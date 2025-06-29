@@ -297,39 +297,49 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 transformOrigin: 'center'
               }}
             >
-              {/* Hospital Logo Section */}
+              {/* Hospital Logo Section - Better positioned with proper padding */}
               <div 
-                className="absolute left-6 top-6 bg-blue-600 text-white rounded-lg flex flex-col items-center justify-center"
-                style={{ width: '90px', height: '70px' }}
+                className="absolute bg-blue-600 text-white rounded-lg flex flex-col items-center justify-center"
+                style={{ 
+                  left: '20px', 
+                  top: '20px', 
+                  width: '100px', 
+                  height: '80px' 
+                }}
               >
-                <div className="text-xs font-bold">HOSPITAL</div>
-                <div className="text-xl font-bold">ID</div>
+                <div className="text-sm font-bold">HOSPITAL</div>
+                <div className="text-2xl font-bold">ID</div>
               </div>
 
-              {/* Main Patient Information - Better spacing */}
-              <div className="absolute left-28 top-6 right-6">
+              {/* Main Patient Information - Better spacing and positioning */}
+              <div className="absolute" style={{ left: '140px', top: '20px', right: '20px' }}>
                 {/* Patient Name - Larger and better spaced */}
-                <div className="text-3xl font-bold text-gray-900 mb-3 leading-tight">
+                <div className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
                   {patient.lastName.toUpperCase()}, {patient.firstName}
                 </div>
                 
-                {/* Patient ID - More prominent */}
-                <div className="text-xl font-bold text-blue-600 mb-2">
+                {/* Patient ID - More prominent with better spacing */}
+                <div className="text-xl font-bold text-blue-600 mb-3">
                   ID: {patient.patientId}
                 </div>
                 
                 {/* DOB and Room - Better spacing */}
-                <div className="text-base text-gray-700 mb-2 space-y-1">
+                <div className="text-base text-gray-700 space-y-2">
                   <div>DOB: {format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}</div>
                   <div>Room: {patient.roomNumber}{patient.bedNumber} • Blood Type: {patient.bloodType}</div>
                 </div>
               </div>
 
-              {/* Allergy Alert Section - Better positioning */}
+              {/* Allergy Alert Section - Better positioning with proper spacing */}
               {patient.allergies.length > 0 && (
                 <div 
-                  className="absolute left-6 right-6 bg-red-600 text-white rounded-lg flex items-center justify-center"
-                  style={{ top: '95px', height: '45px' }}
+                  className="absolute bg-red-600 text-white rounded-lg flex items-center justify-center"
+                  style={{ 
+                    left: '20px', 
+                    right: '20px', 
+                    top: '115px', 
+                    height: '50px' 
+                  }}
                 >
                   <AlertTriangle className="h-5 w-5 mr-2" />
                   <span className="font-bold text-base">
@@ -338,21 +348,23 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 </div>
               )}
 
-              {/* Barcode Section - Removed border, better centering */}
+              {/* Barcode Section - Better centered with proper spacing */}
               <div 
-                className="absolute left-6 right-6 bg-white rounded-lg flex items-center justify-center"
+                className="absolute bg-white rounded-lg flex items-center justify-center"
                 style={{ 
+                  left: '20px', 
+                  right: '20px', 
                   bottom: '20px', 
-                  height: '90px',
-                  top: patient.allergies.length > 0 ? '150px' : '105px'
+                  height: '95px',
+                  top: patient.allergies.length > 0 ? '175px' : '125px'
                 }}
               >
                 <div className="flex flex-col items-center justify-center w-full">
-                  <div className="text-sm text-gray-600 mb-2">Scan for Patient Information</div>
+                  <div className="text-sm text-gray-600 mb-3">Scan for Patient Information</div>
                   
                   {/* Centered and bold barcode */}
-                  <div className="flex justify-center mb-2">
-                    <svg width="250" height="50" className="mx-auto">
+                  <div className="flex justify-center mb-3">
+                    <svg width="280" height="50" className="mx-auto">
                       {generateBarcode(patient.patientId)}
                     </svg>
                   </div>
@@ -360,27 +372,27 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                   <div className="text-sm text-gray-800 font-mono font-bold">{patient.patientId}</div>
                 </div>
                 
-                {/* Medical Symbol - Better positioned */}
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-center">
-                  <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                {/* Medical Symbol - Better positioned with proper spacing */}
+                <div className="absolute right-6 top-1/2 transform -translate-y-1/2 text-center">
+                  <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">
                     ✚
                   </div>
-                  <div className="text-xs text-gray-600 mt-1 font-bold">MEDICAL</div>
+                  <div className="text-xs text-gray-600 mt-2 font-bold">MEDICAL</div>
                 </div>
               </div>
 
-              {/* Security Features - Better positioning */}
-              <div className="absolute top-3 right-3 text-xs text-gray-400 text-center">
+              {/* Security Features - Better positioning with proper spacing */}
+              <div className="absolute top-6 right-6 text-xs text-gray-400 text-center">
                 <div className="font-bold">SECURE ID</div>
                 <div className="text-blue-600 font-bold">#{patient.patientId.slice(-4)}</div>
               </div>
 
-              {/* Tamper-evident pattern - More subtle */}
+              {/* Tamper-evident pattern - More subtle and properly spaced */}
               <div className="absolute inset-0 pointer-events-none">
-                <svg width="100%" height="100%" className="opacity-3">
+                <svg width="100%" height="100%" className="opacity-5">
                   <defs>
-                    <pattern id="security-pattern" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
-                      <text x="12.5" y="18" fontSize="9" textAnchor="middle" fill="#3b82f6" transform="rotate(45 12.5 12.5)">
+                    <pattern id="security-pattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+                      <text x="15" y="20" fontSize="8" textAnchor="middle" fill="#3b82f6" transform="rotate(45 15 15)">
                         SECURE
                       </text>
                     </pattern>
