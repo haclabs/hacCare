@@ -45,24 +45,24 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     console.log('Saving vitals:', newVitals);
   };
 
-  // Generate patient barcode
+  // Generate patient barcode - wider and more prominent
   const generatePatientBarcode = (patientId: string) => {
     const barcodePattern = patientId.split('').map((char, index) => {
       const charCode = char.charCodeAt(0);
-      const width = (charCode % 3) + 1;
+      const width = (charCode % 3) + 2; // Wider bars
       const isWide = index % 2 === 0;
-      return { width: `${width * 1.2}px`, isWide };
+      return { width: `${width * 2}px`, isWide }; // Doubled width
     });
 
     return (
-      <div className="flex items-end justify-center space-x-px bg-white p-2 border border-gray-300 rounded">
+      <div className="flex items-end justify-center space-x-px bg-white p-3 border-2 border-gray-300 rounded-lg shadow-sm">
         {barcodePattern.map((bar, index) => (
           <div
             key={index}
             className="bg-black"
             style={{
               width: bar.width,
-              height: bar.isWide ? '24px' : '20px'
+              height: bar.isWide ? '32px' : '28px' // Taller bars
             }}
           />
         ))}
@@ -92,18 +92,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'post-op', label: 'Post-op Assessment' },
   ];
 
-  const assessmentSubTabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'wounds', label: 'Wounds' },
-    { id: 'fluid-balance', label: 'Fluid Balance' },
-    { id: 'bowel-record', label: 'Bowel Record' },
-  ];
-
   const medicationSubTabs = [
     { id: 'scheduled', label: 'Regularly Scheduled' },
     { id: 'prn', label: 'PRN' },
     { id: 'iv-fluids', label: 'IV Fluids' },
     { id: 'diabetic', label: 'Diabetic Record' },
+  ];
+
+  const assessmentSubTabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'wounds', label: 'Wounds' },
+    { id: 'fluid-balance', label: 'Fluid Balance' },
+    { id: 'bowel-record', label: 'Bowel Record' },
   ];
 
   const renderVitalsContent = () => {
@@ -465,7 +465,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       <div className="border-b border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <button
             onClick={onBack}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -478,47 +478,48 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </span>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="bg-blue-100 p-3 rounded-full">
+        <div className="flex items-start space-x-6">
+          <div className="bg-blue-100 p-3 rounded-full flex-shrink-0">
             <User className="h-6 w-6 text-blue-600" />
           </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {patient.firstName} {patient.lastName}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               {age} years old • {patient.gender} • Room {patient.roomNumber}{patient.bedNumber}
             </p>
-            <p className="text-sm text-blue-600 font-mono mt-1">Patient ID: {patient.patientId}</p>
             
-            {/* Patient Barcode */}
-            <div className="mt-2 flex items-center space-x-4">
-              <div className="text-center">
-                {generatePatientBarcode(patient.patientId)}
-                <p className="text-xs text-gray-500 mt-1 font-mono">{patient.patientId}</p>
+            {/* Patient Barcode and ID - Wider and better aligned */}
+            <div className="mb-6">
+              <div className="flex items-center space-x-6">
+                <div className="text-center">
+                  {generatePatientBarcode(patient.patientId)}
+                  <p className="text-sm text-gray-600 mt-2 font-mono font-bold">{patient.patientId}</p>
+                </div>
               </div>
             </div>
             
-            {/* Patient Labels Button */}
-            <div className="mt-3">
+            {/* Patient Labels Button - Full width to match barcode */}
+            <div className="mb-6">
               <button
                 onClick={() => setShowBracelet(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 w-full max-w-sm"
               >
-                <QrCode className="h-4 w-4" />
+                <QrCode className="h-5 w-5" />
                 <span>Patient Labels</span>
               </button>
             </div>
             
-            {/* Patient Diagnosis */}
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <h3 className="text-sm font-medium text-blue-900 mb-1">Primary Diagnosis</h3>
-              <p className="text-blue-800 font-medium">{patient.diagnosis}</p>
+            {/* Patient Diagnosis - Better aligned and styled */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">Primary Diagnosis</h3>
+              <p className="text-blue-800 font-medium leading-relaxed">{patient.diagnosis}</p>
             </div>
           </div>
         </div>
 
-        <nav className="mt-6">
+        <nav className="mt-8">
           <div className="flex space-x-8 overflow-x-auto">
             {sections.map((section) => (
               <button
@@ -544,10 +545,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Patient Information</h3>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Patient ID:</span>
-                    <span className="font-medium font-mono">{patient.patientId}</span>
-                  </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Date of Birth:</span>
                     <span className="font-medium">{format(new Date(patient.dateOfBirth), 'MMM dd, yyyy')}</span>
