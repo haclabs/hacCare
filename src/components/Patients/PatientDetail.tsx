@@ -118,6 +118,111 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'bowel-record', label: 'Bowel Record' },
   ];
 
+  // Demo PRN medications
+  const prnMedications = [
+    {
+      id: 'prn-001',
+      name: 'Acetaminophen',
+      dosage: '650mg',
+      route: 'PO',
+      indication: 'Pain or fever',
+      frequency: 'Q6H PRN',
+      maxDose: '4g/24hr',
+      lastGiven: '2024-01-20T14:30:00',
+      givenBy: 'Sarah Johnson, RN',
+      effectiveness: 'Good pain relief reported'
+    },
+    {
+      id: 'prn-002',
+      name: 'Ondansetron',
+      dosage: '4mg',
+      route: 'IV',
+      indication: 'Nausea/vomiting',
+      frequency: 'Q8H PRN',
+      maxDose: '32mg/24hr',
+      lastGiven: null,
+      givenBy: null,
+      effectiveness: null
+    },
+    {
+      id: 'prn-003',
+      name: 'Lorazepam',
+      dosage: '0.5mg',
+      route: 'PO',
+      indication: 'Anxiety',
+      frequency: 'Q6H PRN',
+      maxDose: '2mg/24hr',
+      lastGiven: '2024-01-20T08:00:00',
+      givenBy: 'Michael Chen, RN',
+      effectiveness: 'Patient calmer after administration'
+    }
+  ];
+
+  // Demo IV fluids
+  const ivFluids = [
+    {
+      id: 'iv-001',
+      solution: 'Normal Saline 0.9%',
+      volume: '1000mL',
+      rate: '125mL/hr',
+      startTime: '2024-01-20T06:00:00',
+      endTime: '2024-01-20T14:00:00',
+      site: 'Left forearm 20G',
+      status: 'Infusing',
+      remainingVolume: '375mL',
+      nurse: 'Sarah Johnson, RN'
+    },
+    {
+      id: 'iv-002',
+      solution: 'D5W with 20mEq KCl',
+      volume: '1000mL',
+      rate: '100mL/hr',
+      startTime: '2024-01-20T14:00:00',
+      endTime: '2024-01-20T24:00:00',
+      site: 'Left forearm 20G',
+      status: 'Scheduled',
+      remainingVolume: '1000mL',
+      nurse: 'Sarah Johnson, RN'
+    }
+  ];
+
+  // Demo diabetic records
+  const diabeticRecords = [
+    {
+      id: 'bg-001',
+      time: '2024-01-20T07:30:00',
+      bloodGlucose: 142,
+      insulinType: 'Humalog',
+      insulinDose: '6 units',
+      method: 'Subcutaneous',
+      site: 'Abdomen',
+      nurse: 'Sarah Johnson, RN',
+      notes: 'Pre-breakfast reading'
+    },
+    {
+      id: 'bg-002',
+      time: '2024-01-20T11:30:00',
+      bloodGlucose: 156,
+      insulinType: 'Humalog',
+      insulinDose: '4 units',
+      method: 'Subcutaneous',
+      site: 'Thigh',
+      nurse: 'Sarah Johnson, RN',
+      notes: 'Pre-lunch reading'
+    },
+    {
+      id: 'bg-003',
+      time: '2024-01-20T17:30:00',
+      bloodGlucose: 134,
+      insulinType: 'Humalog',
+      insulinDose: '5 units',
+      method: 'Subcutaneous',
+      site: 'Abdomen',
+      nurse: 'Sarah Johnson, RN',
+      notes: 'Pre-dinner reading'
+    }
+  ];
+
   /**
    * Render vital signs content based on active tab
    * @returns {JSX.Element} Vital signs content
@@ -293,8 +398,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
       case 'prn':
         return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">PRN (As Needed) Medications</h3>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">PRN (As Needed) Medications</h3>
+              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Document Administration</span>
+              </button>
+            </div>
+
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <h4 className="font-medium text-yellow-900 mb-2">PRN Medication Guidelines</h4>
               <ul className="text-sm text-yellow-800 space-y-1">
@@ -302,19 +414,85 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <li>• Document reason for administration</li>
                 <li>• Monitor patient response and effectiveness</li>
                 <li>• Follow minimum interval requirements</li>
+                <li>• Check maximum daily dose limits</li>
               </ul>
             </div>
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-              <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">PRN medication management coming soon...</p>
+
+            <div className="space-y-4">
+              {prnMedications.map((med) => (
+                <div key={med.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-orange-100 p-2 rounded-full">
+                        <Pill className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{med.name}</h4>
+                        <p className="text-sm text-gray-600">
+                          {med.dosage} {med.route} • {med.frequency}
+                        </p>
+                        <p className="text-sm text-blue-600 font-medium">
+                          For: {med.indication}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
+                        PRN
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600"><strong>Max Daily Dose:</strong></p>
+                      <p className="text-gray-900">{med.maxDose}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Last Given:</strong></p>
+                      <p className="text-gray-900">
+                        {med.lastGiven ? format(new Date(med.lastGiven), 'MMM dd, HH:mm') : 'Not given today'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Given By:</strong></p>
+                      <p className="text-gray-900">{med.givenBy || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  {med.effectiveness && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
+                      <p className="text-sm text-green-800">
+                        <strong>Effectiveness:</strong> {med.effectiveness}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex space-x-2">
+                    <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors">
+                      Administer
+                    </button>
+                    <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-200 transition-colors">
+                      Document Refusal
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
 
       case 'iv-fluids':
         return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">IV Fluids & Infusions</h3>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">IV Fluids & Infusions</h3>
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Start New IV</span>
+              </button>
+            </div>
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-2">IV Fluid Monitoring</h4>
               <ul className="text-sm text-blue-800 space-y-1">
@@ -322,31 +500,242 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <li>• Check IV site for complications</li>
                 <li>• Document intake and output</li>
                 <li>• Assess patient fluid balance</li>
+                <li>• Verify pump settings hourly</li>
               </ul>
             </div>
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-              <Droplet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">IV fluid management system coming soon...</p>
+
+            <div className="space-y-4">
+              {ivFluids.map((fluid) => (
+                <div key={fluid.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Droplet className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{fluid.solution}</h4>
+                        <p className="text-sm text-gray-600">
+                          {fluid.volume} at {fluid.rate}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Site: {fluid.site}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        fluid.status === 'Infusing' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {fluid.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600"><strong>Start Time:</strong></p>
+                      <p className="text-gray-900">{format(new Date(fluid.startTime), 'MMM dd, HH:mm')}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>End Time:</strong></p>
+                      <p className="text-gray-900">{format(new Date(fluid.endTime), 'MMM dd, HH:mm')}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Remaining:</strong></p>
+                      <p className="text-gray-900 font-medium">{fluid.remainingVolume}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Nurse:</strong></p>
+                      <p className="text-gray-900">{fluid.nurse}</p>
+                    </div>
+                  </div>
+
+                  {fluid.status === 'Infusing' && (
+                    <div className="mt-4 bg-green-50 border border-green-200 rounded p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm text-green-800 font-medium">Currently infusing</span>
+                        </div>
+                        <div className="text-sm text-green-700">
+                          Progress: {((parseInt(fluid.volume) - parseInt(fluid.remainingVolume)) / parseInt(fluid.volume) * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="mt-2 w-full bg-green-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${((parseInt(fluid.volume) - parseInt(fluid.remainingVolume)) / parseInt(fluid.volume) * 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex space-x-2">
+                    <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors">
+                      Check Site
+                    </button>
+                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
+                      Document I/O
+                    </button>
+                    <button className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 transition-colors">
+                      Change Rate
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
 
       case 'diabetic':
         return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Diabetic Medication Record</h3>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h4 className="font-medium text-green-900 mb-2">Blood Glucose Management</h4>
-              <ul className="text-sm text-green-800 space-y-1">
-                <li>• Monitor blood glucose levels regularly</li>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Diabetic Medication Record</h3>
+              <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Record Blood Glucose</span>
+              </button>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h4 className="font-medium text-red-900 mb-2">Blood Glucose Management</h4>
+              <ul className="text-sm text-red-800 space-y-1">
+                <li>• Monitor blood glucose levels per protocol</li>
                 <li>• Administer insulin per sliding scale</li>
                 <li>• Document glucose readings and insulin given</li>
                 <li>• Monitor for signs of hypo/hyperglycemia</li>
+                <li>• Check ketones if glucose >250 mg/dL</li>
               </ul>
             </div>
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Diabetic medication tracking coming soon...</p>
+
+            {/* Blood Glucose Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-red-600">142</div>
+                <div className="text-sm text-gray-600">Latest BG (mg/dL)</div>
+                <div className="text-xs text-gray-500 mt-1">07:30 AM</div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">15</div>
+                <div className="text-sm text-gray-600">Total Insulin (units)</div>
+                <div className="text-xs text-gray-500 mt-1">Today</div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">3</div>
+                <div className="text-sm text-gray-600">Readings Today</div>
+                <div className="text-xs text-gray-500 mt-1">Target: 4</div>
+              </div>
+            </div>
+
+            {/* Diabetic Records */}
+            <div className="space-y-4">
+              <h4 className="text-md font-medium text-gray-900">Today's Blood Glucose & Insulin Record</h4>
+              
+              {diabeticRecords.map((record) => (
+                <div key={record.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-red-100 p-2 rounded-full">
+                        <Activity className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-gray-900">
+                          {format(new Date(record.time), 'HH:mm')} - {record.notes}
+                        </h5>
+                        <p className="text-sm text-gray-600">
+                          {format(new Date(record.time), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${
+                        record.bloodGlucose < 70 ? 'text-red-600' :
+                        record.bloodGlucose > 180 ? 'text-orange-600' :
+                        'text-green-600'
+                      }`}>
+                        {record.bloodGlucose} mg/dL
+                      </div>
+                      <div className="text-xs text-gray-500">Blood Glucose</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600"><strong>Insulin Type:</strong></p>
+                      <p className="text-gray-900">{record.insulinType}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Dose Given:</strong></p>
+                      <p className="text-gray-900 font-medium">{record.insulinDose}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Site:</strong></p>
+                      <p className="text-gray-900">{record.site}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600"><strong>Nurse:</strong></p>
+                      <p className="text-gray-900">{record.nurse}</p>
+                    </div>
+                  </div>
+
+                  {/* Blood Glucose Range Indicator */}
+                  <div className="mt-3 p-2 rounded">
+                    {record.bloodGlucose < 70 && (
+                      <div className="bg-red-100 border border-red-300 rounded p-2">
+                        <p className="text-red-800 text-sm font-medium">
+                          ⚠️ HYPOGLYCEMIA - Monitor closely for symptoms
+                        </p>
+                      </div>
+                    )}
+                    {record.bloodGlucose > 180 && (
+                      <div className="bg-orange-100 border border-orange-300 rounded p-2">
+                        <p className="text-orange-800 text-sm font-medium">
+                          ⚠️ HYPERGLYCEMIA - Consider additional insulin per protocol
+                        </p>
+                      </div>
+                    )}
+                    {record.bloodGlucose >= 70 && record.bloodGlucose <= 180 && (
+                      <div className="bg-green-100 border border-green-300 rounded p-2">
+                        <p className="text-green-800 text-sm font-medium">
+                          ✓ TARGET RANGE - Continue current management
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sliding Scale Reference */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-3">Insulin Sliding Scale Reference</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-medium text-gray-700 mb-2">Humalog Sliding Scale:</p>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>• 150-199 mg/dL: 2 units</li>
+                    <li>• 200-249 mg/dL: 4 units</li>
+                    <li>• 250-299 mg/dL: 6 units</li>
+                    <li>• 300-349 mg/dL: 8 units</li>
+                    <li>• ≥350 mg/dL: 10 units + call MD</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-700 mb-2">Monitoring Schedule:</p>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>• 07:30 - Pre-breakfast</li>
+                    <li>• 11:30 - Pre-lunch</li>
+                    <li>• 17:30 - Pre-dinner</li>
+                    <li>• 21:00 - Bedtime</li>
+                    <li>• PRN if symptomatic</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         );
