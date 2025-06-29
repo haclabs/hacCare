@@ -38,7 +38,7 @@ export const Changelog: React.FC = () => {
   const changelogData: ChangelogEntry[] = [
     {
       version: "2.2.0",
-      date: "2024-01-25",
+      date: "2024-12-29",
       changes: [
         {
           type: "feature",
@@ -49,6 +49,14 @@ export const Changelog: React.FC = () => {
           description: "Implemented medication label generation with Avery 5160 compatibility for medication containers"
         },
         {
+          type: "feature",
+          description: "Added patient management system for super administrators with full CRUD operations"
+        },
+        {
+          type: "feature",
+          description: "Enhanced hospital bracelet design with professional medical appearance and security features"
+        },
+        {
           type: "improvement",
           description: "Enhanced authentication system with robust error handling and automatic session recovery"
         },
@@ -57,12 +65,20 @@ export const Changelog: React.FC = () => {
           description: "Added comprehensive code documentation and comments throughout the application"
         },
         {
+          type: "improvement",
+          description: "Reorganized patient detail interface with better barcode placement and medication tabs"
+        },
+        {
           type: "security",
           description: "Improved refresh token handling and automatic session cleanup for expired tokens"
         },
         {
           type: "bugfix",
           description: "Fixed authentication errors related to invalid refresh tokens and network connectivity issues"
+        },
+        {
+          type: "bugfix",
+          description: "Resolved barcode centering issues in patient bracelets and medication labels"
         }
       ]
     },
