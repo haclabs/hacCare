@@ -9,13 +9,35 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
 import { WoundAssessment } from './WoundAssessment';
+import { generateCode128SVG } from '../../utils/barcodeUtils';
 
+/**
+ * Patient Detail Component
+ * 
+ * Comprehensive patient information display with tabbed interface.
+ * Shows detailed patient data including demographics, vital signs,
+ * medications, assessments, and medical history.
+ * 
+ * Features:
+ * - Tabbed navigation for different information sections
+ * - Real-time vital signs with trend analysis
+ * - Medication management with MAR (Medication Administration Record)
+ * - Assessment tools including wound assessment
+ * - Patient bracelet generation
+ * - Code-128 barcode for patient identification
+ * - Handover notes and documentation
+ * 
+ * @param {Object} props - Component props
+ * @param {Patient} props.patient - Patient data to display
+ * @param {Function} props.onBack - Callback when back button is clicked
+ */
 interface PatientDetailProps {
   patient: Patient;
   onBack: () => void;
 }
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
+  // State management for different sections and modals
   const [activeSection, setActiveSection] = useState<'overview' | 'vitals' | 'medications' | 'handover-notes' | 'admission-records' | 'advanced-directives' | 'physicians-orders' | 'consults' | 'labs-reports' | 'care-plan' | 'assessments'>('overview');
   const [activeVitalsTab, setActiveVitalsTab] = useState<'current' | 'neuro-vs' | 'frequent' | 'pre-op' | 'post-op'>('current');
   const [activeAssessmentTab, setActiveAssessmentTab] = useState<'overview' | 'wounds' | 'fluid-balance' | 'bowel-record'>('overview');
@@ -26,8 +48,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [currentVitals, setCurrentVitals] = useState<VitalSigns>(patient.vitals);
   const [showBracelet, setShowBracelet] = useState(false);
 
+  // Calculate patient age
   const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
 
+  /**
+   * Get CSS classes for patient condition styling
+   * @param {Patient['condition']} condition - Patient's current condition
+   * @returns {string} CSS classes for condition badge
+   */
   const getConditionColor = (condition: Patient['condition']) => {
     switch (condition) {
       case 'Critical': return 'bg-red-100 text-red-800 border-red-200';
@@ -38,6 +66,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   };
 
+  /**
+   * Handle vital signs save
+   * Updates the current vital signs and closes the editor
+   * @param {VitalSigns} newVitals - New vital signs data
+   */
   const handleSaveVitals = (newVitals: VitalSigns) => {
     setCurrentVitals(newVitals);
     setShowVitalsEditor(false);
@@ -45,31 +78,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     console.log('Saving vitals:', newVitals);
   };
 
-  // Generate patient barcode - wider and more prominent
-  const generatePatientBarcode = (patientId: string) => {
-    const barcodePattern = patientId.split('').map((char, index) => {
-      const charCode = char.charCodeAt(0);
-      const width = (charCode % 3) + 2; // Wider bars
-      const isWide = index % 2 === 0;
-      return { width: `${width * 2}px`, isWide }; // Doubled width
-    });
-
-    return (
-      <div className="flex items-end justify-center space-x-px bg-white p-3 border-2 border-gray-300 rounded-lg shadow-sm">
-        {barcodePattern.map((bar, index) => (
-          <div
-            key={index}
-            className="bg-black"
-            style={{
-              width: bar.width,
-              height: bar.isWide ? '32px' : '28px' // Taller bars
-            }}
-          />
-        ))}
-      </div>
-    );
-  };
-
+  // Navigation sections configuration
   const sections = [
     { id: 'overview', label: 'Overview' },
     { id: 'vitals', label: 'Vital Signs' },
@@ -84,6 +93,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'assessments', label: 'Assessments' },
   ];
 
+  // Vital signs sub-navigation
   const vitalsSubTabs = [
     { id: 'current', label: 'Current Vitals' },
     { id: 'neuro-vs', label: 'Neuro VS' },
@@ -92,6 +102,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'post-op', label: 'Post-op Assessment' },
   ];
 
+  // Medication sub-navigation
   const medicationSubTabs = [
     { id: 'scheduled', label: 'Regularly Scheduled' },
     { id: 'prn', label: 'PRN' },
@@ -99,6 +110,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'diabetic', label: 'Diabetic Record' },
   ];
 
+  // Assessment sub-navigation
   const assessmentSubTabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'wounds', label: 'Wounds' },
@@ -106,6 +118,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'bowel-record', label: 'Bowel Record' },
   ];
 
+  /**
+   * Render vital signs content based on active tab
+   * @returns {JSX.Element} Vital signs content
+   */
   const renderVitalsContent = () => {
     switch (activeVitalsTab) {
       case 'current':
@@ -221,6 +237,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   };
 
+  /**
+   * Render medication content based on active tab
+   * @returns {JSX.Element} Medication content
+   */
   const renderMedicationContent = () => {
     const activeMedications = patient.medications.filter(med => med.status === 'Active');
     
@@ -336,6 +356,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   };
 
+  /**
+   * Render assessment content based on active tab
+   * @returns {JSX.Element} Assessment content
+   */
   const renderAssessmentContent = () => {
     switch (activeAssessmentTab) {
       case 'overview':
@@ -483,24 +507,28 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             <User className="h-6 w-6 text-blue-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {patient.firstName} {patient.lastName}
-            </h1>
-            <p className="text-gray-600 mb-4">
-              {age} years old • {patient.gender} • Room {patient.roomNumber}{patient.bedNumber}
-            </p>
-            
-            {/* Patient Barcode and ID - Wider and better aligned */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-6">
-                <div className="text-center">
-                  {generatePatientBarcode(patient.patientId)}
-                  <p className="text-sm text-gray-600 mt-2 font-mono font-bold">{patient.patientId}</p>
-                </div>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {patient.firstName} {patient.lastName}
+                </h1>
+                <p className="text-gray-600 mb-4">
+                  {age} years old • {patient.gender} • Room {patient.roomNumber}{patient.bedNumber}
+                </p>
+              </div>
+              
+              {/* Code-128 Barcode - Positioned to the right of patient name */}
+              <div className="ml-6 flex-shrink-0">
+                {generateCode128SVG(patient.patientId, {
+                  width: 180,
+                  height: 40,
+                  showText: true,
+                  className: 'bg-white border border-gray-300 rounded-lg p-2'
+                })}
               </div>
             </div>
             
-            {/* Patient Labels Button - Full width to match barcode */}
+            {/* Patient Labels Button - Full width to match layout */}
             <div className="mb-6">
               <button
                 onClick={() => setShowBracelet(true)}
