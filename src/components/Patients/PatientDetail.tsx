@@ -7,7 +7,7 @@ import {
 import { format } from 'date-fns';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
-import { PatientBracelet } from './PatientBracelet';
+import { HospitalBracelet } from './HospitalBracelet';
 import { WoundAssessment } from './WoundAssessment';
 
 interface PatientDetailProps {
@@ -16,9 +16,10 @@ interface PatientDetailProps {
 }
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
-  const [activeSection, setActiveSection] = useState<'overview' | 'vitals' | 'medications' | 'notes' | 'admission-records' | 'advanced-directives' | 'physicians-orders' | 'consults' | 'labs-reports' | 'care-plan' | 'assessments'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'vitals' | 'medications' | 'handover-notes' | 'admission-records' | 'advanced-directives' | 'physicians-orders' | 'consults' | 'labs-reports' | 'care-plan' | 'assessments'>('overview');
   const [activeVitalsTab, setActiveVitalsTab] = useState<'current' | 'neuro-vs' | 'frequent' | 'pre-op' | 'post-op'>('current');
   const [activeAssessmentTab, setActiveAssessmentTab] = useState<'overview' | 'wounds' | 'fluid-balance' | 'bowel-record'>('overview');
+  const [activeMedicationTab, setActiveMedicationTab] = useState<'scheduled' | 'prn' | 'iv-fluids' | 'diabetic'>('scheduled');
   const [newNote, setNewNote] = useState('');
   const [noteType, setNoteType] = useState<PatientNote['type']>('General');
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
@@ -44,11 +45,36 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     console.log('Saving vitals:', newVitals);
   };
 
+  // Generate patient barcode
+  const generatePatientBarcode = (patientId: string) => {
+    const barcodePattern = patientId.split('').map((char, index) => {
+      const charCode = char.charCodeAt(0);
+      const width = (charCode % 3) + 1;
+      const isWide = index % 2 === 0;
+      return { width: `${width * 1.2}px`, isWide };
+    });
+
+    return (
+      <div className="flex items-end justify-center space-x-px bg-white p-2 border border-gray-300 rounded">
+        {barcodePattern.map((bar, index) => (
+          <div
+            key={index}
+            className="bg-black"
+            style={{
+              width: bar.width,
+              height: bar.isWide ? '24px' : '20px'
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
   const sections = [
     { id: 'overview', label: 'Overview' },
     { id: 'vitals', label: 'Vital Signs' },
-    { id: 'medications', label: 'Medications' },
-    { id: 'notes', label: 'Notes' },
+    { id: 'medications', label: 'MAR' },
+    { id: 'handover-notes', label: 'Handover Notes' },
     { id: 'admission-records', label: 'Admission Records' },
     { id: 'advanced-directives', label: 'Advanced Directives' },
     { id: 'physicians-orders', label: 'Physicians Orders' },
@@ -71,6 +97,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'wounds', label: 'Wounds' },
     { id: 'fluid-balance', label: 'Fluid Balance' },
     { id: 'bowel-record', label: 'Bowel Record' },
+  ];
+
+  const medicationSubTabs = [
+    { id: 'scheduled', label: 'Regularly Scheduled' },
+    { id: 'prn', label: 'PRN' },
+    { id: 'iv-fluids', label: 'IV Fluids' },
+    { id: 'diabetic', label: 'Diabetic Record' },
   ];
 
   const renderVitalsContent = () => {
@@ -180,6 +213,121 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Post-operative Assessment</h3>
             <p className="text-gray-600">Post-surgical monitoring, recovery vital signs, and post-op complications tracking coming soon...</p>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const renderMedicationContent = () => {
+    const activeMedications = patient.medications.filter(med => med.status === 'Active');
+    
+    switch (activeMedicationTab) {
+      case 'scheduled':
+        const scheduledMeds = activeMedications.filter(med => 
+          !med.frequency.toLowerCase().includes('prn') && 
+          !med.frequency.toLowerCase().includes('as needed')
+        );
+        
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Regularly Scheduled Medications</h3>
+            
+            {scheduledMeds.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No regularly scheduled medications</p>
+              </div>
+            ) : (
+              scheduledMeds.map((medication) => (
+                <div key={medication.id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Pill className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{medication.name}</h4>
+                        <p className="text-sm text-gray-600">
+                          {medication.dosage} • {medication.frequency} • {medication.route}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Prescribed by {medication.prescribedBy}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">Next Due</p>
+                      <p className="text-sm text-gray-600">
+                        {format(new Date(medication.nextDue), 'MMM dd, HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        );
+
+      case 'prn':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">PRN (As Needed) Medications</h3>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="font-medium text-yellow-900 mb-2">PRN Medication Guidelines</h4>
+              <ul className="text-sm text-yellow-800 space-y-1">
+                <li>• Assess patient need before administration</li>
+                <li>• Document reason for administration</li>
+                <li>• Monitor patient response and effectiveness</li>
+                <li>• Follow minimum interval requirements</li>
+              </ul>
+            </div>
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">PRN medication management coming soon...</p>
+            </div>
+          </div>
+        );
+
+      case 'iv-fluids':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">IV Fluids & Infusions</h3>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-2">IV Fluid Monitoring</h4>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>• Monitor infusion rate and volume</li>
+                <li>• Check IV site for complications</li>
+                <li>• Document intake and output</li>
+                <li>• Assess patient fluid balance</li>
+              </ul>
+            </div>
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <Droplet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">IV fluid management system coming soon...</p>
+            </div>
+          </div>
+        );
+
+      case 'diabetic':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Diabetic Medication Record</h3>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-900 mb-2">Blood Glucose Management</h4>
+              <ul className="text-sm text-green-800 space-y-1">
+                <li>• Monitor blood glucose levels regularly</li>
+                <li>• Administer insulin per sliding scale</li>
+                <li>• Document glucose readings and insulin given</li>
+                <li>• Monitor for signs of hypo/hyperglycemia</li>
+              </ul>
+            </div>
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Diabetic medication tracking coming soon...</p>
+            </div>
           </div>
         );
 
@@ -325,25 +473,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Patients</span>
           </button>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setShowBracelet(true)}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-            >
-              <QrCode className="h-4 w-4" />
-              <span>Patient Labels</span>
-            </button>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getConditionColor(patient.condition)}`}>
-              {patient.condition}
-            </span>
-          </div>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getConditionColor(patient.condition)}`}>
+            {patient.condition}
+          </span>
         </div>
 
         <div className="flex items-center space-x-4">
           <div className="bg-blue-100 p-3 rounded-full">
             <User className="h-6 w-6 text-blue-600" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">
               {patient.firstName} {patient.lastName}
             </h1>
@@ -351,6 +490,31 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               {age} years old • {patient.gender} • Room {patient.roomNumber}{patient.bedNumber}
             </p>
             <p className="text-sm text-blue-600 font-mono mt-1">Patient ID: {patient.patientId}</p>
+            
+            {/* Patient Barcode */}
+            <div className="mt-2 flex items-center space-x-4">
+              <div className="text-center">
+                {generatePatientBarcode(patient.patientId)}
+                <p className="text-xs text-gray-500 mt-1 font-mono">{patient.patientId}</p>
+              </div>
+            </div>
+            
+            {/* Patient Labels Button */}
+            <div className="mt-3">
+              <button
+                onClick={() => setShowBracelet(true)}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+              >
+                <QrCode className="h-4 w-4" />
+                <span>Patient Labels</span>
+              </button>
+            </div>
+            
+            {/* Patient Diagnosis */}
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <h3 className="text-sm font-medium text-blue-900 mb-1">Primary Diagnosis</h3>
+              <p className="text-blue-800 font-medium">{patient.diagnosis}</p>
+            </div>
           </div>
         </div>
 
@@ -403,12 +567,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     <span className="text-gray-600">Assigned Nurse:</span>
                     <span className="font-medium">{patient.assignedNurse}</span>
                   </div>
-                  {patient.diagnosis && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Diagnosis:</span>
-                      <span className="font-medium">{patient.diagnosis}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -480,6 +638,31 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         )}
 
+        {activeSection === 'medications' && (
+          <div className="space-y-6">
+            {/* Sub-navigation for Medications */}
+            <nav className="border-b border-gray-200">
+              <div className="flex space-x-8">
+                {medicationSubTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveMedicationTab(tab.id as any)}
+                    className={`pb-2 border-b-2 font-medium text-sm transition-colors ${
+                      activeMedicationTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </nav>
+
+            {renderMedicationContent()}
+          </div>
+        )}
+
         {activeSection === 'assessments' && (
           <div className="space-y-6">
             {/* Sub-navigation for Assessments */}
@@ -505,43 +688,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         )}
 
-        {activeSection === 'medications' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Active Medications</h3>
-            
-            {patient.medications.filter(med => med.status === 'Active').map((medication) => (
-              <div key={medication.id} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <Pill className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{medication.name}</h4>
-                      <p className="text-sm text-gray-600">
-                        {medication.dosage} • {medication.frequency} • {medication.route}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Prescribed by {medication.prescribedBy}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">Next Due</p>
-                    <p className="text-sm text-gray-600">
-                      {format(new Date(medication.nextDue), 'MMM dd, HH:mm')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeSection === 'notes' && (
+        {activeSection === 'handover-notes' && (
           <div className="space-y-6">
             <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Note</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Handover Note</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Note Type</label>
@@ -558,24 +708,24 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Note Content</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Handover Note Content</label>
                   <textarea
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     rows={3}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your note here..."
+                    placeholder="Enter handover information for the next shift..."
                   />
                 </div>
                 <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                   <Plus className="h-4 w-4" />
-                  <span>Add Note</span>
+                  <span>Add Handover Note</span>
                 </button>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Handover Notes</h3>
               
               {patient.notes.map((note) => (
                 <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-4">
@@ -657,7 +807,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       )}
 
       {showBracelet && (
-        <PatientBracelet
+        <HospitalBracelet
           patient={patient}
           onClose={() => setShowBracelet(false)}
         />
