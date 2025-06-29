@@ -1,7 +1,23 @@
 import React from 'react';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
+/**
+ * Sidebar Navigation Component
+ * 
+ * Provides the main navigation menu for the application with role-based visibility.
+ * Different menu items are shown based on the user's role and permissions.
+ * 
+ * Features:
+ * - Role-based menu item visibility
+ * - Active tab highlighting
+ * - Responsive design
+ * - Icon-based navigation
+ * 
+ * @param {Object} props - Component props
+ * @param {string} props.activeTab - Currently active tab identifier
+ * @param {Function} props.onTabChange - Callback function when tab changes
+ */
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -10,9 +26,18 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { hasRole } = useAuth();
 
+  /**
+   * Menu items configuration
+   * Each item includes id, label, icon, and optional role requirements
+   */
   const menuItems = [
     { id: 'patients', label: 'Patients', icon: Users },
     { id: 'schedule', label: 'Schedule', icon: Calendar },
+    // Patient Management - Only for Super Admins
+    ...(hasRole('super_admin') ? [
+      { id: 'patient-management', label: 'Patient Management', icon: UserPlus }
+    ] : []),
+    // User Management - For Admins and Super Admins
     ...(hasRole(['admin', 'super_admin']) ? [
       { id: 'user-management', label: 'User Management', icon: UserCheck }
     ] : []),
