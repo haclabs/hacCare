@@ -49,15 +49,20 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
       };
     });
 
+    // Calculate total width for centering
+    const totalBarcodeWidth = 20 + (barcodeData.length * 10) + 20; // guards + data + guards
+    const svgWidth = 280;
+    const startX = (svgWidth - totalBarcodeWidth) / 2;
+
     return (
       <g>
         {/* Start guard - more bold */}
-        <rect x="0" y="0" width="4" height="45" fill="#000" />
-        <rect x="6" y="0" width="4" height="45" fill="#000" />
+        <rect x={startX} y="0" width="4" height="45" fill="#000" />
+        <rect x={startX + 6} y="0" width="4" height="45" fill="#000" />
         
         {/* Data bars - centered and more bold */}
         {barcodeData.map((bar, index) => {
-          const x = 15 + (index * 10);
+          const x = startX + 15 + (index * 10);
           return (
             <rect
               key={index}
@@ -71,8 +76,8 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
         })}
         
         {/* End guard - more bold */}
-        <rect x={15 + (barcodeData.length * 10) + 8} y="0" width="4" height="45" fill="#000" />
-        <rect x={15 + (barcodeData.length * 10) + 14} y="0" width="4" height="45" fill="#000" />
+        <rect x={startX + 15 + (barcodeData.length * 10) + 8} y="0" width="4" height="45" fill="#000" />
+        <rect x={startX + 15 + (barcodeData.length * 10) + 14} y="0" width="4" height="45" fill="#000" />
       </g>
     );
   };
@@ -204,15 +209,21 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
     ctx.textAlign = 'center';
     ctx.fillText('Scan for Patient Info', canvas.width / 2, barcodeY + 60);
 
-    // Simple barcode representation
+    // Simple barcode representation - centered
+    const barcodeStartX = (canvas.width - 240) / 2; // Center the barcode
     for (let i = 0; i < 30; i++) {
       const barWidth = (i % 3) + 2;
       const barHeight = 40;
-      const x = 400 + (i * 8);
+      const x = barcodeStartX + (i * 8);
       if (i % 2 === 0) {
         ctx.fillRect(x, barcodeY, barWidth, barHeight);
       }
     }
+
+    // Draw patient ID below barcode - centered
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(patient.patientId, canvas.width / 2, barcodeY + 80);
 
     // Convert to blob and download
     canvas.toBlob((blob) => {
@@ -348,9 +359,9 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 </div>
               )}
 
-              {/* Barcode Section - Better centered with proper spacing */}
+              {/* Barcode Section - Perfectly centered with proper spacing */}
               <div 
-                className="absolute bg-white rounded-lg flex items-center justify-center"
+                className="absolute bg-white rounded-lg flex flex-col items-center justify-center"
                 style={{ 
                   left: '20px', 
                   right: '20px', 
@@ -359,17 +370,18 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                   top: patient.allergies.length > 0 ? '175px' : '125px'
                 }}
               >
-                <div className="flex flex-col items-center justify-center w-full">
-                  <div className="text-sm text-gray-600 mb-3">Scan for Patient Information</div>
-                  
-                  {/* Centered and bold barcode */}
-                  <div className="flex justify-center mb-3">
-                    <svg width="280" height="50" className="mx-auto">
-                      {generateBarcode(patient.patientId)}
-                    </svg>
-                  </div>
-                  
-                  <div className="text-sm text-gray-800 font-mono font-bold">{patient.patientId}</div>
+                <div className="text-sm text-gray-600 mb-3">Scan for Patient Information</div>
+                
+                {/* Perfectly centered barcode */}
+                <div className="flex justify-center mb-3">
+                  <svg width="280" height="50" className="mx-auto">
+                    {generateBarcode(patient.patientId)}
+                  </svg>
+                </div>
+                
+                {/* Centered patient ID below barcode */}
+                <div className="text-sm text-gray-800 font-mono font-bold text-center">
+                  {patient.patientId}
                 </div>
                 
                 {/* Medical Symbol - Better positioned with proper spacing */}
