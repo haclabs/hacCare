@@ -518,25 +518,23 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </div>
               
               {/* Code-128 Barcode - Positioned to the right of patient name */}
-              <div className="ml-6 flex-shrink-0">
+              <div className="ml-6 flex-shrink-0 flex flex-col items-center space-y-3">
                 {generateCode128SVG(patient.patientId, {
                   width: 180,
                   height: 40,
                   showText: true,
                   className: 'bg-white border border-gray-300 rounded-lg p-2'
                 })}
+                
+                {/* Patient Labels Button - Now positioned below the barcode */}
+                <button
+                  onClick={() => setShowBracelet(true)}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>Patient Labels</span>
+                </button>
               </div>
-            </div>
-            
-            {/* Patient Labels Button - Full width to match layout */}
-            <div className="mb-6">
-              <button
-                onClick={() => setShowBracelet(true)}
-                className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 w-full max-w-sm"
-              >
-                <QrCode className="h-5 w-5" />
-                <span>Patient Labels</span>
-              </button>
             </div>
             
             {/* Patient Diagnosis - Better aligned and styled */}
