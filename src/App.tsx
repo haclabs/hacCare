@@ -3,7 +3,7 @@ import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { PatientCard } from './components/Patients/PatientCard';
 import { PatientDetail } from './components/Patients/PatientDetail';
-import { PatientBracelet } from './components/Patients/PatientBracelet';
+import { HospitalBracelet } from './components/Patients/HospitalBracelet';
 import { PatientManagement } from './components/Patients/PatientManagement';
 import { AlertPanel } from './components/Alerts/AlertPanel';
 import { QuickStats } from './components/Dashboard/QuickStats';
@@ -25,7 +25,7 @@ import { Patient, Alert } from './types';
  * - Patient selection and detail views
  * - Alert management and notifications
  * - Role-based content rendering
- * - Patient bracelet/label generation
+ * - Hospital bracelet generation
  * 
  * @returns {JSX.Element} The main application component
  */
@@ -163,9 +163,9 @@ function App() {
         onAcknowledge={handleAcknowledgeAlert}
       />
 
-      {/* Patient Bracelet/Label Modal */}
+      {/* Hospital Bracelet Modal */}
       {braceletPatient && (
-        <PatientBracelet
+        <HospitalBracelet
           patient={braceletPatient}
           onClose={() => setBraceletPatient(null)}
         />
