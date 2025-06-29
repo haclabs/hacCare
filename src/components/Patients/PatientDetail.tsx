@@ -609,7 +609,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <li>• Administer insulin per sliding scale</li>
                 <li>• Document glucose readings and insulin given</li>
                 <li>• Monitor for signs of hypo/hyperglycemia</li>
-                <li>• Check ketones if glucose >250 mg/dL</li>
+                <li>• Check ketones if glucose &gt;250 mg/dL</li>
               </ul>
             </div>
 
