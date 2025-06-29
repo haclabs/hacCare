@@ -17,7 +17,7 @@ interface PatientDetailProps {
 }
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
-  const [activeSection, setActiveSection] = useState<'overview' | 'vitals' | 'medications' | 'notes' | 'admission-records' | 'advanced-directives' | 'physicians-orders' | 'consults' | 'labs-reports' | 'care-plan' | 'assessments'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'vitals' | 'mar' | 'notes' | 'admission-records' | 'advanced-directives' | 'physicians-orders' | 'consults' | 'labs-reports' | 'care-plan' | 'assessments'>('overview');
   const [activeVitalsTab, setActiveVitalsTab] = useState<'current' | 'neuro-vs' | 'frequent' | 'pre-op' | 'post-op'>('current');
   const [activeMedicationTab, setActiveMedicationTab] = useState<'scheduled' | 'prn' | 'iv-fluids' | 'diabetic'>('scheduled');
   const [activeAssessmentTab, setActiveAssessmentTab] = useState<'overview' | 'wounds' | 'fluid-balance' | 'bowel-record'>('overview');
@@ -161,7 +161,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const sections = [
     { id: 'overview', label: 'Overview' },
     { id: 'vitals', label: 'Vital Signs' },
-    { id: 'medications', label: 'Medications' },
+    { id: 'mar', label: 'MAR' },
     { id: 'notes', label: 'Notes' },
     { id: 'admission-records', label: 'Admission Records' },
     { id: 'advanced-directives', label: 'Advanced Directives' },
@@ -853,9 +853,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         )}
 
-        {activeSection === 'medications' && (
+        {activeSection === 'mar' && (
           <div className="space-y-6">
-            {/* Sub-navigation for Medications */}
+            {/* Sub-navigation for MAR */}
             <nav className="border-b border-gray-200">
               <div className="flex space-x-8">
                 {medicationSubTabs.map((tab) => (
