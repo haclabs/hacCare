@@ -517,8 +517,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 </p>
               </div>
               
-              {/* Code-128 Barcode - Positioned to the right of patient name */}
+              {/* Code-128 Barcode and Patient Labels Button - Now stacked vertically */}
               <div className="ml-6 flex-shrink-0 flex flex-col items-center space-y-3">
+                {/* Barcode positioned at the top */}
                 {generateCode128SVG(patient.patientId, {
                   width: 180,
                   height: 40,
@@ -526,7 +527,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   className: 'bg-white border border-gray-300 rounded-lg p-2'
                 })}
                 
-                {/* Patient Labels Button - Now positioned below the barcode */}
+                {/* Patient Labels Button positioned below the barcode */}
                 <button
                   onClick={() => setShowBracelet(true)}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
