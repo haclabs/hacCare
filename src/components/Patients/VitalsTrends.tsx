@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, X, Calendar, Activity, RefreshCw } from 'lucide-react';
+import { TrendingUp, X, Calendar, Activity, RefreshCw, BarChart3 } from 'lucide-react';
 import { VitalSigns } from '../../types';
 import { format, subHours } from 'date-fns';
 import { fetchPatientVitalsHistory } from '../../lib/patientService';
@@ -24,6 +24,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
   const [readings, setReadings] = useState<VitalReading[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasRealData, setHasRealData] = useState(false);
 
   // Load vitals history when trends are shown
   useEffect(() => {
@@ -52,47 +53,41 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
         respiratoryRate: vital.respiratory_rate
       }));
 
-      // If we have less than 5 readings, generate some mock data for demonstration
-      if (formattedReadings.length < 5) {
-        const mockReadings = generateMockReadings(currentVitals, 5 - formattedReadings.length);
-        setReadings([...formattedReadings, ...mockReadings]);
-      } else {
+      // Check if we have real data from the database
+      if (formattedReadings.length > 0) {
+        setHasRealData(true);
         setReadings(formattedReadings.slice(0, 5)); // Take last 5 readings
+      } else {
+        setHasRealData(false);
+        setReadings([]);
       }
     } catch (err: any) {
       console.error('Error loading vitals history:', err);
       setError(err.message || 'Failed to load vitals history');
-      
-      // Fallback to mock data
-      const mockReadings = generateMockReadings(currentVitals, 5);
-      setReadings(mockReadings);
+      setHasRealData(false);
+      setReadings([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate mock data for demonstration when no database history exists
-  const generateMockReadings = (currentVitals: VitalSigns, count: number): VitalReading[] => {
-    const readings: VitalReading[] = [];
-    for (let i = count - 1; i >= 0; i--) {
-      const baseTime = new Date(currentVitals.lastUpdated);
-      const timestamp = format(subHours(baseTime, i * 4), 'yyyy-MM-dd HH:mm:ss');
-      
-      // Generate realistic variations around current vitals
-      readings.push({
-        timestamp,
-        temperature: currentVitals.temperature + (Math.random() - 0.5) * 2,
-        heartRate: currentVitals.heartRate + Math.floor((Math.random() - 0.5) * 20),
-        bloodPressure: {
-          systolic: currentVitals.bloodPressure.systolic + Math.floor((Math.random() - 0.5) * 20),
-          diastolic: currentVitals.bloodPressure.diastolic + Math.floor((Math.random() - 0.5) * 15)
-        },
-        oxygenSaturation: Math.max(90, currentVitals.oxygenSaturation + Math.floor((Math.random() - 0.5) * 6)),
-        respiratoryRate: currentVitals.respiratoryRate + Math.floor((Math.random() - 0.5) * 6)
-      });
-    }
-    return readings;
-  };
+  const NoDataDisplay: React.FC = () => (
+    <div className="col-span-full">
+      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Vitals History Available</h3>
+        <p className="text-gray-600 mb-4">
+          Vital signs trends will appear here after the first vitals are recorded for this patient.
+        </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-md mx-auto">
+          <p className="text-blue-800 text-sm">
+            <strong>To see trends:</strong> Record vital signs using the "Update Vitals" button, 
+            then return here to view historical data and trends.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   const MiniChart: React.FC<{ 
     data: number[], 
@@ -264,7 +259,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
     );
   }
 
-  if (selectedChart) {
+  if (selectedChart && hasRealData && readings.length > 0) {
     const chartData = {
       temperature: {
         data: readings.map(r => r.temperature),
@@ -326,7 +321,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
           <Activity className="h-5 w-5 text-teal-600" />
-          <span>Vitals Trends - Last {readings.length} Readings</span>
+          <span>Vitals Trends{hasRealData ? ` - Last ${readings.length} Readings` : ''}</span>
         </h3>
         <div className="flex items-center space-x-2">
           <button
@@ -346,9 +341,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
       </div>
 
       {error && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <p className="text-yellow-800 text-sm">{error}</p>
-          <p className="text-yellow-600 text-xs mt-1">Showing sample data for demonstration</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-red-800 text-sm">{error}</p>
         </div>
       )}
 
@@ -357,6 +351,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
           <RefreshCw className="h-8 w-8 text-gray-400 mx-auto mb-4 animate-spin" />
           <p className="text-gray-500">Loading vitals history...</p>
         </div>
+      ) : !hasRealData || readings.length === 0 ? (
+        <NoDataDisplay />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <MiniChart
@@ -409,15 +405,17 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
         </div>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <Calendar className="h-4 w-4 text-blue-600" />
-          <p className="text-blue-800 text-sm font-medium">Reading Timeline</p>
+      {hasRealData && readings.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Calendar className="h-4 w-4 text-blue-600" />
+            <p className="text-blue-800 text-sm font-medium">Reading Timeline</p>
+          </div>
+          <p className="text-blue-700 text-xs">
+            Showing vitals history from database • Click any chart to view detailed trends
+          </p>
         </div>
-        <p className="text-blue-700 text-xs">
-          Showing vitals history from database • Click any chart to view detailed trends
-        </p>
-      </div>
+      )}
     </div>
   );
 };
