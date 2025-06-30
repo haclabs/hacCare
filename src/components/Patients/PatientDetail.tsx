@@ -12,6 +12,7 @@ import { format, differenceInDays } from 'date-fns';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { PatientBracelet } from './PatientBracelet';
+import { HospitalBracelet } from './HospitalBracelet';
 import { MedicationBarcode } from './MedicationBarcode';
 import { WoundAssessment } from './WoundAssessment';
 
@@ -24,6 +25,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [activeTab, setActiveTab] = useState('overview');
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showBracelet, setShowBracelet] = useState(false);
+  const [showWristband, setShowWristband] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<any>(null);
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
 
@@ -73,6 +75,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       >
                         <QrCode className="h-4 w-4" />
                         <span>Patient Labels</span>
+                      </button>
+                      <button
+                        onClick={() => setShowWristband(true)}
+                        className="text-sm text-gray-600 hover:text-blue-600 flex items-center space-x-1"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>Generate Patient Wristband</span>
                       </button>
                     </div>
                   </div>
@@ -210,7 +219,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   </span>
                 </div>
                 <p className="text-purple-700 font-medium">Blood Pressure</p>
-                <p className="text-purple-600 text-sm">Normal: &lt;120/80 mmHg</p>
+                <p className="text-purple-600 text-sm">Normal: <120/80 mmHg</p>
               </div>
 
               <div className="bg-green-50 rounded-lg p-6 border border-green-200">
@@ -936,6 +945,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         <PatientBracelet
           patient={patient}
           onClose={() => setShowBracelet(false)}
+        />
+      )}
+
+      {showWristband && (
+        <HospitalBracelet
+          patient={patient}
+          onClose={() => setShowWristband(false)}
         />
       )}
 
