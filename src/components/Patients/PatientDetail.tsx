@@ -159,6 +159,136 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   ];
 
+  // Mock Admission Records data
+  const admissionRecords = {
+    currentAdmission: {
+      admissionDate: '2024-01-15T08:30:00',
+      admissionType: 'Emergency',
+      admittingPhysician: 'Dr. Wilson',
+      chiefComplaint: 'Chest pain and shortness of breath',
+      admissionDiagnosis: 'Rule out myocardial infarction, hypertensive crisis',
+      admissionSource: 'Emergency Department',
+      admissionMethod: 'Ambulance',
+      roomAssignment: '302A',
+      insuranceInfo: {
+        primary: 'Blue Cross Blue Shield',
+        policyNumber: 'BC123456789',
+        groupNumber: 'GRP001',
+        authorization: 'AUTH-2024-001'
+      },
+      admissionVitals: {
+        temperature: 99.2,
+        bloodPressure: { systolic: 180, diastolic: 110 },
+        heartRate: 95,
+        respiratoryRate: 24,
+        oxygenSaturation: 92,
+        weight: '185 lbs',
+        height: '5\'10"'
+      },
+      admissionAssessment: 'Patient presents with acute onset chest pain radiating to left arm, associated with diaphoresis and nausea. History of hypertension and diabetes. Patient appears anxious and in moderate distress.',
+      allergies: ['Penicillin (rash)', 'Latex (contact dermatitis)'],
+      medications: [
+        { name: 'Lisinopril 10mg', frequency: 'Daily', lastTaken: '2024-01-15 morning' },
+        { name: 'Metformin 500mg', frequency: 'Twice daily', lastTaken: '2024-01-15 morning' }
+      ],
+      socialHistory: {
+        smoking: 'Former smoker, quit 5 years ago',
+        alcohol: 'Occasional social drinking',
+        drugs: 'Denies',
+        occupation: 'Retired teacher',
+        livingArrangement: 'Lives with spouse'
+      },
+      familyHistory: {
+        father: 'Deceased - heart disease at age 68',
+        mother: 'Deceased - stroke at age 72',
+        siblings: 'Brother with diabetes',
+        children: 'Two daughters, healthy'
+      }
+    },
+    previousAdmissions: [
+      {
+        admissionDate: '2023-08-15',
+        dischargeDate: '2023-08-18',
+        lengthOfStay: '3 days',
+        diagnosis: 'Diabetic ketoacidosis',
+        admittingPhysician: 'Dr. Chen',
+        dischargeDisposition: 'Home with follow-up',
+        complications: 'None',
+        procedures: 'IV fluid resuscitation, insulin therapy'
+      },
+      {
+        admissionDate: '2022-11-22',
+        dischargeDate: '2022-11-25',
+        lengthOfStay: '3 days',
+        diagnosis: 'Pneumonia, community-acquired',
+        admittingPhysician: 'Dr. Martinez',
+        dischargeDisposition: 'Home with antibiotics',
+        complications: 'None',
+        procedures: 'Chest X-ray, blood cultures'
+      },
+      {
+        admissionDate: '2021-06-10',
+        dischargeDate: '2021-06-12',
+        lengthOfStay: '2 days',
+        diagnosis: 'Hypertensive urgency',
+        admittingPhysician: 'Dr. Wilson',
+        dischargeDisposition: 'Home with medication adjustment',
+        complications: 'None',
+        procedures: 'Cardiac monitoring, medication titration'
+      }
+    ],
+    emergencyContacts: [
+      {
+        name: 'Mary Smith',
+        relationship: 'Spouse',
+        phone: '(555) 987-6543',
+        address: '123 Main St, Anytown, ST 12345',
+        isPrimary: true
+      },
+      {
+        name: 'Jennifer Smith',
+        relationship: 'Daughter',
+        phone: '(555) 456-7890',
+        address: '456 Oak Ave, Nearby City, ST 12346',
+        isPrimary: false
+      }
+    ],
+    advanceDirectives: {
+      hasLivingWill: true,
+      hasPowerOfAttorney: true,
+      powerOfAttorneyName: 'Mary Smith',
+      dnrStatus: 'Full code',
+      organDonor: true,
+      religiousPreferences: 'Protestant',
+      specialInstructions: 'Patient prefers family involvement in medical decisions'
+    },
+    nursingAssessments: [
+      {
+        date: '2024-01-15T09:00:00',
+        nurse: 'Sarah Johnson, RN',
+        shift: 'Day',
+        assessment: {
+          neurological: 'Alert and oriented x3, follows commands appropriately',
+          cardiovascular: 'Regular rate and rhythm, no murmurs, peripheral pulses present',
+          respiratory: 'Lungs clear bilaterally, no shortness of breath at rest',
+          gastrointestinal: 'Bowel sounds present, no nausea or vomiting',
+          genitourinary: 'Voiding without difficulty, urine clear yellow',
+          musculoskeletal: 'Ambulates independently, no weakness noted',
+          integumentary: 'Skin warm and dry, no lesions or pressure areas',
+          psychosocial: 'Anxious about diagnosis, supportive family present'
+        },
+        painAssessment: {
+          scale: '4/10',
+          location: 'Chest',
+          quality: 'Pressure-like',
+          interventions: 'Nitroglycerin administered, pain decreased to 2/10'
+        },
+        fallRisk: 'Low risk - independent ambulation, no history of falls',
+        skinIntegrity: 'Intact, no pressure areas identified'
+      }
+    ]
+  };
+
   // Split sections into two rows with color coding
   const sectionsRow1 = [
     { id: 'overview', label: 'Overview', color: 'bg-blue-100 text-blue-800 border-blue-200' },
@@ -690,6 +820,291 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   };
 
+  const renderAdmissionRecords = () => {
+    return (
+      <div className="space-y-6">
+        {/* Current Admission Overview */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Admission</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Admission Details</h4>
+              <div className="space-y-2 text-sm">
+                <p><strong>Admission Date:</strong> {format(new Date(admissionRecords.currentAdmission.admissionDate), 'MMM dd, yyyy HH:mm')}</p>
+                <p><strong>Type:</strong> {admissionRecords.currentAdmission.admissionType}</p>
+                <p><strong>Source:</strong> {admissionRecords.currentAdmission.admissionSource}</p>
+                <p><strong>Method:</strong> {admissionRecords.currentAdmission.admissionMethod}</p>
+                <p><strong>Attending Physician:</strong> {admissionRecords.currentAdmission.admittingPhysician}</p>
+                <p><strong>Room Assignment:</strong> {admissionRecords.currentAdmission.roomAssignment}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Insurance Information</h4>
+              <div className="space-y-2 text-sm">
+                <p><strong>Primary Insurance:</strong> {admissionRecords.currentAdmission.insuranceInfo.primary}</p>
+                <p><strong>Policy Number:</strong> {admissionRecords.currentAdmission.insuranceInfo.policyNumber}</p>
+                <p><strong>Group Number:</strong> {admissionRecords.currentAdmission.insuranceInfo.groupNumber}</p>
+                <p><strong>Authorization:</strong> {admissionRecords.currentAdmission.insuranceInfo.authorization}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h4 className="font-medium text-gray-900 mb-3">Chief Complaint & Diagnosis</h4>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm mb-2"><strong>Chief Complaint:</strong> {admissionRecords.currentAdmission.chiefComplaint}</p>
+              <p className="text-sm"><strong>Admission Diagnosis:</strong> {admissionRecords.currentAdmission.admissionDiagnosis}</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h4 className="font-medium text-gray-900 mb-3">Admission Assessment</h4>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">{admissionRecords.currentAdmission.admissionAssessment}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Admission Vital Signs */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Admission Vital Signs</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-blue-900">{admissionRecords.currentAdmission.admissionVitals.temperature}°F</p>
+              <p className="text-xs text-blue-600">Temperature</p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-red-900">{admissionRecords.currentAdmission.admissionVitals.heartRate}</p>
+              <p className="text-xs text-red-600">Heart Rate</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-purple-900">
+                {admissionRecords.currentAdmission.admissionVitals.bloodPressure.systolic}/{admissionRecords.currentAdmission.admissionVitals.bloodPressure.diastolic}
+              </p>
+              <p className="text-xs text-purple-600">Blood Pressure</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-3 text-center">
+              <p className="text-lg font-bold text-green-900">{admissionRecords.currentAdmission.admissionVitals.oxygenSaturation}%</p>
+              <p className="text-xs text-green-600">O2 Saturation</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-sm"><strong>Weight:</strong> {admissionRecords.currentAdmission.admissionVitals.weight}</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-sm"><strong>Height:</strong> {admissionRecords.currentAdmission.admissionVitals.height}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Social & Family History */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Social History</h3>
+            <div className="space-y-2 text-sm">
+              <p><strong>Smoking:</strong> {admissionRecords.currentAdmission.socialHistory.smoking}</p>
+              <p><strong>Alcohol:</strong> {admissionRecords.currentAdmission.socialHistory.alcohol}</p>
+              <p><strong>Drugs:</strong> {admissionRecords.currentAdmission.socialHistory.drugs}</p>
+              <p><strong>Occupation:</strong> {admissionRecords.currentAdmission.socialHistory.occupation}</p>
+              <p><strong>Living Arrangement:</strong> {admissionRecords.currentAdmission.socialHistory.livingArrangement}</p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Family History</h3>
+            <div className="space-y-2 text-sm">
+              <p><strong>Father:</strong> {admissionRecords.currentAdmission.familyHistory.father}</p>
+              <p><strong>Mother:</strong> {admissionRecords.currentAdmission.familyHistory.mother}</p>
+              <p><strong>Siblings:</strong> {admissionRecords.currentAdmission.familyHistory.siblings}</p>
+              <p><strong>Children:</strong> {admissionRecords.currentAdmission.familyHistory.children}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Emergency Contacts */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contacts</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {admissionRecords.emergencyContacts.map((contact, index) => (
+              <div key={index} className={`border rounded-lg p-4 ${contact.isPrimary ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900">{contact.name}</h4>
+                  {contact.isPrimary && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">Primary</span>
+                  )}
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Relationship:</strong> {contact.relationship}</p>
+                  <p><strong>Phone:</strong> {contact.phone}</p>
+                  <p><strong>Address:</strong> {contact.address}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Advance Directives */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Advance Directives</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${admissionRecords.advanceDirectives.hasLivingWill ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-sm">Living Will: {admissionRecords.advanceDirectives.hasLivingWill ? 'Yes' : 'No'}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${admissionRecords.advanceDirectives.hasPowerOfAttorney ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-sm">Power of Attorney: {admissionRecords.advanceDirectives.hasPowerOfAttorney ? 'Yes' : 'No'}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${admissionRecords.advanceDirectives.organDonor ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-sm">Organ Donor: {admissionRecords.advanceDirectives.organDonor ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <p><strong>POA Name:</strong> {admissionRecords.advanceDirectives.powerOfAttorneyName}</p>
+              <p><strong>DNR Status:</strong> {admissionRecords.advanceDirectives.dnrStatus}</p>
+              <p><strong>Religious Preferences:</strong> {admissionRecords.advanceDirectives.religiousPreferences}</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-sm text-yellow-800">
+              <strong>Special Instructions:</strong> {admissionRecords.advanceDirectives.specialInstructions}
+            </p>
+          </div>
+        </div>
+
+        {/* Nursing Assessment */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Initial Nursing Assessment</h3>
+          
+          {admissionRecords.nursingAssessments.map((assessment, index) => (
+            <div key={index} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  <strong>Assessed by:</strong> {assessment.nurse} • {assessment.shift} Shift
+                </p>
+                <p className="text-sm text-gray-600">
+                  {format(new Date(assessment.date), 'MMM dd, yyyy HH:mm')}
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Neurological</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.neurological}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Cardiovascular</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.cardiovascular}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Respiratory</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.respiratory}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Gastrointestinal</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.gastrointestinal}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Genitourinary</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.genitourinary}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Musculoskeletal</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.musculoskeletal}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Integumentary</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.integumentary}</p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-1">Psychosocial</h5>
+                    <p className="text-sm text-gray-700">{assessment.assessment.psychosocial}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <h5 className="font-medium text-red-900 mb-1">Pain Assessment</h5>
+                  <div className="text-sm text-red-800 space-y-1">
+                    <p><strong>Scale:</strong> {assessment.painAssessment.scale}</p>
+                    <p><strong>Location:</strong> {assessment.painAssessment.location}</p>
+                    <p><strong>Quality:</strong> {assessment.painAssessment.quality}</p>
+                    <p><strong>Interventions:</strong> {assessment.painAssessment.interventions}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <h5 className="font-medium text-yellow-900 mb-1">Fall Risk</h5>
+                  <p className="text-sm text-yellow-800">{assessment.fallRisk}</p>
+                </div>
+                
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <h5 className="font-medium text-green-900 mb-1">Skin Integrity</h5>
+                  <p className="text-sm text-green-800">{assessment.skinIntegrity}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Previous Admissions */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Previous Admissions</h3>
+          
+          <div className="space-y-4">
+            {admissionRecords.previousAdmissions.map((admission, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Admission Details</h5>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Date:</strong> {admission.admissionDate}</p>
+                      <p><strong>Discharge:</strong> {admission.dischargeDate}</p>
+                      <p><strong>Length of Stay:</strong> {admission.lengthOfStay}</p>
+                      <p><strong>Physician:</strong> {admission.admittingPhysician}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Clinical Information</h5>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Diagnosis:</strong> {admission.diagnosis}</p>
+                      <p><strong>Procedures:</strong> {admission.procedures}</p>
+                      <p><strong>Complications:</strong> {admission.complications}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Discharge</h5>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Disposition:</strong> {admission.dischargeDisposition}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       <div className="border-b border-gray-200 p-6">
@@ -1010,14 +1425,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         )}
 
-        {/* Placeholder sections for new tabs */}
-        {activeSection === 'admission-records' && (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Admission Records</h2>
-            <p className="text-gray-600">Patient admission documentation, intake forms, and admission history coming soon...</p>
-          </div>
-        )}
+        {/* Admission Records Section */}
+        {activeSection === 'admission-records' && renderAdmissionRecords()}
 
+        {/* Placeholder sections for new tabs */}
         {activeSection === 'advanced-directives' && (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Advanced Directives</h2>
