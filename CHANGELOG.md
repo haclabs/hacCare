@@ -5,6 +5,49 @@ All notable changes to the hacCare Hospital Patient Record System will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2024-12-29
+
+### Added
+- **Comprehensive Admission Records**: Added detailed demo content to the Admission Records tab
+  - Current admission details with insurance information and attending physician
+  - Complete admission vital signs and measurements
+  - Detailed social and family history sections
+  - Emergency contacts with primary and secondary contact information
+  - Advance directives including living will, DNR status, and religious preferences
+  - Initial nursing assessment with head-to-toe evaluation
+  - Previous admissions history with outcomes and complications
+- **Enhanced Logo System**: Replaced image-based logo with custom Heart icon design
+  - Consistent branding across login, loading, and header components
+  - Heart icon with heartbeat overlay for medical theme
+  - Eliminates loading issues with external image files
+
+### Improved
+- **Patient Detail Navigation**: Split navigation tabs into two rows with color-coded sections
+  - First row: Overview, Vital Signs, MAR, Notes, Admission Records, Advanced Directives
+  - Second row: Physicians Orders, Consults, Labs & Reports, Care Plan, Assessments
+  - Color-coded tabs for better visual organization and navigation
+  - Responsive design maintains usability across screen sizes
+- **User Interface Consistency**: Standardized logo appearance across all components
+  - Unified design language with Heart icon and haccare branding
+  - Improved visual hierarchy and professional appearance
+  - Better accessibility with consistent icon usage
+
+### Fixed
+- **JSX Syntax Error**: Resolved invalid character error in diabetic care guidelines
+  - Fixed ">" character encoding in glucose threshold text
+  - Improved text rendering for medical measurements and thresholds
+  - Enhanced code stability and build process reliability
+- **Logo Loading Issues**: Eliminated image loading problems with custom icon solution
+  - Removed dependency on external image files
+  - Faster loading times with SVG-based icons
+  - Consistent display across all browsers and network conditions
+
+### Technical
+- **Code Quality**: Enhanced JSX syntax compliance and error handling
+  - Improved build process stability
+  - Better error reporting and debugging capabilities
+  - Consistent code formatting and structure
+
 ## [2.2.0] - 2024-01-25
 
 ### Added
