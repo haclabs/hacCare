@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, Heart } from 'lucide-react';
 
 export const LoadingSpinner: React.FC = () => {
   const [showTimeout, setShowTimeout] = useState(false);
@@ -36,17 +36,36 @@ export const LoadingSpinner: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="text-center max-w-md">
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 flex items-center justify-center">
-            <img 
-              src="/logo copy.png" 
-              alt="HacCare Logo" 
-              className="w-full h-full object-contain opacity-75"
-              style={{ maxWidth: '80px', maxHeight: '80px' }}
-              onError={(e) => {
-                // Fallback to SVG if PNG fails
-                e.currentTarget.src = "/haccare-logo.svg";
-              }}
-            />
+          <div className="flex items-center space-x-3">
+            {/* Heart Icon */}
+            <div className="relative">
+              <Heart 
+                className="h-16 w-16 text-blue-600 fill-current opacity-75" 
+                strokeWidth={1.5}
+              />
+              {/* Heartbeat line overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg 
+                  className="h-6 w-6 text-white" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                >
+                  <path d="M3 12h3l2-4 4 8 2-4h3" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* HacCare Text */}
+            <div className="text-left">
+              <h1 className="text-3xl font-bold text-gray-800 leading-none opacity-75">
+                haccare
+              </h1>
+              <p className="text-sm text-gray-500 font-medium mt-1">
+                patient record system
+              </p>
+            </div>
           </div>
         </div>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>

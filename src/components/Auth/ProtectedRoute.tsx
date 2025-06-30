@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { LoginForm } from './LoginForm';
 import { LoadingSpinner } from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { User, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
+import { User, AlertCircle, RefreshCw, CheckCircle, Heart } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -70,17 +70,36 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 flex items-center justify-center">
-                <img 
-                  src="/logo copy.png" 
-                  alt="HacCare Logo" 
-                  className="w-full h-full object-contain"
-                  style={{ maxWidth: '80px', maxHeight: '80px' }}
-                  onError={(e) => {
-                    // Fallback to SVG if PNG fails
-                    e.currentTarget.src = "/haccare-logo.svg";
-                  }}
-                />
+              <div className="flex items-center space-x-3">
+                {/* Heart Icon */}
+                <div className="relative">
+                  <Heart 
+                    className="h-16 w-16 text-blue-600 fill-current" 
+                    strokeWidth={1.5}
+                  />
+                  {/* Heartbeat line overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg 
+                      className="h-6 w-6 text-white" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                    >
+                      <path d="M3 12h3l2-4 4 8 2-4h3" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* HacCare Text */}
+                <div className="text-left">
+                  <h1 className="text-3xl font-bold text-gray-800 leading-none">
+                    haccare
+                  </h1>
+                  <p className="text-sm text-gray-500 font-medium mt-1">
+                    patient record system
+                  </p>
+                </div>
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Profile Setup Required</h1>
