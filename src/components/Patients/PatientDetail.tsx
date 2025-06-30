@@ -10,6 +10,7 @@ import { VitalsTrends } from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
 import { WoundAssessment } from './WoundAssessment';
 import { MedicationBarcode } from './MedicationBarcode';
+import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -707,7 +708,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="bg-blue-100 p-3 rounded-full">
             <User className="h-6 w-6 text-blue-600" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">
               {patient.firstName} {patient.lastName}
             </h1>
@@ -723,6 +724,21 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <QrCode className="h-3 w-3" />
                 <span>Patient Labels</span>
               </button>
+            </div>
+          </div>
+          
+          {/* UPC-128 Barcode next to patient name */}
+          <div className="flex items-center space-x-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="text-center">
+                <p className="text-xs text-gray-600 mb-2 font-medium">Patient ID Barcode</p>
+                {generateCode128SVG(patient.patientId, {
+                  width: 120,
+                  height: 30,
+                  showText: true,
+                  className: 'mx-auto'
+                })}
+              </div>
             </div>
           </div>
         </div>

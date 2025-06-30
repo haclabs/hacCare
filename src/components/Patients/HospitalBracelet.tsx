@@ -2,20 +2,21 @@ import React from 'react';
 import { Patient } from '../../types';
 import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
+import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 /**
  * Hospital Bracelet Component
  * 
  * Generates a realistic vector-style hospital bracelet for patient identification.
  * Features a professional medical design with patient information, allergies,
- * and scannable barcode for quick identification.
+ * and scannable UPC-128 barcode for quick identification.
  * 
  * Features:
  * - Vector-based bracelet design
  * - Patient name in Last, First format
  * - Date of birth
  * - Allergy alerts in red
- * - Barcode with patient ID
+ * - UPC-128 barcode with patient ID
  * - Print and download functionality
  * - Realistic hospital bracelet appearance
  * 
@@ -29,59 +30,6 @@ interface HospitalBraceletProps {
 }
 
 export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose }) => {
-  /**
-   * Generate barcode pattern for patient ID
-   * Creates a realistic barcode representation using the patient ID
-   * 
-   * @param {string} patientId - Patient ID to encode
-   * @returns {JSX.Element} SVG barcode element
-   */
-  const generateBarcode = (patientId: string) => {
-    // Create barcode pattern based on patient ID
-    const barcodeData = patientId.split('').map((char, index) => {
-      const charCode = char.charCodeAt(0);
-      const width = (charCode % 4) + 2; // Vary bar width 2-5 (more bold)
-      const isWide = (charCode + index) % 2 === 0;
-      return { 
-        width: width * 1.5, 
-        height: isWide ? 45 : 40, // Taller bars
-        spacing: 1
-      };
-    });
-
-    // Calculate total width for centering
-    const totalBarcodeWidth = 20 + (barcodeData.length * 10) + 20; // guards + data + guards
-    const svgWidth = 280;
-    const startX = (svgWidth - totalBarcodeWidth) / 2;
-
-    return (
-      <g>
-        {/* Start guard - more bold */}
-        <rect x={startX} y="0" width="4" height="45" fill="#000" />
-        <rect x={startX + 6} y="0" width="4" height="45" fill="#000" />
-        
-        {/* Data bars - centered and more bold */}
-        {barcodeData.map((bar, index) => {
-          const x = startX + 15 + (index * 10);
-          return (
-            <rect
-              key={index}
-              x={x}
-              y="0"
-              width={bar.width}
-              height={bar.height}
-              fill="#000"
-            />
-          );
-        })}
-        
-        {/* End guard - more bold */}
-        <rect x={startX + 15 + (barcodeData.length * 10) + 8} y="0" width="4" height="45" fill="#000" />
-        <rect x={startX + 15 + (barcodeData.length * 10) + 14} y="0" width="4" height="45" fill="#000" />
-      </g>
-    );
-  };
-
   /**
    * Handle print functionality
    * Opens print dialog with bracelet design
@@ -292,7 +240,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
           <div className="bg-gray-100 p-8 rounded-lg overflow-x-auto">
             <div className="text-center mb-4">
               <h4 className="text-lg font-medium text-gray-900">Hospital Patient Identification Bracelet</h4>
-              <p className="text-sm text-gray-600">Professional medical identification with security features</p>
+              <p className="text-sm text-gray-600">Professional medical identification with UPC-128 barcode and security features</p>
             </div>
             
             <div 
@@ -359,7 +307,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 </div>
               )}
 
-              {/* Barcode Section - Perfectly centered with proper spacing */}
+              {/* UPC-128 Barcode Section - Perfectly centered with proper spacing */}
               <div 
                 className="absolute bg-white rounded-lg flex flex-col items-center justify-center"
                 style={{ 
@@ -372,11 +320,14 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
               >
                 <div className="text-sm text-gray-600 mb-3">Scan for Patient Information</div>
                 
-                {/* Perfectly centered barcode */}
+                {/* UPC-128 Barcode - Perfectly centered */}
                 <div className="flex justify-center mb-3">
-                  <svg width="280" height="50" className="mx-auto">
-                    {generateBarcode(patient.patientId)}
-                  </svg>
+                  {generateCode128SVG(patient.patientId, {
+                    width: 200,
+                    height: 40,
+                    showText: false,
+                    className: 'mx-auto'
+                  })}
                 </div>
                 
                 {/* Centered patient ID below barcode */}
@@ -434,7 +385,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h4 className="font-medium text-green-900 mb-2">Security Features</h4>
               <ul className="text-sm text-green-800 space-y-1">
-                <li>• Unique patient ID barcode for scanning</li>
+                <li>• UPC-128 barcode for reliable scanning</li>
                 <li>• Tamper-evident security pattern</li>
                 <li>• High-contrast allergy alerts in red</li>
                 <li>• Medical symbol for quick identification</li>
@@ -477,7 +428,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 <p>• Durability: Water and tear resistant</p>
               </div>
               <div>
-                <p>• Barcode: Code 128 format for compatibility</p>
+                <p>• Barcode: UPC-128 format for compatibility</p>
                 <p>• Colors: High contrast for readability</p>
                 <p>• Security: Unique ID and pattern</p>
                 <p>• Compliance: HIPAA and hospital standards</p>
