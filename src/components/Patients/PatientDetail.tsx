@@ -159,18 +159,22 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   ];
 
-  const sections = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'vitals', label: 'Vital Signs' },
-    { id: 'mar', label: 'MAR' },
-    { id: 'notes', label: 'Notes' },
-    { id: 'admission-records', label: 'Admission Records' },
-    { id: 'advanced-directives', label: 'Advanced Directives' },
-    { id: 'physicians-orders', label: 'Physicians Orders' },
-    { id: 'consults', label: 'Consults' },
-    { id: 'labs-reports', label: 'Labs & Reports' },
-    { id: 'care-plan', label: 'Care Plan' },
-    { id: 'assessments', label: 'Assessments' },
+  // Split sections into two rows with color coding
+  const sectionsRow1 = [
+    { id: 'overview', label: 'Overview', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+    { id: 'vitals', label: 'Vital Signs', color: 'bg-green-100 text-green-800 border-green-200' },
+    { id: 'mar', label: 'MAR', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+    { id: 'notes', label: 'Notes', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    { id: 'admission-records', label: 'Admission Records', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+    { id: 'advanced-directives', label: 'Advanced Directives', color: 'bg-red-100 text-red-800 border-red-200' }
+  ];
+
+  const sectionsRow2 = [
+    { id: 'physicians-orders', label: 'Physicians Orders', color: 'bg-teal-100 text-teal-800 border-teal-200' },
+    { id: 'consults', label: 'Consults', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+    { id: 'labs-reports', label: 'Labs & Reports', color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
+    { id: 'care-plan', label: 'Care Plan', color: 'bg-pink-100 text-pink-800 border-pink-200' },
+    { id: 'assessments', label: 'Assessments', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
   ];
 
   const vitalsSubTabs = [
@@ -548,7 +552,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <li>• Check blood glucose before meals and at bedtime</li>
                 <li>• Document glucose readings and insulin given</li>
                 <li>• Monitor for signs of hypo/hyperglycemia</li>
-                <li>• Check ketones if glucose &gt;250 mg/dL</li>
+                <li>• Check ketones if glucose >250 mg/dL</li>
                 <li>• Follow sliding scale insulin protocol</li>
               </ul>
             </div>
@@ -743,21 +747,42 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         </div>
 
+        {/* Two-row navigation with colored boxes */}
         <nav className="mt-6">
-          <div className="flex space-x-8 overflow-x-auto">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id as any)}
-                className={`pb-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
-                  activeSection === section.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {section.label}
-              </button>
-            ))}
+          <div className="space-y-3">
+            {/* First Row */}
+            <div className="flex flex-wrap gap-2">
+              {sectionsRow1.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id as any)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                    activeSection === section.id
+                      ? section.color
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {section.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Second Row */}
+            <div className="flex flex-wrap gap-2">
+              {sectionsRow2.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id as any)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors border ${
+                    activeSection === section.id
+                      ? section.color
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {section.label}
+                </button>
+              ))}
+            </div>
           </div>
         </nav>
       </div>
