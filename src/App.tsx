@@ -10,7 +10,8 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { UserManagement } from './components/Users/UserManagement';
 import { Documentation } from './components/Documentation/Documentation';
 import { Changelog } from './components/Changelog/Changelog';
-import { mockPatients, mockAlerts } from './data/mockData';
+import { usePatients } from './contexts/PatientContext';
+import { mockAlerts } from './data/mockData';
 import { Patient, Alert } from './types';
 
 /**
@@ -36,6 +37,9 @@ function App() {
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
+
+  // Get patients from context
+  const { patients } = usePatients();
 
   /**
    * Handle alert acknowledgment
@@ -75,19 +79,19 @@ function App() {
         return (
           <div className="space-y-6">
             {/* Dashboard Statistics */}
-            <QuickStats patients={mockPatients} alerts={alerts} />
+            <QuickStats patients={patients} alerts={alerts} />
             
             {/* Patient List */}
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">My Patients</h2>
                 <div className="text-sm text-gray-500">
-                  {mockPatients.length} patients assigned
+                  {patients.length} patients assigned
                 </div>
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {mockPatients.map((patient) => (
+                {patients.map((patient) => (
                   <PatientCard
                     key={patient.id}
                     patient={patient}
