@@ -17,8 +17,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Log configuration status for debugging
 console.log('🔧 Supabase Environment Check:');
-console.log('  URL:', supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'Not set');
-console.log('  Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'Not set');
+console.log('  URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'Not set');
+console.log('  Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 30)}...` : 'Not set');
 
 /**
  * Validate Supabase configuration
@@ -33,8 +33,46 @@ const hasValidConfig = supabaseUrl &&
 
 console.log('✅ Configuration valid:', hasValidConfig);
 
-if (!hasValidConfig) {
-  console.warn('⚠️ Supabase is not configured. Please set up your Supabase project.');
+// Test connection to Supabase
+const testSupabaseConnection = async () => {
+  if (!hasValidConfig) {
+    console.warn('⚠️ Supabase is not configured. Please set up your Supabase project.');
+    return false;
+  }
+
+  try {
+    console.log('🔍 Testing Supabase connection...');
+    const testClient = createClient(supabaseUrl, supabaseAnonKey);
+    
+    // Simple test query to check connectivity
+    const { data, error } = await testClient
+      .from('user_profiles')
+      .select('count')
+      .limit(1);
+    
+    if (error) {
+      console.error('❌ Supabase connection test failed:', error.message);
+      if (error.message.includes('Failed to fetch')) {
+        console.error('💡 This usually means:');
+        console.error('   - The Supabase URL is incorrect');
+        console.error('   - The Supabase project is paused or deleted');
+        console.error('   - Network connectivity issues');
+        console.error('   - CORS issues (check Supabase project settings)');
+      }
+      return false;
+    }
+    
+    console.log('✅ Supabase connection test successful');
+    return true;
+  } catch (error: any) {
+    console.error('❌ Supabase connection test error:', error.message);
+    return false;
+  }
+};
+
+// Run connection test in development
+if (import.meta.env.DEV && hasValidConfig) {
+  testSupabaseConnection();
 }
 
 /**

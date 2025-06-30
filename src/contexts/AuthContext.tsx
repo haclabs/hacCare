@@ -241,6 +241,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📋 Fetching profile for user:', userId);
       setProfileLoading(true);
       
+      // First, test if we can reach Supabase at all
+      try {
+        const healthCheck = await Promise.race([
+          fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`, {
+            method: 'HEAD',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            }
+          }),
+          new Promise<Response>((_, reject) => 
+            setTimeout(() => reject(new Error('Health check timeout')), 5000)
+          )
+        ]);
+        
+        if (!healthCheck.ok && healthCheck.status !== 404) {
+          throw new Error(`Supabase health check failed: ${healthCheck.status}`);
+        }
+        
+        console.log('✅ Supabase connectivity confirmed');
+      } catch (healthError: any) {
+        console.error('❌ Supabase health check failed:', healthError.message);
+        
+        if (healthError.message?.includes('Failed to fetch') || 
+            healthError.message?.includes('NetworkError') ||
+            healthError.message?.includes('timeout')) {
+          console.error('🌐 Cannot reach Supabase - check your internet connection and Supabase URL');
+          console.error('💡 Current Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+          console.error('💡 Verify this URL is correct in your Supabase project settings');
+          setProfile(null);
+          return;
+        }
+        
+        // Continue with profile fetch if it's just a different error
+      }
+      
       // Fetch profile with timeout protection (15 seconds)
       const result = await Promise.race([
         supabase
@@ -268,7 +304,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                    error.message?.includes('NetworkError') ||
                    error.message?.includes('fetch')) {
           // Network connectivity issues
-          console.error('🌐 Network error fetching profile - retrying in background');
+          console.error('🌐 Network error fetching profile');
+          console.error('💡 Check your internet connection and Supabase configuration');
+          console.error('💡 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+          console.error('💡 Make sure your Supabase project is active and accessible');
           setProfile(null);
         } else if (error.code === '42501' || error.message?.includes('permission denied')) {
           // Permission/RLS policy issues
@@ -291,7 +330,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           error.message?.includes('NetworkError') ||
           error.message?.includes('timeout') ||
           error.message?.includes('fetch')) {
-        console.error('🌐 Network connectivity issue - profile will be retried later');
+        console.error('🌐 Network connectivity issue - check your Supabase configuration');
+        console.error('💡 Current Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+        console.error('💡 Current API Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+        console.error('💡 Verify these values in your Supabase project settings');
       }
       
       setProfile(null);
