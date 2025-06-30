@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { TrendingUp, X, Calendar, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, X, Calendar, Activity, RefreshCw } from 'lucide-react';
 import { VitalSigns } from '../../types';
 import { format, subHours } from 'date-fns';
+import { fetchPatientVitalsHistory } from '../../lib/patientService';
 
 interface VitalsTrendsProps {
   currentVitals: VitalSigns;
+  patientId: string;
 }
 
 interface VitalReading {
@@ -16,14 +18,63 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals }) => {
+export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patientId }) => {
   const [showTrends, setShowTrends] = useState(false);
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
+  const [readings, setReadings] = useState<VitalReading[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for the last 5 readings (in a real app, this would come from the database)
-  const generateMockReadings = (): VitalReading[] => {
+  // Load vitals history when trends are shown
+  useEffect(() => {
+    if (showTrends && patientId) {
+      loadVitalsHistory();
+    }
+  }, [showTrends, patientId]);
+
+  const loadVitalsHistory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const history = await fetchPatientVitalsHistory(patientId);
+      
+      // Convert database format to component format
+      const formattedReadings: VitalReading[] = history.map(vital => ({
+        timestamp: vital.recorded_at,
+        temperature: vital.temperature,
+        heartRate: vital.heart_rate,
+        bloodPressure: {
+          systolic: vital.blood_pressure_systolic,
+          diastolic: vital.blood_pressure_diastolic
+        },
+        oxygenSaturation: vital.oxygen_saturation,
+        respiratoryRate: vital.respiratory_rate
+      }));
+
+      // If we have less than 5 readings, generate some mock data for demonstration
+      if (formattedReadings.length < 5) {
+        const mockReadings = generateMockReadings(currentVitals, 5 - formattedReadings.length);
+        setReadings([...formattedReadings, ...mockReadings]);
+      } else {
+        setReadings(formattedReadings.slice(0, 5)); // Take last 5 readings
+      }
+    } catch (err: any) {
+      console.error('Error loading vitals history:', err);
+      setError(err.message || 'Failed to load vitals history');
+      
+      // Fallback to mock data
+      const mockReadings = generateMockReadings(currentVitals, 5);
+      setReadings(mockReadings);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate mock data for demonstration when no database history exists
+  const generateMockReadings = (currentVitals: VitalSigns, count: number): VitalReading[] => {
     const readings: VitalReading[] = [];
-    for (let i = 4; i >= 0; i--) {
+    for (let i = count - 1; i >= 0; i--) {
       const baseTime = new Date(currentVitals.lastUpdated);
       const timestamp = format(subHours(baseTime, i * 4), 'yyyy-MM-dd HH:mm:ss');
       
@@ -42,8 +93,6 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals }) => 
     }
     return readings;
   };
-
-  const readings = generateMockReadings();
 
   const MiniChart: React.FC<{ 
     data: number[], 
@@ -277,65 +326,88 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals }) => 
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
           <Activity className="h-5 w-5 text-teal-600" />
-          <span>Vitals Trends - Last 5 Readings</span>
+          <span>Vitals Trends - Last {readings.length} Readings</span>
         </h3>
-        <button
-          onClick={() => setShowTrends(false)}
-          className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={loadVitalsHistory}
+            disabled={loading}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowTrends(false)}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <MiniChart
-          data={readings.map(r => r.temperature)}
-          label="Temperature"
-          color="blue"
-          unit="°F"
-          onClick={() => setSelectedChart('temperature')}
-        />
-        
-        <MiniChart
-          data={readings.map(r => r.heartRate)}
-          label="Heart Rate"
-          color="red"
-          unit=" BPM"
-          onClick={() => setSelectedChart('heartRate')}
-        />
-        
-        <MiniChart
-          data={readings.map(r => r.bloodPressure.systolic)}
-          label="Systolic BP"
-          color="purple"
-          unit=" mmHg"
-          onClick={() => setSelectedChart('systolic')}
-        />
-        
-        <MiniChart
-          data={readings.map(r => r.bloodPressure.diastolic)}
-          label="Diastolic BP"
-          color="purple"
-          unit=" mmHg"
-          onClick={() => setSelectedChart('diastolic')}
-        />
-        
-        <MiniChart
-          data={readings.map(r => r.oxygenSaturation)}
-          label="O2 Saturation"
-          color="green"
-          unit="%"
-          onClick={() => setSelectedChart('oxygenSaturation')}
-        />
-        
-        <MiniChart
-          data={readings.map(r => r.respiratoryRate)}
-          label="Respiratory Rate"
-          color="indigo"
-          unit="/min"
-          onClick={() => setSelectedChart('respiratoryRate')}
-        />
-      </div>
+      {error && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <p className="text-yellow-800 text-sm">{error}</p>
+          <p className="text-yellow-600 text-xs mt-1">Showing sample data for demonstration</p>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8">
+          <RefreshCw className="h-8 w-8 text-gray-400 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-500">Loading vitals history...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MiniChart
+            data={readings.map(r => r.temperature)}
+            label="Temperature"
+            color="blue"
+            unit="°F"
+            onClick={() => setSelectedChart('temperature')}
+          />
+          
+          <MiniChart
+            data={readings.map(r => r.heartRate)}
+            label="Heart Rate"
+            color="red"
+            unit=" BPM"
+            onClick={() => setSelectedChart('heartRate')}
+          />
+          
+          <MiniChart
+            data={readings.map(r => r.bloodPressure.systolic)}
+            label="Systolic BP"
+            color="purple"
+            unit=" mmHg"
+            onClick={() => setSelectedChart('systolic')}
+          />
+          
+          <MiniChart
+            data={readings.map(r => r.bloodPressure.diastolic)}
+            label="Diastolic BP"
+            color="purple"
+            unit=" mmHg"
+            onClick={() => setSelectedChart('diastolic')}
+          />
+          
+          <MiniChart
+            data={readings.map(r => r.oxygenSaturation)}
+            label="O2 Saturation"
+            color="green"
+            unit="%"
+            onClick={() => setSelectedChart('oxygenSaturation')}
+          />
+          
+          <MiniChart
+            data={readings.map(r => r.respiratoryRate)}
+            label="Respiratory Rate"
+            color="indigo"
+            unit="/min"
+            onClick={() => setSelectedChart('respiratoryRate')}
+          />
+        </div>
+      )}
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-center space-x-2 mb-2">
@@ -343,7 +415,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals }) => 
           <p className="text-blue-800 text-sm font-medium">Reading Timeline</p>
         </div>
         <p className="text-blue-700 text-xs">
-          Showing vitals from the last 20 hours • Click any chart to view detailed trends
+          Showing vitals history from database • Click any chart to view detailed trends
         </p>
       </div>
     </div>

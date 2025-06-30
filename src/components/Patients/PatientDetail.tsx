@@ -15,6 +15,7 @@ import { PatientBracelet } from './PatientBracelet';
 import { HospitalBracelet } from './HospitalBracelet';
 import { MedicationBarcode } from './MedicationBarcode';
 import { WoundAssessment } from './WoundAssessment';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -28,13 +29,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showWristband, setShowWristband] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<any>(null);
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
+  
+  const { getPatient } = usePatients();
 
-  const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
-  const daysAdmitted = differenceInDays(new Date(), new Date(patient.admissionDate));
+  // Get the most current patient data from context
+  const currentPatient = getPatient(patient.id) || patient;
+
+  const age = new Date().getFullYear() - new Date(currentPatient.dateOfBirth).getFullYear();
+  const daysAdmitted = differenceInDays(new Date(), new Date(currentPatient.admissionDate));
 
   const handleSaveVitals = (newVitals: any) => {
-    // In a real app, this would update the patient data
-    console.log('Saving vitals:', newVitals);
+    // The VitalSignsEditor now handles saving to database
+    // and refreshes the patient data automatically
     setShowVitalsEditor(false);
   };
 
@@ -62,12 +68,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                      {patient.firstName} {patient.lastName}
+                      {currentPatient.firstName} {currentPatient.lastName}
                     </h2>
-                    <p className="text-gray-600">{age} years old • {patient.gender}</p>
+                    <p className="text-gray-600">{age} years old • {currentPatient.gender}</p>
                     <div className="flex items-center space-x-4 mt-2">
                       <span className="text-sm text-blue-600 font-mono bg-blue-50 px-2 py-1 rounded">
-                        {patient.patientId}
+                        {currentPatient.patientId}
                       </span>
                       <button
                         onClick={() => setShowBracelet(true)}
@@ -86,8 +92,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     </div>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getConditionColor(patient.condition)}`}>
-                  {patient.condition}
+                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getConditionColor(currentPatient.condition)}`}>
+                  {currentPatient.condition}
                 </span>
               </div>
 
@@ -95,11 +101,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2 text-gray-600">
                     <MapPin className="h-4 w-4" />
-                    <span>Room {patient.roomNumber}{patient.bedNumber}</span>
+                    <span>Room {currentPatient.roomNumber}{currentPatient.bedNumber}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Calendar className="h-4 w-4" />
-                    <span>Admitted {format(new Date(patient.admissionDate), 'MMM dd, yyyy')} ({daysAdmitted} days)</span>
+                    <span>Admitted {format(new Date(currentPatient.admissionDate), 'MMM dd, yyyy')} ({daysAdmitted} days)</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Stethoscope className="h-4 w-4" />
@@ -110,27 +116,27 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2 text-gray-600">
                     <User className="h-4 w-4" />
-                    <span>Nurse: {patient.assignedNurse}</span>
+                    <span>Nurse: {currentPatient.assignedNurse}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Activity className="h-4 w-4" />
-                    <span>Blood Type: {patient.bloodType}</span>
+                    <span>Blood Type: {currentPatient.bloodType}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Phone className="h-4 w-4" />
-                    <span>Emergency: {patient.emergencyContact.name}</span>
+                    <span>Emergency: {currentPatient.emergencyContact.name}</span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {patient.allergies.length > 0 && (
+                  {currentPatient.allergies.length > 0 && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                       <div className="flex items-center space-x-2 mb-2">
                         <AlertTriangle className="h-4 w-4 text-red-600" />
                         <span className="text-red-800 font-medium text-sm">Allergies</span>
                       </div>
                       <div className="space-y-1">
-                        {patient.allergies.map((allergy, index) => (
+                        {currentPatient.allergies.map((allergy, index) => (
                           <span key={index} className="block text-red-700 text-sm">{allergy}</span>
                         ))}
                       </div>
@@ -146,7 +152,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <FileText className="h-5 w-5 mr-2 text-blue-600" />
                 Primary Diagnosis
               </h3>
-              <p className="text-gray-700">{patient.diagnosis}</p>
+              <p className="text-gray-700">{currentPatient.diagnosis}</p>
             </div>
 
             {/* Quick Actions */}
@@ -196,7 +202,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
                 <div className="flex items-center justify-between mb-3">
                   <Thermometer className="h-8 w-8 text-blue-600" />
-                  <span className="text-2xl font-bold text-blue-900">{patient.vitals.temperature}°F</span>
+                  <span className="text-2xl font-bold text-blue-900">{currentPatient.vitals.temperature}°F</span>
                 </div>
                 <p className="text-blue-700 font-medium">Temperature</p>
                 <p className="text-blue-600 text-sm">Normal range: 97.8-99.1°F</p>
@@ -205,7 +211,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <div className="bg-red-50 rounded-lg p-6 border border-red-200">
                 <div className="flex items-center justify-between mb-3">
                   <Heart className="h-8 w-8 text-red-600" />
-                  <span className="text-2xl font-bold text-red-900">{patient.vitals.heartRate}</span>
+                  <span className="text-2xl font-bold text-red-900">{currentPatient.vitals.heartRate}</span>
                 </div>
                 <p className="text-red-700 font-medium">Heart Rate (BPM)</p>
                 <p className="text-red-600 text-sm">Normal range: 60-100 BPM</p>
@@ -215,17 +221,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="flex items-center justify-between mb-3">
                   <Activity className="h-8 w-8 text-purple-600" />
                   <span className="text-2xl font-bold text-purple-900">
-                    {patient.vitals.bloodPressure.systolic}/{patient.vitals.bloodPressure.diastolic}
+                    {currentPatient.vitals.bloodPressure.systolic}/{currentPatient.vitals.bloodPressure.diastolic}
                   </span>
                 </div>
                 <p className="text-purple-700 font-medium">Blood Pressure</p>
-                <p className="text-purple-600 text-sm">Normal: {'<120/80 mmHg'}</p>
+                <p className="text-purple-600 text-sm">Normal: &lt;120/80 mmHg</p>
               </div>
 
               <div className="bg-green-50 rounded-lg p-6 border border-green-200">
                 <div className="flex items-center justify-between mb-3">
                   <Activity className="h-8 w-8 text-green-600" />
-                  <span className="text-2xl font-bold text-green-900">{patient.vitals.oxygenSaturation}%</span>
+                  <span className="text-2xl font-bold text-green-900">{currentPatient.vitals.oxygenSaturation}%</span>
                 </div>
                 <p className="text-green-700 font-medium">O2 Saturation</p>
                 <p className="text-green-600 text-sm">Normal range: 95-100%</p>
@@ -234,18 +240,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <div className="bg-indigo-50 rounded-lg p-6 border border-indigo-200">
                 <div className="flex items-center justify-between mb-3">
                   <Activity className="h-8 w-8 text-indigo-600" />
-                  <span className="text-2xl font-bold text-indigo-900">{patient.vitals.respiratoryRate}</span>
+                  <span className="text-2xl font-bold text-indigo-900">{currentPatient.vitals.respiratoryRate}</span>
                 </div>
                 <p className="text-indigo-700 font-medium">Respiratory Rate</p>
                 <p className="text-indigo-600 text-sm">Normal range: 12-20/min</p>
               </div>
 
-              <VitalsTrends currentVitals={patient.vitals} />
+              <VitalsTrends currentVitals={currentPatient.vitals} patientId={currentPatient.id} />
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-600">
-                <strong>Last Updated:</strong> {format(new Date(patient.vitals.lastUpdated), 'MMM dd, yyyy HH:mm')}
+                <strong>Last Updated:</strong> {format(new Date(currentPatient.vitals.lastUpdated), 'MMM dd, yyyy HH:mm')}
               </p>
             </div>
           </div>
@@ -263,7 +269,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             </div>
 
             <div className="grid gap-4">
-              {patient.medications.filter(med => med.status === 'Active').map((medication) => (
+              {currentPatient.medications.filter(med => med.status === 'Active').map((medication) => (
                 <div key={medication.id} className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -346,7 +352,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             </div>
 
             <div className="space-y-4">
-              {patient.notes.map((note) => (
+              {currentPatient.notes.map((note) => (
                 <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -398,7 +404,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Admission Date</p>
-                    <p className="text-gray-900">{format(new Date(patient.admissionDate), 'MMMM dd, yyyy')}</p>
+                    <p className="text-gray-900">{format(new Date(currentPatient.admissionDate), 'MMMM dd, yyyy')}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Length of Stay</p>
@@ -534,9 +540,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="border border-gray-200 rounded-lg p-4">
                   <p className="font-medium text-gray-900 mb-2">Primary Contact</p>
                   <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Name:</span> {patient.emergencyContact.name}</p>
-                    <p><span className="font-medium">Relationship:</span> {patient.emergencyContact.relationship}</p>
-                    <p><span className="font-medium">Phone:</span> {patient.emergencyContact.phone}</p>
+                    <p><span className="font-medium">Name:</span> {currentPatient.emergencyContact.name}</p>
+                    <p><span className="font-medium">Relationship:</span> {currentPatient.emergencyContact.relationship}</p>
+                    <p><span className="font-medium">Phone:</span> {currentPatient.emergencyContact.phone}</p>
                     <p><span className="font-medium">Address:</span> 123 Main St, Anytown, ST 12345</p>
                   </div>
                 </div>
@@ -835,7 +841,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </div>
 
               {/* Wound Assessment Component */}
-              <WoundAssessment patientId={patient.patientId} />
+              <WoundAssessment patientId={currentPatient.patientId} />
             </div>
           </div>
         );
@@ -860,9 +866,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           
           <div className="text-center">
             <h1 className="text-xl font-semibold text-gray-900">
-              {patient.firstName} {patient.lastName}
+              {currentPatient.firstName} {currentPatient.lastName}
             </h1>
-            <p className="text-sm text-gray-600">Patient ID: {patient.patientId}</p>
+            <p className="text-sm text-gray-600">Patient ID: {currentPatient.patientId}</p>
           </div>
           
           <div className="w-24"></div>
@@ -935,7 +941,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {/* Modals */}
       {showVitalsEditor && (
         <VitalSignsEditor
-          vitals={patient.vitals}
+          patientId={currentPatient.id}
+          vitals={currentPatient.vitals}
           onSave={handleSaveVitals}
           onCancel={() => setShowVitalsEditor(false)}
         />
@@ -943,14 +950,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
       {showBracelet && (
         <PatientBracelet
-          patient={patient}
+          patient={currentPatient}
           onClose={() => setShowBracelet(false)}
         />
       )}
 
       {showWristband && (
         <HospitalBracelet
-          patient={patient}
+          patient={currentPatient}
           onClose={() => setShowWristband(false)}
         />
       )}
@@ -958,8 +965,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {showMedicationBarcode && selectedMedication && (
         <MedicationBarcode
           medication={selectedMedication}
-          patientName={`${patient.firstName} ${patient.lastName}`}
-          patientId={patient.patientId}
+          patientName={`${currentPatient.firstName} ${currentPatient.lastName}`}
+          patientId={currentPatient.patientId}
           onClose={() => {
             setShowMedicationBarcode(false);
             setSelectedMedication(null);

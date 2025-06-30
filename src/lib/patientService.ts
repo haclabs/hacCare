@@ -262,3 +262,26 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
     throw error;
   }
 };
+
+/**
+ * Fetch patient vitals history
+ */
+export const fetchPatientVitalsHistory = async (patientId: string, limit: number = 10): Promise<DatabaseVitals[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('patient_vitals')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('recorded_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching patient vitals history:', error);
+    throw error;
+  }
+};

@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { VitalSigns } from '../../types';
 import { Save, X, Thermometer, Heart, Activity } from 'lucide-react';
+import { updatePatientVitals } from '../../lib/patientService';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface VitalSignsEditorProps {
+  patientId: string;
   vitals: VitalSigns;
   onSave: (vitals: VitalSigns) => void;
   onCancel: () => void;
 }
 
 export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
+  patientId,
   vitals,
   onSave,
   onCancel
@@ -17,10 +21,30 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
     ...vitals,
     lastUpdated: new Date().toISOString()
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { refreshPatients } = usePatients();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(editedVitals);
+    setLoading(true);
+    setError('');
+
+    try {
+      // Save vitals to database
+      await updatePatientVitals(patientId, editedVitals);
+      
+      // Refresh patients to get updated vitals
+      await refreshPatients();
+      
+      // Call the onSave callback
+      onSave(editedVitals);
+    } catch (err: any) {
+      console.error('Error saving vitals:', err);
+      setError(err.message || 'Failed to save vital signs');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateVital = (field: keyof VitalSigns, value: any) => {
@@ -54,6 +78,12 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Temperature */}
             <div className="bg-blue-50 rounded-lg p-4">
@@ -165,16 +195,18 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={loading}
+              className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              disabled={loading}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              <span>Save Vitals</span>
+              <span>{loading ? 'Saving...' : 'Save Vitals'}</span>
             </button>
           </div>
         </form>
