@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
 
@@ -26,16 +26,38 @@ export const Header: React.FC<HeaderProps> = ({ unreadAlerts, onAlertsClick }) =
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex-shrink-0">
-            <img 
-              src="/logo copy.png" 
-              alt="HacCare Logo" 
-              className="h-12 w-auto object-contain"
-              style={{ maxHeight: '48px' }}
-              onError={(e) => {
-                // Fallback to SVG if PNG fails
-                e.currentTarget.src = "/haccare-logo.svg";
-              }}
-            />
+            {/* HacCare Logo with Heart Icon */}
+            <div className="flex items-center space-x-3">
+              {/* Heart Icon */}
+              <div className="relative">
+                <Heart 
+                  className="h-10 w-10 text-blue-600 fill-current" 
+                  strokeWidth={1.5}
+                />
+                {/* Heartbeat line overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg 
+                    className="h-4 w-4 text-white" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                  >
+                    <path d="M3 12h3l2-4 4 8 2-4h3" />
+                  </svg>
+                </div>
+              </div>
+              
+              {/* HacCare Text */}
+              <div className="text-left">
+                <h1 className="text-2xl font-bold text-gray-800 leading-none">
+                  haccare
+                </h1>
+                <p className="text-xs text-gray-500 font-medium">
+                  patient record system
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
