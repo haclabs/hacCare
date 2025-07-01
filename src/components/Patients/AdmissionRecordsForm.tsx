@@ -241,7 +241,6 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   value={formData.height}
                   onChange={(e) => updateField('height', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="5'10\" (178 cm)"
                 />
               </div>
 
@@ -254,7 +253,6 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   value={formData.weight}
                   onChange={(e) => updateField('weight', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="185 lbs (84 kg)"
                 />
               </div>
 
@@ -267,7 +265,6 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   value={formData.bmi}
                   onChange={(e) => updateField('bmi', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="26.5 (Overweight)"
                 />
               </div>
             </div>
@@ -437,5 +434,3 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
     </div>
   );
 };
-  )
-}
