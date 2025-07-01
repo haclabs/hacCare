@@ -1,5 +1,6 @@
 import { Patient, Nurse, Alert } from '../types';
 import { addHours, subHours, format, setHours, setMinutes } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 import { generatePatientId } from '../utils/patientUtils';
 
 export const currentNurse: Nurse = {
@@ -113,9 +114,14 @@ const getNextMedicationTime = (frequency: string, isDiabetic: boolean = false) =
   return setHours(tomorrow, 8);
 };
 
+// Generate proper UUIDs for mock patients
+const patient1Id = uuidv4();
+const patient2Id = uuidv4();
+const patient3Id = uuidv4();
+
 export const mockPatients: Patient[] = [
   {
-    id: 'patient-001',
+    id: patient1Id,
     patient_id: 'PT10001',
     first_name: 'John',
     last_name: 'Smith',
@@ -180,7 +186,7 @@ export const mockPatients: Patient[] = [
     ]
   },
   {
-    id: 'patient-002',
+    id: patient2Id,
     patient_id: 'PT10002',
     first_name: 'Maria',
     last_name: 'Garcia',
@@ -234,7 +240,7 @@ export const mockPatients: Patient[] = [
     ]
   },
   {
-    id: 'patient-003',
+    id: patient3Id,
     patient_id: 'PT10003',
     first_name: 'Robert',
     last_name: 'Davis',
