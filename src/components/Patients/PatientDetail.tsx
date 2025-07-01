@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Patient } from '../../types';
+import { Patient, Medication } from '../../types';
 import { 
   ArrowLeft, Edit, Thermometer, Heart, Activity, 
   Pill, FileText, User, Phone, Calendar, MapPin, 
@@ -52,6 +52,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showBracelet, setShowBracelet] = useState(false);
   const [showHospitalBracelet, setShowHospitalBracelet] = useState(false);
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
+  const [medicationForBarcode, setMedicationForBarcode] = useState<Medication | null>(null);
   
   const { updatePatient } = usePatients();
   
@@ -96,6 +97,47 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
   const handleVitalsSave = () => {
     setShowVitalsEditor(false);
+  };
+
+  const handleMedicationSave = async (medication: Medication) => {
+    try {
+      // Update the patient's medications array
+      const updatedMedications = [...patientMedications];
+      const existingIndex = updatedMedications.findIndex(m => m.id === medication.id);
+      
+      if (existingIndex >= 0) {
+        // Update existing medication
+        updatedMedications[existingIndex] = medication;
+      } else {
+        // Add new medication
+        updatedMedications.push(medication);
+      }
+
+      // Update the patient with new medications
+      await updatePatient(patient.id, { medications: updatedMedications });
+      
+      // Close the medication form
+      setShowMedicationForm(false);
+      
+      // Set the medication for barcode generation and show barcode modal
+      setMedicationForBarcode(medication);
+      setShowMedicationBarcode(true);
+    } catch (error) {
+      console.error('Error saving medication:', error);
+      throw error;
+    }
+  };
+
+  const handleMedicationBarcodeClose = () => {
+    setShowMedicationBarcode(false);
+    setMedicationForBarcode(null);
+  };
+
+  const handleShowBarcodeForExisting = () => {
+    if (activeMedications.length > 0) {
+      setMedicationForBarcode(activeMedications[0]);
+      setShowMedicationBarcode(true);
+    }
   };
 
   const renderTabContent = () => {
@@ -424,7 +466,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     </span>
                   </div>
                   <p className="text-purple-700 font-medium">Blood Pressure</p>
-                  <p className="text-purple-600 text-sm">Normal: &lt;120/80 mmHg</p>
+                  <p className="text-purple-600 text-sm">Normal: <120/80 mmHg</p>
                 </div>
 
                 <div className="bg-green-50 rounded-lg p-6 border border-green-200">
@@ -490,7 +532,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <h3 className="text-lg font-semibold text-gray-900">Medications</h3>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setShowMedicationBarcode(true)}
+                  onClick={handleShowBarcodeForExisting}
                   className="flex items-center px-3 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   <QrCode className="w-4 h-4 mr-2" />
@@ -802,7 +844,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   Generate barcodes for medication administration tracking
                 </p>
                 <button
-                  onClick={() => setShowMedicationBarcode(true)}
+                  onClick={handleShowBarcodeForExisting}
                   className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   <QrCode className="w-4 h-4 mr-2" />
@@ -956,7 +998,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {showMedicationForm && (
         <MedicationForm
           patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowMedicationForm(false)}
+          onSave={handleMedicationSave}
         />
       )}
 
@@ -999,11 +1043,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         />
       )}
 
-      {showMedicationBarcode && (
+      {showMedicationBarcode && medicationForBarcode && (
         <MedicationBarcode
-          medications={activeMedications}
-          patient={patient}
-          onClose={() => setShowMedicationBarcode(false)}
+          medication={medicationForBarcode}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          patientId={patient.patient_id}
+          onClose={handleMedicationBarcodeClose}
         />
       )}
     </div>

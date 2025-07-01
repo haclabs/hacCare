@@ -23,9 +23,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     dosage: medication?.dosage || '',
     frequency: medication?.frequency || 'Once daily',
     route: medication?.route || 'Oral',
-    startDate: medication?.startDate || format(new Date(), 'yyyy-MM-dd'),
-    endDate: medication?.endDate || '',
-    prescribedBy: medication?.prescribedBy || '',
+    startDate: medication?.start_date || format(new Date(), 'yyyy-MM-dd'),
+    endDate: medication?.end_date || '',
+    prescribedBy: medication?.prescribed_by || '',
     instructions: '',
     status: medication?.status || 'Active' as 'Active' | 'Completed' | 'Discontinued'
   });
@@ -159,10 +159,10 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         dosage: formData.dosage,
         frequency: formData.frequency,
         route: formData.route,
-        startDate: formData.startDate,
-        endDate: formData.endDate || undefined,
-        prescribedBy: formData.prescribedBy,
-        nextDue: calculateNextDue(formData.frequency, formData.startDate),
+        start_date: formData.startDate,
+        end_date: formData.endDate || undefined,
+        prescribed_by: formData.prescribedBy,
+        next_due: calculateNextDue(formData.frequency, formData.startDate),
         status: formData.status
       };
 
