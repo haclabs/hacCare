@@ -1,7 +1,7 @@
 import React from 'react';
 import { Patient } from '../../types';
 import { User, MapPin, Calendar, AlertTriangle, Heart, QrCode } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 /**
  * Patient Card Component
@@ -45,8 +45,13 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
     }
   };
 
-  // Calculate patient age
-  const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
+  // Calculate patient age with date validation
+  const birthDate = new Date(patient.dateOfBirth);
+  const age = isValid(birthDate) ? new Date().getFullYear() - birthDate.getFullYear() : 'N/A';
+
+  // Format admission date with validation
+  const admissionDate = new Date(patient.admissionDate);
+  const formattedAdmissionDate = isValid(admissionDate) ? format(admissionDate, 'MMM dd') : 'N/A';
 
   /**
    * Handle bracelet button click
@@ -101,7 +106,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <Calendar className="h-4 w-4" />
-          <span>Admitted {format(new Date(patient.admissionDate), 'MMM dd')}</span>
+          <span>Admitted {formattedAdmissionDate}</span>
         </div>
       </div>
 
