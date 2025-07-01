@@ -41,6 +41,25 @@ export interface DatabaseVitals {
 }
 
 /**
+ * Convert database vitals to app vitals format
+ */
+const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
+  return dbVitals.map(vital => ({
+    id: vital.id,
+    temperature: vital.temperature,
+    bloodPressure: {
+      systolic: vital.blood_pressure_systolic,
+      diastolic: vital.blood_pressure_diastolic
+    },
+    heartRate: vital.heart_rate,
+    respiratoryRate: vital.respiratory_rate,
+    oxygenSaturation: vital.oxygen_saturation,
+    recorded_at: vital.recorded_at,
+    lastUpdated: vital.recorded_at
+  }));
+};
+
+/**
  * Convert database patient to app patient format
  */
 const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVitals[]): Patient => {
@@ -62,7 +81,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
     emergency_contact_relationship: dbPatient.emergency_contact_relationship,
     emergency_contact_phone: dbPatient.emergency_contact_phone,
     assigned_nurse: dbPatient.assigned_nurse,
-    vitals: vitals || [], // Return all vitals as array
+    vitals: vitals ? convertDatabaseVitals(vitals) : [],
     medications: [], // Will be loaded separately
     notes: [] // Will be loaded separately
   };

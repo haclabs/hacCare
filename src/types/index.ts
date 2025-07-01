@@ -1,29 +1,28 @@
 export interface Patient {
   id: string;
-  patientId: string; // New field for PTXXXXX format
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
+  patient_id: string; // Database field name
+  first_name: string; // Database field name
+  last_name: string; // Database field name
+  date_of_birth: string; // Database field name
   gender: 'Male' | 'Female' | 'Other';
-  roomNumber: string;
-  bedNumber: string;
-  admissionDate: string;
+  room_number: string; // Database field name
+  bed_number: string; // Database field name
+  admission_date: string; // Database field name
   condition: 'Critical' | 'Stable' | 'Improving' | 'Discharged';
-  diagnosis: string; // New field for patient diagnosis
+  diagnosis: string;
   allergies: string[];
-  bloodType: string;
-  emergencyContact: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-  assignedNurse: string;
-  vitals: VitalSigns;
+  blood_type: string; // Database field name
+  emergency_contact_name: string; // Database field name
+  emergency_contact_relationship: string; // Database field name
+  emergency_contact_phone: string; // Database field name
+  assigned_nurse: string; // Database field name
+  vitals: VitalSigns[]; // Changed to array
   medications: Medication[];
   notes: PatientNote[];
 }
 
 export interface VitalSigns {
+  id?: string;
   temperature: number;
   bloodPressure: {
     systolic: number;
@@ -32,7 +31,8 @@ export interface VitalSigns {
   heartRate: number;
   respiratoryRate: number;
   oxygenSaturation: number;
-  lastUpdated: string;
+  lastUpdated?: string; // For compatibility
+  recorded_at?: string; // Database field name
 }
 
 export interface Medication {
@@ -41,19 +41,19 @@ export interface Medication {
   dosage: string;
   frequency: string;
   route: string;
-  startDate: string;
-  endDate?: string;
-  prescribedBy: string;
-  lastAdministered?: string;
-  nextDue: string;
+  start_date: string; // Database field name
+  end_date?: string; // Database field name
+  prescribed_by: string; // Database field name
+  last_administered?: string; // Database field name
+  next_due: string; // Database field name
   status: 'Active' | 'Completed' | 'Discontinued';
 }
 
 export interface PatientNote {
   id: string;
-  timestamp: string;
-  nurseId: string;
-  nurseName: string;
+  created_at: string; // Database field name
+  nurse_id: string; // Database field name
+  nurse_name: string; // Database field name
   type: 'Assessment' | 'Medication' | 'Vital Signs' | 'General' | 'Incident';
   content: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';

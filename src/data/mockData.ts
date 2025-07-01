@@ -116,32 +116,33 @@ const getNextMedicationTime = (frequency: string, isDiabetic: boolean = false) =
 export const mockPatients: Patient[] = [
   {
     id: 'patient-001',
-    patientId: 'PT10001',
-    firstName: 'John',
-    lastName: 'Smith',
-    dateOfBirth: '1965-03-15',
+    patient_id: 'PT10001',
+    first_name: 'John',
+    last_name: 'Smith',
+    date_of_birth: '1965-03-15',
     gender: 'Male',
-    roomNumber: '302',
-    bedNumber: 'A',
-    admissionDate: '2024-01-15',
+    room_number: '302',
+    bed_number: 'A',
+    admission_date: '2024-01-15',
     condition: 'Stable',
     diagnosis: 'Hypertension with Type 2 Diabetes Mellitus',
     allergies: ['Penicillin (rash)', 'Latex (contact dermatitis)'],
-    bloodType: 'O+',
-    emergencyContact: {
-      name: 'Mary Smith',
-      relationship: 'Spouse',
-      phone: '(555) 987-6543'
-    },
-    assignedNurse: 'Sarah Johnson',
-    vitals: {
-      temperature: 98.6,
-      bloodPressure: { systolic: 120, diastolic: 80 },
-      heartRate: 72,
-      respiratoryRate: 16,
-      oxygenSaturation: 98,
-      lastUpdated: format(subHours(new Date(), 2), 'yyyy-MM-dd HH:mm:ss')
-    },
+    blood_type: 'O+',
+    emergency_contact_name: 'Mary Smith',
+    emergency_contact_relationship: 'Spouse',
+    emergency_contact_phone: '(555) 987-6543',
+    assigned_nurse: 'Sarah Johnson',
+    vitals: [
+      {
+        temperature: 98.6,
+        bloodPressure: { systolic: 120, diastolic: 80 },
+        heartRate: 72,
+        respiratoryRate: 16,
+        oxygenSaturation: 98,
+        lastUpdated: format(subHours(new Date(), 2), 'yyyy-MM-dd HH:mm:ss'),
+        recorded_at: format(subHours(new Date(), 2), 'yyyy-MM-dd HH:mm:ss')
+      }
+    ],
     medications: [
       {
         id: 'med-001',
@@ -149,9 +150,9 @@ export const mockPatients: Patient[] = [
         dosage: '10mg',
         frequency: 'Once daily',
         route: 'Oral',
-        startDate: '2024-01-15',
-        prescribedBy: 'Dr. Wilson',
-        nextDue: format(getNextMedicationTime('Once daily'), 'yyyy-MM-dd HH:mm:ss'),
+        start_date: '2024-01-15',
+        prescribed_by: 'Dr. Wilson',
+        next_due: format(getNextMedicationTime('Once daily'), 'yyyy-MM-dd HH:mm:ss'),
         status: 'Active'
       },
       {
@@ -160,18 +161,18 @@ export const mockPatients: Patient[] = [
         dosage: '500mg',
         frequency: 'Twice daily',
         route: 'Oral',
-        startDate: '2024-01-15',
-        prescribedBy: 'Dr. Wilson',
-        nextDue: format(getNextMedicationTime('Twice daily'), 'yyyy-MM-dd HH:mm:ss'),
+        start_date: '2024-01-15',
+        prescribed_by: 'Dr. Wilson',
+        next_due: format(getNextMedicationTime('Twice daily'), 'yyyy-MM-dd HH:mm:ss'),
         status: 'Active'
       }
     ],
     notes: [
       {
         id: 'note-001',
-        timestamp: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
-        nurseId: 'nurse-001',
-        nurseName: 'Sarah Johnson',
+        created_at: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
+        nurse_id: 'nurse-001',
+        nurse_name: 'Sarah Johnson',
         type: 'Assessment',
         content: 'Patient ambulating well, no complaints of pain. Incision site clean and dry.',
         priority: 'Low'
@@ -180,32 +181,33 @@ export const mockPatients: Patient[] = [
   },
   {
     id: 'patient-002',
-    patientId: 'PT10002',
-    firstName: 'Maria',
-    lastName: 'Garcia',
-    dateOfBirth: '1978-07-22',
+    patient_id: 'PT10002',
+    first_name: 'Maria',
+    last_name: 'Garcia',
+    date_of_birth: '1978-07-22',
     gender: 'Female',
-    roomNumber: '305',
-    bedNumber: 'B',
-    admissionDate: '2024-01-16',
+    room_number: '305',
+    bed_number: 'B',
+    admission_date: '2024-01-16',
     condition: 'Critical',
     diagnosis: 'Pneumonia with Sepsis',
     allergies: ['Sulfa drugs (anaphylaxis)'],
-    bloodType: 'A-',
-    emergencyContact: {
-      name: 'Carlos Garcia',
-      relationship: 'Husband',
-      phone: '(555) 456-7890'
-    },
-    assignedNurse: 'Sarah Johnson',
-    vitals: {
-      temperature: 101.2,
-      bloodPressure: { systolic: 140, diastolic: 90 },
-      heartRate: 95,
-      respiratoryRate: 22,
-      oxygenSaturation: 94,
-      lastUpdated: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss')
-    },
+    blood_type: 'A-',
+    emergency_contact_name: 'Carlos Garcia',
+    emergency_contact_relationship: 'Husband',
+    emergency_contact_phone: '(555) 456-7890',
+    assigned_nurse: 'Sarah Johnson',
+    vitals: [
+      {
+        temperature: 101.2,
+        bloodPressure: { systolic: 140, diastolic: 90 },
+        heartRate: 95,
+        respiratoryRate: 22,
+        oxygenSaturation: 94,
+        lastUpdated: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
+        recorded_at: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss')
+      }
+    ],
     medications: [
       {
         id: 'med-003',
@@ -213,18 +215,18 @@ export const mockPatients: Patient[] = [
         dosage: '1g',
         frequency: 'Every 12 hours',
         route: 'IV',
-        startDate: '2024-01-16',
-        prescribedBy: 'Dr. Chen',
-        nextDue: format(getNextMedicationTime('Every 12 hours'), 'yyyy-MM-dd HH:mm:ss'),
+        start_date: '2024-01-16',
+        prescribed_by: 'Dr. Chen',
+        next_due: format(getNextMedicationTime('Every 12 hours'), 'yyyy-MM-dd HH:mm:ss'),
         status: 'Active'
       }
     ],
     notes: [
       {
         id: 'note-002',
-        timestamp: format(subHours(new Date(), 30), 'yyyy-MM-dd HH:mm:ss'),
-        nurseId: 'nurse-001',
-        nurseName: 'Sarah Johnson',
+        created_at: format(subHours(new Date(), 30), 'yyyy-MM-dd HH:mm:ss'),
+        nurse_id: 'nurse-001',
+        nurse_name: 'Sarah Johnson',
         type: 'Vital Signs',
         content: 'Elevated temperature and BP. Physician notified. Increased monitoring ordered.',
         priority: 'High'
@@ -233,32 +235,33 @@ export const mockPatients: Patient[] = [
   },
   {
     id: 'patient-003',
-    patientId: 'PT10003',
-    firstName: 'Robert',
-    lastName: 'Davis',
-    dateOfBirth: '1952-11-08',
+    patient_id: 'PT10003',
+    first_name: 'Robert',
+    last_name: 'Davis',
+    date_of_birth: '1952-11-08',
     gender: 'Male',
-    roomNumber: '308',
-    bedNumber: 'A',
-    admissionDate: '2024-01-14',
+    room_number: '308',
+    bed_number: 'A',
+    admission_date: '2024-01-14',
     condition: 'Improving',
     diagnosis: 'Post-operative Hip Replacement with Hyperlipidemia',
     allergies: [],
-    bloodType: 'B+',
-    emergencyContact: {
-      name: 'Linda Davis',
-      relationship: 'Daughter',
-      phone: '(555) 234-5678'
-    },
-    assignedNurse: 'Sarah Johnson',
-    vitals: {
-      temperature: 98.4,
-      bloodPressure: { systolic: 130, diastolic: 85 },
-      heartRate: 68,
-      respiratoryRate: 18,
-      oxygenSaturation: 96,
-      lastUpdated: format(subHours(new Date(), 3), 'yyyy-MM-dd HH:mm:ss')
-    },
+    blood_type: 'B+',
+    emergency_contact_name: 'Linda Davis',
+    emergency_contact_relationship: 'Daughter',
+    emergency_contact_phone: '(555) 234-5678',
+    assigned_nurse: 'Sarah Johnson',
+    vitals: [
+      {
+        temperature: 98.4,
+        bloodPressure: { systolic: 130, diastolic: 85 },
+        heartRate: 68,
+        respiratoryRate: 18,
+        oxygenSaturation: 96,
+        lastUpdated: format(subHours(new Date(), 3), 'yyyy-MM-dd HH:mm:ss'),
+        recorded_at: format(subHours(new Date(), 3), 'yyyy-MM-dd HH:mm:ss')
+      }
+    ],
     medications: [
       {
         id: 'med-004',
@@ -266,9 +269,9 @@ export const mockPatients: Patient[] = [
         dosage: '20mg',
         frequency: 'Once daily at bedtime',
         route: 'Oral',
-        startDate: '2024-01-14',
-        prescribedBy: 'Dr. Martinez',
-        nextDue: format(setHours(new Date(), 21), 'yyyy-MM-dd HH:mm:ss'), // 2100 for bedtime
+        start_date: '2024-01-14',
+        prescribed_by: 'Dr. Martinez',
+        next_due: format(setHours(new Date(), 21), 'yyyy-MM-dd HH:mm:ss'), // 2100 for bedtime
         status: 'Active'
       }
     ],
