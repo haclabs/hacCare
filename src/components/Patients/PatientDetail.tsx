@@ -37,15 +37,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showHospitalBracelet, setShowHospitalBracelet] = useState(false);
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
   
-  const { vitals, medications, notes, updatePatient } = usePatients();
+  const { updatePatient } = usePatients();
   
-  const patientVitals = vitals.filter(v => v.patient_id === patient.id);
-  const patientMedications = medications.filter(m => m.patient_id === patient.id);
-  const patientNotes = notes.filter(n => n.patient_id === patient.id);
+  // Initialize empty arrays if data doesn't exist
+  const patientVitals = patient.vitals || [];
+  const patientMedications = patient.medications || [];
+  const patientNotes = patient.notes || [];
   
-  const latestVitals = patientVitals.sort((a, b) => 
-    new Date(b.recorded_at || 0).getTime() - new Date(a.recorded_at || 0).getTime()
-  )[0];
+  const latestVitals = Array.isArray(patientVitals) && patientVitals.length > 0 
+    ? patientVitals.sort((a, b) => 
+        new Date(b.recorded_at || 0).getTime() - new Date(a.recorded_at || 0).getTime()
+      )[0]
+    : null;
 
   const activeMedications = patientMedications.filter(m => m.status === 'Active');
   const dueMedications = activeMedications.filter(m => 
