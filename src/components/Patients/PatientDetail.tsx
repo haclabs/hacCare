@@ -15,6 +15,8 @@ import { PatientBracelet } from './PatientBracelet';
 import { HospitalBracelet } from './HospitalBracelet';
 import { MedicationBarcode } from './MedicationBarcode';
 import { MedicationForm } from './MedicationForm';
+import { PatientNoteForm } from './PatientNoteForm';
+import { AssessmentForm } from './AssessmentForm';
 import { WoundAssessment } from './WoundAssessment';
 import { usePatients } from '../../contexts/PatientContext';
 
@@ -31,6 +33,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [selectedMedication, setSelectedMedication] = useState<any>(null);
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<any>(null);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
   
   const { getPatient, updatePatient } = usePatients();
 
@@ -65,6 +70,56 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       setSelectedMedication(null);
     } catch (error) {
       console.error('Error saving medication:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveNote = async (noteData: any) => {
+    try {
+      // Update patient with new note
+      const updatedNotes = selectedNote 
+        ? currentPatient.notes.map(note => 
+            note.id === selectedNote.id ? noteData : note
+          )
+        : [...currentPatient.notes, noteData];
+
+      const updatedPatient = {
+        ...currentPatient,
+        notes: updatedNotes
+      };
+
+      await updatePatient(updatedPatient);
+      setShowNoteForm(false);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Error saving note:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveAssessment = async (assessmentData: any) => {
+    try {
+      // In a real app, this would save to a separate assessments table
+      // For now, we'll add it as a note
+      const assessmentNote = {
+        id: `note-${Date.now()}`,
+        timestamp: assessmentData.assessment_date,
+        nurseId: assessmentData.nurse_id,
+        nurseName: assessmentData.nurse_name,
+        type: 'Assessment',
+        content: `${assessmentData.assessment_type.charAt(0).toUpperCase() + assessmentData.assessment_type.slice(1)} Assessment:\n\n${assessmentData.assessment_notes}\n\nRecommendations: ${assessmentData.recommendations || 'None'}`,
+        priority: assessmentData.priority_level === 'critical' ? 'Critical' : assessmentData.priority_level === 'urgent' ? 'High' : 'Medium'
+      };
+
+      const updatedPatient = {
+        ...currentPatient,
+        notes: [...currentPatient.notes, assessmentNote]
+      };
+
+      await updatePatient(updatedPatient);
+      setShowAssessmentForm(false);
+    } catch (error) {
+      console.error('Error saving assessment:', error);
       throw error;
     }
   };
@@ -208,7 +263,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
               
               <button
-                onClick={() => setActiveTab('notes')}
+                onClick={() => {
+                  setSelectedNote(null);
+                  setShowNoteForm(true);
+                }}
                 className="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <FileText className="h-5 w-5" />
@@ -276,7 +334,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       </span>
                     </div>
                     <p className="text-purple-700 font-medium">Blood Pressure</p>
-                    <p className="text-purple-600 text-sm">Normal: &lt;120/80 mmHg</p>
+                    <p className="text-purple-600 text-sm">Normal: <120/80 mmHg</p>
                   </div>
 
                   <div className="bg-green-50 rounded-lg p-6 border border-green-200">
@@ -432,40 +490,79 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+              <button 
+                onClick={() => {
+                  setSelectedNote(null);
+                  setShowNoteForm(true);
+                }}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
                 <Plus className="h-4 w-4" />
                 <span>Add Note</span>
               </button>
             </div>
 
-            <div className="space-y-4">
-              {currentPatient.notes.map((note) => (
-                <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{note.type}</h4>
-                        <p className="text-sm text-gray-600">by {note.nurseName}</p>
+            {currentPatient.notes.length === 0 ? (
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Notes Recorded</h3>
+                <p className="text-gray-600 mb-4">
+                  No notes have been added for this patient yet.
+                </p>
+                <button
+                  onClick={() => {
+                    setSelectedNote(null);
+                    setShowNoteForm(true);
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mx-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add First Note</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {currentPatient.notes.map((note) => (
+                  <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <h4 className="font-medium text-gray-900">{note.type}</h4>
+                          <p className="text-sm text-gray-600">by {note.nurseName}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          {format(new Date(note.timestamp), 'MMM dd, yyyy HH:mm')}
+                        </p>
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                          note.priority === 'Critical' ? 'bg-red-100 text-red-800' :
+                          note.priority === 'High' ? 'bg-orange-100 text-orange-800' :
+                          note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {note.priority} Priority
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
-                        {format(new Date(note.timestamp), 'MMM dd, yyyy HH:mm')}
-                      </p>
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        note.priority === 'High' ? 'bg-red-100 text-red-800' :
-                        note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {note.priority} Priority
-                      </span>
+                    <p className="text-gray-700">{note.content}</p>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => {
+                          setSelectedNote(note);
+                          setShowNoteForm(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center space-x-1"
+                      >
+                        <Edit className="h-3 w-3" />
+                        <span>Edit</span>
+                      </button>
                     </div>
                   </div>
-                  <p className="text-gray-700">{note.content}</p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -474,7 +571,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Assessments</h3>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+              <button 
+                onClick={() => setShowAssessmentForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
                 <Plus className="h-4 w-4" />
                 <span>New Assessment</span>
               </button>
@@ -483,7 +583,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             {/* Assessment Navigation */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setShowAssessmentForm(true)}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className="flex items-center space-x-3 mb-2">
                     <Stethoscope className="h-6 w-6 text-blue-600" />
                     <h4 className="font-medium text-gray-900">Physical Assessment</h4>
@@ -491,7 +594,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <p className="text-sm text-gray-600">Head-to-toe physical examination</p>
                 </button>
 
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setShowAssessmentForm(true)}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className="flex items-center space-x-3 mb-2">
                     <Activity className="h-6 w-6 text-green-600" />
                     <h4 className="font-medium text-gray-900">Neurological</h4>
@@ -499,7 +605,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <p className="text-sm text-gray-600">Cognitive and neurological function</p>
                 </button>
 
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setShowAssessmentForm(true)}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className="flex items-center space-x-3 mb-2">
                     <Heart className="h-6 w-6 text-red-600" />
                     <h4 className="font-medium text-gray-900">Pain Assessment</h4>
@@ -629,6 +738,28 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             setSelectedMedication(null);
           }}
           onSave={handleSaveMedication}
+        />
+      )}
+
+      {showNoteForm && (
+        <PatientNoteForm
+          note={selectedNote}
+          patientId={currentPatient.id}
+          patientName={`${currentPatient.firstName} ${currentPatient.lastName}`}
+          onClose={() => {
+            setShowNoteForm(false);
+            setSelectedNote(null);
+          }}
+          onSave={handleSaveNote}
+        />
+      )}
+
+      {showAssessmentForm && (
+        <AssessmentForm
+          patientId={currentPatient.id}
+          patientName={`${currentPatient.firstName} ${currentPatient.lastName}`}
+          onClose={() => setShowAssessmentForm(false)}
+          onSave={handleSaveAssessment}
         />
       )}
     </div>
