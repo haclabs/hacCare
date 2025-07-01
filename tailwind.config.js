@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class', // Enable class-based dark mode
   theme: {
     extend: {
       colors: {
@@ -87,15 +88,32 @@ export default {
           700: '#0e7490',
           800: '#155e75',
           900: '#164e63',
+        },
+        // Dark mode specific colors
+        gray: {
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          300: '#d1d5db',
+          400: '#9ca3af',
+          500: '#6b7280',
+          600: '#4b5563',
+          700: '#374151',
+          800: '#1f2937',
+          900: '#111827',
         }
       }
     },
   },
   plugins: [],
   safelist: [
-    // Ensure all color variants are included
+    // Ensure all color variants are included for both light and dark modes
     'text-blue-500', 'text-red-500', 'text-green-500', 'text-purple-500', 'text-indigo-500', 'text-teal-500',
     'border-blue-300', 'border-red-300', 'border-green-300', 'border-purple-300', 'border-indigo-300', 'border-teal-300',
-    'hover:border-blue-300', 'hover:border-red-300', 'hover:border-green-300', 'hover:border-purple-300', 'hover:border-indigo-300', 'hover:border-teal-300'
+    'hover:border-blue-300', 'hover:border-red-300', 'hover:border-green-300', 'hover:border-purple-300', 'hover:border-indigo-300', 'hover:border-teal-300',
+    // Dark mode variants
+    'dark:text-blue-400', 'dark:text-red-400', 'dark:text-green-400', 'dark:text-purple-400', 'dark:text-indigo-400', 'dark:text-teal-400',
+    'dark:border-blue-600', 'dark:border-red-600', 'dark:border-green-600', 'dark:border-purple-600', 'dark:border-indigo-600', 'dark:border-teal-600',
+    'dark:bg-gray-800', 'dark:bg-gray-900', 'dark:text-white', 'dark:text-gray-300', 'dark:border-gray-700'
   ]
 };

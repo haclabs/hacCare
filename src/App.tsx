@@ -10,6 +10,7 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { UserManagement } from './components/Users/UserManagement';
 import { Documentation } from './components/Documentation/Documentation';
 import { Changelog } from './components/Changelog/Changelog';
+import { Settings } from './components/Settings/Settings';
 import { usePatients } from './contexts/PatientContext';
 import { mockAlerts } from './data/mockData';
 import { Patient, Alert } from './types';
@@ -113,22 +114,22 @@ function App() {
             {/* Patient List */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">My Patients</h2>
-                <div className="text-sm text-gray-500">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Patients</h2>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   {patients.length} patients assigned
                 </div>
               </div>
               
               {dbError ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                  <h3 className="text-lg font-medium text-red-800 mb-2">Database Connection Error</h3>
-                  <p className="text-red-600">{dbError}</p>
-                  <p className="text-sm text-red-500 mt-2">Please check your Supabase connection and try again.</p>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+                  <h3 className="text-lg font-medium text-red-800 dark:text-red-300 mb-2">Database Connection Error</h3>
+                  <p className="text-red-600 dark:text-red-400">{dbError}</p>
+                  <p className="text-sm text-red-500 dark:text-red-400 mt-2">Please check your Supabase connection and try again.</p>
                 </div>
               ) : patients.length === 0 ? (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">No Patients Found</h3>
-                  <p className="text-gray-600">No patients are currently assigned to you.</p>
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">No Patients Found</h3>
+                  <p className="text-gray-600 dark:text-gray-400">No patients are currently assigned to you.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -160,19 +161,14 @@ function App() {
       
       case 'schedule':
         return (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Schedule Management</h2>
-            <p className="text-gray-600">Shift scheduling and task management system coming soon...</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Schedule Management</h2>
+            <p className="text-gray-600 dark:text-gray-400">Shift scheduling and task management system coming soon...</p>
           </div>
         );
       
       case 'settings':
-        return (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Settings</h2>
-            <p className="text-gray-600">System preferences and configuration options coming soon...</p>
-          </div>
-        );
+        return <Settings />;
       
       default:
         return null;
@@ -180,7 +176,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       {/* Application Header */}
       <Header 
         unreadAlerts={unreadAlerts}
