@@ -437,3 +437,5 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
     </div>
   );
 };
+  )
+}
