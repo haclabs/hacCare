@@ -44,43 +44,43 @@ export const PatientManagement: React.FC = () => {
    * Filter and search patients based on current criteria
    */
   const filteredPatients = patients.filter(patient => {
-    // Search filter
+    // Search filter - using snake_case property names
     const matchesSearch = 
-      patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.patientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.diagnosis.toLowerCase().includes(searchTerm.toLowerCase());
+      patient.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.patient_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.room_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Condition filter
     const matchesCondition = filterCondition === 'all' || patient.condition === filterCondition;
 
     return matchesSearch && matchesCondition;
   }).sort((a, b) => {
-    // Sorting logic
+    // Sorting logic - using snake_case property names
     let aValue: string | number;
     let bValue: string | number;
 
     switch (sortBy) {
       case 'name':
-        aValue = `${a.lastName}, ${a.firstName}`;
-        bValue = `${b.lastName}, ${b.firstName}`;
+        aValue = `${a.last_name}, ${a.first_name}`;
+        bValue = `${b.last_name}, ${b.first_name}`;
         break;
       case 'room':
-        aValue = `${a.roomNumber}${a.bedNumber}`;
-        bValue = `${b.roomNumber}${b.bedNumber}`;
+        aValue = `${a.room_number}${a.bed_number}`;
+        bValue = `${b.room_number}${b.bed_number}`;
         break;
       case 'admission':
-        aValue = new Date(a.admissionDate).getTime();
-        bValue = new Date(b.admissionDate).getTime();
+        aValue = new Date(a.admission_date).getTime();
+        bValue = new Date(b.admission_date).getTime();
         break;
       case 'condition':
         aValue = a.condition;
         bValue = b.condition;
         break;
       default:
-        aValue = a.patientId;
-        bValue = b.patientId;
+        aValue = a.patient_id;
+        bValue = b.patient_id;
     }
 
     if (sortOrder === 'asc') {
@@ -286,7 +286,7 @@ export const PatientManagement: React.FC = () => {
               <p className="text-3xl font-bold text-blue-600">
                 {patients.filter(p => {
                   const today = new Date().toDateString();
-                  const admissionDate = new Date(p.admissionDate).toDateString();
+                  const admissionDate = new Date(p.admission_date).toDateString();
                   return today === admissionDate;
                 }).length}
               </p>
@@ -435,12 +435,12 @@ export const PatientManagement: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {patient.firstName} {patient.lastName}
+                            {patient.first_name} {patient.last_name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {patient.patientId} • {calculateAge(patient.dateOfBirth)} years • {patient.gender}
+                            {patient.patient_id} • {calculateAge(patient.date_of_birth)} years • {patient.gender}
                           </div>
-                          {patient.allergies.length > 0 && (
+                          {patient.allergies && patient.allergies.length > 0 && (
                             <div className="flex items-center mt-1">
                               <AlertTriangle className="h-3 w-3 text-amber-500 mr-1" />
                               <span className="text-xs text-amber-600">
@@ -454,7 +454,7 @@ export const PatientManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                        {patient.roomNumber}{patient.bedNumber}
+                        {patient.room_number}{patient.bed_number}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -468,10 +468,10 @@ export const PatientManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {format(new Date(patient.admissionDate), 'MMM dd, yyyy')}
+                      {format(new Date(patient.admission_date), 'MMM dd, yyyy')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {patient.assignedNurse}
+                      {patient.assigned_nurse}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
