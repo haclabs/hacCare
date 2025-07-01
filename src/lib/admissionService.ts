@@ -67,7 +67,11 @@ export const fetchAdmissionRecord = async (patientId: string): Promise<Admission
     }
 
     return data;
-  } catch (error) {
+  } catch (error: any) {
+    // Handle PGRST116 error in catch block as well
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
     console.error('Error fetching admission record:', error);
     throw error;
   }
@@ -117,7 +121,11 @@ export const fetchAdvancedDirective = async (patientId: string): Promise<Advance
     }
 
     return data;
-  } catch (error) {
+  } catch (error: any) {
+    // Handle PGRST116 error in catch block as well
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
     console.error('Error fetching advanced directive:', error);
     throw error;
   }
