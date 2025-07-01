@@ -44,43 +44,43 @@ export const PatientManagement: React.FC = () => {
    * Filter and search patients based on current criteria
    */
   const filteredPatients = patients.filter(patient => {
-    // Search filter - using snake_case property names
+    // Search filter - safely handle undefined properties
     const matchesSearch = 
-      patient.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.patient_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.room_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase());
+      (patient.first_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.last_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.patient_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.room_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (patient.diagnosis || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     // Condition filter
     const matchesCondition = filterCondition === 'all' || patient.condition === filterCondition;
 
     return matchesSearch && matchesCondition;
   }).sort((a, b) => {
-    // Sorting logic - using snake_case property names
+    // Sorting logic - safely handle undefined properties
     let aValue: string | number;
     let bValue: string | number;
 
     switch (sortBy) {
       case 'name':
-        aValue = `${a.last_name}, ${a.first_name}`;
-        bValue = `${b.last_name}, ${b.first_name}`;
+        aValue = `${a.last_name || ''}, ${a.first_name || ''}`;
+        bValue = `${b.last_name || ''}, ${b.first_name || ''}`;
         break;
       case 'room':
-        aValue = `${a.room_number}${a.bed_number}`;
-        bValue = `${b.room_number}${b.bed_number}`;
+        aValue = `${a.room_number || ''}${a.bed_number || ''}`;
+        bValue = `${b.room_number || ''}${b.bed_number || ''}`;
         break;
       case 'admission':
-        aValue = new Date(a.admission_date).getTime();
-        bValue = new Date(b.admission_date).getTime();
+        aValue = new Date(a.admission_date || '').getTime();
+        bValue = new Date(b.admission_date || '').getTime();
         break;
       case 'condition':
-        aValue = a.condition;
-        bValue = b.condition;
+        aValue = a.condition || '';
+        bValue = b.condition || '';
         break;
       default:
-        aValue = a.patient_id;
-        bValue = b.patient_id;
+        aValue = a.patient_id || '';
+        bValue = b.patient_id || '';
     }
 
     if (sortOrder === 'asc') {
@@ -126,7 +126,7 @@ export const PatientManagement: React.FC = () => {
       
       if (selectedPatient) {
         // Update existing patient
-        await updatePatient({ ...patientData, id: selectedPatient.id });
+        await updatePatient(selectedPatient.id, patientData);
       } else {
         // Create new patient
         const newPatient = {
@@ -167,6 +167,8 @@ export const PatientManagement: React.FC = () => {
    * @returns {number} Age in years
    */
   const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth) return 'N/A';
+    
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -286,7 +288,7 @@ export const PatientManagement: React.FC = () => {
               <p className="text-3xl font-bold text-blue-600">
                 {patients.filter(p => {
                   const today = new Date().toDateString();
-                  const admissionDate = new Date(p.admission_date).toDateString();
+                  const admissionDate = new Date(p.admission_date || '').toDateString();
                   return today === admissionDate;
                 }).length}
               </p>
@@ -468,7 +470,7 @@ export const PatientManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {format(new Date(patient.admission_date), 'MMM dd, yyyy')}
+                      {patient.admission_date ? format(new Date(patient.admission_date), 'MMM dd, yyyy') : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {patient.assigned_nurse}
