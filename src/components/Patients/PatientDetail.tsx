@@ -30,6 +30,7 @@ import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { VitalsTrends } from './VitalsTrends';
 import { supabase } from '../../lib/supabase';
+import { updatePatientVitals } from '../../lib/patientService';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -183,15 +184,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
   const handleVitalsSubmit = async (vitalsData: any) => {
     try {
-      const { error } = await supabase
-        .from('patient_vitals')
-        .insert({
-          patient_id: patient.id,
-          ...vitalsData
-        });
-
-      if (error) throw error;
-      
+      await updatePatientVitals(patient.id, vitalsData);
       setShowVitalsEditor(false);
       fetchPatientData();
     } catch (error) {
