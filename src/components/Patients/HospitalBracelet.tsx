@@ -42,7 +42,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
         printWindow.document.write(`
           <html>
             <head>
-              <title>Hospital Bracelet - ${patient.patientId}</title>
+              <title>Hospital Bracelet - ${patient.patient_id}</title>
               <style>
                 @page {
                   size: 11in 8.5in landscape;
@@ -124,21 +124,21 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
     ctx.fillStyle = '#1f2937';
     ctx.font = 'bold 32px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`${patient.lastName.toUpperCase()}, ${patient.firstName}`, 180, 80);
+    ctx.fillText(`${patient.last_name.toUpperCase()}, ${patient.first_name}`, 180, 80);
 
     // Draw patient ID
     ctx.font = 'bold 24px Arial';
-    ctx.fillText(`ID: ${patient.patientId}`, 180, 110);
+    ctx.fillText(`ID: ${patient.patient_id}`, 180, 110);
 
     // Draw DOB
     ctx.font = '20px Arial';
-    ctx.fillText(`DOB: ${format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}`, 180, 140);
+    ctx.fillText(`DOB: ${format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}`, 180, 140);
 
     // Draw room info
-    ctx.fillText(`Room: ${patient.roomNumber}${patient.bedNumber}`, 180, 170);
+    ctx.fillText(`Room: ${patient.room_number}${patient.bed_number}`, 180, 170);
 
     // Draw allergies if any
-    if (patient.allergies.length > 0) {
+    if (patient.allergies && patient.allergies.length > 0) {
       ctx.fillStyle = '#dc2626';
       ctx.fillRect(40, 200, canvas.width - 80, 60);
       ctx.fillStyle = '#ffffff';
@@ -151,7 +151,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
     }
 
     // Draw barcode area
-    const barcodeY = patient.allergies.length > 0 ? 280 : 200;
+    const barcodeY = patient.allergies && patient.allergies.length > 0 ? 280 : 200;
     ctx.fillStyle = '#000000';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
@@ -171,7 +171,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
     // Draw patient ID below barcode - centered
     ctx.font = 'bold 16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(patient.patientId, canvas.width / 2, barcodeY + 80);
+    ctx.fillText(patient.patient_id, canvas.width / 2, barcodeY + 80);
 
     // Convert to blob and download
     canvas.toBlob((blob) => {
@@ -179,7 +179,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `hospital-bracelet-${patient.patientId}.png`;
+        a.download = `hospital-bracelet-${patient.patient_id}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -224,14 +224,14 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
             <h3 className="text-lg font-medium text-blue-900 mb-3">Bracelet Information</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-blue-900"><strong>Patient:</strong> {patient.lastName}, {patient.firstName}</p>
-                <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patientId}</p>
-                <p className="text-blue-900"><strong>Date of Birth:</strong> {format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}</p>
+                <p className="text-blue-900"><strong>Patient:</strong> {patient.last_name}, {patient.first_name}</p>
+                <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patient_id}</p>
+                <p className="text-blue-900"><strong>Date of Birth:</strong> {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</p>
               </div>
               <div>
-                <p className="text-blue-900"><strong>Room:</strong> {patient.roomNumber}{patient.bedNumber}</p>
-                <p className="text-blue-900"><strong>Blood Type:</strong> {patient.bloodType}</p>
-                <p className="text-blue-900"><strong>Allergies:</strong> {patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}</p>
+                <p className="text-blue-900"><strong>Room:</strong> {patient.room_number}{patient.bed_number}</p>
+                <p className="text-blue-900"><strong>Blood Type:</strong> {patient.blood_type}</p>
+                <p className="text-blue-900"><strong>Allergies:</strong> {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}</p>
               </div>
             </div>
           </div>
@@ -274,23 +274,23 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
               <div className="absolute" style={{ left: '140px', top: '20px', right: '20px' }}>
                 {/* Patient Name - Larger and better spaced */}
                 <div className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
-                  {patient.lastName.toUpperCase()}, {patient.firstName}
+                  {patient.last_name.toUpperCase()}, {patient.first_name}
                 </div>
                 
                 {/* Patient ID - More prominent with better spacing */}
                 <div className="text-xl font-bold text-blue-600 mb-3">
-                  ID: {patient.patientId}
+                  ID: {patient.patient_id}
                 </div>
                 
                 {/* DOB and Room - Better spacing */}
                 <div className="text-base text-gray-700 space-y-2">
-                  <div>DOB: {format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}</div>
-                  <div>Room: {patient.roomNumber}{patient.bedNumber} • Blood Type: {patient.bloodType}</div>
+                  <div>DOB: {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</div>
+                  <div>Room: {patient.room_number}{patient.bed_number} • Blood Type: {patient.blood_type}</div>
                 </div>
               </div>
 
               {/* Allergy Alert Section - Better positioning with proper spacing */}
-              {patient.allergies.length > 0 && (
+              {patient.allergies && patient.allergies.length > 0 && (
                 <div 
                   className="absolute bg-red-600 text-white rounded-lg flex items-center justify-center"
                   style={{ 
@@ -315,14 +315,14 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                   right: '20px', 
                   bottom: '20px', 
                   height: '95px',
-                  top: patient.allergies.length > 0 ? '175px' : '125px'
+                  top: patient.allergies && patient.allergies.length > 0 ? '175px' : '125px'
                 }}
               >
                 <div className="text-sm text-gray-600 mb-3">Scan for Patient Information</div>
                 
                 {/* UPC-128 Barcode - Perfectly centered */}
                 <div className="flex justify-center mb-3">
-                  {generateCode128SVG(patient.patientId, {
+                  {generateCode128SVG(patient.patient_id, {
                     width: 200,
                     height: 40,
                     showText: false,
@@ -332,7 +332,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 
                 {/* Centered patient ID below barcode */}
                 <div className="text-sm text-gray-800 font-mono font-bold text-center">
-                  {patient.patientId}
+                  {patient.patient_id}
                 </div>
                 
                 {/* Medical Symbol - Better positioned with proper spacing */}
@@ -347,7 +347,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
               {/* Security Features - Better positioning with proper spacing */}
               <div className="absolute top-6 right-6 text-xs text-gray-400 text-center">
                 <div className="font-bold">SECURE ID</div>
-                <div className="text-blue-600 font-bold">#{patient.patientId.slice(-4)}</div>
+                <div className="text-blue-600 font-bold">#{patient.patient_id.slice(-4)}</div>
               </div>
 
               {/* Tamper-evident pattern - More subtle and properly spaced */}
@@ -394,7 +394,7 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
             </div>
           </div>
 
-          {patient.allergies.length > 0 && (
+          {patient.allergies && patient.allergies.length > 0 && (
             <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
