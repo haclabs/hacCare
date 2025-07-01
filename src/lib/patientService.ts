@@ -43,46 +43,26 @@ export interface DatabaseVitals {
 /**
  * Convert database patient to app patient format
  */
-const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVitals): Patient => {
+const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVitals[]): Patient => {
   return {
     id: dbPatient.id,
-    patientId: dbPatient.patient_id,
-    firstName: dbPatient.first_name,
-    lastName: dbPatient.last_name,
-    dateOfBirth: dbPatient.date_of_birth,
+    patient_id: dbPatient.patient_id,
+    first_name: dbPatient.first_name,
+    last_name: dbPatient.last_name,
+    date_of_birth: dbPatient.date_of_birth,
     gender: dbPatient.gender as 'Male' | 'Female' | 'Other',
-    roomNumber: dbPatient.room_number,
-    bedNumber: dbPatient.bed_number,
-    admissionDate: dbPatient.admission_date,
+    room_number: dbPatient.room_number,
+    bed_number: dbPatient.bed_number,
+    admission_date: dbPatient.admission_date,
     condition: dbPatient.condition as 'Critical' | 'Stable' | 'Improving' | 'Discharged',
     diagnosis: dbPatient.diagnosis,
     allergies: dbPatient.allergies || [],
-    bloodType: dbPatient.blood_type,
-    emergencyContact: {
-      name: dbPatient.emergency_contact_name,
-      relationship: dbPatient.emergency_contact_relationship,
-      phone: dbPatient.emergency_contact_phone
-    },
-    assignedNurse: dbPatient.assigned_nurse,
-    vitals: vitals ? {
-      temperature: vitals.temperature,
-      bloodPressure: {
-        systolic: vitals.blood_pressure_systolic,
-        diastolic: vitals.blood_pressure_diastolic
-      },
-      heartRate: vitals.heart_rate,
-      respiratoryRate: vitals.respiratory_rate,
-      oxygenSaturation: vitals.oxygen_saturation,
-      lastUpdated: vitals.recorded_at
-    } : {
-      // For new patients, set vitals to zero/empty until first recording
-      temperature: 0,
-      bloodPressure: { systolic: 0, diastolic: 0 },
-      heartRate: 0,
-      respiratoryRate: 0,
-      oxygenSaturation: 0,
-      lastUpdated: ''
-    },
+    blood_type: dbPatient.blood_type,
+    emergency_contact_name: dbPatient.emergency_contact_name,
+    emergency_contact_relationship: dbPatient.emergency_contact_relationship,
+    emergency_contact_phone: dbPatient.emergency_contact_phone,
+    assigned_nurse: dbPatient.assigned_nurse,
+    vitals: vitals || [], // Return all vitals as array
     medications: [], // Will be loaded separately
     notes: [] // Will be loaded separately
   };
@@ -93,22 +73,22 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
  */
 const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'created_at' | 'updated_at'> => {
   return {
-    patient_id: patient.patientId,
-    first_name: patient.firstName,
-    last_name: patient.lastName,
-    date_of_birth: patient.dateOfBirth,
+    patient_id: patient.patient_id,
+    first_name: patient.first_name,
+    last_name: patient.last_name,
+    date_of_birth: patient.date_of_birth,
     gender: patient.gender,
-    room_number: patient.roomNumber,
-    bed_number: patient.bedNumber,
-    admission_date: patient.admissionDate,
+    room_number: patient.room_number,
+    bed_number: patient.bed_number,
+    admission_date: patient.admission_date,
     condition: patient.condition,
     diagnosis: patient.diagnosis,
     allergies: patient.allergies,
-    blood_type: patient.bloodType,
-    emergency_contact_name: patient.emergencyContact.name,
-    emergency_contact_relationship: patient.emergencyContact.relationship,
-    emergency_contact_phone: patient.emergencyContact.phone,
-    assigned_nurse: patient.assignedNurse
+    blood_type: patient.blood_type,
+    emergency_contact_name: patient.emergency_contact_name,
+    emergency_contact_relationship: patient.emergency_contact_relationship,
+    emergency_contact_phone: patient.emergency_contact_phone,
+    assigned_nurse: patient.assigned_nurse
   };
 };
 
@@ -117,7 +97,9 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
  */
 export const fetchPatients = async (): Promise<Patient[]> => {
   try {
-    // Fetch patients with their latest vitals
+    console.log('Fetching patients from database...');
+    
+    // Fetch patients
     const { data: patients, error: patientsError } = await supabase
       .from('patients')
       .select('*')
@@ -128,24 +110,37 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     }
 
     if (!patients || patients.length === 0) {
+      console.log('No patients found in database');
       return [];
     }
 
-    // Fetch latest vitals for each patient
-    const patientsWithVitals = await Promise.all(
-      patients.map(async (patient) => {
-        const { data: vitals } = await supabase
-          .from('patient_vitals')
-          .select('*')
-          .eq('patient_id', patient.id)
-          .order('recorded_at', { ascending: false })
-          .limit(1)
-          .single();
+    console.log(`Found ${patients.length} patients`);
 
-        return convertDatabasePatient(patient, vitals || undefined);
-      })
+    // Fetch vitals for all patients
+    const { data: allVitals, error: vitalsError } = await supabase
+      .from('patient_vitals')
+      .select('*')
+      .order('recorded_at', { ascending: false });
+
+    if (vitalsError) {
+      console.error('Error fetching vitals:', vitalsError);
+    }
+
+    // Group vitals by patient
+    const vitalsByPatient = (allVitals || []).reduce((acc, vital) => {
+      if (!acc[vital.patient_id]) {
+        acc[vital.patient_id] = [];
+      }
+      acc[vital.patient_id].push(vital);
+      return acc;
+    }, {} as Record<string, DatabaseVitals[]>);
+
+    // Convert patients with their vitals
+    const patientsWithVitals = patients.map(patient => 
+      convertDatabasePatient(patient, vitalsByPatient[patient.id] || [])
     );
 
+    console.log('Patients converted successfully');
     return patientsWithVitals;
   } catch (error) {
     console.error('Error fetching patients:', error);
@@ -168,25 +163,6 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
 
     if (error) {
       throw error;
-    }
-
-    // Only insert initial vitals if they have actual values (not zeros)
-    if (patient.vitals.temperature > 0 || patient.vitals.heartRate > 0) {
-      const { error: vitalsError } = await supabase
-        .from('patient_vitals')
-        .insert({
-          patient_id: data.id,
-          temperature: patient.vitals.temperature,
-          blood_pressure_systolic: patient.vitals.bloodPressure.systolic,
-          blood_pressure_diastolic: patient.vitals.bloodPressure.diastolic,
-          heart_rate: patient.vitals.heartRate,
-          respiratory_rate: patient.vitals.respiratoryRate,
-          oxygen_saturation: patient.vitals.oxygenSaturation
-        });
-
-      if (vitalsError) {
-        console.error('Error inserting initial vitals:', vitalsError);
-      }
     }
 
     return convertDatabasePatient(data);
@@ -245,6 +221,8 @@ export const deletePatient = async (patientId: string): Promise<void> => {
  */
 export const updatePatientVitals = async (patientId: string, vitals: VitalSigns): Promise<void> => {
   try {
+    console.log('Inserting vitals for patient:', patientId, vitals);
+    
     const { error } = await supabase
       .from('patient_vitals')
       .insert({
@@ -258,8 +236,11 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
       });
 
     if (error) {
+      console.error('Database error inserting vitals:', error);
       throw error;
     }
+
+    console.log('Vitals inserted successfully');
   } catch (error) {
     console.error('Error updating patient vitals:', error);
     throw error;
@@ -271,6 +252,8 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
  */
 export const fetchPatientVitalsHistory = async (patientId: string, limit: number = 10): Promise<DatabaseVitals[]> => {
   try {
+    console.log('Fetching vitals history for patient:', patientId);
+    
     const { data, error } = await supabase
       .from('patient_vitals')
       .select('*')
@@ -279,9 +262,11 @@ export const fetchPatientVitalsHistory = async (patientId: string, limit: number
       .limit(limit);
 
     if (error) {
+      console.error('Error fetching vitals history:', error);
       throw error;
     }
 
+    console.log(`Found ${data?.length || 0} vitals records for patient ${patientId}`);
     return data || [];
   } catch (error) {
     console.error('Error fetching patient vitals history:', error);

@@ -16,7 +16,7 @@ import {
 interface PatientContextType {
   patients: Patient[];
   addPatient: (patient: Patient) => Promise<void>;
-  updatePatient: (patient: Patient) => Promise<void>;
+  updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
   deletePatient: (patientId: string) => Promise<void>;
   getPatient: (patientId: string) => Patient | undefined;
   loading: boolean;
@@ -58,6 +58,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       setError(null);
+      console.log('Loading patients...');
 
       if (isSupabaseConfigured) {
         console.log('Loading patients from Supabase...');
@@ -115,9 +116,18 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   /**
    * Update an existing patient
    */
-  const updatePatient = async (updatedPatient: Patient) => {
+  const updatePatient = async (patientId: string, updates: Partial<Patient>) => {
     try {
       setError(null);
+      
+      // Find the current patient
+      const currentPatient = patients.find(p => p.id === patientId);
+      if (!currentPatient) {
+        throw new Error('Patient not found');
+      }
+
+      // Create updated patient object
+      const updatedPatient = { ...currentPatient, ...updates };
       
       if (isSupabaseConfigured) {
         console.log('Updating patient in database...');
@@ -128,7 +138,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } else {
         console.log('Updating patient in local state (Supabase not configured)');
         setPatients(prev => prev.map(patient => 
-          patient.id === updatedPatient.id ? updatedPatient : patient
+          patient.id === patientId ? updatedPatient : patient
         ));
       }
     } catch (err: any) {
@@ -171,6 +181,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
    * Refresh patients from database
    */
   const refreshPatients = async () => {
+    console.log('Refreshing patients...');
     await loadPatients();
   };
 

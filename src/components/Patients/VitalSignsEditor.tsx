@@ -45,11 +45,15 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
     setError('');
 
     try {
+      console.log('Saving vitals for patient:', patientId, editedVitals);
+      
       // Save vitals to database
       await updatePatientVitals(patientId, editedVitals);
+      console.log('Vitals saved successfully');
       
       // Refresh patients to get updated vitals
       await refreshPatients();
+      console.log('Patients refreshed');
       
       // Call the onSave callback
       onSave(editedVitals);
