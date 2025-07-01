@@ -8,7 +8,7 @@ import {
   Clipboard, BookOpen, FileCheck, UserCheck, Settings,
   Zap, Award, CheckCircle, AlertCircle, Info, Star
 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, isValid } from 'date-fns';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { PatientBracelet } from './PatientBracelet';
@@ -24,6 +24,22 @@ interface PatientDetailProps {
   patient: Patient;
   onBack: () => void;
 }
+
+// Helper function to safely format dates
+const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
+  if (!dateValue) return 'N/A';
+  
+  const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+  
+  if (!isValid(date)) return 'N/A';
+  
+  try {
+    return format(date, formatString);
+  } catch (error) {
+    console.warn('Date formatting error:', error);
+    return 'Invalid Date';
+  }
+};
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -45,9 +61,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const patientNotes = patient.notes || [];
   
   const latestVitals = Array.isArray(patientVitals) && patientVitals.length > 0 
-    ? patientVitals.sort((a, b) => 
-        new Date(b.recorded_at || 0).getTime() - new Date(a.recorded_at || 0).getTime()
-      )[0]
+    ? patientVitals.sort((a, b) => {
+        const dateA = new Date(a.recorded_at || a.lastUpdated || 0);
+        const dateB = new Date(b.recorded_at || b.lastUpdated || 0);
+        return dateB.getTime() - dateA.getTime();
+      })[0]
     : null;
 
   const activeMedications = patientMedications.filter(m => m.status === 'Active');
@@ -111,7 +129,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <div>
                     <label className="text-sm font-medium text-gray-500">Date of Birth</label>
                     <p className="text-sm text-gray-900">
-                      {format(new Date(patient.date_of_birth), 'MMM dd, yyyy')}
+                      {safeFormatDate(patient.date_of_birth, 'MMM dd, yyyy')}
                     </p>
                   </div>
                   <div>
@@ -132,7 +150,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     <label className="text-sm font-medium text-gray-500">Admission Date</label>
                     <p className="text-sm text-gray-900 flex items-center">
                       <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                      {format(new Date(patient.admission_date), 'MMM dd, yyyy')} 
+                      {safeFormatDate(patient.admission_date, 'MMM dd, yyyy')} 
                       <span className="ml-2 text-xs text-gray-500">({admissionDays} days)</span>
                     </p>
                   </div>
@@ -215,7 +233,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-500">Latest Vitals</p>
                     <p className="text-lg font-semibold text-gray-900">
-                      {latestVitals ? format(new Date(latestVitals.recorded_at || ''), 'HH:mm') : 'No data'}
+                      {latestVitals ? safeFormatDate(latestVitals.recorded_at || latestVitals.lastUpdated, 'HH:mm') : 'No data'}
                     </p>
                   </div>
                 </div>
@@ -291,7 +309,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-500">Recorded</p>
                     <p className="text-sm text-gray-600">
-                      {format(new Date(latestVitals.recorded_at || ''), 'MMM dd, HH:mm')}
+                      {safeFormatDate(latestVitals.recorded_at || latestVitals.lastUpdated, 'MMM dd, HH:mm')}
                     </p>
                   </div>
                 </div>
@@ -314,7 +332,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-orange-600">
-                          Due: {format(new Date(medication.next_due), 'HH:mm')}
+                          Due: {safeFormatDate(medication.next_due, 'HH:mm')}
                         </p>
                         <p className="text-xs text-gray-500">{medication.frequency}</p>
                       </div>
@@ -343,7 +361,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                           {note.priority}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {format(new Date(note.created_at || ''), 'MMM dd, HH:mm')}
+                          {safeFormatDate(note.created_at, 'MMM dd, HH:mm')}
                         </span>
                       </div>
                       <p className="text-sm text-gray-900 mb-1">{note.content}</p>
@@ -424,14 +442,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     </div>
                     <div>
                       <label className="font-medium text-gray-500">Start Date</label>
-                      <p className="text-gray-900">{format(new Date(medication.start_date), 'MMM dd, yyyy')}</p>
+                      <p className="text-gray-900">{safeFormatDate(medication.start_date, 'MMM dd, yyyy')}</p>
                     </div>
                     <div>
                       <label className="font-medium text-gray-500">Next Due</label>
                       <p className={`font-medium ${
                         new Date(medication.next_due) <= new Date() ? 'text-red-600' : 'text-gray-900'
                       }`}>
-                        {format(new Date(medication.next_due), 'MMM dd, HH:mm')}
+                        {safeFormatDate(medication.next_due, 'MMM dd, HH:mm')}
                       </p>
                     </div>
                   </div>
@@ -439,7 +457,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   {medication.last_administered && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <p className="text-sm text-gray-600">
-                        Last administered: {format(new Date(medication.last_administered), 'MMM dd, yyyy HH:mm')}
+                        Last administered: {safeFormatDate(medication.last_administered, 'MMM dd, yyyy HH:mm')}
                       </p>
                     </div>
                   )}
@@ -478,7 +496,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       <span className="text-sm font-medium text-gray-900">{note.type}</span>
                     </div>
                     <span className="text-sm text-gray-500">
-                      {format(new Date(note.created_at || ''), 'MMM dd, yyyy HH:mm')}
+                      {safeFormatDate(note.created_at, 'MMM dd, yyyy HH:mm')}
                     </span>
                   </div>
                   <p className="text-gray-900 mb-3">{note.content}</p>
