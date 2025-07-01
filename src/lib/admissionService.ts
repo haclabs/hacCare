@@ -56,22 +56,14 @@ export const fetchAdmissionRecord = async (patientId: string): Promise<Admission
       .from('patient_admission_records')
       .select('*')
       .eq('patient_id', patientId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No record found
-        return null;
-      }
       throw error;
     }
 
     return data;
-  } catch (error: any) {
-    // Handle PGRST116 error in catch block as well
-    if (error?.code === 'PGRST116') {
-      return null;
-    }
+  } catch (error) {
     console.error('Error fetching admission record:', error);
     throw error;
   }
@@ -110,22 +102,14 @@ export const fetchAdvancedDirective = async (patientId: string): Promise<Advance
       .from('patient_advanced_directives')
       .select('*')
       .eq('patient_id', patientId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No record found
-        return null;
-      }
       throw error;
     }
 
     return data;
-  } catch (error: any) {
-    // Handle PGRST116 error in catch block as well
-    if (error?.code === 'PGRST116') {
-      return null;
-    }
+  } catch (error) {
     console.error('Error fetching advanced directive:', error);
     throw error;
   }
