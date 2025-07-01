@@ -93,6 +93,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     setIsEditing(false);
   };
 
+  const handleVitalsSave = () => {
+    setShowVitalsEditor(false);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -852,7 +856,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {showVitalsEditor && (
         <VitalSignsEditor
           patientId={patient.id}
+          vitals={latestVitals}
           onClose={() => setShowVitalsEditor(false)}
+          onSave={handleVitalsSave}
         />
       )}
 
