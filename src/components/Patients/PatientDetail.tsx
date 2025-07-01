@@ -19,7 +19,11 @@ import {
   ClipboardList,
   UserCheck,
   Shield,
-  Building
+  Building,
+  Settings,
+  QrCode,
+  TrendingUp,
+  BookOpen
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
@@ -29,6 +33,9 @@ import { AssessmentForm } from './AssessmentForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { VitalsTrends } from './VitalsTrends';
+import { HospitalBracelet } from './HospitalBracelet';
+import { PatientBracelet } from './PatientBracelet';
+import { MedicationBarcode } from './MedicationBarcode';
 import { supabase } from '../../lib/supabase';
 import { updatePatientVitals } from '../../lib/patientService';
 
@@ -120,6 +127,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
   const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
+  const [showHospitalBracelet, setShowHospitalBracelet] = useState(false);
+  const [showPatientBracelet, setShowPatientBracelet] = useState(false);
+  const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
+  const [selectedMedication, setSelectedMedication] = useState<PatientMedication | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -291,9 +302,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     { id: 'vitals', label: 'Vital Signs', icon: Activity },
     { id: 'medications', label: 'Medications', icon: Pill },
     { id: 'notes', label: 'Notes', icon: FileText },
-    { id: 'admission', label: 'Admission', icon: Building },
-    { id: 'directives', label: 'Directives', icon: Shield }
+    { id: 'assessments', label: 'Assessments', icon: ClipboardList },
+    { id: 'tools', label: 'Tools', icon: Settings }
   ];
+
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId);
+  };
 
   if (loading) {
     return (
@@ -344,7 +359,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -408,65 +423,83 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 </div>
               </div>
 
-              {/* Latest Vitals */}
+              {/* Latest Vitals with Colored Boxes */}
               {latestVitals && (
                 <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
                     <button
                       onClick={() => setShowVitalsEditor(true)}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
                     >
                       <Plus className="h-4 w-4 mr-1" />
-                      Add Vitals
+                      Record Vitals
                     </button>
                   </div>
+                  
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="flex items-center">
-                      <Thermometer className="h-5 w-5 text-red-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{latestVitals.temperature}°F</p>
-                        <p className="text-sm text-gray-500">Temperature</p>
+                    {/* Temperature */}
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <Thermometer className="h-5 w-5 text-blue-600" />
+                        <span className="text-xs text-blue-600 font-medium">TEMP</span>
                       </div>
+                      <div className="text-2xl font-bold text-blue-900">{latestVitals.temperature}°F</div>
+                      <div className="text-xs text-blue-700">Temperature</div>
                     </div>
-                    <div className="flex items-center">
-                      <Heart className="h-5 w-5 text-red-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
-                        </p>
-                        <p className="text-sm text-gray-500">Blood Pressure</p>
+
+                    {/* Blood Pressure */}
+                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <Heart className="h-5 w-5 text-red-600" />
+                        <span className="text-xs text-red-600 font-medium">BP</span>
                       </div>
+                      <div className="text-2xl font-bold text-red-900">
+                        {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
+                      </div>
+                      <div className="text-xs text-red-700">Blood Pressure</div>
                     </div>
-                    <div className="flex items-center">
-                      <Activity className="h-5 w-5 text-green-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{latestVitals.heart_rate} bpm</p>
-                        <p className="text-sm text-gray-500">Heart Rate</p>
+
+                    {/* Heart Rate */}
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <Activity className="h-5 w-5 text-green-600" />
+                        <span className="text-xs text-green-600 font-medium">HR</span>
                       </div>
+                      <div className="text-2xl font-bold text-green-900">{latestVitals.heart_rate}</div>
+                      <div className="text-xs text-green-700">Heart Rate (BPM)</div>
                     </div>
-                    <div className="flex items-center">
-                      <Activity className="h-5 w-5 text-blue-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{latestVitals.respiratory_rate} /min</p>
-                        <p className="text-sm text-gray-500">Respiratory Rate</p>
+
+                    {/* Respiratory Rate */}
+                    <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <Activity className="h-5 w-5 text-purple-600" />
+                        <span className="text-xs text-purple-600 font-medium">RR</span>
                       </div>
+                      <div className="text-2xl font-bold text-purple-900">{latestVitals.respiratory_rate}</div>
+                      <div className="text-xs text-purple-700">Respiratory Rate</div>
                     </div>
-                    <div className="flex items-center">
-                      <Droplets className="h-5 w-5 text-blue-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{latestVitals.oxygen_saturation}%</p>
-                        <p className="text-sm text-gray-500">O2 Saturation</p>
+
+                    {/* Oxygen Saturation */}
+                    <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <Droplets className="h-5 w-5 text-indigo-600" />
+                        <span className="text-xs text-indigo-600 font-medium">O2</span>
                       </div>
+                      <div className="text-2xl font-bold text-indigo-900">{latestVitals.oxygen_saturation}%</div>
+                      <div className="text-xs text-indigo-700">O2 Saturation</div>
                     </div>
-                    <div className="flex items-center">
-                      <Clock className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {new Date(latestVitals.recorded_at).toLocaleTimeString()}
-                        </p>
-                        <p className="text-sm text-gray-500">Recorded</p>
+
+                    {/* Recorded Time */}
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <Clock className="h-5 w-5 text-gray-600" />
+                        <span className="text-xs text-gray-600 font-medium">TIME</span>
                       </div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {new Date(latestVitals.recorded_at).toLocaleTimeString()}
+                      </div>
+                      <div className="text-xs text-gray-700">Last Recorded</div>
                     </div>
                   </div>
                 </div>
@@ -600,13 +633,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <div key={medication.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        medication.status === 'Active' ? 'bg-green-100 text-green-800' :
-                        medication.status === 'Discontinued' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {medication.status}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          medication.status === 'Active' ? 'bg-green-100 text-green-800' :
+                          medication.status === 'Discontinued' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {medication.status}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedMedication(medication);
+                            setShowMedicationBarcode(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                          title="Generate Barcode"
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
@@ -692,150 +737,148 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         )}
 
-        {activeTab === 'admission' && (
+        {activeTab === 'assessments' && (
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Admission Record</h3>
+                <h3 className="text-lg font-medium text-gray-900">Patient Assessments</h3>
                 <button
-                  onClick={() => setShowAdmissionForm(true)}
+                  onClick={() => setShowAssessmentForm(true)}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                 >
-                  <Edit className="h-4 w-4 mr-2" />
-                  {admissionRecord ? 'Edit' : 'Add'} Record
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Assessment
                 </button>
               </div>
             </div>
             <div className="p-6">
-              {admissionRecord ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">Admission Details</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-500">Admission Type</p>
-                        <p className="font-medium">{admissionRecord.admission_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Attending Physician</p>
-                        <p className="font-medium">{admissionRecord.attending_physician}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Admission Source</p>
-                        <p className="font-medium">{admissionRecord.admission_source}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Chief Complaint</p>
-                        <p className="font-medium">{admissionRecord.chief_complaint}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">Insurance & Contact</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-500">Insurance Provider</p>
-                        <p className="font-medium">{admissionRecord.insurance_provider}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Policy Number</p>
-                        <p className="font-medium">{admissionRecord.insurance_policy}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Secondary Contact</p>
-                        <p className="font-medium">{admissionRecord.secondary_contact_name}</p>
-                        <p className="text-sm text-gray-600">{admissionRecord.secondary_contact_phone}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No admission record found</p>
-                  <button
-                    onClick={() => setShowAdmissionForm(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Admission Record
-                  </button>
-                </div>
-              )}
+              <div className="text-center py-8">
+                <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No assessments recorded</p>
+                <p className="text-sm text-gray-400 mt-2">Click "New Assessment" to begin</p>
+              </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'directives' && (
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Advanced Directives</h3>
+        {activeTab === 'tools' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">Patient Care Tools</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Patient Bracelet */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center mb-4">
+                  <QrCode className="h-8 w-8 text-blue-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Patient Bracelet</h3>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  Generate and print patient identification bracelet with QR code
+                </p>
                 <button
-                  onClick={() => setShowAdvancedDirectivesForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  onClick={() => setShowPatientBracelet(true)}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                 >
-                  <Edit className="h-4 w-4 mr-2" />
-                  {advancedDirective ? 'Edit' : 'Add'} Directives
+                  <QrCode className="h-4 w-4" />
+                  <span>Generate Bracelet</span>
                 </button>
               </div>
-            </div>
-            <div className="p-6">
-              {advancedDirective ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">Legal Documents</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-500">Living Will Status</p>
-                        <p className="font-medium">{advancedDirective.living_will_status}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">DNR Status</p>
-                        <p className="font-medium">{advancedDirective.dnr_status}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Healthcare Proxy</p>
-                        <p className="font-medium">{advancedDirective.healthcare_proxy_name || 'Not specified'}</p>
-                        {advancedDirective.healthcare_proxy_phone && (
-                          <p className="text-sm text-gray-600">{advancedDirective.healthcare_proxy_phone}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">Preferences</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-500">Organ Donation</p>
-                        <p className="font-medium">{advancedDirective.organ_donation_status}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Religious Preference</p>
-                        <p className="font-medium">{advancedDirective.religious_preference || 'Not specified'}</p>
-                      </div>
-                      {advancedDirective.special_instructions && (
-                        <div>
-                          <p className="text-sm text-gray-500">Special Instructions</p>
-                          <p className="font-medium">{advancedDirective.special_instructions}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+
+              {/* Hospital Bracelet */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center mb-4">
+                  <Heart className="h-8 w-8 text-green-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Hospital Bracelet</h3>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No advanced directives found</p>
-                  <button
-                    onClick={() => setShowAdvancedDirectivesForm(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Advanced Directives
-                  </button>
+                <p className="text-gray-600 mb-4">
+                  Official hospital identification bracelet with security features
+                </p>
+                <button
+                  onClick={() => setShowHospitalBracelet(true)}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Heart className="h-4 w-4" />
+                  <span>Generate Hospital Bracelet</span>
+                </button>
+              </div>
+
+              {/* Medication Barcode */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center mb-4">
+                  <Pill className="h-8 w-8 text-purple-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Medication Barcode</h3>
                 </div>
-              )}
+                <p className="text-gray-600 mb-4">
+                  Generate barcodes for medication administration tracking
+                </p>
+                <button
+                  onClick={() => {
+                    if (activeMedications.length > 0) {
+                      setSelectedMedication(activeMedications[0]);
+                      setShowMedicationBarcode(true);
+                    }
+                  }}
+                  disabled={activeMedications.length === 0}
+                  className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Pill className="h-4 w-4" />
+                  <span>Generate Barcode</span>
+                </button>
+              </div>
+
+              {/* Vitals Trends */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center mb-4">
+                  <TrendingUp className="h-8 w-8 text-orange-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Vitals Trends</h3>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  View detailed trends and analytics for vital signs
+                </p>
+                <button
+                  onClick={() => setActiveTab('vitals')}
+                  className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span>View Trends</span>
+                </button>
+              </div>
+
+              {/* Assessment Tools */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center mb-4">
+                  <ClipboardList className="h-8 w-8 text-red-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Assessment Tools</h3>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  Access specialized assessment forms and checklists
+                </p>
+                <button
+                  onClick={() => setActiveTab('assessments')}
+                  className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  <span>Open Assessments</span>
+                </button>
+              </div>
+
+              {/* Documentation */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center mb-4">
+                  <BookOpen className="h-8 w-8 text-blue-600 mr-3" />
+                  <h3 className="text-lg font-medium text-gray-900">Documentation</h3>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  Access care plans, protocols, and documentation templates
+                </p>
+                <button
+                  onClick={() => window.open('/documentation', '_blank')}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>View Documentation</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -901,6 +944,32 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             fetchPatientData();
           }}
           onClose={() => setShowAdvancedDirectivesForm(false)}
+        />
+      )}
+
+      {showHospitalBracelet && (
+        <HospitalBracelet
+          patient={patient}
+          onClose={() => setShowHospitalBracelet(false)}
+        />
+      )}
+
+      {showPatientBracelet && (
+        <PatientBracelet
+          patient={patient}
+          onClose={() => setShowPatientBracelet(false)}
+        />
+      )}
+
+      {showMedicationBarcode && selectedMedication && (
+        <MedicationBarcode
+          medication={selectedMedication}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          patientId={patient.patient_id}
+          onClose={() => {
+            setShowMedicationBarcode(false);
+            setSelectedMedication(null);
+          }}
         />
       )}
     </div>
