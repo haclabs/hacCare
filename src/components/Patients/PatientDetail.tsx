@@ -1,6 +1,3 @@
-Here's the fixed version with all missing closing brackets added:
-
-```typescript
 import React, { useState } from 'react';
 import { Patient } from '../../types';
 import { 
@@ -585,4 +582,134 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Alcohol Use</p>
-                    <p className="text-
+                    <p className="text-gray-900">Social drinker (1-2 drinks per week)</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Family History</p>
+                    <p className="text-gray-900">Father: Hypertension, Diabetes</p>
+                    <p className="text-gray-900">Mother: Breast cancer (age 65)</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Occupation</p>
+                    <p className="text-gray-900">Software Engineer</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onBack}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {currentPatient.firstName} {currentPatient.lastName}
+              </h1>
+              <p className="text-gray-600">Patient ID: {currentPatient.patientId}</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getConditionColor(currentPatient.condition)}`}>
+              {currentPatient.condition}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200 px-6">
+        <nav className="flex space-x-8">
+          {[
+            { id: 'overview', label: 'Overview', icon: User },
+            { id: 'vitals', label: 'Vital Signs', icon: Activity },
+            { id: 'medications', label: 'Medications', icon: Pill },
+            { id: 'notes', label: 'Notes', icon: FileText },
+            { id: 'admission', label: 'Admission', icon: Calendar },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        {renderTabContent()}
+      </div>
+
+      {/* Modals */}
+      {showVitalsEditor && (
+        <VitalSignsEditor
+          patient={currentPatient}
+          onSave={handleSaveVitals}
+          onCancel={() => setShowVitalsEditor(false)}
+        />
+      )}
+
+      {showBracelet && (
+        <PatientBracelet
+          patient={currentPatient}
+          onClose={() => setShowBracelet(false)}
+        />
+      )}
+
+      {showWristband && (
+        <HospitalBracelet
+          patient={currentPatient}
+          onClose={() => setShowWristband(false)}
+        />
+      )}
+
+      {showMedicationBarcode && selectedMedication && (
+        <MedicationBarcode
+          medication={selectedMedication}
+          patient={currentPatient}
+          onClose={() => setShowMedicationBarcode(false)}
+        />
+      )}
+
+      {showMedicationForm && (
+        <MedicationForm
+          patient={currentPatient}
+          medication={selectedMedication}
+          onSave={handleSaveMedication}
+          onCancel={() => {
+            setShowMedicationForm(false);
+            setSelectedMedication(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
