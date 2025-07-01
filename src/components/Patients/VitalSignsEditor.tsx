@@ -6,10 +6,23 @@ import { usePatients } from '../../contexts/PatientContext';
 
 interface VitalSignsEditorProps {
   patientId: string;
-  vitals: VitalSigns;
+  vitals?: VitalSigns; // Make vitals optional
   onSave: (vitals: VitalSigns) => void;
   onCancel: () => void;
 }
+
+// Default vital signs values
+const defaultVitals: VitalSigns = {
+  temperature: 98.6,
+  heartRate: 72,
+  bloodPressure: {
+    systolic: 120,
+    diastolic: 80
+  },
+  respiratoryRate: 16,
+  oxygenSaturation: 98,
+  lastUpdated: new Date().toISOString()
+};
 
 export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
   patientId,
@@ -18,7 +31,8 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
   onCancel
 }) => {
   const [editedVitals, setEditedVitals] = useState<VitalSigns>({
-    ...vitals,
+    ...defaultVitals,
+    ...vitals, // Override defaults with actual vitals if provided
     lastUpdated: new Date().toISOString()
   });
   const [loading, setLoading] = useState(false);
