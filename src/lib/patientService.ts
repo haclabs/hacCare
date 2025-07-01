@@ -75,12 +75,13 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
       oxygenSaturation: vitals.oxygen_saturation,
       lastUpdated: vitals.recorded_at
     } : {
-      temperature: 98.6,
-      bloodPressure: { systolic: 120, diastolic: 80 },
-      heartRate: 72,
-      respiratoryRate: 16,
-      oxygenSaturation: 98,
-      lastUpdated: new Date().toISOString()
+      // For new patients, set vitals to zero/empty until first recording
+      temperature: 0,
+      bloodPressure: { systolic: 0, diastolic: 0 },
+      heartRate: 0,
+      respiratoryRate: 0,
+      oxygenSaturation: 0,
+      lastUpdated: ''
     },
     medications: [], // Will be loaded separately
     notes: [] // Will be loaded separately
@@ -169,21 +170,23 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
       throw error;
     }
 
-    // Insert initial vitals
-    const { error: vitalsError } = await supabase
-      .from('patient_vitals')
-      .insert({
-        patient_id: data.id,
-        temperature: patient.vitals.temperature,
-        blood_pressure_systolic: patient.vitals.bloodPressure.systolic,
-        blood_pressure_diastolic: patient.vitals.bloodPressure.diastolic,
-        heart_rate: patient.vitals.heartRate,
-        respiratory_rate: patient.vitals.respiratoryRate,
-        oxygen_saturation: patient.vitals.oxygenSaturation
-      });
+    // Only insert initial vitals if they have actual values (not zeros)
+    if (patient.vitals.temperature > 0 || patient.vitals.heartRate > 0) {
+      const { error: vitalsError } = await supabase
+        .from('patient_vitals')
+        .insert({
+          patient_id: data.id,
+          temperature: patient.vitals.temperature,
+          blood_pressure_systolic: patient.vitals.bloodPressure.systolic,
+          blood_pressure_diastolic: patient.vitals.bloodPressure.diastolic,
+          heart_rate: patient.vitals.heartRate,
+          respiratory_rate: patient.vitals.respiratoryRate,
+          oxygen_saturation: patient.vitals.oxygenSaturation
+        });
 
-    if (vitalsError) {
-      console.error('Error inserting initial vitals:', vitalsError);
+      if (vitalsError) {
+        console.error('Error inserting initial vitals:', vitalsError);
+      }
     }
 
     return convertDatabasePatient(data);

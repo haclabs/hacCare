@@ -50,14 +50,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
       phone: ''
     },
     assignedNurse: patient?.assignedNurse || '',
-    vitals: patient?.vitals || {
-      temperature: 98.6,
-      bloodPressure: { systolic: 120, diastolic: 80 },
-      heartRate: 72,
-      respiratoryRate: 16,
-      oxygenSaturation: 98,
-      lastUpdated: new Date().toISOString()
-    },
+    // Only include vitals if editing existing patient, not for new patients
+    vitals: patient?.vitals || undefined,
     medications: patient?.medications || [],
     notes: patient?.notes || []
   });
@@ -202,7 +196,16 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
         bloodType: formData.bloodType!,
         emergencyContact: formData.emergencyContact!,
         assignedNurse: formData.assignedNurse!,
-        vitals: formData.vitals!,
+        // Only include vitals if they exist (for existing patients)
+        // New patients will have no vitals until first entry
+        vitals: formData.vitals || {
+          temperature: 0,
+          bloodPressure: { systolic: 0, diastolic: 0 },
+          heartRate: 0,
+          respiratoryRate: 0,
+          oxygenSaturation: 0,
+          lastUpdated: ''
+        },
         medications: formData.medications!,
         notes: formData.notes!
       };
