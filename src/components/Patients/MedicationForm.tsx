@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Pill, Calendar, Clock, User, Save, AlertTriangle } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
 import { format, addHours, setHours, setMinutes } from 'date-fns';
 
@@ -154,7 +155,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     
     try {
       const medicationData: Medication = {
-        id: medication?.id || `med-${Date.now()}`,
+        id: medication?.id || uuidv4(),
         name: formData.name,
         dosage: formData.dosage,
         frequency: formData.frequency,
