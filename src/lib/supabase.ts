@@ -21,7 +21,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Log configuration status for debugging
 console.log('🔧 Supabase Environment Check:');
-console.log('  URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'Not set');
+console.log('  URL:', supabaseUrl ? `${supabaseUrl.substring(0, 50)}...` : 'Not set');
 console.log('  Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 30)}...` : 'Not set');
 
 /**
@@ -38,48 +38,83 @@ const hasValidConfig = supabaseUrl &&
 console.log('✅ Configuration valid:', hasValidConfig);
 
 /**
- * Test connection to Supabase
+ * Test connection to Supabase with enhanced error handling
  * Verifies that the Supabase instance is reachable and properly configured
  */
 const testSupabaseConnection = async () => {
   if (!hasValidConfig) {
-    console.warn('⚠️ Supabase is not configured. Please set up your Supabase project.');
+    console.warn('⚠️ Supabase is not configured. Using mock data mode.');
     return false;
   }
 
   try {
     console.log('🔍 Testing Supabase connection...');
-    const testClient = createClient(supabaseUrl, supabaseAnonKey);
     
-    // Simple test query to check connectivity
-    const { data, error } = await testClient
-      .from('user_profiles')
-      .select('count')
-      .limit(1);
-    
-    if (error) {
-      console.error('❌ Supabase connection test failed:', error.message);
-      if (error.message.includes('Failed to fetch')) {
-        console.error('💡 This usually means:');
-        console.error('   - The Supabase URL is incorrect');
-        console.error('   - The Supabase project is paused or deleted');
-        console.error('   - Network connectivity issues');
-        console.error('   - CORS issues (check Supabase project settings)');
+    // Create a test client with shorter timeout
+    const testClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      },
+      global: {
+        headers: {
+          'x-client-info': 'haccare-connection-test'
+        }
       }
+    });
+    
+    // Test with a simple health check that has timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    try {
+      const { data, error } = await testClient
+        .from('user_profiles')
+        .select('count')
+        .limit(1)
+        .abortSignal(controller.signal);
+      
+      clearTimeout(timeoutId);
+      
+      if (error) {
+        console.error('❌ Supabase connection test failed:', error.message);
+        
+        if (error.message.includes('Failed to fetch')) {
+          console.error('💡 Connection failed - possible causes:');
+          console.error('   - Supabase project is paused (check dashboard)');
+          console.error('   - Invalid API key');
+          console.error('   - Network connectivity issues');
+          console.error('   - CORS configuration problems');
+        }
+        
+        return false;
+      }
+      
+      console.log('✅ Supabase connection test successful');
+      return true;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.error('❌ Supabase connection timeout (10s)');
+      } else {
+        console.error('❌ Supabase fetch error:', fetchError.message);
+      }
+      
       return false;
     }
     
-    console.log('✅ Supabase connection test successful');
-    return true;
   } catch (error: any) {
     console.error('❌ Supabase connection test error:', error.message);
     return false;
   }
 };
 
-// Run connection test in development
+// Run connection test in development with better error handling
 if (import.meta.env.DEV && hasValidConfig) {
-  testSupabaseConnection();
+  testSupabaseConnection().catch(error => {
+    console.error('Connection test failed:', error);
+  });
 }
 
 /**
@@ -168,23 +203,40 @@ export interface UserProfile {
 }
 
 /**
- * Database Health Check
+ * Database Health Check with enhanced error handling
  * Utility function to verify database connectivity
  * Can be called from components to check if Supabase is accessible
  */
 export const checkDatabaseHealth = async (): Promise<boolean> => {
   if (!isSupabaseConfigured) {
+    console.log('Database not configured, using mock data mode');
     return false;
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const { error } = await supabase
       .from('user_profiles')
       .select('count')
-      .limit(1);
+      .limit(1)
+      .abortSignal(controller.signal);
     
-    return !error;
-  } catch {
+    clearTimeout(timeoutId);
+    
+    if (error) {
+      console.error('Database health check failed:', error.message);
+      return false;
+    }
+    
+    return true;
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.error('Database health check timeout');
+    } else {
+      console.error('Database health check error:', error.message);
+    }
     return false;
   }
 };

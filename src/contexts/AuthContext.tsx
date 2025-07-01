@@ -82,31 +82,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Skip initialization if Supabase is not configured
         if (!isSupabaseConfigured) {
-          console.log('⚠️ Supabase not configured, skipping auth');
+          console.log('⚠️ Supabase not configured, using mock data mode');
           if (mounted) {
             setLoading(false);
           }
           return;
         }
 
-        // Set timeout to prevent infinite loading (30 seconds)
+        // Set timeout to prevent infinite loading (15 seconds)
         timeoutId = setTimeout(() => {
           console.log('⏰ Auth initialization timeout reached');
           if (mounted) {
             setLoading(false);
           }
-        }, 30000);
+        }, 15000);
 
         console.log('🔍 Getting initial session from Supabase...');
         
+        // Create abort controller for timeout handling
+        const controller = new AbortController();
+        const sessionTimeoutId = setTimeout(() => controller.abort(), 10000);
+        
         // Attempt to get current session with timeout protection
         // This uses Supabase's internal session management, not localStorage
-        const { data: { session }, error } = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<any>((_, reject) => 
-            setTimeout(() => reject(new Error('Session timeout')), 15000)
-          )
-        ]);
+        const sessionPromise = supabase.auth.getSession();
+        
+        let sessionResult;
+        try {
+          sessionResult = await Promise.race([
+            sessionPromise,
+            new Promise<any>((_, reject) => 
+              setTimeout(() => reject(new Error('Session timeout')), 10000)
+            )
+          ]);
+          clearTimeout(sessionTimeoutId);
+        } catch (timeoutError) {
+          clearTimeout(sessionTimeoutId);
+          controller.abort();
+          throw timeoutError;
+        }
+        
+        const { data: { session }, error } = sessionResult;
         
         // Clear timeout since we got a response
         if (timeoutId) {
@@ -161,6 +177,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error: any) {
         console.error('💥 Error in initializeAuth:', error);
+        
+        // Handle specific error types
+        if (error.message?.includes('Failed to fetch') || 
+            error.message?.includes('NetworkError') ||
+            error.message?.includes('timeout')) {
+          console.error('🌐 Network connectivity issue during auth initialization');
+          console.error('💡 Falling back to mock data mode');
+        }
         
         // Handle refresh token errors in catch block as well
         if (error.message?.includes('Invalid Refresh Token') || 
@@ -227,7 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   /**
-   * Fetch user profile from database
+   * Fetch user profile from database with enhanced error handling
    * Retrieves additional user information beyond basic auth data
    * Uses only Supabase database queries - no localStorage
    * 
@@ -246,87 +270,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📋 Fetching profile for user:', userId);
       setProfileLoading(true);
       
-      // First, test if we can reach Supabase at all
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      
       try {
-        const healthCheck = await Promise.race([
-          fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`, {
-            method: 'HEAD',
-            headers: {
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-            }
-          }),
-          new Promise<Response>((_, reject) => 
-            setTimeout(() => reject(new Error('Health check timeout')), 5000)
+        // Fetch profile with timeout protection (8 seconds)
+        // Uses Supabase database query - no localStorage involved
+        const result = await Promise.race([
+          supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', userId)
+            .single()
+            .abortSignal(controller.signal),
+          new Promise<any>((_, reject) => 
+            setTimeout(() => reject(new Error('Profile fetch timeout')), 8000)
           )
         ]);
-        
-        if (!healthCheck.ok && healthCheck.status !== 404) {
-          throw new Error(`Supabase health check failed: ${healthCheck.status}`);
-        }
-        
-        console.log('✅ Supabase connectivity confirmed');
-      } catch (healthError: any) {
-        console.error('❌ Supabase health check failed:', healthError.message);
-        
-        if (healthError.message?.includes('Failed to fetch') || 
-            healthError.message?.includes('NetworkError') ||
-            healthError.message?.includes('timeout')) {
-          console.error('🌐 Cannot reach Supabase - check your internet connection and Supabase URL');
-          console.error('💡 Current Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-          console.error('💡 Verify this URL is correct in your Supabase project settings');
-          setProfile(null);
-          return;
-        }
-        
-        // Continue with profile fetch if it's just a different error
-      }
-      
-      // Fetch profile with timeout protection (15 seconds)
-      // Uses Supabase database query - no localStorage involved
-      const result = await Promise.race([
-        supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', userId)
-          .single(),
-        new Promise<any>((_, reject) => 
-          setTimeout(() => reject(new Error('Profile fetch timeout')), 15000)
-        )
-      ]);
 
-      const { data, error } = result;
+        clearTimeout(timeoutId);
+        const { data, error } = result;
 
-      // Handle profile fetch errors
-      if (error) {
-        console.error('❌ Error fetching user profile:', error);
-        
-        // Handle specific error cases gracefully
-        if (error.code === 'PGRST116') {
-          // Profile not found - this is expected for new users
-          console.log('📋 Profile not found for user:', userId);
-          setProfile(null);
-        } else if (error.message?.includes('Failed to fetch') || 
-                   error.message?.includes('NetworkError') ||
-                   error.message?.includes('fetch')) {
-          // Network connectivity issues
-          console.error('🌐 Network error fetching profile');
-          console.error('💡 Check your internet connection and Supabase configuration');
-          console.error('💡 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-          console.error('💡 Make sure your Supabase project is active and accessible');
-          setProfile(null);
-        } else if (error.code === '42501' || error.message?.includes('permission denied')) {
-          // Permission/RLS policy issues
-          console.error('🔒 Permission denied - check RLS policies');
-          setProfile(null);
+        // Handle profile fetch errors
+        if (error) {
+          console.error('❌ Error fetching user profile:', error);
+          
+          // Handle specific error cases gracefully
+          if (error.code === 'PGRST116') {
+            // Profile not found - this is expected for new users
+            console.log('📋 Profile not found for user:', userId);
+            setProfile(null);
+          } else if (error.message?.includes('Failed to fetch') || 
+                     error.message?.includes('NetworkError') ||
+                     error.message?.includes('fetch')) {
+            // Network connectivity issues
+            console.error('🌐 Network error fetching profile - using mock data mode');
+            setProfile(null);
+          } else if (error.code === '42501' || error.message?.includes('permission denied')) {
+            // Permission/RLS policy issues
+            console.error('🔒 Permission denied - check RLS policies');
+            setProfile(null);
+          } else {
+            // Other unexpected errors
+            console.error('💥 Unexpected error fetching profile:', error);
+            setProfile(null);
+          }
         } else {
-          // Other unexpected errors
-          console.error('💥 Unexpected error fetching profile:', error);
-          setProfile(null);
+          console.log('✅ Profile fetched successfully:', data?.email);
+          setProfile(data);
         }
-      } else {
-        console.log('✅ Profile fetched successfully:', data?.email);
-        setProfile(data);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError.name === 'AbortError') {
+          console.error('❌ Profile fetch timeout');
+        } else {
+          console.error('❌ Profile fetch error:', fetchError.message);
+        }
+        
+        setProfile(null);
       }
     } catch (error: any) {
       console.error('💥 Exception in fetchUserProfile:', error);
@@ -336,10 +339,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           error.message?.includes('NetworkError') ||
           error.message?.includes('timeout') ||
           error.message?.includes('fetch')) {
-        console.error('🌐 Network connectivity issue - check your Supabase configuration');
-        console.error('💡 Current Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-        console.error('💡 Current API Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
-        console.error('💡 Verify these values in your Supabase project settings');
+        console.error('🌐 Network connectivity issue - falling back to mock data mode');
       }
       
       setProfile(null);
@@ -370,7 +370,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfileLoading(true);
       console.log('📝 Creating/updating profile for user:', user.id);
 
-      // Create/update profile with timeout protection (20 seconds)
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      // Create/update profile with timeout protection (15 seconds)
       // Uses Supabase upsert operation - no localStorage involved
       const result = await Promise.race([
         supabase
@@ -386,12 +390,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             onConflict: 'id' // Update if exists, insert if new
           })
           .select()
-          .single(),
+          .single()
+          .abortSignal(controller.signal),
         new Promise<any>((_, reject) => 
-          setTimeout(() => reject(new Error('Profile creation timeout')), 20000)
+          setTimeout(() => reject(new Error('Profile creation timeout')), 15000)
         )
       ]);
 
+      clearTimeout(timeoutId);
       const { data, error } = result;
 
       // Handle profile creation errors
@@ -448,7 +454,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
-      // Attempt sign in with timeout protection (20 seconds)
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      // Attempt sign in with timeout protection (15 seconds)
       // Supabase handles all session management internally
       const result = await Promise.race([
         supabase.auth.signInWithPassword({
@@ -456,10 +466,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password,
         }),
         new Promise<any>((_, reject) => 
-          setTimeout(() => reject(new Error('Sign in timeout')), 20000)
+          setTimeout(() => reject(new Error('Sign in timeout')), 15000)
         )
       ]);
       
+      clearTimeout(timeoutId);
       const { error } = result;
       
       // Handle sign in errors

@@ -52,7 +52,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Load patients from database or use mock data
+   * Load patients from database or use mock data with enhanced error handling
    */
   const loadPatients = async () => {
     try {
@@ -62,15 +62,44 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (isSupabaseConfigured) {
         console.log('Loading patients from Supabase...');
-        const dbPatients = await fetchPatients();
         
-        // If no patients in database, use mock data as initial data
-        if (dbPatients.length === 0) {
-          console.log('No patients in database, using mock data');
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        try {
+          const dbPatients = await Promise.race([
+            fetchPatients(),
+            new Promise<Patient[]>((_, reject) => 
+              setTimeout(() => reject(new Error('Patient fetch timeout')), 10000)
+            )
+          ]);
+          
+          clearTimeout(timeoutId);
+          
+          // If no patients in database, use mock data as initial data
+          if (dbPatients.length === 0) {
+            console.log('No patients in database, using mock data');
+            setPatients(mockPatients);
+          } else {
+            console.log(`Loaded ${dbPatients.length} patients from database`);
+            setPatients(dbPatients);
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          
+          if (fetchError.name === 'AbortError' || fetchError.message?.includes('timeout')) {
+            console.error('❌ Patient fetch timeout, falling back to mock data');
+          } else if (fetchError.message?.includes('Failed to fetch') || 
+                     fetchError.message?.includes('NetworkError')) {
+            console.error('❌ Network error fetching patients, falling back to mock data');
+          } else {
+            console.error('❌ Error fetching patients:', fetchError);
+          }
+          
+          // Always fall back to mock data on any error
+          console.log('Using mock data as fallback');
           setPatients(mockPatients);
-        } else {
-          console.log(`Loaded ${dbPatients.length} patients from database`);
-          setPatients(dbPatients);
         }
       } else {
         console.log('Supabase not configured, using mock data');
@@ -80,6 +109,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.error('Error loading patients:', err);
       setError(err.message || 'Failed to load patients');
       // Fallback to mock data on error
+      console.log('Using mock data as fallback due to error');
       setPatients(mockPatients);
     } finally {
       setLoading(false);
@@ -92,7 +122,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   /**
-   * Add a new patient
+   * Add a new patient with enhanced error handling
    */
   const addPatient = async (patient: Patient) => {
     try {
@@ -100,8 +130,33 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       if (isSupabaseConfigured) {
         console.log('Creating patient in database...');
-        const newPatient = await createPatientDB(patient);
-        setPatients(prev => [newPatient, ...prev]);
+        
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        try {
+          const newPatient = await Promise.race([
+            createPatientDB(patient),
+            new Promise<Patient>((_, reject) => 
+              setTimeout(() => reject(new Error('Patient creation timeout')), 10000)
+            )
+          ]);
+          
+          clearTimeout(timeoutId);
+          setPatients(prev => [newPatient, ...prev]);
+        } catch (createError: any) {
+          clearTimeout(timeoutId);
+          
+          if (createError.name === 'AbortError' || createError.message?.includes('timeout')) {
+            throw new Error('Request timeout - please try again');
+          } else if (createError.message?.includes('Failed to fetch') || 
+                     createError.message?.includes('NetworkError')) {
+            throw new Error('Network error - please check your connection');
+          } else {
+            throw createError;
+          }
+        }
       } else {
         console.log('Adding patient to local state (Supabase not configured)');
         setPatients(prev => [patient, ...prev]);
@@ -114,7 +169,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   /**
-   * Update an existing patient
+   * Update an existing patient with enhanced error handling
    */
   const updatePatient = async (patientId: string, updates: Partial<Patient>) => {
     try {
@@ -131,10 +186,35 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       if (isSupabaseConfigured) {
         console.log('Updating patient in database...');
-        const updated = await updatePatientDB(updatedPatient);
-        setPatients(prev => prev.map(patient => 
-          patient.id === updated.id ? updated : patient
-        ));
+        
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        try {
+          const updated = await Promise.race([
+            updatePatientDB(updatedPatient),
+            new Promise<Patient>((_, reject) => 
+              setTimeout(() => reject(new Error('Patient update timeout')), 10000)
+            )
+          ]);
+          
+          clearTimeout(timeoutId);
+          setPatients(prev => prev.map(patient => 
+            patient.id === updated.id ? updated : patient
+          ));
+        } catch (updateError: any) {
+          clearTimeout(timeoutId);
+          
+          if (updateError.name === 'AbortError' || updateError.message?.includes('timeout')) {
+            throw new Error('Request timeout - please try again');
+          } else if (updateError.message?.includes('Failed to fetch') || 
+                     updateError.message?.includes('NetworkError')) {
+            throw new Error('Network error - please check your connection');
+          } else {
+            throw updateError;
+          }
+        }
       } else {
         console.log('Updating patient in local state (Supabase not configured)');
         setPatients(prev => prev.map(patient => 
@@ -149,7 +229,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   /**
-   * Delete a patient
+   * Delete a patient with enhanced error handling
    */
   const deletePatient = async (patientId: string) => {
     try {
@@ -157,7 +237,32 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       if (isSupabaseConfigured) {
         console.log('Deleting patient from database...');
-        await deletePatientDB(patientId);
+        
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        try {
+          await Promise.race([
+            deletePatientDB(patientId),
+            new Promise<void>((_, reject) => 
+              setTimeout(() => reject(new Error('Patient deletion timeout')), 10000)
+            )
+          ]);
+          
+          clearTimeout(timeoutId);
+        } catch (deleteError: any) {
+          clearTimeout(timeoutId);
+          
+          if (deleteError.name === 'AbortError' || deleteError.message?.includes('timeout')) {
+            throw new Error('Request timeout - please try again');
+          } else if (deleteError.message?.includes('Failed to fetch') || 
+                     deleteError.message?.includes('NetworkError')) {
+            throw new Error('Network error - please check your connection');
+          } else {
+            throw deleteError;
+          }
+        }
       } else {
         console.log('Deleting patient from local state (Supabase not configured)');
       }
@@ -178,7 +283,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   /**
-   * Refresh patients from database
+   * Refresh patients from database with enhanced error handling
    */
   const refreshPatients = async () => {
     console.log('Refreshing patients...');

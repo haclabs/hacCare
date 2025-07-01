@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, Info, Heart } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Info, Heart, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,7 +9,22 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected' | null>(null);
   const { signIn } = useAuth();
+
+  // Check database connection on component mount
+  React.useEffect(() => {
+    if (isSupabaseConfigured) {
+      setConnectionStatus('checking');
+      checkDatabaseHealth()
+        .then(isHealthy => {
+          setConnectionStatus(isHealthy ? 'connected' : 'disconnected');
+        })
+        .catch(() => {
+          setConnectionStatus('disconnected');
+        });
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,15 +48,25 @@ export const LoginForm: React.FC = () => {
           setError('Please confirm your email address before signing in.');
         } else if (error.message?.includes('Too many requests')) {
           setError('Too many login attempts. Please wait a moment before trying again.');
-        } else if (error.message?.includes('Network error') || error.message?.includes('Failed to fetch')) {
+        } else if (error.message?.includes('Network error') || 
+                   error.message?.includes('Failed to fetch') ||
+                   error.message?.includes('timeout')) {
           setError('Network connection error. Please check your internet connection and try again.');
+          setConnectionStatus('disconnected');
         } else {
           setError(error.message || 'An error occurred during sign in. Please try again.');
         }
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      setError(error.message || 'An unexpected error occurred');
+      if (error.message?.includes('Failed to fetch') || 
+          error.message?.includes('NetworkError') ||
+          error.message?.includes('timeout')) {
+        setError('Connection timeout. Please check your internet connection and try again.');
+        setConnectionStatus('disconnected');
+      } else {
+        setError(error.message || 'An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -59,15 +84,64 @@ export const LoginForm: React.FC = () => {
       if (error) {
         if (error.message?.includes('Invalid login credentials')) {
           setError('Demo account not found. Please ensure the demo accounts have been set up in your Supabase project.');
+        } else if (error.message?.includes('Network error') || 
+                   error.message?.includes('Failed to fetch') ||
+                   error.message?.includes('timeout')) {
+          setError('Network connection error. Please check your internet connection and try again.');
+          setConnectionStatus('disconnected');
         } else {
           setError(error.message || 'Failed to sign in with demo account.');
         }
       }
     } catch (error: any) {
       console.error('Demo login error:', error);
-      setError(error.message || 'An unexpected error occurred');
+      if (error.message?.includes('Failed to fetch') || 
+          error.message?.includes('NetworkError') ||
+          error.message?.includes('timeout')) {
+        setError('Connection timeout. Please check your internet connection and try again.');
+        setConnectionStatus('disconnected');
+      } else {
+        setError(error.message || 'An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getConnectionStatusIcon = () => {
+    switch (connectionStatus) {
+      case 'checking':
+        return <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>;
+      case 'connected':
+        return <Wifi className="h-4 w-4 text-green-600" />;
+      case 'disconnected':
+        return <WifiOff className="h-4 w-4 text-red-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getConnectionStatusText = () => {
+    switch (connectionStatus) {
+      case 'checking':
+        return 'Checking connection...';
+      case 'connected':
+        return 'Database connected';
+      case 'disconnected':
+        return 'Database disconnected - using demo mode';
+      default:
+        return '';
+    }
+  };
+
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'text-green-600';
+      case 'disconnected':
+        return 'text-red-600';
+      default:
+        return 'text-blue-600';
     }
   };
 
@@ -112,6 +186,16 @@ export const LoginForm: React.FC = () => {
           <p className="text-gray-500 text-sm mt-2">Secure Portal Access</p>
         </div>
 
+        {/* Connection Status */}
+        {isSupabaseConfigured && connectionStatus && (
+          <div className="mb-4 flex items-center justify-center space-x-2">
+            {getConnectionStatusIcon()}
+            <span className={`text-xs ${getConnectionStatusColor()}`}>
+              {getConnectionStatusText()}
+            </span>
+          </div>
+        )}
+
         {!isSupabaseConfigured && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div className="flex items-center space-x-2">
@@ -120,6 +204,20 @@ export const LoginForm: React.FC = () => {
                 <p className="text-yellow-800 text-sm font-medium">Database Not Connected</p>
                 <p className="text-yellow-700 text-xs mt-1">
                   Please click "Connect to Supabase" in the top right to set up the database connection.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {connectionStatus === 'disconnected' && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center space-x-2">
+              <WifiOff className="h-5 w-5 text-orange-600 flex-shrink-0" />
+              <div>
+                <p className="text-orange-800 text-sm font-medium">Connection Issue</p>
+                <p className="text-orange-700 text-xs mt-1">
+                  Cannot reach database. Running in demo mode with sample data.
                 </p>
               </div>
             </div>
@@ -222,6 +320,21 @@ export const LoginForm: React.FC = () => {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {connectionStatus === 'disconnected' && (
+          <div className="mt-6 bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">Demo Mode Active</h3>
+            <p className="text-xs text-gray-600 mb-3">
+              You can still explore the application with sample data. All features are available except data persistence.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+            >
+              Retry Connection
+            </button>
           </div>
         )}
       </div>
