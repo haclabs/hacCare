@@ -583,8 +583,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
         {activeTab === 'vitals' && (
           <VitalsTrends 
-            patientId={patient.id} 
-            onAddVitals={() => setShowVitalsEditor(true)}
+            vitals={vitals}
           />
         )}
 
@@ -852,7 +851,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {/* Modals */}
       {showVitalsEditor && (
         <VitalSignsEditor
-          onSubmit={handleVitalsSubmit}
+          patientId={patient.id}
+          onSave={handleVitalsSubmit}
           onCancel={() => setShowVitalsEditor(false)}
         />
       )}
@@ -868,37 +868,46 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
       {showNoteForm && (
         <PatientNoteForm
-          onSubmit={handleNoteSubmit}
-          onCancel={() => setShowNoteForm(false)}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          onSave={handleNoteSubmit}
+          onClose={() => setShowNoteForm(false)}
         />
       )}
 
       {showAssessmentForm && (
         <AssessmentForm
           patientId={patient.id}
-          onSubmit={() => {
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          onSave={() => {
             setShowAssessmentForm(false);
             fetchPatientData();
           }}
-          onCancel={() => setShowAssessmentForm(false)}
+          onClose={() => setShowAssessmentForm(false)}
         />
       )}
 
       {showAdmissionForm && (
         <AdmissionRecordsForm
           patientId={patient.id}
-          initialData={admissionRecord}
-          onSubmit={handleAdmissionSubmit}
-          onCancel={() => setShowAdmissionForm(false)}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          onSave={() => {
+            setShowAdmissionForm(false);
+            fetchPatientData();
+          }}
+          onClose={() => setShowAdmissionForm(false)}
         />
       )}
 
       {showAdvancedDirectivesForm && (
         <AdvancedDirectivesForm
           patientId={patient.id}
-          initialData={advancedDirective}
-          onSubmit={handleAdvancedDirectivesSubmit}
-          onCancel={() => setShowAdvancedDirectivesForm(false)}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          onSave={() => {
+            setShowAdvancedDirectivesForm(false);
+            fetchPatientData();
+          }}
+          onClose={() => setShowAdvancedDirectivesForm(false)}
         />
       )}
     </div>
