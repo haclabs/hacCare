@@ -856,7 +856,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {showVitalsEditor && (
         <VitalSignsEditor
           patientId={patient.id}
-          vitals={latestVitals}
+          vitals={latestVitals || undefined}
           onClose={() => setShowVitalsEditor(false)}
           onSave={handleVitalsSave}
         />
