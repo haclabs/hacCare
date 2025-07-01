@@ -6,16 +6,21 @@ import {
   AlertTriangle, Clock, Stethoscope, QrCode, Printer,
   TrendingUp, Plus, Save, X, Target, Shield, Users,
   Clipboard, BookOpen, FileCheck, UserCheck, Settings,
-  Zap, Award, CheckCircle, AlertCircle, Info, Star
+  Zap, Award, CheckCircle, AlertCircle, Info, Star,
+  Wrench, Tool
 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, isValid } from 'date-fns';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { PatientBracelet } from './PatientBracelet';
 import { HospitalBracelet } from './HospitalBracelet';
 import { MedicationBarcode } from './MedicationBarcode';
 import { MedicationForm } from './MedicationForm';
+import { PatientNoteForm } from './PatientNoteForm';
+import { AssessmentForm } from './AssessmentForm';
 import { WoundAssessment } from './WoundAssessment';
+import { AdmissionRecordsForm } from './AdmissionRecordsForm';
+import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { usePatients } from '../../contexts/PatientContext';
 
 interface PatientDetailProps {
@@ -31,6 +36,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [selectedMedication, setSelectedMedication] = useState<any>(null);
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [showAdmissionForm, setShowAdmissionForm] = useState(false);
+  const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
   
   const { getPatient, updatePatient } = usePatients();
 
@@ -39,9 +48,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
   // Calculate age and days admitted
   const birthDate = new Date(currentPatient.date_of_birth);
-  const age = new Date().getFullYear() - birthDate.getFullYear();
+  const age = isValid(birthDate) ? new Date().getFullYear() - birthDate.getFullYear() : 'N/A';
   const admissionDate = new Date(currentPatient.admission_date);
-  const daysAdmitted = differenceInDays(new Date(), admissionDate);
+  const daysAdmitted = isValid(admissionDate) ? differenceInDays(new Date(), admissionDate) : 0;
 
   const handleSaveVitals = (newVitals: any) => {
     // The VitalSignsEditor now handles saving to database
@@ -56,7 +65,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         ? currentPatient.medications.map(med => 
             med.id === selectedMedication.id ? medicationData : med
           )
-        : [...currentPatient.medications, medicationData];
+        : [...(currentPatient.medications || []), medicationData];
 
       await updatePatient(currentPatient.id, {
         medications: updatedMedications
@@ -66,6 +75,33 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       setSelectedMedication(null);
     } catch (error) {
       console.error('Error saving medication:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveNote = async (noteData: any) => {
+    try {
+      // Update patient with new note
+      const updatedNotes = [...(currentPatient.notes || []), noteData];
+
+      await updatePatient(currentPatient.id, {
+        notes: updatedNotes
+      });
+      
+      setShowNoteForm(false);
+    } catch (error) {
+      console.error('Error saving note:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveAssessment = async (assessmentData: any) => {
+    try {
+      // In a real app, this would save to a separate assessments table
+      console.log('Assessment saved:', assessmentData);
+      setShowAssessmentForm(false);
+    } catch (error) {
+      console.error('Error saving assessment:', error);
       throw error;
     }
   };
@@ -149,7 +185,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Calendar className="h-4 w-4" />
-                    <span>Admitted {format(admissionDate, 'MMM dd, yyyy')} ({daysAdmitted} days)</span>
+                    <span>Admitted {isValid(admissionDate) ? format(admissionDate, 'MMM dd, yyyy') : 'N/A'} ({daysAdmitted} days)</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Stethoscope className="h-4 w-4" />
@@ -218,7 +254,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
               
               <button
-                onClick={() => setActiveTab('notes')}
+                onClick={() => setShowNoteForm(true)}
                 className="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <FileText className="h-5 w-5" />
@@ -442,7 +478,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+              <button 
+                onClick={() => setShowNoteForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
                 <Plus className="h-4 w-4" />
                 <span>Add Note</span>
               </button>
@@ -479,12 +518,62 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </div>
         );
 
+      case 'admission-records':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Admission Records</h3>
+              <button 
+                onClick={() => setShowAdmissionForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Update Records</span>
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <p className="text-gray-600">
+                Comprehensive admission records including insurance information, physical measurements, 
+                social history, and emergency contacts. Click "Update Records" to view and edit detailed admission information.
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'advanced-directives':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Advanced Directives</h3>
+              <button 
+                onClick={() => setShowAdvancedDirectivesForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Update Directives</span>
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <p className="text-gray-600">
+                Advanced directives including living will status, healthcare proxy information, 
+                DNR status, organ donation preferences, and religious considerations. 
+                Click "Update Directives" to view and edit detailed directive information.
+              </p>
+            </div>
+          </div>
+        );
+
       case 'assessments':
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Assessments</h3>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+              <button 
+                onClick={() => setShowAssessmentForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
                 <Plus className="h-4 w-4" />
                 <span>New Assessment</span>
               </button>
@@ -493,7 +582,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             {/* Assessment Navigation */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setShowAssessmentForm(true)}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className="flex items-center space-x-3 mb-2">
                     <Stethoscope className="h-6 w-6 text-blue-600" />
                     <h4 className="font-medium text-gray-900">Physical Assessment</h4>
@@ -501,7 +593,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <p className="text-sm text-gray-600">Head-to-toe physical examination</p>
                 </button>
 
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setShowAssessmentForm(true)}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className="flex items-center space-x-3 mb-2">
                     <Activity className="h-6 w-6 text-green-600" />
                     <h4 className="font-medium text-gray-900">Neurological</h4>
@@ -509,7 +604,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <p className="text-sm text-gray-600">Cognitive and neurological function</p>
                 </button>
 
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setShowAssessmentForm(true)}
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                >
                   <div className="flex items-center space-x-3 mb-2">
                     <Heart className="h-6 w-6 text-red-600" />
                     <h4 className="font-medium text-gray-900">Pain Assessment</h4>
@@ -520,6 +618,134 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
               {/* Wound Assessment Component */}
               <WoundAssessment patientId={currentPatient.patient_id} />
+            </div>
+          </div>
+        );
+
+      case 'tools':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Tool className="h-6 w-6 mr-2 text-blue-600" />
+                Patient Tools & Utilities
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Patient Labels */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <QrCode className="h-8 w-8 text-blue-600" />
+                  <h4 className="text-lg font-medium text-gray-900">Patient Labels</h4>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Generate Avery 5160 compatible patient identification labels with barcode.
+                </p>
+                <button
+                  onClick={() => setShowBracelet(true)}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Generate Labels
+                </button>
+              </div>
+
+              {/* Hospital Wristband */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Printer className="h-8 w-8 text-green-600" />
+                  <h4 className="text-lg font-medium text-gray-900">Hospital Wristband</h4>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Generate professional hospital patient identification wristband.
+                </p>
+                <button
+                  onClick={() => setShowWristband(true)}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Generate Wristband
+                </button>
+              </div>
+
+              {/* Medication Labels */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Pill className="h-8 w-8 text-purple-600" />
+                  <h4 className="text-lg font-medium text-gray-900">Medication Labels</h4>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Generate medication labels for active prescriptions with barcodes.
+                </p>
+                <div className="space-y-2">
+                  {currentPatient.medications && currentPatient.medications.filter(med => med.status === 'Active').length > 0 ? (
+                    currentPatient.medications.filter(med => med.status === 'Active').slice(0, 2).map((medication) => (
+                      <button
+                        key={medication.id}
+                        onClick={() => {
+                          setSelectedMedication(medication);
+                          setShowMedicationBarcode(true);
+                        }}
+                        className="w-full text-left bg-purple-50 border border-purple-200 px-3 py-2 rounded text-sm hover:bg-purple-100 transition-colors"
+                      >
+                        {medication.name} - {medication.dosage}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">No active medications</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Vital Signs Trends */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <TrendingUp className="h-8 w-8 text-teal-600" />
+                  <h4 className="text-lg font-medium text-gray-900">Vitals Trends</h4>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  View historical vital signs data and trend analysis.
+                </p>
+                <button
+                  onClick={() => setActiveTab('vitals')}
+                  className="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+                >
+                  View Trends
+                </button>
+              </div>
+
+              {/* Assessment Tools */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Stethoscope className="h-8 w-8 text-indigo-600" />
+                  <h4 className="text-lg font-medium text-gray-900">Assessment Tools</h4>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Access wound assessment and other clinical assessment tools.
+                </p>
+                <button
+                  onClick={() => setActiveTab('assessments')}
+                  className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  Open Assessments
+                </button>
+              </div>
+
+              {/* Documentation */}
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <FileText className="h-8 w-8 text-orange-600" />
+                  <h4 className="text-lg font-medium text-gray-900">Documentation</h4>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Quick access to patient notes and documentation tools.
+                </p>
+                <button
+                  onClick={() => setShowNoteForm(true)}
+                  className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Add Note
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -567,7 +793,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             { id: 'vitals', label: 'Vital Signs', icon: Activity, color: 'red' },
             { id: 'medications', label: 'MAR', icon: Pill, color: 'green' },
             { id: 'notes', label: 'Notes', icon: FileText, color: 'purple' },
-            { id: 'assessments', label: 'Assessments', icon: Stethoscope, color: 'violet' }
+            { id: 'admission-records', label: 'Admission Records', icon: Clipboard, color: 'indigo' },
+            { id: 'advanced-directives', label: 'Advanced Directives', icon: FileCheck, color: 'violet' }
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -575,6 +802,33 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? `border-${tab.color}-500 text-${tab.color}-600`
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        
+        {/* Second Row of Tabs */}
+        <div className="flex space-x-8 overflow-x-auto border-t border-gray-100">
+          {[
+            { id: 'assessments', label: 'Assessments', icon: Stethoscope, color: 'teal' },
+            { id: 'tools', label: 'Tools', icon: Wrench, color: 'orange' },
+            { id: 'physicians-orders', label: 'Physicians Orders', icon: UserCheck, color: 'cyan' },
+            { id: 'consults', label: 'Consults', icon: Users, color: 'pink' },
+            { id: 'labs-reports', label: 'Labs & Reports', icon: BookOpen, color: 'emerald' }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 py-3 px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? `border-${tab.color}-500 text-${tab.color}-600`
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -639,6 +893,42 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             setSelectedMedication(null);
           }}
           onSave={handleSaveMedication}
+        />
+      )}
+
+      {showNoteForm && (
+        <PatientNoteForm
+          patientId={currentPatient.id}
+          patientName={`${currentPatient.first_name} ${currentPatient.last_name}`}
+          onClose={() => setShowNoteForm(false)}
+          onSave={handleSaveNote}
+        />
+      )}
+
+      {showAssessmentForm && (
+        <AssessmentForm
+          patientId={currentPatient.id}
+          patientName={`${currentPatient.first_name} ${currentPatient.last_name}`}
+          onClose={() => setShowAssessmentForm(false)}
+          onSave={handleSaveAssessment}
+        />
+      )}
+
+      {showAdmissionForm && (
+        <AdmissionRecordsForm
+          patientId={currentPatient.id}
+          patientName={`${currentPatient.first_name} ${currentPatient.last_name}`}
+          onClose={() => setShowAdmissionForm(false)}
+          onSave={() => setShowAdmissionForm(false)}
+        />
+      )}
+
+      {showAdvancedDirectivesForm && (
+        <AdvancedDirectivesForm
+          patientId={currentPatient.id}
+          patientName={`${currentPatient.first_name} ${currentPatient.last_name}`}
+          onClose={() => setShowAdvancedDirectivesForm(false)}
+          onSave={() => setShowAdvancedDirectivesForm(false)}
         />
       )}
     </div>
