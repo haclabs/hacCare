@@ -168,21 +168,21 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       
       if (notesData) setNotes(notesData);
 
-      // Fetch admission record
+      // Fetch admission record - use maybeSingle() to handle cases where no record exists
       const { data: admissionData } = await supabase
         .from('patient_admission_records')
         .select('*')
         .eq('patient_id', patient.id)
-        .single();
+        .maybeSingle();
       
       if (admissionData) setAdmissionRecord(admissionData);
 
-      // Fetch advanced directives
+      // Fetch advanced directives - use maybeSingle() to handle cases where no record exists
       const { data: directivesData } = await supabase
         .from('patient_advanced_directives')
         .select('*')
         .eq('patient_id', patient.id)
-        .single();
+        .maybeSingle();
       
       if (directivesData) setAdvancedDirective(directivesData);
 

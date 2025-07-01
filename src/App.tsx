@@ -39,7 +39,7 @@ function App() {
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
 
   // Get patients from context
-  const { patients } = usePatients();
+  const { patients, error: dbError } = usePatients();
 
   /**
    * Handle alert acknowledgment
@@ -119,16 +119,29 @@ function App() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {patients.map((patient) => (
-                  <PatientCard
-                    key={patient.id}
-                    patient={patient}
-                    onClick={() => handlePatientSelect(patient)}
-                    onShowBracelet={() => setBraceletPatient(patient)}
-                  />
-                ))}
-              </div>
+              {dbError ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                  <h3 className="text-lg font-medium text-red-800 mb-2">Database Connection Error</h3>
+                  <p className="text-red-600">{dbError}</p>
+                  <p className="text-sm text-red-500 mt-2">Please check your Supabase connection and try again.</p>
+                </div>
+              ) : patients.length === 0 ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">No Patients Found</h3>
+                  <p className="text-gray-600">No patients are currently assigned to you.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {patients.map((patient) => (
+                    <PatientCard
+                      key={patient.id}
+                      patient={patient}
+                      onClick={() => handlePatientSelect(patient)}
+                      onShowBracelet={() => setBraceletPatient(patient)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
@@ -172,6 +185,7 @@ function App() {
       <Header 
         unreadAlerts={unreadAlerts}
         onAlertsClick={() => setShowAlerts(true)}
+        dbError={dbError}
       />
       
       {/* Main Layout */}

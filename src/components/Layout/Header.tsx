@@ -1,14 +1,15 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
 
 interface HeaderProps {
   unreadAlerts: number;
   onAlertsClick: () => void;
+  dbError?: string | null;
 }
 
-export const Header: React.FC<HeaderProps> = ({ unreadAlerts, onAlertsClick }) => {
+export const Header: React.FC<HeaderProps> = ({ unreadAlerts, onAlertsClick, dbError }) => {
   const { profile, signOut } = useAuth();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
 
@@ -62,6 +63,21 @@ export const Header: React.FC<HeaderProps> = ({ unreadAlerts, onAlertsClick }) =
         </div>
 
         <div className="flex items-center space-x-6">
+          {/* Database Status Indicator */}
+          <div className="flex items-center space-x-2">
+            {dbError ? (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-red-50 border border-red-200 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <span className="text-sm text-red-700 font-medium">DB Disconnected</span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg">
+                <Database className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-green-700 font-medium">DB Connected</span>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Clock className="h-4 w-4" />
             <span>{currentTime}</span>
