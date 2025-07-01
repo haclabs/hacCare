@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { X, Save, Stethoscope, Activity, Heart, Brain, Eye, Ear } from 'lucide-react';
 import { format } from 'date-fns';
+import { createAssessment, PatientAssessment } from '../../lib/assessmentService';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * Assessment Form Component
  * 
- * Comprehensive form for conducting patient assessments with multiple
- * assessment types and detailed documentation capabilities.
+ * Form for creating and editing patient assessments with proper validation
+ * and integration with the patient record system.
  * 
  * Features:
- * - Multiple assessment types (Physical, Neurological, Pain, etc.)
- * - Structured assessment fields
+ * - Note type selection (Assessment, Medication, Vital Signs, etc.)
+ * - Priority level assignment
+ * - Rich text content area
  * - Automatic timestamp and nurse assignment
- * - Assessment scoring and recommendations
  * - Form validation and error handling
+ * - Database integration for saving assessments
  * 
  * @param {Object} props - Component props
  * @param {string} props.patientId - ID of the patient
@@ -25,7 +28,7 @@ interface AssessmentFormProps {
   patientId: string;
   patientName: string;
   onClose: () => void;
-  onSave: (assessment: any) => void;
+  onSave: (assessment: PatientAssessment) => void;
 }
 
 export const AssessmentForm: React.FC<AssessmentFormProps> = ({
@@ -34,8 +37,10 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   onClose,
   onSave
 }) => {
+  const { user, profile } = useAuth();
+  
   // Form state management
-  const [assessmentType, setAssessmentType] = useState('physical');
+  const [assessmentType, setAssessmentType] = useState<'physical' | 'pain' | 'neurological'>('physical');
   const [formData, setFormData] = useState({
     // Physical Assessment
     general_appearance: '',
@@ -68,7 +73,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
     assessment_notes: '',
     recommendations: '',
     follow_up_required: false,
-    priority_level: 'routine'
+    priority_level: 'routine' as 'routine' | 'urgent' | 'critical'
   });
 
   const [loading, setLoading] = useState(false);
@@ -150,25 +155,39 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
       return;
     }
 
+    if (!user || !profile) {
+      alert('User information not available. Please try logging in again.');
+      return;
+    }
+
     setLoading(true);
     
     try {
       // Create assessment object
-      const assessmentData = {
-        id: `assessment-${Date.now()}`,
+      const assessmentData: PatientAssessment = {
         patient_id: patientId,
+        nurse_id: user.id,
+        nurse_name: `${profile.first_name} ${profile.last_name}`,
         assessment_type: assessmentType,
         assessment_date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-        nurse_id: 'nurse-001', // In real app, this would come from auth context
-        nurse_name: 'Sarah Johnson', // In real app, this would come from auth context
-        ...formData,
-        created_at: new Date().toISOString()
+        ...formData
       };
 
-      await onSave(assessmentData);
-    } catch (error) {
+      console.log('Submitting assessment:', assessmentData);
+      
+      // Save to database
+      const savedAssessment = await createAssessment(assessmentData);
+      
+      console.log('Assessment saved successfully:', savedAssessment);
+      
+      // Call the onSave callback
+      onSave(savedAssessment);
+      
+      // Close the form
+      onClose();
+    } catch (error: any) {
       console.error('Error saving assessment:', error);
-      alert('Failed to save assessment. Please try again.');
+      alert(`Failed to save assessment: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
       setLoading(false);
     }

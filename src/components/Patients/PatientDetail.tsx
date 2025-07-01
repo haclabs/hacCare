@@ -38,6 +38,7 @@ import { PatientBracelet } from './PatientBracelet';
 import { MedicationBarcode } from './MedicationBarcode';
 import { supabase } from '../../lib/supabase';
 import { updatePatientVitals } from '../../lib/patientService';
+import { fetchPatientAssessments, PatientAssessment } from '../../lib/assessmentService';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -119,6 +120,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [vitals, setVitals] = useState<PatientVitals[]>([]);
   const [medications, setMedications] = useState<PatientMedication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
+  const [assessments, setAssessments] = useState<PatientAssessment[]>([]);
   const [admissionRecord, setAdmissionRecord] = useState<AdmissionRecord | null>(null);
   const [advancedDirective, setAdvancedDirective] = useState<AdvancedDirective | null>(null);
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
@@ -167,6 +169,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         .order('created_at', { ascending: false });
       
       if (notesData) setNotes(notesData);
+
+      // Fetch assessments
+      try {
+        const assessmentsData = await fetchPatientAssessments(patient.id);
+        setAssessments(assessmentsData);
+      } catch (error) {
+        console.error('Error fetching assessments:', error);
+        setAssessments([]);
+      }
 
       // Fetch admission record - use maybeSingle() to handle cases where no record exists
       const { data: admissionData } = await supabase
@@ -236,6 +247,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       fetchPatientData();
     } catch (error) {
       console.error('Error saving note:', error);
+    }
+  };
+
+  const handleAssessmentSubmit = async (assessmentData: PatientAssessment) => {
+    try {
+      console.log('Assessment submitted successfully:', assessmentData);
+      setShowAssessmentForm(false);
+      fetchPatientData(); // Refresh to show the new assessment
+    } catch (error) {
+      console.error('Error handling assessment submission:', error);
     }
   };
 
@@ -752,11 +773,71 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </div>
             </div>
             <div className="p-6">
-              <div className="text-center py-8">
-                <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No assessments recorded</p>
-                <p className="text-sm text-gray-400 mt-2">Click "New Assessment" to begin</p>
-              </div>
+              {assessments.length === 0 ? (
+                <div className="text-center py-8">
+                  <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No assessments recorded</p>
+                  <p className="text-sm text-gray-400 mt-2">Click "New Assessment" to begin</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {assessments.map((assessment) => (
+                    <div key={assessment.id} className="border rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            assessment.assessment_type === 'physical' ? 'bg-blue-100' :
+                            assessment.assessment_type === 'pain' ? 'bg-red-100' :
+                            'bg-purple-100'
+                          }`}>
+                            {assessment.assessment_type === 'physical' && <Stethoscope className="h-5 w-5 text-blue-600" />}
+                            {assessment.assessment_type === 'pain' && <Heart className="h-5 w-5 text-red-600" />}
+                            {assessment.assessment_type === 'neurological' && <Brain className="h-5 w-5 text-purple-600" />}
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-medium text-gray-900 capitalize">
+                              {assessment.assessment_type} Assessment
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              By {assessment.nurse_name} • {new Date(assessment.assessment_date).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          assessment.priority_level === 'critical' ? 'bg-red-100 text-red-800' :
+                          assessment.priority_level === 'urgent' ? 'bg-orange-100 text-orange-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {assessment.priority_level}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-900 mb-1">Assessment Notes</h5>
+                          <p className="text-sm text-gray-700">{assessment.assessment_notes}</p>
+                        </div>
+                        
+                        {assessment.recommendations && (
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-900 mb-1">Recommendations</h5>
+                            <p className="text-sm text-gray-700">{assessment.recommendations}</p>
+                          </div>
+                        )}
+                        
+                        {assessment.follow_up_required && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <p className="text-sm text-yellow-800 font-medium">
+                              <AlertTriangle className="h-4 w-4 inline mr-1" />
+                              Follow-up assessment required
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -915,10 +996,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         <AssessmentForm
           patientId={patient.id}
           patientName={`${patient.first_name} ${patient.last_name}`}
-          onSave={() => {
-            setShowAssessmentForm(false);
-            fetchPatientData();
-          }}
+          onSave={handleAssessmentSubmit}
           onClose={() => setShowAssessmentForm(false)}
         />
       )}
