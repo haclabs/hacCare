@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Printer, Download } from 'lucide-react';
 import { Medication } from '../../types';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 interface MedicationBarcodeProps {
   medication: Medication;
@@ -52,6 +52,12 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
 
   // Generate medication ID for barcode
   const medicationBarcodeId = `MED${medication.id.slice(-6).toUpperCase()}`;
+
+  // Helper function to safely format dates
+  const formatSafeDate = (dateValue: string | Date) => {
+    const date = new Date(dateValue);
+    return isValid(date) ? format(date, 'MM/dd HH:mm') : 'N/A';
+  };
 
   const handlePrint = () => {
     const printContent = document.getElementById('medication-labels-content');
@@ -434,7 +440,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                 <div>
                   <p>• <strong>Frequency:</strong> {medication.frequency}</p>
                   <p>• <strong>Prescribed by:</strong> {medication.prescribedBy}</p>
-                  <p>• <strong>Next Due:</strong> {format(new Date(medication.nextDue), 'MM/dd HH:mm')}</p>
+                  <p>• <strong>Next Due:</strong> {formatSafeDate(medication.nextDue)}</p>
                 </div>
               </div>
               <div className="bg-red-100 border border-red-300 rounded p-2 mt-3">
