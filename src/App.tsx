@@ -57,18 +57,47 @@ function App() {
   const unreadAlerts = alerts.filter(alert => !alert.acknowledged).length;
 
   /**
+   * Handle tab change - clear selected patient when navigating away from patient detail
+   * @param {string} tab - The new active tab
+   */
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Clear selected patient when navigating to a different tab
+    if (tab !== 'patients') {
+      setSelectedPatient(null);
+    }
+  };
+
+  /**
+   * Handle patient selection
+   * @param {Patient} patient - The selected patient
+   */
+  const handlePatientSelect = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setActiveTab('patients'); // Ensure we're on the patients tab
+  };
+
+  /**
+   * Handle back navigation from patient detail
+   */
+  const handleBackFromPatient = () => {
+    setSelectedPatient(null);
+    // Stay on the patients tab
+  };
+
+  /**
    * Render main content based on active tab
    * Handles routing between different application sections
    * 
    * @returns {JSX.Element} The content for the current active tab
    */
   const renderContent = () => {
-    // Show patient detail view if a patient is selected
-    if (selectedPatient) {
+    // Show patient detail view if a patient is selected and we're on patients tab
+    if (selectedPatient && activeTab === 'patients') {
       return (
         <PatientDetail
           patient={selectedPatient}
-          onBack={() => setSelectedPatient(null)}
+          onBack={handleBackFromPatient}
         />
       );
     }
@@ -95,7 +124,7 @@ function App() {
                   <PatientCard
                     key={patient.id}
                     patient={patient}
-                    onClick={() => setSelectedPatient(patient)}
+                    onClick={() => handlePatientSelect(patient)}
                     onShowBracelet={() => setBraceletPatient(patient)}
                   />
                 ))}
@@ -147,10 +176,10 @@ function App() {
       
       {/* Main Layout */}
       <div className="flex">
-        {/* Sidebar Navigation */}
+        {/* Sidebar Navigation - Always visible */}
         <Sidebar 
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
         />
         
         {/* Main Content Area */}
