@@ -42,7 +42,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
         printWindow.document.write(`
           <html>
             <head>
-              <title>Patient Labels - ${patient.patientId}</title>
+              <title>Patient Labels - ${patient.patient_id}</title>
               <style>
                 @page {
                   size: 8.5in 11in;
@@ -188,18 +188,18 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
         ctx.fillStyle = 'black';
         ctx.font = 'bold 33px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`${patient.firstName} ${patient.lastName}`, x + labelWidth/2, y + 45);
+        ctx.fillText(`${patient.first_name} ${patient.last_name}`, x + labelWidth/2, y + 45);
 
         // Draw room number
         ctx.font = 'bold 27px Arial';
-        ctx.fillText(`Room: ${patient.roomNumber}${patient.bedNumber}`, x + labelWidth/2, y + 75);
+        ctx.fillText(`Room: ${patient.room_number}${patient.bed_number}`, x + labelWidth/2, y + 75);
 
         // Draw DOB
         ctx.font = '24px Arial';
-        ctx.fillText(`DOB: ${format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}`, x + labelWidth/2, y + 105);
+        ctx.fillText(`DOB: ${format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}`, x + labelWidth/2, y + 105);
 
         // Draw allergies if any
-        if (patient.allergies.length > 0) {
+        if (patient.allergies && patient.allergies.length > 0) {
           ctx.fillStyle = '#dc2626';
           ctx.fillRect(x + 15, y + 115, labelWidth - 30, 22);
           ctx.fillStyle = 'white';
@@ -209,7 +209,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
 
         // Draw simple barcode representation
         ctx.fillStyle = 'black';
-        const barcodeY = y + (patient.allergies.length > 0 ? 150 : 130);
+        const barcodeY = y + (patient.allergies && patient.allergies.length > 0 ? 150 : 130);
         const barcodeWidth = 120;
         const barcodeHeight = 20;
         const startX = x + (labelWidth - barcodeWidth) / 2;
@@ -225,7 +225,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
 
         // Draw patient ID
         ctx.font = 'bold 21px Arial';
-        ctx.fillText(patient.patientId, x + labelWidth/2, y + 280);
+        ctx.fillText(patient.patient_id, x + labelWidth/2, y + 280);
       }
     }
 
@@ -235,7 +235,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `patient-labels-${patient.patientId}.png`;
+        a.download = `patient-labels-${patient.patient_id}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -250,11 +250,11 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
     for (let i = 0; i < 30; i++) {
       labels.push(
         <div key={i} className="label">
-          <div className="patient-name">{patient.firstName} {patient.lastName}</div>
-          <div className="room-number">Room: {patient.roomNumber}{patient.bedNumber}</div>
-          <div className="dob">DOB: {format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}</div>
+          <div className="patient-name">{patient.first_name} {patient.last_name}</div>
+          <div className="room-number">Room: {patient.room_number}{patient.bed_number}</div>
+          <div className="dob">DOB: {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</div>
           
-          {patient.allergies.length > 0 && (
+          {patient.allergies && patient.allergies.length > 0 && (
             <div className="allergies">
               ALLERGIES: {patient.allergies.join(', ')}
             </div>
@@ -274,7 +274,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
                 />
               ))}
             </div>
-            <div className="patient-id">{patient.patientId}</div>
+            <div className="patient-id">{patient.patient_id}</div>
           </div>
         </div>
       );
@@ -318,13 +318,13 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-blue-900"><strong>Patient Name:</strong> {patient.firstName} {patient.lastName}</p>
-                  <p className="text-blue-900"><strong>Room Number:</strong> {patient.roomNumber}{patient.bedNumber}</p>
-                  <p className="text-blue-900"><strong>Date of Birth:</strong> {format(new Date(patient.dateOfBirth), 'MM/dd/yyyy')}</p>
+                  <p className="text-blue-900"><strong>Patient Name:</strong> {patient.first_name} {patient.last_name}</p>
+                  <p className="text-blue-900"><strong>Room Number:</strong> {patient.room_number}{patient.bed_number}</p>
+                  <p className="text-blue-900"><strong>Date of Birth:</strong> {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</p>
                 </div>
                 <div>
-                  <p className="text-blue-900"><strong>Patient Number:</strong> {patient.patientId}</p>
-                  <p className="text-blue-900"><strong>Allergies:</strong> {patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}</p>
+                  <p className="text-blue-900"><strong>Patient Number:</strong> {patient.patient_id}</p>
+                  <p className="text-blue-900"><strong>Allergies:</strong> {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}</p>
                   <p className="text-blue-900"><strong>Labels per Sheet:</strong> 30 identical labels</p>
                 </div>
               </div>
@@ -387,7 +387,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
             </div>
           </div>
 
-          {patient.allergies.length > 0 && (
+          {patient.allergies && patient.allergies.length > 0 && (
             <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
