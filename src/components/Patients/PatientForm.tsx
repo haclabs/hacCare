@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, Calendar, MapPin, Heart, Phone, AlertTriangle, Save } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 import { Patient } from '../../types';
 import { generatePatientId } from '../../utils/patientUtils';
 
@@ -181,7 +182,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
     try {
       // Create complete patient object
       const patientData: Patient = {
-        id: patient?.id || `patient-${Date.now()}`,
+        id: patient?.id || uuidv4(), // Generate proper UUID for new patients
         patientId: formData.patientId!,
         firstName: formData.firstName!,
         lastName: formData.lastName!,
