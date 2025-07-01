@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, X, Calendar, Activity, RefreshCw, BarChart3 } from 'lucide-react';
-import { VitalSigns } from '../../types';
 import { format, subHours } from 'date-fns';
 import { fetchPatientVitalsHistory } from '../../lib/patientService';
 
 interface VitalsTrendsProps {
-  currentVitals: VitalSigns;
-  patientId: string;
+  vitals: any[]; // Array of vitals from database
 }
 
 interface VitalReading {
@@ -18,58 +16,38 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patientId }) => {
+export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
   const [showTrends, setShowTrends] = useState(false);
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [readings, setReadings] = useState<VitalReading[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasRealData, setHasRealData] = useState(false);
 
-  // Load vitals history when trends are shown
+  // Convert database vitals to component format
   useEffect(() => {
-    if (showTrends && patientId) {
-      loadVitalsHistory();
-    }
-  }, [showTrends, patientId]);
-
-  const loadVitalsHistory = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const history = await fetchPatientVitalsHistory(patientId);
-      
-      // Convert database format to component format
-      const formattedReadings: VitalReading[] = history.map(vital => ({
-        timestamp: vital.recorded_at,
+    if (vitals && vitals.length > 0) {
+      const formattedReadings: VitalReading[] = vitals.map(vital => ({
+        timestamp: vital.recorded_at || vital.lastUpdated,
         temperature: vital.temperature,
-        heartRate: vital.heart_rate,
+        heartRate: vital.heart_rate || vital.heartRate,
         bloodPressure: {
-          systolic: vital.blood_pressure_systolic,
-          diastolic: vital.blood_pressure_diastolic
+          systolic: vital.blood_pressure_systolic || vital.bloodPressure?.systolic,
+          diastolic: vital.blood_pressure_diastolic || vital.bloodPressure?.diastolic
         },
-        oxygenSaturation: vital.oxygen_saturation,
-        respiratoryRate: vital.respiratory_rate
-      }));
+        oxygenSaturation: vital.oxygen_saturation || vital.oxygenSaturation,
+        respiratoryRate: vital.respiratory_rate || vital.respiratoryRate
+      })).filter(reading => 
+        // Filter out invalid readings
+        reading.temperature > 0 && 
+        reading.heartRate > 0 && 
+        reading.bloodPressure.systolic > 0
+      );
 
-      // Check if we have real data from the database
-      if (formattedReadings.length > 0) {
-        setHasRealData(true);
-        setReadings(formattedReadings.slice(0, 5)); // Take last 5 readings
-      } else {
-        setHasRealData(false);
-        setReadings([]);
-      }
-    } catch (err: any) {
-      console.error('Error loading vitals history:', err);
-      setError(err.message || 'Failed to load vitals history');
-      setHasRealData(false);
+      setReadings(formattedReadings.slice(0, 10)); // Take last 10 readings
+    } else {
       setReadings([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [vitals]);
 
   const NoDataDisplay: React.FC = () => (
     <div className="col-span-full">
@@ -81,7 +59,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-md mx-auto">
           <p className="text-blue-800 text-sm">
-            <strong>To see trends:</strong> Record vital signs using the "Update Vitals" button, 
+            <strong>To see trends:</strong> Record vital signs using the "Record Vitals" button, 
             then return here to view historical data and trends.
           </p>
         </div>
@@ -96,6 +74,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
     unit: string,
     onClick: () => void 
   }> = ({ data, label, color, unit, onClick }) => {
+    if (data.length === 0) return null;
+
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
@@ -255,11 +235,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
         <TrendingUp className="h-8 w-8 text-teal-600 mx-auto mb-2" />
         <p className="text-2xl font-bold text-teal-900">Vitals Trends</p>
         <p className="text-sm text-teal-600">View Historical Data</p>
+        {readings.length > 0 && (
+          <p className="text-xs text-teal-500 mt-1">{readings.length} readings available</p>
+        )}
       </div>
     );
   }
 
-  if (selectedChart && hasRealData && readings.length > 0) {
+  if (selectedChart && readings.length > 0) {
     const chartData = {
       temperature: {
         data: readings.map(r => r.temperature),
@@ -321,37 +304,17 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
           <Activity className="h-5 w-5 text-teal-600" />
-          <span>Vitals Trends{hasRealData ? ` - Last ${readings.length} Readings` : ''}</span>
+          <span>Vitals Trends{readings.length > 0 ? ` - Last ${readings.length} Readings` : ''}</span>
         </h3>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={loadVitalsHistory}
-            disabled={loading}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={() => setShowTrends(false)}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <button
+          onClick={() => setShowTrends(false)}
+          className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="text-center py-8">
-          <RefreshCw className="h-8 w-8 text-gray-400 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-500">Loading vitals history...</p>
-        </div>
-      ) : !hasRealData || readings.length === 0 ? (
+      {readings.length === 0 ? (
         <NoDataDisplay />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -405,14 +368,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ currentVitals, patie
         </div>
       )}
 
-      {hasRealData && readings.length > 0 && (
+      {readings.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center space-x-2 mb-2">
             <Calendar className="h-4 w-4 text-blue-600" />
             <p className="text-blue-800 text-sm font-medium">Reading Timeline</p>
           </div>
           <p className="text-blue-700 text-xs">
-            Showing vitals history from database • Click any chart to view detailed trends
+            Showing {readings.length} vitals readings • Click any chart to view detailed trends
           </p>
         </div>
       )}
