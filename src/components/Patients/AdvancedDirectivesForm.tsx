@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
 import { AdvancedDirective, fetchAdvancedDirective, upsertAdvancedDirective, createDefaultAdvancedDirective } from '../../lib/admissionService';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
@@ -19,6 +20,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const { refreshPatients } = usePatients();
 
   useEffect(() => {
     loadAdvancedDirective();
@@ -29,13 +31,16 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       setLoading(true);
       setError('');
       
+      console.log('Loading advanced directive for patient:', patientId);
       let directive = await fetchAdvancedDirective(patientId);
       
       // If no directive exists, create default one
       if (!directive) {
+        console.log('No advanced directive found, creating default');
         directive = await createDefaultAdvancedDirective(patientId);
       }
       
+      console.log('Advanced directive loaded:', directive);
       setFormData(directive);
     } catch (err: any) {
       console.error('Error loading advanced directive:', err);
@@ -53,7 +58,13 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       setSaving(true);
       setError('');
       
+      console.log('Saving advanced directive:', formData);
       await upsertAdvancedDirective(formData);
+      
+      // Refresh patient data to reflect changes
+      await refreshPatients();
+      
+      console.log('Advanced directive saved successfully');
       onSave();
     } catch (err: any) {
       console.error('Error saving advanced directive:', err);

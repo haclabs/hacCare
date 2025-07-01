@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, User, Building, Phone, Heart, AlertTriangle } from 'lucide-react';
 import { AdmissionRecord, fetchAdmissionRecord, upsertAdmissionRecord, createDefaultAdmissionRecord } from '../../lib/admissionService';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface AdmissionRecordsFormProps {
   patientId: string;
@@ -19,6 +20,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const { refreshPatients } = usePatients();
 
   useEffect(() => {
     loadAdmissionRecord();
@@ -29,13 +31,16 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       setLoading(true);
       setError('');
       
+      console.log('Loading admission record for patient:', patientId);
       let record = await fetchAdmissionRecord(patientId);
       
       // If no record exists, create default one
       if (!record) {
+        console.log('No admission record found, creating default');
         record = await createDefaultAdmissionRecord(patientId);
       }
       
+      console.log('Admission record loaded:', record);
       setFormData(record);
     } catch (err: any) {
       console.error('Error loading admission record:', err);
@@ -53,7 +58,13 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       setSaving(true);
       setError('');
       
+      console.log('Saving admission record:', formData);
       await upsertAdmissionRecord(formData);
+      
+      // Refresh patient data to reflect changes
+      await refreshPatients();
+      
+      console.log('Admission record saved successfully');
       onSave();
     } catch (err: any) {
       console.error('Error saving admission record:', err);
@@ -230,7 +241,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   value={formData.height}
                   onChange={(e) => updateField('height', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder={`5'10" (178 cm)`}
+                  placeholder="5'10\" (178 cm)"
                 />
               </div>
 

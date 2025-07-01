@@ -52,6 +52,8 @@ export interface AdvancedDirective {
  */
 export const fetchAdmissionRecord = async (patientId: string): Promise<AdmissionRecord | null> => {
   try {
+    console.log('Fetching admission record for patient:', patientId);
+    
     const { data, error } = await supabase
       .from('patient_admission_records')
       .select('*')
@@ -59,9 +61,11 @@ export const fetchAdmissionRecord = async (patientId: string): Promise<Admission
       .maybeSingle();
 
     if (error) {
+      console.error('Error fetching admission record:', error);
       throw error;
     }
 
+    console.log('Admission record result:', data);
     return data;
   } catch (error) {
     console.error('Error fetching admission record:', error);
@@ -74,6 +78,8 @@ export const fetchAdmissionRecord = async (patientId: string): Promise<Admission
  */
 export const upsertAdmissionRecord = async (admissionRecord: AdmissionRecord): Promise<AdmissionRecord> => {
   try {
+    console.log('Upserting admission record:', admissionRecord);
+    
     const { data, error } = await supabase
       .from('patient_admission_records')
       .upsert(admissionRecord, {
@@ -83,9 +89,11 @@ export const upsertAdmissionRecord = async (admissionRecord: AdmissionRecord): P
       .single();
 
     if (error) {
+      console.error('Error upserting admission record:', error);
       throw error;
     }
 
+    console.log('Admission record upserted successfully:', data);
     return data;
   } catch (error) {
     console.error('Error upserting admission record:', error);
@@ -98,6 +106,8 @@ export const upsertAdmissionRecord = async (admissionRecord: AdmissionRecord): P
  */
 export const fetchAdvancedDirective = async (patientId: string): Promise<AdvancedDirective | null> => {
   try {
+    console.log('Fetching advanced directive for patient:', patientId);
+    
     const { data, error } = await supabase
       .from('patient_advanced_directives')
       .select('*')
@@ -105,9 +115,11 @@ export const fetchAdvancedDirective = async (patientId: string): Promise<Advance
       .maybeSingle();
 
     if (error) {
+      console.error('Error fetching advanced directive:', error);
       throw error;
     }
 
+    console.log('Advanced directive result:', data);
     return data;
   } catch (error) {
     console.error('Error fetching advanced directive:', error);
@@ -120,6 +132,8 @@ export const fetchAdvancedDirective = async (patientId: string): Promise<Advance
  */
 export const upsertAdvancedDirective = async (directive: AdvancedDirective): Promise<AdvancedDirective> => {
   try {
+    console.log('Upserting advanced directive:', directive);
+    
     const { data, error } = await supabase
       .from('patient_advanced_directives')
       .upsert(directive, {
@@ -129,9 +143,11 @@ export const upsertAdvancedDirective = async (directive: AdvancedDirective): Pro
       .single();
 
     if (error) {
+      console.error('Error upserting advanced directive:', error);
       throw error;
     }
 
+    console.log('Advanced directive upserted successfully:', data);
     return data;
   } catch (error) {
     console.error('Error upserting advanced directive:', error);
@@ -143,6 +159,8 @@ export const upsertAdvancedDirective = async (directive: AdvancedDirective): Pro
  * Create default admission record for a patient
  */
 export const createDefaultAdmissionRecord = async (patientId: string): Promise<AdmissionRecord> => {
+  console.log('Creating default admission record for patient:', patientId);
+  
   const defaultRecord: AdmissionRecord = {
     patient_id: patientId,
     admission_type: 'Emergency',
@@ -173,6 +191,8 @@ export const createDefaultAdmissionRecord = async (patientId: string): Promise<A
  * Create default advanced directive for a patient
  */
 export const createDefaultAdvancedDirective = async (patientId: string): Promise<AdvancedDirective> => {
+  console.log('Creating default advanced directive for patient:', patientId);
+  
   const defaultDirective: AdvancedDirective = {
     patient_id: patientId,
     living_will_status: 'On File',

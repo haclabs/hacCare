@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Patient } from '../../types';
-import { ArrowLeft, Edit, Thermometer, Heart, Activity, Pill, FileText, User, Phone, Calendar, MapPin, AlertTriangle, Clock, Stethoscope, QrCode, Printer, TrendingUp, Plus, Save, X, Target, Shield, Users, Clipboard, BookOpen, FileCheck, UserCheck, Settings, Zap, Award, CheckCircle, AlertCircle, Info, Star, Wrench, PenTool as Tool } from 'lucide-react';
+import { 
+  ArrowLeft, Edit, Thermometer, Heart, Activity, 
+  Pill, FileText, User, Phone, Calendar, MapPin, 
+  AlertTriangle, Clock, Stethoscope, QrCode, Printer,
+  TrendingUp, Plus, Save, X, Target, Shield, Users,
+  Clipboard, BookOpen, FileCheck, UserCheck, Settings,
+  Zap, Award, CheckCircle, AlertCircle, Info, Star, Wrench, PenTool as Tool 
+} from 'lucide-react';
 import { format, differenceInDays, isValid } from 'date-fns';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
@@ -14,6 +21,7 @@ import { WoundAssessment } from './WoundAssessment';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { usePatients } from '../../contexts/PatientContext';
+import { fetchAdmissionRecord, fetchAdvancedDirective } from '../../lib/admissionService';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -33,10 +41,61 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
   const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
   
-  const { getPatient, updatePatient } = usePatients();
+  // State for admission records and advanced directives
+  const [admissionRecord, setAdmissionRecord] = useState<any>(null);
+  const [advancedDirective, setAdvancedDirective] = useState<any>(null);
+  const [loadingAdmissionRecord, setLoadingAdmissionRecord] = useState(false);
+  const [loadingAdvancedDirective, setLoadingAdvancedDirective] = useState(false);
+  const [admissionError, setAdmissionError] = useState('');
+  const [directiveError, setDirectiveError] = useState('');
+  
+  const { getPatient, updatePatient, refreshPatients } = usePatients();
 
   // Get the most current patient data from context
   const currentPatient = getPatient(patient.id) || patient;
+
+  // Load admission record and advanced directives when tab changes
+  useEffect(() => {
+    if (activeTab === 'admission-records') {
+      loadAdmissionRecord();
+    } else if (activeTab === 'advanced-directives') {
+      loadAdvancedDirective();
+    }
+  }, [activeTab, currentPatient.id]);
+
+  // Load admission record
+  const loadAdmissionRecord = async () => {
+    try {
+      setLoadingAdmissionRecord(true);
+      setAdmissionError('');
+      
+      console.log('Loading admission record for tab display');
+      const record = await fetchAdmissionRecord(currentPatient.id);
+      setAdmissionRecord(record);
+    } catch (err: any) {
+      console.error('Error loading admission record for display:', err);
+      setAdmissionError(err.message || 'Failed to load admission record');
+    } finally {
+      setLoadingAdmissionRecord(false);
+    }
+  };
+
+  // Load advanced directive
+  const loadAdvancedDirective = async () => {
+    try {
+      setLoadingAdvancedDirective(true);
+      setDirectiveError('');
+      
+      console.log('Loading advanced directive for tab display');
+      const directive = await fetchAdvancedDirective(currentPatient.id);
+      setAdvancedDirective(directive);
+    } catch (err: any) {
+      console.error('Error loading advanced directive for display:', err);
+      setDirectiveError(err.message || 'Failed to load advanced directive');
+    } finally {
+      setLoadingAdvancedDirective(false);
+    }
+  };
 
   // Calculate age and days admitted
   const birthDate = new Date(currentPatient.date_of_birth);
@@ -96,6 +155,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       console.error('Error saving assessment:', error);
       throw error;
     }
+  };
+
+  const handleSaveAdmissionRecord = async () => {
+    setShowAdmissionForm(false);
+    // Reload admission record data
+    await loadAdmissionRecord();
+  };
+
+  const handleSaveAdvancedDirective = async () => {
+    setShowAdvancedDirectivesForm(false);
+    // Reload advanced directive data
+    await loadAdvancedDirective();
   };
 
   const getConditionColor = (condition: Patient['condition']) => {
@@ -314,7 +385,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       </span>
                     </div>
                     <p className="text-purple-700 font-medium">Blood Pressure</p>
-                    <p className="text-purple-600 text-sm">Normal: &lt;120/80 mmHg</p>
+                    <p className="text-purple-600 text-sm">Normal: <120/80 mmHg</p>
                   </div>
 
                   <div className="bg-green-50 rounded-lg p-6 border border-green-200">
@@ -480,32 +551,49 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             </div>
 
             <div className="space-y-4">
-              {currentPatient.notes && currentPatient.notes.map((note) => (
-                <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{note.type}</h4>
-                        <p className="text-sm text-gray-600">by {note.nurse_name}</p>
+              {currentPatient.notes && currentPatient.notes.length > 0 ? (
+                currentPatient.notes.map((note) => (
+                  <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <h4 className="font-medium text-gray-900">{note.type}</h4>
+                          <p className="text-sm text-gray-600">by {note.nurse_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          {format(new Date(note.created_at), 'MMM dd, yyyy HH:mm')}
+                        </p>
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                          note.priority === 'High' ? 'bg-red-100 text-red-800' :
+                          note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {note.priority} Priority
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
-                        {format(new Date(note.created_at), 'MMM dd, yyyy HH:mm')}
-                      </p>
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        note.priority === 'High' ? 'bg-red-100 text-red-800' :
-                        note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {note.priority} Priority
-                      </span>
-                    </div>
+                    <p className="text-gray-700">{note.content}</p>
                   </div>
-                  <p className="text-gray-700">{note.content}</p>
+                ))
+              ) : (
+                <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Notes Recorded</h3>
+                  <p className="text-gray-600 mb-4">
+                    No notes have been recorded for this patient yet.
+                  </p>
+                  <button
+                    onClick={() => setShowNoteForm(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mx-auto"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add First Note</span>
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         );
@@ -524,12 +612,154 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <p className="text-gray-600">
-                Comprehensive admission records including insurance information, physical measurements, 
-                social history, and emergency contacts. Click "Update Records" to view and edit detailed admission information.
-              </p>
-            </div>
+            {loadingAdmissionRecord ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading admission records...</p>
+              </div>
+            ) : admissionError ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <h4 className="font-medium text-red-900">Error Loading Records</h4>
+                </div>
+                <p className="text-red-700">{admissionError}</p>
+                <button 
+                  onClick={loadAdmissionRecord}
+                  className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : admissionRecord ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+                {/* Admission Details */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                    Admission Details
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Admission Type</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.admission_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Attending Physician</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.attending_physician}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Insurance Provider</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.insurance_provider}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Insurance Policy</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.insurance_policy}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Admission Source</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.admission_source}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Chief Complaint</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.chief_complaint}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Physical Measurements */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Heart className="h-5 w-5 mr-2 text-red-600" />
+                    Physical Measurements
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-red-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Height</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.height}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Weight</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.weight}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">BMI</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.bmi}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social History */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <User className="h-5 w-5 mr-2 text-green-600" />
+                    Social & Family History
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-green-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Smoking Status</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.smoking_status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Alcohol Use</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.alcohol_use}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Exercise</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.exercise}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Occupation</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.occupation}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Marital Status</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.marital_status}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <p className="text-sm text-gray-600">Family History</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.family_history}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Secondary Contact */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Phone className="h-5 w-5 mr-2 text-orange-600" />
+                    Secondary Emergency Contact
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Name</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.secondary_contact_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Relationship</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.secondary_contact_relationship}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.secondary_contact_phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Address</p>
+                      <p className="font-medium text-gray-900">{admissionRecord.secondary_contact_address}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <p className="text-gray-600">
+                  No admission records found. Click "Update Records" to add comprehensive admission information.
+                </p>
+              </div>
+            )}
           </div>
         );
 
@@ -547,13 +777,103 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <p className="text-gray-600">
-                Advanced directives including living will status, healthcare proxy information, 
-                DNR status, organ donation preferences, and religious considerations. 
-                Click "Update Directives" to view and edit detailed directive information.
-              </p>
-            </div>
+            {loadingAdvancedDirective ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading advanced directives...</p>
+              </div>
+            ) : directiveError ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <h4 className="font-medium text-red-900">Error Loading Directives</h4>
+                </div>
+                <p className="text-red-700">{directiveError}</p>
+                <button 
+                  onClick={loadAdvancedDirective}
+                  className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : advancedDirective ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+                {/* Legal Documents */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <FileCheck className="h-5 w-5 mr-2 text-blue-600" />
+                    Legal Documents & Directives
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Living Will Status</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.living_will_status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Living Will Date</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.living_will_date}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Healthcare Proxy</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.healthcare_proxy_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Healthcare Proxy Phone</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.healthcare_proxy_phone}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">DNR Status</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.dnr_status}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Organ Donation */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Heart className="h-5 w-5 mr-2 text-red-600" />
+                    Organ Donation Preferences
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-red-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Organ Donation Status</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.organ_donation_status}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Donation Details</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.organ_donation_details}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Religious & Personal Preferences */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <Shield className="h-5 w-5 mr-2 text-purple-600" />
+                    Religious & Personal Preferences
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 gap-4 bg-purple-50 p-4 rounded-lg">
+                    <div>
+                      <p className="text-sm text-gray-600">Religious Preference</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.religious_preference}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Special Instructions</p>
+                      <p className="font-medium text-gray-900">{advancedDirective.special_instructions}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <p className="text-gray-600">
+                  No advanced directives found. Click "Update Directives" to add directive information.
+                </p>
+              </div>
+            )}
           </div>
         );
 
@@ -911,7 +1231,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           patientId={currentPatient.id}
           patientName={`${currentPatient.first_name} ${currentPatient.last_name}`}
           onClose={() => setShowAdmissionForm(false)}
-          onSave={() => setShowAdmissionForm(false)}
+          onSave={handleSaveAdmissionRecord}
         />
       )}
 
@@ -920,7 +1240,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           patientId={currentPatient.id}
           patientName={`${currentPatient.first_name} ${currentPatient.last_name}`}
           onClose={() => setShowAdvancedDirectivesForm(false)}
-          onSave={() => setShowAdvancedDirectivesForm(false)}
+          onSave={handleSaveAdvancedDirective}
         />
       )}
     </div>
