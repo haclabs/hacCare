@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
 import { Patient } from '../../types';
-import { 
-  ArrowLeft, Edit, Thermometer, Heart, Activity, 
-  Pill, FileText, User, Phone, Calendar, MapPin, 
-  AlertTriangle, Clock, Stethoscope, QrCode, Printer,
-  TrendingUp, Plus, Save, X, Target, Shield, Users,
-  Clipboard, BookOpen, FileCheck, UserCheck, Settings,
-  Zap, Award, CheckCircle, AlertCircle, Info, Star,
-  Wrench, Tool
-} from 'lucide-react';
+import { ArrowLeft, Edit, Thermometer, Heart, Activity, Pill, FileText, User, Phone, Calendar, MapPin, AlertTriangle, Clock, Stethoscope, QrCode, Printer, TrendingUp, Plus, Save, X, Target, Shield, Users, Clipboard, BookOpen, FileCheck, UserCheck, Settings, Zap, Award, CheckCircle, AlertCircle, Info, Star, Wrench, PenTool as Tool } from 'lucide-react';
 import { format, differenceInDays, isValid } from 'date-fns';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
