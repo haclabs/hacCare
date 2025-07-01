@@ -230,7 +230,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   value={formData.height}
                   onChange={(e) => updateField('height', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="5'10\" (178 cm)"
+                  placeholder='5\'10" (178 cm)'
                 />
               </div>
 
