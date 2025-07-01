@@ -286,7 +286,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       </span>
                     </div>
                     <p className="text-purple-700 font-medium">Blood Pressure</p>
-                    <p className="text-purple-600 text-sm">Normal: <120/80 mmHg</p>
+                    <p className="text-purple-600 text-sm">Normal: &lt;120/80 mmHg</p>
                   </div>
 
                   <div className="bg-green-50 rounded-lg p-6 border border-green-200">
