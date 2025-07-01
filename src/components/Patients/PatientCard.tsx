@@ -46,12 +46,21 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
   };
 
   // Calculate patient age with date validation
-  const birthDate = new Date(patient.dateOfBirth);
+  const birthDate = new Date(patient.date_of_birth);
   const age = isValid(birthDate) ? new Date().getFullYear() - birthDate.getFullYear() : 'N/A';
 
   // Format admission date with validation
-  const admissionDate = new Date(patient.admissionDate);
+  const admissionDate = new Date(patient.admission_date);
   const formattedAdmissionDate = isValid(admissionDate) ? format(admissionDate, 'MMM dd') : 'N/A';
+
+  // Get latest vitals from the vitals array
+  const latestVitals = patient.vitals && patient.vitals.length > 0 
+    ? patient.vitals.sort((a, b) => {
+        const dateA = new Date(a.recorded_at || a.lastUpdated || 0);
+        const dateB = new Date(b.recorded_at || b.lastUpdated || 0);
+        return dateB.getTime() - dateA.getTime();
+      })[0]
+    : null;
 
   /**
    * Handle bracelet button click
@@ -76,10 +85,10 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {patient.firstName} {patient.lastName}
+              {patient.first_name} {patient.last_name}
             </h3>
             <p className="text-sm text-gray-500">{age} years old • {patient.gender}</p>
-            <p className="text-xs text-blue-600 font-mono">{patient.patientId}</p>
+            <p className="text-xs text-blue-600 font-mono">{patient.patient_id}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -102,7 +111,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <MapPin className="h-4 w-4" />
-          <span>Room {patient.roomNumber}{patient.bedNumber}</span>
+          <span>Room {patient.room_number}{patient.bed_number}</span>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <Calendar className="h-4 w-4" />
@@ -115,12 +124,12 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
         <div className="flex items-center space-x-2">
           <Heart className="h-4 w-4 text-red-500" />
           <span className="text-sm text-gray-600">
-            {patient.vitals.heartRate} BPM • {patient.vitals.bloodPressure.systolic}/{patient.vitals.bloodPressure.diastolic}
+            {latestVitals?.heartRate || 'N/A'} BPM • {latestVitals?.bloodPressure?.systolic || 'N/A'}/{latestVitals?.bloodPressure?.diastolic || 'N/A'}
           </span>
         </div>
         
         {/* Allergy Indicator */}
-        {patient.allergies.length > 0 && (
+        {patient.allergies && patient.allergies.length > 0 && (
           <div className="flex items-center space-x-1">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <span className="text-xs text-amber-600 font-medium">Allergies</span>
@@ -129,7 +138,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
       </div>
 
       {/* Active Medications Count */}
-      {patient.medications.filter(med => med.status === 'Active').length > 0 && (
+      {patient.medications && patient.medications.filter(med => med.status === 'Active').length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100">
           <p className="text-xs text-gray-500">
             {patient.medications.filter(med => med.status === 'Active').length} active medications
