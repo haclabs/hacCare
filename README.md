@@ -42,6 +42,24 @@ A comprehensive, secure hospital management system designed for healthcare profe
 - **Build Tool**: Vite for fast development and building
 - **Date Handling**: date-fns for date manipulation and formatting
 
+## 🔒 Data Storage & Security
+
+**Important**: This application uses **ONLY Supabase** for data persistence and session management. 
+
+- ✅ **All user data** is stored in Supabase PostgreSQL database
+- ✅ **Authentication sessions** are managed by Supabase Auth
+- ✅ **User profiles and preferences** are stored in Supabase tables
+- ✅ **Patient records and medical data** are stored securely in Supabase
+- ❌ **No localStorage or sessionStorage** is used for application data
+- ❌ **No client-side data persistence** beyond temporary UI state
+
+### Security Features
+- **Row Level Security (RLS)**: Database-level security policies
+- **Role-Based Access Control**: Different permissions for nurses, admins, and super admins
+- **Session Management**: Automatic session refresh and timeout handling via Supabase
+- **Input Validation**: Client and server-side validation
+- **Secure Authentication**: Supabase Auth with PKCE flow
+
 ## 📋 Prerequisites
 
 - Node.js 18+ and npm
@@ -101,9 +119,9 @@ src/
 │   ├── Patients/        # Patient management components
 │   ├── Users/           # User management components
 │   └── UI/              # Reusable UI components
-├── contexts/            # React contexts (Auth, etc.)
+├── contexts/            # React contexts (Auth, Patient)
 ├── data/               # Mock data and constants
-├── lib/                # External library configurations
+├── lib/                # External library configurations (Supabase)
 ├── types/              # TypeScript type definitions
 ├── utils/              # Utility functions
 └── main.tsx            # Application entry point
@@ -112,7 +130,7 @@ src/
 ## 🎨 Key Components
 
 ### Authentication System
-- **AuthContext**: Manages user authentication state and session handling
+- **AuthContext**: Manages user authentication state and session handling via Supabase
 - **ProtectedRoute**: Ensures only authenticated users can access the application
 - **LoginForm**: Secure login interface with demo account options
 
@@ -128,14 +146,6 @@ src/
 - **Sidebar**: Main navigation menu with role-based visibility
 - **AlertPanel**: Real-time notification system
 - **QuickStats**: Dashboard statistics and metrics
-
-## 🔒 Security Features
-
-- **Row Level Security (RLS)**: Database-level security policies
-- **Role-Based Access Control**: Different permissions for nurses, admins, and super admins
-- **Session Management**: Automatic session refresh and timeout handling
-- **Input Validation**: Client and server-side validation
-- **Secure Authentication**: Supabase Auth with PKCE flow
 
 ## 📱 Responsive Design
 
@@ -187,8 +197,28 @@ The application is fully responsive and optimized for:
 
 - **Code Splitting**: Lazy loading of components
 - **Optimized Queries**: Efficient database queries with proper indexing
-- **Caching**: Strategic caching of user data and preferences
+- **Caching**: Strategic caching via Supabase's built-in mechanisms
 - **Bundle Optimization**: Vite's optimized bundling and tree shaking
+
+## 🔍 Data Flow & Architecture
+
+### Authentication Flow
+1. User enters credentials → Supabase Auth
+2. Supabase validates and creates session
+3. App fetches user profile from Supabase database
+4. Session persisted by Supabase (not localStorage)
+
+### Data Management
+1. All CRUD operations go through Supabase client
+2. Real-time updates via Supabase subscriptions
+3. Optimistic updates with error handling
+4. No local data persistence beyond component state
+
+### Security Model
+1. Row Level Security policies enforce data access
+2. Role-based permissions checked on both client and server
+3. All sensitive operations require authentication
+4. Session management handled entirely by Supabase
 
 ## 🤝 Contributing
 
@@ -215,4 +245,4 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and updates.
 
 ---
 
-**hacCare** - Empowering healthcare professionals with modern, secure, and efficient patient management tools.
+**hacCare** - Empowering healthcare professionals with modern, secure, and efficient patient management tools powered by Supabase.

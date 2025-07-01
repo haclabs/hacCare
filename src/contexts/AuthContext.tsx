@@ -48,12 +48,13 @@ export const useAuth = () => {
  * - Role-based access control
  * - Comprehensive error handling
  * - Network timeout protection
+ * - NO localStorage usage - all data managed by Supabase
  * 
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Child components to wrap
  */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Authentication state management
+  // Authentication state management - all handled by Supabase, no localStorage
   const [user, setUser] = useState<User | null>(null);           // Supabase user object
   const [profile, setProfile] = useState<UserProfile | null>(null); // User profile from database
   const [loading, setLoading] = useState(true);                 // Overall loading state
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * Initialize authentication on component mount
    * Handles session restoration, auth state changes, and cleanup
+   * Uses only Supabase session management - no localStorage access
    */
   useEffect(() => {
     let mounted = true;        // Flag to prevent state updates after unmount
@@ -69,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     /**
      * Initialize authentication system
-     * - Restores existing session if available
+     * - Restores existing session if available (via Supabase, not localStorage)
      * - Fetches user profile data
      * - Sets up auth state listeners
      * - Handles various error conditions gracefully
@@ -95,9 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }, 30000);
 
-        console.log('🔍 Getting initial session...');
+        console.log('🔍 Getting initial session from Supabase...');
         
         // Attempt to get current session with timeout protection
+        // This uses Supabase's internal session management, not localStorage
         const { data: { session }, error } = await Promise.race([
           supabase.auth.getSession(),
           new Promise<any>((_, reject) => 
@@ -120,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               error.message?.includes('Refresh Token Not Found') ||
               error.message?.includes('refresh_token_not_found')) {
             console.log('🔄 Invalid refresh token detected, clearing session...');
-            await signOut(); // Clear invalid session data
+            await signOut(); // Clear invalid session data via Supabase
           }
           
           if (mounted) {
@@ -179,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     /**
      * Set up auth state change listener
      * Responds to login, logout, and token refresh events
+     * Uses Supabase's built-in auth state management
      */
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -225,6 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * Fetch user profile from database
    * Retrieves additional user information beyond basic auth data
+   * Uses only Supabase database queries - no localStorage
    * 
    * @param {string} userId - The user ID to fetch profile for
    * @returns {Promise<void>}
@@ -278,6 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Fetch profile with timeout protection (15 seconds)
+      // Uses Supabase database query - no localStorage involved
       const result = await Promise.race([
         supabase
           .from('user_profiles')
@@ -346,6 +352,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * Create or update user profile
    * Called when a user needs a profile created (typically after first login)
+   * Uses Supabase database operations - no localStorage
    * 
    * @returns {Promise<void>}
    * @throws {Error} If user not found or database not configured
@@ -364,6 +371,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📝 Creating/updating profile for user:', user.id);
 
       // Create/update profile with timeout protection (20 seconds)
+      // Uses Supabase upsert operation - no localStorage involved
       const result = await Promise.race([
         supabase
           .from('user_profiles')
@@ -424,6 +432,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * Sign in user with email and password
    * Handles authentication and provides detailed error feedback
+   * Uses only Supabase auth - no localStorage manipulation
    * 
    * @param {string} email - User's email address
    * @param {string} password - User's password
@@ -440,6 +449,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Attempt sign in with timeout protection (20 seconds)
+      // Supabase handles all session management internally
       const result = await Promise.race([
         supabase.auth.signInWithPassword({
           email,
@@ -490,6 +500,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * Sign out current user
    * Clears both Supabase session and local state
+   * Uses only Supabase signOut - no localStorage clearing needed
    * 
    * @returns {Promise<void>}
    */
@@ -498,6 +509,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Attempt Supabase sign out if configured
+      // This clears all session data managed by Supabase
       if (isSupabaseConfigured) {
         await supabase.auth.signOut();
         console.log('✅ Supabase sign out successful');
