@@ -12,8 +12,8 @@ import { Documentation } from './components/Documentation/Documentation';
 import { Changelog } from './components/Changelog/Changelog';
 import { Settings } from './components/Settings/Settings';
 import { usePatients } from './contexts/PatientContext';
-import { mockAlerts } from './data/mockData';
-import { Patient, Alert } from './types';
+import { useAlerts } from './contexts/AlertContext';
+import { Patient } from './types';
 
 /**
  * Main Application Component
@@ -25,7 +25,7 @@ import { Patient, Alert } from './types';
  * Features:
  * - Tab-based navigation system
  * - Patient selection and detail views
- * - Alert management and notifications
+ * - Real-time alert management and notifications
  * - Role-based content rendering
  * - Hospital bracelet generation
  * 
@@ -37,25 +37,10 @@ function App() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
-  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
 
-  // Get patients from context
+  // Get patients and alerts from context
   const { patients, error: dbError } = usePatients();
-
-  /**
-   * Handle alert acknowledgment
-   * Marks an alert as acknowledged and updates the alerts list
-   * 
-   * @param {string} alertId - ID of the alert to acknowledge
-   */
-  const handleAcknowledgeAlert = (alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId ? { ...alert, acknowledged: true } : alert
-    ));
-  };
-
-  // Calculate unread alerts count
-  const unreadAlerts = alerts.filter(alert => !alert.acknowledged).length;
+  const { alerts } = useAlerts();
 
   /**
    * Handle tab change - clear selected patient when navigating away from patient detail
@@ -179,7 +164,6 @@ function App() {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       {/* Application Header */}
       <Header 
-        unreadAlerts={unreadAlerts}
         onAlertsClick={() => setShowAlerts(true)}
         dbError={dbError}
       />
@@ -200,10 +184,8 @@ function App() {
 
       {/* Alert Panel Overlay */}
       <AlertPanel
-        alerts={alerts}
         isOpen={showAlerts}
         onClose={() => setShowAlerts(false)}
-        onAcknowledge={handleAcknowledgeAlert}
       />
 
       {/* Hospital Bracelet Modal */}
