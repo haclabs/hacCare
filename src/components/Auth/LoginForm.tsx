@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, Info, Heart, Wifi, WifiOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Info, Heart, Wifi, WifiOff, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 
@@ -337,6 +337,20 @@ export const LoginForm: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Security Notice */}
+        <div className="mt-6 bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Shield className="h-4 w-4 text-gray-600" />
+            <h3 className="text-sm font-medium text-gray-900">Security Recommendations</h3>
+          </div>
+          <ul className="text-xs text-gray-600 space-y-1">
+            <li>• Use a strong, unique password</li>
+            <li>• Enable multi-factor authentication when available</li>
+            <li>• Never share your login credentials</li>
+            <li>• Log out when using shared devices</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

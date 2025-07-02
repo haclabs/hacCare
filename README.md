@@ -59,6 +59,7 @@ A comprehensive, secure hospital management system designed for healthcare profe
 - **Session Management**: Automatic session refresh and timeout handling via Supabase
 - **Input Validation**: Client and server-side validation
 - **Secure Authentication**: Supabase Auth with PKCE flow
+- **Function Search Path Security**: Immutable search paths to prevent SQL injection
 
 ## 📋 Prerequisites
 
@@ -127,45 +128,6 @@ src/
 └── main.tsx            # Application entry point
 ```
 
-## 🎨 Key Components
-
-### Authentication System
-- **AuthContext**: Manages user authentication state and session handling via Supabase
-- **ProtectedRoute**: Ensures only authenticated users can access the application
-- **LoginForm**: Secure login interface with demo account options
-
-### Patient Management
-- **PatientCard**: Summary view of patient information
-- **PatientDetail**: Comprehensive patient information with tabbed interface
-- **PatientBracelet**: Patient ID label generation system
-- **VitalSignsEditor**: Interface for updating patient vital signs
-- **WoundAssessment**: Interactive body diagram for wound documentation
-
-### User Interface
-- **Header**: Navigation bar with user info and alerts
-- **Sidebar**: Main navigation menu with role-based visibility
-- **AlertPanel**: Real-time notification system
-- **QuickStats**: Dashboard statistics and metrics
-
-## 📱 Responsive Design
-
-The application is fully responsive and optimized for:
-- Desktop computers (1920x1080+)
-- Tablets (768px - 1024px)
-- Mobile devices (320px - 767px)
-
-## 🖨️ Printing Features
-
-### Patient ID Labels
-- **Avery 5160 Compatible**: 30 labels per sheet (2⅝" × 1")
-- **Patient Information**: Name, room, DOB, allergies, and barcode
-- **Print & Download**: Direct printing or PNG download options
-
-### Medication Labels
-- **Compact Format**: Optimized for medication containers
-- **Safety Information**: Medication name, dosage, patient info, and barcode
-- **Color Coding**: Red text for dosage information for quick identification
-
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -177,6 +139,9 @@ The application is fully responsive and optimized for:
 2. Set up Row Level Security policies
 3. Create user roles enum (nurse, admin, super_admin)
 4. Configure authentication settings
+5. Enable security features:
+   - Leaked password protection
+   - Multi-factor authentication options
 
 ## 🧪 Development
 
@@ -186,47 +151,14 @@ The application is fully responsive and optimized for:
 - `npm run preview`: Preview production build
 - `npm run lint`: Run ESLint
 
-### Code Style
-- TypeScript for type safety
-- ESLint for code quality
-- Consistent component structure
-- Comprehensive commenting
-- Modular architecture
-
-## 📈 Performance Optimizations
-
-- **Code Splitting**: Lazy loading of components
-- **Optimized Queries**: Efficient database queries with proper indexing
-- **Caching**: Strategic caching via Supabase's built-in mechanisms
-- **Bundle Optimization**: Vite's optimized bundling and tree shaking
-
-## 🔍 Data Flow & Architecture
-
-### Authentication Flow
-1. User enters credentials → Supabase Auth
-2. Supabase validates and creates session
-3. App fetches user profile from Supabase database
-4. Session persisted by Supabase (not localStorage)
-
-### Data Management
-1. All CRUD operations go through Supabase client
-2. Real-time updates via Supabase subscriptions
-3. Optimistic updates with error handling
-4. No local data persistence beyond component state
-
-### Security Model
-1. Row Level Security policies enforce data access
-2. Role-based permissions checked on both client and server
-3. All sensitive operations require authentication
-4. Session management handled entirely by Supabase
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Security Best Practices
+- Use immutable search paths in all database functions
+- Implement proper Row Level Security policies
+- Enable leaked password protection
+- Configure multi-factor authentication
+- Validate all user inputs
+- Use prepared statements for database queries
+- Implement proper error handling
 
 ## 📄 License
 
