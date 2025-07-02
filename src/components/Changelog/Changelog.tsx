@@ -37,6 +37,122 @@ export const Changelog: React.FC = () => {
    */
   const changelogData: ChangelogEntry[] = [
     {
+      version: "2.3.0",
+      date: "2025-07-15",
+      changes: [
+        {
+          type: "feature",
+          description: "Vital Signs Trend Analysis: Enhanced visualization of patient vital signs history with comprehensive trend charts for all vital measurements"
+        },
+        {
+          type: "feature",
+          description: "Last 5 readings summary table with formatted timestamps for better tracking of patient progress"
+        },
+        {
+          type: "feature",
+          description: "Trend analysis with automatic detection of improving/deteriorating patterns in vital signs"
+        },
+        {
+          type: "feature",
+          description: "Interactive mini-charts with detailed full-screen view for in-depth analysis"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced Alert System with intelligent alert deduplication to prevent duplicate notifications"
+        },
+        {
+          type: "improvement",
+          description: "Advanced filtering by alert type and priority for better alert management"
+        },
+        {
+          type: "improvement",
+          description: "Rate-limiting for alert checks to prevent excessive processing and improve system performance"
+        },
+        {
+          type: "improvement",
+          description: "Improved real-time alert synchronization with better handling of similar alerts"
+        },
+        {
+          type: "security",
+          description: "New Security Settings Panel with password strength evaluation and visual indicators"
+        },
+        {
+          type: "security",
+          description: "Comprehensive password requirements enforcement for better account protection"
+        },
+        {
+          type: "security",
+          description: "Security status monitoring and recommendations for users"
+        },
+        {
+          type: "security",
+          description: "Preparation for future multi-factor authentication implementation"
+        },
+        {
+          type: "improvement",
+          description: "Fixed function return types for better type safety in database operations"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced error handling in database operations for more reliable data management"
+        },
+        {
+          type: "security",
+          description: "Improved search path security for all database functions to prevent SQL injection"
+        }
+      ]
+    },
+    {
+      version: "2.2.1",
+      date: "2025-07-01",
+      changes: [
+        {
+          type: "feature",
+          description: "Added comprehensive demo content to the Admission Records tab with insurance information and attending physician"
+        },
+        {
+          type: "feature",
+          description: "Complete admission vital signs and measurements for better patient assessment"
+        },
+        {
+          type: "feature",
+          description: "Detailed social and family history sections for comprehensive patient profiles"
+        },
+        {
+          type: "feature",
+          description: "Emergency contacts with primary and secondary contact information"
+        },
+        {
+          type: "feature",
+          description: "Advance directives including living will, DNR status, and religious preferences"
+        },
+        {
+          type: "feature",
+          description: "Replaced image-based logo with custom Heart icon design for consistent branding"
+        },
+        {
+          type: "improvement",
+          description: "Split patient detail navigation tabs into two rows with color-coded sections"
+        },
+        {
+          type: "improvement",
+          description: "Standardized logo appearance across all components for better visual hierarchy"
+        },
+        {
+          type: "bugfix",
+          description: "Resolved invalid character error in diabetic care guidelines"
+        },
+        {
+          type: "bugfix",
+          description: "Eliminated image loading problems with custom icon solution"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced JSX syntax compliance and error handling"
+        }
+      ]
+    },
+    {
       version: "2.2.0",
       date: "2025-07-01",
       changes: [
@@ -357,10 +473,10 @@ export const Changelog: React.FC = () => {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
         <h3 className="text-lg font-medium text-yellow-900 mb-3">Upcoming Features</h3>
         <div className="text-yellow-800 space-y-2 text-sm">
-          <p>• <strong>v2.3.0:</strong> Advanced reporting and analytics dashboard</p>
           <p>• <strong>v2.4.0:</strong> Mobile app for iOS and Android</p>
           <p>• <strong>v2.5.0:</strong> Integration with laboratory systems</p>
           <p>• <strong>v2.6.0:</strong> Automated medication dispensing integration</p>
+          <p>• <strong>v2.7.0:</strong> Advanced reporting and analytics dashboard</p>
         </div>
       </div>
     </div>
