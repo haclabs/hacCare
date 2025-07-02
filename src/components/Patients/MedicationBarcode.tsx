@@ -17,40 +17,6 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   onClose 
 }) => {
   // Generate unique medication barcode based on medication ID and details
-  const generateMedicationBarcode = (medId: string, medName: string, dosage: string) => {
-    // Create a unique identifier combining medication details
-    const uniqueId = `${medId}-${medName.replace(/\s+/g, '')}-${dosage.replace(/\s+/g, '')}`;
-    
-    // Generate barcode pattern based on the unique identifier
-    const barcodePattern = uniqueId.split('').map((char, index) => {
-      const charCode = char.charCodeAt(0);
-      const width = (charCode % 3) + 1; // Vary bar width 1-3
-      const height = (charCode % 2) + 1; // Vary bar height
-      const isWide = index % 2 === 0;
-      return { 
-        width: `${width * 0.8}px`, 
-        height: isWide ? `${12 + height * 2}px` : `${10 + height}px`,
-        isWide 
-      };
-    });
-
-    return (
-      <div className="flex items-end justify-center space-x-px bg-white p-1">
-        {barcodePattern.map((bar, index) => (
-          <div
-            key={index}
-            className="bg-black"
-            style={{
-              width: bar.width,
-              height: bar.height
-            }}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  // Generate medication ID for barcode
   const medicationBarcodeId = `MED${medication.id.slice(-6).toUpperCase()}`;
 
   // Helper function to safely format dates
@@ -236,15 +202,13 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         ctx.fillStyle = 'black';
         const barcodeX = x + labelWidth - 180;
         const barcodeY = y + 80;
-        const barcodeWidth = 120;
-        const barcodeHeight = 42;
         
         // Simple barcode pattern
         for (let i = 0; i < 25; i++) {
           const barWidth = (i % 3) + 1;
           const barX = barcodeX + (i * 4.8);
           if (i % 2 === 0) {
-            ctx.fillRect(barX, barcodeY, barWidth, barcodeHeight);
+            ctx.fillRect(barX, barcodeY, barWidth, 42);
           }
         }
 
@@ -439,8 +403,8 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                 </div>
                 <div>
                   <p>• <strong>Frequency:</strong> {medication.frequency}</p>
-                  <p>• <strong>Prescribed by:</strong> {medication.prescribedBy}</p>
-                  <p>• <strong>Next Due:</strong> {formatSafeDate(medication.nextDue)}</p>
+                  <p>• <strong>Prescribed by:</strong> {medication.prescribed_by}</p>
+                  <p>• <strong>Next Due:</strong> {formatSafeDate(medication.next_due)}</p>
                 </div>
               </div>
               <div className="bg-red-100 border border-red-300 rounded p-2 mt-3">

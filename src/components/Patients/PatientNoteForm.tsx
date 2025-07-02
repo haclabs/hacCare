@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, FileText, AlertTriangle, Clock, User } from 'lucide-react';
+import { X, Save, FileText, AlertTriangle, User } from 'lucide-react';
 import { PatientNote } from '../../types';
 import { format } from 'date-fns';
 
@@ -108,9 +108,9 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
       // Create note object
       const noteData: PatientNote = {
         id: note?.id || `note-${Date.now()}`,
-        timestamp: note?.timestamp || format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-        nurseId: 'nurse-001', // In real app, this would come from auth context
-        nurseName: 'Sarah Johnson', // In real app, this would come from auth context
+        created_at: note?.created_at || format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+        nurse_id: 'nurse-001', // In real app, this would come from auth context
+        nurse_name: 'Sarah Johnson', // In real app, this would come from auth context
         type: formData.type,
         content: formData.content.trim(),
         priority: formData.priority

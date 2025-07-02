@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, MapPin, Calendar, AlertTriangle, Save, X } from 'lucide-react';
+import { Plus, Trash2, MapPin, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Wound {
@@ -26,7 +26,7 @@ interface WoundAssessmentProps {
   patientId: string;
 }
 
-export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) => {
+export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
   const [wounds, setWounds] = useState<Wound[]>([
     {
       id: 'wound-001',
@@ -79,7 +79,11 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
       view: selectedView,
       type: newWound.type as Wound['type'],
       stage: newWound.stage as Wound['stage'],
-      size: newWound.size || { length: 0, width: 0 },
+      size: {
+        length: newWound.size?.length || 0,
+        width: newWound.size?.width || 0,
+        depth: newWound.size?.depth
+      },
       description: newWound.description || '',
       treatment: newWound.treatment || '',
       assessedBy: 'Sarah Johnson, RN',
@@ -418,7 +422,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
                     Wound Type
                   </label>
                   <select
-                    value={newWound.type}
+                    value={newWound.type || 'Pressure Ulcer'}
                     onChange={(e) => setNewWound(prev => ({ ...prev, type: e.target.value as Wound['type'] }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -437,7 +441,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
                     Stage/Grade
                   </label>
                   <select
-                    value={newWound.stage}
+                    value={newWound.stage || 'Stage 1'}
                     onChange={(e) => setNewWound(prev => ({ ...prev, stage: e.target.value as Wound['stage'] }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -460,11 +464,14 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
                   <input
                     type="number"
                     step="0.1"
-                    value={newWound.size?.length || ''}
-                    onChange={(e) => setNewWound(prev => ({ 
-                      ...prev, 
-                      size: { ...prev.size, length: parseFloat(e.target.value) || 0 }
-                    }))}
+                    value={newWound.size?.length || 0}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setNewWound(prev => ({
+                        ...prev,
+                        size: { ...(prev.size || { width: 0 }), length: value }
+                      }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -475,11 +482,14 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
                   <input
                     type="number"
                     step="0.1"
-                    value={newWound.size?.width || ''}
-                    onChange={(e) => setNewWound(prev => ({ 
-                      ...prev, 
-                      size: { ...prev.size, width: parseFloat(e.target.value) || 0 }
-                    }))}
+                    value={newWound.size?.width || 0}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0;
+                      setNewWound(prev => ({
+                        ...prev,
+                        size: { ...(prev.size || { length: 0 }), width: value }
+                      }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -491,10 +501,13 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
                     type="number"
                     step="0.1"
                     value={newWound.size?.depth || ''}
-                    onChange={(e) => setNewWound(prev => ({ 
-                      ...prev, 
-                      size: { ...prev.size, depth: parseFloat(e.target.value) || undefined }
-                    }))}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                      setNewWound(prev => ({
+                        ...prev,
+                        size: { ...(prev.size || { length: 0, width: 0 }), depth: value }
+                      }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>

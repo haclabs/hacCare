@@ -9,31 +9,6 @@ interface PatientBraceletProps {
 }
 
 export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClose }) => {
-  const generateBarcode = (patientId: string) => {
-    // Enhanced barcode generation for better scanning
-    const barcodePattern = patientId.split('').map((char, index) => {
-      const charCode = char.charCodeAt(0);
-      const width = (charCode % 3) + 1; // Vary bar width 1-3
-      const isWide = index % 2 === 0;
-      return { width: `${width * 1.2}px`, isWide };
-    });
-
-    return (
-      <div className="flex items-end justify-center space-x-px bg-white p-1">
-        {barcodePattern.map((bar, index) => (
-          <div
-            key={index}
-            className="bg-black"
-            style={{
-              width: bar.width,
-              height: bar.isWide ? '18px' : '14px'
-            }}
-          />
-        ))}
-      </div>
-    );
-  };
-
   const handlePrint = () => {
     const printContent = document.getElementById('label-content');
     if (printContent) {

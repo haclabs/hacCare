@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Pill, Calendar, Clock, User, Save, AlertTriangle } from 'lucide-react';
+import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
 import { format, addHours, setHours, setMinutes } from 'date-fns';

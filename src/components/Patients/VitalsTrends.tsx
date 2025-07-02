@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, X, Calendar, Activity, RefreshCw, BarChart3 } from 'lucide-react';
-import { format, subHours } from 'date-fns';
-import { fetchPatientVitalsHistory } from '../../lib/patientService';
+import React, { useState } from 'react';
+import { TrendingUp, X, Calendar, Activity, BarChart3 } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface VitalsTrendsProps {
   vitals: any[]; // Array of vitals from database
@@ -20,11 +19,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
   const [showTrends, setShowTrends] = useState(false);
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [readings, setReadings] = useState<VitalReading[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Convert database vitals to component format
-  useEffect(() => {
+  React.useEffect(() => {
     if (vitals && vitals.length > 0) {
       const formattedReadings: VitalReading[] = vitals.map(vital => ({
         timestamp: vital.recorded_at || vital.lastUpdated,

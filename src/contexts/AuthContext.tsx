@@ -282,8 +282,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('user_profiles')
             .select('*')
             .eq('id', userId)
-            .single()
-            .abortSignal(controller.signal),
+            .single(),
           new Promise<any>((_, reject) => 
             setTimeout(() => reject(new Error('Profile fetch timeout')), 8000)
           )
@@ -390,8 +389,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             onConflict: 'id' // Update if exists, insert if new
           })
           .select()
-          .single()
-          .abortSignal(controller.signal),
+          .single(),
         new Promise<any>((_, reject) => 
           setTimeout(() => reject(new Error('Profile creation timeout')), 15000)
         )
