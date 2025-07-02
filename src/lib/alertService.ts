@@ -158,16 +158,16 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       
       // Check if alert already exists for this medication
-      const { data: existingAlert } = await supabase
+      const { data: existingAlerts } = await supabase
         .from('patient_alerts')
         .select('id')
         .eq('patient_id', patient.id)
         .eq('alert_type', 'medication_due')
         .eq('acknowledged', false)
         .ilike('message', `%${medication.name}%`)
-        .single();
+        .limit(1);
 
-      if (!existingAlert) {
+      if (!existingAlerts || existingAlerts.length === 0) {
         await createAlert({
           patient_id: patient.id,
           patient_name: `${patient.first_name} ${patient.last_name}`,
@@ -275,16 +275,16 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       // Create alerts for abnormal vitals
       for (const alertInfo of alerts) {
         // Check if similar alert already exists
-        const { data: existingAlert } = await supabase
+        const { data: existingAlerts } = await supabase
           .from('patient_alerts')
           .select('id')
           .eq('patient_id', patientId)
           .eq('alert_type', 'vital_signs')
           .eq('acknowledged', false)
           .ilike('message', `%${alertInfo.type}%`)
-          .single();
+          .limit(1);
 
-        if (!existingAlert) {
+        if (!existingAlerts || existingAlerts.length === 0) {
           await createAlert({
             patient_id: patientId,
             patient_name: `${patient.first_name} ${patient.last_name}`,
@@ -336,16 +336,16 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
       // If no vitals or last vitals older than 8 hours
       if (!lastVital || new Date(lastVital.recorded_at) < eightHoursAgo) {
         // Check if alert already exists
-        const { data: existingAlert } = await supabase
+        const { data: existingAlerts } = await supabase
           .from('patient_alerts')
           .select('id')
           .eq('patient_id', patient.id)
           .eq('alert_type', 'vital_signs')
           .eq('acknowledged', false)
           .ilike('message', '%vitals overdue%')
-          .single();
+          .limit(1);
 
-        if (!existingAlert) {
+        if (!existingAlerts || existingAlerts.length === 0) {
           const hoursOverdue = lastVital 
             ? Math.floor((now.getTime() - new Date(lastVital.recorded_at).getTime()) / (1000 * 60 * 60))
             : 24; // Assume 24 hours if no vitals ever recorded
