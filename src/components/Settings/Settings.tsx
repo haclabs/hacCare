@@ -1,33 +1,194 @@
-import React from 'react';
-import { Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database,
+  Wifi, WifiOff, Clock, Activity, Zap, CheckCircle, XCircle, AlertTriangle,
+  RefreshCw, Globe, Server, HardDrive, Cpu, MemoryStick
+} from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth, testSupabaseConnection } from '../../lib/supabase';
 
 /**
  * Settings Component
  * 
  * Comprehensive settings panel for user preferences and system configuration.
- * Includes theme management, notification settings, and account preferences.
+ * Includes theme management, notification settings, and real-time system monitoring.
  * 
  * Features:
  * - Dark/Light mode toggle with system preference option
  * - User profile settings
  * - Notification preferences
- * - System information display
- * - Database connection status
+ * - Real-time system information display
+ * - Database connection status and ping monitoring
+ * - Feature status indicators
+ * - Performance metrics
  */
 export const Settings: React.FC = () => {
   const { isDarkMode, toggleDarkMode, setDarkMode } = useTheme();
   const { profile } = useAuth();
 
+  // System monitoring state
+  const [systemInfo, setSystemInfo] = useState({
+    dbStatus: 'checking' as 'connected' | 'disconnected' | 'checking' | 'error',
+    dbPing: null as number | null,
+    lastPingTime: null as Date | null,
+    connectionAttempts: 0,
+    uptime: 0,
+    memoryUsage: null as number | null,
+    networkStatus: navigator.onLine,
+    lastRefresh: new Date()
+  });
+
+  const [featureStatus, setFeatureStatus] = useState({
+    authentication: 'operational' as 'operational' | 'degraded' | 'down',
+    patientData: 'operational' as 'operational' | 'degraded' | 'down',
+    alerts: 'operational' as 'operational' | 'degraded' | 'down',
+    vitals: 'operational' as 'operational' | 'degraded' | 'down',
+    medications: 'operational' as 'operational' | 'degraded' | 'down'
+  });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  /**
+   * Ping database and measure response time
+   */
+  const pingDatabase = async (): Promise<{ success: boolean; ping: number | null }> => {
+    if (!isSupabaseConfigured) {
+      return { success: false, ping: null };
+    }
+
+    const startTime = performance.now();
+    try {
+      const isHealthy = await checkDatabaseHealth();
+      const endTime = performance.now();
+      const ping = Math.round(endTime - startTime);
+      
+      return { success: isHealthy, ping };
+    } catch (error) {
+      const endTime = performance.now();
+      const ping = Math.round(endTime - startTime);
+      return { success: false, ping };
+    }
+  };
+
+  /**
+   * Check feature status
+   */
+  const checkFeatureStatus = async () => {
+    const newFeatureStatus = { ...featureStatus };
+
+    try {
+      // Check authentication
+      if (profile) {
+        newFeatureStatus.authentication = 'operational';
+      } else {
+        newFeatureStatus.authentication = 'degraded';
+      }
+
+      // Check database-dependent features
+      if (systemInfo.dbStatus === 'connected') {
+        newFeatureStatus.patientData = 'operational';
+        newFeatureStatus.alerts = 'operational';
+        newFeatureStatus.vitals = 'operational';
+        newFeatureStatus.medications = 'operational';
+      } else {
+        newFeatureStatus.patientData = 'down';
+        newFeatureStatus.alerts = 'down';
+        newFeatureStatus.vitals = 'down';
+        newFeatureStatus.medications = 'down';
+      }
+
+      setFeatureStatus(newFeatureStatus);
+    } catch (error) {
+      console.error('Error checking feature status:', error);
+    }
+  };
+
+  /**
+   * Get memory usage estimate
+   */
+  const getMemoryUsage = (): number | null => {
+    if ('memory' in performance) {
+      const memory = (performance as any).memory;
+      if (memory && memory.usedJSHeapSize && memory.totalJSHeapSize) {
+        return Math.round((memory.usedJSHeapSize / memory.totalJSHeapSize) * 100);
+      }
+    }
+    return null;
+  };
+
+  /**
+   * Update system information
+   */
+  const updateSystemInfo = async () => {
+    setIsRefreshing(true);
+    
+    try {
+      // Ping database
+      const { success, ping } = await pingDatabase();
+      
+      // Update system info
+      setSystemInfo(prev => ({
+        ...prev,
+        dbStatus: success ? 'connected' : 'disconnected',
+        dbPing: ping,
+        lastPingTime: new Date(),
+        connectionAttempts: prev.connectionAttempts + 1,
+        memoryUsage: getMemoryUsage(),
+        networkStatus: navigator.onLine,
+        lastRefresh: new Date()
+      }));
+
+      // Update feature status
+      await checkFeatureStatus();
+    } catch (error) {
+      console.error('Error updating system info:', error);
+      setSystemInfo(prev => ({
+        ...prev,
+        dbStatus: 'error',
+        lastRefresh: new Date()
+      }));
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  /**
+   * Initialize system monitoring
+   */
+  useEffect(() => {
+    // Initial check
+    updateSystemInfo();
+
+    // Set up periodic monitoring
+    const interval = setInterval(updateSystemInfo, 30000); // Every 30 seconds
+
+    // Monitor network status
+    const handleOnline = () => {
+      setSystemInfo(prev => ({ ...prev, networkStatus: true }));
+      updateSystemInfo();
+    };
+    
+    const handleOffline = () => {
+      setSystemInfo(prev => ({ ...prev, networkStatus: false }));
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Cleanup
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   /**
    * Handle theme selection
-   * @param {string} theme - Theme option: 'light', 'dark', or 'system'
    */
   const handleThemeChange = (theme: string) => {
     if (theme === 'system') {
-      // Use system preference
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setDarkMode(systemDark);
       localStorage.setItem('haccare-theme', 'system');
@@ -36,10 +197,51 @@ export const Settings: React.FC = () => {
     }
   };
 
-  // Get current theme setting
+  /**
+   * Get current theme setting
+   */
   const getCurrentTheme = () => {
     const savedTheme = localStorage.getItem('haccare-theme');
     return savedTheme || 'system';
+  };
+
+  /**
+   * Get status icon and color
+   */
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'operational':
+      case 'connected':
+        return { icon: CheckCircle, color: 'text-green-600 dark:text-green-400' };
+      case 'degraded':
+        return { icon: AlertTriangle, color: 'text-yellow-600 dark:text-yellow-400' };
+      case 'down':
+      case 'disconnected':
+      case 'error':
+        return { icon: XCircle, color: 'text-red-600 dark:text-red-400' };
+      case 'checking':
+        return { icon: RefreshCw, color: 'text-blue-600 dark:text-blue-400 animate-spin' };
+      default:
+        return { icon: AlertTriangle, color: 'text-gray-600 dark:text-gray-400' };
+    }
+  };
+
+  /**
+   * Format uptime
+   */
+  const formatUptime = () => {
+    const uptimeMs = performance.now();
+    const seconds = Math.floor(uptimeMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
   };
 
   return (
@@ -245,32 +447,181 @@ export const Settings: React.FC = () => {
           </div>
         </div>
 
+        {/* System Status */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">System Status</h2>
+            </div>
+            <button
+              onClick={updateSystemInfo}
+              disabled={isRefreshing}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Database Status */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Database className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Database</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {systemInfo.dbPing !== null ? `${systemInfo.dbPing}ms` : 'No ping data'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {(() => {
+                  const { icon: Icon, color } = getStatusIcon(systemInfo.dbStatus);
+                  return <Icon className={`h-4 w-4 ${color}`} />;
+                })()}
+                <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                  {systemInfo.dbStatus}
+                </span>
+              </div>
+            </div>
+
+            {/* Network Status */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {systemInfo.networkStatus ? (
+                  <Wifi className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                )}
+                <div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Network</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Internet connectivity
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {systemInfo.networkStatus ? (
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                )}
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {systemInfo.networkStatus ? 'Online' : 'Offline'}
+                </span>
+              </div>
+            </div>
+
+            {/* Session Uptime */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <div>
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">Session Uptime</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Since page load
+                  </div>
+                </div>
+              </div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {formatUptime()}
+              </span>
+            </div>
+
+            {/* Memory Usage */}
+            {systemInfo.memoryUsage !== null && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <MemoryStick className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">Memory Usage</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      JavaScript heap
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full ${
+                        systemInfo.memoryUsage > 80 ? 'bg-red-500' :
+                        systemInfo.memoryUsage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${systemInfo.memoryUsage}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {systemInfo.memoryUsage}%
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Last Refresh */}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                Last updated: {systemInfo.lastRefresh.toLocaleTimeString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature Status */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+              <Zap className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Feature Status</h2>
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(featureStatus).map(([feature, status]) => {
+              const { icon: Icon, color } = getStatusIcon(status);
+              const featureNames = {
+                authentication: 'Authentication',
+                patientData: 'Patient Data',
+                alerts: 'Alert System',
+                vitals: 'Vital Signs',
+                medications: 'Medications'
+              };
+
+              return (
+                <div key={feature} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Icon className={`h-4 w-4 ${color}`} />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {featureNames[feature as keyof typeof featureNames]}
+                      </div>
+                    </div>
+                  </div>
+                  <span className={`text-sm capitalize ${
+                    status === 'operational' ? 'text-green-600 dark:text-green-400' :
+                    status === 'degraded' ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-red-600 dark:text-red-400'
+                  }`}>
+                    {status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* System Information */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+              <Server className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">System Information</h2>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Database Status
-              </label>
-              <div className={`text-sm p-3 rounded-lg flex items-center space-x-2 ${
-                isSupabaseConfigured 
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400' 
-                  : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  isSupabaseConfigured ? 'bg-green-500' : 'bg-red-500'
-                }`} />
-                <span>{isSupabaseConfigured ? 'Connected' : 'Disconnected'}</span>
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Application Version
@@ -297,6 +648,24 @@ export const Settings: React.FC = () => {
                 {navigator.userAgent.split(' ')[0]}
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Platform
+              </label>
+              <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                {navigator.platform}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Connection Attempts
+              </label>
+              <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                {systemInfo.connectionAttempts}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -312,6 +681,7 @@ export const Settings: React.FC = () => {
           <p>• Your session is automatically secured with industry-standard encryption</p>
           <p>• Theme preferences are stored locally on your device only</p>
           <p>• No personal data is shared with third parties</p>
+          <p>• System monitoring data is used only for performance optimization</p>
         </div>
       </div>
     </div>
