@@ -7,6 +7,7 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured, checkDatabaseHealth, testSupabaseConnection } from '../../lib/supabase';
+import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 
 /**
  * Settings Component
@@ -48,6 +49,7 @@ export const Settings: React.FC = () => {
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   /**
    * Ping database and measure response time
@@ -693,6 +695,44 @@ export const Settings: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Connection Diagnostics */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Database Connection</h2>
+          <button
+            onClick={() => setShowDiagnostics(!showDiagnostics)}
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
+          >
+            {showDiagnostics ? 'Hide Diagnostics' : 'Show Diagnostics'}
+          </button>
+        </div>
+        
+        {!showDiagnostics ? (
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Database className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              <div>
+                <div className="text-sm font-medium text-gray-900 dark:text-white">Supabase Connection</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {isSupabaseConfigured ? 'Configuration detected' : 'Not configured'}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              {(() => {
+                const { icon: Icon, color } = getStatusIcon(systemInfo.dbStatus);
+                return <Icon className={`h-5 w-5 ${color}`} />;
+              })()}
+              <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                {systemInfo.dbStatus}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <ConnectionDiagnostics />
+        )}
       </div>
 
       {/* Security Notice */}
