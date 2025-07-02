@@ -76,6 +76,34 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
   try {
     console.log('🚨 Creating new alert:', alert);
     
+    // Check if a similar alert already exists to prevent duplicates
+    const { data: existingAlerts, error: checkError } = await supabase
+      .from('patient_alerts')
+      .select('id')
+      .eq('patient_id', alert.patient_id)
+      .eq('alert_type', alert.alert_type)
+      .eq('acknowledged', false)
+      .ilike('message', `%${alert.message.substring(0, 20)}%`)
+      .limit(1);
+    
+    if (checkError) {
+      console.error('Error checking for existing alerts:', checkError);
+    }
+    
+    // If a similar alert already exists, don't create a new one
+    if (existingAlerts && existingAlerts.length > 0) {
+      console.log('⚠️ Similar alert already exists, skipping creation');
+      
+      // Return the existing alert
+      const { data: existingAlert } = await supabase
+        .from('patient_alerts')
+        .select('*')
+        .eq('id', existingAlerts[0].id)
+        .single();
+      
+      return convertDatabaseAlert(existingAlert);
+    }
+    
     const { data, error } = await supabase
       .from('patient_alerts')
       .insert(alert)

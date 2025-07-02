@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert } from '../../types';
-import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play } from 'lucide-react';
+import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAlerts } from '../../contexts/AlertContext';
 
@@ -14,6 +14,8 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   onClose
 }) => {
   const { alerts, loading, error, acknowledgeAlert, refreshAlerts, runChecks } = useAlerts();
+  const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
 
   if (!isOpen) return null;
 
@@ -37,8 +39,15 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
     }
   };
 
-  const unacknowledgedAlerts = alerts.filter(alert => !alert.acknowledged);
-  const acknowledgedAlerts = alerts.filter(alert => alert.acknowledged);
+  // Filter alerts based on selected filters
+  const filteredAlerts = alerts.filter(alert => {
+    const matchesPriority = filterPriority === 'all' || alert.priority === filterPriority;
+    const matchesType = filterType === 'all' || alert.type === filterType;
+    return matchesPriority && matchesType;
+  });
+
+  const unacknowledgedAlerts = filteredAlerts.filter(alert => !alert.acknowledged);
+  const acknowledgedAlerts = filteredAlerts.filter(alert => alert.acknowledged);
 
   const handleAcknowledge = async (alertId: string) => {
     try {
@@ -64,6 +73,10 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
     }
   };
 
+  // Get unique alert types and priorities for filters
+  const alertTypes = ['all', ...new Set(alerts.map(alert => alert.type))];
+  const alertPriorities = ['all', ...new Set(alerts.map(alert => alert.priority))];
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-end">
       <div className="bg-white dark:bg-gray-800 w-96 h-full shadow-xl overflow-y-auto">
@@ -76,6 +89,42 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
             >
               <X className="h-5 w-5" />
             </button>
+          </div>
+
+          {/* Alert Filters */}
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Filter by Type
+              </label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                {alertTypes.map(type => (
+                  <option key={type} value={type}>
+                    {type === 'all' ? 'All Types' : type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Filter by Priority
+              </label>
+              <select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="w-full text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                {alertPriorities.map(priority => (
+                  <option key={priority} value={priority}>
+                    {priority === 'all' ? 'All Priorities' : priority}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Alert Controls */}
@@ -192,7 +241,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
             </div>
           )}
 
-          {!loading && alerts.length === 0 && (
+          {!loading && filteredAlerts.length === 0 && (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400">No alerts at this time</p>
