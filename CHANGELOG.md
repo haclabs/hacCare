@@ -5,6 +5,40 @@ All notable changes to the hacCare Hospital Patient Record System will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-07-15
+
+### Added
+- **Vital Signs Trend Analysis**: Enhanced visualization of patient vital signs history
+  - Comprehensive trend charts for all vital measurements
+  - Last 5 readings summary table with formatted timestamps
+  - Trend analysis with automatic detection of improving/deteriorating patterns
+  - Interactive mini-charts with detailed full-screen view
+  - Color-coded indicators for different vital sign types
+
+### Improved
+- **Alert System**: Enhanced notification management
+  - Intelligent alert deduplication to prevent duplicate notifications
+  - Advanced filtering by alert type and priority
+  - Rate-limiting for alert checks to prevent excessive processing
+  - Improved real-time alert synchronization
+  - Better handling of similar alerts with content matching
+
+### Security
+- **Security Settings Panel**: New dedicated security management interface
+  - Password strength evaluation with visual indicators
+  - Comprehensive password requirements enforcement
+  - Security status monitoring and recommendations
+  - Preparation for future multi-factor authentication
+  - Enhanced password update workflow
+
+### Technical
+- **Database Functions**: Improved security in database functions
+  - Fixed function return types for better type safety
+  - Enhanced error handling in database operations
+  - Improved search path security for all database functions
+  - Better documentation of security features
+  - Optimized query performance for alert operations
+
 ## [2.2.1] - 2025-07-01
 
 ### Added
@@ -242,10 +276,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming Features
 
-- **v2.3.0**: Advanced reporting and analytics dashboard
 - **v2.4.0**: Mobile app for iOS and Android
 - **v2.5.0**: Integration with laboratory systems
 - **v2.6.0**: Automated medication dispensing integration
+- **v2.7.0**: Advanced reporting and analytics dashboard
 
 ---
 
