@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, Stethoscope, Activity, Heart, Brain, Eye, Ear } from 'lucide-react';
+import { X, Save, Stethoscope, Activity, Heart, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { createAssessment, PatientAssessment } from '../../lib/assessmentService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -7,22 +7,16 @@ import { useAuth } from '../../contexts/AuthContext';
 /**
  * Assessment Form Component
  * 
- * Form for creating and editing patient assessments with proper validation
+ * Form for creating patient assessments with proper validation
  * and integration with the patient record system.
  * 
  * Features:
- * - Note type selection (Assessment, Medication, Vital Signs, etc.)
+ * - Multiple assessment types (Physical, Pain, Neurological)
  * - Priority level assignment
  * - Rich text content area
  * - Automatic timestamp and nurse assignment
  * - Form validation and error handling
  * - Database integration for saving assessments
- * 
- * @param {Object} props - Component props
- * @param {string} props.patientId - ID of the patient
- * @param {string} props.patientName - Name of the patient for display
- * @param {Function} props.onClose - Callback when form is closed
- * @param {Function} props.onSave - Callback when assessment is saved
  */
 interface AssessmentFormProps {
   patientId: string;
@@ -81,8 +75,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   /**
    * Update form field value
-   * @param {string} field - Field name to update
-   * @param {any} value - New value for the field
    */
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({
@@ -101,7 +93,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   /**
    * Validate form data
-   * @returns {boolean} True if form is valid
    */
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -146,7 +137,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   /**
    * Handle form submission
-   * @param {React.FormEvent} e - Form event
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,8 +173,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
       // Call the onSave callback
       onSave(savedAssessment);
       
-      // Close the form
-      onClose();
     } catch (error: any) {
       console.error('Error saving assessment:', error);
       alert(`Failed to save assessment: ${error.message || 'Unknown error'}. Please try again.`);
@@ -329,34 +317,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
           )}
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Gastrointestinal Assessment
-          </label>
-          <textarea
-            value={formData.gastrointestinal_assessment}
-            onChange={(e) => updateField('gastrointestinal_assessment', e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Bowel sounds, abdomen, appetite, nausea..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Musculoskeletal Assessment
-          </label>
-          <textarea
-            value={formData.musculoskeletal_assessment}
-            onChange={(e) => updateField('musculoskeletal_assessment', e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Range of motion, strength, mobility, gait..."
-          />
-        </div>
-      </div>
     </div>
   );
 
@@ -429,34 +389,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         {errors.pain_quality && (
           <p className="text-red-600 text-xs mt-1">{errors.pain_quality}</p>
         )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Pain Triggers/Aggravating Factors
-          </label>
-          <textarea
-            value={formData.pain_triggers}
-            onChange={(e) => updateField('pain_triggers', e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="What makes the pain worse?"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Pain Relief Measures
-          </label>
-          <textarea
-            value={formData.pain_relief_measures}
-            onChange={(e) => updateField('pain_relief_measures', e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="What helps relieve the pain?"
-          />
-        </div>
       </div>
     </div>
   );
@@ -534,34 +466,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
           {errors.cognitive_function && (
             <p className="text-red-600 text-xs mt-1">{errors.cognitive_function}</p>
           )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sensory Function
-          </label>
-          <textarea
-            value={formData.sensory_function}
-            onChange={(e) => updateField('sensory_function', e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Touch, pain, temperature sensation..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Reflexes
-          </label>
-          <textarea
-            value={formData.reflexes}
-            onChange={(e) => updateField('reflexes', e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Deep tendon reflexes, pathological reflexes..."
-          />
         </div>
       </div>
     </div>

@@ -23,7 +23,8 @@ import {
   Settings,
   QrCode,
   TrendingUp,
-  BookOpen
+  BookOpen,
+  Brain
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
@@ -731,6 +732,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
                         <h4 className="text-lg font-medium text-gray-900">{note.type}</h4>
+                        
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           note.priority === 'High' ? 'bg-red-100 text-red-800' :
                           note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
