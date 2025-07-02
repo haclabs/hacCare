@@ -321,7 +321,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
-    { id: 'vitals', label: 'Vital Signs', icon: Activity },
+    { id: 'vitals', label: 'Vital Trends', icon: TrendingUp },
     { id: 'medications', label: 'Medications', icon: Pill },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
