@@ -54,6 +54,23 @@ export const supabase = createClient(
     global: {
       headers: {
         'x-client-info': 'haccare-hospital@1.0.0'
+      },
+      fetch: (url, options = {}) => {
+        // Add timeout and better error handling for fetch requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        return fetch(url, {
+          ...options,
+          signal: controller.signal,
+        }).finally(() => {
+          clearTimeout(timeoutId);
+        }).catch((error) => {
+          if (error.name === 'AbortError') {
+            throw new Error('Request timeout - please check your internet connection');
+          }
+          throw error;
+        });
       }
     },
     db: {
@@ -90,7 +107,7 @@ export interface UserProfile {
 }
 
 /**
- * Database Health Check
+ * Database Health Check with improved error handling
  */
 export const checkDatabaseHealth = async (): Promise<boolean> => {
   if (!isSupabaseConfigured) {
@@ -101,13 +118,21 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
   try {
     console.log('🔍 Testing database connection...');
     
-    const { error } = await supabase
-      .from('patients')
-      .select('count')
+    // Use a simple query that should always work
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id')
       .limit(1);
     
     if (error) {
       console.error('Database health check failed:', error.message);
+      
+      // Check for specific error types
+      if (error.message.includes('Failed to fetch')) {
+        console.error('Network connectivity issue detected');
+        throw new Error('Unable to connect to database. Please check your internet connection.');
+      }
+      
       return false;
     }
     
@@ -115,6 +140,14 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
     return true;
   } catch (error: any) {
     console.error('Database health check error:', error.message);
+    
+    // Provide more specific error messages
+    if (error.message.includes('fetch')) {
+      console.error('Network error: Unable to reach Supabase servers');
+    } else if (error.message.includes('timeout')) {
+      console.error('Connection timeout: Request took too long');
+    }
+    
     return false;
   }
 };
@@ -130,4 +163,25 @@ export const clearSupabaseSession = async (): Promise<void> => {
     console.error('❌ Error clearing Supabase session:', error);
     throw error;
   }
+};
+
+/**
+ * Test Supabase connection with retry logic
+ */
+export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const isHealthy = await checkDatabaseHealth();
+      if (isHealthy) {
+        return true;
+      }
+    } catch (error) {
+      console.log(`Connection attempt ${i + 1} failed:`, error);
+      if (i < retries - 1) {
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      }
+    }
+  }
+  return false;
 };
