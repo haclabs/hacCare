@@ -92,7 +92,7 @@ export const mockPatients: Patient[] = [
     assigned_nurse: 'Sarah Johnson',
     vitals: [
       {
-        temperature: 98.6,
+        temperature: 37.0,
         bloodPressure: { systolic: 120, diastolic: 80 },
         heartRate: 72,
         respiratoryRate: 16,
@@ -157,7 +157,7 @@ export const mockPatients: Patient[] = [
     assigned_nurse: 'Sarah Johnson',
     vitals: [
       {
-        temperature: 101.2,
+        temperature: 38.4,
         bloodPressure: { systolic: 140, diastolic: 90 },
         heartRate: 95,
         respiratoryRate: 22,
@@ -211,7 +211,7 @@ export const mockPatients: Patient[] = [
     assigned_nurse: 'Sarah Johnson',
     vitals: [
       {
-        temperature: 98.4,
+        temperature: 36.9,
         bloodPressure: { systolic: 130, diastolic: 85 },
         heartRate: 68,
         respiratoryRate: 18,
@@ -253,7 +253,7 @@ export const mockAlerts: Alert[] = [
     patientId: 'PT10002',
     patientName: 'Maria Garcia',
     type: 'Vital Signs Alert',
-    message: 'Temperature elevated to 101.2°F - requires monitoring',
+    message: 'Temperature elevated to 38.4°C - requires monitoring',
     priority: 'Critical',
     timestamp: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
     acknowledged: false
