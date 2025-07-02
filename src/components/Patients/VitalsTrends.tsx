@@ -228,7 +228,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
         data: readings.map(r => r.temperature),
         label: 'Temperature',
         color: 'blue',
-        unit: '°F'
+        unit: '°C'
       },
       heartRate: {
         data: readings.map(r => r.heartRate),
@@ -308,7 +308,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temp (°F)</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temp (°C)</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HR (BPM)</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BP (mmHg)</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">O2 (%)</th>
@@ -349,7 +349,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
               data={readings.slice(0, 5).map(r => r.temperature).reverse()}
               label="Temperature"
               color="blue"
-              unit="°F"
+              unit="°C"
               onClick={() => setSelectedChart('temperature')}
             />
             
@@ -410,11 +410,11 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
                   <div>
                     {readings[0].temperature > readings[1].temperature ? (
                       <p className="text-sm text-orange-600">
-                        <span className="font-medium">Increasing</span> - Up {(readings[0].temperature - readings[1].temperature).toFixed(1)}°F from previous reading
+                        <span className="font-medium">Increasing</span> - Up {(readings[0].temperature - readings[1].temperature).toFixed(1)}°C from previous reading
                       </p>
                     ) : readings[0].temperature < readings[1].temperature ? (
                       <p className="text-sm text-green-600">
-                        <span className="font-medium">Decreasing</span> - Down {(readings[1].temperature - readings[0].temperature).toFixed(1)}°F from previous reading
+                        <span className="font-medium">Decreasing</span> - Down {(readings[1].temperature - readings[0].temperature).toFixed(1)}°C from previous reading
                       </p>
                     ) : (
                       <p className="text-sm text-blue-600">
@@ -423,7 +423,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
                     )}
                     
                     <p className="text-xs text-gray-500 mt-1">
-                      Normal range: 97.0°F - 99.0°F
+                      Normal range: 36.1°C - 37.2°C
                     </p>
                   </div>
                 )}

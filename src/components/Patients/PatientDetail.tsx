@@ -466,7 +466,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                         <Thermometer className="h-5 w-5 text-blue-600" />
                         <span className="text-xs text-blue-600 font-medium">TEMP</span>
                       </div>
-                      <div className="text-2xl font-bold text-blue-900">{latestVitals.temperature}°F</div>
+                      <div className="text-2xl font-bold text-blue-900">{latestVitals.temperature}°C</div>
                       <div className="text-xs text-blue-700">Temperature</div>
                     </div>
 
