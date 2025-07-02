@@ -5,7 +5,7 @@ All notable changes to the hacCare Hospital Patient Record System will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.2.1] - 2024-12-29
+## [2.2.1] - 2025-07-01
 
 ### Added
 - **Comprehensive Admission Records**: Added detailed demo content to the Admission Records tab
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better error reporting and debugging capabilities
   - Consistent code formatting and structure
 
-## [2.2.0] - 2024-01-25
+## [2.2.0] - 2025-07-01
 
 ### Added
 - **Wound Assessment System**: Interactive body diagrams for anterior and posterior views
@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optimized file organization and structure
   - Improved development environment setup
 
-## [2.1.0] - 2024-01-20
+## [2.1.0] - 2025-06-20
 
 ### Added
 - **Patient ID Label Generation**: Avery 5160 compatible patient identification labels
@@ -135,7 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved label border and margin calculations
   - Enhanced print quality and barcode readability
 
-## [2.0.5] - 2024-01-15
+## [2.0.5] - 2025-06-15
 
 ### Added
 - **User Management System**: Comprehensive user administration for admins and super admins
@@ -170,7 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better error handling for vital signs submission
   - Enhanced user feedback for successful updates
 
-## [2.0.0] - 2024-01-10
+## [2.0.0] - 2025-06-10
 
 ### Added
 - **Modern UI Redesign**: Complete interface overhaul with contemporary design
@@ -203,7 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved authentication security
   - Better protection against common vulnerabilities
 
-## [1.8.2] - 2024-01-05
+## [1.8.2] - 2025-06-05
 
 ### Added
 - **Medication Scheduling**: Advanced medication timing and tracking

@@ -285,7 +285,7 @@ export const Settings: React.FC = () => {
                 Last Updated
               </label>
               <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                December 29, 2024
+                July 1, 2025
               </div>
             </div>
 
