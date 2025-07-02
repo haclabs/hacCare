@@ -87,15 +87,40 @@ export const Settings: React.FC = () => {
 
       // Check database-dependent features
       if (systemInfo.dbStatus === 'connected') {
+        // All features are operational when database is connected
+        newFeatureStatus.patientData = 'operational';
+        newFeatureStatus.alerts = 'operational';
+        newFeatureStatus.vitals = 'operational';
+        newFeatureStatus.medications = 'operational';
+      } else if (systemInfo.dbStatus === 'checking') {
+        // Features are in a degraded state while checking
+        newFeatureStatus.patientData = 'degraded';
+        newFeatureStatus.alerts = 'degraded';
+        newFeatureStatus.vitals = 'degraded';
+        newFeatureStatus.medications = 'degraded';
+      } else if (systemInfo.dbStatus === 'error') {
+        // Features are in a degraded state on error
+        newFeatureStatus.patientData = 'degraded';
+        newFeatureStatus.alerts = 'degraded';
+        newFeatureStatus.vitals = 'degraded';
+        newFeatureStatus.medications = 'degraded';
+      } else if (!isSupabaseConfigured) {
+        // When Supabase is not configured, we're using mock data
         newFeatureStatus.patientData = 'operational';
         newFeatureStatus.alerts = 'operational';
         newFeatureStatus.vitals = 'operational';
         newFeatureStatus.medications = 'operational';
       } else {
-        newFeatureStatus.patientData = 'down';
+        // Only mark as down when database is disconnected and Supabase is configured
+        newFeatureStatus.patientData = 'degraded';
+        newFeatureStatus.alerts = 'degraded';
+        newFeatureStatus.vitals = 'degraded';
+        newFeatureStatus.medications = 'degraded';
+      }
+
+      // Check network-dependent features
+      if (!systemInfo.networkStatus) {
         newFeatureStatus.alerts = 'down';
-        newFeatureStatus.vitals = 'down';
-        newFeatureStatus.medications = 'down';
       }
 
       setFeatureStatus(newFeatureStatus);
