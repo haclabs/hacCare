@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database,
-  Wifi, WifiOff, Clock, Activity, Zap, CheckCircle, XCircle, AlertTriangle,
-  RefreshCw, Globe, Server, HardDrive, Cpu, MemoryStick, Tabs
-} from 'lucide-react';
+import { Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, Zap, CheckCircle, XCircle, AlertTriangle, RefreshCw, Globe, Server, HardDrive, Cpu, MemoryStick, Table as Tabs } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { isSupabaseConfigured, checkDatabaseHealth, testSupabaseConnection } from '../../lib/supabase';
