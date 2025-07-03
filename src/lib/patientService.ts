@@ -274,7 +274,19 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
   try {
     console.log('Clearing all vitals for patient:', patientId);
     
-    // Use a more specific query to ensure we're only deleting vitals for this patient
+    // First, verify the patient exists to avoid deleting wrong records
+    const { data: patient, error: patientError } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('id', patientId)
+      .single();
+    
+    if (patientError) {
+      console.error('Error verifying patient before clearing vitals:', patientError);
+      throw new Error(`Patient with ID ${patientId} not found`);
+    }
+    
+    // Delete all vitals for this patient with explicit patient_id check
     const { error } = await supabase
       .from('patient_vitals')
       .delete()
