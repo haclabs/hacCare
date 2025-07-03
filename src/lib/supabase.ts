@@ -32,10 +32,17 @@ const hasValidConfig = supabaseUrl &&
   supabaseAnonKey && 
   supabaseUrl !== 'your_supabase_url_here' && 
   supabaseAnonKey !== 'your_supabase_anon_key_here' &&
+  supabaseUrl !== 'https://your-project-id.supabase.co' &&
+  supabaseAnonKey !== 'your-anon-key-here' &&
   supabaseUrl.startsWith('https://') &&
   supabaseUrl.includes('.supabase.co');
 
 console.log('✅ Configuration valid:', hasValidConfig);
+
+if (!hasValidConfig) {
+  console.warn('⚠️ Supabase not configured properly. Please check your .env file.');
+  console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
+}
 
 /**
  * Supabase Client Instance
@@ -56,6 +63,11 @@ export const supabase = createClient(
         'x-client-info': 'haccare-hospital@1.0.0'
       },
       fetch: (url, options = {}) => {
+        // Skip fetch if not configured
+        if (!hasValidConfig) {
+          return Promise.reject(new Error('Supabase not configured'));
+        }
+        
         // Add timeout and better error handling for fetch requests
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout

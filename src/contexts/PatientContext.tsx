@@ -49,7 +49,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (!isSupabaseConfigured) {
         console.log('❌ Supabase not configured');
         setPatients([]);
-        setError('Database not configured. Please connect to Supabase.');
+        setError('Database not configured. Please check your .env file and connect to Supabase.');
         return;
       }
 
@@ -62,7 +62,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch (fetchError: any) {
         console.error('❌ Error fetching patients from database:', fetchError);
         setPatients([]);
-        setError('Failed to connect to database. Please check your connection.');
+        
+        // Provide more specific error messages
+        if (fetchError.message?.includes('Failed to fetch') || 
+            fetchError.message?.includes('NetworkError') ||
+            fetchError.message?.includes('fetch') ||
+            fetchError.message?.includes('Supabase not configured')) {
+          setError('Failed to connect to database. Please check your Supabase configuration and internet connection.');
+        } else {
+          setError('Failed to load patients. Please try again.');
+        }
       }
     } catch (err: any) {
       console.error('❌ Error loading patients:', err);
@@ -86,7 +95,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setError(null);
       
       if (!isSupabaseConfigured) {
-        throw new Error('Database not configured. Please connect to Supabase.');
+        throw new Error('Database not configured. Please check your .env file and connect to Supabase.');
       }
 
       console.log('➕ Creating patient in database...');
@@ -94,7 +103,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setPatients(prev => [newPatient, ...prev]);
     } catch (err: any) {
       console.error('❌ Error adding patient:', err);
-      setError(err.message || 'Failed to add patient');
+      
+      // Provide more specific error messages
+      if (err.message?.includes('Failed to fetch') || 
+          err.message?.includes('NetworkError') ||
+          err.message?.includes('fetch') ||
+          err.message?.includes('Supabase not configured')) {
+        setError('Failed to connect to database. Please check your Supabase configuration.');
+      } else {
+        setError(err.message || 'Failed to add patient');
+      }
       throw err;
     }
   };
@@ -107,7 +125,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setError(null);
       
       if (!isSupabaseConfigured) {
-        throw new Error('Database not configured. Please connect to Supabase.');
+        throw new Error('Database not configured. Please check your .env file and connect to Supabase.');
       }
 
       const currentPatient = patients.find(p => p.id === patientId);
@@ -124,7 +142,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ));
     } catch (err: any) {
       console.error('❌ Error updating patient:', err);
-      setError(err.message || 'Failed to update patient');
+      
+      // Provide more specific error messages
+      if (err.message?.includes('Failed to fetch') || 
+          err.message?.includes('NetworkError') ||
+          err.message?.includes('fetch') ||
+          err.message?.includes('Supabase not configured')) {
+        setError('Failed to connect to database. Please check your Supabase configuration.');
+      } else {
+        setError(err.message || 'Failed to update patient');
+      }
       throw err;
     }
   };
@@ -137,7 +164,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setError(null);
       
       if (!isSupabaseConfigured) {
-        throw new Error('Database not configured. Please connect to Supabase.');
+        throw new Error('Database not configured. Please check your .env file and connect to Supabase.');
       }
 
       console.log('🗑️ Deleting patient from database...');
@@ -145,7 +172,16 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setPatients(prev => prev.filter(patient => patient.id !== patientId));
     } catch (err: any) {
       console.error('❌ Error deleting patient:', err);
-      setError(err.message || 'Failed to delete patient');
+      
+      // Provide more specific error messages
+      if (err.message?.includes('Failed to fetch') || 
+          err.message?.includes('NetworkError') ||
+          err.message?.includes('fetch') ||
+          err.message?.includes('Supabase not configured')) {
+        setError('Failed to connect to database. Please check your Supabase configuration.');
+      } else {
+        setError(err.message || 'Failed to delete patient');
+      }
       throw err;
     }
   };

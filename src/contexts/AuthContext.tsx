@@ -181,8 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Handle specific error types
         if (error.message?.includes('Failed to fetch') || 
             error.message?.includes('NetworkError') ||
-            error.message?.includes('timeout')) {
-          console.error('🌐 Network connectivity issue during auth initialization');
+            error.message?.includes('timeout') ||
+            error.message?.includes('Supabase not configured')) {
+          console.error('🌐 Network connectivity issue or Supabase not configured during auth initialization');
           console.error('💡 Falling back to mock data mode');
         }
         
@@ -304,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                      error.message?.includes('NetworkError') ||
                      error.message?.includes('fetch')) {
             // Network connectivity issues
-            console.error('🌐 Network error fetching profile - using mock data mode');
+            console.error('🌐 Network error fetching profile - Supabase may not be configured properly');
             setProfile(null);
           } else if (error.code === '42501' || error.message?.includes('permission denied')) {
             // Permission/RLS policy issues
@@ -324,6 +325,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (fetchError.name === 'AbortError') {
           console.error('❌ Profile fetch timeout');
+        } else if (fetchError.message?.includes('Supabase not configured')) {
+          console.error('❌ Supabase not configured properly');
         } else {
           console.error('❌ Profile fetch error:', fetchError.message);
         }
@@ -337,8 +340,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.message?.includes('Failed to fetch') || 
           error.message?.includes('NetworkError') ||
           error.message?.includes('timeout') ||
-          error.message?.includes('fetch')) {
-        console.error('🌐 Network connectivity issue - falling back to mock data mode');
+          error.message?.includes('fetch') ||
+          error.message?.includes('Supabase not configured')) {
+        console.error('🌐 Network connectivity issue or Supabase not configured - falling back to mock data mode');
       }
       
       setProfile(null);
@@ -423,8 +427,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.message?.includes('Failed to fetch') || 
           error.message?.includes('NetworkError') ||
           error.message?.includes('timeout') ||
-          error.message?.includes('fetch')) {
-        throw new Error('Unable to connect to database. Please check your internet connection and try again.');
+          error.message?.includes('fetch') ||
+          error.message?.includes('Supabase not configured')) {
+        throw new Error('Unable to connect to database. Please check your internet connection and Supabase configuration.');
       }
       
       throw error;
@@ -445,7 +450,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     // Check if database is configured
     if (!isSupabaseConfigured) {
-      return { error: { message: 'Database connection not configured' } };
+      return { error: { message: 'Database connection not configured. Please check your .env file.' } };
     }
 
     console.log('🔐 Attempting sign in for:', email);
@@ -483,7 +488,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                    error.message?.includes('NetworkError') ||
                    error.message?.includes('fetch')) {
           console.error('🌐 Network error during sign in');
-          return { error: { message: 'Network error - check your internet connection' } };
+          return { error: { message: 'Network error - check your internet connection and Supabase configuration' } };
         }
         
         setLoading(false);
@@ -498,8 +503,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.message?.includes('timeout') || 
           error.message?.includes('Failed to fetch') ||
           error.message?.includes('NetworkError') ||
-          error.message?.includes('fetch')) {
-        return { error: { message: 'Connection timeout - please check your internet connection and try again' } };
+          error.message?.includes('fetch') ||
+          error.message?.includes('Supabase not configured')) {
+        return { error: { message: 'Connection timeout - please check your internet connection and Supabase configuration' } };
       }
       
       return { error };
