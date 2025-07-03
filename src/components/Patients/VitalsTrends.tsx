@@ -48,16 +48,24 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
         reading.bloodPressure.systolic > 0
       );
 
-      // Get unique timestamps to prevent duplicates
-      const uniqueTimestamps = new Set();
-      const uniqueReadings = formattedReadings.filter(reading => {
-        const timestamp = reading.timestamp;
-        if (uniqueTimestamps.has(timestamp)) {
-          return false;
+      // Get unique readings by timestamp to prevent duplicates
+      const uniqueReadings: VitalReading[] = [];
+      const seenTimestamps = new Set<string>();
+      
+      for (const reading of formattedReadings) {
+        // Normalize timestamp to remove milliseconds for comparison
+        const normalizedTimestamp = new Date(reading.timestamp).toISOString().split('.')[0];
+        
+        if (!seenTimestamps.has(normalizedTimestamp)) {
+          seenTimestamps.add(normalizedTimestamp);
+          uniqueReadings.push(reading);
         }
-        uniqueTimestamps.add(timestamp);
-        return true;
-      });
+      }
+
+      // Sort by timestamp (newest first)
+      uniqueReadings.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
 
       // Take only last 5 readings
       setReadings(uniqueReadings.slice(0, 5));
@@ -89,9 +97,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
       await refreshPatients();
       
       alert('All vital records have been cleared successfully.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error clearing vitals:', error);
-      alert('Failed to clear vital records. Please try again.');
+      alert(`Failed to clear vital records: ${error.message || 'Unknown error'}. This may be due to insufficient permissions.`);
     } finally {
       setClearingVitals(false);
     }
