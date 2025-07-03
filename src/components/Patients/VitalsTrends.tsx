@@ -579,7 +579,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                     )}
                     
                     <p className="text-xs text-gray-500 mt-1">
-                      Normal range: Systolic <120 mmHg, Diastolic <80 mmHg
+                      {"Normal range: Systolic <120 mmHg, Diastolic <80 mmHg"}
                     </p>
                   </div>
                 )}
@@ -590,7 +590,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                       <span className="font-medium">Single Reading</span> - {readings[0].bloodPressure.systolic}/{readings[0].bloodPressure.diastolic} mmHg
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Normal range: Systolic <120 mmHg, Diastolic <80 mmHg
+                      {"Normal range: Systolic <120 mmHg, Diastolic <80 mmHg"}
                     </p>
                   </div>
                 )}
