@@ -613,7 +613,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="space-y-4">
                   {recentNotes.map((note) => (
                     <div key={note.id} className="border-l-4 border-blue-400 pl-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-1">
                         <p className="text-sm font-medium text-gray-900">{note.type}</p>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           note.priority === 'High' ? 'bg-red-100 text-red-800' :
