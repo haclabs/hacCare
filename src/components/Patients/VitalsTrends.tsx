@@ -28,6 +28,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
   // Convert database vitals to component format
   useEffect(() => {
     if (vitals && vitals.length > 0) {
+      // Create a new array to avoid reference issues
       const formattedReadings: VitalReading[] = vitals.map(vital => ({
         timestamp: vital.recorded_at || vital.lastUpdated,
         temperature: vital.temperature,
@@ -102,7 +103,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
   }> = ({ data, label, color, unit, onClick }) => {
     if (data.length === 0) return null;
 
-    // For a single reading, duplicate it to create a flat line
+    // For a single reading, create a flat line with two identical points
     const displayData = data.length === 1 ? [data[0], data[0]] : data;
     
     const max = Math.max(...displayData);
@@ -163,9 +164,11 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
     unit: string,
     timestamps: string[]
   }> = ({ data, label, color, unit, timestamps }) => {
-    // For a single reading, duplicate it to create a flat line
+    // For a single reading, create a flat line with two identical points
     const displayData = data.length === 1 ? [data[0], data[0]] : data;
-    const displayTimestamps = timestamps.length === 1 ? [timestamps[0], timestamps[0]] : timestamps;
+    const displayTimestamps = timestamps.length === 1 ? 
+      [timestamps[0], format(new Date(new Date(timestamps[0]).getTime() + 3600000), 'yyyy-MM-dd HH:mm:ss')] : 
+      timestamps;
     
     const max = Math.max(...displayData);
     const min = Math.min(...displayData);
@@ -366,7 +369,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {readings.slice(0, 5).map((reading, index) => (
+                  {readings.map((reading, index) => (
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {format(new Date(reading.timestamp), 'MMM dd, HH:mm')}
@@ -396,7 +399,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
           {/* Trend Charts */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MiniChart
-              data={readings.slice(0, 5).map(r => r.temperature).reverse()}
+              data={readings.map(r => r.temperature)}
               label="Temperature"
               color="blue"
               unit="°C"
@@ -404,7 +407,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
             />
             
             <MiniChart
-              data={readings.slice(0, 5).map(r => r.heartRate).reverse()}
+              data={readings.map(r => r.heartRate)}
               label="Heart Rate"
               color="red"
               unit=" BPM"
@@ -412,7 +415,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
             />
             
             <MiniChart
-              data={readings.slice(0, 5).map(r => r.bloodPressure.systolic).reverse()}
+              data={readings.map(r => r.bloodPressure.systolic)}
               label="Systolic BP"
               color="purple"
               unit=" mmHg"
@@ -420,7 +423,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
             />
             
             <MiniChart
-              data={readings.slice(0, 5).map(r => r.bloodPressure.diastolic).reverse()}
+              data={readings.map(r => r.bloodPressure.diastolic)}
               label="Diastolic BP"
               color="purple"
               unit=" mmHg"
@@ -428,7 +431,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
             />
             
             <MiniChart
-              data={readings.slice(0, 5).map(r => r.oxygenSaturation).reverse()}
+              data={readings.map(r => r.oxygenSaturation)}
               label="O2 Saturation"
               color="green"
               unit="%"
@@ -436,7 +439,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
             />
             
             <MiniChart
-              data={readings.slice(0, 5).map(r => r.respiratoryRate).reverse()}
+              data={readings.map(r => r.respiratoryRate)}
               label="Respiratory Rate"
               color="indigo"
               unit="/min"
