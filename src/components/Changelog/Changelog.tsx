@@ -38,7 +38,7 @@ export const Changelog: React.FC = () => {
   const changelogData: ChangelogEntry[] = [
     {
       version: "2.3.0",
-      date: "2025-07-15",
+      date: "2025-07-4",
       changes: [
         {
           type: "feature",
