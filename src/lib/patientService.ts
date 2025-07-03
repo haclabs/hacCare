@@ -274,6 +274,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
   try {
     console.log('Clearing all vitals for patient:', patientId);
     
+    // Use a more specific query to ensure we're only deleting vitals for this patient
     const { error } = await supabase
       .from('patient_vitals')
       .delete()

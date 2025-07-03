@@ -42,6 +42,7 @@ import { supabase } from '../../lib/supabase';
 import { updatePatientVitals, clearPatientVitals } from '../../lib/patientService';
 import { fetchPatientAssessments, PatientAssessment } from '../../lib/assessmentService';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -139,6 +140,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [loading, setLoading] = useState(true);
   const [clearingVitals, setClearingVitals] = useState(false);
   const { hasRole } = useAuth();
+  const { refreshPatients } = usePatients();
 
   useEffect(() => {
     fetchPatientData();
@@ -231,8 +233,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
     try {
       setClearingVitals(true);
+      
+      // Clear vitals from database
       await clearPatientVitals(patient.id);
+      
+      // Clear local state
       setVitals([]);
+      
+      // Refresh patient data in context
+      await refreshPatients();
+      
       alert('All vital records have been cleared successfully.');
     } catch (error) {
       console.error('Error clearing vitals:', error);
