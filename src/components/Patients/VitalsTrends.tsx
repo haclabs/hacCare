@@ -45,7 +45,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
         reading.bloodPressure.systolic > 0
       );
 
-      setReadings(formattedReadings.slice(0, 5)); // Take only last 5 readings
+      // Take only last 5 readings
+      setReadings(formattedReadings.slice(0, 5));
     } else {
       setReadings([]);
     }
@@ -101,8 +102,11 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
   }> = ({ data, label, color, unit, onClick }) => {
     if (data.length === 0) return null;
 
-    const max = Math.max(...data);
-    const min = Math.min(...data);
+    // For a single reading, duplicate it to create a flat line
+    const displayData = data.length === 1 ? [data[0], data[0]] : data;
+    
+    const max = Math.max(...displayData);
+    const min = Math.min(...displayData);
     const range = max - min || 1;
 
     return (
@@ -122,14 +126,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
               stroke={`currentColor`}
               strokeWidth="2"
               className={`text-${color}-500`}
-              points={data.map((value, index) => {
-                const x = (index / (data.length - 1)) * 100;
+              points={displayData.map((value, index) => {
+                const x = (index / (displayData.length - 1)) * 100;
                 const y = 40 - ((value - min) / range) * 40;
                 return `${x},${y}`;
               }).join(' ')}
             />
-            {data.map((value, index) => {
-              const x = (index / (data.length - 1)) * 100;
+            {displayData.map((value, index) => {
+              const x = (index / (displayData.length - 1)) * 100;
               const y = 40 - ((value - min) / range) * 40;
               return (
                 <circle
@@ -159,8 +163,12 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
     unit: string,
     timestamps: string[]
   }> = ({ data, label, color, unit, timestamps }) => {
-    const max = Math.max(...data);
-    const min = Math.min(...data);
+    // For a single reading, duplicate it to create a flat line
+    const displayData = data.length === 1 ? [data[0], data[0]] : data;
+    const displayTimestamps = timestamps.length === 1 ? [timestamps[0], timestamps[0]] : timestamps;
+    
+    const max = Math.max(...displayData);
+    const min = Math.min(...displayData);
     const range = max - min || 1;
 
     return (
@@ -207,16 +215,16 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
               stroke={`currentColor`}
               strokeWidth="3"
               className={`text-${color}-500`}
-              points={data.map((value, index) => {
-                const x = (index / (data.length - 1)) * 400;
+              points={displayData.map((value, index) => {
+                const x = (index / (displayData.length - 1)) * 400;
                 const y = 200 - ((value - min) / range) * 200;
                 return `${x},${y}`;
               }).join(' ')}
             />
             
             {/* Data points */}
-            {data.map((value, index) => {
-              const x = (index / (data.length - 1)) * 400;
+            {displayData.map((value, index) => {
+              const x = (index / (displayData.length - 1)) * 400;
               const y = 200 - ((value - min) / range) * 200;
               return (
                 <g key={index}>
@@ -241,7 +249,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
         </div>
         
         <div className="flex justify-between text-sm text-gray-600">
-          {timestamps.map((timestamp, index) => (
+          {displayTimestamps.map((timestamp, index) => (
             <span key={index} className="text-xs">
               {format(new Date(timestamp), 'MMM dd\nHH:mm')}
             </span>
@@ -469,6 +477,17 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                     </p>
                   </div>
                 )}
+                
+                {readings.length === 1 && (
+                  <div>
+                    <p className="text-sm text-blue-600">
+                      <span className="font-medium">Single Reading</span> - {readings[0].temperature.toFixed(1)}°C
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Normal range: 36.1°C - 37.2°C
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Heart Rate Trend */}
@@ -494,6 +513,17 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                       </p>
                     )}
                     
+                    <p className="text-xs text-gray-500 mt-1">
+                      Normal range: 60-100 BPM
+                    </p>
+                  </div>
+                )}
+                
+                {readings.length === 1 && (
+                  <div>
+                    <p className="text-sm text-blue-600">
+                      <span className="font-medium">Single Reading</span> - {readings[0].heartRate} BPM
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Normal range: 60-100 BPM
                     </p>
@@ -529,6 +559,17 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                     </p>
                   </div>
                 )}
+                
+                {readings.length === 1 && (
+                  <div>
+                    <p className="text-sm text-blue-600">
+                      <span className="font-medium">Single Reading</span> - {readings[0].bloodPressure.systolic}/{readings[0].bloodPressure.diastolic} mmHg
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Normal range: Systolic &lt;120 mmHg, Diastolic &lt;80 mmHg
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Oxygen Saturation Trend */}
@@ -554,6 +595,17 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
                       </p>
                     )}
                     
+                    <p className="text-xs text-gray-500 mt-1">
+                      Normal range: 95-100%
+                    </p>
+                  </div>
+                )}
+                
+                {readings.length === 1 && (
+                  <div>
+                    <p className="text-sm text-blue-600">
+                      <span className="font-medium">Single Reading</span> - {readings[0].oxygenSaturation}%
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Normal range: 95-100%
                     </p>
