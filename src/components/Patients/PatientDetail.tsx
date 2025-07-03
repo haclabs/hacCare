@@ -693,6 +693,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         {activeTab === 'vitals' && (
           <VitalsTrends 
             vitals={vitals}
+            patientId={patient.id}
+            onRecordVitals={() => setShowVitalsEditor(true)}
           />
         )}
 
