@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, X, Calendar, Activity, BarChart3, Plus } from 'lucide-react';
+import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '../../contexts/AuthContext';
+import { clearPatientVitals } from '../../lib/patientService';
 
 interface VitalsTrendsProps {
   vitals: any[]; // Array of vitals from database
+  patientId: string; // Added patient ID for clear functionality
+  onRecordVitals: () => void; // Added callback for record vitals button
 }
 
 interface VitalReading {
@@ -15,9 +19,11 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
+export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, onRecordVitals }) => {
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [readings, setReadings] = useState<VitalReading[]>([]);
+  const [clearingVitals, setClearingVitals] = useState(false);
+  const { hasRole } = useAuth();
 
   // Convert database vitals to component format
   useEffect(() => {
@@ -39,11 +45,34 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
         reading.bloodPressure.systolic > 0
       );
 
-      setReadings(formattedReadings.slice(0, 10)); // Take last 10 readings
+      setReadings(formattedReadings.slice(0, 5)); // Take only last 5 readings
     } else {
       setReadings([]);
     }
   }, [vitals]);
+
+  const handleClearVitals = async () => {
+    if (!hasRole('super_admin')) {
+      alert('Only super administrators can clear vital records.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to clear ALL vital records for this patient? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setClearingVitals(true);
+      await clearPatientVitals(patientId);
+      setReadings([]);
+      alert('All vital records have been cleared successfully.');
+    } catch (error) {
+      console.error('Error clearing vitals:', error);
+      alert('Failed to clear vital records. Please try again.');
+    } finally {
+      setClearingVitals(false);
+    }
+  };
 
   const NoDataDisplay: React.FC = () => (
     <div className="col-span-full">
@@ -286,13 +315,26 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
           <TrendingUp className="h-8 w-8 text-blue-600" />
           <h1 className="text-2xl font-bold text-gray-900">Vital Signs Trends</h1>
         </div>
-        <button
-          onClick={() => setSelectedChart('temperature')}
-          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Record New Vitals
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={onRecordVitals}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Record New Vitals
+          </button>
+          
+          {hasRole('super_admin') && (
+            <button
+              onClick={handleClearVitals}
+              disabled={clearingVitals || readings.length === 0}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              {clearingVitals ? 'Clearing...' : 'Clear All Vitals'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Vital Signs Trends */}
@@ -483,7 +525,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals }) => {
                     )}
                     
                     <p className="text-xs text-gray-500 mt-1">
-                      Normal range: Systolic &lt;120 mmHg, Diastolic &lt;80 mmHg
+                      Normal range: Systolic <120 mmHg, Diastolic <80 mmHg
                     </p>
                   </div>
                 )}
