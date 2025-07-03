@@ -47,8 +47,16 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
     try {
       console.log('Saving vitals for patient:', patientId, editedVitals);
       
+      // Ensure temperature is a number
+      const vitalsToSave = {
+        ...editedVitals,
+        temperature: parseFloat(editedVitals.temperature.toString())
+      };
+      
+      console.log('Formatted vitals to save:', vitalsToSave);
+      
       // Save vitals to database
-      await updatePatientVitals(patientId, editedVitals);
+      await updatePatientVitals(patientId, vitalsToSave);
       console.log('Vitals saved successfully');
       
       // Refresh patients to get updated vitals
@@ -56,7 +64,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
       console.log('Patients refreshed');
       
       // Call the onSave callback
-      onSave(editedVitals);
+      onSave(vitalsToSave);
     } catch (err: any) {
       console.error('Error saving vitals:', err);
       setError(err.message || 'Failed to save vital signs');

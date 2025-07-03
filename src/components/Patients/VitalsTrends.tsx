@@ -30,18 +30,26 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
   // Convert database vitals to component format
   useEffect(() => {
     if (vitals && vitals.length > 0) {
+      console.log('Raw vitals data:', vitals);
+      
       // Create a new array to avoid reference issues
-      const formattedReadings: VitalReading[] = vitals.map(vital => ({
-        timestamp: vital.recorded_at || vital.lastUpdated,
-        temperature: vital.temperature,
-        heartRate: vital.heart_rate || vital.heartRate,
-        bloodPressure: {
-          systolic: vital.blood_pressure_systolic || vital.bloodPressure?.systolic,
-          diastolic: vital.blood_pressure_diastolic || vital.bloodPressure?.diastolic
-        },
-        oxygenSaturation: vital.oxygen_saturation || vital.oxygenSaturation,
-        respiratoryRate: vital.respiratory_rate || vital.respiratoryRate
-      })).filter(reading => 
+      const formattedReadings: VitalReading[] = vitals.map(vital => {
+        // Log each vital to see what's happening with temperature
+        console.log('Processing vital:', vital);
+        console.log('Temperature value:', vital.temperature);
+        
+        return {
+          timestamp: vital.recorded_at || vital.lastUpdated,
+          temperature: parseFloat(vital.temperature) || 0,
+          heartRate: vital.heart_rate || vital.heartRate || 0,
+          bloodPressure: {
+            systolic: vital.blood_pressure_systolic || vital.bloodPressure?.systolic || 0,
+            diastolic: vital.blood_pressure_diastolic || vital.bloodPressure?.diastolic || 0
+          },
+          oxygenSaturation: vital.oxygen_saturation || vital.oxygenSaturation || 0,
+          respiratoryRate: vital.respiratory_rate || vital.respiratoryRate || 0
+        };
+      }).filter(reading => 
         // Filter out invalid readings
         reading.temperature > 0 && 
         reading.heartRate > 0 && 
@@ -66,6 +74,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
       uniqueReadings.sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
+
+      // Log the final processed readings
+      console.log('Processed unique readings:', uniqueReadings);
 
       // Take only last 5 readings
       setReadings(uniqueReadings.slice(0, 5));
@@ -132,6 +143,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
   }> = ({ data, label, color, unit, onClick }) => {
     if (data.length === 0) return null;
 
+    // Log the data being passed to the chart
+    console.log(`MiniChart data for ${label}:`, data);
+
     // For a single reading, create a flat line with two identical points
     const displayData = data.length === 1 ? [data[0], data[0]] : data;
     
@@ -193,6 +207,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
     unit: string,
     timestamps: string[]
   }> = ({ data, label, color, unit, timestamps }) => {
+    // Log the data being passed to the full chart
+    console.log(`FullChart data for ${label}:`, data);
+    
     // For a single reading, create a flat line with two identical points
     const displayData = data.length === 1 ? [data[0], data[0]] : data;
     const displayTimestamps = timestamps.length === 1 ? 
