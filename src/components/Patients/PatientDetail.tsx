@@ -244,9 +244,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       await refreshPatients();
       
       alert('All vital records have been cleared successfully.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error clearing vitals:', error);
-      alert('Failed to clear vital records. Please try again.');
+      // Show the specific error message to help with debugging
+      alert(`Failed to clear vital records: ${error.message || 'Unknown error'}. This may be due to insufficient permissions.`);
     } finally {
       setClearingVitals(false);
     }
