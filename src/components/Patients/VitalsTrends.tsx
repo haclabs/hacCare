@@ -46,8 +46,19 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
         reading.bloodPressure.systolic > 0
       );
 
+      // Get unique timestamps to prevent duplicates
+      const uniqueTimestamps = new Set();
+      const uniqueReadings = formattedReadings.filter(reading => {
+        const timestamp = reading.timestamp;
+        if (uniqueTimestamps.has(timestamp)) {
+          return false;
+        }
+        uniqueTimestamps.add(timestamp);
+        return true;
+      });
+
       // Take only last 5 readings
-      setReadings(formattedReadings.slice(0, 5));
+      setReadings(uniqueReadings.slice(0, 5));
     } else {
       setReadings([]);
     }
