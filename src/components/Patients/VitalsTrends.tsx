@@ -3,6 +3,7 @@ import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2 } from 'luci
 import { format } from 'date-fns';
 import { useAuth } from '../../contexts/AuthContext';
 import { clearPatientVitals } from '../../lib/patientService';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface VitalsTrendsProps {
   vitals: any[]; // Array of vitals from database
@@ -24,6 +25,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
   const [readings, setReadings] = useState<VitalReading[]>([]);
   const [clearingVitals, setClearingVitals] = useState(false);
   const { hasRole } = useAuth();
+  const { refreshPatients } = usePatients();
 
   // Convert database vitals to component format
   useEffect(() => {
@@ -76,8 +78,16 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ vitals, patientId, o
 
     try {
       setClearingVitals(true);
+      
+      // Clear vitals from database
       await clearPatientVitals(patientId);
+      
+      // Clear local state
       setReadings([]);
+      
+      // Refresh patient data in context to ensure UI is updated
+      await refreshPatients();
+      
       alert('All vital records have been cleared successfully.');
     } catch (error) {
       console.error('Error clearing vitals:', error);
