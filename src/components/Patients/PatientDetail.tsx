@@ -24,7 +24,8 @@ import {
   QrCode,
   TrendingUp,
   BookOpen,
-  Brain
+  Brain,
+  Trash2
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
@@ -38,8 +39,9 @@ import { HospitalBracelet } from './HospitalBracelet';
 import { PatientBracelet } from './PatientBracelet';
 import { MedicationBarcode } from './MedicationBarcode';
 import { supabase } from '../../lib/supabase';
-import { updatePatientVitals } from '../../lib/patientService';
+import { updatePatientVitals, clearPatientVitals } from '../../lib/patientService';
 import { fetchPatientAssessments, PatientAssessment } from '../../lib/assessmentService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -135,6 +137,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<PatientMedication | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clearingVitals, setClearingVitals] = useState(false);
+  const { hasRole } = useAuth();
 
   useEffect(() => {
     fetchPatientData();
@@ -212,6 +216,29 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       fetchPatientData();
     } catch (error) {
       console.error('Error saving vitals:', error);
+    }
+  };
+
+  const handleClearVitals = async () => {
+    if (!hasRole('super_admin')) {
+      alert('Only super administrators can clear vital records.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to clear ALL vital records for this patient? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setClearingVitals(true);
+      await clearPatientVitals(patient.id);
+      setVitals([]);
+      alert('All vital records have been cleared successfully.');
+    } catch (error) {
+      console.error('Error clearing vitals:', error);
+      alert('Failed to clear vital records. Please try again.');
+    } finally {
+      setClearingVitals(false);
     }
   };
 
@@ -450,13 +477,26 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
-                    <button
-                      onClick={() => setShowVitalsEditor(true)}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Record Vitals
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setShowVitalsEditor(true)}
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Record Vitals
+                      </button>
+                      
+                      {hasRole('super_admin') && (
+                        <button
+                          onClick={handleClearVitals}
+                          disabled={clearingVitals || vitals.length === 0}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          {clearingVitals ? 'Clearing...' : 'Clear Vitals'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

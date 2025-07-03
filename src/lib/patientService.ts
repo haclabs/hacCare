@@ -267,6 +267,31 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
 };
 
 /**
+ * Clear all vital records for a patient
+ * Only accessible to super admins
+ */
+export const clearPatientVitals = async (patientId: string): Promise<void> => {
+  try {
+    console.log('Clearing all vitals for patient:', patientId);
+    
+    const { error } = await supabase
+      .from('patient_vitals')
+      .delete()
+      .eq('patient_id', patientId);
+
+    if (error) {
+      console.error('Database error deleting vitals:', error);
+      throw error;
+    }
+
+    console.log('All vitals cleared successfully');
+  } catch (error) {
+    console.error('Error clearing patient vitals:', error);
+    throw error;
+  }
+};
+
+/**
  * Fetch patient vitals history
  */
 export const fetchPatientVitalsHistory = async (patientId: string, limit: number = 10): Promise<DatabaseVitals[]> => {
