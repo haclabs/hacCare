@@ -64,23 +64,6 @@ export const supabase = hasValidConfig ? createClient(
     global: {
       headers: {
         'x-client-info': 'haccare-hospital@1.0.0'
-      },
-      fetch: (url, options = {}) => {
-        // Add timeout and better error handling for fetch requests
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-        
-        return fetch(url, {
-          ...options,
-          signal: controller.signal,
-        }).finally(() => {
-          clearTimeout(timeoutId);
-        }).catch((error) => {
-          if (error.name === 'AbortError') {
-            throw new Error('Request timeout - please check your internet connection');
-          }
-          throw error;
-        });
       }
     },
     db: {
