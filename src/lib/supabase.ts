@@ -35,27 +35,30 @@ const hasValidConfig = supabaseUrl &&
   supabaseUrl !== 'https://your-project-id.supabase.co' &&
   supabaseAnonKey !== 'your-anon-key-here' &&
   supabaseUrl.startsWith('https://') &&
-  supabaseUrl.includes('.supabase.co');
+  supabaseUrl.includes('.supabase.co') &&
+  supabaseUrl.length > 30 &&
+  supabaseAnonKey.length > 50;
 
 console.log('✅ Configuration valid:', hasValidConfig);
 
 if (!hasValidConfig) {
   console.warn('⚠️ Supabase not configured properly. Please check your .env file.');
   console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
+  console.warn('🔗 Get your credentials from: https://app.supabase.com/project/[your-project]/settings/api');
 }
 
 /**
  * Supabase Client Instance
  * Configured with optimized settings for the hospital management system
  */
-export const supabase = createClient(
-  supabaseUrl || 'https://dummy.supabase.co',
-  supabaseAnonKey || 'dummy-key',
+export const supabase = hasValidConfig ? createClient(
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
-      autoRefreshToken: hasValidConfig,
-      persistSession: hasValidConfig,
-      detectSessionInUrl: hasValidConfig,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
       flowType: 'pkce',
     },
     global: {
@@ -63,14 +66,9 @@ export const supabase = createClient(
         'x-client-info': 'haccare-hospital@1.0.0'
       },
       fetch: (url, options = {}) => {
-        // Skip fetch if not configured
-        if (!hasValidConfig) {
-          return Promise.reject(new Error('Supabase not configured'));
-        }
-        
         // Add timeout and better error handling for fetch requests
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
         
         return fetch(url, {
           ...options,
@@ -87,6 +85,19 @@ export const supabase = createClient(
     },
     db: {
       schema: 'public'
+    }
+  }
+) : createClient(
+  'https://dummy.supabase.co',
+  'dummy-key',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      fetch: () => Promise.reject(new Error('Supabase not configured - please add your credentials to .env file'))
     }
   }
 );
@@ -168,6 +179,11 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
  * Clear Supabase Session
  */
 export const clearSupabaseSession = async (): Promise<void> => {
+  if (!isSupabaseConfigured) {
+    console.log('Supabase not configured, skipping session clear');
+    return;
+  }
+
   try {
     await supabase.auth.signOut();
     console.log('✅ Supabase session cleared successfully');
@@ -181,6 +197,10 @@ export const clearSupabaseSession = async (): Promise<void> => {
  * Test Supabase connection with retry logic
  */
 export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
+  if (!isSupabaseConfigured) {
+    return false;
+  }
+
   for (let i = 0; i < retries; i++) {
     try {
       const isHealthy = await checkDatabaseHealth();
