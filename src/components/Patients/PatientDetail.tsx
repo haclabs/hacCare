@@ -546,7 +546,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                                     else if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
                                     else if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
                                     else if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
-                                    return belongsInSlot; // Return early for once daily meds
                                   } else {
                                     // For other frequencies, check if they belong in this time slot
                                     if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
@@ -566,7 +565,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                                     if (med.frequency.includes('evening') && index === 2) belongsInSlot = true;
                                     if (med.frequency.includes('night') || med.frequency.includes('bedtime') && index === 3) belongsInSlot = true;
                                   }
-                                }
                                 
                                 // PRN medications show in all slots
                                 if (med.category === 'prn') belongsInSlot = true;
