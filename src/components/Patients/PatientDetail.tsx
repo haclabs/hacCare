@@ -346,40 +346,60 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                   </span>
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.temperature, { min: 97, max: 99 })}`}>
-                    <div className="flex items-center space-x-2">
-                      <Thermometer className="w-4 h-4" />
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Thermometer className="w-4 h-4 text-red-600" />
+                      <span className="text-xs text-red-600 font-medium">TEMP</span>
+                    </div>
+                    <div className={`text-lg font-bold ${parseFloat(latestVitals.temperature) < 97 || parseFloat(latestVitals.temperature) > 99 ? 'text-red-700' : 'text-red-900'}`}>
                       <span className="text-sm font-medium">Temperature (°F)</span>
+                      {latestVitals.temperature}°F
                     </div>
-                    <p className="text-lg font-bold">{latestVitals.temperature}°F</p>
+                    <div className="text-xs text-red-700">Temperature</div>
                   </div>
-                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.bloodPressure.systolic, { min: 90, max: 140 })}`}>
-                    <div className="flex items-center space-x-2">
-                      <Activity className="w-4 h-4" />
+                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Activity className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs text-blue-600 font-medium">BP</span>
+                    </div>
+                    <div className={`text-lg font-bold ${latestVitals.bloodPressure.systolic < 90 || latestVitals.bloodPressure.systolic > 140 ? 'text-blue-700' : 'text-blue-900'}`}>
                       <span className="text-sm font-medium">Blood Pressure</span>
+                      {latestVitals.bloodPressure.systolic}/{latestVitals.bloodPressure.diastolic}
                     </div>
-                    <p className="text-lg font-bold">{latestVitals.bloodPressure.systolic}/{latestVitals.bloodPressure.diastolic}</p>
+                    <div className="text-xs text-blue-700">Blood Pressure</div>
                   </div>
-                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.heartRate, { min: 60, max: 100 })}`}>
-                    <div className="flex items-center space-x-2">
-                      <Heart className="w-4 h-4" />
+                  <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Heart className="w-4 h-4 text-green-600" />
+                      <span className="text-xs text-green-600 font-medium">HR</span>
+                    </div>
+                    <div className={`text-lg font-bold ${latestVitals.heartRate < 60 || latestVitals.heartRate > 100 ? 'text-green-700' : 'text-green-900'}`}>
                       <span className="text-sm font-medium">Heart Rate</span>
+                      {latestVitals.heartRate} bpm
                     </div>
-                    <p className="text-lg font-bold">{latestVitals.heartRate} bpm</p>
+                    <div className="text-xs text-green-700">Heart Rate (BPM)</div>
                   </div>
-                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.respiratoryRate, { min: 12, max: 20 })}`}>
-                    <div className="flex items-center space-x-2">
-                      <Activity className="w-4 h-4" />
+                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Activity className="w-4 h-4 text-purple-600" />
+                      <span className="text-xs text-purple-600 font-medium">RR</span>
+                    </div>
+                    <div className={`text-lg font-bold ${latestVitals.respiratoryRate < 12 || latestVitals.respiratoryRate > 20 ? 'text-purple-700' : 'text-purple-900'}`}>
                       <span className="text-sm font-medium">Respiratory Rate</span>
+                      {latestVitals.respiratoryRate} /min
                     </div>
-                    <p className="text-lg font-bold">{latestVitals.respiratoryRate} /min</p>
+                    <div className="text-xs text-purple-700">Respiratory Rate</div>
                   </div>
-                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.oxygenSaturation, { min: 95, max: 100 })}`}>
-                    <div className="flex items-center space-x-2">
-                      <Droplets className="w-4 h-4" />
-                      <span className="text-sm font-medium">O2 Saturation</span>
+                  <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Droplets className="w-4 h-4 text-indigo-600" />
+                      <span className="text-xs text-indigo-600 font-medium">O2</span>
                     </div>
-                    <p className="text-lg font-bold">{latestVitals.oxygenSaturation}%</p>
+                    <div className={`text-lg font-bold ${latestVitals.oxygenSaturation < 95 ? 'text-indigo-700' : 'text-indigo-900'}`}>
+                      <span className="text-sm font-medium">O2 Saturation</span>
+                      {latestVitals.oxygenSaturation}%
+                    </div>
+                    <div className="text-xs text-indigo-700">O2 Saturation</div>
                   </div>
                 </div>
               </div>
@@ -456,40 +476,60 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                       </span>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.temperature, { min: 97, max: 99 })}`}>
-                        <div className="flex items-center space-x-2">
-                          <Thermometer className="w-4 h-4" />
+                      <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <Thermometer className="w-4 h-4 text-red-600" />
+                          <span className="text-xs text-red-600 font-medium">TEMP</span>
+                        </div>
+                        <div className={`text-lg font-bold ${parseFloat(vital.temperature) < 97 || parseFloat(vital.temperature) > 99 ? 'text-red-700' : 'text-red-900'}`}>
                           <span className="text-sm font-medium">Temperature (°F)</span>
+                          {vital.temperature}°F
                         </div>
-                        <p className="text-lg font-bold">{vital.temperature}°F</p>
+                        <div className="text-xs text-red-700">Temperature</div>
                       </div>
-                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.bloodPressure.systolic, { min: 90, max: 140 })}`}>
-                        <div className="flex items-center space-x-2">
-                          <Activity className="w-4 h-4" />
+                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <Activity className="w-4 h-4 text-blue-600" />
+                          <span className="text-xs text-blue-600 font-medium">BP</span>
+                        </div>
+                        <div className={`text-lg font-bold ${vital.bloodPressure.systolic < 90 || vital.bloodPressure.systolic > 140 ? 'text-blue-700' : 'text-blue-900'}`}>
                           <span className="text-sm font-medium">Blood Pressure</span>
+                          {vital.bloodPressure.systolic}/{vital.bloodPressure.diastolic}
                         </div>
-                        <p className="text-lg font-bold">{vital.bloodPressure.systolic}/{vital.bloodPressure.diastolic}</p>
+                        <div className="text-xs text-blue-700">Blood Pressure</div>
                       </div>
-                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.heartRate, { min: 60, max: 100 })}`}>
-                        <div className="flex items-center space-x-2">
-                          <Heart className="w-4 h-4" />
+                      <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <Heart className="w-4 h-4 text-green-600" />
+                          <span className="text-xs text-green-600 font-medium">HR</span>
+                        </div>
+                        <div className={`text-lg font-bold ${vital.heartRate < 60 || vital.heartRate > 100 ? 'text-green-700' : 'text-green-900'}`}>
                           <span className="text-sm font-medium">Heart Rate</span>
+                          {vital.heartRate} bpm
                         </div>
-                        <p className="text-lg font-bold">{vital.heartRate} bpm</p>
+                        <div className="text-xs text-green-700">Heart Rate (BPM)</div>
                       </div>
-                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.respiratoryRate, { min: 12, max: 20 })}`}>
-                        <div className="flex items-center space-x-2">
-                          <Activity className="w-4 h-4" />
+                      <div className="p-3 rounded-lg bg-purple-50 border border-purple-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <Activity className="w-4 h-4 text-purple-600" />
+                          <span className="text-xs text-purple-600 font-medium">RR</span>
+                        </div>
+                        <div className={`text-lg font-bold ${vital.respiratoryRate < 12 || vital.respiratoryRate > 20 ? 'text-purple-700' : 'text-purple-900'}`}>
                           <span className="text-sm font-medium">Respiratory Rate</span>
+                          {vital.respiratoryRate} /min
                         </div>
-                        <p className="text-lg font-bold">{vital.respiratoryRate} /min</p>
+                        <div className="text-xs text-purple-700">Respiratory Rate</div>
                       </div>
-                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.oxygenSaturation, { min: 95, max: 100 })}`}>
-                        <div className="flex items-center space-x-2">
-                          <Droplets className="w-4 h-4" />
-                          <span className="text-sm font-medium">O2 Saturation</span>
+                      <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <Droplets className="w-4 h-4 text-indigo-600" />
+                          <span className="text-xs text-indigo-600 font-medium">O2</span>
                         </div>
-                        <p className="text-lg font-bold">{vital.oxygenSaturation}%</p>
+                        <div className={`text-lg font-bold ${vital.oxygenSaturation < 95 ? 'text-indigo-700' : 'text-indigo-900'}`}>
+                          <span className="text-sm font-medium">O2 Saturation</span>
+                          {vital.oxygenSaturation}%
+                        </div>
+                        <div className="text-xs text-indigo-700">O2 Saturation</div>
                       </div>
                     </div>
                   </div>

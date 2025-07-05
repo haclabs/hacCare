@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Printer, Download } from 'lucide-react';
+import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { Medication } from '../../types';
 import { format, isValid } from 'date-fns';
 import { generateCode128SVG } from '../../utils/barcodeUtils';
@@ -38,6 +38,13 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
 
   // Generate unique medication barcode based on medication ID and details
   const medicationBarcodeId = `MED${selectedMedication.id.slice(-6).toUpperCase()}`;
+
+  // Generate barcode SVG
+  const barcodeSvg = generateCode128SVG(selectedMedication.id, {
+    width: 200,
+    height: 40,
+    showText: false
+  });
 
   // Helper function to safely format dates
   const formatSafeDate = (dateValue: string | Date) => {
@@ -342,16 +349,12 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                 <select 
                   value={selectedMedication.id}
                   onChange={(e) => {
-                    const med = medications.find(m => m.id === e.target.value);
-                    if (med) setSelectedMedication(med);
-                  }}
-                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {medications.map(med => (
-                    <option key={med.id} value={med.id}>
-                      {med.name} {med.dosage}
-                    </option>
-                  ))}
+                  {generateCode128SVG(selectedMedication.id, {
+                    width: 60,
+                    height: 14,
+                    showText: false,
+                    className: "inline-block"
+                  })}
                 </select>
               </div>
               
