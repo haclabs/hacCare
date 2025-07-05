@@ -708,7 +708,5 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
             </div>
           )}
         </div>
-      </div>
-    </div>
   );
 };
