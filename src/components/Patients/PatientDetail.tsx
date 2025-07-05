@@ -38,6 +38,7 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationForm } from './MedicationForm';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
+import { MedicationAdministration } from './MedicationAdministration';
 import { AssessmentDetail } from './AssessmentDetail';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
@@ -74,6 +75,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
   const [activeTab, setActiveTab] = useState('overview');
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
+  const [showMedicationAdministration, setShowMedicationAdministration] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
@@ -158,7 +160,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Signs', icon: Heart },
-    { id: 'medications', label: 'Medications', icon: Pill },
+    { id: 'medications', label: 'Medications', icon: Pill }, 
+    { id: 'mar', label: 'MAR', icon: CheckSquare },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
     { id: 'admission', label: 'Admission', icon: Building },
@@ -478,13 +481,22 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Medications</h2>
-              <button
-                onClick={() => setShowMedicationForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Medication</span>
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowMedicationAdministration(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <CheckSquare className="w-4 h-4" />
+                  <span>Medication Administration</span>
+                </button>
+                <button
+                  onClick={() => setShowMedicationForm(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Medication</span>
+                </button>
+              </div>
             </div>
 
             {medications.length === 0 ? (
@@ -544,6 +556,20 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'mar' && (
+          <div className="p-6">
+            <MedicationAdministration 
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              medications={medications}
+              onRefresh={() => {
+                // Refresh medications data
+                fetchPatientData();
+              }}
+            />
           </div>
         )}
 
@@ -809,6 +835,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
           medications={medications}
           onClose={() => setShowMedicationBarcode(false)}
         />
+      )}
+
+      {showMedicationAdministration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <MedicationAdministration 
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              medications={medications}
+              onRefresh={fetchPatientData}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
