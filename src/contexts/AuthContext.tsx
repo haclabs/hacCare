@@ -387,7 +387,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: user.email || '',
             first_name: user.user_metadata?.first_name || 'User',
             last_name: user.user_metadata?.last_name || '',
-            role: 'nurse', // Default role for new users
             is_active: true
           }, {
             onConflict: 'id' // Update if exists, insert if new
