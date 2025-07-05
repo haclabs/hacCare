@@ -5,6 +5,8 @@
  * Includes ID generation, validation, formatting, and risk assessment.
  */
 
+import { format, isValid, parseISO } from 'date-fns';
+
 /**
  * Generate a unique patient ID in PTXXXXX format
  * Creates a 5-digit patient identifier with PT prefix
@@ -145,4 +147,31 @@ export const generateSearchKeywords = (patient: any): string[] => {
   ];
   
   return keywords.filter(keyword => keyword.length > 0);
+};
+
+/**
+ * Format date/time for display
+ * Converts date to readable format with time
+ * 
+ * @param {string | Date | null} dateValue - Date value to format
+ * @returns {string} Formatted date string or 'N/A' if invalid
+ */
+export const formatTime = (dateValue: string | Date | null): string => {
+  if (!dateValue) return 'N/A';
+  
+  try {
+    let date: Date;
+    
+    if (typeof dateValue === 'string') {
+      date = parseISO(dateValue);
+    } else {
+      date = dateValue;
+    }
+    
+    if (!isValid(date)) return 'N/A';
+    
+    return format(date, 'MMM dd, yyyy HH:mm');
+  } catch (error) {
+    return 'N/A';
+  }
 };
