@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { clearPatientVitals } from '../../lib/patientService';
@@ -60,8 +60,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
       
       // Convert database format to component format
       const formattedReadings: VitalReading[] = vitalsData.map(vital => ({
-        timestamp: vital.recorded_at,
-        temperature: parseFloat(vital.temperature),
+        timestamp: vital.recorded_at || '',
+        temperature: parseFloat(vital.temperature) * (9/5) + 32, // Convert Celsius to Fahrenheit
         heartRate: vital.heart_rate,
         bloodPressure: {
           systolic: vital.blood_pressure_systolic,
@@ -135,7 +135,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
   const MiniChart: React.FC<{ 
     data: number[], 
     label: string, 
-    color: string, 
+    color: 'red' | 'green' | 'blue' | 'purple' | 'teal', 
     unit: string,
     onClick: () => void 
   }> = ({ data, label, color, unit, onClick }) => {
@@ -150,12 +150,24 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
 
     return (
       <div 
-        className={`bg-white border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all hover:border-${color}-300 h-full`}
+        className={`bg-white border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-all h-full ${
+          color === 'red' ? 'hover:border-red-300' :
+          color === 'green' ? 'hover:border-green-300' :
+          color === 'blue' ? 'hover:border-blue-300' :
+          color === 'purple' ? 'hover:border-purple-300' :
+          'hover:border-teal-300'
+        }`}
         onClick={onClick}
       >
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-medium text-gray-700">{label}</h4>
-          <TrendingUp className={`h-4 w-4 text-${color}-500`} />
+          <TrendingUp className={`h-4 w-4 ${
+            color === 'red' ? 'text-red-500' :
+            color === 'green' ? 'text-green-500' :
+            color === 'blue' ? 'text-blue-500' :
+            color === 'purple' ? 'text-purple-500' :
+            'text-teal-500'
+          }`} />
         </div>
         
         <div className="relative h-16 mb-2">
@@ -163,8 +175,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
             <polyline
               fill="none"
               stroke={`currentColor`}
-              strokeWidth="2"
-              className={`text-${color}-500`}
+              strokeWidth="2" 
+              className={`${
+                color === 'red' ? 'text-red-500' :
+                color === 'green' ? 'text-green-500' :
+                color === 'blue' ? 'text-blue-500' :
+                color === 'purple' ? 'text-purple-500' :
+                'text-teal-500'
+              }`}
               points={displayData.map((value, index) => {
                 const x = (index / (displayData.length - 1)) * 100;
                 const y = 40 - ((value - min) / range) * 40;
@@ -179,8 +197,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
                   key={index}
                   cx={x}
                   cy={y}
-                  r="2"
-                  className={`fill-${color}-500`}
+                  r="2" 
+                  className={`${
+                    color === 'red' ? 'fill-red-500' :
+                    color === 'green' ? 'fill-green-500' :
+                    color === 'blue' ? 'fill-blue-500' :
+                    color === 'purple' ? 'fill-purple-500' :
+                    'fill-teal-500'
+                  }`}
                 />
               );
             })}
@@ -198,7 +222,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
   const FullChart: React.FC<{ 
     data: number[], 
     label: string, 
-    color: string, 
+    color: 'red' | 'green' | 'blue' | 'purple' | 'teal', 
     unit: string,
     timestamps: string[]
   }> = ({ data, label, color, unit, timestamps }) => {
@@ -254,8 +278,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
             <polyline
               fill="none"
               stroke={`currentColor`}
-              strokeWidth="3"
-              className={`text-${color}-500`}
+              strokeWidth="3" 
+              className={`${
+                color === 'red' ? 'text-red-500' :
+                color === 'green' ? 'text-green-500' :
+                color === 'blue' ? 'text-blue-500' :
+                color === 'purple' ? 'text-purple-500' :
+                'text-teal-500'
+              }`}
               points={displayData.map((value, index) => {
                 const x = (index / (displayData.length - 1)) * 400;
                 const y = 200 - ((value - min) / range) * 200;
@@ -272,8 +302,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
                   <circle
                     cx={x}
                     cy={y}
-                    r="4"
-                    className={`fill-${color}-500`}
+                    r="4" 
+                    className={`${
+                      color === 'red' ? 'fill-red-500' :
+                      color === 'green' ? 'fill-green-500' :
+                      color === 'blue' ? 'fill-blue-500' :
+                      color === 'purple' ? 'fill-purple-500' :
+                      'fill-teal-500'
+                    }`}
                   />
                   <text
                     x={x}
@@ -292,7 +328,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
         <div className="flex justify-between text-sm text-gray-600">
           {displayTimestamps.map((timestamp, index) => (
             <span key={index} className="text-xs">
-              {format(parseISO(timestamp), 'MMM dd\nHH:mm')}
+              {isValid(parseISO(timestamp)) ? format(parseISO(timestamp), 'MMM dd HH:mm') : 'Invalid date'}
             </span>
           ))}
         </div>
@@ -343,49 +379,45 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
     const chart = chartData[selectedChart as keyof typeof chartData];
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-50 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-          <FullChart
-            data={chart.data}
-            label={chart.label}
-            color={chart.color}
-            unit={chart.unit}
-            timestamps={readings.map(r => r.timestamp)}
-          />
-        </div>
-      </div>
+      <FullChart
+        data={chart.data}
+        label={chart.label}
+        color={chart.color}
+        unit={chart.unit}
+        timestamps={readings.map(r => r.timestamp)}
+      />
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Vital Signs Trends - {patientName}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <TrendingUp className="h-8 w-8 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Vital Signs Trends</h1>
         </div>
-        
-        <div className="p-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">Vital Signs History</h3>
-            <div className="flex space-x-3">
-              <button
-                onClick={fetchVitalsData}
-                disabled={loading}
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 text-sm"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </button>
-              
-              {hasRole('super_admin') && (
+        <div className="flex space-x-2">
+          <button
+            onClick={onRecordVitals}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Record New Vitals
+          </button>
+          
+          {hasRole('super_admin') && (
+            <button
+              onClick={handleClearVitals}
+              disabled={clearingVitals || readings.length === 0}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              {clearingVitals ? 'Clearing...' : 'Clear All Vitals'}
+            </button>
+          )}
+        </div>
+      </div>
+
                 <button
                   onClick={handleClearVitals}
                   disabled={clearingVitals || readings.length === 0}
@@ -454,8 +486,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <MiniChart
                   data={readings.map(r => r.temperature)}
-                  label="Temperature"
-                  color="red"
+                  label="Temperature (°F)"
+                  color="green"
                   unit="°F"
                   onClick={() => setSelectedChart('temperature')}
                 />

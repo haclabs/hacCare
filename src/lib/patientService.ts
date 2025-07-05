@@ -57,7 +57,7 @@ export interface DatabaseMedicationAdministration {
 const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
   return dbVitals.map(vital => ({
     id: vital.id,
-    temperature: vital.temperature,
+    temperature: vital.temperature, // Store in Celsius in the database
     bloodPressure: {
       systolic: vital.blood_pressure_systolic,
       diastolic: vital.blood_pressure_diastolic
