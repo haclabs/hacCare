@@ -21,7 +21,8 @@ import { Patient, VitalSigns, PatientNote, Medication } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationForm } from './MedicationForm';
-import { getPatientVitals, getPatientNotes, getPatientMedications } from '../../lib/patientService';
+import { getPatientVitals, getPatientNotes } from '../../lib/patientService';
+import { fetchPatientMedications } from '../../lib/medicationService';
 import { formatTime, calculateAge } from '../../utils/patientUtils';
 
 interface PatientDetailProps {
