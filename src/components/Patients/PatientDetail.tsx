@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   User, 
-  Calendar, 
+  Calendar,
   MapPin, 
   Phone, 
   Heart, 
@@ -135,8 +135,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
   const [showHospitalBracelet, setShowHospitalBracelet] = useState(false);
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
+  const [activeMedCategory, setActiveMedCategory] = useState<'scheduled' | 'unscheduled' | 'prn' | 'continuous'>('scheduled');
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<PatientMedication | null>(null);
+  const [showAdministerForm, setShowAdministerForm] = useState(false);
+  const [medicationToAdminister, setMedicationToAdminister] = useState<PatientMedication | null>(null);
   const [loading, setLoading] = useState(true);
   const [clearingVitals, setClearingVitals] = useState(false);
   const { hasRole } = useAuth();
@@ -353,6 +356,126 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     }
   };
 
+  /**
+   * Get filtered medications based on active category
+   */
+  const filteredMedications = medications.filter(med => {
+    // If medication doesn't have a category yet, assign based on frequency
+    const category = med.category || getCategoryFromFrequency(med.frequency);
+    return category === activeMedCategory && med.status === 'Active';
+  });
+
+  /**
+   * Determine medication category from frequency if not explicitly set
+   */
+  const getCategoryFromFrequency = (frequency: string): 'scheduled' | 'unscheduled' | 'prn' | 'continuous' => {
+    if (frequency.includes('PRN') || frequency.includes('As needed')) {
+      return 'prn';
+    } else if (frequency.includes('Continuous') || frequency.includes('Infusion')) {
+      return 'continuous';
+    } else if (frequency.includes('Once') || frequency.includes('daily') || 
+               frequency.includes('BID') || frequency.includes('TID') || 
+               frequency.includes('QID') || frequency.includes('Every')) {
+      return 'scheduled';
+    } else {
+      return 'unscheduled';
+    }
+  };
+
+  /**
+   * Get display name for medication category
+   */
+  const getCategoryDisplayName = (category: string): string => {
+    switch (category) {
+      case 'scheduled': return 'Scheduled';
+      case 'unscheduled': return 'Unscheduled';
+      case 'prn': return 'PRN';
+      case 'continuous': return 'Continuous Infusion';
+      default: return category;
+    }
+  };
+
+  /**
+   * Get background color for medication category
+   */
+  const getMedicationCategoryColor = (category?: string): string => {
+    switch (category) {
+      case 'scheduled': return 'bg-blue-50 border-blue-200';
+      case 'unscheduled': return 'bg-yellow-50 border-yellow-200';
+      case 'prn': return 'bg-green-50 border-green-200';
+      case 'continuous': return 'bg-purple-50 border-purple-200';
+      default: return 'bg-white border-gray-200';
+    }
+  };
+
+  /**
+   * Handle medication administration
+   */
+  const handleAdministerMedication = (medication: PatientMedication) => {
+    setMedicationToAdminister(medication);
+    setShowAdministerForm(true);
+  };
+
+  /**
+   * Save medication administration
+   */
+  const handleSaveAdministration = async (medicationId: string, notes: string) => {
+    try {
+      // Create administration record
+      const administration = {
+        medication_id: medicationId,
+        patient_id: patient.id,
+        administered_by: `${profile?.first_name} ${profile?.last_name}`,
+        administered_by_id: user?.id,
+        timestamp: new Date().toISOString(),
+        notes: notes
+      };
+
+      // Save to database
+      const { error } = await supabase
+        .from('medication_administrations')
+        .insert(administration);
+
+      if (error) throw error;
+
+      // Update local state
+      setMedications(prev => prev.map(med => {
+        if (med.id === medicationId) {
+          return {
+            ...med,
+            administrations: [
+              { timestamp: administration.timestamp, administered_by: administration.administered_by, notes },
+              ...(med.administrations || [])
+            ]
+          };
+        }
+        return med;
+      }));
+
+      // Create a note about the administration
+      await supabase
+        .from('patient_notes')
+        .insert({
+          patient_id: patient.id,
+          nurse_id: user?.id,
+          nurse_name: `${profile?.first_name} ${profile?.last_name}`,
+          type: 'Medication',
+          content: `Administered ${medicationToAdminister?.name} ${medicationToAdminister?.dosage}. ${notes ? `Notes: ${notes}` : ''}`,
+          priority: 'Medium'
+        });
+
+      // Close form
+      setShowAdministerForm(false);
+      setMedicationToAdminister(null);
+
+      // Refresh data
+      fetchPatientData();
+    } catch (error) {
+      console.error('Error saving medication administration:', error);
+      alert('Failed to save medication administration. Please try again.');
+    }
+  };
+
   const latestVitals = vitals[0];
   const activeMedications = medications.filter(med => med.status === 'Active');
   const recentNotes = notes.slice(0, 5);
@@ -360,7 +483,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Trends', icon: TrendingUp },
-    { id: 'medications', label: 'Medications', icon: Pill },
+    { id: 'medications', label: 'MAR', icon: Pill },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
     { id: 'tools', label: 'Tools', icon: Settings }
@@ -710,76 +833,167 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         )}
 
         {activeTab === 'medications' && (
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Medications</h3>
-                <button
-                  onClick={() => setShowMedicationForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Medication
-                </button>
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Medication Administration Record (MAR) Overview</h3>
+                  <button
+                    onClick={() => setShowMedicationForm(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Medication
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {medications.map((medication) => (
-                  <div key={medication.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
-                      <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          medication.status === 'Active' ? 'bg-green-100 text-green-800' :
-                          medication.status === 'Discontinued' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {medication.status}
-                        </span>
-                        <button
-                          onClick={() => {
-                            setSelectedMedication(medication);
-                            setShowMedicationBarcode(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 p-1 rounded"
-                          title="Generate Barcode"
-                        >
-                          <QrCode className="h-4 w-4" />
-                        </button>
-                      </div>
+              
+              {/* MAR Category Tabs */}
+              <div className="px-6 py-2 border-b border-gray-200 bg-gray-50">
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setActiveMedCategory('scheduled')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeMedCategory === 'scheduled' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Scheduled
+                  </button>
+                  <button
+                    onClick={() => setActiveMedCategory('unscheduled')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeMedCategory === 'unscheduled' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Unscheduled
+                  </button>
+                  <button
+                    onClick={() => setActiveMedCategory('prn')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeMedCategory === 'prn' 
+                        ? 'bg-green-600 text-white' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    PRN
+                  </button>
+                  <button
+                    onClick={() => setActiveMedCategory('continuous')}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeMedCategory === 'continuous' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Continuous Infusions
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  {filteredMedications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No {activeMedCategory} medications found</p>
+                      <button
+                        onClick={() => setShowMedicationForm(true)}
+                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add {getCategoryDisplayName(activeMedCategory)} Medication
+                      </button>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500">Dosage</p>
-                        <p className="font-medium">{medication.dosage}</p>
+                  ) : (
+                    filteredMedications.map((medication) => (
+                      <div key={medication.id} className={`border rounded-lg p-4 ${getMedicationCategoryColor(medication.category)}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              medication.status === 'Active' ? 'bg-green-100 text-green-800' :
+                              medication.status === 'Discontinued' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {medication.status}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setSelectedMedication(medication);
+                                setShowMedicationBarcode(true);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                              title="Generate Barcode"
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-500">Dosage</p>
+                            <p className="font-medium">{medication.dosage}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Frequency</p>
+                            <p className="font-medium">{medication.frequency}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Route</p>
+                            <p className="font-medium">{medication.route}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500">Prescribed By</p>
+                            <p className="font-medium">{medication.prescribed_by}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Administration History */}
+                        {medication.administrations && medication.administrations.length > 0 && (
+                          <div className="mt-3 border-t border-gray-200 pt-3">
+                            <h5 className="text-sm font-medium text-gray-700 mb-2">Administration History</h5>
+                            <div className="space-y-2">
+                              {medication.administrations.slice(0, 3).map((admin, index) => (
+                                <div key={index} className="flex items-center justify-between text-xs">
+                                  <div className="flex items-center">
+                                    <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                                    <span>{format(new Date(admin.timestamp), 'MMM dd, yyyy HH:mm')}</span>
+                                  </div>
+                                  <span className="text-gray-500">{admin.administered_by}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Next Due Time */}
+                        {medication.next_due && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-md">
+                            <p className="text-sm text-blue-800">
+                              <Clock className="h-4 w-4 inline mr-1" />
+                              Next due: {new Date(medication.next_due).toLocaleString()}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Administration Button */}
+                        <div className="mt-3 flex justify-end">
+                          <button
+                            onClick={() => handleAdministerMedication(medication)}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Administer
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-500">Frequency</p>
-                        <p className="font-medium">{medication.frequency}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Route</p>
-                        <p className="font-medium">{medication.route}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Prescribed By</p>
-                        <p className="font-medium">{medication.prescribed_by}</p>
-                      </div>
-                    </div>
-                    {medication.next_due && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-md">
-                        <p className="text-sm text-blue-800">
-                          <Clock className="h-4 w-4 inline mr-1" />
-                          Next due: {new Date(medication.next_due).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {medications.length === 0 && (
-                  <p className="text-center text-gray-500 py-8">No medications recorded</p>
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1057,6 +1271,75 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           onSave={handleMedicationSubmit}
           onClose={() => setShowMedicationForm(false)}
         />
+      )}
+      
+      {/* Medication Administration Form */}
+      {showAdministerForm && medicationToAdminister && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Administer Medication</h2>
+              <button
+                onClick={() => {
+                  setShowAdministerForm(false);
+                  setMedicationToAdminister(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <h3 className="text-lg font-medium text-gray-900">{medicationToAdminister.name}</h3>
+                <p className="text-gray-600">{medicationToAdminister.dosage} - {medicationToAdminister.route}</p>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Administration Time
+                </label>
+                <div className="bg-gray-100 p-3 rounded-lg text-gray-800">
+                  {format(new Date(), 'MMM dd, yyyy HH:mm:ss')}
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes (optional)
+                </label>
+                <textarea
+                  id="admin-notes"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Patient response, site condition, etc."
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowAdministerForm(false);
+                    setMedicationToAdminister(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const notes = (document.getElementById('admin-notes') as HTMLTextAreaElement)?.value || '';
+                    handleSaveAdministration(medicationToAdminister.id, notes);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Confirm Administration
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {showNoteForm && (

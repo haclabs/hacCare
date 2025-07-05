@@ -3,6 +3,7 @@ import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
 import { format, addHours, setHours, setMinutes } from 'date-fns';
+import { CheckCircle } from 'lucide-react';
 
 interface MedicationFormProps {
   medication?: Medication | null;
@@ -22,6 +23,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
   const [formData, setFormData] = useState({
     name: medication?.name || '',
     dosage: medication?.dosage || '',
+    category: medication?.category || 'scheduled',
     frequency: medication?.frequency || 'Once daily',
     route: medication?.route || 'Oral',
     startDate: medication?.start_date || format(new Date(), 'yyyy-MM-dd'),
@@ -158,6 +160,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         id: medication?.id || uuidv4(),
         name: formData.name,
         dosage: formData.dosage,
+        category: formData.category,
         frequency: formData.frequency,
         route: formData.route,
         start_date: formData.startDate,
@@ -203,7 +206,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
               <Pill className="h-5 w-5 mr-2 text-green-600" />
               Medication Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -222,6 +225,73 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                 {errors.name && (
                   <p className="text-red-600 text-xs mt-1">{errors.name}</p>
                 )}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Medication Category
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      formData.category === 'scheduled' 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => updateField('category', 'scheduled')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">Scheduled</span>
+                      {formData.category === 'scheduled' && <CheckCircle className="h-4 w-4 text-blue-500" />}
+                    </div>
+                    <p className="text-xs text-gray-500">Regular timing (daily, BID, TID, etc.)</p>
+                  </div>
+                  
+                  <div
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      formData.category === 'unscheduled' 
+                        ? 'border-yellow-500 bg-yellow-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => updateField('category', 'unscheduled')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">Unscheduled</span>
+                      {formData.category === 'unscheduled' && <CheckCircle className="h-4 w-4 text-yellow-500" />}
+                    </div>
+                    <p className="text-xs text-gray-500">Irregular or one-time medications</p>
+                  </div>
+                  
+                  <div
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      formData.category === 'prn' 
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => updateField('category', 'prn')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">PRN</span>
+                      {formData.category === 'prn' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    </div>
+                    <p className="text-xs text-gray-500">As needed medications</p>
+                  </div>
+                  
+                  <div
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      formData.category === 'continuous' 
+                        ? 'border-purple-500 bg-purple-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => updateField('category', 'continuous')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">Continuous</span>
+                      {formData.category === 'continuous' && <CheckCircle className="h-4 w-4 text-purple-500" />}
+                    </div>
+                    <p className="text-xs text-gray-500">IV drips and continuous infusions</p>
+                  </div>
+                </div>
               </div>
 
               <div>

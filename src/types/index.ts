@@ -38,6 +38,7 @@ export interface VitalSigns {
 export interface Medication {
   id: string;
   name: string;
+  category?: 'scheduled' | 'unscheduled' | 'prn' | 'continuous';
   dosage: string;
   frequency: string;
   route: string;
@@ -47,6 +48,17 @@ export interface Medication {
   last_administered?: string;
   next_due: string;
   status: 'Active' | 'Completed' | 'Discontinued';
+  administrations?: MedicationAdministration[];
+}
+
+export interface MedicationAdministration {
+  id?: string;
+  medication_id?: string;
+  patient_id?: string;
+  administered_by: string;
+  administered_by_id?: string;
+  timestamp: string;
+  notes?: string;
 }
 
 export interface PatientNote {
