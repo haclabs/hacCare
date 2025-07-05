@@ -156,6 +156,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
    * Determine medication category from frequency if not explicitly set
    */
   const getCategoryFromFrequency = (frequency: string): 'scheduled' | 'unscheduled' | 'prn' | 'continuous' => {
+    // Ensure frequency is a string to prevent TypeError
+    if (typeof frequency !== 'string' || !frequency) {
+      return 'unscheduled';
+    }
+    
     if (frequency.includes('PRN') || frequency.includes('As needed')) {
       return 'prn';
     } else if (frequency.includes('Continuous') || frequency.includes('Infusion')) {
