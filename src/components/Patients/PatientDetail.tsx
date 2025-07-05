@@ -183,8 +183,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Signs', icon: Heart },
-    { id: 'medications', label: 'Medications', icon: Pill }, 
-    { id: 'mar', label: 'MAR', icon: CheckSquare },
     { id: 'mar', label: 'MAR', icon: CheckSquare },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
@@ -501,96 +499,143 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
           </div>
         )}
 
-        {activeTab === 'medications' && (
+        {activeTab === 'mar' && (
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Medications</h2>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowMedicationAdministration(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                >
-                  <CheckSquare className="w-4 h-4" />
-                  <span>Medication Administration</span>
-                </button>
-                <button
-                  onClick={() => setShowMedicationForm(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Medication</span>
-                </button>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900">Medication Administration Record</h2>
+              <button
+                onClick={() => setShowMedicationForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Medication</span>
+              </button>
             </div>
-
-            {medications.length === 0 ? (
-              <div className="text-center py-12">
-                <Pill className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No medications prescribed yet.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {medications.map((medication, index) => (
-                  <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">{medication.name}</h3>
-                        <p className="text-gray-600 mt-1">{medication.dosage} - {medication.frequency}</p>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Route: {medication.route} | Prescribed by: {medication.prescribedBy}
-                        </p>
-                        <div className="flex items-center space-x-4 mt-3">
-                          <span className="text-sm text-gray-500">
-                            Start: {safeFormatDate(medication.startDate || medication.start_date, 'MMM dd, yyyy')}
-                          </span>
-                          {medication.endDate && (
-                            <span className="text-sm text-gray-500">
-                              End: {safeFormatDate(medication.endDate || medication.end_date, 'MMM dd, yyyy')}
-                            </span>
-                          )}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            medication.status === 'Active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {medication.status}
-                          </span>
+            
+            <div className="space-y-6">
+              {/* Medication Overview */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Medication Schedule Overview</h3>
+                
+                {medications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Pill className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No medications prescribed yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Time slots */}
+                    <div className="grid grid-cols-1 gap-4">
+                      {['Morning (6am-12pm)', 'Afternoon (12pm-6pm)', 'Evening (6pm-12am)', 'Night (12am-6am)'].map((timeSlot, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <h4 className="font-medium text-gray-900 mb-3">{timeSlot}</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {medications
+                              .filter(med => med.status === 'Active')
+                              .map((med) => {
+                                // Determine if medication belongs in this time slot
+                                let belongsInSlot = false;
+                                try {
+                                  const nextDue = new Date(med.next_due);
+                                  const hour = nextDue.getHours();
+                                  
+                                  if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
+                                  if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
+                                  if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
+                                  if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
+                                  
+                                  // For medications with multiple daily doses
+                                  if (med.frequency.includes('daily') || 
+                                      med.frequency.includes('BID') || 
+                                      med.frequency.includes('TID') || 
+                                      med.frequency.includes('QID')) {
+                                    
+                                    if (med.frequency.includes('morning') && index === 0) belongsInSlot = true;
+                                    if (med.frequency.includes('afternoon') && index === 1) belongsInSlot = true;
+                                    if (med.frequency.includes('evening') && index === 2) belongsInSlot = true;
+                                    if (med.frequency.includes('night') || med.frequency.includes('bedtime') && index === 3) belongsInSlot = true;
+                                  }
+                                  
+                                  // PRN medications show in all slots
+                                  if (med.category === 'prn') belongsInSlot = true;
+                                  
+                                  // Continuous medications show in all slots
+                                  if (med.category === 'continuous') belongsInSlot = true;
+                                  
+                                } catch (e) {
+                                  // If date parsing fails, show in all slots
+                                  belongsInSlot = true;
+                                }
+                                
+                                if (!belongsInSlot) return null;
+                                
+                                // Determine color based on category
+                                let bgColor = 'bg-blue-100 text-blue-800';
+                                if (med.category === 'prn') bgColor = 'bg-green-100 text-green-800';
+                                if (med.category === 'continuous') bgColor = 'bg-purple-100 text-purple-800';
+                                
+                                return (
+                                  <div 
+                                    key={med.id} 
+                                    className={`px-3 py-2 ${bgColor} rounded-lg text-sm flex items-center space-x-2 cursor-pointer hover:opacity-80`}
+                                    onClick={() => handleAdminister(med)}
+                                  >
+                                    <span>{med.name} {med.dosage}</span>
+                                    <span className="text-xs opacity-75">
+                                      {safeFormatDate(med.next_due, 'HH:mm')}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                              .filter(Boolean)}
+                            
+                            {medications.filter(med => {
+                              try {
+                                const nextDue = new Date(med.next_due);
+                                const hour = nextDue.getHours();
+                                
+                                if (index === 0 && hour >= 6 && hour < 12) return true;
+                                if (index === 1 && hour >= 12 && hour < 18) return true;
+                                if (index === 2 && hour >= 18 && hour < 24) return true;
+                                if (index === 3 && hour >= 0 && hour < 6) return true;
+                                return false;
+                              } catch (e) {
+                                return false;
+                              }
+                            }).length === 0 && (
+                              <p className="text-sm text-gray-500">No medications scheduled for this time period</p>
+                            )}
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                    
+                    <div className="flex items-center justify-center space-x-6 pt-4 border-t border-gray-200">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-100 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Scheduled</span>
                       </div>
-                      <div className="text-right">
-                        {medication.nextDue && (
-                          <div className="text-sm">
-                            <span className="text-gray-500">Next due:</span>
-                            <p className="font-medium text-blue-600">
-                              {safeFormatDate(medication.nextDue || medication.next_due, 'MMM dd, HH:mm')}
-                            </p>
-                          </div>
-                        )}
-                        {medication.lastAdministered && (
-                          <div className="text-sm mt-2">
-                            <span className="text-gray-500">Last given:</span>
-                            <p className="font-medium">
-                              {safeFormatDate(medication.lastAdministered || medication.last_administered, 'MMM dd, HH:mm')}
-                            </p>
-                          </div>
-                        )}
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-100 rounded-full"></div>
+                        <span className="text-sm text-gray-600">PRN</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-100 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Continuous</span>
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'mar' && (
-          <div className="p-6">
-            <MedicationAdministration 
-              patientId={patient.id}
-              patientName={`${patient.first_name} ${patient.last_name}`}
-              medications={medications}
-              onRefresh={fetchPatientData}
-            />
+              
+              {/* Medication Administration Record */}
+              <MedicationAdministration 
+                patientId={patient.id}
+                patientName={`${patient.first_name} ${patient.last_name}`}
+                medications={medications}
+                onRefresh={fetchPatientData}
+              />
+            </div>
           </div>
         )}
 
