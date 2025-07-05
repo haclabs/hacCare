@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { 
   ArrowLeft, 
   User, 
@@ -50,6 +50,17 @@ import { updatePatientVitals, clearPatientVitals } from '../../lib/patientServic
 import { fetchPatientAssessments, PatientAssessment } from '../../lib/assessmentService';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePatients } from '../../contexts/PatientContext';
+
+// Helper function to safely format dates
+const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
+  if (!dateValue) return 'N/A';
+  
+  const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+  
+  if (!isValid(date)) return 'N/A';
+  
+  return format(date, formatString);
+};
 
 interface PatientDetailProps {
   patient: Patient;
@@ -178,10 +189,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {patient.firstName} {patient.lastName}
+                {patient.first_name} {patient.last_name}
               </h1>
               <p className="text-sm text-gray-500">
-                Patient ID: {patient.patientId} • Room {patient.roomNumber}-{patient.bedNumber}
+                Patient ID: {patient.patient_id} • Room {patient.room_number}-{patient.bed_number}
               </p>
             </div>
           </div>
@@ -237,7 +248,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Date of Birth:</span>
-                    <span className="font-medium">{format(new Date(patient.dateOfBirth), 'MMM dd, yyyy')}</span>
+                    <span className="font-medium">{safeFormatDate(patient.date_of_birth, 'MMM dd, yyyy')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Gender:</span>
@@ -245,11 +256,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Blood Type:</span>
-                    <span className="font-medium">{patient.bloodType}</span>
+                    <span className="font-medium">{patient.blood_type}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Assigned Nurse:</span>
-                    <span className="font-medium">{patient.assignedNurse}</span>
+                    <span className="font-medium">{patient.assigned_nurse}</span>
                   </div>
                 </div>
               </div>
@@ -263,7 +274,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Admission Date:</span>
-                    <span className="font-medium">{format(new Date(patient.admissionDate), 'MMM dd, yyyy')}</span>
+                    <span className="font-medium">{safeFormatDate(patient.admission_date, 'MMM dd, yyyy')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Condition:</span>
@@ -285,15 +296,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Name:</span>
-                    <span className="font-medium">{patient.emergencyContactName}</span>
+                    <span className="font-medium">{patient.emergency_contact_name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Relationship:</span>
-                    <span className="font-medium">{patient.emergencyContactRelationship}</span>
+                    <span className="font-medium">{patient.emergency_contact_relationship}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Phone:</span>
-                    <span className="font-medium">{patient.emergencyContactPhone}</span>
+                    <span className="font-medium">{patient.emergency_contact_phone}</span>
                   </div>
                 </div>
               </div>
@@ -306,7 +317,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                   <Heart className="w-5 h-5 mr-2 text-red-600" />
                   Latest Vital Signs
                   <span className="ml-2 text-sm text-gray-500">
-                    ({format(new Date(latestVitals.recordedAt), 'MMM dd, yyyy HH:mm')})
+                    ({safeFormatDate(latestVitals.recordedAt || latestVitals.recorded_at, 'MMM dd, yyyy HH:mm')})
                   </span>
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -413,7 +424,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                   <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="font-semibold text-gray-900">
-                        {format(new Date(vital.recordedAt), 'MMM dd, yyyy HH:mm')}
+                        {safeFormatDate(vital.recordedAt || vital.recorded_at, 'MMM dd, yyyy HH:mm')}
                       </h3>
                       <span className="text-sm text-gray-500">
                         {index === 0 ? 'Latest' : `${index + 1} reading${index > 0 ? 's' : ''} ago`}
@@ -494,11 +505,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                         </p>
                         <div className="flex items-center space-x-4 mt-3">
                           <span className="text-sm text-gray-500">
-                            Start: {format(new Date(medication.startDate), 'MMM dd, yyyy')}
+                            Start: {safeFormatDate(medication.startDate || medication.start_date, 'MMM dd, yyyy')}
                           </span>
                           {medication.endDate && (
                             <span className="text-sm text-gray-500">
-                              End: {format(new Date(medication.endDate), 'MMM dd, yyyy')}
+                              End: {safeFormatDate(medication.endDate || medication.end_date, 'MMM dd, yyyy')}
                             </span>
                           )}
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -515,7 +526,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                           <div className="text-sm">
                             <span className="text-gray-500">Next due:</span>
                             <p className="font-medium text-blue-600">
-                              {format(new Date(medication.nextDue), 'MMM dd, HH:mm')}
+                              {safeFormatDate(medication.nextDue || medication.next_due, 'MMM dd, HH:mm')}
                             </p>
                           </div>
                         )}
@@ -523,7 +534,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                           <div className="text-sm mt-2">
                             <span className="text-gray-500">Last given:</span>
                             <p className="font-medium">
-                              {format(new Date(medication.lastAdministered), 'MMM dd, HH:mm')}
+                              {safeFormatDate(medication.lastAdministered || medication.last_administered, 'MMM dd, HH:mm')}
                             </p>
                           </div>
                         )}
@@ -577,7 +588,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                         </span>
                       </div>
                       <span className="text-sm text-gray-500">
-                        {format(new Date(note.createdAt), 'MMM dd, yyyy HH:mm')}
+                        {safeFormatDate(note.createdAt || note.created_at, 'MMM dd, yyyy HH:mm')}
                       </span>
                     </div>
                     <p className="text-gray-900 mb-3">{note.content}</p>
@@ -625,7 +636,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                       </div>
                       <div className="text-right">
                         <span className="text-sm text-gray-500">
-                          {format(new Date(assessment.created_at), 'MMM dd, yyyy HH:mm')}
+                          {safeFormatDate(assessment.created_at, 'MMM dd, yyyy HH:mm')}
                         </span>
                         <p className="text-sm text-gray-600 mt-1">By: {assessment.nurse_name}</p>
                       </div>
@@ -748,7 +759,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
       {showAssessmentForm && (
         <AssessmentForm
           patientId={patient.id}
-          patientName={`${patient.firstName} ${patient.lastName}`}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onSave={handleAssessmentAdd}
           onCancel={() => setShowAssessmentForm(false)}
         />
@@ -773,7 +784,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
       {showVitalsTrends && (
         <VitalsTrends
           patientId={patient.id}
-          patientName={`${patient.firstName} ${patient.lastName}`}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowVitalsTrends(false)}
         />
       )}
