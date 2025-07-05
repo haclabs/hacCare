@@ -145,6 +145,23 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const { hasRole } = useAuth();
   const { refreshPatients } = usePatients();
 
+  /**
+   * Determine medication category from frequency if not explicitly set
+   */
+  const getCategoryFromFrequency = (frequency: string): 'scheduled' | 'unscheduled' | 'prn' | 'continuous' => {
+    if (frequency.includes('PRN') || frequency.includes('As needed')) {
+      return 'prn';
+    } else if (frequency.includes('Continuous') || frequency.includes('Infusion')) {
+      return 'continuous';
+    } else if (frequency.includes('Once') || frequency.includes('daily') || 
+               frequency.includes('BID') || frequency.includes('TID') || 
+               frequency.includes('QID') || frequency.includes('Every')) {
+      return 'scheduled';
+    } else {
+      return 'unscheduled';
+    }
+  };
+
   useEffect(() => {
     fetchPatientData();
   }, [patient.id]);
@@ -364,23 +381,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     const category = med.category || getCategoryFromFrequency(med.frequency);
     return category === activeMedCategory && med.status === 'Active';
   });
-
-  /**
-   * Determine medication category from frequency if not explicitly set
-   */
-  const getCategoryFromFrequency = (frequency: string): 'scheduled' | 'unscheduled' | 'prn' | 'continuous' => {
-    if (frequency.includes('PRN') || frequency.includes('As needed')) {
-      return 'prn';
-    } else if (frequency.includes('Continuous') || frequency.includes('Infusion')) {
-      return 'continuous';
-    } else if (frequency.includes('Once') || frequency.includes('daily') || 
-               frequency.includes('BID') || frequency.includes('TID') || 
-               frequency.includes('QID') || frequency.includes('Every')) {
-      return 'scheduled';
-    } else {
-      return 'unscheduled';
-    }
-  };
 
   /**
    * Get display name for medication category
