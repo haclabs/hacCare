@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, User, FileText, Search, RefreshCw } from 'lucide-react';
-import { format } from 'date-fns';
-import { supabase } from '../../lib/supabase';
+import { format, parseISO, isValid } from 'date-fns';
+import { fetchMedicationAdministrationHistory } from '../../lib/medicationService';
 import { MedicationAdministration } from '../../types';
 
 interface MedicationAdministrationHistoryProps {
@@ -27,18 +27,8 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
       setLoading(true);
       setError('');
       
-      const { data, error } = await supabase
-        .from('medication_administrations')
-        .select('*')
-        .eq('medication_id', medicationId)
-        .eq('patient_id', patientId)
-        .order('timestamp', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      setAdministrations(data || []);
+      const data = await fetchMedicationAdministrationHistory(medicationId, patientId);
+      setAdministrations(data);
     } catch (err: any) {
       console.error('Error fetching medication administrations:', err);
       setError(err.message || 'Failed to load administration history');
@@ -54,6 +44,17 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
       (admin.notes && admin.notes.toLowerCase().includes(searchLower))
     );
   });
+
+  // Safe date formatting
+  const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
+    if (!dateValue) return 'N/A';
+    
+    const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
+    
+    if (!isValid(date)) return 'N/A';
+    
+    return format(date, formatString);
+  };
 
   return (
     <div className="space-y-4">
@@ -109,11 +110,11 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
                 <div className="flex items-center space-x-2">
                   <Clock className="h-4 w-4 text-blue-600" />
                   <p className="text-sm font-medium text-gray-900">
-                    {format(new Date(admin.timestamp), 'MMM dd, yyyy HH:mm')}
+                    {safeFormatDate(admin.timestamp, 'MMM dd, yyyy HH:mm')}
                   </p>
                 </div>
                 <span className="text-xs text-gray-500">
-                  {format(new Date(admin.timestamp), 'EEEE')}
+                  {safeFormatDate(admin.timestamp, 'EEEE')}
                 </span>
               </div>
               

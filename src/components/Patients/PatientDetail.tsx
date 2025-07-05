@@ -39,6 +39,7 @@ import { MedicationForm } from './MedicationForm';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
 import { MedicationAdministration } from './MedicationAdministration';
+import { MedicationAdministration } from './MedicationAdministration';
 import { AssessmentDetail } from './AssessmentDetail';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
@@ -76,6 +77,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [showMedicationAdministration, setShowMedicationAdministration] = useState(false);
+  const [showMedicationAdministration, setShowMedicationAdministration] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
@@ -92,8 +94,26 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadAssessments();
+    fetchPatientData();
   }, [patient.id]);
+
+  const fetchPatientData = async () => {
+    try {
+      await loadAssessments();
+      // Fetch updated medications
+      const { data: medicationsData } = await supabase
+        .from('patient_medications')
+        .select('*')
+        .eq('patient_id', patient.id)
+        .order('created_at', { ascending: false });
+      
+      if (medicationsData) {
+        setMedications(medicationsData);
+      }
+    } catch (error) {
+      console.error('Error fetching patient data:', error);
+    }
+  };
 
   const loadAssessments = async () => {
     try {
@@ -161,6 +181,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Signs', icon: Heart },
     { id: 'medications', label: 'Medications', icon: Pill }, 
+    { id: 'mar', label: 'MAR', icon: CheckSquare },
     { id: 'mar', label: 'MAR', icon: CheckSquare },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
@@ -490,6 +511,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                   <span>Medication Administration</span>
                 </button>
                 <button
+                  onClick={() => setShowMedicationAdministration(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <CheckSquare className="w-4 h-4" />
+                  <span>Medication Administration</span>
+                </button>
+                <button
                   onClick={() => setShowMedicationForm(true)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
                 >
@@ -569,6 +597,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                 // Refresh medications data
                 fetchPatientData();
               }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'mar' && (
+          <div className="p-6">
+            <MedicationAdministration 
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              medications={medications}
+              onRefresh={fetchPatientData}
             />
           </div>
         )}
@@ -772,6 +811,33 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
           onSave={handleMedicationAdd}
           onCancel={() => setShowMedicationForm(false)}
         />
+      )}
+
+      {showMedicationAdministration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Medication Administration Record
+              </h2>
+              <button
+                onClick={() => setShowMedicationAdministration(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <MedicationAdministration 
+                patientId={patient.id}
+                patientName={`${patient.first_name} ${patient.last_name}`}
+                medications={medications}
+                onRefresh={fetchPatientData}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {showNoteForm && (
