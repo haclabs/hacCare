@@ -487,24 +487,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const activeMedications = medications.filter(med => med.status === 'Active');
   const recentNotes = notes.slice(0, 5);
   
-  // Helper function to categorize medications
-  const getCategoryFromFrequency = (medication: PatientMedication): 'scheduled' | 'unscheduled' | 'prn' | 'continuous' => {
-    if (medication.category) {
-      return medication.category;
-    }
-    
-    // Default categorization based on frequency if category not explicitly set
-    if (medication.frequency.toLowerCase().includes('prn') || medication.frequency.toLowerCase().includes('as needed')) {
-      return 'prn';
-    } else if (medication.frequency.toLowerCase().includes('continuous') || medication.route.toLowerCase().includes('iv') || medication.route.toLowerCase().includes('infusion')) {
-      return 'continuous';
-    } else if (medication.frequency.toLowerCase().includes('once') && !medication.frequency.toLowerCase().includes('daily')) {
-      return 'unscheduled';
-    } else {
-      return 'scheduled';
-    }
-  };
-  
   // Group medications by category
   const scheduledMeds = activeMedications.filter(med => getCategoryFromFrequency(med) === 'scheduled');
   const unscheduledMeds = activeMedications.filter(med => getCategoryFromFrequency(med) === 'unscheduled');
