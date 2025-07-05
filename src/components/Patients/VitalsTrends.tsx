@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { clearPatientVitals } from '../../lib/patientService';
 import { usePatients } from '../../contexts/PatientContext';
