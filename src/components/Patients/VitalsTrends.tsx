@@ -418,18 +418,6 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
         </div>
       </div>
 
-                <button
-                  onClick={handleClearVitals}
-                  disabled={clearingVitals || readings.length === 0}
-                  className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>{clearingVitals ? 'Clearing...' : 'Clear All'}</span>
-                </button>
-              )}
-            </div>
-          </div>
-
           {loading ? (
             <div className="text-center py-12">
               <RefreshCw className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-spin" />
