@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VitalSigns } from '../../types';
-import { Save, X, Thermometer, Heart, Activity } from 'lucide-react';
+import { Save, X, Thermometer, Heart, Activity, Droplets } from 'lucide-react';
 import { updatePatientVitals } from '../../lib/patientService';
 import { usePatients } from '../../contexts/PatientContext';
 
@@ -13,7 +13,7 @@ interface VitalSignsEditorProps {
 
 // Default vital signs values
 const defaultVitals: VitalSigns = {
-  temperature: 37.0,
+  temperature: 98.6,
   heartRate: 72,
   bloodPressure: {
     systolic: 120,
@@ -75,18 +75,18 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
 
   const updateVital = (field: keyof VitalSigns, value: any) => {
     setEditedVitals(prev => ({
-      ...prev,
-      [field]: value
+      ...prev, 
+      [field]: value 
     }));
   };
 
   const updateBloodPressure = (type: 'systolic' | 'diastolic', value: number) => {
     setEditedVitals(prev => ({
       ...prev,
-      bloodPressure: {
-        ...prev.bloodPressure,
-        [type]: value
-      }
+      bloodPressure: { 
+        ...prev.bloodPressure, 
+        [type]: value 
+      } 
     }));
   };
 
@@ -113,27 +113,27 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Temperature */}
             <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <Thermometer className="h-5 w-5 text-blue-600" />
-                <label className="text-sm font-medium text-blue-900">Temperature (°C)</label>
+              <div className="flex items-center space-x-2 mb-3"> 
+                <Thermometer className="h-5 w-5 text-red-600" />
+                <label className="text-sm font-medium text-red-900">Temperature (°F)</label>
               </div>
               <input
                 type="number"
                 step="0.1"
-                min="32"
-                max="43"
+                min="95"
+                max="105"
                 value={editedVitals.temperature}
                 onChange={(e) => updateVital('temperature', parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 required
               />
             </div>
 
             {/* Heart Rate */}
-            <div className="bg-red-50 rounded-lg p-4">
+            <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
-                <Heart className="h-5 w-5 text-red-600" />
-                <label className="text-sm font-medium text-red-900">Heart Rate (BPM)</label>
+                <Heart className="h-5 w-5 text-green-600" />
+                <label className="text-sm font-medium text-green-900">Heart Rate (BPM)</label>
               </div>
               <input
                 type="number"
@@ -141,41 +141,39 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                 max="200"
                 value={editedVitals.heartRate}
                 onChange={(e) => updateVital('heartRate', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 required
               />
             </div>
 
             {/* Blood Pressure */}
-            <div className="bg-purple-50 rounded-lg p-4">
+            <div className="bg-blue-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
-                <div className="h-5 w-5 bg-purple-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">BP</span>
-                </div>
-                <label className="text-sm font-medium text-purple-900">Blood Pressure</label>
+                <Activity className="h-5 w-5 text-blue-600" />
+                <label className="text-sm font-medium text-blue-900">Blood Pressure</label>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-purple-700 mb-1 block">Systolic</label>
+                  <label className="text-xs text-blue-700 mb-1 block">Systolic</label>
                   <input
                     type="number"
                     min="70"
                     max="250"
                     value={editedVitals.bloodPressure.systolic}
                     onChange={(e) => updateBloodPressure('systolic', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-purple-700 mb-1 block">Diastolic</label>
+                  <label className="text-xs text-blue-700 mb-1 block">Diastolic</label>
                   <input
                     type="number"
                     min="40"
                     max="150"
                     value={editedVitals.bloodPressure.diastolic}
                     onChange={(e) => updateBloodPressure('diastolic', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
@@ -183,10 +181,10 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
             </div>
 
             {/* Oxygen Saturation */}
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="bg-teal-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
-                <Activity className="h-5 w-5 text-green-600" />
-                <label className="text-sm font-medium text-green-900">O2 Saturation (%)</label>
+                <Droplets className="h-5 w-5 text-teal-600" />
+                <label className="text-sm font-medium text-teal-900">O2 Saturation (%)</label>
               </div>
               <input
                 type="number"
@@ -194,16 +192,16 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                 max="100"
                 value={editedVitals.oxygenSaturation}
                 onChange={(e) => updateVital('oxygenSaturation', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 required
               />
             </div>
 
             {/* Respiratory Rate */}
-            <div className="bg-indigo-50 rounded-lg p-4 md:col-span-2">
+            <div className="bg-purple-50 rounded-lg p-4 md:col-span-2">
               <div className="flex items-center space-x-2 mb-3">
-                <Activity className="h-5 w-5 text-indigo-600" />
-                <label className="text-sm font-medium text-indigo-900">Respiratory Rate (breaths/min)</label>
+                <Activity className="h-5 w-5 text-purple-600" />
+                <label className="text-sm font-medium text-purple-900">Respiratory Rate (breaths/min)</label>
               </div>
               <input
                 type="number"
@@ -211,7 +209,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                 max="40"
                 value={editedVitals.respiratoryRate}
                 onChange={(e) => updateVital('respiratoryRate', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 required
               />
             </div>

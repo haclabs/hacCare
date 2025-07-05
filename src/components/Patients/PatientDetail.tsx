@@ -349,16 +349,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                   <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.temperature, { min: 97, max: 99 })}`}>
                     <div className="flex items-center space-x-2">
                       <Thermometer className="w-4 h-4" />
-                      <span className="text-sm font-medium">Temperature</span>
+                      <span className="text-sm font-medium">Temperature (°F)</span>
                     </div>
                     <p className="text-lg font-bold">{latestVitals.temperature}°F</p>
                   </div>
-                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.bloodPressureSystolic, { min: 90, max: 140 })}`}>
+                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.bloodPressure.systolic, { min: 90, max: 140 })}`}>
                     <div className="flex items-center space-x-2">
                       <Activity className="w-4 h-4" />
                       <span className="text-sm font-medium">Blood Pressure</span>
                     </div>
-                    <p className="text-lg font-bold">{latestVitals.bloodPressureSystolic}/{latestVitals.bloodPressureDiastolic}</p>
+                    <p className="text-lg font-bold">{latestVitals.bloodPressure.systolic}/{latestVitals.bloodPressure.diastolic}</p>
                   </div>
                   <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.heartRate, { min: 60, max: 100 })}`}>
                     <div className="flex items-center space-x-2">
@@ -459,16 +459,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                       <div className={`p-3 rounded-lg ${getVitalStatus(vital.temperature, { min: 97, max: 99 })}`}>
                         <div className="flex items-center space-x-2">
                           <Thermometer className="w-4 h-4" />
-                          <span className="text-sm font-medium">Temperature</span>
+                          <span className="text-sm font-medium">Temperature (°F)</span>
                         </div>
                         <p className="text-lg font-bold">{vital.temperature}°F</p>
                       </div>
-                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.bloodPressureSystolic, { min: 90, max: 140 })}`}>
+                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.bloodPressure.systolic, { min: 90, max: 140 })}`}>
                         <div className="flex items-center space-x-2">
                           <Activity className="w-4 h-4" />
                           <span className="text-sm font-medium">Blood Pressure</span>
                         </div>
-                        <p className="text-lg font-bold">{vital.bloodPressureSystolic}/{vital.bloodPressureDiastolic}</p>
+                        <p className="text-lg font-bold">{vital.bloodPressure.systolic}/{vital.bloodPressure.diastolic}</p>
                       </div>
                       <div className={`p-3 rounded-lg ${getVitalStatus(vital.heartRate, { min: 60, max: 100 })}`}>
                         <div className="flex items-center space-x-2">
