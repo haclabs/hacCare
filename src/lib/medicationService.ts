@@ -7,6 +7,11 @@ import { Medication, MedicationAdministration } from '../types';
  */
 
 /**
+ * Medication Service
+ * Handles database operations for medications and medication administrations
+ */
+
+/**
  * Fetch medications for a patient
  */
 export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
@@ -96,6 +101,42 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
   try {
     console.log('Deleting medication:', medicationId);
     
+    const { error } = await supabase
+      .from('patient_medications')
+      .delete()
+      .eq('id', medicationId);
+
+    if (error) {
+      console.error('Error deleting medication:', error);
+      throw error;
+    }
+
+    console.log('Medication deleted successfully');
+  } catch (error) {
+    console.error('Error deleting medication:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a medication
+ */
+export const deleteMedication = async (medicationId: string): Promise<void> => {
+  try {
+    console.log('Deleting medication:', medicationId);
+    
+    // First delete any administration records for this medication
+    const { error: adminError } = await supabase
+      .from('medication_administrations')
+      .delete()
+      .eq('medication_id', medicationId);
+    
+    if (adminError) {
+      console.error('Error deleting medication administrations:', adminError);
+      // Continue anyway to try deleting the medication
+    }
+    
+    // Now delete the medication itself
     const { error } = await supabase
       .from('patient_medications')
       .delete()

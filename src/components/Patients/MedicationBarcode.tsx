@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { X, Printer, Download, AlertTriangle } from 'lucide-react';
-import { Medication } from '../../types';
+import { Medication, Patient } from '../../types';
 import { format, isValid } from 'date-fns';
 import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 interface MedicationBarcodeProps {
-  patient: any;
+  patient: Patient;
   medications: Medication[];
   onClose: () => void;
 }
@@ -18,6 +18,9 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(
     medications.length > 0 ? medications[0] : null
   );
+  
+  // Filter to only show active medications
+  const activeMedications = medications.filter(med => med.status === 'Active');
 
   if (!selectedMedication) {
     return (
@@ -346,15 +349,21 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-blue-900 mb-2">Select Medication</label>
-                <select 
+                <select
                   value={selectedMedication.id}
                   onChange={(e) => {
-                  {generateCode128SVG(selectedMedication.id, {
-                    width: 60,
-                    height: 14,
-                    showText: false,
-                    className: "inline-block"
-                  })}
+                    const selected = medications.find(med => med.id === e.target.value);
+                    if (selected) {
+                      setSelectedMedication(selected);
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {activeMedications.map(med => (
+                    <option key={med.id} value={med.id}>
+                      {med.name} {med.dosage} ({med.route})
+                    </option>
+                  ))}
                 </select>
               </div>
               

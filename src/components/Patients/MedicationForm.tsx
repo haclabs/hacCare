@@ -17,8 +17,8 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
   medication,
   patientId,
   patientName,
-  onClose,
-  onCancel
+  onCancel,
+  onSave
 }) => {
   const [formData, setFormData] = useState({
     name: medication?.name || '',
@@ -173,7 +173,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
       await onSave(medicationData);
     } catch (error) {
       console.error('Error saving medication:', error);
-      alert('Failed to save medication. Please try again.');
+      setErrors({ general: 'Failed to save medication. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -482,6 +482,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
               type="reset"
+              disabled={loading}
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Cancel
