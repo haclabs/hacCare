@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Patient, VitalSigns, Medication, PatientNote } from '../types';
+import { Patient, VitalSigns, Medication, PatientNote, MedicationAdministration } from '../types';
 
 /**
  * Patient Service
@@ -38,6 +38,17 @@ export interface DatabaseVitals {
   respiratory_rate: number;
   oxygen_saturation: number;
   recorded_at: string;
+}
+
+export interface DatabaseMedicationAdministration {
+  id: string;
+  medication_id: string;
+  patient_id: string;
+  administered_by: string;
+  administered_by_id: string;
+  timestamp: string;
+  notes?: string;
+  created_at: string;
 }
 
 /**
