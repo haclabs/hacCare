@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
-import { format, addHours, setHours, setMinutes } from 'date-fns';
+import { format, addHours, setHours, setMinutes, parseISO } from 'date-fns';
 import { CheckCircle } from 'lucide-react';
 
 interface MedicationFormProps {
   medication?: Medication | null;
   patientId: string;
   patientName: string;
-  onClose: () => void;
+  patientName: string;
+  onCancel: () => void;
   onSave: (medication: Medication) => void;
 }
 
@@ -17,8 +18,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
   medication,
   patientId,
   patientName,
+  patientName,
   onClose,
-  onSave
+  onCancel
 }) => {
   const [formData, setFormData] = useState({
     name: medication?.name || '',
@@ -199,7 +201,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" onReset={onCancel}>
           {/* Medication Information */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
@@ -481,8 +483,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           {/* Form Actions */}
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
-              type="button"
-              onClick={onClose}
+              type="reset"
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Cancel
