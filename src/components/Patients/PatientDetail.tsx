@@ -539,10 +539,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                                   const nextDue = new Date(med.next_due);
                                   const hour = nextDue.getHours();
                                   
-                                  if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
-                                  if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
-                                  if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
-                                  if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
+                                  // For "Once daily" medications, only show in their specific time slot
+                                  if (med.frequency === 'Once daily') {
+                                    if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
+                                    else if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
+                                    else if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
+                                    else if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
+                                  } else {
+                                    // For other frequencies, check if they belong in this time slot
+                                    if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
+                                    if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
+                                    if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
+                                    if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
+                                  }
                                   
                                   // For medications with multiple daily doses
                                   if (med.frequency.includes('daily') || 
@@ -592,12 +601,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                             {medications.filter(med => {
                               try {
                                 const nextDue = new Date(med.next_due);
+                                // Skip if medication is not active
+                                if (med.status !== 'Active') return false;
+                                
                                 const hour = nextDue.getHours();
                                 
-                                if (index === 0 && hour >= 6 && hour < 12) return true;
-                                if (index === 1 && hour >= 12 && hour < 18) return true;
-                                if (index === 2 && hour >= 18 && hour < 24) return true;
-                                if (index === 3 && hour >= 0 && hour < 6) return true;
+                                // For "Once daily" medications, only count them in their specific time slot
+                                if (med.frequency === 'Once daily') {
+                                  if (index === 0 && hour >= 6 && hour < 12) return true;
+                                  else if (index === 1 && hour >= 12 && hour < 18) return true;
+                                  else if (index === 2 && hour >= 18 && hour < 24) return true;
+                                  else if (index === 3 && hour >= 0 && hour < 6) return true;
+                                  return false;
+                                } else {
+                                  // For other frequencies, check if they belong in this time slot
+                                  if (index === 0 && hour >= 6 && hour < 12) return true;
+                                  if (index === 1 && hour >= 12 && hour < 18) return true;
+                                  if (index === 2 && hour >= 18 && hour < 24) return true;
+                                  if (index === 3 && hour >= 0 && hour < 6) return true;
+                                }
                                 return false;
                               } catch (e) {
                                 return false;
