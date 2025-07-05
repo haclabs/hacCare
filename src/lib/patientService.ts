@@ -290,14 +290,9 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No records found
-        console.log('No vitals found for patient:', patientId);
-        return null;
-      }
       console.error('Error fetching patient vitals:', error);
       throw error;
     }
