@@ -929,6 +929,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
           patientId={patient.id}
           patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowVitalsTrends(false)}
+          onRecordVitals={() => setShowVitalsEditor(true)}
         />
       )}
 
