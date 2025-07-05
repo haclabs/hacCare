@@ -38,6 +38,7 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationForm } from './MedicationForm';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
+import { AssessmentDetail } from './AssessmentDetail';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { VitalsTrends } from './VitalsTrends';
@@ -137,6 +138,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [showAssessmentDetail, setShowAssessmentDetail] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<PatientAssessment | null>(null);
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
   const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
   const [showHospitalBracelet, setShowHospitalBracelet] = useState(false);
@@ -1105,7 +1108,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       )}
                     </div>
                     
-                    {/* Legend */}
+                    <div 
+                      className="space-y-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                      onClick={() => {
+                        setSelectedAssessment(assessment);
+                        setShowAssessmentDetail(true);
+                      }}
+                    >
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                       <h5 className="text-sm font-medium text-gray-900 mb-3">MAR Legend</h5>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
@@ -1494,11 +1503,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     <div key={assessment.id} className="border rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-lg ${
+                        <div 
+                          className={`p-2 rounded-lg cursor-pointer hover:opacity-80 ${
                             assessment.assessment_type === 'physical' ? 'bg-blue-100' :
                             assessment.assessment_type === 'pain' ? 'bg-red-100' :
                             'bg-purple-100'
-                          }`}>
+                          }`}
+                          onClick={() => {
+                            setSelectedAssessment(assessment);
+                            setShowAssessmentDetail(true);
+                          }}
+                        >
                             {assessment.assessment_type === 'physical' && <Stethoscope className="h-5 w-5 text-blue-600" />}
                             {assessment.assessment_type === 'pain' && <Heart className="h-5 w-5 text-red-600" />}
                             {assessment.assessment_type === 'neurological' && <Brain className="h-5 w-5 text-purple-600" />}
@@ -1518,13 +1533,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                           'bg-green-100 text-green-800'
                         }`}>
                           {assessment.priority_level}
-                        </span>
+                        <p className="text-sm text-gray-700 line-clamp-3">{assessment.assessment_notes}</p>
                       </div>
                       
                       <div className="space-y-3">
-                        <div>
+                        <div 
+                          className="cursor-pointer hover:text-blue-600"
+                          onClick={() => {
+                            setSelectedAssessment(assessment);
+                            setShowAssessmentDetail(true);
+                          }}
+                        >
                           <h5 className="text-sm font-medium text-gray-900 mb-1">Assessment Notes</h5>
-                          <p className="text-sm text-gray-700">{assessment.assessment_notes}</p>
+                          <p className="text-sm text-gray-700 line-clamp-2">{assessment.recommendations}</p>
                         </div>
                         
                         {assessment.recommendations && (
@@ -1825,6 +1846,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           onClose={() => {
             setShowMedicationBarcode(false);
             setSelectedMedication(null);
+          }}
+        />
+      )}
+      
+      {/* Assessment Detail Modal */}
+      {showAssessmentDetail && selectedAssessment && (
+        <AssessmentDetail
+          assessment={selectedAssessment}
+          onClose={() => {
+            setShowAssessmentDetail(false);
+            setSelectedAssessment(null);
           }}
         />
       )}
