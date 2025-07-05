@@ -129,12 +129,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     }
   };
 
-  // Handle medication administration
-  const handleAdminister = (medication: Medication) => {
-    setSelectedMedication(medication);
-    setShowAdminForm(true);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-2">
