@@ -57,7 +57,7 @@ export interface DatabaseMedicationAdministration {
 const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
   return dbVitals.map(vital => ({
     id: vital.id,
-    temperature: vital.temperature, // Store in Celsius in the database
+    temperature: vital.temperature * (9/5) + 32, // Convert Celsius to Fahrenheit for display
     bloodPressure: {
       systolic: vital.blood_pressure_systolic,
       diastolic: vital.blood_pressure_diastolic
@@ -257,7 +257,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
       .from('patient_vitals')
       .insert({
         patient_id: patientId,
-        temperature: vitals.temperature,
+        temperature: (vitals.temperature - 32) * (5/9), // Convert Fahrenheit to Celsius for storage
         blood_pressure_systolic: vitals.bloodPressure.systolic,
         blood_pressure_diastolic: vitals.bloodPressure.diastolic,
         heart_rate: vitals.heartRate,

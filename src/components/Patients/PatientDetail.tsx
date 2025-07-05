@@ -536,42 +536,33 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
                                 // Determine if medication belongs in this time slot
                                 let belongsInSlot = false;
                                 try {
+                                  // Get the next due time
                                   const nextDue = new Date(med.next_due);
                                   const hour = nextDue.getHours();
                                   
+                                  // PRN medications show in all slots
+                                  if (med.category === 'prn') {
+                                    belongsInSlot = true;
+                                  }
+                                  // Continuous medications show in all slots
+                                  else if (med.category === 'continuous') {
+                                    belongsInSlot = true;
+                                  }
                                   // For "Once daily" medications, only show in their specific time slot
-                                  if (med.frequency === 'Once daily') {
+                                  else if (med.frequency === 'Once daily') {
                                     // Only show in the specific time slot where it's due
                                     if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
                                     else if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
                                     else if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
                                     else if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
-                                  } else {
-                                    // For other frequencies, check if they belong in this time slot
+                                  }
+                                  // For other frequencies, check if they belong in this time slot
+                                  else {
                                     if (index === 0 && hour >= 6 && hour < 12) belongsInSlot = true;
-                                    if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
-                                    if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
-                                    if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
+                                    else if (index === 1 && hour >= 12 && hour < 18) belongsInSlot = true;
+                                    else if (index === 2 && hour >= 18 && hour < 24) belongsInSlot = true;
+                                    else if (index === 3 && hour >= 0 && hour < 6) belongsInSlot = true;
                                   }
-                                  
-                                  // For medications with multiple daily doses
-                                  if (med.frequency.includes('daily') || 
-                                      med.frequency.includes('BID') || 
-                                      med.frequency.includes('TID') || 
-                                      med.frequency.includes('QID')) {
-                                    
-                                    if (med.frequency.includes('morning') && index === 0) belongsInSlot = true;
-                                    if (med.frequency.includes('afternoon') && index === 1) belongsInSlot = true;
-                                    if (med.frequency.includes('evening') && index === 2) belongsInSlot = true;
-                                    if (med.frequency.includes('night') || med.frequency.includes('bedtime') && index === 3) belongsInSlot = true;
-                                  }
-                                
-                                // PRN medications show in all slots
-                                if (med.category === 'prn') belongsInSlot = true;
-                                
-                                // Continuous medications show in all slots
-                                if (med.category === 'continuous') belongsInSlot = true;
-                                
                                 } catch (e) {
                                   // If date parsing fails, show in all slots
                                   belongsInSlot = true;

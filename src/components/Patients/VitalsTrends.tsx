@@ -61,8 +61,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
       
       // Convert database format to component format
       const formattedReadings: VitalReading[] = vitalsData.map(vital => ({
-        timestamp: vital.recorded_at || '',
-        temperature: parseFloat(vital.temperature) * (9/5) + 32, // Convert Celsius to Fahrenheit
+        timestamp: vital.recorded_at,
+        temperature: parseFloat(vital.temperature) * (9/5) + 32, // Convert Celsius to Fahrenheit for display
         heartRate: vital.heart_rate,
         bloodPressure: {
           systolic: vital.blood_pressure_systolic,
