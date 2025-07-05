@@ -25,7 +25,8 @@ import {
   TrendingUp,
   BookOpen,
   Brain,
-  Trash2
+  Trash2,
+  CheckCircle
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
