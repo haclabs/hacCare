@@ -23,7 +23,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
   const [formData, setFormData] = useState({
     name: medication?.name || '',
     dosage: medication?.dosage || '',
-    category: medication?.category || 'scheduled',
+    category: medication?.category || 'scheduled' as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
     frequency: medication?.frequency || 'Once daily',
     route: medication?.route || 'Oral',
     startDate: medication?.start_date || format(new Date(), 'yyyy-MM-dd'),
@@ -159,8 +159,8 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
       const medicationData: Medication = {
         id: medication?.id || uuidv4(),
         name: formData.name,
+        category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
         dosage: formData.dosage,
-        category: formData.category,
         frequency: formData.frequency,
         route: formData.route,
         start_date: formData.startDate,

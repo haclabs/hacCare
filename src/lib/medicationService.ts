@@ -7,11 +7,6 @@ import { Medication, MedicationAdministration } from '../types';
  */
 
 /**
- * Medication Service
- * Handles database operations for medications and medication administrations
- */
-
-/**
  * Fetch medications for a patient
  */
 export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
@@ -46,7 +41,11 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
     
     const { data, error } = await supabase
       .from('patient_medications')
-      .insert(medication)
+      .insert({
+        ...medication,
+        // Ensure category is set to a valid value
+        category: medication.category || 'scheduled'
+      })
       .select()
       .single();
 
