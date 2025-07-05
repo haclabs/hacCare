@@ -22,7 +22,7 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationForm } from './MedicationForm';
 import { getPatientVitals, getPatientNotes, getPatientMedications } from '../../lib/patientService';
-import { formatDate, formatTime, calculateAge } from '../../utils/patientUtils';
+import { formatTime, calculateAge } from '../../utils/patientUtils';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -156,7 +156,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4" />
-              <span>Admitted {formatDate(patient.admissionDate)}</span>
+              <span>Admitted {new Date(patient.admissionDate).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+              })}</span>
             </div>
           </div>
         </div>
