@@ -26,7 +26,8 @@ import {
   BookOpen,
   Brain,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  X
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
