@@ -356,7 +356,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
         .eq('patient_id', patient.id)
         .order('recorded_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const now = new Date();
       const eightHoursAgo = new Date(now.getTime() - 8 * 60 * 60 * 1000);
