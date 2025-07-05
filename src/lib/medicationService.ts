@@ -101,30 +101,6 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
   try {
     console.log('Deleting medication:', medicationId);
     
-    const { error } = await supabase
-      .from('patient_medications')
-      .delete()
-      .eq('id', medicationId);
-
-    if (error) {
-      console.error('Error deleting medication:', error);
-      throw error;
-    }
-
-    console.log('Medication deleted successfully');
-  } catch (error) {
-    console.error('Error deleting medication:', error);
-    throw error;
-  }
-};
-
-/**
- * Delete a medication
- */
-export const deleteMedication = async (medicationId: string): Promise<void> => {
-  try {
-    console.log('Deleting medication:', medicationId);
-    
     // First delete any administration records for this medication
     const { error: adminError } = await supabase
       .from('medication_administrations')
