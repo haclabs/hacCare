@@ -22,7 +22,6 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientName, onClose }) => {
 export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientName, onClose, onRecordVitals }) => {
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [readings, setReadings] = useState<VitalReading[]>([]);
