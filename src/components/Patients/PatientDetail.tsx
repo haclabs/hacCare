@@ -4,6 +4,7 @@ import {
   ArrowLeft, 
   User, 
   Calendar,
+  CalendarDays,
   MapPin, 
   Phone, 
   Heart, 
@@ -27,6 +28,8 @@ import {
   BookOpen,
   Brain,
   Trash2,
+  CheckSquare,
+  Clipboard,
   CheckCircle,
   X
 } from 'lucide-react';
@@ -144,6 +147,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showAdministerForm, setShowAdministerForm] = useState(false);
   const [medicationToAdminister, setMedicationToAdminister] = useState<PatientMedication | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeMarTab, setActiveMarTab] = useState<'overview' | 'scheduled' | 'unscheduled' | 'prn' | 'continuous'>('overview');
   const [clearingVitals, setClearingVitals] = useState(false);
   const { hasRole } = useAuth();
   const { refreshPatients } = usePatients();
@@ -482,10 +486,34 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const latestVitals = vitals[0];
   const activeMedications = medications.filter(med => med.status === 'Active');
   const recentNotes = notes.slice(0, 5);
+  
+  // Helper function to categorize medications
+  const getCategoryFromFrequency = (medication: PatientMedication): 'scheduled' | 'unscheduled' | 'prn' | 'continuous' => {
+    if (medication.category) {
+      return medication.category;
+    }
+    
+    // Default categorization based on frequency if category not explicitly set
+    if (medication.frequency.toLowerCase().includes('prn') || medication.frequency.toLowerCase().includes('as needed')) {
+      return 'prn';
+    } else if (medication.frequency.toLowerCase().includes('continuous') || medication.route.toLowerCase().includes('iv') || medication.route.toLowerCase().includes('infusion')) {
+      return 'continuous';
+    } else if (medication.frequency.toLowerCase().includes('once') && !medication.frequency.toLowerCase().includes('daily')) {
+      return 'unscheduled';
+    } else {
+      return 'scheduled';
+    }
+  };
+  
+  // Group medications by category
+  const scheduledMeds = activeMedications.filter(med => getCategoryFromFrequency(med) === 'scheduled');
+  const unscheduledMeds = activeMedications.filter(med => getCategoryFromFrequency(med) === 'unscheduled');
+  const prnMeds = activeMedications.filter(med => getCategoryFromFrequency(med) === 'prn');
+  const continuousMeds = activeMedications.filter(med => getCategoryFromFrequency(med) === 'continuous');
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
-    { id: 'vitals', label: 'Vital Trends', icon: TrendingUp },
+    { id: 'vitals', label: 'Vital Signs', icon: TrendingUp },
     { id: 'medications', label: 'MAR', icon: Pill },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
@@ -851,152 +879,553 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 </div>
               </div>
               
-              {/* MAR Category Tabs */}
-              <div className="px-6 py-2 border-b border-gray-200 bg-gray-50">
-                <div className="flex space-x-4">
+              {/* MAR Tabs */}
+              <div className="border-b border-gray-200">
+                <div className="flex">
                   <button
-                    onClick={() => setActiveMedCategory('scheduled')}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      activeMedCategory === 'scheduled' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                    onClick={() => setActiveMarTab('overview')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      activeMarTab === 'overview' 
+                        ? 'border-blue-500 text-blue-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    Scheduled
+                    <CalendarDays className="h-4 w-4 inline mr-2" />
+                    Overview
                   </button>
                   <button
-                    onClick={() => setActiveMedCategory('unscheduled')}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      activeMedCategory === 'unscheduled' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                    onClick={() => setActiveMarTab('scheduled')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      activeMarTab === 'scheduled' 
+                        ? 'border-blue-500 text-blue-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    Unscheduled
+                    <Calendar className="h-4 w-4 inline mr-2" />
+                    Scheduled ({scheduledMeds.length})
                   </button>
                   <button
-                    onClick={() => setActiveMedCategory('prn')}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      activeMedCategory === 'prn' 
-                        ? 'bg-green-600 text-white' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                    onClick={() => setActiveMarTab('unscheduled')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      activeMarTab === 'unscheduled' 
+                        ? 'border-yellow-500 text-yellow-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    PRN
+                    <Clock className="h-4 w-4 inline mr-2" />
+                    Unscheduled ({unscheduledMeds.length})
                   </button>
                   <button
-                    onClick={() => setActiveMedCategory('continuous')}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      activeMedCategory === 'continuous' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                    onClick={() => setActiveMarTab('prn')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      activeMarTab === 'prn' 
+                        ? 'border-green-500 text-green-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    Continuous Infusions
+                    <CheckSquare className="h-4 w-4 inline mr-2" />
+                    PRN ({prnMeds.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveMarTab('continuous')}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 ${
+                      activeMarTab === 'continuous' 
+                        ? 'border-purple-500 text-purple-600' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <Activity className="h-4 w-4 inline mr-2" />
+                    Continuous ({continuousMeds.length})
                   </button>
                 </div>
               </div>
               
               <div className="p-6">
-                <div className="space-y-4">
-                  {filteredMedications.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No {activeMedCategory} medications found</p>
-                      <button
-                        onClick={() => setShowMedicationForm(true)}
-                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add {getCategoryDisplayName(activeMedCategory)} Medication
-                      </button>
-                    </div>
-                  ) : (
-                    filteredMedications.map((medication) => (
-                      <div key={medication.id} className={`border rounded-lg p-4 ${getMedicationCategoryColor(medication.category)}`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              medication.status === 'Active' ? 'bg-green-100 text-green-800' :
-                              medication.status === 'Discontinued' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {medication.status}
-                            </span>
-                            <button
-                              onClick={() => {
-                                setSelectedMedication(medication);
-                                setShowMedicationBarcode(true);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 p-1 rounded"
-                              title="Generate Barcode"
-                            >
-                              <QrCode className="h-4 w-4" />
-                            </button>
+                {activeMedications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No medications recorded</p>
+                    <p className="text-sm text-gray-400 mt-2">Click "Add Medication" to begin</p>
+                  </div>
+                ) : activeMarTab === 'overview' ? (
+                  <div className="space-y-6">
+                    {/* MAR Overview - Calendar-like view */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <CalendarDays className="h-5 w-5 mr-2 text-blue-600" />
+                        Medication Schedule Overview
+                      </h4>
+                      
+                      {/* Scheduled Medications */}
+                      {scheduledMeds.length > 0 && (
+                        <div className="mb-6">
+                          <div className="flex items-center mb-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                            <h5 className="text-sm font-medium text-gray-900">Scheduled Medications</h5>
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">Dosage</p>
-                            <p className="font-medium">{medication.dosage}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Frequency</p>
-                            <p className="font-medium">{medication.frequency}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Route</p>
-                            <p className="font-medium">{medication.route}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Prescribed By</p>
-                            <p className="font-medium">{medication.prescribed_by}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Administration History */}
-                        {medication.administrations && medication.administrations.length > 0 && (
-                          <div className="mt-3 border-t border-gray-200 pt-3">
-                            <h5 className="text-sm font-medium text-gray-700 mb-2">Administration History</h5>
-                            <div className="space-y-2">
-                              {medication.administrations.slice(0, 3).map((admin, index) => (
-                                <div key={index} className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center">
-                                    <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
-                                    <span>{format(new Date(admin.timestamp), 'MMM dd, yyyy HH:mm')}</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {scheduledMeds.map(med => (
+                              <div key={med.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-medium text-blue-800">{med.name}</p>
+                                    <p className="text-sm text-blue-600">{med.dosage} - {med.route}</p>
                                   </div>
-                                  <span className="text-gray-500">{admin.administered_by}</span>
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                    {med.frequency}
+                                  </span>
                                 </div>
-                              ))}
-                            </div>
+                                <div className="mt-2 text-xs text-blue-700">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  Next: {format(new Date(med.next_due), 'MMM dd, HH:mm')}
+                                </div>
+                                <button 
+                                  className="mt-2 w-full text-xs bg-blue-600 text-white py-1 px-2 rounded flex items-center justify-center"
+                                  onClick={() => {
+                                    setSelectedMedication(med);
+                                    // Open administration form (to be implemented)
+                                  }}
+                                >
+                                  <CheckSquare className="h-3 w-3 mr-1" />
+                                  Record Administration
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        )}
-                        
-                        {/* Next Due Time */}
-                        {medication.next_due && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded-md">
-                            <p className="text-sm text-blue-800">
-                              <Clock className="h-4 w-4 inline mr-1" />
-                              Next due: {new Date(medication.next_due).toLocaleString()}
-                            </p>
+                        </div>
+                      )}
+                      
+                      {/* PRN Medications */}
+                      {prnMeds.length > 0 && (
+                        <div className="mb-6">
+                          <div className="flex items-center mb-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <h5 className="text-sm font-medium text-gray-900">PRN Medications (As Needed)</h5>
                           </div>
-                        )}
-                        
-                        {/* Administration Button */}
-                        <div className="mt-3 flex justify-end">
-                          <button
-                            onClick={() => handleAdministerMedication(medication)}
-                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Administer
-                          </button>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {prnMeds.map(med => (
+                              <div key={med.id} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-medium text-green-800">{med.name}</p>
+                                    <p className="text-sm text-green-600">{med.dosage} - {med.route}</p>
+                                  </div>
+                                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                    {med.frequency}
+                                  </span>
+                                </div>
+                                <div className="mt-2 text-xs text-green-700">
+                                  <span className="font-medium">PRN</span> - Give as needed
+                                </div>
+                                <button 
+                                  className="mt-2 w-full text-xs bg-green-600 text-white py-1 px-2 rounded flex items-center justify-center"
+                                  onClick={() => {
+                                    setSelectedMedication(med);
+                                    // Open administration form (to be implemented)
+                                  }}
+                                >
+                                  <CheckSquare className="h-3 w-3 mr-1" />
+                                  Record Administration
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Continuous Infusions */}
+                      {continuousMeds.length > 0 && (
+                        <div className="mb-6">
+                          <div className="flex items-center mb-2">
+                            <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                            <h5 className="text-sm font-medium text-gray-900">Continuous Infusions</h5>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {continuousMeds.map(med => (
+                              <div key={med.id} className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-medium text-purple-800">{med.name}</p>
+                                    <p className="text-sm text-purple-600">{med.dosage} - {med.route}</p>
+                                  </div>
+                                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                                    Continuous
+                                  </span>
+                                </div>
+                                <div className="mt-2 text-xs text-purple-700">
+                                  <span className="font-medium">Started:</span> {format(new Date(med.start_date), 'MMM dd, yyyy')}
+                                </div>
+                                <button 
+                                  className="mt-2 w-full text-xs bg-purple-600 text-white py-1 px-2 rounded flex items-center justify-center"
+                                  onClick={() => {
+                                    setSelectedMedication(med);
+                                    // Open administration form (to be implemented)
+                                  }}
+                                >
+                                  <CheckSquare className="h-3 w-3 mr-1" />
+                                  Record Check/Adjustment
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Unscheduled Medications */}
+                      {unscheduledMeds.length > 0 && (
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                            <h5 className="text-sm font-medium text-gray-900">Unscheduled Medications</h5>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {unscheduledMeds.map(med => (
+                              <div key={med.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <p className="font-medium text-yellow-800">{med.name}</p>
+                                    <p className="text-sm text-yellow-600">{med.dosage} - {med.route}</p>
+                                  </div>
+                                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                                    {med.frequency}
+                                  </span>
+                                </div>
+                                <div className="mt-2 text-xs text-yellow-700">
+                                  <span className="font-medium">Ordered:</span> {format(new Date(med.start_date), 'MMM dd, yyyy')}
+                                </div>
+                                <button 
+                                  className="mt-2 w-full text-xs bg-yellow-600 text-white py-1 px-2 rounded flex items-center justify-center"
+                                  onClick={() => {
+                                    setSelectedMedication(med);
+                                    // Open administration form (to be implemented)
+                                  }}
+                                >
+                                  <CheckSquare className="h-3 w-3 mr-1" />
+                                  Record Administration
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {activeMedications.length === 0 && (
+                        <div className="text-center py-8">
+                          <Clipboard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">No active medications</p>
+                          <p className="text-sm text-gray-400 mt-2">Add medications to see them in the MAR</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Legend */}
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <h5 className="text-sm font-medium text-gray-900 mb-3">MAR Legend</h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                          <span>Scheduled Medications</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                          <span>Unscheduled Medications</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                          <span>PRN (As Needed)</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                          <span>Continuous Infusions</span>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    </div>
+                  </div>
+                ) : activeMarTab === 'scheduled' ? (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                      Scheduled Medications
+                    </h4>
+                    
+                    {scheduledMeds.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No scheduled medications</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {scheduledMeds.map((medication) => (
+                          <div key={medication.id} className="border border-blue-200 bg-blue-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-medium text-blue-900">{medication.name}</h4>
+                              <div className="flex items-center space-x-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Scheduled
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setSelectedMedication(medication);
+                                    setShowMedicationBarcode(true);
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                                  title="Generate Barcode"
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-blue-700">Dosage</p>
+                                <p className="font-medium text-blue-900">{medication.dosage}</p>
+                              </div>
+                              <div>
+                                <p className="text-blue-700">Frequency</p>
+                                <p className="font-medium text-blue-900">{medication.frequency}</p>
+                              </div>
+                              <div>
+                                <p className="text-blue-700">Route</p>
+                                <p className="font-medium text-blue-900">{medication.route}</p>
+                              </div>
+                              <div>
+                                <p className="text-blue-700">Prescribed By</p>
+                                <p className="font-medium text-blue-900">{medication.prescribed_by}</p>
+                              </div>
+                            </div>
+                            {medication.next_due && (
+                              <div className="mt-3 p-3 bg-blue-100 rounded-md">
+                                <p className="text-sm text-blue-800">
+                                  <Clock className="h-4 w-4 inline mr-1" />
+                                  Next due: {format(new Date(medication.next_due), 'MMM dd, HH:mm')}
+                                </p>
+                              </div>
+                            )}
+                            <div className="mt-3">
+                              <button
+                                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                                onClick={() => {
+                                  setSelectedMedication(medication);
+                                  // Open administration form (to be implemented)
+                                }}
+                              >
+                                <CheckSquare className="h-4 w-4 mr-2" />
+                                Record Administration
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : activeMarTab === 'unscheduled' ? (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <Clock className="h-5 w-5 mr-2 text-yellow-600" />
+                      Unscheduled Medications
+                    </h4>
+                    
+                    {unscheduledMeds.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No unscheduled medications</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {unscheduledMeds.map((medication) => (
+                          <div key={medication.id} className="border border-yellow-200 bg-yellow-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-medium text-yellow-900">{medication.name}</h4>
+                              <div className="flex items-center space-x-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  Unscheduled
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setSelectedMedication(medication);
+                                    setShowMedicationBarcode(true);
+                                  }}
+                                  className="text-yellow-600 hover:text-yellow-800 p-1 rounded"
+                                  title="Generate Barcode"
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-yellow-700">Dosage</p>
+                                <p className="font-medium text-yellow-900">{medication.dosage}</p>
+                              </div>
+                              <div>
+                                <p className="text-yellow-700">Frequency</p>
+                                <p className="font-medium text-yellow-900">{medication.frequency}</p>
+                              </div>
+                              <div>
+                                <p className="text-yellow-700">Route</p>
+                                <p className="font-medium text-yellow-900">{medication.route}</p>
+                              </div>
+                              <div>
+                                <p className="text-yellow-700">Prescribed By</p>
+                                <p className="font-medium text-yellow-900">{medication.prescribed_by}</p>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <button
+                                className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors flex items-center justify-center"
+                                onClick={() => {
+                                  setSelectedMedication(medication);
+                                  // Open administration form (to be implemented)
+                                }}
+                              >
+                                <CheckSquare className="h-4 w-4 mr-2" />
+                                Record Administration
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : activeMarTab === 'prn' ? (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <CheckSquare className="h-5 w-5 mr-2 text-green-600" />
+                      PRN Medications (As Needed)
+                    </h4>
+                    
+                    {prnMeds.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <CheckSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No PRN medications</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {prnMeds.map((medication) => (
+                          <div key={medication.id} className="border border-green-200 bg-green-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-medium text-green-900">{medication.name}</h4>
+                              <div className="flex items-center space-x-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  PRN
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setSelectedMedication(medication);
+                                    setShowMedicationBarcode(true);
+                                  }}
+                                  className="text-green-600 hover:text-green-800 p-1 rounded"
+                                  title="Generate Barcode"
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-green-700">Dosage</p>
+                                <p className="font-medium text-green-900">{medication.dosage}</p>
+                              </div>
+                              <div>
+                                <p className="text-green-700">Frequency</p>
+                                <p className="font-medium text-green-900">{medication.frequency}</p>
+                              </div>
+                              <div>
+                                <p className="text-green-700">Route</p>
+                                <p className="font-medium text-green-900">{medication.route}</p>
+                              </div>
+                              <div>
+                                <p className="text-green-700">Prescribed By</p>
+                                <p className="font-medium text-green-900">{medication.prescribed_by}</p>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <button
+                                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                                onClick={() => {
+                                  setSelectedMedication(medication);
+                                  // Open administration form (to be implemented)
+                                }}
+                              >
+                                <CheckSquare className="h-4 w-4 mr-2" />
+                                Record Administration
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                      <Activity className="h-5 w-5 mr-2 text-purple-600" />
+                      Continuous Infusions
+                    </h4>
+                    
+                    {continuousMeds.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No continuous infusions</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {continuousMeds.map((medication) => (
+                          <div key={medication.id} className="border border-purple-200 bg-purple-50 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-lg font-medium text-purple-900">{medication.name}</h4>
+                              <div className="flex items-center space-x-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  Continuous
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setSelectedMedication(medication);
+                                    setShowMedicationBarcode(true);
+                                  }}
+                                  className="text-purple-600 hover:text-purple-800 p-1 rounded"
+                                  title="Generate Barcode"
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-purple-700">Dosage</p>
+                                <p className="font-medium text-purple-900">{medication.dosage}</p>
+                              </div>
+                              <div>
+                                <p className="text-purple-700">Frequency</p>
+                                <p className="font-medium text-purple-900">{medication.frequency}</p>
+                              </div>
+                              <div>
+                                <p className="text-purple-700">Route</p>
+                                <p className="font-medium text-purple-900">{medication.route}</p>
+                              </div>
+                              <div>
+                                <p className="text-purple-700">Prescribed By</p>
+                                <p className="font-medium text-purple-900">{medication.prescribed_by}</p>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <button
+                                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center"
+                                onClick={() => {
+                                  setSelectedMedication(medication);
+                                  // Open administration form (to be implemented)
+                                }}
+                              >
+                                <CheckSquare className="h-4 w-4 mr-2" />
+                                Record Check/Adjustment
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
