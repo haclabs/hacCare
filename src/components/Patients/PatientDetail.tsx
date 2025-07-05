@@ -1422,6 +1422,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     )}
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
