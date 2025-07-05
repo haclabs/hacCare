@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Save, Clock, User, FileText, AlertTriangle } from 'lucide-react';
 import { Medication, MedicationAdministration } from '../../types';
 import { format } from 'date-fns';
-import { supabase } from '../../lib/supabase';
+import { recordMedicationAdministration } from '../../lib/medicationService';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface MedicationAdministrationFormProps {
@@ -46,36 +46,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
     
     try {
       // Save administration record
-      const { data, error: saveError } = await supabase
-        .from('medication_administrations')
-        .insert({
-          medication_id: formData.medication_id,
-          patient_id: formData.patient_id,
-          administered_by: formData.administered_by,
-          administered_by_id: formData.administered_by_id,
-          timestamp: formData.timestamp,
-          notes: formData.notes
-        })
-        .select()
-        .single();
-      
-      if (saveError) {
-        throw saveError;
-      }
-      
-      // Update medication's last_administered time
-      const { error: updateError } = await supabase
-        .from('patient_medications')
-        .update({
-          last_administered: formData.timestamp
-        })
-        .eq('id', medication.id);
-      
-      if (updateError) {
-        console.error('Error updating medication last_administered:', updateError);
-        // Continue anyway since the administration was recorded
-      }
-      
+      await recordMedicationAdministration(formData as Omit<MedicationAdministration, 'id'>);
       onSave();
     } catch (err: any) {
       console.error('Error recording administration:', err);
@@ -101,7 +72,6 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
     const category = medication.category || 'scheduled';
     switch (category) {
       case 'scheduled': return 'blue';
-      case 'unscheduled': return 'yellow';
       case 'prn': return 'green';
       case 'continuous': return 'purple';
       default: return 'blue';
@@ -142,18 +112,18 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
           )}
 
           {/* Medication Information */}
-          <div className={`bg-${color}-50 border border-${color}-200 rounded-lg p-4`}>
-            <h3 className={`text-lg font-medium text-${color}-900 mb-2`}>Medication Information</h3>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-blue-900 mb-2">Medication Information</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className={`text-${color}-700`}><strong>Name:</strong> {medication.name}</p>
-                <p className={`text-${color}-700`}><strong>Dosage:</strong> {medication.dosage}</p>
-                <p className={`text-${color}-700`}><strong>Route:</strong> {medication.route}</p>
+                <p className="text-blue-700"><strong>Name:</strong> {medication.name}</p>
+                <p className="text-blue-700"><strong>Dosage:</strong> {medication.dosage}</p>
+                <p className="text-blue-700"><strong>Route:</strong> {medication.route}</p>
               </div>
               <div>
-                <p className={`text-${color}-700`}><strong>Frequency:</strong> {medication.frequency}</p>
-                <p className={`text-${color}-700`}><strong>Category:</strong> {medication.category || 'Scheduled'}</p>
-                <p className={`text-${color}-700`}><strong>Status:</strong> {medication.status}</p>
+                <p className="text-blue-700"><strong>Frequency:</strong> {medication.frequency}</p>
+                <p className="text-blue-700"><strong>Category:</strong> {medication.category || 'Scheduled'}</p>
+                <p className="text-blue-700"><strong>Status:</strong> {medication.status}</p>
               </div>
             </div>
           </div>
@@ -241,7 +211,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
             <button
               type="submit"
               disabled={loading}
-              className={`px-6 py-2 bg-${color}-600 text-white rounded-lg hover:bg-${color}-700 transition-colors disabled:opacity-50 flex items-center space-x-2`}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
             >
               <Save className="h-4 w-4" />
               <span>{loading ? 'Saving...' : 'Record Administration'}</span>

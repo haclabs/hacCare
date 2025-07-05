@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Clock, CheckCircle, Pill, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle } from 'lucide-react';
 import { Medication, MedicationAdministration as MedAdmin } from '../../types';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
 
 interface MedicationAdministrationProps {
   patientId: string;
@@ -26,25 +27,45 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [allMedications, setAllMedications] = useState<Medication[]>(medications);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadMedications();
+  }, [patientId]);
+
+  const loadMedications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const meds = await fetchPatientMedications(patientId);
+      setAllMedications(meds);
+    } catch (err: any) {
+      console.error('Error loading medications:', err);
+      setError(err.message || 'Failed to load medications');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter medications by category
-  const scheduledMeds = medications.filter(med => 
-    med.category === 'scheduled' || !med.category // Default to scheduled if no category
+  const scheduledMeds = allMedications.filter(med => 
+    (med.category === 'scheduled' || !med.category) && med.status === 'Active'
   );
   
-  const prnMeds = medications.filter(med => 
-    med.category === 'prn'
+  const prnMeds = allMedications.filter(med => 
+    med.category === 'prn' && med.status === 'Active'
   );
   
-  const continuousMeds = medications.filter(med => 
-    med.category === 'continuous'
+  const continuousMeds = allMedications.filter(med => 
+    med.category === 'continuous' && med.status === 'Active'
   );
 
   // Safe date formatting
   const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
     if (!dateValue) return 'N/A';
     
-    const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+    const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
     
     if (!isValid(date)) return 'N/A';
     
@@ -56,14 +77,18 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     if (medication.status !== 'Active') return 'bg-gray-100 text-gray-800';
     
     // Check if it's due soon (within 1 hour)
-    const nextDue = new Date(medication.next_due);
-    const now = new Date();
-    const diffMs = nextDue.getTime() - now.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-    
-    if (diffHours < 0) return 'bg-red-100 text-red-800'; // Overdue
-    if (diffHours < 1) return 'bg-yellow-100 text-yellow-800'; // Due soon
-    return 'bg-green-100 text-green-800'; // Not due soon
+    try {
+      const nextDue = parseISO(medication.next_due);
+      const now = new Date();
+      const diffMs = nextDue.getTime() - now.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      
+      if (diffHours < 0) return 'bg-red-100 text-red-800'; // Overdue
+      if (diffHours < 1) return 'bg-yellow-100 text-yellow-800'; // Due soon
+      return 'bg-green-100 text-green-800'; // Not due soon
+    } catch (e) {
+      return 'bg-gray-100 text-gray-800'; // Error parsing date
+    }
   };
 
   // Handle medication administration
@@ -87,16 +112,10 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     try {
       setLoading(true);
       
-      const { error } = await supabase
-        .from('patient_medications')
-        .delete()
-        .eq('id', medicationId);
-      
-      if (error) {
-        throw error;
-      }
+      await deleteMedication(medicationId);
       
       // Refresh medications list
+      await loadMedications();
       onRefresh();
       
     } catch (error: any) {
@@ -111,7 +130,25 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">Medication Administration Record</h2>
+        <button 
+          onClick={loadMedications}
+          disabled={loading}
+          className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh</span>
+        </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            <p className="text-red-800 font-medium">Error</p>
+          </div>
+          <p className="text-red-700 text-sm mt-1">{error}</p>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
@@ -124,7 +161,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            <Clock className="w-4 h-4" />
+            <CalendarDays className="w-4 h-4" />
             <span>Scheduled ({scheduledMeds.length})</span>
           </button>
           
@@ -160,7 +197,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           <>
             {scheduledMeds.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <Pill className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No scheduled medications</p>
               </div>
             ) : (
@@ -294,7 +331,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           <>
             {continuousMeds.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <Pill className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No continuous medications</p>
               </div>
             ) : (
@@ -367,6 +404,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           onClose={() => setShowAdminForm(false)}
           onSave={() => {
             setShowAdminForm(false);
+            loadMedications();
             onRefresh();
           }}
         />
@@ -409,40 +447,3 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     </div>
   );
 };
-
-// X icon component for the modal
-const X = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M18 6 6 18" />
-    <path d="m6 6 12 12" />
-  </svg>
-);
-
-// Activity icon component for continuous medications
-const Activity = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-  </svg>
-);
