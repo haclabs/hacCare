@@ -1,23 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Printer, Download } from 'lucide-react';
 import { Medication } from '../../types';
 import { format, isValid } from 'date-fns';
+import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 interface MedicationBarcodeProps {
-  medication: Medication;
-  patientName: string;
-  patientId: string;
+  patient: any;
+  medications: Medication[];
   onClose: () => void;
 }
 
 export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({ 
-  medication, 
-  patientName, 
-  patientId, 
+  patient,
+  medications,
   onClose 
 }) => {
+  const [selectedMedication, setSelectedMedication] = useState<Medication | null>(
+    medications.length > 0 ? medications[0] : null
+  );
+
+  if (!selectedMedication) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8 text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">No Medications Available</h2>
+          <p className="text-gray-600 mb-6">There are no medications available to generate barcodes for.</p>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Generate unique medication barcode based on medication ID and details
-  const medicationBarcodeId = `MED${medication.id.slice(-6).toUpperCase()}`;
+  const medicationBarcodeId = `MED${selectedMedication.id.slice(-6).toUpperCase()}`;
 
   // Helper function to safely format dates
   const formatSafeDate = (dateValue: string | Date) => {
@@ -33,7 +53,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         printWindow.document.write(`
           <html>
             <head>
-              <title>Medication Labels - ${medication.name}</title>
+              <title>Medication Labels - ${selectedMedication.name}</title>
               <style>
                 @page {
                   size: 8.5in 11in;
@@ -179,24 +199,24 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         ctx.fillStyle = 'black';
         ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(medication.name, x + 15, y + 35);
+        ctx.fillText(selectedMedication.name, x + 15, y + 35);
 
         // Draw dosage in red
         ctx.fillStyle = '#dc2626';
         ctx.font = 'bold 27px Arial';
-        ctx.fillText(medication.dosage, x + 15, y + 65);
+        ctx.fillText(selectedMedication.dosage, x + 15, y + 65);
 
         // Draw patient info
         ctx.fillStyle = 'black';
         ctx.font = '21px Arial';
-        ctx.fillText(`Patient: ${patientName}`, x + 15, y + 90);
-        ctx.fillText(`ID: ${patientId}`, x + 15, y + 115);
+        ctx.fillText(`Patient: ${patient.first_name} ${patient.last_name}`, x + 15, y + 90);
+        ctx.fillText(`ID: ${patient.patient_id}`, x + 15, y + 115);
 
         // Draw frequency
         ctx.fillStyle = '#666';
         ctx.font = '18px Arial';
-        ctx.fillText(medication.frequency, x + 15, y + 140);
-        ctx.fillText(medication.route, x + 15, y + 160);
+        ctx.fillText(selectedMedication.frequency, x + 15, y + 140);
+        ctx.fillText(selectedMedication.route, x + 15, y + 160);
 
         // Draw simple barcode on the right
         ctx.fillStyle = 'black';
@@ -220,7 +240,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         // Draw medication ID
         ctx.fillStyle = '#666';
         ctx.font = '15px Arial';
-        ctx.fillText(medication.id.slice(-6), barcodeX + 60, barcodeY + 80);
+        ctx.fillText(selectedMedication.id.slice(-6), barcodeX + 60, barcodeY + 80);
       }
     }
 
@@ -230,7 +250,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `medication-labels-${medicationBarcodeId}-${medication.name.replace(/\s+/g, '-')}.png`;
+        a.download = `medication-labels-${medicationBarcodeId}-${selectedMedication.name.replace(/\s+/g, '-')}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -247,16 +267,16 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         <div key={i} className="label">
           <div className="left-section">
             <div>
-              <div className="medication-name">{medication.name}</div>
-              <div className="dosage">{medication.dosage}</div>
+              <div className="medication-name">{selectedMedication.name}</div>
+              <div className="dosage">{selectedMedication.dosage}</div>
               <div className="patient-info">
-                <div>Patient: {patientName}</div>
-                <div>ID: {patientId}</div>
+                <div>Patient: {patient.first_name} {patient.last_name}</div>
+                <div>ID: {patient.patient_id}</div>
               </div>
             </div>
             <div className="frequency">
-              <div>{medication.frequency}</div>
-              <div>{medication.route}</div>
+              <div>{selectedMedication.frequency}</div>
+              <div>{selectedMedication.route}</div>
             </div>
           </div>
           
@@ -275,7 +295,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               ))}
             </div>
             <div className="barcode-id">{medicationBarcodeId}</div>
-            <div className="med-id">{medication.id.slice(-6)}</div>
+            <div className="med-id">{selectedMedication.id.slice(-6)}</div>
           </div>
         </div>
       );
@@ -317,16 +337,34 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
             <h3 className="text-lg font-medium text-gray-900 mb-2">Medication Label Information</h3>
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-blue-900 mb-2">Select Medication</label>
+                <select 
+                  value={selectedMedication.id}
+                  onChange={(e) => {
+                    const med = medications.find(m => m.id === e.target.value);
+                    if (med) setSelectedMedication(med);
+                  }}
+                  className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {medications.map(med => (
+                    <option key={med.id} value={med.id}>
+                      {med.name} {med.dosage}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-blue-900"><strong>Medication:</strong> {medication.name}</p>
-                  <p className="text-blue-900"><strong>Dosage:</strong> {medication.dosage}</p>
-                  <p className="text-blue-900"><strong>Frequency:</strong> {medication.frequency}</p>
-                  <p className="text-blue-900"><strong>Route:</strong> {medication.route}</p>
+                  <p className="text-blue-900"><strong>Medication:</strong> {selectedMedication.name}</p>
+                  <p className="text-blue-900"><strong>Dosage:</strong> {selectedMedication.dosage}</p>
+                  <p className="text-blue-900"><strong>Frequency:</strong> {selectedMedication.frequency}</p>
+                  <p className="text-blue-900"><strong>Route:</strong> {selectedMedication.route}</p>
                 </div>
                 <div>
-                  <p className="text-blue-900"><strong>Patient:</strong> {patientName}</p>
-                  <p className="text-blue-900"><strong>Patient ID:</strong> {patientId}</p>
+                  <p className="text-blue-900"><strong>Patient:</strong> {patient.first_name} {patient.last_name}</p>
+                  <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patient_id}</p>
                   <p className="text-blue-900"><strong>Barcode ID:</strong> {medicationBarcodeId}</p>
                   <p className="text-blue-900"><strong>Labels per Sheet:</strong> 30 identical labels</p>
                 </div>
@@ -397,14 +435,14 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               <p><strong>Medication Details:</strong></p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p>• <strong>Name:</strong> {medication.name}</p>
-                  <p>• <strong>Dosage:</strong> <span className="text-red-600 font-bold">{medication.dosage}</span></p>
-                  <p>• <strong>Route:</strong> {medication.route}</p>
+                  <p>• <strong>Name:</strong> {selectedMedication.name}</p>
+                  <p>• <strong>Dosage:</strong> <span className="text-red-600 font-bold">{selectedMedication.dosage}</span></p>
+                  <p>• <strong>Route:</strong> {selectedMedication.route}</p>
                 </div>
                 <div>
-                  <p>• <strong>Frequency:</strong> {medication.frequency}</p>
-                  <p>• <strong>Prescribed by:</strong> {medication.prescribed_by}</p>
-                  <p>• <strong>Next Due:</strong> {formatSafeDate(medication.next_due)}</p>
+                  <p>• <strong>Frequency:</strong> {selectedMedication.frequency}</p>
+                  <p>• <strong>Prescribed by:</strong> {selectedMedication.prescribed_by}</p>
+                  <p>• <strong>Next Due:</strong> {formatSafeDate(selectedMedication.next_due)}</p>
                 </div>
               </div>
               <div className="bg-red-100 border border-red-300 rounded p-2 mt-3">
