@@ -1,239 +1,422 @@
-import React, { useState } from 'react';
-import { VitalSigns } from '../../types';
-import { Save, X, Thermometer, Heart, Activity, Droplets } from 'lucide-react';
-import { updatePatientVitals } from '../../lib/patientService';
-import { usePatients } from '../../contexts/PatientContext';
+import React, { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, 
+  Edit, 
+  Calendar, 
+  MapPin, 
+  Phone, 
+  User, 
+  Heart, 
+  Thermometer, 
+  Activity, 
+  Droplets,
+  Clock,
+  Pill,
+  FileText,
+  AlertTriangle,
+  Plus,
+  Stethoscope
+} from 'lucide-react';
+import { Patient, VitalSigns, PatientNote, Medication } from '../../types';
+import { VitalSignsEditor } from './VitalSignsEditor';
+import { PatientNoteForm } from './PatientNoteForm';
+import { MedicationForm } from './MedicationForm';
+import { getPatientVitals, getPatientNotes, getPatientMedications } from '../../lib/patientService';
+import { formatDate, formatTime, calculateAge } from '../../utils/patientUtils';
 
-interface VitalSignsEditorProps {
-  patientId: string;
-  vitals?: VitalSigns; // Make vitals optional
-  onSave: (vitals: VitalSigns) => void;
-  onCancel: () => void;
+interface PatientDetailProps {
+  patient: Patient;
+  onBack: () => void;
 }
 
-// Default vital signs values
-const defaultVitals: VitalSigns = {
-  temperature: 98.6, // Store in Fahrenheit for display
-  heartRate: 72,
-  bloodPressure: {
-    systolic: 120,
-    diastolic: 80
-  },
-  respiratoryRate: 16,
-  oxygenSaturation: 98,
-  lastUpdated: new Date().toISOString()
-};
-
-export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
-  patientId,
-  vitals,
-  onSave,
-  onCancel
-}) => {
-  const [editedVitals, setEditedVitals] = useState<VitalSigns>({
-    ...defaultVitals,
-    ...vitals, // Override defaults with actual vitals if provided
-    lastUpdated: new Date().toISOString()
-  });
-  const [loading, setLoading] = useState(false);
+export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
+  const [vitals, setVitals] = useState<VitalSigns | null>(null);
+  const [notes, setNotes] = useState<PatientNote[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { refreshPatients } = usePatients();
+  const [showVitalsEditor, setShowVitalsEditor] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [showMedicationForm, setShowMedicationForm] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  useEffect(() => {
+    loadPatientData();
+  }, [patient.id]);
 
+  const loadPatientData = async () => {
     try {
-      console.log('Saving vitals for patient:', patientId, editedVitals);
+      setLoading(true);
+      const [vitalsData, notesData, medicationsData] = await Promise.all([
+        getPatientVitals(patient.id),
+        getPatientNotes(patient.id),
+        getPatientMedications(patient.id)
+      ]);
       
-      // Ensure temperature is a number
-      const vitalsToSave = {
-        ...editedVitals
-      };
-      
-      console.log('Formatted vitals to save:', vitalsToSave);
-      
-      // Save vitals to database
-      await updatePatientVitals(patientId, vitalsToSave);
-      console.log('Vitals saved successfully');
-      
-      // Refresh patients to get updated vitals
-      await refreshPatients();
-      console.log('Patients refreshed');
-      
-      // Call the onSave callback
-      onSave(vitalsToSave);
+      setVitals(vitalsData);
+      setNotes(notesData);
+      setMedications(medicationsData);
     } catch (err: any) {
-      console.error('Error saving vitals:', err);
-      setError(err.message || 'Failed to save vital signs');
+      console.error('Error loading patient data:', err);
+      setError(err.message || 'Failed to load patient data');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateVital = (field: keyof VitalSigns, value: any) => {
-    setEditedVitals(prev => ({
-      ...prev, 
-      [field]: value 
-    }));
+  const handleVitalsSave = (newVitals: VitalSigns) => {
+    setVitals(newVitals);
+    setShowVitalsEditor(false);
   };
 
-  const updateBloodPressure = (type: 'systolic' | 'diastolic', value: number) => {
-    setEditedVitals(prev => ({
-      ...prev,
-      bloodPressure: { 
-        ...prev.bloodPressure, 
-        [type]: value 
-      } 
-    }));
+  const handleNoteAdd = () => {
+    setShowNoteForm(false);
+    loadPatientData(); // Refresh data
   };
+
+  const handleMedicationAdd = () => {
+    setShowMedicationForm(false);
+    loadPatientData(); // Refresh data
+  };
+
+  const getVitalStatus = (vital: string, value: number) => {
+    switch (vital) {
+      case 'temperature':
+        if (value < 97 || value > 100.4) return 'text-red-600 bg-red-50';
+        return 'text-green-600 bg-green-50';
+      case 'heartRate':
+        if (value < 60 || value > 100) return 'text-yellow-600 bg-yellow-50';
+        return 'text-green-600 bg-green-50';
+      case 'systolic':
+        if (value < 90 || value > 140) return 'text-red-600 bg-red-50';
+        return 'text-green-600 bg-green-50';
+      case 'diastolic':
+        if (value < 60 || value > 90) return 'text-red-600 bg-red-50';
+        return 'text-green-600 bg-green-50';
+      case 'oxygenSaturation':
+        if (value < 95) return 'text-red-600 bg-red-50';
+        return 'text-green-600 bg-green-50';
+      case 'respiratoryRate':
+        if (value < 12 || value > 20) return 'text-yellow-600 bg-yellow-50';
+        return 'text-green-600 bg-green-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Update Vital Signs</h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            onClick={onBack}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <X className="h-6 w-6" />
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Patients</span>
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Patient Information Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="h-8 w-8 text-blue-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {patient.firstName} {patient.lastName}
+              </h1>
+              <p className="text-gray-600">Patient ID: {patient.patientId}</p>
+              <p className="text-sm text-gray-500">
+                {calculateAge(patient.dateOfBirth)} years old • {patient.gender}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+              <MapPin className="h-4 w-4" />
+              <span>Room {patient.roomNumber}, Bed {patient.bedNumber}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Calendar className="h-4 w-4" />
+              <span>Admitted {formatDate(patient.admissionDate)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <h3 className="font-medium text-gray-900 mb-2">Medical Information</h3>
+            <div className="space-y-2 text-sm">
+              <div><span className="text-gray-600">Condition:</span> {patient.condition}</div>
+              <div><span className="text-gray-600">Diagnosis:</span> {patient.diagnosis}</div>
+              <div><span className="text-gray-600">Blood Type:</span> {patient.bloodType}</div>
+              <div><span className="text-gray-600">Assigned Nurse:</span> {patient.assignedNurse}</div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-900 mb-2">Emergency Contact</h3>
+            <div className="space-y-2 text-sm">
+              <div><span className="text-gray-600">Name:</span> {patient.emergencyContactName}</div>
+              <div><span className="text-gray-600">Relationship:</span> {patient.emergencyContactRelationship}</div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-gray-400" />
+                <span>{patient.emergencyContactPhone}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-gray-900 mb-2">Allergies</h3>
+            <div className="space-y-1">
+              {patient.allergies && patient.allergies.length > 0 ? (
+                patient.allergies.map((allergy, index) => (
+                  <span
+                    key={index}
+                    className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full mr-1 mb-1"
+                  >
+                    {allergy}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-500 text-sm">No known allergies</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Vital Signs Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+            <Stethoscope className="h-5 w-5" />
+            <span>Vital Signs</span>
+          </h2>
+          <button
+            onClick={() => setShowVitalsEditor(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Edit className="h-4 w-4" />
+            <span>Update Vitals</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Temperature */}
-            <div className="bg-red-50 rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-3"> 
-                <Thermometer className="h-5 w-5 text-red-600" />
-                <label className="text-sm font-medium text-red-900">Temperature (°F)</label>
+        {vitals ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className={`p-4 rounded-lg ${getVitalStatus('temperature', vitals.temperature)}`}>
+              <div className="flex items-center space-x-2 mb-2">
+                <Thermometer className="h-5 w-5" />
+                <span className="text-sm font-medium">Temperature</span>
               </div>
-              <input
-                type="number"
-                step="0.1"
-                min="95"
-                max="110"
-                value={editedVitals.temperature}
-                onChange={(e) => updateVital('temperature', parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                required
-              />
+              <div className="text-2xl font-bold">{vitals.temperature}°F</div>
             </div>
 
-            {/* Heart Rate */}
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <Heart className="h-5 w-5 text-green-600" />
-                <label className="text-sm font-medium text-green-900">Heart Rate (BPM)</label>
+            <div className={`p-4 rounded-lg ${getVitalStatus('heartRate', vitals.heartRate)}`}>
+              <div className="flex items-center space-x-2 mb-2">
+                <Heart className="h-5 w-5" />
+                <span className="text-sm font-medium">Heart Rate</span>
               </div>
-              <input
-                type="number"
-                min="30"
-                max="200"
-                value={editedVitals.heartRate}
-                onChange={(e) => updateVital('heartRate', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                required
-              />
+              <div className="text-2xl font-bold">{vitals.heartRate} BPM</div>
             </div>
 
-            {/* Blood Pressure */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <Activity className="h-5 w-5 text-blue-600" />
-                <label className="text-sm font-medium text-blue-900">Blood Pressure</label>
+            <div className={`p-4 rounded-lg ${getVitalStatus('systolic', vitals.bloodPressure.systolic)}`}>
+              <div className="flex items-center space-x-2 mb-2">
+                <Activity className="h-5 w-5" />
+                <span className="text-sm font-medium">Blood Pressure</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-blue-700 mb-1 block">Systolic</label>
-                  <input
-                    type="number"
-                    min="70"
-                    max="250"
-                    value={editedVitals.bloodPressure.systolic}
-                    onChange={(e) => updateBloodPressure('systolic', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-blue-700 mb-1 block">Diastolic</label>
-                  <input
-                    type="number"
-                    min="40"
-                    max="150"
-                    value={editedVitals.bloodPressure.diastolic}
-                    onChange={(e) => updateBloodPressure('diastolic', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
+              <div className="text-2xl font-bold">
+                {vitals.bloodPressure.systolic}/{vitals.bloodPressure.diastolic}
               </div>
             </div>
 
-            {/* Oxygen Saturation */}
-            <div className="bg-teal-50 rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <Droplets className="h-5 w-5 text-teal-600" />
-                <label className="text-sm font-medium text-teal-900">O2 Saturation (%)</label>
+            <div className={`p-4 rounded-lg ${getVitalStatus('respiratoryRate', vitals.respiratoryRate)}`}>
+              <div className="flex items-center space-x-2 mb-2">
+                <Activity className="h-5 w-5" />
+                <span className="text-sm font-medium">Respiratory Rate</span>
               </div>
-              <input
-                type="number"
-                min="70"
-                max="100"
-                value={editedVitals.oxygenSaturation}
-                onChange={(e) => updateVital('oxygenSaturation', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                required
-              />
+              <div className="text-2xl font-bold">{vitals.respiratoryRate}/min</div>
             </div>
 
-            {/* Respiratory Rate */}
-            <div className="bg-purple-50 rounded-lg p-4 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-3">
-                <Activity className="h-5 w-5 text-purple-600" />
-                <label className="text-sm font-medium text-purple-900">Respiratory Rate (breaths/min)</label>
+            <div className={`p-4 rounded-lg ${getVitalStatus('oxygenSaturation', vitals.oxygenSaturation)}`}>
+              <div className="flex items-center space-x-2 mb-2">
+                <Droplets className="h-5 w-5" />
+                <span className="text-sm font-medium">O2 Saturation</span>
               </div>
-              <input
-                type="number"
-                min="8"
-                max="40"
-                value={editedVitals.respiratoryRate}
-                onChange={(e) => updateVital('respiratoryRate', parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                required
-              />
+              <div className="text-2xl font-bold">{vitals.oxygenSaturation}%</div>
+            </div>
+
+            <div className="p-4 rounded-lg bg-gray-50 text-gray-600">
+              <div className="flex items-center space-x-2 mb-2">
+                <Clock className="h-5 w-5" />
+                <span className="text-sm font-medium">Last Updated</span>
+              </div>
+              <div className="text-sm">{formatTime(vitals.lastUpdated)}</div>
             </div>
           </div>
-
-          <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+        ) : (
+          <div className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">No vital signs recorded yet</p>
             <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              onClick={() => setShowVitalsEditor(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-            >
-              <Save className="h-4 w-4" />
-              <span>{loading ? 'Saving...' : 'Save Vitals'}</span>
+              Record First Vitals
             </button>
           </div>
-        </form>
+        )}
       </div>
+
+      {/* Medications Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+            <Pill className="h-5 w-5" />
+            <span>Current Medications</span>
+          </h2>
+          <button
+            onClick={() => setShowMedicationForm(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Medication</span>
+          </button>
+        </div>
+
+        {medications.length > 0 ? (
+          <div className="space-y-4">
+            {medications.map((medication) => (
+              <div key={medication.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{medication.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {medication.dosage} • {medication.frequency} • {medication.route}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Prescribed by: {medication.prescribedBy}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                      medication.status === 'Active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {medication.status}
+                    </span>
+                    {medication.nextDue && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Next due: {formatTime(medication.nextDue)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">No medications prescribed</p>
+          </div>
+        )}
+      </div>
+
+      {/* Notes Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+            <FileText className="h-5 w-5" />
+            <span>Patient Notes</span>
+          </h2>
+          <button
+            onClick={() => setShowNoteForm(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Note</span>
+          </button>
+        </div>
+
+        {notes.length > 0 ? (
+          <div className="space-y-4">
+            {notes.map((note) => (
+              <div key={note.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                      note.priority === 'High' 
+                        ? 'bg-red-100 text-red-800'
+                        : note.priority === 'Medium'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {note.priority}
+                    </span>
+                    <span className="text-sm font-medium text-gray-900">{note.type}</span>
+                  </div>
+                  <div className="text-right text-sm text-gray-500">
+                    <div>{note.nurseName}</div>
+                    <div>{formatTime(note.createdAt)}</div>
+                  </div>
+                </div>
+                <p className="text-gray-700">{note.content}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">No notes recorded yet</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      {showVitalsEditor && (
+        <VitalSignsEditor
+          patientId={patient.id}
+          vitals={vitals || undefined}
+          onSave={handleVitalsSave}
+          onCancel={() => setShowVitalsEditor(false)}
+        />
+      )}
+
+      {showNoteForm && (
+        <PatientNoteForm
+          patientId={patient.id}
+          onSave={handleNoteAdd}
+          onCancel={() => setShowNoteForm(false)}
+        />
+      )}
+
+      {showMedicationForm && (
+        <MedicationForm
+          patientId={patient.id}
+          onSave={handleMedicationAdd}
+          onCancel={() => setShowMedicationForm(false)}
+        />
+      )}
     </div>
   );
 };
