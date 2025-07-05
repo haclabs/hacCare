@@ -858,6 +858,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, o
       {showMedicationForm && (
         <MedicationForm
           patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onSave={handleMedicationAdd}
           onCancel={() => setShowMedicationForm(false)}
         />

@@ -7,6 +7,11 @@ import { Medication, MedicationAdministration } from '../types';
  */
 
 /**
+ * Medication Service
+ * Handles database operations for medications and medication administrations
+ */
+
+/**
  * Fetch medications for a patient
  */
 export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
@@ -105,6 +110,30 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
     console.log('Medication deleted successfully');
   } catch (error) {
     console.error('Error deleting medication:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update medication next due time
+ */
+export const updateMedicationNextDue = async (medicationId: string, nextDue: string): Promise<void> => {
+  try {
+    console.log('Updating medication next due time:', medicationId, nextDue);
+    
+    const { error } = await supabase
+      .from('patient_medications')
+      .update({ next_due: nextDue })
+      .eq('id', medicationId);
+
+    if (error) {
+      console.error('Error updating medication next due time:', error);
+      throw error;
+    }
+
+    console.log('Medication next due time updated successfully');
+  } catch (error) {
+    console.error('Error updating medication next due time:', error);
     throw error;
   }
 };
