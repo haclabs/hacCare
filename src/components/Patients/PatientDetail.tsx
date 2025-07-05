@@ -51,4 +51,754 @@ import { fetchPatientAssessments, PatientAssessment } from '../../lib/assessment
 import { useAuth } from '../../contexts/AuthContext';
 import { usePatients } from '../../contexts/PatientContext';
 
-[Rest of the code remains unchanged]
+interface PatientDetailProps {
+  patient: Patient;
+  onBack: () => void;
+  onEdit: (patient: Patient) => void;
+}
+
+export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack, onEdit }) => {
+  const { user } = useAuth();
+  const { updatePatient } = usePatients();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showVitalsEditor, setShowVitalsEditor] = useState(false);
+  const [showMedicationForm, setShowMedicationForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [showAdmissionForm, setShowAdmissionForm] = useState(false);
+  const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
+  const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [showHospitalBracelet, setShowHospitalBracelet] = useState(false);
+  const [showPatientBracelet, setShowPatientBracelet] = useState(false);
+  const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
+  const [vitals, setVitals] = useState(patient.vitals || []);
+  const [medications, setMedications] = useState(patient.medications || []);
+  const [notes, setNotes] = useState(patient.notes || []);
+  const [assessments, setAssessments] = useState<PatientAssessment[]>([]);
+  const [selectedAssessment, setSelectedAssessment] = useState<PatientAssessment | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadAssessments();
+  }, [patient.id]);
+
+  const loadAssessments = async () => {
+    try {
+      const patientAssessments = await fetchPatientAssessments(patient.id);
+      setAssessments(patientAssessments);
+    } catch (error) {
+      console.error('Error loading assessments:', error);
+    }
+  };
+
+  const handleVitalsUpdate = async (newVitals: any) => {
+    try {
+      setLoading(true);
+      await updatePatientVitals(patient.id, newVitals);
+      setVitals(prev => [newVitals, ...prev]);
+      setShowVitalsEditor(false);
+    } catch (error) {
+      console.error('Error updating vitals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearVitals = async () => {
+    try {
+      setLoading(true);
+      await clearPatientVitals(patient.id);
+      setVitals([]);
+    } catch (error) {
+      console.error('Error clearing vitals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMedicationAdd = (medication: any) => {
+    setMedications(prev => [medication, ...prev]);
+    setShowMedicationForm(false);
+  };
+
+  const handleNoteAdd = (note: any) => {
+    setNotes(prev => [note, ...prev]);
+    setShowNoteForm(false);
+  };
+
+  const handleAssessmentAdd = () => {
+    loadAssessments();
+    setShowAssessmentForm(false);
+  };
+
+  const getLatestVitals = () => {
+    return vitals.length > 0 ? vitals[0] : null;
+  };
+
+  const getVitalStatus = (value: number, normal: { min: number; max: number }) => {
+    if (value < normal.min || value > normal.max) {
+      return 'text-red-600 bg-red-50';
+    }
+    return 'text-green-600 bg-green-50';
+  };
+
+  const latestVitals = getLatestVitals();
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: User },
+    { id: 'vitals', label: 'Vital Signs', icon: Heart },
+    { id: 'medications', label: 'Medications', icon: Pill },
+    { id: 'notes', label: 'Notes', icon: FileText },
+    { id: 'assessments', label: 'Assessments', icon: ClipboardList },
+    { id: 'admission', label: 'Admission', icon: Building },
+    { id: 'directives', label: 'Directives', icon: Shield },
+    { id: 'tools', label: 'Tools', icon: Settings }
+  ];
+
+  if (selectedAssessment) {
+    return (
+      <AssessmentDetail
+        assessment={selectedAssessment}
+        onBack={() => setSelectedAssessment(null)}
+      />
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {patient.firstName} {patient.lastName}
+              </h1>
+              <p className="text-sm text-gray-500">
+                Patient ID: {patient.patientId} • Room {patient.roomNumber}-{patient.bedNumber}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => onEdit(patient)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            >
+              <Edit className="w-4 h-4" />
+              <span>Edit Patient</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6">
+          <nav className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto">
+        {activeTab === 'overview' && (
+          <div className="p-6 space-y-6">
+            {/* Patient Info Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Basic Info */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600" />
+                  Basic Information
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date of Birth:</span>
+                    <span className="font-medium">{format(new Date(patient.dateOfBirth), 'MMM dd, yyyy')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Gender:</span>
+                    <span className="font-medium">{patient.gender}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Blood Type:</span>
+                    <span className="font-medium">{patient.bloodType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Assigned Nurse:</span>
+                    <span className="font-medium">{patient.assignedNurse}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Admission Info */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-green-600" />
+                  Admission Details
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Admission Date:</span>
+                    <span className="font-medium">{format(new Date(patient.admissionDate), 'MMM dd, yyyy')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Condition:</span>
+                    <span className="font-medium">{patient.condition}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Diagnosis:</span>
+                    <span className="font-medium">{patient.diagnosis}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Phone className="w-5 h-5 mr-2 text-purple-600" />
+                  Emergency Contact
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Name:</span>
+                    <span className="font-medium">{patient.emergencyContactName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Relationship:</span>
+                    <span className="font-medium">{patient.emergencyContactRelationship}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="font-medium">{patient.emergencyContactPhone}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Latest Vitals */}
+            {latestVitals && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Heart className="w-5 h-5 mr-2 text-red-600" />
+                  Latest Vital Signs
+                  <span className="ml-2 text-sm text-gray-500">
+                    ({format(new Date(latestVitals.recordedAt), 'MMM dd, yyyy HH:mm')})
+                  </span>
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.temperature, { min: 97, max: 99 })}`}>
+                    <div className="flex items-center space-x-2">
+                      <Thermometer className="w-4 h-4" />
+                      <span className="text-sm font-medium">Temperature</span>
+                    </div>
+                    <p className="text-lg font-bold">{latestVitals.temperature}°F</p>
+                  </div>
+                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.bloodPressureSystolic, { min: 90, max: 140 })}`}>
+                    <div className="flex items-center space-x-2">
+                      <Activity className="w-4 h-4" />
+                      <span className="text-sm font-medium">Blood Pressure</span>
+                    </div>
+                    <p className="text-lg font-bold">{latestVitals.bloodPressureSystolic}/{latestVitals.bloodPressureDiastolic}</p>
+                  </div>
+                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.heartRate, { min: 60, max: 100 })}`}>
+                    <div className="flex items-center space-x-2">
+                      <Heart className="w-4 h-4" />
+                      <span className="text-sm font-medium">Heart Rate</span>
+                    </div>
+                    <p className="text-lg font-bold">{latestVitals.heartRate} bpm</p>
+                  </div>
+                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.respiratoryRate, { min: 12, max: 20 })}`}>
+                    <div className="flex items-center space-x-2">
+                      <Activity className="w-4 h-4" />
+                      <span className="text-sm font-medium">Respiratory Rate</span>
+                    </div>
+                    <p className="text-lg font-bold">{latestVitals.respiratoryRate} /min</p>
+                  </div>
+                  <div className={`p-3 rounded-lg ${getVitalStatus(latestVitals.oxygenSaturation, { min: 95, max: 100 })}`}>
+                    <div className="flex items-center space-x-2">
+                      <Droplets className="w-4 h-4" />
+                      <span className="text-sm font-medium">O2 Saturation</span>
+                    </div>
+                    <p className="text-lg font-bold">{latestVitals.oxygenSaturation}%</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Allergies */}
+            {patient.allergies && patient.allergies.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-red-900 mb-3 flex items-center">
+                  <AlertTriangle className="w-5 h-5 mr-2" />
+                  Allergies
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {patient.allergies.map((allergy, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium"
+                    >
+                      {allergy}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'vitals' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Vital Signs</h2>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowVitalsTrends(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>View Trends</span>
+                </button>
+                <button
+                  onClick={() => setShowVitalsEditor(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Vitals</span>
+                </button>
+                {vitals.length > 0 && (
+                  <button
+                    onClick={handleClearVitals}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear All</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {vitals.length === 0 ? (
+              <div className="text-center py-12">
+                <Stethoscope className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No vital signs recorded yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {vitals.map((vital, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-semibold text-gray-900">
+                        {format(new Date(vital.recordedAt), 'MMM dd, yyyy HH:mm')}
+                      </h3>
+                      <span className="text-sm text-gray-500">
+                        {index === 0 ? 'Latest' : `${index + 1} reading${index > 0 ? 's' : ''} ago`}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.temperature, { min: 97, max: 99 })}`}>
+                        <div className="flex items-center space-x-2">
+                          <Thermometer className="w-4 h-4" />
+                          <span className="text-sm font-medium">Temperature</span>
+                        </div>
+                        <p className="text-lg font-bold">{vital.temperature}°F</p>
+                      </div>
+                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.bloodPressureSystolic, { min: 90, max: 140 })}`}>
+                        <div className="flex items-center space-x-2">
+                          <Activity className="w-4 h-4" />
+                          <span className="text-sm font-medium">Blood Pressure</span>
+                        </div>
+                        <p className="text-lg font-bold">{vital.bloodPressureSystolic}/{vital.bloodPressureDiastolic}</p>
+                      </div>
+                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.heartRate, { min: 60, max: 100 })}`}>
+                        <div className="flex items-center space-x-2">
+                          <Heart className="w-4 h-4" />
+                          <span className="text-sm font-medium">Heart Rate</span>
+                        </div>
+                        <p className="text-lg font-bold">{vital.heartRate} bpm</p>
+                      </div>
+                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.respiratoryRate, { min: 12, max: 20 })}`}>
+                        <div className="flex items-center space-x-2">
+                          <Activity className="w-4 h-4" />
+                          <span className="text-sm font-medium">Respiratory Rate</span>
+                        </div>
+                        <p className="text-lg font-bold">{vital.respiratoryRate} /min</p>
+                      </div>
+                      <div className={`p-3 rounded-lg ${getVitalStatus(vital.oxygenSaturation, { min: 95, max: 100 })}`}>
+                        <div className="flex items-center space-x-2">
+                          <Droplets className="w-4 h-4" />
+                          <span className="text-sm font-medium">O2 Saturation</span>
+                        </div>
+                        <p className="text-lg font-bold">{vital.oxygenSaturation}%</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'medications' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Medications</h2>
+              <button
+                onClick={() => setShowMedicationForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Medication</span>
+              </button>
+            </div>
+
+            {medications.length === 0 ? (
+              <div className="text-center py-12">
+                <Pill className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No medications prescribed yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {medications.map((medication, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900">{medication.name}</h3>
+                        <p className="text-gray-600 mt-1">{medication.dosage} - {medication.frequency}</p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Route: {medication.route} | Prescribed by: {medication.prescribedBy}
+                        </p>
+                        <div className="flex items-center space-x-4 mt-3">
+                          <span className="text-sm text-gray-500">
+                            Start: {format(new Date(medication.startDate), 'MMM dd, yyyy')}
+                          </span>
+                          {medication.endDate && (
+                            <span className="text-sm text-gray-500">
+                              End: {format(new Date(medication.endDate), 'MMM dd, yyyy')}
+                            </span>
+                          )}
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            medication.status === 'Active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {medication.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {medication.nextDue && (
+                          <div className="text-sm">
+                            <span className="text-gray-500">Next due:</span>
+                            <p className="font-medium text-blue-600">
+                              {format(new Date(medication.nextDue), 'MMM dd, HH:mm')}
+                            </p>
+                          </div>
+                        )}
+                        {medication.lastAdministered && (
+                          <div className="text-sm mt-2">
+                            <span className="text-gray-500">Last given:</span>
+                            <p className="font-medium">
+                              {format(new Date(medication.lastAdministered), 'MMM dd, HH:mm')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'notes' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Patient Notes</h2>
+              <button
+                onClick={() => setShowNoteForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Note</span>
+              </button>
+            </div>
+
+            {notes.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No notes recorded yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notes.map((note, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          note.type === 'Assessment' ? 'bg-blue-100 text-blue-800' :
+                          note.type === 'Treatment' ? 'bg-green-100 text-green-800' :
+                          note.type === 'Observation' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {note.type}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          note.priority === 'High' ? 'bg-red-100 text-red-800' :
+                          note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {note.priority} Priority
+                        </span>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {format(new Date(note.createdAt), 'MMM dd, yyyy HH:mm')}
+                      </span>
+                    </div>
+                    <p className="text-gray-900 mb-3">{note.content}</p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <UserCheck className="w-4 h-4" />
+                      <span>By: {note.nurseName}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'assessments' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Patient Assessments</h2>
+              <button
+                onClick={() => setShowAssessmentForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Assessment</span>
+              </button>
+            </div>
+
+            {assessments.length === 0 ? (
+              <div className="text-center py-12">
+                <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No assessments completed yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {assessments.map((assessment) => (
+                  <div 
+                    key={assessment.id} 
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setSelectedAssessment(assessment)}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{assessment.type}</h3>
+                        <p className="text-gray-600 mt-1">{assessment.summary}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm text-gray-500">
+                          {format(new Date(assessment.created_at), 'MMM dd, yyyy HH:mm')}
+                        </span>
+                        <p className="text-sm text-gray-600 mt-1">By: {assessment.nurse_name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        assessment.priority === 'High' ? 'bg-red-100 text-red-800' :
+                        assessment.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {assessment.priority} Priority
+                      </span>
+                      <span className="text-sm text-blue-600 hover:text-blue-800">
+                        Click to view details →
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'admission' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Admission Records</h2>
+              <button
+                onClick={() => setShowAdmissionForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Edit className="w-4 h-4" />
+                <span>Edit Records</span>
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500">Admission records will be displayed here.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'directives' && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Advanced Directives</h2>
+              <button
+                onClick={() => setShowAdvancedDirectivesForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <Edit className="w-4 h-4" />
+                <span>Edit Directives</span>
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500">Advanced directives will be displayed here.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'tools' && (
+          <div className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Patient Tools</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <button
+                onClick={() => setShowHospitalBracelet(true)}
+                className="p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+              >
+                <QrCode className="w-8 h-8 text-blue-600 mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Hospital Bracelet</h3>
+                <p className="text-gray-600 text-sm">Generate patient identification bracelet</p>
+              </button>
+
+              <button
+                onClick={() => setShowPatientBracelet(true)}
+                className="p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+              >
+                <Clipboard className="w-8 h-8 text-green-600 mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Patient Bracelet</h3>
+                <p className="text-gray-600 text-sm">Print patient information bracelet</p>
+              </button>
+
+              <button
+                onClick={() => setShowMedicationBarcode(true)}
+                className="p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left"
+              >
+                <QrCode className="w-8 h-8 text-purple-600 mb-3" />
+                <h3 className="font-semibold text-gray-900 mb-2">Medication Barcode</h3>
+                <p className="text-gray-600 text-sm">Generate medication barcodes</p>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      {showVitalsEditor && (
+        <VitalSignsEditor
+          patientId={patient.id}
+          onSave={handleVitalsUpdate}
+          onCancel={() => setShowVitalsEditor(false)}
+        />
+      )}
+
+      {showMedicationForm && (
+        <MedicationForm
+          patientId={patient.id}
+          onSave={handleMedicationAdd}
+          onCancel={() => setShowMedicationForm(false)}
+        />
+      )}
+
+      {showNoteForm && (
+        <PatientNoteForm
+          patientId={patient.id}
+          onSave={handleNoteAdd}
+          onCancel={() => setShowNoteForm(false)}
+        />
+      )}
+
+      {showAssessmentForm && (
+        <AssessmentForm
+          patientId={patient.id}
+          patientName={`${patient.firstName} ${patient.lastName}`}
+          onSave={handleAssessmentAdd}
+          onCancel={() => setShowAssessmentForm(false)}
+        />
+      )}
+
+      {showAdmissionForm && (
+        <AdmissionRecordsForm
+          patientId={patient.id}
+          onSave={() => setShowAdmissionForm(false)}
+          onCancel={() => setShowAdmissionForm(false)}
+        />
+      )}
+
+      {showAdvancedDirectivesForm && (
+        <AdvancedDirectivesForm
+          patientId={patient.id}
+          onSave={() => setShowAdvancedDirectivesForm(false)}
+          onCancel={() => setShowAdvancedDirectivesForm(false)}
+        />
+      )}
+
+      {showVitalsTrends && (
+        <VitalsTrends
+          patientId={patient.id}
+          patientName={`${patient.firstName} ${patient.lastName}`}
+          onClose={() => setShowVitalsTrends(false)}
+        />
+      )}
+
+      {showHospitalBracelet && (
+        <HospitalBracelet
+          patient={patient}
+          onClose={() => setShowHospitalBracelet(false)}
+        />
+      )}
+
+      {showPatientBracelet && (
+        <PatientBracelet
+          patient={patient}
+          onClose={() => setShowPatientBracelet(false)}
+        />
+      )}
+
+      {showMedicationBarcode && (
+        <MedicationBarcode
+          patient={patient}
+          medications={medications}
+          onClose={() => setShowMedicationBarcode(false)}
+        />
+      )}
+    </div>
+  );
+};
