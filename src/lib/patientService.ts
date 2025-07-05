@@ -278,6 +278,100 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
 };
 
 /**
+ * Get patient vitals (latest record)
+ */
+export const getPatientVitals = async (patientId: string): Promise<VitalSigns | null> => {
+  try {
+    console.log('Fetching latest vitals for patient:', patientId);
+    
+    const { data, error } = await supabase
+      .from('patient_vitals')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No records found
+        console.log('No vitals found for patient:', patientId);
+        return null;
+      }
+      console.error('Error fetching patient vitals:', error);
+      throw error;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    // Convert to app format
+    const vitals: VitalSigns = {
+      id: data.id,
+      temperature: data.temperature * (9/5) + 32, // Convert Celsius to Fahrenheit
+      bloodPressure: {
+        systolic: data.blood_pressure_systolic,
+        diastolic: data.blood_pressure_diastolic
+      },
+      heartRate: data.heart_rate,
+      respiratoryRate: data.respiratory_rate,
+      oxygenSaturation: data.oxygen_saturation,
+      recorded_at: data.recorded_at,
+      lastUpdated: data.recorded_at
+    };
+
+    console.log('Latest vitals fetched successfully');
+    return vitals;
+  } catch (error) {
+    console.error('Error fetching patient vitals:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get patient notes
+ */
+export const getPatientNotes = async (patientId: string): Promise<PatientNote[]> => {
+  try {
+    console.log('Fetching notes for patient:', patientId);
+    
+    const { data, error } = await supabase
+      .from('patient_notes')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching patient notes:', error);
+      throw error;
+    }
+
+    if (!data) {
+      return [];
+    }
+
+    // Convert to app format
+    const notes: PatientNote[] = data.map(note => ({
+      id: note.id,
+      patientId: note.patient_id,
+      nurseId: note.nurse_id,
+      nurseName: note.nurse_name,
+      type: note.type,
+      content: note.content,
+      priority: note.priority as 'Low' | 'Medium' | 'High',
+      createdAt: note.created_at
+    }));
+
+    console.log(`Found ${notes.length} notes for patient ${patientId}`);
+    return notes;
+  } catch (error) {
+    console.error('Error fetching patient notes:', error);
+    throw error;
+  }
+};
+
+/**
  * Clear all vital records for a patient
  * Only accessible to super admins
  */

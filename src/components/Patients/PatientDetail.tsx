@@ -49,7 +49,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       const [vitalsData, notesData, medicationsData] = await Promise.all([
         getPatientVitals(patient.id),
         getPatientNotes(patient.id),
-        getPatientMedications(patient.id)
+        fetchPatientMedications(patient.id)
       ]);
       
       setVitals(vitalsData);
