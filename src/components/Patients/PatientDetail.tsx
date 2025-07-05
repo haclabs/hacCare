@@ -36,9 +36,9 @@ import {
 import { Patient } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationForm } from './MedicationForm';
+import { MedicationAdministration } from './MedicationAdministration';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
-import { MedicationAdministration } from './MedicationAdministration';
 import { AssessmentDetail } from './AssessmentDetail';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
@@ -56,11 +56,16 @@ import { usePatients } from '../../contexts/PatientContext';
 const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
   if (!dateValue) return 'N/A';
   
-  const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
-  
-  if (!isValid(date)) return 'N/A';
-  
-  return format(date, formatString);
+  try {
+    const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+    
+    if (!isValid(date)) return 'N/A';
+    
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Date formatting error:', error, 'for value:', dateValue);
+    return 'N/A';
+  }
 };
 
 interface PatientDetailProps {
