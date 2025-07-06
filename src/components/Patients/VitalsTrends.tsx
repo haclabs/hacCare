@@ -22,7 +22,12 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientName, onClose, onRecordVitals }) => {
+export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ 
+  patientId, 
+  patientName, 
+  onClose, 
+  onRecordVitals 
+}) => {
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [readings, setReadings] = useState<VitalReading[]>([]);
   const [clearingVitals, setClearingVitals] = useState(false);
@@ -226,7 +231,13 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
     color: 'red' | 'green' | 'blue' | 'purple' | 'teal', 
     unit: string,
     timestamps: string[]
-  }> = ({ data, label, color, unit, timestamps }) => {
+  }> = ({ 
+    data, 
+    label, 
+    color, 
+    unit, 
+    timestamps 
+  }) => {
     // For a single reading, create a flat line with two identical points
     const displayData = data.length === 1 ? [data[0], data[0]] : data;
     const displayTimestamps = timestamps.length === 1 ? 
@@ -238,7 +249,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
     const range = max - min || 1;
 
     return (
-      <div className="bg-white rounded-lg p-6">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">{label} Trend</h3>
           <button
@@ -247,8 +258,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
           >
             <X className="h-5 w-5" />
           </button>
-        </div>
-        
+        </div>  
+        <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{label} Trend</h3>
         <div className="relative h-64 mb-4">
           <svg className="w-full h-full border border-gray-200 rounded" viewBox="0 0 400 200">
             {/* Grid lines */}
@@ -332,6 +344,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
               {isValid(parseISO(timestamp)) ? format(parseISO(timestamp), 'MMM dd HH:mm') : 'Invalid date'}
             </span>
           ))}
+        </div>
         </div>
       </div>
     );

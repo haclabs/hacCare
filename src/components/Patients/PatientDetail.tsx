@@ -376,7 +376,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <div className={`p-4 rounded-lg ${getVitalStatus('temperature', vitals.temperature)}`}>
                     <div className="flex items-center space-x-2 mb-2">
                       <Thermometer className="h-5 w-5" />
-                      <span className="text-sm font-medium">Temperature</span>
+                      <span className="text-sm font-medium">Temperature (°C)</span>
                     </div>
                     <div className="text-2xl font-bold">{vitals.temperature.toFixed(1)}°C</div>
                   </div>
@@ -579,6 +579,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <button
                   onClick={() => setShowVitalsTrends(true)}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="View vital signs trends"
+                  title="View vital signs trends"
                 >
                   <TrendingUp className="h-4 w-4" />
                   <span>View Trends</span>
