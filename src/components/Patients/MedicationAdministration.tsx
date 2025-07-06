@@ -32,6 +32,11 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [medicationToEdit, setMedicationToEdit] = useState<Medication | null>(null);
 
+  // Ensure MedicationForm is properly imported
+  useEffect(() => {
+    console.log('MedicationAdministration component mounted');
+  }, []);
+
   useEffect(() => {
     loadMedications();
   }, [patientId]);
@@ -569,7 +574,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       
       {/* Medication Edit Form */}
       {showMedicationForm && medicationToEdit && (
-        <MedicationForm
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <MedicationForm
           medication={medicationToEdit}
           patientId={patientId}
           patientName={patientName}
@@ -583,7 +589,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             loadMedications();
             onRefresh();
           }}
-        />
+          />
+        </div>
       )}
     </div>
   );
