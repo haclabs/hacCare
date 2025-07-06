@@ -4,6 +4,7 @@ import { Medication, MedicationAdministration as MedAdmin } from '../../types';
 import { format, isValid, parseISO } from 'date-fns';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
+import { MedicationForm } from './MedicationForm';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
@@ -576,19 +577,19 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showMedicationForm && medicationToEdit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <MedicationForm
-          medication={medicationToEdit}
-          patientId={patientId}
-          patientName={patientName}
-          onCancel={() => {
-            setShowMedicationForm(false);
-            setMedicationToEdit(null);
-          }}
-          onSave={() => {
-            setShowMedicationForm(false);
-            setMedicationToEdit(null);
-            loadMedications();
-            onRefresh();
-          }}
+            medication={medicationToEdit}
+            patientId={patientId}
+            patientName={patientName}
+            onCancel={() => {
+              setShowMedicationForm(false);
+              setMedicationToEdit(null);
+            }}
+            onSave={() => {
+              setShowMedicationForm(false);
+              setMedicationToEdit(null);
+              loadMedications();
+              onRefresh();
+            }}
           />
         </div>
       )}
