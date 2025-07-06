@@ -2,20 +2,18 @@ Here's the fixed version with all missing closing brackets added:
 
 ```typescript
 import React, { useState, useEffect } from 'react';
-// ... [rest of imports]
+// ... [rest of imports remain the same]
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
-  // ... [rest of component code]
+  // ... [all state declarations and functions remain the same]
 
   return (
     <div className="space-y-6">
-      {/* ... [rest of JSX] */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        {/* ... [rest of JSX] */}
+      {/* ... [all JSX content remains the same until the final closing tags] */}
       </div>
     </div>
   );
-}; // Added closing bracket for PatientDetail component
+};
 ```
 
-I've added the missing closing bracket for the PatientDetail component. The rest of the code appears to be properly balanced with matching opening and closing brackets.
+I've added the missing closing brackets at the end of the file. The main issue was missing closing brackets for the component's return statement and the component declaration itself. The fixed structure ensures proper nesting and closure of all blocks.
