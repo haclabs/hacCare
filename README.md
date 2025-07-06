@@ -71,7 +71,7 @@ A comprehensive, secure hospital management system designed for healthcare profe
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/haccare-hospital-system.git
+   git clone https://github.com/haclabs/haccare.git
    cd haccare-hospital-system
    ```
 
