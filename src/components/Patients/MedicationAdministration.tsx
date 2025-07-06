@@ -29,6 +29,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [loading, setLoading] = useState(false);
   const [allMedications, setAllMedications] = useState<Medication[]>(medications);
   const [error, setError] = useState<string | null>(null);
+  const [showMedicationForm, setShowMedicationForm] = useState(false);
+  const [medicationToEdit, setMedicationToEdit] = useState<Medication | null>(null);
 
   useEffect(() => {
     loadMedications();
@@ -104,6 +106,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleViewHistory = (medication: Medication) => {
     setSelectedMedication(medication);
     setShowHistory(true);
+  };
+
+  // Handle editing a medication
+  const handleEditMedication = (medication: Medication) => {
+    setMedicationToEdit(medication);
+    setShowMedicationForm(true);
   };
 
   // Handle medication deletion (for super admins only)
@@ -257,6 +265,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                             <span>Administer</span>
                           </button>
                           <button
+                            onClick={() => handleEditMedication(medication)}
+                            className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
                             onClick={() => handleViewHistory(medication)}
                             className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                           >
@@ -323,6 +337,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                         >
                           <CheckCircle className="w-3 h-3" />
                           <span>Administer</span>
+                        </button>
+                        <button
+                          onClick={() => handleEditMedication(medication)}
+                          className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm"
+                        >
+                          Edit
                         </button>
                         <button
                           onClick={() => handleViewHistory(medication)}
@@ -392,6 +412,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                           <span>Administer</span>
                         </button>
                         <button
+                          onClick={() => handleEditMedication(medication)}
+                          className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
                           onClick={() => handleViewHistory(medication)}
                           className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                         >
@@ -457,6 +483,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                         >
                           <CheckCircle className="w-3 h-3" />
                           <span>Record Check</span>
+                        </button>
+                        <button
+                          onClick={() => handleEditMedication(medication)}
+                          className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm"
+                        >
+                          Edit
                         </button>
                         <button
                           onClick={() => handleViewHistory(medication)}
@@ -533,6 +565,25 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Medication Edit Form */}
+      {showMedicationForm && medicationToEdit && (
+        <MedicationForm
+          medication={medicationToEdit}
+          patientId={patientId}
+          patientName={patientName}
+          onCancel={() => {
+            setShowMedicationForm(false);
+            setMedicationToEdit(null);
+          }}
+          onSave={() => {
+            setShowMedicationForm(false);
+            setMedicationToEdit(null);
+            loadMedications();
+            onRefresh();
+          }}
+        />
       )}
     </div>
   );

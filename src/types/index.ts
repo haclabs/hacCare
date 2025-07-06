@@ -37,6 +37,7 @@ export interface VitalSigns {
 
 export interface Medication {
   id: string;
+  patient_id?: string;
   name: string;
   category?: 'scheduled' | 'unscheduled' | 'prn' | 'continuous';
   dosage: string;

@@ -158,6 +158,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     try {
       const medicationData: Medication = {
         id: medication?.id || uuidv4(),
+        patient_id: patientId,
         name: formData.name,
         category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
         dosage: formData.dosage,

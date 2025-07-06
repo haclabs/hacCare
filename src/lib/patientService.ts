@@ -252,12 +252,13 @@ export const deletePatient = async (patientId: string): Promise<void> => {
 export const updatePatientVitals = async (patientId: string, vitals: VitalSigns): Promise<void> => {
   try {
     console.log('Inserting vitals for patient:', patientId, vitals);
+    console.log('Storing temperature in Celsius:', vitals.temperature);
     
     const { error } = await supabase
       .from('patient_vitals')
       .insert({
         patient_id: patientId,
-        temperature: vitals.temperature, // Already in Celsius, no conversion needed
+        temperature: vitals.temperature, // Already converted to Celsius in VitalSignsEditor
         blood_pressure_systolic: vitals.bloodPressure.systolic,
         blood_pressure_diastolic: vitals.bloodPressure.diastolic,
         heart_rate: vitals.heartRate,
@@ -304,7 +305,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
     // Convert to app format
     const vitals: VitalSigns = {
       id: data.id,
-      temperature: data.temperature, // Keep in Celsius
+      temperature: data.temperature * (9/5) + 32, // Convert Celsius to Fahrenheit for display
       bloodPressure: {
         systolic: data.blood_pressure_systolic,
         diastolic: data.blood_pressure_diastolic
