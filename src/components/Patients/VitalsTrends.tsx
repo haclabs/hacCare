@@ -62,7 +62,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
       // Convert database format to component format
       const formattedReadings: VitalReading[] = vitalsData.map(vital => ({
         timestamp: vital.recorded_at,
-        temperature: parseFloat(vital.temperature) * (9/5) + 32, // Convert Celsius to Fahrenheit for display
+        temperature: parseFloat(vital.temperature), // Keep in Celsius
         heartRate: vital.heart_rate,
         bloodPressure: {
           systolic: vital.blood_pressure_systolic,
@@ -551,7 +551,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
                         )}
                         
                         <p className="text-xs text-gray-500 mt-1">
-                          Normal range: 97.0°F - 99.0°F
+                          Normal range: 36.5°C - 37.5°C
                         </p>
                       </div>
                     )}
@@ -562,7 +562,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
                           <span className="font-medium">Single Reading</span> - {readings[0].temperature.toFixed(1)}°F
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Normal range: 97.0°F - 99.0°F
+                          Normal range: 36.5°C - 37.5°C
                         </p>
                       </div>
                     )}

@@ -257,7 +257,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
       .from('patient_vitals')
       .insert({
         patient_id: patientId,
-        temperature: (vitals.temperature - 32) * (5/9), // Convert Fahrenheit to Celsius for storage
+        temperature: vitals.temperature, // Already in Celsius, no conversion needed
         blood_pressure_systolic: vitals.bloodPressure.systolic,
         blood_pressure_diastolic: vitals.bloodPressure.diastolic,
         heart_rate: vitals.heartRate,
@@ -304,7 +304,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
     // Convert to app format
     const vitals: VitalSigns = {
       id: data.id,
-      temperature: data.temperature * (9/5) + 32, // Convert Celsius to Fahrenheit
+      temperature: data.temperature, // Keep in Celsius
       bloodPressure: {
         systolic: data.blood_pressure_systolic,
         diastolic: data.blood_pressure_diastolic
