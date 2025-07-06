@@ -47,10 +47,5 @@ interface PatientDetailProps {
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
   // ... rest of the component code ...
-  return (
-    <div className="space-y-6">
-      {/* ... rest of the JSX ... */}
-    </div>
-  );
-}; // Added closing bracket for PatientDetail component
+}); // Added closing bracket for PatientDetail component
 ```
