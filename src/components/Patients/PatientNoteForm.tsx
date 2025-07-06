@@ -154,6 +154,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            type="button"
           >
             <X className="h-6 w-6" />
           </button>
@@ -280,7 +281,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => onClose()}
               disabled={loading}
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >

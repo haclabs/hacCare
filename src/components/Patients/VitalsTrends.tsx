@@ -343,7 +343,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ patientId, patientNa
         data: readings.map(r => r.temperature),
         label: 'Temperature',
         color: 'red',
-        unit: '°F'
+        unit: '°C'
       },
       heartRate: {
         data: readings.map(r => r.heartRate),

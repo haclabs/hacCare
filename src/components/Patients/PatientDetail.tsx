@@ -272,7 +272,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             }`}
           >
             <Pill className="w-4 h-4" />
-            <span>Medications</span>
+            <span>MAR</span>
           </button>
           
           <button
@@ -378,7 +378,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       <Thermometer className="h-5 w-5" />
                       <span className="text-sm font-medium">Temperature</span>
                     </div>
-                    <div className="text-2xl font-bold">{vitals.temperature.toFixed(1)}°F</div>
+                    <div className="text-2xl font-bold">{vitals.temperature.toFixed(1)}°C</div>
                   </div>
 
                   <div className={`p-4 rounded-lg ${getVitalStatus('heartRate', vitals.heartRate)}`}>
@@ -665,7 +665,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
                 <Pill className="h-5 w-5" />
-                <span>Medication Administration Record</span>
+                <span>MAR (Medication Administration Record)</span>
               </h2>
               <button
                 onClick={() => setShowMedicationForm(true)}
