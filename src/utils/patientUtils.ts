@@ -182,3 +182,21 @@ export const getVitalStatus = (vital: string, value: number) => {
       if (value < 36 || value > 38) return 'text-red-600 bg-red-50';
       return 'text-green-600 bg-green-50';
     case 'heartRate':
+      if (value < 60 || value > 100) return 'text-red-600 bg-red-50';
+      return 'text-green-600 bg-green-50';
+    case 'bloodPressureSystolic':
+      if (value < 90 || value > 140) return 'text-red-600 bg-red-50';
+      return 'text-green-600 bg-green-50';
+    case 'bloodPressureDiastolic':
+      if (value < 60 || value > 90) return 'text-red-600 bg-red-50';
+      return 'text-green-600 bg-green-50';
+    case 'respiratoryRate':
+      if (value < 12 || value > 20) return 'text-red-600 bg-red-50';
+      return 'text-green-600 bg-green-50';
+    case 'oxygenSaturation':
+      if (value < 95) return 'text-red-600 bg-red-50';
+      return 'text-green-600 bg-green-50';
+    default:
+      return 'text-gray-600 bg-gray-50';
+  }
+};
