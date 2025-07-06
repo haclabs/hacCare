@@ -22,7 +22,7 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ 
+const VitalsTrends: React.FC<VitalsTrendsProps> = ({ 
   patientId, 
   patientName, 
   onClose, 
@@ -725,4 +725,3 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           )}
         </div>
   );
-};
