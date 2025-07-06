@@ -400,7 +400,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
         color={chart.color}
         unit={chart.unit}
         timestamps={readings.map(r => r.timestamp)}
-        onClose: () => setSelectedChart(null)
+        onClose={() => setSelectedChart(null)}
       />
     );
   }
