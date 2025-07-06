@@ -238,13 +238,6 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     unit, 
     timestamps 
   }) => {
-    const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only close if clicking the background overlay, not the chart itself
-      if (e.target === e.currentTarget) {
-        setSelectedChart(null);
-      }
-    };
-
     // For a single reading, create a flat line with two identical points
     const displayData = data.length === 1 ? [data[0], data[0]] : data;
     const displayTimestamps = timestamps.length === 1 ? 
@@ -256,20 +249,18 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     const range = max - min || 1;
 
     return (
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
-        onClick={handleBackgroundClick}
-      >
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">{label} Trend</h3>
+          <button
+            onClick={() => setSelectedChart(null)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>  
         <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">{label} Trend</h3>
-            <button
-              onClick={() => setSelectedChart(null)}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{label} Trend</h3>
         <div className="relative h-64 mb-4">
           <svg className="w-full h-full border border-gray-200 rounded" viewBox="0 0 400 200">
             {/* Grid lines */}
@@ -353,15 +344,6 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               {isValid(parseISO(timestamp)) ? format(parseISO(timestamp), 'MMM dd HH:mm') : 'Invalid date'}
             </span>
           ))}
-        </div>
-        
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={() => setSelectedChart(null)}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Close
-          </button>
         </div>
         </div>
       </div>
