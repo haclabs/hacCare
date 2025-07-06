@@ -205,7 +205,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
             <p className="text-sm text-gray-600 mt-1">Patient: {patientName}</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCancel}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-6 w-6" />
