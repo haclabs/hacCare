@@ -399,7 +399,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
         label={chart.label}
         color={chart.color}
         unit={chart.unit}
-        timestamps: readings.map(r => r.timestamp),
+        timestamps={readings.map(r => r.timestamp)}
         onClose: () => setSelectedChart(null)
       />
     );
