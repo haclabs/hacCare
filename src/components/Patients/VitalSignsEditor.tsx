@@ -13,7 +13,7 @@ interface VitalSignsEditorProps {
 
 // Default vital signs values
 const defaultVitals: VitalSigns = {
-  temperature: 37.0, // Display in Celsius
+  temperature: 37.0, // Store in Celsius
   heartRate: 72,
   bloodPressure: {
     systolic: 120,
@@ -48,10 +48,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
       console.log('Saving vitals for patient:', patientId, editedVitals);
       
       // Convert temperature from Fahrenheit to Celsius for storage
-      const vitalsToSave = {
-        ...editedVitals,
-        temperature: (editedVitals.temperature - 32) * (5/9) // Convert to Celsius for storage
-      };
+      const vitalsToSave = { ...editedVitals };
       
       console.log('Formatted vitals to save:', vitalsToSave);
       
