@@ -42,11 +42,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showMedicationBarcode, setShowMedicationBarcode] = useState(false);
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
   const [showDirectivesForm, setShowDirectivesForm] = useState(false);
-    
-    // Close the vitals trends modal when switching tabs
-    if (tab !== 'vitals' && showVitalsTrends) {
-      setShowVitalsTrends(false);
-    }
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
 
   useEffect(() => {
@@ -93,6 +88,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const handleAssessmentAdd = () => {
     setShowAssessmentForm(false);
     loadPatientData(); // Refresh data
+  };
+
+  const handleTabChange = (tab: string) => {
+    // Close the vitals trends modal when switching tabs
+    if (tab !== 'vitals' && showVitalsTrends) {
+      setShowVitalsTrends(false);
+    }
+    setActiveTab(tab);
   };
 
   const getVitalStatus = (vital: string, value: number) => {
@@ -243,19 +246,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-8 overflow-x-auto" onClick={(e) => {
-          // Get the tab name from the clicked button
-          const button = (e.target as HTMLElement).closest('button');
-          if (button) {
-            const tab = button.getAttribute('data-tab');
-            if (tab) {
-              handleTabChange(tab);
-            }
-          }
-        }}>
+        <nav className="flex space-x-8 overflow-x-auto">
           <button
-            data-tab="overview"
-            onClick={() => setActiveTab('overview')}
+            onClick={() => handleTabChange('overview')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'overview'
                 ? 'border-blue-500 text-blue-600'
@@ -267,8 +260,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </button>
           
           <button
-            data-tab="vitals"
-            onClick={() => setActiveTab('vitals')}
+            onClick={() => handleTabChange('vitals')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'vitals'
                 ? 'border-blue-500 text-blue-600'
@@ -280,8 +272,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </button>
           
           <button
-            data-tab="medications"
-            onClick={() => setActiveTab('medications')}
+            onClick={() => handleTabChange('medications')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'medications'
                 ? 'border-blue-500 text-blue-600'
@@ -293,8 +284,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </button>
           
           <button
-            data-tab="notes"
-            onClick={() => setActiveTab('notes')}
+            onClick={() => handleTabChange('notes')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'notes'
                 ? 'border-blue-500 text-blue-600'
@@ -306,8 +296,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </button>
           
           <button
-            data-tab="admission"
-            onClick={() => setActiveTab('admission')}
+            onClick={() => handleTabChange('admission')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'admission'
                 ? 'border-blue-500 text-blue-600'
@@ -319,8 +308,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </button>
           
           <button
-            data-tab="directives"
-            onClick={() => setActiveTab('directives')}
+            onClick={() => handleTabChange('directives')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'directives'
                 ? 'border-blue-500 text-blue-600'
@@ -335,19 +323,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       
       {/* Second row of tabs for assessments */}
       <div className="border-b border-gray-200 -mt-6">
-        <nav className="flex space-x-8 overflow-x-auto" onClick={(e) => {
-          // Get the tab name from the clicked button
-          const button = (e.target as HTMLElement).closest('button');
-          if (button) {
-            const tab = button.getAttribute('data-tab');
-            if (tab) {
-              handleTabChange(tab);
-            }
-          }
-        }}>
+        <nav className="flex space-x-8 overflow-x-auto">
           <button
-            data-tab="assessments"
-            onClick={() => setActiveTab('assessments')}
+            onClick={() => handleTabChange('assessments')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'assessments'
                 ? 'border-purple-500 text-purple-600'
@@ -359,8 +337,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           </button>
           
           <button
-            data-tab="wounds"
-            onClick={() => setActiveTab('wounds')}
+            onClick={() => handleTabChange('wounds')}
             className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
               activeTab === 'wounds'
                 ? 'border-purple-500 text-purple-600'
@@ -517,7 +494,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   ))}
                   {medications.filter(med => med.status === 'Active').length > 3 && (
                     <button
-                      onClick={() => setActiveTab('medications')}
+                      onClick={() => handleTabChange('medications')}
                       className="w-full text-blue-600 hover:text-blue-800 text-sm py-2"
                     >
                       View all {medications.filter(med => med.status === 'Active').length} medications
@@ -575,7 +552,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   ))}
                   {notes.length > 3 && (
                     <button
-                      onClick={() => setActiveTab('notes')}
+                      onClick={() => handleTabChange('notes')}
                       className="w-full text-blue-600 hover:text-blue-800 text-sm py-2"
                     >
                       View all {notes.length} notes
@@ -610,11 +587,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <button
                   onClick={() => {
                     setShowVitalsTrends(true);
-                    // Ensure we're on the vitals tab when showing trends
-                    setActiveTab('vitals');
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  title="View vital signs trends"
+                   handleTabChange('vitals');
                   title="View vital signs trends"
                 >
                   <TrendingUp className="h-4 w-4" />
