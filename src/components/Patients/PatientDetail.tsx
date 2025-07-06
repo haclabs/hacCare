@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2 } from 'lucide-react';
-import { Patient, PatientVitals, PatientMedication, PatientNote, PatientAlert } from '../../types';
+import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationForm } from './MedicationForm';
 import { PatientNoteForm } from './PatientNoteForm';
@@ -25,10 +25,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
   const [showMedicationAdmin, setShowMedicationAdmin] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
-  const [vitals, setVitals] = useState<PatientVitals[]>([]);
-  const [medications, setMedications] = useState<PatientMedication[]>([]);
+  const [vitals, setVitals] = useState<VitalSigns[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
-  const [alerts, setAlerts] = useState<PatientAlert[]>([]);
 
   const handleTabChange = (tab: string) => {
     // Close the vitals trends modal when switching tabs
@@ -481,85 +480,97 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {/* Modals */}
       {showVitalForm && (
         <VitalSignsEditor
-          patient={patient}
+          patientId={patient.id}
+          vitals={vitals[0]}
           onClose={() => setShowVitalForm(false)}
-          onSave={() => {
+          onSave={(newVitals) => {
             setShowVitalForm(false);
-            // Refresh vitals data
+            setVitals([newVitals, ...vitals]);
           }}
+          onCancel={() => setShowVitalForm(false)}
         />
       )}
 
       {showMedicationForm && (
         <MedicationForm
-          patient={patient}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowMedicationForm(false)}
-          onSave={() => {
+          onSave={(newMedication) => {
             setShowMedicationForm(false);
-            // Refresh medications data
+            setMedications([newMedication, ...medications]);
           }}
+          onCancel={() => setShowMedicationForm(false)}
         />
       )}
 
       {showNoteForm && (
         <PatientNoteForm
-          patient={patient}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowNoteForm(false)}
-          onSave={() => {
+          onSave={(newNote) => {
             setShowNoteForm(false);
-            // Refresh notes data
+            setNotes([newNote, ...notes]);
           }}
+          onCancel={() => setShowNoteForm(false)}
         />
       )}
 
       {showAssessmentForm && (
         <AssessmentForm
-          patient={patient}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowAssessmentForm(false)}
-          onSave={() => {
+          onSave={(newAssessment) => {
             setShowAssessmentForm(false);
-            // Refresh assessments data
           }}
         />
       )}
 
       {showAdmissionForm && (
         <AdmissionRecordsForm
-          patient={patient}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowAdmissionForm(false)}
           onSave={() => {
             setShowAdmissionForm(false);
-            // Refresh admission data
           }}
         />
       )}
 
       {showAdvancedDirectivesForm && (
         <AdvancedDirectivesForm
-          patient={patient}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowAdvancedDirectivesForm(false)}
           onSave={() => {
             setShowAdvancedDirectivesForm(false);
-            // Refresh directives data
           }}
         />
       )}
 
       {showMedicationAdmin && (
         <MedicationAdministration
-          patient={patient}
-          onClose={() => setShowMedicationAdmin(false)}
-          onComplete={() => {
-            setShowMedicationAdmin(false);
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          medications={medications}
+          onRefresh={() => {
             // Refresh medications data
           }}
+          onClose={() => setShowMedicationAdmin(false)}
         />
       )}
 
       {showVitalsTrends && (
         <VitalsTrends
-          patient={patient}
+          patientId={patient.id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowVitalsTrends(false)}
+          onRecordVitals={() => {
+            setShowVitalsTrends(false);
+            setShowVitalForm(true);
+          }}
         />
       )}
     </div>
