@@ -175,3 +175,10 @@ export const formatTime = (dateValue: string | Date | null): string => {
     return 'N/A';
   }
 };
+
+export const getVitalStatus = (vital: string, value: number) => {
+  switch (vital) {
+    case 'temperature':
+      if (value < 36 || value > 38) return 'text-red-600 bg-red-50';
+      return 'text-green-600 bg-green-50';
+    case 'heartRate':
