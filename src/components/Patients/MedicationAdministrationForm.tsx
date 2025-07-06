@@ -4,6 +4,7 @@ import { Medication, MedicationAdministration } from '../../types';
 import { format } from 'date-fns';
 import { recordMedicationAdministration } from '../../lib/medicationService';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 interface MedicationAdministrationFormProps {
   medication: Medication;
@@ -46,11 +47,19 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
     
     try {
       // Save administration record
-      await recordMedicationAdministration(formData as Omit<MedicationAdministration, 'id'>);
+      const result = await recordMedicationAdministration(formData as Omit<MedicationAdministration, 'id'>);
+      console.log('Administration recorded successfully:', result);
       onSave();
     } catch (err: any) {
       console.error('Error recording administration:', err);
-      setError(err.message || 'Failed to record administration');
+      
+      // Provide more specific error messages
+      if (err.message?.includes('permission denied') || err.message?.includes('foreign key constraint')) {
+        setError('Permission error: Unable to record administration. This may be due to a database configuration issue.');
+        console.error('This is likely due to a permission issue with the users table. A database migration is needed.');
+      } else {
+        setError(err.message || 'Failed to record administration');
+      }
     } finally {
       setLoading(false);
     }

@@ -160,15 +160,27 @@ export const updateMedicationNextDue = async (medicationId: string, nextDue: str
 export const recordMedicationAdministration = async (administration: Omit<MedicationAdministration, 'id'>): Promise<MedicationAdministration> => {
   try {
     console.log('Recording medication administration:', administration);
+
+    // Create a clean object without undefined values
+    const cleanAdministration = Object.fromEntries(
+      Object.entries(administration).filter(([_, v]) => v !== undefined)
+    );
     
     const { data, error } = await supabase
       .from('medication_administrations')
-      .insert(administration)
+      .insert(cleanAdministration)
       .select()
       .single();
 
     if (error) {
       console.error('Error recording medication administration:', error);
+      
+      // Log more details for debugging
+      if (error.message.includes('permission denied')) {
+        console.error('Permission denied error. This may be related to RLS policies or foreign key constraints.');
+        console.error('Details:', error.details, error.hint);
+      }
+      
       throw error;
     }
 
@@ -183,6 +195,8 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     if (updateError) {
       console.error('Error updating medication last_administered:', updateError);
       // Continue anyway since the administration was recorded
+    } else {
+      console.log('Medication last_administered updated successfully');
     }
 
     console.log('Medication administration recorded successfully:', data);
