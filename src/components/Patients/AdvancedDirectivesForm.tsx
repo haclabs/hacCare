@@ -60,11 +60,11 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       
       console.log('Saving advanced directive:', formData);
       await upsertAdvancedDirective(formData);
+      console.log('Advanced directive saved successfully');
       
       // Refresh patient data to reflect changes
       await refreshPatients();
       
-      console.log('Advanced directive saved successfully');
       onSave();
     } catch (err: any) {
       console.error('Error saving advanced directive:', err);

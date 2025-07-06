@@ -60,11 +60,11 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       
       console.log('Saving admission record:', formData);
       await upsertAdmissionRecord(formData);
+      console.log('Admission record saved successfully');
       
       // Refresh patient data to reflect changes
       await refreshPatients();
       
-      console.log('Admission record saved successfully');
       onSave();
     } catch (err: any) {
       console.error('Error saving admission record:', err);

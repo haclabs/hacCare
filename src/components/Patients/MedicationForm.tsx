@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
+import { createMedication, updateMedication } from '../../lib/medicationService';
 import { format, addHours, setHours, setMinutes, parseISO } from 'date-fns';
 import { CheckCircle } from 'lucide-react';
 
@@ -157,7 +158,6 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     
     try {
       const medicationData: Omit<Medication, 'id'> = {
-        patient_id: patientId,
         id: medication?.id || uuidv4(),
         patient_id: patientId,
         name: formData.name,
@@ -172,7 +172,19 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         status: formData.status
       };
 
-      await onSave(medicationData as Medication);
+      if (medication) {
+        // Update existing medication
+        console.log('Updating existing medication:', medicationData);
+        const updatedMedication = await updateMedication(medication.id, medicationData);
+        console.log('Medication updated successfully:', updatedMedication);
+        onSave(updatedMedication);
+      } else {
+        // Create new medication
+        console.log('Creating new medication:', medicationData);
+        const newMedication = await createMedication(medicationData as Omit<Medication, 'id'>);
+        console.log('Medication created successfully:', newMedication);
+        onSave(newMedication);
+      }
     } catch (error) {
       console.error('Error saving medication:', error);
       setErrors({ general: 'Failed to save medication. Please try again.' });
