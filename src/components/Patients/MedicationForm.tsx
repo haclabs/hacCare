@@ -23,7 +23,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
   const [formData, setFormData] = useState({
     name: medication?.name || '',
     dosage: medication?.dosage || '',
-    category: medication?.category || 'scheduled' as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
+    category: medication?.category || 'scheduled',
     frequency: medication?.frequency || 'Once daily',
     route: medication?.route || 'Oral',
     startDate: medication?.start_date || format(new Date(), 'yyyy-MM-dd'),
@@ -156,7 +156,8 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     setLoading(true);
     
     try {
-      const medicationData: Medication = {
+      const medicationData: Omit<Medication, 'id'> = {
+        patient_id: patientId,
         id: medication?.id || uuidv4(),
         patient_id: patientId,
         name: formData.name,
@@ -171,7 +172,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         status: formData.status
       };
 
-      await onSave(medicationData);
+      await onSave(medicationData as Medication);
     } catch (error) {
       console.error('Error saving medication:', error);
       setErrors({ general: 'Failed to save medication. Please try again.' });

@@ -600,7 +600,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     <Thermometer className="h-5 w-5" />
                     <span className="text-sm font-medium">Temperature</span>
                   </div>
-                  <div className="text-2xl font-bold">{vitals.temperature.toFixed(1)}°F</div>
+                  <div className="text-2xl font-bold">{vitals.temperature.toFixed(1)}°C</div>
                 </div>
 
                 <div className={`p-4 rounded-lg ${getVitalStatus('heartRate', vitals.heartRate)}`}>

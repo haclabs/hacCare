@@ -13,7 +13,7 @@ interface VitalSignsEditorProps {
 
 // Default vital signs values
 const defaultVitals: VitalSigns = {
-  temperature: 98.6, // Display in Fahrenheit
+  temperature: 37.0, // Display in Celsius
   heartRate: 72,
   bloodPressure: {
     systolic: 120,
@@ -115,13 +115,13 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
             <div className="bg-red-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3"> 
                 <Thermometer className="h-5 w-5 text-red-600" /> 
-                <label className="text-sm font-medium text-red-900">Temperature (°F)</label>
+                <label className="text-sm font-medium text-red-900">Temperature (°C)</label>
               </div>
               <input
                 type="number"
                 step="0.1"
-                min="95"
-                max="110"
+                min="35"
+                max="42"
                 value={editedVitals.temperature}
                 onChange={(e) => updateVital('temperature', parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
