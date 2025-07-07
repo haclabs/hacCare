@@ -43,7 +43,6 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
-  const [initialized, setInitialized] = useState(false);
   const { user } = useAuth();
 
   /**
@@ -62,16 +61,6 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       console.log('🔔 Loading alerts...');
       const fetchedAlerts = await fetchActiveAlerts();
-      
-      if (!fetchedAlerts || fetchedAlerts.length === 0) {
-        // If no alerts from database, use mock data
-        console.log('No alerts found in database, using mock data');
-        import('../data/mockData').then(({ mockAlerts }) => {
-          setAlerts(mockAlerts);
-          console.log(`✅ Loaded ${mockAlerts.length} mock alerts`);
-        });
-        return;
-      }
       
       // Deduplicate alerts based on message and patient
       const uniqueAlerts = deduplicateAlerts(fetchedAlerts);
@@ -172,7 +161,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     // Initial load
-    loadAlerts().then(() => setInitialized(true));
+    loadAlerts();
 
     // Set up real-time subscription
     const subscription = subscribeToAlerts((updatedAlerts) => {
@@ -217,7 +206,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isSupabaseConfigured]);
 
   // Calculate unread count
-  const unreadCount = initialized ? alerts.filter(alert => !alert.acknowledged).length : 0;
+  const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
 
   const value = {
     alerts,

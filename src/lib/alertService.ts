@@ -47,32 +47,17 @@ const convertDatabaseAlert = (dbAlert: DatabaseAlert): Alert => ({
 export const fetchActiveAlerts = async (): Promise<Alert[]> => {
   try {
     console.log('🔔 Fetching active alerts...');
-
-    if (!supabase) {
-      console.error('Supabase client not initialized');
-      return [];
-    }
     
-    let data, error;
-    
-    try {
-      const result = await supabase
-        .from('patient_alerts')
-        .select('*')
-        .eq('acknowledged', false)
-        .or('expires_at.is.null,expires_at.gt.now()')
-        .order('created_at', { ascending: false });
-      
-      data = result.data;
-      error = result.error;
-    } catch (err) {
-      console.error('Error in Supabase query:', err);
-      error = err;
-    }
+    const { data, error } = await supabase
+      .from('patient_alerts')
+      .select('*')
+      .eq('acknowledged', false)
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching alerts:', error);
-      return [];
+      throw error;
     }
 
     const alerts = (data || []).map(convertDatabaseAlert);
@@ -435,35 +420,23 @@ export const runAlertChecks = async (): Promise<void> => {
 export const subscribeToAlerts = (callback: (alerts: Alert[]) => void) => {
   console.log('🔔 Setting up real-time alert subscription...');
   
-  try {
-    const subscription = supabase
-      .channel('patient_alerts')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'patient_alerts' 
-        }, 
-        async () => {
-          try {
-            // Fetch updated alerts when changes occur
-            const alerts = await fetchActiveAlerts();
-            callback(alerts);
-          } catch (error) {
-            console.error('Error in alert subscription callback:', error);
-          }
-        }
-      )
-      .subscribe();
+  const subscription = supabase
+    .channel('patient_alerts')
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'patient_alerts' 
+      }, 
+      async () => {
+        // Fetch updated alerts when changes occur
+        const alerts = await fetchActiveAlerts();
+        callback(alerts);
+      }
+    )
+    .subscribe();
 
-    return subscription;
-  } catch (error) {
-    console.error('Error setting up alert subscription:', error);
-    // Return a dummy subscription object
-    return {
-      unsubscribe: () => console.log('Dummy unsubscribe called')
-    };
-  }
+  return subscription;
 };
 
 /**

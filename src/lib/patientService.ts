@@ -485,7 +485,6 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
 export const fetchPatientVitalsHistory = async (patientId: string, limit: number = 10): Promise<DatabaseVitals[]> => {
   try {
     console.log('Fetching vitals history for patient:', patientId);
-    console.log('Limit:', limit);
     
     const { data, error } = await supabase
       .from('patient_vitals')
@@ -496,53 +495,13 @@ export const fetchPatientVitalsHistory = async (patientId: string, limit: number
 
     if (error) {
       console.error('Error fetching vitals history:', error);
-      // Return mock data if there's an error
-      return generateMockVitals(patientId, 5);
+      throw error;
     }
 
-    // If no data found, return mock data
-    if (!data || data.length === 0) {
-      console.log('No vitals found, generating mock data');
-      return generateMockVitals(patientId, 5);
-    }
-    
-    console.log(`Found ${data.length} vitals records for patient ${patientId}`);
-    return data;
+    console.log(`Found ${data?.length || 0} vitals records for patient ${patientId}`);
+    return data || [];
   } catch (error) {
     console.error('Error fetching patient vitals history:', error);
-    // Return mock data if there's an error
-    return generateMockVitals(patientId, 5);
+    throw error;
   }
-};
-
-/**
- * Generate mock vital signs data for testing
- */
-const generateMockVitals = (patientId: string, count: number = 5): DatabaseVitals[] => {
-  console.log('Generating mock vitals for patient:', patientId);
-  
-  const mockVitals: DatabaseVitals[] = [];
-  const now = new Date();
-  
-  for (let i = 0; i < count; i++) {
-    // Create a timestamp that's i*2 hours in the past
-    const timestamp = new Date(now.getTime() - (i * 2 * 60 * 60 * 1000));
-    
-    // Add some random variation to the values
-    const variation = (Math.random() - 0.5) * 0.4;
-    
-    mockVitals.push({
-      id: `mock-vital-${i}`,
-      patient_id: patientId,
-      temperature: 37.0 + variation,
-      blood_pressure_systolic: Math.round(120 + variation * 10),
-      blood_pressure_diastolic: Math.round(80 + variation * 5),
-      heart_rate: Math.round(72 + variation * 10),
-      respiratory_rate: Math.round(16 + variation * 4),
-      oxygen_saturation: Math.round(98 + variation * 2),
-      recorded_at: timestamp.toISOString()
-    });
-  }
-  
-  return mockVitals;
 };
