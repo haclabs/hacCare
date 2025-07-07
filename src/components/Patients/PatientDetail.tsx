@@ -1,25 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Edit, 
-  Heart, 
-  Thermometer, 
-  Activity, 
-  Droplets,
-  Clock,
-  User,
-  Calendar,
-  MapPin,
-  Phone,
-  AlertTriangle,
-  FileText,
-  Pill,
-  Stethoscope,
-  Clipboard,
-  Shield,
-  Bandage
-} from 'lucide-react';
+import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage } from 'lucide-react';
 import { Patient, PatientVitals, PatientMedication, PatientNote } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes } from '../../lib/patientService';
 import { VitalSignsEditor } from './VitalSignsEditor';
