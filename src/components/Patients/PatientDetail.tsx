@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X, Activity, Pill, FileText, Heart, AlertTriangle, User, Calendar, Phone, MapPin, Stethoscope, Clipboard, Shield, Ban as Bandage } from 'lucide-react';
-import { Patient, PatientVitals, PatientMedication, PatientNote, PatientAlert, PatientAdmissionRecord, PatientAdvancedDirective, PatientWound } from '../../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientNotes, fetchPatientWounds } from '../../lib/patientService';
+import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
+import { fetchPatientById, fetchPatientVitals, getPatientNotes, fetchPatientWounds } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
 import { fetchActiveAlerts } from '../../lib/alertService';
 import { fetchAdmissionRecord, fetchAdvancedDirective } from '../../lib/admissionService';
@@ -19,13 +19,13 @@ export function PatientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [vitals, setVitals] = useState<PatientVitals[]>([]);
-  const [medications, setMedications] = useState<PatientMedication[]>([]);
+  const [vitals, setVitals] = useState<VitalSigns[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
-  const [alerts, setAlerts] = useState<PatientAlert[]>([]);
-  const [admissionRecord, setAdmissionRecord] = useState<PatientAdmissionRecord | null>(null);
-  const [advancedDirective, setAdvancedDirective] = useState<PatientAdvancedDirective | null>(null);
-  const [wounds, setWounds] = useState<PatientWound[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [admissionRecord, setAdmissionRecord] = useState<any | null>(null);
+  const [advancedDirective, setAdvancedDirective] = useState<any | null>(null);
+  const [wounds, setWounds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -53,7 +53,7 @@ export function PatientDetail() {
         vitalsData,
         medicationsData,
         notesData,
-        allAlertsData,
+        alertsData,
         admissionData,
         directiveData,
         woundsData
@@ -61,15 +61,12 @@ export function PatientDetail() {
         fetchPatientById(id),
         fetchPatientVitals(id),
         fetchPatientMedications(id),
-        fetchPatientNotes(id),
+        getPatientNotes(id),
         fetchActiveAlerts(),
         fetchAdmissionRecord(id),
         fetchAdvancedDirective(id),
         fetchPatientWounds(id)
       ]);
-
-      // Filter alerts for this specific patient
-      const alertsData = allAlertsData.filter(alert => alert.patient_id === id);
 
       setPatient(patientData);
       setVitals(vitalsData);
@@ -91,7 +88,9 @@ export function PatientDetail() {
     if (!id) return;
     try {
       const vitalsData = await fetchPatientVitals(id);
-      setVitals(vitalsData);
+      if (vitalsData && Array.isArray(vitalsData)) {
+        setVitals(vitalsData);
+      }
     } catch (error) {
       console.error('Error fetching vitals:', error);
     }
@@ -229,30 +228,30 @@ export function PatientDetail() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700">Temperature</p>
-                    <p className="text-lg font-semibold text-gray-900">{vitals[0].temperature}°F</p>
+                    <p className="text-lg font-semibold text-gray-900">{vitals[0].temperature}°C</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700">Blood Pressure</p>
                     <p className="text-lg font-semibold text-gray-900">
-                      {vitals[0].blood_pressure_systolic}/{vitals[0].blood_pressure_diastolic}
+                      {vitals[0].bloodPressure.systolic}/{vitals[0].bloodPressure.diastolic}
                     </p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700">Heart Rate</p>
-                    <p className="text-lg font-semibold text-gray-900">{vitals[0].heart_rate} bpm</p>
+                    <p className="text-lg font-semibold text-gray-900">{vitals[0].heartRate} bpm</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700">Respiratory Rate</p>
-                    <p className="text-lg font-semibold text-gray-900">{vitals[0].respiratory_rate} /min</p>
+                    <p className="text-lg font-semibold text-gray-900">{vitals[0].respiratoryRate} /min</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700">O2 Saturation</p>
-                    <p className="text-lg font-semibold text-gray-900">{vitals[0].oxygen_saturation}%</p>
+                    <p className="text-lg font-semibold text-gray-900">{vitals[0].oxygenSaturation}%</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-gray-700">Recorded</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(vitals[0].recorded_at).toLocaleString()}
+                      {new Date(vitals[0].recorded_at || vitals[0].lastUpdated || '').toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -319,7 +318,7 @@ export function PatientDetail() {
                 <div key={note.id} className="bg-white rounded-lg shadow-md p-6">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h4 className="font-semibold text-gray-900">{note.type}</h4>
+                      <h4 className="font-semibold text-gray-900">{alert.type}</h4>
                       <p className="text-sm text-gray-600">By {note.nurse_name}</p>
                     </div>
                     <div className="text-right">
@@ -331,13 +330,13 @@ export function PatientDetail() {
                         {note.priority}
                       </span>
                       <p className="text-sm text-gray-500 mt-1">
-                        {new Date(note.created_at).toLocaleString()}
+                        {new Date(alert.timestamp).toLocaleString()}
                       </p>
                     </div>
                   </div>
                   <p className="text-gray-700">{note.content}</p>
                 </div>
-              ))}
+                      Acknowledged
             </div>
           </div>
         );

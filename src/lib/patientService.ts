@@ -331,6 +331,24 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
 };
 
 /**
+ * Fetch patient vitals
+ */
+export const fetchPatientVitals = async (patientId: string): Promise<VitalSigns[]> => {
+  try {
+    console.log('Fetching vitals for patient:', patientId);
+    
+    // Use the existing fetchPatientVitalsHistory function
+    const vitalsHistory = await fetchPatientVitalsHistory(patientId);
+    
+    // Convert to app format
+    return convertDatabaseVitals(vitalsHistory);
+  } catch (error) {
+    console.error('Error fetching patient vitals:', error);
+    return []; // Return empty array instead of throwing to prevent UI crashes
+  }
+}
+
+/**
  * Get patient vitals (latest record)
  */
 export const getPatientVitals = async (patientId: string): Promise<VitalSigns | null> => {
@@ -379,9 +397,9 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
 };
 
 /**
- * Get patient notes
+ * Fetch patient notes
  */
-export const getPatientNotes = async (patientId: string): Promise<PatientNote[]> => {
+export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[]> => {
   try {
     console.log('Fetching notes for patient:', patientId);
     
@@ -419,6 +437,9 @@ export const getPatientNotes = async (patientId: string): Promise<PatientNote[]>
     throw error;
   }
 };
+
+// Keep the original function name for backward compatibility
+export const getPatientNotes = fetchPatientNotes;
 
 /**
  * Clear all vital records for a patient
