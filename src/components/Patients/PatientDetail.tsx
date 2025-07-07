@@ -114,8 +114,7 @@ export const PatientDetail: React.FC = () => {
     { id: 'assessments', label: 'Assessments', icon: Stethoscope },
     { id: 'wounds', label: 'Wound Care', icon: Bandage },
     { id: 'admission', label: 'Admission', icon: Clipboard },
-    { id: 'directives', label: 'Directives', icon: Shield },
-    { id: 'bracelet', label: 'ID Bracelet', icon: User }
+    { id: 'directives', label: 'Directives', icon: Shield }
   ];
 
   const renderTabContent = () => { 
@@ -123,11 +122,18 @@ export const PatientDetail: React.FC = () => {
       case 'overview':
         return (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <User className="h-5 w-5 text-blue-600 mr-2" />
                 Patient Information
               </h3>
+              <button
+                onClick={() => setActiveTab('bracelet')}
+                className="absolute top-4 right-4 flex items-center text-blue-600 hover:text-blue-800 text-sm"
+              >
+                <User className="h-4 w-4 mr-1" />
+                ID Bracelet
+              </button>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm font-medium text-gray-500">Patient ID:</span>
@@ -400,9 +406,6 @@ export const PatientDetail: React.FC = () => {
       case 'directives':
         return <AdvancedDirectivesForm patientId={id!} />;
 
-      case 'bracelet':
-        return <HospitalBracelet patient={patient} />;
-
       default:
         return null;
     }
@@ -459,6 +462,26 @@ export const PatientDetail: React.FC = () => {
       <div className="mt-6">
         {renderTabContent()}
       </div>
+      
+      {/* Hospital Bracelet Modal */}
+      {activeTab === 'bracelet' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Hospital Patient Bracelet</h2>
+              <button
+                onClick={() => setActiveTab('overview')}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-4">
+              <HospitalBracelet patient={patient} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
