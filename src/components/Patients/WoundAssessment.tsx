@@ -64,23 +64,22 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
   const handleSaveWound = async () => {
     if (!newWoundCoords || !profile) return;
     
-    const wound: Wound = {
+    const wound: any = {
       id: `wound-${Date.now()}`,
       location: newWound.location || 'Unspecified location',
-      coordinates: newWoundCoords,
+      coordinates_x: newWoundCoords.x,
+      coordinates_y: newWoundCoords.y,
       view: selectedView,
       type: newWound.type as Wound['type'],
       stage: newWound.stage as Wound['stage'],
-      size: {
-        length: newWound.size?.length || 0,
-        width: newWound.size?.width || 0,
-        depth: newWound.size?.depth
-      },
+      size_length: newWound.size?.length || 0,
+      size_width: newWound.size?.width || 0,
+      size_depth: newWound.size?.depth,
       description: newWound.description || '',
       treatment: newWound.treatment || '', 
       assessedBy: `${profile.first_name} ${profile.last_name}`,
-      assessmentDate: new Date().toISOString(), 
-      healingProgress: newWound.healingProgress as Wound['healingProgress']
+      assessment_date: new Date().toISOString(), 
+      healing_progress: newWound.healingProgress as Wound['healingProgress']
     };
     
     try {

@@ -124,14 +124,12 @@ export const fetchPatientWounds = async (patientId: string): Promise<WoundUI[]> 
 /**
  * Create a new wound
  */
-export const createWound = async (patientId: string, wound: Omit<WoundUI, 'id'>): Promise<WoundUI> => {
+export const createWound = async (wound: Wound, patientId: string): Promise<WoundUI> => {
   try {
     console.log('Creating wound for patient:', patientId);
     
-    const dbWound = {
-      ...convertToDatabaseFormat(wound as WoundUI),
-      patient_id: patientId
-    };
+    // Make sure patient_id is set correctly
+    const dbWound = { ...wound, patient_id: patientId };
     
     const { data, error } = await supabase
       .from('patient_wounds')
