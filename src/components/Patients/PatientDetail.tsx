@@ -565,13 +565,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         <MedicationForm
           patientId={patient.id}
           patientName={`${patient.first_name} ${patient.last_name}`}
-          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowMedicationForm(false)}
-          onSave={(newMedication) => {
+          onSuccess={(newMedication) => {
             setShowMedicationForm(false);
             setMedications([newMedication, ...medications]);
-          }}
-          onCancel={() => setShowMedicationForm(false)}
           onCancel={() => setShowMedicationForm(false)}
         />
       )}
