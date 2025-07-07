@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X, Activity, Pill, FileText, Heart, AlertTriangle, User, Calendar, Phone, MapPin, Stethoscope, Clipboard, Shield, Ban as Bandage } from 'lucide-react';
 import { Patient, PatientVitals, PatientMedication, PatientNote, PatientAlert, PatientAdmissionRecord, PatientAdvancedDirective, PatientWound } from '../../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes, fetchPatientAlerts, fetchPatientAdmissionRecord, fetchPatientAdvancedDirective, fetchPatientWounds } from '../../lib/patientService';
+import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes, fetchPatientAlerts, fetchPatientAdvancedDirective, fetchPatientWounds } from '../../lib/patientService';
+import { fetchAdmissionRecord } from '../../lib/admissionService';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationAdministration } from './MedicationAdministration';
 import { PatientNoteForm } from './PatientNoteForm';
@@ -60,7 +61,7 @@ export function PatientDetail() {
         fetchPatientMedications(id),
         fetchPatientNotes(id),
         fetchPatientAlerts(id),
-        fetchPatientAdmissionRecord(id),
+        fetchAdmissionRecord(id),
         fetchPatientAdvancedDirective(id),
         fetchPatientWounds(id)
       ]);
