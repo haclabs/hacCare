@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind } from 'lucide-react';
-import { Patient, PatientVitals, PatientMedication, PatientNote } from '../../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../lib/patientService';
+import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw } from 'lucide-react';
+import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
+import { fetchPatientById, fetchPatientVitals, fetchPatientNotes, clearPatientVitals } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
@@ -17,15 +17,16 @@ import { HospitalBracelet } from './HospitalBracelet';
 export const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [vitals, setVitals] = useState<PatientVitals[]>([]);
-  const [medications, setMedications] = useState<PatientMedication[]>([]);
+  const [patient, setPatient] = useState<Patient | null>(null); 
+  const [vitals, setVitals] = useState<VitalSigns[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); 
   const [activeTab, setActiveTab] = useState('overview');
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [refreshingVitals, setRefreshingVitals] = useState(false);
 
   useEffect(() => {
     const loadPatientData = async () => {
@@ -54,7 +55,7 @@ export const PatientDetail: React.FC = () => {
     loadPatientData();
   }, [id]);
 
-  const handleVitalsUpdate = async () => {
+  const handleVitalsUpdate = async () => { 
     if (!id) return;
     try {
       const vitalsData = await fetchPatientVitals(id);
@@ -62,6 +63,19 @@ export const PatientDetail: React.FC = () => {
       setShowVitalsEditor(false);
     } catch (error) {
       console.error('Error updating vitals:', error);
+    }
+  };
+
+  const refreshVitals = async () => {
+    if (!id) return;
+    try {
+      setRefreshingVitals(true);
+      const vitalsData = await fetchPatientVitals(id);
+      setVitals(vitalsData);
+    } catch (error) {
+      console.error('Error refreshing vitals:', error);
+    } finally {
+      setRefreshingVitals(false);
     }
   };
 
@@ -76,7 +90,7 @@ export const PatientDetail: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading) { 
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -84,7 +98,7 @@ export const PatientDetail: React.FC = () => {
     );
   }
 
-  if (!patient) {
+  if (!patient) { 
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Patient not found</p>
@@ -92,7 +106,7 @@ export const PatientDetail: React.FC = () => {
     );
   }
 
-  const tabs = [
+  const tabs = [ 
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Signs', icon: Activity },
     { id: 'medications', label: 'Medications', icon: Pill },
@@ -104,7 +118,7 @@ export const PatientDetail: React.FC = () => {
     { id: 'bracelet', label: 'ID Bracelet', icon: User }
   ];
 
-  const renderTabContent = () => {
+  const renderTabContent = () => { 
     switch (activeTab) {
       case 'overview':
         return (
@@ -204,7 +218,7 @@ export const PatientDetail: React.FC = () => {
           </div>
         );
 
-      case 'vitals':
+      case 'vitals': 
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -219,6 +233,13 @@ export const PatientDetail: React.FC = () => {
                   <span>View Trends</span>
                 </button>
                 <button
+                  onClick={refreshVitals}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshingVitals ? 'animate-spin' : ''}`} />
+                  <span>Refresh</span>
+                </button>
+                <button
                   onClick={() => setShowVitalsEditor(true)}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
@@ -228,7 +249,7 @@ export const PatientDetail: React.FC = () => {
               </div>
             </div>
 
-            {vitals.length > 0 && (
+            {vitals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                   <div className="flex items-center justify-between">
@@ -237,8 +258,8 @@ export const PatientDetail: React.FC = () => {
                       <span className="text-sm font-medium text-gray-600">Temperature</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.temperature?.toFixed(1) || 'N/A'}°C</p>
-                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.recorded_at ? new Date(vitals[0].recorded_at).toLocaleTimeString() : 'N/A'}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.temperature?.toFixed(1)}°C</p>
+                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -248,8 +269,8 @@ export const PatientDetail: React.FC = () => {
                       <span className="text-sm font-medium text-gray-600">Heart Rate</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.heartRate || 'N/A'} bpm</p>
-                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.recorded_at ? new Date(vitals[0].recorded_at).toLocaleTimeString() : 'N/A'}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.heartRate} bpm</p>
+                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -259,10 +280,24 @@ export const PatientDetail: React.FC = () => {
                       <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.bloodPressure?.systolic || 'N/A'}/{vitals[0]?.bloodPressure?.diastolic || 'N/A'} mmHg</p>
-                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.recorded_at ? new Date(vitals[0].recorded_at).toLocaleTimeString() : 'N/A'}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.bloodPressure?.systolic}/{vitals[0]?.bloodPressure?.diastolic} mmHg</p>
+                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
                 </div>
               </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Vital Signs Recorded</h3>
+                <p className="text-gray-600 mb-6">Start recording vital signs to see patient health data.</p>
+                <button
+                  onClick={() => setShowVitalsEditor(true)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Record First Vitals
+                </button>
+              </div>
+            )}
             )}
             
             {showVitalsEditor && (
@@ -279,6 +314,7 @@ export const PatientDetail: React.FC = () => {
                 patientName={`${patient.first_name} ${patient.last_name}`}
                 onClose={() => setShowVitalsTrends(false)}
                 onRecordVitals={() => {
+                  console.log("Record vitals clicked from trends");
                   setShowVitalsTrends(false);
                   setShowVitalsEditor(true);
                 }}
@@ -287,7 +323,7 @@ export const PatientDetail: React.FC = () => {
           </div>
         );
 
-      case 'medications':
+      case 'medications': 
         return (
           <MedicationAdministration
             patientId={id!}
@@ -303,7 +339,7 @@ export const PatientDetail: React.FC = () => {
           />
         );
 
-      case 'notes':
+      case 'notes': 
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -353,7 +389,7 @@ export const PatientDetail: React.FC = () => {
           </div>
         );
 
-      case 'assessments':
+      case 'assessments': 
         return <AssessmentDetail patientId={id!} />;
 
       case 'wounds':
@@ -373,7 +409,7 @@ export const PatientDetail: React.FC = () => {
     }
   };
 
-  return (
+  return ( 
     <div className="space-y-6 pb-12">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
