@@ -402,10 +402,22 @@ export const PatientDetail: React.FC = () => {
         return <WoundAssessment patientId={id!} />;
 
       case 'admission':
-        return <AdmissionRecordsForm patientId={id!} />;
+        return (
+          <AdmissionRecordsForm 
+            patientId={id!} 
+            patientName={`${patient.first_name} ${patient.last_name}`}
+            onClose={() => setActiveTab('overview')}
+          />
+        );
 
       case 'directives':
-        return <AdvancedDirectivesForm patientId={id!} />;
+        return (
+          <AdvancedDirectivesForm 
+            patientId={id!} 
+            patientName={`${patient.first_name} ${patient.last_name}`}
+            onClose={() => setActiveTab('overview')}
+          />
+        );
 
       default:
         return null;

@@ -5,9 +5,9 @@ import { usePatients } from '../../contexts/PatientContext';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
-  patientName: string;
+  patientName?: string;
   onClose: () => void;
-  onSave: () => void;
+  onSave?: () => void;
 }
 
 export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
@@ -78,7 +78,11 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       // Refresh patient data to reflect changes
       await refreshPatients();
       
-      onSave();
+      if (onSave) {
+        onSave();
+      } else {
+        onClose();
+      }
     } catch (err: any) {
       console.error('Error saving advanced directive:', err);
       setError(err.message || 'Failed to save advanced directive');
@@ -131,6 +135,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            type="button"
           >
             <X className="h-6 w-6" />
           </button>
@@ -330,7 +335,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
             <button
               type="button"
               onClick={onClose}
-              disabled={saving}
+              disabled={saving} 
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               Cancel
