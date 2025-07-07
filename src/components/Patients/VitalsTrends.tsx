@@ -381,8 +381,8 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {isValid(date) ? format(date, 'MM/dd/yyyy HH:mm') : 'Invalid Date'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.temperature}°F
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
+                            {vital.temperature}°C
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {vital.heartRate} bpm

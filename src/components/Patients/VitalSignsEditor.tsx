@@ -122,6 +122,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                 value={editedVitals.temperature}
                 onChange={(e) => updateVital('temperature', parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="37.0"
                 required
               />
             </div>
