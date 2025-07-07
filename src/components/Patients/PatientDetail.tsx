@@ -74,11 +74,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
             {/* Patient Information - Left Column */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col">
               {/* Patient Information */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                     <User className="h-5 w-5 mr-2 text-blue-600" />
@@ -113,7 +113,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </div>
               
               {/* Allergies */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
                   Allergies
@@ -136,14 +136,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col">
               {/* Current Condition */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <Stethoscope className="h-5 w-5 mr-2 text-green-600" />
-                    Current Condition
-                  </h3>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Stethoscope className="h-5 w-5 mr-2 text-green-600" />
+                  Current Condition
+                </h3>
                   <div className="space-y-3">
                     <div>
                       <span className="text-gray-600">Condition:</span>
@@ -179,14 +178,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     </div>
                   </div>
                 </div>
-              </div>
 
-            {/* Emergency Contact */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Phone className="h-5 w-5 mr-2 text-purple-600" />
-                Emergency Contact
-              </h3>
+              {/* Emergency Contact */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Phone className="h-5 w-5 mr-2 text-purple-600" />
+                  Emergency Contact
+                </h3>
               <div className="space-y-3">
                 <div>
                   <span className="text-gray-600">Name:</span>
@@ -201,14 +199,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <p className="font-medium mt-1">{patient.emergency_contact_phone}</p>
                 </div>
               </div>
-            </div>
             
-            {/* Last Update Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-indigo-600" />
-                Record Status
-              </h3>
+              {/* Last Update Information */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-indigo-600" />
+                  Record Status
+                </h3>
               <div className="space-y-3">
                 <div>
                   <span className="text-gray-600">Last Updated:</span>
@@ -237,8 +234,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   </p>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
           </div>
         );
 
