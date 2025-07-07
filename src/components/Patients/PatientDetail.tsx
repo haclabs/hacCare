@@ -640,23 +640,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <p className="text-gray-600">Patient ID: {patient.patient_id}</p>
               <button 
                 onClick={() => setShowPatientBracelet(true)}
-                className="ml-2 px-2 py-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md text-xs flex items-center space-x-1 transition-colors"
-              >
-                <QrCode className="h-3 w-3" />
-                <span>Hospital Bracelet</span>
-              </button>
-            </div>
-          </div>
         </div>
         <button 
           onClick={() => setShowPatientBracelet(true)}
-          className="px-3 py-2 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-md text-sm flex items-center space-x-2 transition-colors"
-        >
-          <FileText className="h-4 w-4" />
-          <span>Print Patient Labels</span>
-        </button>
-      </div>
-
+    <div className="flex space-x-3">
+      <button 
+        onClick={() => setShowPatientBracelet(true)}
+        className="px-3 py-2 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-md text-sm flex items-center space-x-2 transition-colors"
+      >
+        <FileText className="h-4 w-4" />
+        <span>Print Patient Labels</span>
+      </button>
+      <button 
+        onClick={() => setShowPatientBracelet(true)}
+        className="px-3 py-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md text-sm flex items-center space-x-2 transition-colors"
+      >
+        <QrCode className="h-4 w-4" />
+        <span>Hospital Bracelet</span>
+      </button>
+    </div>
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
