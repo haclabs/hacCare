@@ -5,7 +5,7 @@ import { format, isValid } from 'date-fns';
 import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 /**
- * Medication Barcode Component
+ * Medication Label Component
  * 
  * Generates Avery 5167 compatible medication labels for printing.
  * Creates a sheet of labels with medication information and barcodes.
@@ -82,7 +82,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               <style>
                 @page {
                   size: 8.5in 11in;
-                  margin: 0.5in 0.1875in 0.5in 0.1875in;
+                  margin: 0.5in 0.25in 0.5in 0.25in;
                 }
                 body { 
                   margin: 0; 
@@ -91,7 +91,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                   background: white;
                 }
                 .label-sheet {
-                  width: 8.125in;
+                  width: 8in;
                   height: 10in;
                   display: flex;
                   flex-wrap: wrap;
@@ -99,8 +99,8 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                   align-content: flex-start;
                 }
                 .label {
-                  width: 2.625in;
-                  height: 1in;
+                  width: 4in;
+                  height: 1.33in;
                   box-sizing: border-box;
                   padding: 3px;
                   display: flex;
@@ -198,23 +198,23 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
     // Full sheet dimensions at 300 DPI
     canvas.width = 2550; // 8.5 * 300
     canvas.height = 3300; // 11 * 300
-
+    
     // Draw white background
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Avery 5160 exact specifications
-    const labelWidth = 787.5; // 2.625 * 300
-    const labelHeight = 300; // 1 * 300
-    const leftMargin = 56.25; // 0.1875 * 300
+    
+    // Avery 5167 exact specifications
+    const labelWidth = 1200; // 4 * 300
+    const labelHeight = 399; // 1.33 * 300
+    const leftMargin = 75; // 0.25 * 300
     const topMargin = 150; // 0.5 * 300
-
-    // Draw 30 labels (3 columns x 10 rows)
-    for (let row = 0; row < 10; row++) {
-      for (let col = 0; col < 3; col++) {
+    
+    // Draw 20 labels (4 columns x 5 rows)
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 4; col++) {
         const x = leftMargin + (col * labelWidth);
         const y = topMargin + (row * labelHeight);
-
+        
         // Draw label border (for reference only)
         ctx.strokeStyle = '#e5e7eb';
         ctx.lineWidth = 1;
@@ -223,49 +223,49 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
         // Draw medication name
         ctx.fillStyle = 'black';
         ctx.font = 'bold 30px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(selectedMedication.name, x + 15, y + 35);
-
+        ctx.textAlign = 'left'; 
+        ctx.fillText(selectedMedication.name, x + 20, y + 40);
+        
         // Draw dosage in red
         ctx.fillStyle = '#dc2626';
         ctx.font = 'bold 27px Arial';
-        ctx.fillText(selectedMedication.dosage, x + 15, y + 65);
-
+        ctx.fillText(selectedMedication.dosage, x + 20, y + 80);
+        
         // Draw patient info
         ctx.fillStyle = 'black';
         ctx.font = '21px Arial';
-        ctx.fillText(`Patient: ${patient.first_name} ${patient.last_name}`, x + 15, y + 90);
-        ctx.fillText(`ID: ${patient.patient_id}`, x + 15, y + 115);
-
+        ctx.fillText(`Patient: ${patient.first_name} ${patient.last_name}`, x + 20, y + 120);
+        ctx.fillText(`ID: ${patient.patient_id}`, x + 20, y + 150);
+        
         // Draw frequency
         ctx.fillStyle = '#666';
         ctx.font = '18px Arial';
-        ctx.fillText(selectedMedication.frequency, x + 15, y + 140);
-        ctx.fillText(selectedMedication.route, x + 15, y + 160);
-
+        ctx.fillText(`Frequency: ${selectedMedication.frequency}`, x + 20, y + 180);
+        ctx.fillText(`Route: ${selectedMedication.route}`, x + 20, y + 210);
+        
         // Draw simple barcode on the right
         ctx.fillStyle = 'black';
-        const barcodeX = x + labelWidth - 180;
-        const barcodeY = y + 80;
+        const barcodeX = x + labelWidth - 220;
+        const barcodeY = y + 120;
         
         // Simple barcode pattern
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 30; i++) {
           const barWidth = (i % 3) + 1;
-          const barX = barcodeX + (i * 4.8);
+          const barX = barcodeX + (i * 5);
           if (i % 2 === 0) {
-            ctx.fillRect(barX, barcodeY, barWidth, 42);
+            ctx.fillRect(barX, barcodeY, barWidth, 50);
           }
         }
-
+        
         // Draw barcode ID
         ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(medicationBarcodeId, barcodeX + 60, barcodeY + 60);
-
+        ctx.fillText(medicationBarcodeId, barcodeX + 75, barcodeY + 70);
+        
         // Draw medication ID
         ctx.fillStyle = '#666';
         ctx.font = '15px Arial';
-        ctx.fillText(selectedMedication.id.slice(-6), barcodeX + 60, barcodeY + 80);
+        ctx.fillText(selectedMedication.id.slice(-6), barcodeX + 75, barcodeY + 90);
       }
     }
 
@@ -285,7 +285,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   };
 
   // Generate 30 identical medication labels for the sheet
-  const generateLabelSheet = () => {
+  const generateLabelSheet = () => {  
     const labels = [];  
     // Generate 20 labels for Avery 5167 (4 across, 5 down)
     for (let i = 0; i < 20; i++) {
@@ -405,7 +405,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
           <div className="bg-gray-100 p-8 rounded-lg overflow-x-auto">
             <div className="text-center mb-4">
               <h4 className="text-lg font-medium text-gray-900">Avery 5167 Medication Label Sheet Preview</h4>
-              <p className="text-sm text-gray-600">20 labels • 4" × 1.33" each • 4 columns × 5 rows</p>
+              <p className="text-sm text-gray-600">20 labels • 4" × 1.33" each • 4 across × 5 down</p>
               <p className="text-xs text-gray-500 mt-1">Return address format optimized for medication containers</p>
             </div>
             
@@ -414,14 +414,15 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               className="bg-white shadow-lg mx-auto border border-gray-300"
               style={{
                 width: '8.5in',
-                height: '11in',
+                height: '10in',
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'flex-start',
                 alignContent: 'flex-start',
                 transform: 'scale(0.6)',
                 transformOrigin: 'top center',
-                padding: '0.5in 0.25in'
+                padding: '0.5in 0.25in',
+                gap: '0'
               }}
             >
               {generateLabelSheet()}
@@ -440,7 +441,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                 <li>• Set printer to "Actual Size" (100% scale)</li>
                 <li>• Use high-quality print setting for barcode clarity</li>
                 <li>• Test alignment with regular paper first</li>
-                <li>• Print generates 20 identical medication labels</li>
+                <li>• Print generates identical medication labels</li>
                 <li>• <strong>Return address format</strong> - fits on medication containers</li>
               </ul>
             </div>
