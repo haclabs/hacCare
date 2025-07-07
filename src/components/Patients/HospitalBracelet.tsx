@@ -353,8 +353,6 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
                 </svg>
               </div>
             </div>
-          </div>
-
         </div>
 
         {/* Instructions and Information */}
