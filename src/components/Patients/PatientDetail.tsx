@@ -332,6 +332,7 @@ export const PatientDetail: React.FC = () => {
         return (
           <MedicationAdministration
             patientId={id!}
+           patientName={`${patient.first_name} ${patient.last_name}`}
             medications={medications}
             onRefresh={async () => {
               try {
