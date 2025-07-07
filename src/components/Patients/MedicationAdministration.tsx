@@ -12,7 +12,7 @@ import { fetchPatientMedications, deleteMedication } from '../../lib/medicationS
 
 interface MedicationAdministrationProps {
   patientId: string;
-  patientName: string;
+  patientName?: string;
   medications: Medication[];
   onRefresh: () => void;
 }
@@ -36,6 +36,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [showMedicationLabels, setShowMedicationLabels] = useState(false);
 
   useEffect(() => {
+    console.log('MedicationAdministration mounted with patientName:', patientName);
     setAllMedications(medications);
   }, [medications]);
 
@@ -305,7 +306,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
               onClick={() => {
                 setMedicationToEdit(null);
                 setShowMedicationForm(true);
-              }}
+              }} 
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -412,6 +413,17 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showMedicationLabels && (
         <MedicationBarcode
           patient={{ id: patientId, first_name: patientName.split(' ')[0], last_name: patientName.split(' ')[1], patient_id: '' }}
+          medications={selectedMedication ? [selectedMedication] : allMedications}
+          onClose={() => {
+            setShowMedicationLabels(false);
+            setSelectedMedication(null);
+            handleRefresh();
+          }}
+        />
+      )}
+    </div>
+  );
+};
           medications={selectedMedication ? [selectedMedication] : allMedications}
           onClose={() => {
             setShowMedicationLabels(false);
