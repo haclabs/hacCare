@@ -3,7 +3,7 @@ import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw }
 import { format, parseISO, isValid } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { clearPatientVitals } from '../../lib/patientService';
+import { clearPatientVitals, fetchPatientVitalsHistory } from '../../lib/patientService';
 import { usePatients } from '../../contexts/PatientContext';
 
 interface VitalsTrendsProps {
@@ -22,7 +22,7 @@ interface VitalReading {
   respiratoryRate: number;
 }
 
-const VitalsTrends: React.FC<VitalsTrendsProps> = ({ 
+export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ 
   patientId, 
   patientName, 
   onClose, 
@@ -461,5 +461,3 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     </div>
   );
 };
-
-export { VitalsTrends };
