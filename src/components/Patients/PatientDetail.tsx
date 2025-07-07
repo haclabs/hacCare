@@ -1,3 +1,6 @@
+Here's the fixed version with all missing closing brackets and parentheses added:
+
+```typescript
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2, Trash2, QrCode } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
@@ -569,6 +572,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           onSuccess={(newMedication) => {
             setShowMedicationForm(false);
             setMedications([newMedication, ...medications]);
+          }}
           onCancel={() => setShowMedicationForm(false)}
         />
       )}
@@ -649,3 +653,4 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     </div>
   );
 };
+```
