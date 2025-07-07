@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, MapPin, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { supabase } from '../../lib/supabase';
 
 interface Wound {
   id: string;
@@ -27,27 +28,13 @@ interface WoundAssessmentProps {
 }
 
 export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
-  const [wounds, setWounds] = useState<Wound[]>([
-    {
-      id: 'wound-001',
-      location: 'Left heel',
-      coordinates: { x: 15, y: 85 },
-      view: 'posterior',
-      type: 'Pressure Ulcer',
-      stage: 'Stage 2',
-      size: { length: 2.5, width: 1.8, depth: 0.5 },
-      description: 'Partial thickness skin loss with exposed dermis. Wound bed is viable, pink or red, moist, and may also present as an intact or ruptured serum-filled blister.',
-      treatment: 'Hydrocolloid dressing, pressure relief, repositioning q2h',
-      assessedBy: 'Sarah Johnson, RN',
-      assessmentDate: '2024-01-20T10:30:00',
-      healingProgress: 'Improving'
-    }
-  ]);
+  const [wounds, setWounds] = useState<Wound[]>([]);
   
   const [selectedView, setSelectedView] = useState<'anterior' | 'posterior'>('anterior');
   const [showAddWound, setShowAddWound] = useState(false);
   const [selectedWound, setSelectedWound] = useState<Wound | null>(null);
   const [newWoundCoords, setNewWoundCoords] = useState<{ x: number; y: number } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [newWound, setNewWound] = useState<Partial<Wound>>({
     type: 'Pressure Ulcer',
@@ -57,6 +44,39 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
     treatment: '',
     healingProgress: 'New'
   });
+
+  // Load wounds when component mounts
+  useEffect(() => {
+    loadWounds();
+  }, []);
+
+  // Load wounds from local storage or database
+  const loadWounds = async () => {
+    setLoading(true);
+    try {
+      // In a real app, this would fetch from the database
+      // For now, we'll use localStorage to simulate persistence
+      const savedWounds = localStorage.getItem('patientWounds');
+      if (savedWounds) {
+        setWounds(JSON.parse(savedWounds));
+      }
+    } catch (error) {
+      console.error('Error loading wounds:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save wounds to local storage or database
+  const saveWounds = (updatedWounds: Wound[]) => {
+    try {
+      // In a real app, this would save to the database
+      // For now, we'll use localStorage to simulate persistence
+      localStorage.setItem('patientWounds', JSON.stringify(updatedWounds));
+    } catch (error) {
+      console.error('Error saving wounds:', error);
+    }
+  };
 
   const handleBodyClick = (event: React.MouseEvent<SVGElement>) => {
     if (!showAddWound) return;
@@ -91,7 +111,9 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
       healingProgress: newWound.healingProgress as Wound['healingProgress']
     };
     
-    setWounds(prev => [...prev, wound]);
+    const updatedWounds = [...wounds, wound];
+    setWounds(updatedWounds);
+    saveWounds(updatedWounds);
     setShowAddWound(false);
     setNewWoundCoords(null);
     setNewWound({
@@ -105,8 +127,10 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
   };
 
   const handleDeleteWound = (woundId: string) => {
-    if (confirm('Are you sure you want to delete this wound assessment?')) {
-      setWounds(prev => prev.filter(w => w.id !== woundId));
+    if (window.confirm('Are you sure you want to delete this wound assessment?')) {
+      const updatedWounds = wounds.filter(w => w.id !== woundId);
+      setWounds(updatedWounds);
+      saveWounds(updatedWounds);
     }
   };
 
@@ -552,7 +576,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
 
         {/* Wound List (when not adding) */}
         {!showAddWound && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]">
             <h4 className="text-lg font-medium text-gray-900 mb-4">Current Wounds</h4>
             
             {wounds.length === 0 ? (
@@ -560,7 +584,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No wounds documented</p>
                 <p className="text-sm text-gray-400">Click "Add Wound" to begin assessment</p>
-              </div>
+              </div> 
             ) : (
               <div className="space-y-4">
                 {wounds.map((wound, index) => (
