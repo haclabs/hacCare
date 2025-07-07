@@ -9,7 +9,7 @@ import { PatientNoteForm } from './PatientNoteForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import WoundAssessment from './WoundAssessment';
-import VitalsTrends from './VitalsTrends';
+import { VitalsTrends } from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
 
 export function PatientDetail() {
