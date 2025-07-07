@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { Patient } from '../../types';
 import { usePatients } from '../../contexts/PatientContext';
 import { PatientForm } from './PatientForm';
-import { PatientDetail } from './PatientDetail';
+import PatientDetail from './PatientDetail';
 
 /**
  * Patient Management Component
