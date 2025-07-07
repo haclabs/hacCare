@@ -50,6 +50,7 @@ function App() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     // Clear selected patient when navigating to a different tab
+    navigate('/');
   };
 
   /**

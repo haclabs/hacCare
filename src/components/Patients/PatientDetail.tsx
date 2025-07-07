@@ -19,7 +19,7 @@ const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { patients } = usePatients();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
   const [showVitalForm, setShowVitalForm] = useState(false);
@@ -86,6 +86,11 @@ const PatientDetail: React.FC = () => {
       setShowVitalsTrends(false);
     }
     setActiveTab(tab);
+  };
+
+  // Handle back button click
+  const handleBackClick = () => {
+    navigate('/');
   };
 
   const getLatestVitals = () => {
@@ -257,8 +262,8 @@ const PatientDetail: React.FC = () => {
                     <span className="text-sm font-medium text-gray-600">Temperature</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{latestVitals?.temperature || '37.0'}°C</p>
+                <p className="text-xs text-gray-500 mt-1">{latestVitals ? 'Last recorded' : 'Default value'}</p>
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -268,8 +273,10 @@ const PatientDetail: React.FC = () => {
                     <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">120/80</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">
+                  {latestVitals ? `${latestVitals.blood_pressure_systolic}/${latestVitals.blood_pressure_diastolic}` : '120/80'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{latestVitals ? 'Last recorded' : 'Default value'}</p>
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -279,8 +286,8 @@ const PatientDetail: React.FC = () => {
                     <span className="text-sm font-medium text-gray-600">Heart Rate</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">72 bpm</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{latestVitals?.heart_rate || '72'} bpm</p>
+                <p className="text-xs text-gray-500 mt-1">{latestVitals ? 'Last recorded' : 'Default value'}</p>
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -290,8 +297,8 @@ const PatientDetail: React.FC = () => {
                     <span className="text-sm font-medium text-gray-600">O2 Saturation</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">98%</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{latestVitals?.oxygen_saturation || '98'}%</p>
+                <p className="text-xs text-gray-500 mt-1">{latestVitals ? 'Last recorded' : 'Default value'}</p>
               </div>
             </div>
 
@@ -322,6 +329,27 @@ const PatientDetail: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
+                   {vitals.length > 0 ? (
+                     vitals.map((vital, index) => (
+                       <tr key={index}>
+                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                           {new Date(vital.recorded_at || vital.lastUpdated || '').toLocaleTimeString()}
+                         </td>
+                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
+                           {vital.temperature}°C
+                         </td>
+                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                           {vital.bloodPressure?.systolic || vital.blood_pressure_systolic}/{vital.bloodPressure?.diastolic || vital.blood_pressure_diastolic}
+                         </td>
+                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                           {vital.heartRate || vital.heart_rate} bpm
+                         </td>
+                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                           {vital.oxygenSaturation || vital.oxygen_saturation}%
+                         </td>
+                       </tr>
+                     ))
+                   ) : (
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         2 hours ago
@@ -339,6 +367,7 @@ const PatientDetail: React.FC = () => {
                         98%
                       </td>
                     </tr>
+                   )}
                   </tbody>
                 </table>
               </div>
@@ -500,7 +529,7 @@ const PatientDetail: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate('/patients')}
+              onClick={handleBackClick}
               className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />

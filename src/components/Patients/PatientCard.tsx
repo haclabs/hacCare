@@ -76,6 +76,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
   return (
     <div 
       className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+     onClick={onClick}
     >
       {/* Patient Header */}
       <div className="flex items-start justify-between mb-4">
@@ -84,11 +85,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
             <User className="h-5 w-5 text-blue-600 dark:text-blue-300" />
           </div>
           <div>
-            <Link to={`/patient/${patient.id}`}>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600">
-                {patient.first_name} {patient.last_name}
-              </h3>
-            </Link>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600">
+              {patient.first_name} {patient.last_name}
+            </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">{age} years old • {patient.gender}</p>
             <p className="text-xs text-blue-600 dark:text-blue-400 font-mono">{patient.patient_id}</p>
           </div>
