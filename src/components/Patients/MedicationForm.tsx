@@ -10,8 +10,9 @@ interface MedicationFormProps {
   medication?: Medication | null;
   patientId: string;
   patientName: string;
-  onClose: () => void;
-  onSuccess: () => void;
+  onClose: () => void; 
+  onSuccess: (medication: Medication) => void;
+  onCancel?: () => void;
 }
 
 export const MedicationForm: React.FC<MedicationFormProps> = ({
@@ -19,7 +20,8 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
   patientId,
   patientName,
   onClose,
-  onSuccess
+  onSuccess,
+  onCancel = onClose
 }) => {
   const [formData, setFormData] = useState({
     name: medication?.name || '',
@@ -177,13 +179,13 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         console.log('Updating existing medication:', medicationData);
         const updatedMedication = await updateMedication(medication.id, medicationData);
         console.log('Medication updated successfully:', updatedMedication);
-        onSuccess();
+        onSuccess(updatedMedication);
       } else {
         // Create new medication
         console.log('Creating new medication:', medicationData);
         const newMedication = await createMedication(medicationData as Omit<Medication, 'id'>);
         console.log('Medication created successfully:', newMedication);
-        onSuccess();
+        onSuccess(newMedication);
       }
     } catch (error) {
       console.error('Error saving medication:', error);
@@ -213,7 +215,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6" onReset={onClose}>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" onReset={onCancel}>
           {/* Medication Information */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">

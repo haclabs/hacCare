@@ -11,7 +11,7 @@ interface MedicationAdministrationFormProps {
   patientId: string;
   patientName: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: () => void; 
 }
 
 export const MedicationAdministrationForm: React.FC<MedicationAdministrationFormProps> = ({
@@ -49,7 +49,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       // Save administration record
       const result = await recordMedicationAdministration(formData as Omit<MedicationAdministration, 'id'>);
       console.log('Administration recorded successfully:', result);
-      onSuccess();
+      onSuccess(); 
     } catch (err: any) {
       console.error('Error recording administration:', err);
       

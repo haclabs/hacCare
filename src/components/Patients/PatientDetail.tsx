@@ -5,12 +5,12 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationForm } from './MedicationForm';
 import { PatientBracelet } from './PatientBracelet';
-import { AssessmentForm } from './AssessmentForm';
+import { AssessmentForm } from './AssessmentForm'; 
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
-import VitalsTrends from './VitalsTrends';
+import { VitalsTrends } from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
 import { fetchPatientMedications } from '../../lib/medicationService';
 

@@ -384,8 +384,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           onClose={() => {
             setShowMedicationForm(false);
             setMedicationToEdit(null);
-          }}
-          onSuccess={() => {
+          }} 
+          onSuccess={(medication) => {
             setShowMedicationForm(false);
             setMedicationToEdit(null);
             handleRefresh();

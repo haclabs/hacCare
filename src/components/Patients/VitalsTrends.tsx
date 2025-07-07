@@ -410,4 +410,4 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   );
 };
 
-export default VitalsTrends;
+export { VitalsTrends };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, User, FileText, Search, RefreshCw } from 'lucide-react';
+import { Clock, User, FileText, Search, RefreshCw, X } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { fetchMedicationAdministrationHistory } from '../../lib/medicationService';
 import { MedicationAdministration } from '../../types';

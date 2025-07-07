@@ -27,7 +27,7 @@ interface PatientNoteFormProps {
   note?: PatientNote | null;
   patientId: string;
   patientName: string;
-  onClose?: () => void;
+  onClose: () => void;
   onSave: (note: PatientNote) => void;
   onCancel: () => void;
 }
@@ -36,7 +36,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   note,
   patientId,
   patientName,
-  onClose = () => {},
+  onClose,
   onSave,
   onCancel
 }) => {
