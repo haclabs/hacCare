@@ -92,7 +92,7 @@ export const mockPatients: Patient[] = [
     assigned_nurse: 'Sarah Johnson',
     vitals: [
       {
-        temperature: 37.0,
+        temperature: 37.0, // Celsius
         bloodPressure: { systolic: 120, diastolic: 80 },
         heartRate: 72,
         respiratoryRate: 16,
@@ -157,7 +157,7 @@ export const mockPatients: Patient[] = [
     assigned_nurse: 'Sarah Johnson',
     vitals: [
       {
-        temperature: 38.4,
+        temperature: 38.4, // Celsius
         bloodPressure: { systolic: 140, diastolic: 90 },
         heartRate: 95,
         respiratoryRate: 22,
@@ -211,7 +211,7 @@ export const mockPatients: Patient[] = [
     assigned_nurse: 'Sarah Johnson',
     vitals: [
       {
-        temperature: 36.9,
+        temperature: 36.9, // Celsius
         bloodPressure: { systolic: 130, diastolic: 85 },
         heartRate: 68,
         respiratoryRate: 18,

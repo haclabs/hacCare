@@ -123,7 +123,7 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   const getMetricUnit = (metric: string) => {
     switch (metric) {
       case 'temperature':
-        return '°F';
+        return '°C';
       case 'heartRate':
         return 'bpm';
       case 'systolic':
@@ -141,7 +141,7 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   const getMetricLabel = (metric: string) => {
     switch (metric) {
       case 'temperature':
-        return 'Temperature';
+        return 'Temperature (°C)';
       case 'heartRate':
         return 'Heart Rate';
       case 'systolic':
@@ -158,7 +158,7 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   };
 
   const metrics = [
-    { key: 'temperature', label: 'Temperature', icon: Activity },
+    { key: 'temperature', label: 'Temperature (°C)', icon: Activity },
     { key: 'heartRate', label: 'Heart Rate', icon: Activity },
     { key: 'systolic', label: 'Systolic BP', icon: TrendingUp },
     { key: 'diastolic', label: 'Diastolic BP', icon: TrendingUp },

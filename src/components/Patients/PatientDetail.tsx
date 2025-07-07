@@ -210,7 +210,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                     <span className="text-sm font-medium text-gray-600">Temperature</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">98.6°F</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
                 <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
               </div>
 
@@ -279,8 +279,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         2 hours ago
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        98.6°F
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
+                        37.0°C
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         120/80

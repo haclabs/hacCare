@@ -285,7 +285,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
   try {
     console.log('Fetching latest vitals for patient:', patientId);
     
-    const { data, error } = await supabase
+    const { data, error } = await supabase 
       .from('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
@@ -305,7 +305,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
     // Convert to app format
     const vitals: VitalSigns = {
       id: data.id,
-      temperature: data.temperature, // Keep in Celsius
+      temperature: data.temperature,
       bloodPressure: {
         systolic: data.blood_pressure_systolic,
         diastolic: data.blood_pressure_diastolic
@@ -318,6 +318,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
     };
 
     console.log('Latest vitals fetched successfully');
+    console.log('Temperature in Celsius:', vitals.temperature);
     return vitals;
   } catch (error) {
     console.error('Error fetching patient vitals:', error);

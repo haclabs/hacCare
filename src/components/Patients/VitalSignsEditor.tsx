@@ -42,12 +42,12 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError(''); 
 
     try {
       console.log('Saving vitals for patient:', patientId, editedVitals);
       
-      // Convert temperature from Fahrenheit to Celsius for storage
+      // Store temperature in Celsius (already in Celsius)
       const vitalsToSave = { ...editedVitals };
       
       console.log('Formatted vitals to save:', vitalsToSave);

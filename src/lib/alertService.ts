@@ -251,11 +251,11 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       const alerts = [];
 
       // Temperature alerts (using Celsius)
-      if (vital.temperature > 38.3 || vital.temperature < 35.5) {
+      if (vital.temperature > 38.0 || vital.temperature < 36.0) {
         alerts.push({
           type: 'Temperature',
-          message: `Temperature ${vital.temperature.toFixed(1)}°C - ${vital.temperature > 38.3 ? 'Fever' : 'Hypothermia'}`,
-          priority: vital.temperature > 39.5 || vital.temperature < 35.0 ? 'critical' : 'high'
+          message: `Temperature ${vital.temperature.toFixed(1)}°C - ${vital.temperature > 38.0 ? 'Fever' : 'Hypothermia'}`,
+          priority: vital.temperature > 39.0 || vital.temperature < 35.5 ? 'critical' : 'high'
         });
       }
 
