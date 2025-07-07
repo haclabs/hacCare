@@ -70,7 +70,7 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
   const handleBraceletClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onShowBracelet?.();
-  };
+  }; 
 
   return (
     <div
@@ -94,14 +94,15 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
         <div className="flex items-center space-x-2">
           <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getConditionColor(patient.condition)}`}>
             {patient.condition}
-          </span>
+          </span> 
           {onShowBracelet && (
-            <button
+            <button 
               onClick={handleBraceletClick}
-              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-1"
               title="View Hospital Bracelet"
             >
               <QrCode className="h-4 w-4" />
+              <span className="text-xs">Bracelet</span>
             </button>
           )}
         </div>
