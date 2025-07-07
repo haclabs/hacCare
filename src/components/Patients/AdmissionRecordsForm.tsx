@@ -29,39 +29,32 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
   const loadAdmissionRecord = async () => {
     try {
       setLoading(true);
-      setError('');
       
-      console.log('Loading admission record for patient:', patientId);
-      let record = await fetchAdmissionRecord(patientId);
-
-      if (!record) {
-        // Create a completely empty record template
-        record = {
-          patient_id: patientId,
-          admission_type: '',
-          attending_physician: '',
-          insurance_provider: '',
-          insurance_policy: '',
-          admission_source: '',
-          chief_complaint: '',
-          height: '',
-          weight: '',
-          bmi: '',
-          smoking_status: '',
-          alcohol_use: '',
-          exercise: '',
-          occupation: '',
-          family_history: '',
-          marital_status: '',
-          secondary_contact_name: '',
-          secondary_contact_relationship: '',
-          secondary_contact_phone: '',
-          secondary_contact_address: ''
-        };
-      }
-
-      console.log('Admission record loaded:', record);
-      setFormData(record);
+      // Always start with a completely empty form
+      const emptyRecord = {
+        patient_id: patientId,
+        admission_type: '',
+        attending_physician: '',
+        insurance_provider: '',
+        insurance_policy: '',
+        admission_source: '',
+        chief_complaint: '',
+        height: '',
+        weight: '',
+        bmi: '',
+        smoking_status: '',
+        alcohol_use: '',
+        exercise: '',
+        occupation: '',
+        family_history: '',
+        marital_status: '',
+        secondary_contact_name: '',
+        secondary_contact_relationship: '',
+        secondary_contact_phone: '',
+        secondary_contact_address: ''
+      };
+      
+      setFormData(emptyRecord);
     } catch (err: any) {
       console.error('Error loading admission record:', err);
       setError(err.message || 'Failed to load admission record');
