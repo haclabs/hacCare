@@ -10,16 +10,16 @@ interface MedicationFormProps {
   medication?: Medication | null;
   patientId: string;
   patientName: string;
-  onCancel: () => void;
-  onSave: (medication: Medication) => void;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 export const MedicationForm: React.FC<MedicationFormProps> = ({
   medication,
   patientId,
   patientName,
-  onCancel,
-  onSave
+  onClose,
+  onSuccess
 }) => {
   const [formData, setFormData] = useState({
     name: medication?.name || '',
@@ -177,13 +177,13 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         console.log('Updating existing medication:', medicationData);
         const updatedMedication = await updateMedication(medication.id, medicationData);
         console.log('Medication updated successfully:', updatedMedication);
-        onSave(updatedMedication);
+        onSuccess();
       } else {
         // Create new medication
         console.log('Creating new medication:', medicationData);
         const newMedication = await createMedication(medicationData as Omit<Medication, 'id'>);
         console.log('Medication created successfully:', newMedication);
-        onSave(newMedication);
+        onSuccess();
       }
     } catch (error) {
       console.error('Error saving medication:', error);
@@ -205,7 +205,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
             <p className="text-sm text-gray-600 mt-1">Patient: {patientName}</p>
           </div>
           <button
-            onClick={onCancel}
+            onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-6 w-6" />
@@ -213,7 +213,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6" onReset={onCancel}>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" onReset={onClose}>
           {/* Medication Information */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
@@ -496,7 +496,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
               type="reset"
-              disabled={loading}
+              onClick={onClose}
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Cancel
