@@ -7,7 +7,7 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationAdministration } from './MedicationAdministration';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
-import WoundAssessment from './WoundAssessment';
+import { WoundAssessment } from './WoundAssessment';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { PatientBracelet } from './PatientBracelet';
