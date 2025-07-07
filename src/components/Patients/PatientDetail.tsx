@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Save, X, Activity, Pill, FileText, Heart, AlertTriangle, User, Calendar, Phone, MapPin, Stethoscope, Clipboard, Shield, Ban as Bandage } from 'lucide-react';
 import { Patient, PatientVitals, PatientMedication, PatientNote, PatientAlert, PatientAdmissionRecord, PatientAdvancedDirective, PatientWound } from '../../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes, fetchPatientAlerts, fetchPatientWounds } from '../../lib/patientService';
+import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes, fetchPatientWounds } from '../../lib/patientService';
+import { fetchActiveAlerts } from '../../lib/alertService';
 import { fetchAdmissionRecord, fetchAdvancedDirective } from '../../lib/admissionService';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationAdministration } from './MedicationAdministration';
@@ -51,7 +52,7 @@ export function PatientDetail() {
         vitalsData,
         medicationsData,
         notesData,
-        alertsData,
+        allAlertsData,
         admissionData,
         directiveData,
         woundsData
@@ -60,11 +61,14 @@ export function PatientDetail() {
         fetchPatientVitals(id),
         fetchPatientMedications(id),
         fetchPatientNotes(id),
-        fetchPatientAlerts(id),
+        fetchActiveAlerts(),
         fetchAdmissionRecord(id),
         fetchAdvancedDirective(id),
         fetchPatientWounds(id)
       ]);
+
+      // Filter alerts for this specific patient
+      const alertsData = allAlertsData.filter(alert => alert.patient_id === id);
 
       setPatient(patientData);
       setVitals(vitalsData);
