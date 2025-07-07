@@ -159,9 +159,8 @@ export const upsertAdvancedDirective = async (directive: AdvancedDirective): Pro
  * Create default admission record for a patient
  */
 export const createDefaultAdmissionRecord = async (patientId: string): Promise<AdmissionRecord> => {
-  console.log('Creating default admission record for patient:', patientId);
+  console.log('Creating empty admission record for patient:', patientId);
   
-  // Create a completely empty record
   const emptyRecord: AdmissionRecord = {
     patient_id: patientId,
     admission_type: '',
@@ -192,9 +191,8 @@ export const createDefaultAdmissionRecord = async (patientId: string): Promise<A
  * Create default advanced directive for a patient
  */
 export const createDefaultAdvancedDirective = async (patientId: string): Promise<AdvancedDirective> => {
-  console.log('Creating default advanced directive for patient:', patientId);
+  console.log('Creating empty advanced directive for patient:', patientId);
   
-  // Create a completely empty directive
   const emptyDirective: AdvancedDirective = {
     patient_id: patientId,
     living_will_status: '',
