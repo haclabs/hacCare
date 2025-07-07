@@ -216,12 +216,14 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     }
 
     // Update medication's last_administered time
+    const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);
+    
     const { error: updateError } = await supabase
       .from('patient_medications')
       .update({ 
         last_administered: cleanAdministration.timestamp,
         // Calculate next due time based on frequency
-        next_due: calculateNextDueTime(cleanAdministration.medication_id)
+        next_due: nextDueTime
       })
       .eq('id', administration.medication_id);
     
