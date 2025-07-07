@@ -8,7 +8,7 @@ import { AssessmentForm } from './AssessmentForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { MedicationAdministration } from './MedicationAdministration';
-import { VitalsTrends } from './VitalsTrends';
+import VitalsTrends from './VitalsTrends';
 
 interface PatientDetailProps {
   patient: Patient;
