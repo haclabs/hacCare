@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { alertService } from '../lib/alertService';
+import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
+import { useAuth } from './AuthContext';
 import { Alert } from '../types';
 
 interface AlertContextType {
@@ -22,6 +23,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -29,7 +31,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
     try {
       setLoading(true);
       setError(null);
-      const fetchedAlerts = await alertService.getAlerts();
+      const fetchedAlerts = await fetchActiveAlerts();
       setAlerts(fetchedAlerts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
@@ -40,7 +42,10 @@ export function AlertProvider({ children }: AlertProviderProps) {
 
   const acknowledgeAlert = async (alertId: string) => {
     try {
-      await alertService.acknowledgeAlert(alertId);
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+      await acknowledgeAlertService(alertId, user.id);
       setAlerts(prev => 
         prev.map(alert => 
           alert.id === alertId 
@@ -57,7 +62,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
     try {
       setLoading(true);
       setError(null);
-      await alertService.runMedicationChecks();
+      await runAlertChecks();
       await refreshAlerts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run checks');
