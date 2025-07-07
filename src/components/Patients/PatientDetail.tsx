@@ -4,7 +4,7 @@ import { ArrowLeft, Edit, Save, X, Activity, Pill, FileText, Heart, AlertTriangl
 import { Patient, PatientVitals, PatientMedication, PatientNote, PatientAlert, PatientAdmissionRecord, PatientAdvancedDirective, PatientWound } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes, fetchPatientAlerts, fetchPatientAdmissionRecord, fetchPatientAdvancedDirective, fetchPatientWounds } from '../../lib/patientService';
 import VitalSignsEditor from './VitalSignsEditor';
-import MedicationAdministration from './MedicationAdministration';
+import { MedicationAdministration } from './MedicationAdministration';
 import PatientNoteForm from './PatientNoteForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
