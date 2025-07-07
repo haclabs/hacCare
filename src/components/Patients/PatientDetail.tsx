@@ -199,6 +199,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <p className="font-medium mt-1">{patient.emergency_contact_phone}</p>
                 </div>
               </div>
+            </div>
             
               {/* Last Update Information */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1">
