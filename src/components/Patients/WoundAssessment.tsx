@@ -1,42 +1,25 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, MapPin, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { supabase } from '../../lib/supabase';
-
-interface Wound {
-  id: string;
-  location: string;
-  coordinates: { x: number; y: number };
-  view: 'anterior' | 'posterior';
-  type: 'Pressure Ulcer' | 'Surgical' | 'Traumatic' | 'Diabetic' | 'Venous' | 'Arterial' | 'Other';
-  stage: 'Stage 1' | 'Stage 2' | 'Stage 3' | 'Stage 4' | 'Unstageable' | 'Deep Tissue Injury' | 'N/A';
-  size: {
-    length: number;
-    width: number;
-    depth?: number;
-  };
-  description: string;
-  treatment: string;
-  assessedBy: string;
-  assessmentDate: string;
-  photos?: string[];
-  healingProgress: 'Improving' | 'Stable' | 'Deteriorating' | 'New';
-}
+import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../lib/woundService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface WoundAssessmentProps {
   patientId: string;
 }
 
-export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
-  const [wounds, setWounds] = useState<Wound[]>([]);
+export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) => {
+  const [wounds, setWounds] = useState<WoundUI[]>([]);
   
   const [selectedView, setSelectedView] = useState<'anterior' | 'posterior'>('anterior');
   const [showAddWound, setShowAddWound] = useState(false);
-  const [selectedWound, setSelectedWound] = useState<Wound | null>(null);
+  const [selectedWound, setSelectedWound] = useState<WoundUI | null>(null);
   const [newWoundCoords, setNewWoundCoords] = useState<{ x: number; y: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { profile } = useAuth();
 
-  const [newWound, setNewWound] = useState<Partial<Wound>>({
+  const [newWound, setNewWound] = useState<Partial<WoundUI>>({
     type: 'Pressure Ulcer',
     stage: 'Stage 1',
     size: { length: 0, width: 0 },
@@ -47,34 +30,23 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
 
   // Load wounds when component mounts
   useEffect(() => {
-    loadWounds();
-  }, []);
+    if (patientId) {
+      loadWounds();
+    }
+  }, [patientId]);
 
-  // Load wounds from local storage or database
+  // Load wounds from database
   const loadWounds = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // In a real app, this would fetch from the database
-      // For now, we'll use localStorage to simulate persistence
-      const savedWounds = localStorage.getItem('patientWounds');
-      if (savedWounds) {
-        setWounds(JSON.parse(savedWounds));
-      }
+      const woundData = await fetchPatientWounds(patientId);
+      setWounds(woundData);
     } catch (error) {
       console.error('Error loading wounds:', error);
+      setError('Failed to load wound assessments');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Save wounds to local storage or database
-  const saveWounds = (updatedWounds: Wound[]) => {
-    try {
-      // In a real app, this would save to the database
-      // For now, we'll use localStorage to simulate persistence
-      localStorage.setItem('patientWounds', JSON.stringify(updatedWounds));
-    } catch (error) {
-      console.error('Error saving wounds:', error);
     }
   };
 
@@ -89,8 +61,8 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
     setNewWoundCoords({ x, y });
   };
 
-  const handleSaveWound = () => {
-    if (!newWoundCoords) return;
+  const handleSaveWound = async () => {
+    if (!newWoundCoords || !profile) return;
     
     const wound: Wound = {
       id: `wound-${Date.now()}`,
@@ -105,15 +77,23 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
         depth: newWound.size?.depth
       },
       description: newWound.description || '',
-      treatment: newWound.treatment || '',
-      assessedBy: 'Sarah Johnson, RN',
-      assessmentDate: new Date().toISOString(),
+      treatment: newWound.treatment || '', 
+      assessedBy: `${profile.first_name} ${profile.last_name}`,
+      assessmentDate: new Date().toISOString(), 
       healingProgress: newWound.healingProgress as Wound['healingProgress']
     };
     
-    const updatedWounds = [...wounds, wound];
-    setWounds(updatedWounds);
-    saveWounds(updatedWounds);
+    try {
+      setLoading(true);
+      const savedWound = await createWound(wound, patientId);
+      setWounds(prev => [...prev, savedWound]);
+      setError(null);
+    } catch (err) {
+      console.error('Error saving wound:', err);
+      setError('Failed to save wound assessment');
+    } finally {
+      setLoading(false);
+    }
     setShowAddWound(false);
     setNewWoundCoords(null);
     setNewWound({
@@ -126,11 +106,19 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
     });
   };
 
-  const handleDeleteWound = (woundId: string) => {
+  const handleDeleteWound = async (woundId: string) => {
     if (window.confirm('Are you sure you want to delete this wound assessment?')) {
-      const updatedWounds = wounds.filter(w => w.id !== woundId);
-      setWounds(updatedWounds);
-      saveWounds(updatedWounds);
+      try {
+        setLoading(true);
+        await deleteWound(woundId);
+        setWounds(prev => prev.filter(w => w.id !== woundId));
+        setError(null);
+      } catch (err) {
+        console.error('Error deleting wound:', err);
+        setError('Failed to delete wound assessment');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -347,6 +335,14 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
         </button>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center space-x-2">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        </div>
+      )}
+
       {/* Instructions */}
       {showAddWound && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -366,7 +362,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Body Diagram */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4"> 
             <h4 className="text-lg font-medium text-gray-900">Body Diagram</h4>
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
@@ -392,7 +388,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 h-96 flex items-center justify-center">
+          <div className="bg-gray-50 rounded-lg p-4 h-96 flex items-center justify-center"> 
             {selectedView === 'anterior' ? <AnteriorBodySVG /> : <PosteriorBodySVG />}
           </div>
 
@@ -423,7 +419,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
 
         {/* Wound Details Form (when adding) */}
         {showAddWound && newWoundCoords && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6"> 
             <h4 className="text-lg font-medium text-gray-900 mb-4">Wound Details</h4>
             
             <div className="space-y-4">
@@ -432,7 +428,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                   Location Description
                 </label>
                 <input
-                  type="text"
+                  type="text" 
                   value={newWound.location || ''}
                   onChange={(e) => setNewWound(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -440,7 +436,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4"> 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Wound Type
@@ -448,7 +444,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                   <select
                     value={newWound.type || 'Pressure Ulcer'}
                     onChange={(e) => setNewWound(prev => ({ ...prev, type: e.target.value as Wound['type'] }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   >
                     <option value="Pressure Ulcer">Pressure Ulcer</option>
                     <option value="Surgical">Surgical</option>
@@ -467,7 +463,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                   <select
                     value={newWound.stage || 'Stage 1'}
                     onChange={(e) => setNewWound(prev => ({ ...prev, stage: e.target.value as Wound['stage'] }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   >
                     <option value="Stage 1">Stage 1</option>
                     <option value="Stage 2">Stage 2</option>
@@ -480,7 +476,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-4"> 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Length (cm)
@@ -494,7 +490,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                       setNewWound(prev => ({
                         ...prev,
                         size: { ...(prev.size || { width: 0 }), length: value }
-                      }));
+                      })); 
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -512,7 +508,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                       setNewWound(prev => ({
                         ...prev,
                         size: { ...(prev.size || { length: 0 }), width: value }
-                      }));
+                      })); 
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -530,7 +526,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                       setNewWound(prev => ({
                         ...prev,
                         size: { ...(prev.size || { length: 0, width: 0 }), depth: value }
-                      }));
+                      })); 
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -543,7 +539,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 </label>
                 <textarea
                   value={newWound.description || ''}
-                  onChange={(e) => setNewWound(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setNewWound(prev => ({ ...prev, description: e.target.value }))} 
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Describe wound appearance, drainage, surrounding tissue..."
@@ -556,7 +552,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 </label>
                 <textarea
                   value={newWound.treatment || ''}
-                  onChange={(e) => setNewWound(prev => ({ ...prev, treatment: e.target.value }))}
+                  onChange={(e) => setNewWound(prev => ({ ...prev, treatment: e.target.value }))} 
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Dressing type, frequency, special instructions..."
@@ -566,7 +562,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
               <button
                 onClick={handleSaveWound}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-              >
+              > 
                 <Save className="h-4 w-4" />
                 <span>Save Wound Assessment</span>
               </button>
@@ -576,7 +572,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
 
         {/* Wound List (when not adding) */}
         {!showAddWound && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 min-h-[300px]"> 
             <h4 className="text-lg font-medium text-gray-900 mb-4">Current Wounds</h4>
             
             {wounds.length === 0 ? (
@@ -584,7 +580,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No wounds documented</p>
                 <p className="text-sm text-gray-400">Click "Add Wound" to begin assessment</p>
-              </div> 
+              </div>
             ) : (
               <div className="space-y-4">
                 {wounds.map((wound, index) => (
@@ -592,7 +588,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <div 
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" 
                           style={{ backgroundColor: getWoundColor(wound) }}
                         >
                           {index + 1}
@@ -603,7 +599,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(wound.stage)}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(wound.stage)}`}> 
                           {wound.stage}
                         </span>
                         <button
@@ -616,7 +612,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                      <div>
+                      <div> 
                         <p className="text-gray-600">Type: <span className="font-medium">{wound.type}</span></p>
                         <p className="text-gray-600">Size: <span className="font-medium">{wound.size.length} × {wound.size.width} cm</span></p>
                       </div>
@@ -626,11 +622,11 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                       </div>
                     </div>
                     
-                    {wound.description && (
+                    {wound.description && ( 
                       <p className="text-sm text-gray-700 mb-2">{wound.description}</p>
                     )}
                     
-                    {wound.treatment && (
+                    {wound.treatment && ( 
                       <div className="bg-blue-50 border border-blue-200 rounded p-2">
                         <p className="text-xs text-blue-800"><strong>Treatment:</strong> {wound.treatment}</p>
                       </div>
@@ -645,7 +641,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
 
       {/* Selected Wound Details Modal */}
       {selectedWound && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"> 
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Wound Details</h3>
@@ -657,7 +653,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4"> 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Location & Classification</h4>
@@ -668,7 +664,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                     <p><strong>Stage:</strong> <span className={`px-2 py-1 rounded-full text-xs ${getStageColor(selectedWound.stage)}`}>{selectedWound.stage}</span></p>
                   </div>
                 </div>
-                
+                 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Measurements</h4>
                   <div className="space-y-2 text-sm">
@@ -679,7 +675,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                   </div>
                 </div>
               </div>
-              
+               
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Assessment</h4>
                 <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{selectedWound.description}</p>
@@ -689,7 +685,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = () => {
                 <h4 className="font-medium text-gray-900 mb-2">Treatment Plan</h4>
                 <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded">{selectedWound.treatment}</p>
               </div>
-              
+               
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-600">
                   <p><strong>Assessed by:</strong> {selectedWound.assessedBy}</p>
