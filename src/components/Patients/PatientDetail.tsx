@@ -327,11 +327,24 @@ export const PatientDetail: React.FC = () => {
             
             {/* Vitals History */}
             {vitals.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Thermometer className="h-5 w-5 text-red-500 mr-2" />
+                      <span className="text-sm font-medium text-gray-600">Temperature</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
+                  <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Thermometer className="h-5 w-5 text-red-500 mr-2" />
-                    <span className="text-sm font-medium text-gray-600">Temperature</span>
+                    <Heart className="h-5 w-5 text-red-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
+                  </div>
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
@@ -344,16 +357,8 @@ export const PatientDetail: React.FC = () => {
                     <Heart className="h-5 w-5 text-red-500 mr-2" />
                     <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'medications':
-        return (
-          <MedicationAdministration
-            patientId={id!}
-            patientName={patientName}
+                </div>
+              </>
             medications={medications}
             onRefresh={async () => {
               try {
