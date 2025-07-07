@@ -9,7 +9,7 @@ import PatientNoteForm from './PatientNoteForm';
 import AssessmentForm from './AssessmentForm';
 import WoundAssessment from './WoundAssessment';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
-import AdvancedDirectivesForm from './AdvancedDirectivesForm';
+import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import PatientBracelet from './PatientBracelet';
 import VitalsTrends from './VitalsTrends';
 
