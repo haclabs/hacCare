@@ -354,11 +354,11 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Instructions and Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        </div>
+
+        {/* Instructions and Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h4 className="font-medium text-yellow-900 mb-2 flex items-center space-x-2">
             <Printer className="h-4 w-4" />
