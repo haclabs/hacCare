@@ -5,7 +5,7 @@ import { usePatients } from '../../contexts/PatientContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { MedicationAdministration } from './MedicationAdministration';
-import PatientNoteForm from './PatientNoteForm';
+import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
 import WoundAssessment from './WoundAssessment';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
