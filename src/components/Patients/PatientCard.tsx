@@ -30,6 +30,7 @@ interface PatientCardProps {
 }
 
 export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet }) => {
   /**
    * Get CSS classes for patient condition styling
    * @param {Patient['condition']} condition - Patient's current condition
@@ -149,3 +150,5 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onSh
     </div>
   );
 };
+
+export default PatientCard;
