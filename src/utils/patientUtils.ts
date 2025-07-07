@@ -179,7 +179,7 @@ export const formatTime = (dateValue: string | Date | null): string => {
 export const getVitalStatus = (vital: string, value: number) => {
   switch (vital) {
     case 'temperature':
-      if (value < 36 || value > 38) return 'text-red-600 bg-red-50';
+      if (value < 36.0 || value > 38.0) return 'text-red-600 bg-red-50';
       return 'text-green-600 bg-green-50';
     case 'heartRate':
       if (value < 60 || value > 100) return 'text-red-600 bg-red-50';
