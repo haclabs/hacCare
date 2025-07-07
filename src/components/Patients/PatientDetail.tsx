@@ -4,7 +4,7 @@ import { ArrowLeft, Edit, Calendar, FileText, AlertTriangle, Activity, Pill, Ste
 import { Patient, PatientNote, PatientAlert, PatientVitals, PatientMedication, PatientWound } from '../../types';
 import { patientService } from '../../lib/patientService';
 import { supabase } from '../../lib/supabase';
-import PatientNoteForm from './PatientNoteForm';
+import { PatientNoteForm } from './PatientNoteForm';
 import VitalSignsEditor from './VitalSignsEditor';
 import { MedicationForm } from './MedicationForm';
 import WoundAssessment from './WoundAssessment';
