@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, Activity, Pill, FileText, Calendar, ArrowLeft, Edit, Printer, AlertTriangle, Stethoscope, FileText as FileText2, Heart, Thermometer, Droplets, Wind } from 'lucide-react';
+import { User, Activity, Pill, FileText, Calendar, ArrowLeft, Edit, Printer, AlertTriangle, Stethoscope, FileText as FileText2, Heart, Thermometer, Droplets, Clock, Plus, TrendingUp } from 'lucide-react';
 import { usePatients } from '../../contexts/PatientContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { VitalSignsEditor } from './VitalSignsEditor';
@@ -12,6 +12,8 @@ import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { PatientBracelet } from './PatientBracelet';
 import { VitalsTrends } from './VitalsTrends';
+import { HospitalBracelet } from './HospitalBracelet';
+import { fetchPatientMedications } from '../../lib/medicationService';
 
 const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +22,13 @@ const PatientDetail: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
+  const [showVitalForm, setShowVitalForm] = useState(false);
+  const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [showAdmissionForm, setShowAdmissionForm] = useState(false);
+  const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<any | null>(null);
   
   // Local state for patient-specific data
   const [vitals, setVitals] = useState<any[]>([]);
@@ -34,11 +43,6 @@ const PatientDetail: React.FC = () => {
   const patient = patients.find(p => p.id === id);
 
   useEffect(() => {
-    if (!patient) {
-      navigate('/patients');
-      return;
-    }
-
     // Initialize with empty arrays/objects to prevent filter errors
     setVitals([]);
     setMedications([]);
@@ -49,7 +53,7 @@ const PatientDetail: React.FC = () => {
     setDirectives(null);
     setLoading(false);
 
-    // TODO: Fetch patient-specific data using service functions
+    // Fetch patient-specific data using service functions
     // This would be implemented when the actual service functions are available
     // Example:
     // fetchPatientVitals(id).then(setVitals);
@@ -57,7 +61,7 @@ const PatientDetail: React.FC = () => {
     // etc.
   }, [patient, id, navigate]);
 
-  if (!patient) {
+  if (!patient && !loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -68,7 +72,7 @@ const PatientDetail: React.FC = () => {
     );
   }
 
-  if (loading) {
+  if (loading || !patient) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -79,6 +83,10 @@ const PatientDetail: React.FC = () => {
   }
 
   const handleTabChange = (tab: string) => {
+    // Close any open modals when changing tabs
+    if (showVitalsTrends) {
+      setShowVitalsTrends(false);
+    }
     setActiveTab(tab);
   };
 
@@ -90,6 +98,8 @@ const PatientDetail: React.FC = () => {
   };
 
   const latestVitals = getLatestVitals();
+  
+  const patientName = `${patient.first_name} ${patient.last_name}`;
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -98,7 +108,7 @@ const PatientDetail: React.FC = () => {
           <div className="space-y-6">
             {/* Patient Information */}
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Patient Information</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center"><User className="h-5 w-5 mr-2 text-blue-600" />Patient Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Patient ID</label>
@@ -130,7 +140,7 @@ const PatientDetail: React.FC = () => {
             {/* Latest Vitals */}
             {latestVitals && (
               <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Latest Vital Signs</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center"><Activity className="h-5 w-5 mr-2 text-blue-600" />Latest Vital Signs</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
@@ -176,7 +186,7 @@ const PatientDetail: React.FC = () => {
 
             {/* Allergies */}
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Allergies</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center"><AlertTriangle className="h-5 w-5 mr-2 text-red-600" />Allergies</h3>
               {patient.allergies && patient.allergies.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {patient.allergies.map((allergy, index) => (
@@ -195,7 +205,7 @@ const PatientDetail: React.FC = () => {
 
             {/* Emergency Contact */}
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Emergency Contact</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center"><FileText className="h-5 w-5 mr-2 text-purple-600" />Emergency Contact</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">Name</label>
@@ -217,36 +227,271 @@ const PatientDetail: React.FC = () => {
       case 'vitals':
         return (
           <div className="space-y-6">
-            <VitalSignsEditor patientId={id!} />
-            <VitalsTrends patientId={id!} />
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowVitalsTrends(true); 
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="View vital signs trends"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span>View Trends</span>
+                </button>
+                <button
+                  onClick={() => setShowVitalForm(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Vitals</span>
+                </button>
+              </div>
+            </div>
+            
+            {/* Latest Vitals Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Thermometer className="h-5 w-5 text-red-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">Temperature</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
+                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Heart className="h-5 w-5 text-red-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">120/80</p>
+                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Activity className="h-5 w-5 text-green-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">Heart Rate</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">72 bpm</p>
+                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Droplets className="h-5 w-5 text-blue-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">O2 Saturation</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-2">98%</p>
+                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+              </div>
+            </div>
+
+            {/* Vitals History */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h4 className="text-lg font-medium text-gray-900">Recent Measurements</h4>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Time
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Temperature
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Blood Pressure
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Heart Rate
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        O2 Sat
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        2 hours ago
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
+                        37.0°C
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        120/80
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        72 bpm
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        98%
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         );
 
       case 'medications':
         return <MedicationAdministration patientId={id!} />;
-
+          <MedicationAdministration
+            patientId={id!}
+            patientName={patientName}
+            medications={medications}
+            onRefresh={async () => {
+              try {
+                const meds = await fetchPatientMedications(id!);
+                setMedications(meds);
+              } catch (error) {
+                console.error('Error refreshing medications:', error);
+              }
+            }}
+          />
       case 'notes':
         return <PatientNoteForm patientId={id!} />;
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
+              <button
+                onClick={() => {
+                  setSelectedNote(null);
+                  setShowNoteForm(true);
+                }}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Note</span>
+              </button>
+            </div>
 
+            <div className="space-y-4">
+              {notes.length > 0 ? (
+                notes.map((note) => (
+                  <div key={note.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <FileText className="h-5 w-5 text-blue-600 mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between w-full">
+                            <div>
+                              <h4 className="text-lg font-medium text-gray-900">{note.type} Note</h4>
+                              <p className="text-sm text-gray-600">by {note.nurse_name} • {new Date(note.created_at).toLocaleString()}</p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedNote(note);
+                                  setShowNoteForm(true);
+                                }}
+                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mt-2">{note.content}</p>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        note.priority === 'High' ? 'bg-red-100 text-red-800' :
+                        note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {note.priority}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <p className="text-gray-500 text-center py-8">No notes recorded yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
       case 'assessments':
         return <AssessmentForm patientId={id!} />;
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Assessments</h3>
+              <button
+                onClick={() => setShowAssessmentForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>New Assessment</span>
+              </button>
+            </div>
 
+            {/* Empty state for assessments */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500 text-center py-8">No assessments recorded yet.</p>
+            </div>
+          </div>
       case 'wounds':
         return <WoundAssessment patientId={id!} />;
 
       case 'admission':
         return <AdmissionRecordsForm patientId={id!} />;
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Admission Records</h3>
+              <button
+                onClick={() => setShowAdmissionForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add New Records</span>
+              </button>
+            </div>
 
+            {/* Empty state for admission records */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500 text-center py-8">No admission records found.</p>
+            </div>
+          </div>
       case 'directives':
         return <AdvancedDirectivesForm patientId={id!} />;
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Advanced Directives</h3>
+              <button
+                onClick={() => setShowAdvancedDirectivesForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add New Directives</span>
+              </button>
+            </div>
 
+            {/* Empty state for advanced directives */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500 text-center py-8">No advanced directives found.</p>
+            </div>
+          </div>
       default:
         return null;
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <div className="flex items-center justify-between">
@@ -314,9 +559,99 @@ const PatientDetail: React.FC = () => {
       {/* Tab Content */}
       {renderTabContent()}
 
+      {/* Modals */}
+      {showVitalForm && (
+        <VitalSignsEditor
+          patientId={id!}
+          vitals={vitals[0]}
+          onClose={() => setShowVitalForm(false)}
+          onSave={(newVitals) => {
+            setShowVitalForm(false);
+            setVitals([newVitals, ...vitals]);
+          }}
+          onCancel={() => setShowVitalForm(false)}
+        />
+      )}
+
+      {showNoteForm && (
+        <PatientNoteForm
+          patientId={id!}
+          note={selectedNote}
+          patientName={patientName}
+          onCancel={() => {
+            setShowNoteForm(false);
+            setSelectedNote(null);
+          }}
+          onSave={(newNote) => {
+            if (selectedNote) {
+              // Update existing note
+              setNotes(notes.map(note => note.id === selectedNote.id ? newNote : note));
+              setSelectedNote(null);
+            } else {
+              // Add new note
+              setNotes([newNote, ...notes]);
+            }
+            setShowNoteForm(false);
+          }}
+        />
+      )}
+
+      {showAssessmentForm && (
+        <AssessmentForm
+          patientId={id!}
+          patientName={patientName}
+          onClose={() => setShowAssessmentForm(false)}
+          onSave={(newAssessment) => {
+            setShowAssessmentForm(false);
+          }}
+        />
+      )}
+
+      {showAdmissionForm && (
+        <AdmissionRecordsForm
+          patientId={id!}
+          patientName={patientName}
+          onClose={() => setShowAdmissionForm(false)}
+          onSave={() => {
+            setShowAdmissionForm(false);
+          }}
+        />
+      )}
+
+      {showAdvancedDirectivesForm && (
+        <AdvancedDirectivesForm
+          patientId={id!}
+          patientName={patientName}
+          onClose={() => setShowAdvancedDirectivesForm(false)}
+          onSave={() => {
+            setShowAdvancedDirectivesForm(false);
+          }}
+        />
+      )}
+
+      {showVitalsTrends && (
+        <VitalsTrends
+          patientId={id!}
+          patientName={patientName}
+          onClose={() => setShowVitalsTrends(false)}
+          onRecordVitals={() => {
+            setShowVitalsTrends(false);
+            setShowVitalForm(true);
+          }}
+        />
+      )}
+
       {/* Patient Bracelet Modal */}
       {showPatientBracelet && (
         <PatientBracelet
+          patient={patient}
+          onClose={() => setShowPatientBracelet(false)}
+        />
+      )}
+      
+      {/* Hospital Bracelet Modal */}
+      {showPatientBracelet && (
+        <HospitalBracelet
           patient={patient}
           onClose={() => setShowPatientBracelet(false)}
         />
