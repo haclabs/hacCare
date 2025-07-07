@@ -5,7 +5,7 @@ import { Patient, PatientVitals, PatientMedication, PatientNote, PatientAlert, P
 import { fetchPatientById, fetchPatientVitals, fetchPatientMedications, fetchPatientNotes, fetchPatientAlerts, fetchPatientAdmissionRecord, fetchPatientAdvancedDirective, fetchPatientWounds } from '../../lib/patientService';
 import VitalSignsEditor from './VitalSignsEditor';
 import { MedicationAdministration } from './MedicationAdministration';
-import PatientNoteForm from './PatientNoteForm';
+import { PatientNoteForm } from './PatientNoteForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import WoundAssessment from './WoundAssessment';
