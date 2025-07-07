@@ -643,7 +643,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       )}
       
       {showPatientBracelet && (
-        <PatientBracelet
+        <HospitalBracelet
           patient={patient}
           onClose={() => setShowPatientBracelet(false)}
         />
