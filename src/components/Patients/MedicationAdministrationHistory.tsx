@@ -6,6 +6,7 @@ import { MedicationAdministration } from '../../types';
 
 interface MedicationAdministrationHistoryProps {
   medicationId: string;
+  patientId: string;
   medicationName: string;
   patientId: string;
   onClose: () => void;
@@ -13,6 +14,7 @@ interface MedicationAdministrationHistoryProps {
 
 export const MedicationAdministrationHistory: React.FC<MedicationAdministrationHistoryProps> = ({
   medicationId,
+  patientId,
   medicationName,
   patientId,
   onClose

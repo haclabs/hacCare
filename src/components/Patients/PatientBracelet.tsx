@@ -4,7 +4,7 @@ import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 
 /**
- * Patient Bracelet Component
+ * Patient Label Component
  * 
  * Generates Avery 5160 compatible patient identification labels for printing.
  * Creates a sheet of labels with patient information and barcodes.
