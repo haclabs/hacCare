@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Wound Service
@@ -29,7 +28,7 @@ export interface DbWound {
 }
 
 // UI wound interface
-export interface Wound {
+export interface WoundUI {
   id: string;
   location: string;
   coordinates: { x: number; y: number };
@@ -51,7 +50,7 @@ export interface Wound {
 /**
  * Convert database wound to UI wound
  */
-const convertDbToUiWound = (dbWound: DbWound): Wound => {
+const convertDbToUiWound = (dbWound: DbWound): WoundUI => {
   return {
     id: dbWound.id,
     location: dbWound.location,
@@ -60,8 +59,8 @@ const convertDbToUiWound = (dbWound: DbWound): Wound => {
       y: Number(dbWound.coordinates_y)
     },
     view: dbWound.view as 'anterior' | 'posterior',
-    type: dbWound.type as Wound['type'],
-    stage: dbWound.stage as Wound['stage'],
+    type: dbWound.type as WoundUI['type'],
+    stage: dbWound.stage as WoundUI['stage'],
     size: {
       length: Number(dbWound.size_length),
       width: Number(dbWound.size_width),
@@ -71,14 +70,14 @@ const convertDbToUiWound = (dbWound: DbWound): Wound => {
     treatment: dbWound.treatment || '',
     assessedBy: dbWound.assessed_by,
     assessmentDate: dbWound.assessment_date,
-    healingProgress: dbWound.healing_progress as Wound['healingProgress']
+    healingProgress: dbWound.healing_progress as WoundUI['healingProgress']
   };
 };
 
 /**
  * Convert UI wound to database format
  */
-const convertUiToDbWound = (wound: Wound, patientId: string): Omit<DbWound, 'id' | 'created_at' | 'updated_at'> => {
+const convertUiToDbWound = (wound: WoundUI, patientId: string): Omit<DbWound, 'id' | 'created_at' | 'updated_at'> => {
   return {
     patient_id: patientId,
     location: wound.location,
@@ -101,7 +100,7 @@ const convertUiToDbWound = (wound: Wound, patientId: string): Omit<DbWound, 'id'
 /**
  * Fetch wounds for a patient
  */
-export const fetchPatientWounds = async (patientId: string): Promise<Wound[]> => {
+export const fetchPatientWounds = async (patientId: string): Promise<WoundUI[]> => {
   try {
     console.log('Fetching wounds for patient:', patientId);
     
@@ -127,11 +126,11 @@ export const fetchPatientWounds = async (patientId: string): Promise<Wound[]> =>
 /**
  * Create a new wound
  */
-export const createWound = async (wound: Omit<Wound, 'id'>, patientId: string): Promise<Wound> => {
+export const createWound = async (wound: Omit<WoundUI, 'id'>, patientId: string): Promise<WoundUI> => {
   try {
     console.log('Creating wound:', wound);
     
-    const dbWound = convertUiToDbWound(wound as Wound, patientId);
+    const dbWound = convertUiToDbWound(wound as WoundUI, patientId);
     
     const { data, error } = await supabase
       .from('patient_wounds')
@@ -155,7 +154,7 @@ export const createWound = async (wound: Omit<Wound, 'id'>, patientId: string): 
 /**
  * Update an existing wound
  */
-export const updateWound = async (woundId: string, updates: Partial<Wound>, patientId: string): Promise<Wound> => {
+export const updateWound = async (woundId: string, updates: Partial<WoundUI>, patientId: string): Promise<WoundUI> => {
   try {
     console.log('Updating wound:', woundId, updates);
     
