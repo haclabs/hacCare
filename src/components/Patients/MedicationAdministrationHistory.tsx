@@ -8,7 +8,6 @@ interface MedicationAdministrationHistoryProps {
   medicationId: string;
   patientId: string;
   medicationName: string;
-  patientId: string;
   onClose: () => void;
 }
 
@@ -16,7 +15,6 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
   medicationId,
   patientId,
   medicationName,
-  patientId,
   onClose
 }) => {
   const [administrations, setAdministrations] = useState<MedicationAdministration[]>([]);
