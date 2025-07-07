@@ -11,7 +11,7 @@ import WoundAssessment from './WoundAssessment';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { PatientBracelet } from './PatientBracelet';
-import VitalsTrends from './VitalsTrends';
+import { VitalsTrends } from './VitalsTrends';
 
 const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
