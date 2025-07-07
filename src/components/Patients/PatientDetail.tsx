@@ -499,7 +499,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           {[
             { id: 'overview', label: 'Overview', icon: User },
             { id: 'vitals', label: 'Vital Signs', icon: Activity },
-            { id: 'medications', label: 'Medication Administration Record', icon: Pill },
+            { id: 'medications', label: 'MAR', icon: Pill },
             { id: 'notes', label: 'Notes', icon: FileText },
             { id: 'assessments', label: 'Assessments', icon: Stethoscope },
             { id: 'wounds', label: 'Wound Assessment', icon: AlertTriangle },
