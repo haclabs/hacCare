@@ -35,15 +35,15 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       let directive = await fetchAdvancedDirective(patientId);
 
       if (!directive) {
-        // Create a completely empty directive
+        // Create a completely empty directive template
         directive = {
           patient_id: patientId,
-          living_will_status: 'Not Available',
+          living_will_status: '',
           living_will_date: '',
           healthcare_proxy_name: '',
           healthcare_proxy_phone: '',
-          dnr_status: 'Full Code',
-          organ_donation_status: 'Not registered',
+          dnr_status: '',
+          organ_donation_status: '',
           organ_donation_details: '',
           religious_preference: '',
           special_instructions: ''
@@ -63,14 +63,24 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData) return;
-
+    
     try {
       setSaving(true);
       setError('');
       
-      console.log('Saving advanced directive:', formData);
-      await upsertAdvancedDirective(formData);
-      console.log('Advanced directive saved successfully');
+      // Make sure required fields are filled
+      const requiredFields = ['living_will_status', 'dnr_status'];
+      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+      
+      if (missingFields.length > 0) {
+        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        setSaving(false);
+        return;
+      }
+      
+      // Save to database
+      const savedDirective = await upsertAdvancedDirective(formData);
+      console.log('Advanced directive saved successfully:', savedDirective);
       
       // Refresh patient data to reflect changes
       await refreshPatients();
@@ -159,8 +169,12 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.living_will_status}
                   onChange={(e) => updateField('living_will_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !formData.living_will_status ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  required
                 >
+                  <option value="">Select status</option>
                   <option value="On File">On File</option>
                   <option value="Not Available">Not Available</option>
                   <option value="Pending">Pending</option>
@@ -212,8 +226,12 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.dnr_status}
                   onChange={(e) => updateField('dnr_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !formData.dnr_status ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  required
                 >
+                  <option value="">Select DNR status</option>
                   <option value="Full Code">Full Code</option>
                   <option value="DNR">Do Not Resuscitate</option>
                   <option value="DNI">Do Not Intubate</option>
@@ -239,8 +257,9 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.organ_donation_status}
                   onChange={(e) => updateField('organ_donation_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                 >
+                  <option value="">Select donation status</option>
                   <option value="Registered organ donor">Registered organ donor</option>
                   <option value="Not registered">Not registered</option>
                   <option value="Declined">Declined</option>

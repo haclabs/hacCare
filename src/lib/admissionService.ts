@@ -161,30 +161,31 @@ export const upsertAdvancedDirective = async (directive: AdvancedDirective): Pro
 export const createDefaultAdmissionRecord = async (patientId: string): Promise<AdmissionRecord> => {
   console.log('Creating default admission record for patient:', patientId);
   
-  const defaultRecord: AdmissionRecord = {
+  // Create a completely empty record
+  const emptyRecord: AdmissionRecord = {
     patient_id: patientId,
-    admission_type: 'Emergency',
-    attending_physician: 'Dr. Sarah Wilson, MD',
-    insurance_provider: 'Blue Cross Blue Shield',
-    insurance_policy: 'BC123456789',
-    admission_source: 'Emergency Department',
-    chief_complaint: 'Chest pain and shortness of breath',
-    height: '5\'10" (178 cm)',
-    weight: '185 lbs (84 kg)',
-    bmi: '26.5 (Overweight)',
-    smoking_status: 'Former smoker (quit 5 years ago)',
-    alcohol_use: 'Social drinker (2-3 drinks/week)',
-    exercise: 'Sedentary lifestyle',
-    occupation: 'Office manager (desk job)',
-    family_history: 'Father: Myocardial infarction at age 58; Mother: Type 2 diabetes, hypertension; Brother: Hyperlipidemia',
-    marital_status: 'Married, 2 children',
-    secondary_contact_name: 'Robert Smith Jr.',
-    secondary_contact_relationship: 'Son',
-    secondary_contact_phone: '(555) 234-5678',
-    secondary_contact_address: '456 Oak Ave, Nearby City, ST 12346'
+    admission_type: '',
+    attending_physician: '',
+    insurance_provider: '',
+    insurance_policy: '',
+    admission_source: '',
+    chief_complaint: '',
+    height: '',
+    weight: '',
+    bmi: '',
+    smoking_status: '',
+    alcohol_use: '',
+    exercise: '',
+    occupation: '',
+    family_history: '',
+    marital_status: '',
+    secondary_contact_name: '',
+    secondary_contact_relationship: '',
+    secondary_contact_phone: '',
+    secondary_contact_address: ''
   };
 
-  return await upsertAdmissionRecord(defaultRecord);
+  return await upsertAdmissionRecord(emptyRecord);
 };
 
 /**
@@ -193,18 +194,19 @@ export const createDefaultAdmissionRecord = async (patientId: string): Promise<A
 export const createDefaultAdvancedDirective = async (patientId: string): Promise<AdvancedDirective> => {
   console.log('Creating default advanced directive for patient:', patientId);
   
-  const defaultDirective: AdvancedDirective = {
+  // Create a completely empty directive
+  const emptyDirective: AdvancedDirective = {
     patient_id: patientId,
-    living_will_status: 'On File',
-    living_will_date: '2024-01-10',
-    healthcare_proxy_name: 'Mary Smith (Spouse)',
-    healthcare_proxy_phone: '(555) 987-6543',
-    dnr_status: 'Full Code',
-    organ_donation_status: 'Registered organ donor',
-    organ_donation_details: 'All organs and tissues',
-    religious_preference: 'Catholic',
-    special_instructions: 'Prefers family present for major decisions; Comfortable with medical students observing'
+    living_will_status: '',
+    living_will_date: '',
+    healthcare_proxy_name: '',
+    healthcare_proxy_phone: '',
+    dnr_status: '',
+    organ_donation_status: '',
+    organ_donation_details: '',
+    religious_preference: '',
+    special_instructions: ''
   };
 
-  return await upsertAdvancedDirective(defaultDirective);
+  return await upsertAdvancedDirective(emptyDirective);
 };

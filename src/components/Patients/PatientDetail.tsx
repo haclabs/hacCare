@@ -414,15 +414,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Admission Records</h3>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowAdmissionForm(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Records</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setShowAdmissionForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Records</span>
+              </button>
             </div>
 
             {/* Empty state for admission records */}
@@ -449,15 +447,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Advanced Directives</h3>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowAdvancedDirectivesForm(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Directives</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setShowAdvancedDirectivesForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Directives</span>
+              </button>
             </div>
 
             {/* Empty state for advanced directives */}

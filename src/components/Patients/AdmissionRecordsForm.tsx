@@ -35,14 +35,14 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       let record = await fetchAdmissionRecord(patientId);
 
       if (!record) {
-        // Create a completely empty record
+        // Create a completely empty record template
         record = {
           patient_id: patientId,
-          admission_type: 'Emergency',
+          admission_type: '',
           attending_physician: '',
           insurance_provider: '',
           insurance_policy: '',
-          admission_source: 'Emergency Department',
+          admission_source: '',
           chief_complaint: '',
           height: '',
           weight: '',
@@ -73,13 +73,24 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData) return;
-
+    
     try {
       setSaving(true);
       setError('');
       
-      console.log('Saving admission record:', formData);
-      await upsertAdmissionRecord(formData);
+      // Make sure all required fields are filled
+      const requiredFields = ['admission_type', 'attending_physician', 'chief_complaint'];
+      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+      
+      if (missingFields.length > 0) {
+        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        setSaving(false);
+        return;
+      }
+      
+      // Save to database
+      const savedRecord = await upsertAdmissionRecord(formData);
+      console.log('Admission record saved successfully:', savedRecord);
       console.log('Admission record saved successfully');
       
       // Refresh patient data to reflect changes
@@ -169,8 +180,12 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                 <select
                   value={formData.admission_type}
                   onChange={(e) => updateField('admission_type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !formData.admission_type ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  required
                 >
+                  <option value="">Select admission type</option>
                   <option value="Emergency">Emergency</option>
                   <option value="Elective">Elective</option>
                   <option value="Urgent">Urgent</option>
@@ -186,7 +201,11 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.attending_physician}
                   onChange={(e) => updateField('attending_physician', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !formData.attending_physician ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="Dr. Name"
+                  required
                 />
               </div>
 
@@ -221,8 +240,9 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                 <select
                   value={formData.admission_source}
                   onChange={(e) => updateField('admission_source', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                 >
+                  <option value="">Select admission source</option>
                   <option value="Emergency Department">Emergency Department</option>
                   <option value="Physician Referral">Physician Referral</option>
                   <option value="Transfer from Another Facility">Transfer from Another Facility</option>
@@ -238,7 +258,11 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.chief_complaint}
                   onChange={(e) => updateField('chief_complaint', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    !formData.chief_complaint ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="Reason for admission"
+                  required
                 />
               </div>
             </div>
