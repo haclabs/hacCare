@@ -70,27 +70,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
-              <div className="flex items-center space-x-3">
-                {/* Heart Icon */}
-                <div className="relative">
-                  <Heart 
-                    className="h-16 w-16 text-blue-600 fill-current" 
-                    strokeWidth={1.5}
-                  />
-                  {/* Heartbeat line overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg 
-                      className="h-6 w-6 text-white" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2"
-                    >
-                      <path d="M3 12h3l2-4 4 8 2-4h3" />
-                    </svg>
-                  </div>
-                </div>
-                
+              <div className="flex items-center">
                 {/* HacCare Text */}
                 <div className="text-left">
                   <h1 className="text-3xl font-bold text-gray-800 leading-none">

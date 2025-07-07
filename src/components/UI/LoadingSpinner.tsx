@@ -72,27 +72,7 @@ export const LoadingSpinner: React.FC = () => {
       <div className="text-center max-w-md">
         {/* hacCare Logo */}
         <div className="flex justify-center mb-6">
-          <div className="flex items-center space-x-3">
-            {/* Heart Icon with heartbeat overlay */}
-            <div className="relative">
-              <Heart 
-                className="h-16 w-16 text-blue-600 fill-current opacity-75" 
-                strokeWidth={1.5}
-              />
-              {/* Heartbeat line overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg 
-                  className="h-6 w-6 text-white" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                >
-                  <path d="M3 12h3l2-4 4 8 2-4h3" />
-                </svg>
-              </div>
-            </div>
-            
+          <div className="flex items-center">
             {/* hacCare Text */}
             <div className="text-left">
               <h1 className="text-3xl font-bold text-gray-800 leading-none opacity-75">
