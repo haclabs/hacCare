@@ -13,7 +13,9 @@ import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { PatientBracelet } from './PatientBracelet';
 import { VitalsTrends } from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
-import { fetchPatientMedications } from '../../lib/medicationService';
+import { fetchPatientMedications } from '../../lib/medicationService'; 
+import { fetchPatientVitals } from '../../lib/patientService';
+import { format } from 'date-fns';
 import { fetchPatientById } from '../../lib/patientService';
 
 export const PatientDetail: React.FC = () => {
@@ -52,11 +54,12 @@ export const PatientDetail: React.FC = () => {
     setWounds([]);
     setAdmissionRecords(null);
     setDirectives(null);
-    setLoading(false);
 
     // Fetch patient-specific data using service functions
     if (id) {
       fetchPatientMedications(id).then(setMedications).catch(console.error);
+      fetchPatientVitals(id).then(setVitals).catch(console.error);
+      setLoading(false);
     }
   }, [patient, id, navigate]);
 
@@ -299,7 +302,10 @@ export const PatientDetail: React.FC = () => {
             {/* Vitals History */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h4 className="text-lg font-medium text-gray-900">Recent Measurements</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-medium text-gray-900">Recent Measurements</h4>
+                  <span className="text-sm text-gray-500">Last 5 readings</span>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -322,24 +328,34 @@ export const PatientDetail: React.FC = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        2 hours ago
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
-                        37.0°C
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        120/80
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        72 bpm
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        98%
-                      </td>
-                    </tr>
+                  <tbody className="bg-white divide-y divide-gray-200" id="vitals-table-body">
+                    {vitals.length > 0 ? (
+                      vitals.slice(0, 5).map((vital, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {format(new Date(vital.recorded_at || vital.lastUpdated || new Date()), 'MMM dd, HH:mm')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
+                            {vital.temperature}°C
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {vital.bloodPressure?.systolic}/{vital.bloodPressure?.diastolic}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {vital.heartRate} bpm
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {vital.oxygenSaturation}%
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                          No vital signs recorded yet
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
