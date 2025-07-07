@@ -4,11 +4,13 @@ import { format } from 'date-fns';
 import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../lib/woundService';
 import { useAuth } from '../../contexts/AuthContext';
 
-interface WoundAssessmentProps {
+export interface WoundAssessmentProps {
   patientId: string;
+  onClose?: () => void;
+  onSave?: () => void;
 }
 
-export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) => {
+export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onClose, onSave }) => {
   const [wounds, setWounds] = useState<WoundUI[]>([]);
   
   const [selectedView, setSelectedView] = useState<'anterior' | 'posterior'>('anterior');
@@ -96,6 +98,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
     setShowAddWound(false);
     setNewWoundCoords(null);
     setNewWound({
+      location: '',
       type: 'Pressure Ulcer',
       stage: 'Stage 1',
       size: { length: 0, width: 0 },
@@ -103,6 +106,11 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
       treatment: '',
       healingProgress: 'New'
     });
+    
+    // Call onSave callback if provided
+    if (onSave) {
+      onSave();
+    }
   };
 
   const handleDeleteWound = async (woundId: string) => {
@@ -318,20 +326,29 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Wound Assessment</h3>
-        <button
-          onClick={() => setShowAddWound(!showAddWound)}
-          className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
-            showAddWound 
-              ? 'bg-red-600 text-white hover:bg-red-700' 
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          {showAddWound ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          <span>{showAddWound ? 'Cancel' : 'Add Wound'}</span>
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setShowAddWound(!showAddWound)}
+            className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+              showAddWound 
+                ? 'bg-red-600 text-white hover:bg-red-700' 
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {showAddWound ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            <span>{showAddWound ? 'Cancel' : 'Add Wound'}</span>
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -561,6 +578,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId }) =
               <button
                 onClick={handleSaveWound}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                disabled={!newWoundCoords}
               > 
                 <Save className="h-4 w-4" />
                 <span>Save Wound Assessment</span>
