@@ -36,7 +36,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   note,
   patientId,
   patientName,
-  onClose,
+  onClose = () => {},
   onSave,
   onCancel
 }) => {
@@ -109,13 +109,13 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
     try {
       // Create note object
       const noteData: PatientNote = {
-        id: note?.id || `note-${Date.now()}`,
-        created_at: note?.created_at || format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+        id: note?.id || `note-${Date.now()}`, 
+        created_at: note?.created_at || format(new Date(), 'yyyy-MM-dd HH:mm:ss'), 
         nurse_id: 'nurse-001', // In real app, this would come from auth context
         nurse_name: 'Sarah Johnson', // In real app, this would come from auth context
-        type: formData.type,
+        type: formData.type as PatientNote['type'],
         content: formData.content.trim(),
-        priority: formData.priority
+        priority: formData.priority as PatientNote['priority']
       };
 
       await onSave(noteData);

@@ -32,7 +32,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>(patient.medications || []);
-  const [notes, setNotes] = useState<PatientNote[]>([]);
+  const [notes, setNotes] = useState<PatientNote[]>(patient.notes || []);
   const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
 
   // Load medications when component mounts or patient changes
@@ -47,6 +47,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
     };
     
     loadMedications();
+    
+    // Initialize notes from patient data
+    if (patient.notes && patient.notes.length > 0) {
+      setNotes(patient.notes);
+    }
   }, [patient.id]);
 
   const handleTabChange = (tab: string) => {
@@ -317,7 +322,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
               <button
-                onClick={() => setShowNoteForm(true)}
+                onClick={() => {
+                  setSelectedNote(null);
+                  setShowNoteForm(true);
+                }}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
@@ -326,54 +334,59 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3">
-                    <FileText className="h-5 w-5 text-blue-600 mt-1" />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between w-full">
-                        <div>
-                          <h4 className="text-lg font-medium text-gray-900">Assessment Note</h4>
-                          <p className="text-sm text-gray-600">by Nurse Johnson • 2 hours ago</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => setSelectedNote({
-                              id: 'note-1',
-                              created_at: '2023-07-01T10:00:00Z',
-                              nurse_id: 'nurse-001',
-                              nurse_name: 'Nurse Johnson',
-                              type: 'Assessment',
-                              content: 'Patient is alert and oriented. Vital signs stable. No complaints of pain or discomfort. Ambulating independently. Diet tolerated well.',
-                              priority: 'Low'
-                            })}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm('Are you sure you want to delete this note?')) {
-                                // Delete note logic
-                              }
-                            }}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+              {notes.length > 0 ? (
+                notes.map((note) => (
+                  <div key={note.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <FileText className="h-5 w-5 text-blue-600 mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between w-full">
+                            <div>
+                              <h4 className="text-lg font-medium text-gray-900">{note.type} Note</h4>
+                              <p className="text-sm text-gray-600">by {note.nurse_name} • {new Date(note.created_at).toLocaleString()}</p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedNote(note);
+                                  setShowNoteForm(true);
+                                }}
+                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Are you sure you want to delete this note?')) {
+                                    // Delete note from state
+                                    setNotes(notes.filter(n => n.id !== note.id));
+                                  }
+                                }}
+                                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mt-2">{note.content}</p>
                         </div>
                       </div>
-                      <p className="text-gray-700 mt-2">
-                        Patient is alert and oriented. Vital signs stable. No complaints of pain or discomfort.
-                        Ambulating independently. Diet tolerated well.
-                      </p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        note.priority === 'High' ? 'bg-red-100 text-red-800' :
+                        note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {note.priority}
+                      </span>
                     </div>
                   </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Normal
-                  </span>
+                ))
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <p className="text-gray-500 text-center py-8">No notes recorded yet.</p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         );
@@ -578,8 +591,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {showNoteForm && (
         <PatientNoteForm
           patientId={patient.id}
+          note={selectedNote}
           patientName={`${patient.first_name} ${patient.last_name}`}
-          onClose={() => setShowNoteForm(false)}
+          onCancel={() => {
+            setShowNoteForm(false);
+            setSelectedNote(null);
+          }}
           onSave={(newNote) => {
             if (selectedNote) {
               // Update existing note
@@ -591,8 +608,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             }
             setShowNoteForm(false);
           }}
-          note={selectedNote}
-          onCancel={() => setShowNoteForm(false)}
         />
       )}
 
