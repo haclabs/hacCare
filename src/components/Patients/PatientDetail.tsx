@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, Activity, Pill, FileText, Calendar, ArrowLeft, Edit, Printer, AlertTriangle, Stethoscope, FileText as FileText2, Heart, Thermometer, Droplets, Clock, Plus, TrendingUp } from 'lucide-react';
+import { User, Activity, Pill, FileText, Calendar, ArrowLeft, Edit, Printer, AlertTriangle, Stethoscope, FileText as FileText2, Heart, Thermometer, Droplets, Clock, Plus, TrendingUp, Wind } from 'lucide-react';
 import { usePatients } from '../../contexts/PatientContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { VitalSignsEditor } from './VitalSignsEditor';
