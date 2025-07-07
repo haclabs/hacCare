@@ -179,6 +179,58 @@ export const fetchPatients = async (): Promise<Patient[]> => {
 };
 
 /**
+ * Fetch a single patient by ID from database
+ */
+export const fetchPatientById = async (patientId: string): Promise<Patient | null> => {
+  try {
+    console.log('Fetching patient by ID:', patientId);
+    
+    // Fetch patient
+    const { data: patient, error: patientError } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('id', patientId)
+      .single();
+
+    if (patientError) {
+      if (patientError.code === 'PGRST116') {
+        // No rows returned
+        console.log('Patient not found:', patientId);
+        return null;
+      }
+      throw patientError;
+    }
+
+    if (!patient) {
+      console.log('Patient not found:', patientId);
+      return null;
+    }
+
+    console.log('Found patient:', patient.patient_id);
+
+    // Fetch vitals for this patient
+    const { data: vitals, error: vitalsError } = await supabase
+      .from('patient_vitals')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('recorded_at', { ascending: false });
+
+    if (vitalsError) {
+      console.error('Error fetching vitals for patient:', vitalsError);
+    }
+
+    // Convert patient with vitals
+    const patientWithVitals = convertDatabasePatient(patient, vitals || []);
+
+    console.log('Patient fetched successfully');
+    return patientWithVitals;
+  } catch (error) {
+    console.error('Error fetching patient by ID:', error);
+    throw error;
+  }
+};
+
+/**
  * Create a new patient
  */
 export const createPatient = async (patient: Patient): Promise<Patient> => {
