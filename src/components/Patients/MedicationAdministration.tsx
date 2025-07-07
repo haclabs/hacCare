@@ -42,6 +42,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleRefresh = async () => {
     setLoading(true);
     try {
+      console.log('Refreshing medications for patient:', patientId);
       const updatedMedications = await fetchPatientMedications(patientId);
       setAllMedications(updatedMedications);
       onRefresh();
@@ -141,6 +142,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             <button
               onClick={() => {
                 setSelectedMedication(medication);
+                console.log('Opening administration form for medication:', medication.id);
                 setShowAdminForm(true);
               }}
               className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"

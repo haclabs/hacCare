@@ -37,7 +37,8 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.administered_by) {
+    // Validate required fields
+    if (!formData.administered_by?.trim()) {
       setError('Administrator name is required');
       return;
     }
@@ -46,8 +47,18 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
     setError('');
     
     try {
+      // Ensure all required fields are present
+      const adminData: Omit<MedicationAdministration, 'id'> = {
+        medication_id: formData.medication_id!,
+        patient_id: formData.patient_id!,
+        administered_by: formData.administered_by,
+        administered_by_id: formData.administered_by_id || user?.id,
+        timestamp: formData.timestamp || new Date().toISOString(),
+        notes: formData.notes || ''
+      };
+      
       // Save administration record
-      const result = await recordMedicationAdministration(formData as Omit<MedicationAdministration, 'id'>);
+      const result = await recordMedicationAdministration(adminData);
       console.log('Administration recorded successfully:', result);
       onSuccess(); 
     } catch (err: any) {
