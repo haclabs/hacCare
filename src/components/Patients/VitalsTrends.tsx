@@ -3,7 +3,7 @@ import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw }
 import { format, parseISO, isValid } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { clearPatientVitals, fetchPatientVitalsHistory } from '../../lib/patientService';
+import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../lib/patientService';
 import { usePatients } from '../../contexts/PatientContext';
 
 interface VitalsTrendsProps {
@@ -13,22 +13,13 @@ interface VitalsTrendsProps {
   onRecordVitals: () => void;
 }
 
-interface VitalReading {
-  timestamp: string;
-  temperature: number;
-  heartRate: number;
-  bloodPressure: { systolic: number; diastolic: number };
-  oxygenSaturation: number;
-  respiratoryRate: number;
-}
-
 export const VitalsTrends: React.FC<VitalsTrendsProps> = ({ 
   patientId, 
   patientName, 
   onClose, 
   onRecordVitals 
 }) => {
-  const [vitals, setVitals] = useState<VitalReading[]>([]);
+  const [vitals, setVitals] = useState<DatabaseVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<string>('temperature');
@@ -43,28 +34,11 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     try {
       setLoading(true);
       setError(null);
-
-      const { data, error } = await supabase
-        .from('patient_vitals')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('recorded_at', { ascending: true });
-
-      if (error) throw error;
-
-      const formattedVitals = data.map(vital => ({
-        timestamp: vital.recorded_at,
-        temperature: parseFloat(vital.temperature),
-        heartRate: vital.heart_rate,
-        bloodPressure: {
-          systolic: vital.blood_pressure_systolic,
-          diastolic: vital.blood_pressure_diastolic
-        },
-        oxygenSaturation: vital.oxygen_saturation,
-        respiratoryRate: vital.respiratory_rate
-      }));
-
-      setVitals(formattedVitals);
+      
+      // Fetch the last 20 vital readings to ensure we have enough data for trends
+      const vitalsHistory = await fetchPatientVitalsHistory(patientId, 20);
+      console.log('Fetched vitals history:', vitalsHistory);
+      setVitals(vitalsHistory);
     } catch (err) {
       console.error('Error fetching vitals:', err);
       setError('Failed to load vital signs data');
@@ -91,7 +65,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   const getMetricData = (metric: string) => {
     return vitals.map(vital => {
       let value: number;
-      switch (metric) {
+      switch (metric) {  
         case 'temperature':
           value = vital.temperature;
           break;
@@ -99,10 +73,10 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           value = vital.heartRate;
           break;
         case 'systolic':
-          value = vital.bloodPressure.systolic;
+          value = vital.blood_pressure_systolic;
           break;
         case 'diastolic':
-          value = vital.bloodPressure.diastolic;
+          value = vital.blood_pressure_diastolic;
           break;
         case 'oxygenSaturation':
           value = vital.oxygenSaturation;
@@ -114,7 +88,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           value = 0;
       }
       return {
-        timestamp: vital.timestamp,
+        timestamp: vital.recorded_at,
         value
       };
     });
@@ -167,7 +141,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   ];
 
   const metricData = getMetricData(selectedMetric);
-  const maxValue = Math.max(...metricData.map(d => d.value));
+  const maxValue = Math.max(...metricData.map(d => d.value), 0);
   const minValue = Math.min(...metricData.map(d => d.value));
 
   if (loading) {
@@ -175,7 +149,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-center py-12">
-            <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+            <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mr-3" />
             <span className="ml-3 text-lg">Loading vital signs...</span>
           </div>
         </div>
@@ -183,6 +157,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     );
   }
 
+  // Get the last 5 vitals for the table display
+  const recentVitals = vitals.slice(0, 5);
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -193,7 +169,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               <h2 className="text-2xl font-bold text-gray-900">Vital Signs Trends</h2>
               <p className="text-gray-600">{patientName}</p>
             </div>
-          </div>
+          </div>  
           <div className="flex items-center space-x-3">
             <button
               onClick={onRecordVitals}
@@ -202,7 +178,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               <Plus className="w-4 h-4 mr-2" />
               Record Vitals
             </button>
-            <button
+            <button  
               onClick={handleClearVitals}
               className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
@@ -210,7 +186,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               Clear All
             </button>
             <button
-              onClick={onClose}
+              onClick={onClose}  
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
@@ -225,7 +201,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
         )}
 
         {vitals.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12">  
             <Activity className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Vital Signs Recorded</h3>
             <p className="text-gray-600 mb-6">Start recording vital signs to see trends and patterns.</p>
@@ -241,7 +217,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           <div className="space-y-6">
             {/* Metric Selection */}
             <div className="flex flex-wrap gap-2">
-              {metrics.map(metric => {
+              {metrics.map(metric => {  
                 const Icon = metric.icon;
                 return (
                   <button
@@ -261,7 +237,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
             </div>
 
             {/* Chart */}
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 rounded-lg p-6">  
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {getMetricLabel(selectedMetric)} Trend
@@ -271,7 +247,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                 </div>
               </div>
 
-              <div className="relative h-64">
+              <div className="relative h-64">  
                 <svg className="w-full h-full" viewBox="0 0 800 200">
                   {/* Grid lines */}
                   {[0, 1, 2, 3, 4].map(i => (
@@ -287,7 +263,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                   ))}
 
                   {/* Data line */}
-                  {metricData.length > 1 && (
+                  {metricData.length > 1 && (  
                     <polyline
                       fill="none"
                       stroke="#2563eb"
@@ -303,7 +279,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                   )}
 
                   {/* Data points */}
-                  {metricData.map((point, index) => {
+                  {metricData.map((point, index) => {  
                     const x = (index / Math.max(metricData.length - 1, 1)) * 800;
                     const y = 200 - ((point.value - minValue) / Math.max(maxValue - minValue, 1)) * 200;
                     return (
@@ -329,7 +305,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               </div>
 
               {/* Time labels */}
-              <div className="flex justify-between mt-2 text-xs text-gray-600">
+              <div className="flex justify-between mt-2 text-xs text-gray-600">  
                 {metricData.map((point, index) => {
                   if (index % Math.ceil(metricData.length / 6) === 0 || index === metricData.length - 1) {
                     const date = parseISO(point.timestamp);
@@ -345,7 +321,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
             </div>
 
             {/* Recent Readings Table */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">  
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Recent Readings</h3>
               </div>
@@ -374,27 +350,27 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {vitals.slice(-10).reverse().map((vital, index) => {
-                      const date = parseISO(vital.timestamp);
+                    {recentVitals.map((vital, index) => {
+                      const date = parseISO(vital.recorded_at);
                       return (
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {isValid(date) ? format(date, 'MM/dd/yyyy HH:mm') : 'Invalid Date'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
-                            {vital.temperature}°C
+                            {vital.temperature.toFixed(1)}°C
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.heartRate} bpm
+                            {vital.heart_rate} bpm
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.bloodPressure.systolic}/{vital.bloodPressure.diastolic} mmHg
+                            {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic} mmHg
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.oxygenSaturation}%
+                            {vital.oxygen_saturation}%
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.respiratoryRate}/min
+                            {vital.respiratory_rate}/min
                           </td>
                         </tr>
                       );

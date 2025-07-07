@@ -31,12 +31,12 @@ export interface DatabasePatient {
 export interface DatabaseVitals {
   id: string;
   patient_id: string;
-  temperature: number;
+  temperature: number; 
   blood_pressure_systolic: number;
   blood_pressure_diastolic: number;
-  heart_rate: number;
-  respiratory_rate: number;
-  oxygen_saturation: number;
+  heart_rate: number; 
+  respiratory_rate: number; 
+  oxygen_saturation: number; 
   recorded_at: string;
 }
 
@@ -57,7 +57,7 @@ export interface DatabaseMedicationAdministration {
 const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
   return dbVitals.map(vital => ({
     id: vital.id,
-    temperature: vital.temperature, // Keep in Celsius
+    temperature: vital.temperature,
     bloodPressure: {
       systolic: vital.blood_pressure_systolic,
       diastolic: vital.blood_pressure_diastolic
@@ -483,7 +483,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
  * Fetch patient vitals history
  */
 export const fetchPatientVitalsHistory = async (patientId: string, limit: number = 10): Promise<DatabaseVitals[]> => {
-  try {
+  try { 
     console.log('Fetching vitals history for patient:', patientId);
     
     const { data, error } = await supabase
@@ -493,13 +493,15 @@ export const fetchPatientVitalsHistory = async (patientId: string, limit: number
       .order('recorded_at', { ascending: false })
       .limit(limit);
 
-    if (error) {
+    if (error) { 
       console.error('Error fetching vitals history:', error);
       throw error;
     }
 
     console.log(`Found ${data?.length || 0} vitals records for patient ${patientId}`);
-    return data || [];
+    
+    // Return the data with proper typing
+    return (data || []) as DatabaseVitals[];
   } catch (error) {
     console.error('Error fetching patient vitals history:', error);
     throw error;
