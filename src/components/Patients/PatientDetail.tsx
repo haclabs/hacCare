@@ -6,7 +6,7 @@ import { patientService } from '../../lib/patientService';
 import { supabase } from '../../lib/supabase';
 import PatientNoteForm from './PatientNoteForm';
 import VitalSignsEditor from './VitalSignsEditor';
-import MedicationForm from './MedicationForm';
+import { MedicationForm } from './MedicationForm';
 import WoundAssessment from './WoundAssessment';
 import VitalsTrends from './VitalsTrends';
 
