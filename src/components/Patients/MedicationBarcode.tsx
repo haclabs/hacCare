@@ -4,6 +4,19 @@ import { Medication } from '../../types';
 import { format, isValid } from 'date-fns';
 import { generateCode128SVG } from '../../utils/barcodeUtils';
 
+/**
+ * Medication Barcode Component
+ * 
+ * Generates Avery 5167 compatible medication labels for printing.
+ * Creates a sheet of labels with medication information and barcodes.
+ * 
+ * Features:
+ * - Medication name and dosage
+ * - Patient information
+ * - UPC-128 barcode for medication identification
+ * - Print and download functionality
+ * - Avery 5167 label sheet format (4" x 1.33")
+ */
 interface MedicationBarcodeProps {
   patient: any;
   medications: Medication[];
@@ -18,6 +31,11 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(
     medications.length > 0 ? medications[0] : null
   );
+  
+  // Avery 5167 specifications
+  const labelWidth = 4; // inches
+  const labelHeight = 1.33; // inches
+  const labelsPerSheet = 20; // 4 across, 5 down
 
   if (!selectedMedication) {
     return (
@@ -42,7 +60,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   // Generate barcode SVG
   const barcodeSvg = generateCode128SVG(selectedMedication.id, {
     width: 200,
-    height: 40,
+    height: 30,
     showText: false
   });
 
@@ -268,27 +286,28 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
 
   // Generate 30 identical medication labels for the sheet
   const generateLabelSheet = () => {
-    const labels = [];
-    for (let i = 0; i < 30; i++) {
+    const labels = [];  
+    // Generate 20 labels for Avery 5167 (4 across, 5 down)
+    for (let i = 0; i < 20; i++) {
       labels.push(
         <div key={i} className="label">
           <div className="left-section">
             <div>
-              <div className="medication-name">{selectedMedication.name}</div>
-              <div className="dosage">{selectedMedication.dosage}</div>
+              <div className="medication-name" style={{ fontSize: '14px', fontWeight: 'bold' }}>{selectedMedication.name}</div>
+              <div className="dosage" style={{ fontSize: '12px', fontWeight: 'bold', color: '#dc2626' }}>{selectedMedication.dosage}</div>
               <div className="patient-info">
-                <div>Patient: {patient.first_name} {patient.last_name}</div>
-                <div>ID: {patient.patient_id}</div>
+                <div style={{ fontSize: '10px' }}>Patient: {patient.first_name} {patient.last_name}</div>
+                <div style={{ fontSize: '10px' }}>ID: {patient.patient_id}</div>
               </div>
             </div>
-            <div className="frequency">
-              <div>{selectedMedication.frequency}</div>
-              <div>{selectedMedication.route}</div>
+            <div className="frequency" style={{ fontSize: '9px', color: '#666' }}>
+              <div>Frequency: {selectedMedication.frequency}</div>
+              <div>Route: {selectedMedication.route}</div>
             </div>
           </div>
           
-          <div className="barcode-section">
-            <div className="barcode">
+          <div className="barcode-section" style={{ width: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="barcode" style={{ marginBottom: '2px' }}>
               {/* Compact barcode for small labels */}
               {Array.from({length: 12}, (_, i) => (
                 <div
@@ -296,13 +315,16 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                   className="barcode-line"
                   style={{
                     width: `${(i % 3) + 1}px`,
-                    height: i % 2 === 0 ? '14px' : '10px'
+                    height: i % 2 === 0 ? '20px' : '16px',
+                    background: 'black',
+                    margin: '0 0.2px',
+                    display: 'inline-block'
                   }}
                 />
               ))}
             </div>
-            <div className="barcode-id">{medicationBarcodeId}</div>
-            <div className="med-id">{selectedMedication.id.slice(-6)}</div>
+            <div className="barcode-id" style={{ fontSize: '8px', fontWeight: 'bold' }}>{medicationBarcodeId}</div>
+            <div className="med-id" style={{ fontSize: '7px', color: '#666' }}>{selectedMedication.id.slice(-6)}</div>
           </div>
         </div>
       );
@@ -314,14 +336,14 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Medication Labels - Avery 5160</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Medication Labels - Avery 5167</h2>
           <div className="flex items-center space-x-3">
             <button
               onClick={handlePrint}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
             >
               <Printer className="h-4 w-4" />
-              <span>Print 30 Labels</span>
+              <span>Print Labels</span>
             </button>
             <button
               onClick={handleDownload}
@@ -365,7 +387,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-blue-900"><strong>Medication:</strong> {selectedMedication.name}</p>
-                  <p className="text-blue-900"><strong>Dosage:</strong> {selectedMedication.dosage}</p>
+                  <p className="text-blue-900"><strong>Dosage:</strong> <span className="text-red-600 font-bold">{selectedMedication.dosage}</span></p>
                   <p className="text-blue-900"><strong>Frequency:</strong> {selectedMedication.frequency}</p>
                   <p className="text-blue-900"><strong>Route:</strong> {selectedMedication.route}</p>
                 </div>
@@ -373,7 +395,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                   <p className="text-blue-900"><strong>Patient:</strong> {patient.first_name} {patient.last_name}</p>
                   <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patient_id}</p>
                   <p className="text-blue-900"><strong>Barcode ID:</strong> {medicationBarcodeId}</p>
-                  <p className="text-blue-900"><strong>Labels per Sheet:</strong> 30 identical labels</p>
+                  <p className="text-blue-900"><strong>Labels per Sheet:</strong> 20 identical labels</p>
                 </div>
               </div>
             </div>
@@ -382,24 +404,24 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
           {/* Label Sheet Preview */}
           <div className="bg-gray-100 p-8 rounded-lg overflow-x-auto">
             <div className="text-center mb-4">
-              <h4 className="text-lg font-medium text-gray-900">Avery 5160 Medication Label Sheet Preview</h4>
-              <p className="text-sm text-gray-600">30 labels • 2⅝" × 1" each • 3 columns × 10 rows</p>
-              <p className="text-xs text-gray-500 mt-1">Compact format optimized for medication containers</p>
+              <h4 className="text-lg font-medium text-gray-900">Avery 5167 Medication Label Sheet Preview</h4>
+              <p className="text-sm text-gray-600">20 labels • 4" × 1.33" each • 4 columns × 5 rows</p>
+              <p className="text-xs text-gray-500 mt-1">Return address format optimized for medication containers</p>
             </div>
             
             <div 
               id="medication-labels-content" 
               className="bg-white shadow-lg mx-auto border border-gray-300"
               style={{
-                width: '8.125in',
-                height: '10in',
+                width: '8.5in',
+                height: '11in',
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'flex-start',
                 alignContent: 'flex-start',
                 transform: 'scale(0.6)',
                 transformOrigin: 'top center',
-                padding: '0.5in 0.1875in'
+                padding: '0.5in 0.25in'
               }}
             >
               {generateLabelSheet()}
@@ -414,12 +436,12 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                 <span>Printing Instructions</span>
               </h4>
               <ul className="text-sm text-yellow-800 space-y-1">
-                <li>• Load Avery 5160 label sheets into printer</li>
+                <li>• Load Avery 5167 label sheets into printer</li>
                 <li>• Set printer to "Actual Size" (100% scale)</li>
                 <li>• Use high-quality print setting for barcode clarity</li>
                 <li>• Test alignment with regular paper first</li>
-                <li>• Print generates 30 identical medication labels</li>
-                <li>• <strong>Compact format</strong> - fits on small containers</li>
+                <li>• Print generates 20 identical medication labels</li>
+                <li>• <strong>Return address format</strong> - fits on medication containers</li>
               </ul>
             </div>
 
@@ -461,18 +483,18 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
           </div>
 
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">Avery 5160 Specifications</h4>
+            <h4 className="font-medium text-gray-900 mb-2">Avery 5167 Specifications</h4>
             <div className="text-sm text-gray-700 grid grid-cols-2 gap-4">
               <div>
-                <p>• Label Size: 2⅝" × 1" (compact format)</p>
+                <p>• Label Size: 4" × 1.33" (return address format)</p>
                 <p>• Sheet Size: 8½" × 11"</p>
-                <p>• Layout: 3 columns × 10 rows</p>
-                <p>• Total Labels: 30 per sheet</p>
+                <p>• Layout: 4 columns × 5 rows</p>
+                <p>• Total Labels: 20 per sheet</p>
               </div>
               <div>
-                <p>• Margins: 0.1875" left/right, 0.5" top/bottom</p>
+                <p>• Margins: 0.25" left/right, 0.5" top/bottom</p>
                 <p>• No gaps between labels</p>
-                <p>• Optimized for small medication containers</p>
+                <p>• Optimized for medication containers</p>
                 <p>• High-contrast barcode for reliable scanning</p>
               </div>
             </div>

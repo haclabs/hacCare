@@ -3,6 +3,21 @@ import { Patient } from '../../types';
 import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 
+/**
+ * Patient Bracelet Component
+ * 
+ * Generates Avery 5160 compatible patient identification labels for printing.
+ * Creates a sheet of labels with patient information and barcodes.
+ * 
+ * Features:
+ * - Patient name and ID
+ * - Date of birth
+ * - Room and bed number
+ * - Allergy warnings
+ * - UPC-128 barcode for patient identification
+ * - Print and download functionality
+ * - Avery 5160 label sheet format (2⅝" × 1")
+ */
 interface PatientBraceletProps {
   patient: Patient;
   onClose: () => void;
@@ -265,7 +280,7 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
           <div className="flex items-center space-x-3">
             <button
               onClick={handlePrint}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mr-2"
             >
               <Printer className="h-4 w-4" />
               <span>Print 30 Labels</span>

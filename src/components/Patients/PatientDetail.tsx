@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2, Trash2, QrCode, Settings as Lungs } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
+import { MedicationBarcode } from './MedicationBarcode';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationForm } from './MedicationForm';
 import { PatientBracelet } from './PatientBracelet';
@@ -41,6 +42,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showMedicationAdmin, setShowMedicationAdmin] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
+  const [showMedicationLabels, setShowMedicationLabels] = useState(false);
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>(patient.medications || []);
   const [notes, setNotes] = useState<PatientNote[]>(patient.notes || []);
@@ -638,10 +640,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <p className="text-gray-600">Patient ID: {patient.patient_id}</p>
               <button 
                 onClick={() => setShowPatientBracelet(true)}
-                className="ml-2 px-2 py-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md text-xs flex items-center space-x-1 transition-colors"
+                className="ml-2 px-2 py-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md text-xs flex items-center space-x-1 transition-colors mr-2"
               >
                 <QrCode className="h-3 w-3" />
                 <span>Hospital Bracelet</span>
+              </button>
+              <button 
+                onClick={() => setShowPatientBracelet(true)}
+                className="px-2 py-1 text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 rounded-md text-xs flex items-center space-x-1 transition-colors"
+              >
+                <FileText className="h-3 w-3" />
+                <span>Print Labels</span>
               </button>
             </div>
           </div>
@@ -781,7 +790,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       {showPatientBracelet && (
         <HospitalBracelet
           patient={patient}
-          onClose={() => setShowPatientBracelet(false)}
+          onClose={() => {
+            setShowPatientBracelet(false);
+          }}
+        />
+      )}
+      
+      {showMedicationLabels && medications.length > 0 && (
+        <MedicationBarcode
+          patient={patient}
+          medications={medications}
+          onClose={() => setShowMedicationLabels(false)}
         />
       )}
       

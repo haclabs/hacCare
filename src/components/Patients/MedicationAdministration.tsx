@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus } from 'lucide-react';
+import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
 import { Medication, MedicationAdministration as MedAdmin } from '../../types';
 import { format, isValid, parseISO } from 'date-fns';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 import { MedicationForm } from './MedicationForm';
+import { MedicationBarcode } from './MedicationBarcode';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
@@ -32,6 +33,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [error, setError] = useState<string | null>(null);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [medicationToEdit, setMedicationToEdit] = useState<Medication | null>(null);
+  const [showMedicationLabels, setShowMedicationLabels] = useState(false);
 
   useEffect(() => {
     setAllMedications(medications);
@@ -145,6 +147,17 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             >
               <CheckCircle className="w-4 h-4" />
               Give
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedMedication(medication);
+                setShowMedicationLabels(true);
+              }}
+              className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
+            >
+              <FileText className="w-4 h-4" />
+              Print Labels
             </button>
             
             <button
@@ -388,6 +401,18 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           onSuccess={(medication) => {
             setShowMedicationForm(false);
             setMedicationToEdit(null);
+            handleRefresh();
+          }}
+        />
+      )}
+      
+      {showMedicationLabels && (
+        <MedicationBarcode
+          patient={{ id: patientId, first_name: patientName.split(' ')[0], last_name: patientName.split(' ')[1], patient_id: '' }}
+          medications={selectedMedication ? [selectedMedication] : allMedications}
+          onClose={() => {
+            setShowMedicationLabels(false);
+            setSelectedMedication(null);
             handleRefresh();
           }}
         />
