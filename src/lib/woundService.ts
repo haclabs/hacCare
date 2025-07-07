@@ -1,32 +1,35 @@
 import { supabase } from './supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Wound Service
  * Handles database operations for patient wound assessments
  */
 
-export interface Wound {
+// Database wound interface
+export interface DbWound {
   id: string;
   patient_id: string;
   location: string;
   coordinates_x: number;
   coordinates_y: number;
-  view: 'anterior' | 'posterior';
-  type: 'Pressure Ulcer' | 'Surgical' | 'Traumatic' | 'Diabetic' | 'Venous' | 'Arterial' | 'Other';
-  stage: 'Stage 1' | 'Stage 2' | 'Stage 3' | 'Stage 4' | 'Unstageable' | 'Deep Tissue Injury' | 'N/A';
+  view: string;
+  type: string;
+  stage: string;
   size_length: number;
   size_width: number;
-  size_depth?: number;
-  description?: string;
-  treatment?: string;
+  size_depth?: number | null;
+  description?: string | null;
+  treatment?: string | null;
   assessed_by: string;
   assessment_date: string;
-  healing_progress: 'Improving' | 'Stable' | 'Deteriorating' | 'New';
+  healing_progress: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface WoundUI {
+// UI wound interface
+export interface Wound {
   id: string;
   location: string;
   coordinates: { x: number; y: number };
@@ -46,59 +49,59 @@ export interface WoundUI {
 }
 
 /**
- * Convert database wound to UI wound format
+ * Convert database wound to UI wound
  */
-const convertToUIWound = (dbWound: Wound): WoundUI => {
+const convertDbToUiWound = (dbWound: DbWound): Wound => {
   return {
     id: dbWound.id,
     location: dbWound.location,
-    coordinates: { 
-      x: dbWound.coordinates_x, 
-      y: dbWound.coordinates_y 
+    coordinates: {
+      x: Number(dbWound.coordinates_x),
+      y: Number(dbWound.coordinates_y)
     },
-    view: dbWound.view,
-    type: dbWound.type,
-    stage: dbWound.stage,
+    view: dbWound.view as 'anterior' | 'posterior',
+    type: dbWound.type as Wound['type'],
+    stage: dbWound.stage as Wound['stage'],
     size: {
-      length: dbWound.size_length,
-      width: dbWound.size_width,
-      depth: dbWound.size_depth
+      length: Number(dbWound.size_length),
+      width: Number(dbWound.size_width),
+      depth: dbWound.size_depth ? Number(dbWound.size_depth) : undefined
     },
     description: dbWound.description || '',
     treatment: dbWound.treatment || '',
     assessedBy: dbWound.assessed_by,
     assessmentDate: dbWound.assessment_date,
-    healingProgress: dbWound.healing_progress
+    healingProgress: dbWound.healing_progress as Wound['healingProgress']
   };
 };
 
 /**
  * Convert UI wound to database format
  */
-const convertToDatabaseWound = (uiWound: WoundUI, patientId: string): Omit<Wound, 'id' | 'created_at' | 'updated_at'> => {
+const convertUiToDbWound = (wound: Wound, patientId: string): Omit<DbWound, 'id' | 'created_at' | 'updated_at'> => {
   return {
     patient_id: patientId,
-    location: uiWound.location,
-    coordinates_x: uiWound.coordinates.x,
-    coordinates_y: uiWound.coordinates.y,
-    view: uiWound.view,
-    type: uiWound.type,
-    stage: uiWound.stage,
-    size_length: uiWound.size.length,
-    size_width: uiWound.size.width,
-    size_depth: uiWound.size.depth,
-    description: uiWound.description,
-    treatment: uiWound.treatment,
-    assessed_by: uiWound.assessedBy,
-    assessment_date: uiWound.assessmentDate,
-    healing_progress: uiWound.healingProgress
+    location: wound.location,
+    coordinates_x: wound.coordinates.x,
+    coordinates_y: wound.coordinates.y,
+    view: wound.view,
+    type: wound.type,
+    stage: wound.stage,
+    size_length: wound.size.length,
+    size_width: wound.size.width,
+    size_depth: wound.size.depth,
+    description: wound.description,
+    treatment: wound.treatment,
+    assessed_by: wound.assessedBy,
+    assessment_date: wound.assessmentDate,
+    healing_progress: wound.healingProgress
   };
 };
 
 /**
- * Fetch all wounds for a patient
+ * Fetch wounds for a patient
  */
-export const fetchPatientWounds = async (patientId: string): Promise<WoundUI[]> => {
+export const fetchPatientWounds = async (patientId: string): Promise<Wound[]> => {
   try {
     console.log('Fetching wounds for patient:', patientId);
     
@@ -114,7 +117,7 @@ export const fetchPatientWounds = async (patientId: string): Promise<WoundUI[]> 
     }
 
     console.log(`Found ${data?.length || 0} wounds for patient ${patientId}`);
-    return (data || []).map(convertToUIWound);
+    return (data || []).map(convertDbToUiWound);
   } catch (error) {
     console.error('Error fetching patient wounds:', error);
     throw error;
@@ -124,11 +127,11 @@ export const fetchPatientWounds = async (patientId: string): Promise<WoundUI[]> 
 /**
  * Create a new wound
  */
-export const createWound = async (wound: WoundUI, patientId: string): Promise<WoundUI> => {
+export const createWound = async (wound: Omit<Wound, 'id'>, patientId: string): Promise<Wound> => {
   try {
     console.log('Creating wound:', wound);
     
-    const dbWound = convertToDatabaseWound(wound, patientId);
+    const dbWound = convertUiToDbWound(wound as Wound, patientId);
     
     const { data, error } = await supabase
       .from('patient_wounds')
@@ -142,7 +145,7 @@ export const createWound = async (wound: WoundUI, patientId: string): Promise<Wo
     }
 
     console.log('Wound created successfully:', data);
-    return convertToUIWound(data);
+    return convertDbToUiWound(data);
   } catch (error) {
     console.error('Error creating wound:', error);
     throw error;
@@ -152,31 +155,31 @@ export const createWound = async (wound: WoundUI, patientId: string): Promise<Wo
 /**
  * Update an existing wound
  */
-export const updateWound = async (woundId: string, updates: Partial<WoundUI>, patientId: string): Promise<WoundUI> => {
+export const updateWound = async (woundId: string, updates: Partial<Wound>, patientId: string): Promise<Wound> => {
   try {
     console.log('Updating wound:', woundId, updates);
     
-    // Convert UI updates to database format
-    const dbUpdates: Partial<Wound> = {};
+    // Convert partial UI wound to partial DB wound
+    const dbUpdates: Partial<DbWound> = {};
     
-    if (updates.location) dbUpdates.location = updates.location;
-    if (updates.coordinates) {
+    if (updates.location !== undefined) dbUpdates.location = updates.location;
+    if (updates.coordinates !== undefined) {
       dbUpdates.coordinates_x = updates.coordinates.x;
       dbUpdates.coordinates_y = updates.coordinates.y;
     }
-    if (updates.view) dbUpdates.view = updates.view;
-    if (updates.type) dbUpdates.type = updates.type;
-    if (updates.stage) dbUpdates.stage = updates.stage;
-    if (updates.size) {
+    if (updates.view !== undefined) dbUpdates.view = updates.view;
+    if (updates.type !== undefined) dbUpdates.type = updates.type;
+    if (updates.stage !== undefined) dbUpdates.stage = updates.stage;
+    if (updates.size !== undefined) {
       dbUpdates.size_length = updates.size.length;
       dbUpdates.size_width = updates.size.width;
       dbUpdates.size_depth = updates.size.depth;
     }
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.treatment !== undefined) dbUpdates.treatment = updates.treatment;
-    if (updates.assessedBy) dbUpdates.assessed_by = updates.assessedBy;
-    if (updates.assessmentDate) dbUpdates.assessment_date = updates.assessmentDate;
-    if (updates.healingProgress) dbUpdates.healing_progress = updates.healingProgress;
+    if (updates.assessedBy !== undefined) dbUpdates.assessed_by = updates.assessedBy;
+    if (updates.assessmentDate !== undefined) dbUpdates.assessment_date = updates.assessmentDate;
+    if (updates.healingProgress !== undefined) dbUpdates.healing_progress = updates.healingProgress;
     
     const { data, error } = await supabase
       .from('patient_wounds')
@@ -191,7 +194,7 @@ export const updateWound = async (woundId: string, updates: Partial<WoundUI>, pa
     }
 
     console.log('Wound updated successfully:', data);
-    return convertToUIWound(data);
+    return convertDbToUiWound(data);
   } catch (error) {
     console.error('Error updating wound:', error);
     throw error;
