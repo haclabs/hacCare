@@ -4,10 +4,20 @@ import { format } from 'date-fns';
 
 interface AssessmentDetailProps {
   assessment: any;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export const AssessmentDetail: React.FC<AssessmentDetailProps> = ({ assessment, onClose }) => {
+  if (!assessment) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Assessment Selected</h3>
+        <p className="text-gray-600">Please select an assessment to view details.</p>
+      </div>
+    );
+  }
+  
   // Get icon based on assessment type
   const getAssessmentIcon = () => {
     switch (assessment.assessment_type) {
@@ -83,6 +93,7 @@ export const AssessmentDetail: React.FC<AssessmentDetailProps> = ({ assessment, 
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            type="button"
           >
             <X className="h-6 w-6" />
           </button>
@@ -258,8 +269,9 @@ export const AssessmentDetail: React.FC<AssessmentDetailProps> = ({ assessment, 
         {/* Footer */}
         <div className="flex justify-end p-6 border-t border-gray-200">
           <button
-            onClick={onClose}
+            onClick={onClose || (() => {})}
             className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            type="button"
           >
             Close
           </button>
