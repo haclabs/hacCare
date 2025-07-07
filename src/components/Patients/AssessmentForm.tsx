@@ -36,38 +36,23 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
   // Form state management
   const [assessmentType, setAssessmentType] = useState<'physical' | 'pain' | 'neurological'>('physical');
   const [formData, setFormData] = useState({
-    // Physical Assessment
-    general_appearance: '',
-    level_of_consciousness: 'Alert and oriented x3',
-    skin_condition: '',
-    respiratory_assessment: '',
-    cardiovascular_assessment: '',
-    gastrointestinal_assessment: '',
-    genitourinary_assessment: '',
-    musculoskeletal_assessment: '',
-    neurological_assessment: '',
+    general_appearance: '',                // Physical
+    level_of_consciousness: '',            // Physical
+    respiratory_assessment: '',            // Physical
+    cardiovascular_assessment: '',         // Physical
     
-    // Pain Assessment
-    pain_scale: '0',
-    pain_location: '',
-    pain_quality: '',
-    pain_duration: '',
-    pain_triggers: '',
-    pain_relief_measures: '',
+    pain_scale: '0',                       // Pain
+    pain_location: '',                     // Pain
+    pain_quality: '',                      // Pain
     
-    // Neurological Assessment
-    glasgow_coma_scale: '15',
-    pupil_response: 'PERRL',
-    motor_function: '',
-    sensory_function: '',
-    reflexes: '',
-    cognitive_function: '',
+    glasgow_coma_scale: '',                // Neurological
+    motor_function: '',                    // Neurological
+    cognitive_function: '',                // Neurological
     
-    // Additional fields
-    assessment_notes: '',
-    recommendations: '',
-    follow_up_required: false,
-    priority_level: 'routine' as 'routine' | 'urgent' | 'critical'
+    assessment_notes: '',                  // Common
+    recommendations: '',                   // Common
+    follow_up_required: false,             // Common
+    priority_level: 'routine'              // Common
   });
 
   const [loading, setLoading] = useState(false);

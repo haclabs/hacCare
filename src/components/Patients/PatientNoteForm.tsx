@@ -27,8 +27,9 @@ interface PatientNoteFormProps {
   note?: PatientNote | null;
   patientId: string;
   patientName: string;
-  onClose: () => void;
+  onClose?: () => void;
   onSave: (note: PatientNote) => void;
+  onCancel: () => void;
 }
 
 export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
@@ -36,13 +37,14 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   patientId,
   patientName,
   onClose,
-  onSave
+  onSave,
+  onCancel
 }) => {
   // Form state management
   const [formData, setFormData] = useState({
-    type: note?.type || 'General' as PatientNote['type'],
-    content: note?.content || '',
-    priority: note?.priority || 'Medium' as PatientNote['priority']
+    type: note?.type || 'General',
+    content: note?.content || '', 
+    priority: note?.priority || 'Medium'
   });
 
   const [loading, setLoading] = useState(false);
@@ -152,7 +154,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
             <p className="text-sm text-gray-600 mt-1">Patient: {patientName}</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={onCancel}
             className="text-gray-400 hover:text-gray-600 transition-colors"
             type="button"
           >
@@ -281,7 +283,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
               type="button"
-              onClick={() => onClose()}
+              onClick={onCancel}
               disabled={loading}
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >

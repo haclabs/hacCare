@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2, Trash2 } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
+import { PatientNoteForm } from './PatientNoteForm';
 import { PatientBracelet } from './PatientBracelet';
 import { MedicationForm } from './MedicationForm';
-import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
@@ -281,46 +281,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       case 'medications':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Medications</h3>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowMedicationAdmin(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Pill className="h-4 w-4" />
-                  <span>Administer</span>
-                </button>
-                <button
-                  onClick={() => setShowMedicationForm(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Medication</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h4 className="text-lg font-medium text-gray-900">Current Medications</h4>
-              </div>
-              <div className="divide-y divide-gray-200">
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h5 className="text-lg font-medium text-gray-900">Lisinopril</h5>
-                      <p className="text-sm text-gray-600">10mg, Once daily, Oral</p>
-                      <p className="text-sm text-gray-500">Prescribed by Dr. Smith</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">Next due: 8:00 AM</p>
-                      <p className="text-sm text-gray-500">Last given: Yesterday 8:00 AM</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <MedicationAdministration
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              medications={medications}
+              onRefresh={() => {
+                // Refresh medications data
+              }}
+            />
           </div>
         );
 
@@ -531,7 +499,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           {[
             { id: 'overview', label: 'Overview', icon: User },
             { id: 'vitals', label: 'Vital Signs', icon: Activity },
-            { id: 'medications', label: 'MAR', icon: Pill },
+            { id: 'medications', label: 'Medication Administration Record', icon: Pill },
             { id: 'notes', label: 'Notes', icon: FileText },
             { id: 'assessments', label: 'Assessments', icon: Stethoscope },
             { id: 'wounds', label: 'Wound Assessment', icon: AlertTriangle },
@@ -578,11 +546,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         <MedicationForm
           patientId={patient.id}
           patientName={`${patient.first_name} ${patient.last_name}`}
+          patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowMedicationForm(false)}
           onSave={(newMedication) => {
             setShowMedicationForm(false);
             setMedications([newMedication, ...medications]);
           }}
+          onCancel={() => setShowMedicationForm(false)}
           onCancel={() => setShowMedicationForm(false)}
         />
       )}
@@ -593,9 +563,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowNoteForm(false)}
           onSave={(newNote) => {
+            if (selectedNote) {
+              // Update existing note
+              setNotes(notes.map(note => note.id === selectedNote.id ? newNote : note));
+              setSelectedNote(null);
+            } else {
+              // Add new note
+              setNotes([newNote, ...notes]);
+            }
             setShowNoteForm(false);
-            setNotes([newNote, ...notes]);
           }}
+          note={selectedNote}
           onCancel={() => setShowNoteForm(false)}
         />
       )}
@@ -633,23 +611,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
         />
       )}
 
-      {showMedicationAdmin && (
-        <MedicationAdministration
-          patientId={patient.id}
-          patientName={`${patient.first_name} ${patient.last_name}`}
-          medications={medications}
-          onRefresh={() => {
-            // Refresh medications data
-          }}
-          onClose={() => setShowMedicationAdmin(false)}
-        />
-      )}
-
       {showVitalsTrends && (
         <VitalsTrends
           patientId={patient.id}
-          patientName={`${patient.first_name} ${patient.last_name}`}
-          onRecordVitals={() => setShowVitalForm(true)}
           patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowVitalsTrends(false)}
           onRecordVitals={() => {

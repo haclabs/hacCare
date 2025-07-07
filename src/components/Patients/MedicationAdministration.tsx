@@ -14,16 +14,14 @@ interface MedicationAdministrationProps {
   patientName: string;
   medications: Medication[];
   onRefresh: () => void;
-}
 
 export const MedicationAdministration: React.FC<MedicationAdministrationProps> = ({
   patientId,
   patientName,
   medications,
   onRefresh
-}) => {
-  const { hasRole } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'scheduled' | 'prn' | 'continuous'>('scheduled');
+  onRefresh
+  const [activeTab, setActiveTab] = useState<'overview' | 'scheduled' | 'prn' | 'continuous'>('overview');
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -145,8 +143,21 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-semibold text-gray-900">Administration Categories</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900">Medication Administration Record (MAR)</h3>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setShowMedicationForm(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Medication</span>
+          </button>
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center mb-2 mt-4">
+        <h4 className="text-md font-medium text-gray-700">Administration Categories</h4>
         <button 
           onClick={loadMedications}
           disabled={loading}
