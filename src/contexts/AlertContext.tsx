@@ -127,7 +127,8 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const runChecks = async () => {
     try {
       if (!isSupabaseConfigured) {
-        console.log('❌ Supabase not configured for alert checks');
+        console.log('❌ Supabase not configured for alert checks, cannot run checks');
+        setError('Database not configured. Please check your .env file and connect to Supabase.');
         return;
       }
 
@@ -137,8 +138,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const twoMinutesMs = 2 * 60 * 1000;
       
       if (timeSinceLastCheck < twoMinutesMs) {
-        console.log(`🕒 Skipping alert check - last check was ${Math.round(timeSinceLastCheck / 1000)} seconds ago`);
-        return;
+        console.log(`⚠️ Alert check requested soon after previous check (${Math.round(timeSinceLastCheck / 1000)} seconds ago), but running anyway`);
       }
       
       console.log('🔄 Running manual alert checks...');
@@ -157,6 +157,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
+      setError('Database not configured. Please check your .env file and connect to Supabase.');
       return;
     }
 
@@ -181,6 +182,10 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (error) {
         console.error('Error in scheduled alert checks:', error);
       }
+        await loadAlerts();
+      } catch (error) {
+        console.error('Error in scheduled alert checks:', error);
+      }
     }, 5 * 60 * 1000);
 
     // Set up periodic cleanup (every hour)
@@ -192,18 +197,36 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (error) {
         console.error('Error in scheduled alert cleanup:', error);
       }
+        await loadAlerts();
+      } catch (error) {
+        console.error('Error in scheduled alert cleanup:', error);
+      }
     }, 60 * 60 * 1000);
 
     // Cleanup function
     return () => {
       console.log('🧹 Cleaning up alert subscriptions...');
       if (subscription) {
-        subscription.unsubscribe();
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing from alerts:', error);
+        }
       }
       clearInterval(alertCheckInterval);
       clearInterval(cleanupInterval);
     };
-  }, [isSupabaseConfigured]);
+  }, [isSupabaseConfigured, user]);
+
+  // Run alert checks when user changes
+  useEffect(() => {
+    if (user && isSupabaseConfigured) {
+      console.log('🔄 User changed, running alert checks...');
+      runChecks().catch(error => {
+        console.error('Error running alert checks after user change:', error);
+      });
+    }
+  }, [user]);
 
   // Calculate unread count
   const unreadCount = alerts.filter(alert => !alert.acknowledged).length;

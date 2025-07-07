@@ -158,10 +158,12 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
 export const checkMedicationAlerts = async (): Promise<void> => {
   try {
     console.log('💊 Checking for medication due alerts...');
+
+    // Get current time
+    const now = new Date();
     
-    // Get medications due within the next hour
-    const oneHourFromNow = new Date();
-    oneHourFromNow.setHours(oneHourFromNow.getHours() + 1);
+    // Get all active medications that are due now or overdue
+    // This includes both medications due within the next hour AND overdue medications
     
     const { data: dueMedications, error } = await supabase
       .from('patient_medications')
@@ -170,20 +172,21 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .eq('status', 'Active')
-      .lte('next_due', oneHourFromNow.toISOString())
-      .gte('next_due', new Date().toISOString());
+      .lte('next_due', now.toISOString());
 
     if (error) {
       console.error('Error checking medications:', error);
       return;
     }
 
+    console.log(`Found ${dueMedications?.length || 0} medications due or overdue`);
+
     // Create alerts for due medications
     for (const medication of dueMedications || []) {
       const patient = medication.patients;
       const dueTime = new Date(medication.next_due);
-      const now = new Date();
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
+      const isOverdue = minutesUntilDue < 0;
       
       // Check if alert already exists for this medication
       const { data: existingAlerts } = await supabase
@@ -195,16 +198,25 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         .ilike('message', `%${medication.name}%`)
         .limit(1);
 
+      console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name} is ${isOverdue ? 'overdue' : 'due soon'}, existing alert: ${existingAlerts?.length || 0}`);
+
       if (!existingAlerts || existingAlerts.length === 0) {
+        const message = isOverdue 
+          ? `${medication.name} ${medication.dosage} overdue by ${Math.abs(minutesUntilDue)} minutes` 
+          : `${medication.name} ${medication.dosage} due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
+        
+        const priority = isOverdue ? 'high' : (minutesUntilDue <= 15 ? 'high' : 'medium');
+        
         await createAlert({
           patient_id: patient.id,
           patient_name: `${patient.first_name} ${patient.last_name}`,
           alert_type: 'medication_due',
-          message: `${medication.name} ${medication.dosage} due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`,
-          priority: minutesUntilDue <= 0 ? 'high' : 'medium',
+          message: message,
+          priority: priority,
           acknowledged: false,
           expires_at: new Date(dueTime.getTime() + 2 * 60 * 60 * 1000).toISOString() // Expires 2 hours after due time
         });
+        console.log(`Created alert for ${medication.name}: ${message}`);
       }
     }
   } catch (error) {
@@ -401,9 +413,12 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
 export const runAlertChecks = async (): Promise<void> => {
   try {
     console.log('🔄 Running comprehensive alert checks...');
+
+    // Run medication checks first
+    await checkMedicationAlerts();
     
-    await Promise.all([
-      checkMedicationAlerts(),
+    // Run other checks in parallel
+    await Promise.all([  
       checkVitalSignsAlerts(),
       checkMissingVitalsAlerts()
     ]);

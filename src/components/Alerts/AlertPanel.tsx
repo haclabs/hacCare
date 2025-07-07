@@ -4,6 +4,16 @@ import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, Refresh
 import { format } from 'date-fns';
 import { useAlerts } from '../../contexts/AlertContext';
 
+// Helper function to format alert timestamp
+const formatAlertTime = (timestamp: string) => {
+  try {
+    const date = new Date(timestamp);
+    return format(date, 'MMM dd, HH:mm');
+  } catch (error) {
+    return 'Invalid date';
+  }
+};
+
 interface AlertPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -191,7 +201,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                           <p className="text-sm mb-2">{alert.message}</p>
                           <div className="flex items-center justify-between">
                             <p className="text-xs opacity-75">
-                              {format(new Date(alert.timestamp), 'MMM dd, HH:mm')}
+                              {formatAlertTime(alert.timestamp)}
                             </p>
                             <button
                               onClick={() => handleAcknowledge(alert.id)}
@@ -229,7 +239,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                           <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{alert.patientName}</p>
                           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{alert.message}</p>
                           <p className="text-xs text-gray-400">
-                            {format(new Date(alert.timestamp), 'MMM dd, HH:mm')}
+                            {formatAlertTime(alert.timestamp)}
                           </p>
                         </div>
                         <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
