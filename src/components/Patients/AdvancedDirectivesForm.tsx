@@ -29,29 +29,22 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   const loadAdvancedDirective = async () => {
     try {
       setLoading(true);
-      setError('');
       
-      console.log('Loading advanced directive for patient:', patientId);
-      let directive = await fetchAdvancedDirective(patientId);
-
-      if (!directive) {
-        // Create a completely empty directive template
-        directive = {
-          patient_id: patientId,
-          living_will_status: '',
-          living_will_date: '',
-          healthcare_proxy_name: '',
-          healthcare_proxy_phone: '',
-          dnr_status: '',
-          organ_donation_status: '',
-          organ_donation_details: '',
-          religious_preference: '',
-          special_instructions: ''
-        };
-      }
-
-      console.log('Advanced directive loaded:', directive);
-      setFormData(directive);
+      // Always start with a completely empty form
+      const emptyDirective = {
+        patient_id: patientId,
+        living_will_status: '',
+        living_will_date: '',
+        healthcare_proxy_name: '',
+        healthcare_proxy_phone: '',
+        dnr_status: '',
+        organ_donation_status: '',
+        organ_donation_details: '',
+        religious_preference: '',
+        special_instructions: ''
+      };
+      
+      setFormData(emptyDirective);
     } catch (err: any) {
       console.error('Error loading advanced directive:', err);
       setError(err.message || 'Failed to load advanced directive');

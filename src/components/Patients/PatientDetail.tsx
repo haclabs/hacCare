@@ -412,14 +412,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       case 'admission':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Admission Records</h3>
               <button
                 onClick={() => setShowAdmissionForm(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                <span>Add Records</span>
+                <span>Add New Records</span>
               </button>
             </div>
 
@@ -445,14 +445,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       case 'directives':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Advanced Directives</h3>
               <button
                 onClick={() => setShowAdvancedDirectivesForm(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                <span>Add Directives</span>
+                <span>Add New Directives</span>
               </button>
             </div>
 
