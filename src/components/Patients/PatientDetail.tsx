@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage } from 'lucide-react';
+import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp } from 'lucide-react';
 import { Patient, PatientVitals, PatientMedication, PatientNote } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
 import { VitalSignsEditor } from './VitalSignsEditor';
+import { VitalsTrends } from './VitalsTrends';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
@@ -205,15 +206,25 @@ export const PatientDetail: React.FC = () => {
       case 'vitals':
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
-              <button
-                onClick={() => setShowVitalsEditor(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Record Vitals
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => navigate(`/patient/${id}/vitals-trends`)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  title="View vital signs trends"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span>View Trends</span>
+                </button>
+                <button
+                  onClick={() => setShowVitalsEditor(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  <span>Record Vitals</span>
+                </button>
+              </div>
             </div>
 
             {showVitalsEditor && (
@@ -225,7 +236,7 @@ export const PatientDetail: React.FC = () => {
             )}
 
             {vitals.length > 0 && (
-              <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -233,7 +244,7 @@ export const PatientDetail: React.FC = () => {
                       <span className="text-sm font-medium text-gray-600">Temperature</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.temperature || 'N/A'}°C</p>
                   <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
                 </div>
 
@@ -244,7 +255,7 @@ export const PatientDetail: React.FC = () => {
                       <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">120/80 mmHg</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.bloodPressure?.systolic || 'N/A'}/{vitals[0]?.bloodPressure?.diastolic || 'N/A'} mmHg</p>
                   <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
                 </div>
 
@@ -255,10 +266,10 @@ export const PatientDetail: React.FC = () => {
                       <span className="text-sm font-medium text-gray-600">Heart Rate</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">72 bpm</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.heartRate || 'N/A'} bpm</p>
                   <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
                 </div>
-              </>
+              </div>
             )}
           </div>
         );
