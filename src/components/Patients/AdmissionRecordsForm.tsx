@@ -5,9 +5,9 @@ import { usePatients } from '../../contexts/PatientContext';
 
 interface AdmissionRecordsFormProps {
   patientId: string;
-  patientName: string;
+  patientName?: string;
   onClose: () => void;
-  onSave: () => void;
+  onSave?: () => void;
 }
 
 export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
@@ -89,7 +89,11 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       // Refresh patient data to reflect changes
       await refreshPatients();
       
-      onSave();
+      if (onSave) {
+        onSave();
+      } else {
+        onClose();
+      }
     } catch (err: any) {
       console.error('Error saving admission record:', err);
       setError(err.message || 'Failed to save admission record');
@@ -142,6 +146,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            type="button"
           >
             <X className="h-6 w-6" />
           </button>
@@ -452,7 +457,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
             <button
               type="button"
               onClick={onClose}
-              disabled={saving}
+              disabled={saving} 
               className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               Cancel
