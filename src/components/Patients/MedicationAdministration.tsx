@@ -381,6 +381,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showHistory && selectedMedication && (
         <MedicationAdministrationHistory
           medicationId={selectedMedication.id}
+         patientId={patientId}
           medicationName={selectedMedication.name}
           patientName={patientName}
           onClose={() => {
