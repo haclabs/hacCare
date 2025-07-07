@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import PatientCard from './components/Patients/PatientCard';
@@ -34,7 +35,7 @@ import { Patient } from './types';
 function App() {
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const navigate = useNavigate();
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
 
@@ -49,9 +50,6 @@ function App() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     // Clear selected patient when navigating to a different tab
-    if (tab !== 'patients') {
-      setSelectedPatient(null);
-    }
   };
 
   /**
@@ -59,16 +57,7 @@ function App() {
    * @param {Patient} patient - The selected patient
    */
   const handlePatientSelect = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setActiveTab('patients'); // Ensure we're on the patients tab
-  };
-
-  /**
-   * Handle back navigation from patient detail
-   */
-  const handleBackFromPatient = () => {
-    setSelectedPatient(null);
-    // Stay on the patients tab
+    navigate(`/patient/${patient.id}`);
   };
 
   /**
@@ -78,16 +67,6 @@ function App() {
    * @returns {JSX.Element} The content for the current active tab
    */
   const renderContent = () => {
-    // Show patient detail view if a patient is selected and we're on patients tab
-    if (selectedPatient && activeTab === 'patients') {
-      return (
-        <PatientDetail
-          patient={selectedPatient}
-          onBack={handleBackFromPatient}
-        />
-      );
-    }
-
     // Route to appropriate content based on active tab
     switch (activeTab) {
       case 'patients':
@@ -178,7 +157,10 @@ function App() {
         
         {/* Main Content Area */}
         <main className="flex-1 p-8">
-          {renderContent()}
+          <Routes>
+            <Route path="/patient/:id" element={<PatientDetail />} />
+            <Route path="*" element={renderContent()} />
+          </Routes>
         </main>
       </div>
 
