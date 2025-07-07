@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { PatientProvider } from './contexts/PatientContext';
 import { AlertProvider } from './contexts/AlertContext';
@@ -10,16 +11,18 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider>
-      <AuthProvider>
-        <PatientProvider>
-          <AlertProvider>
-            <ProtectedRoute>
-              <App />
-            </ProtectedRoute>
-          </AlertProvider>
-        </PatientProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <PatientProvider>
+            <AlertProvider>
+              <ProtectedRoute>
+                <App />
+              </ProtectedRoute>
+            </AlertProvider>
+          </PatientProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </StrictMode>
 );
