@@ -724,4 +724,5 @@ const VitalsTrends: React.FC<VitalsTrendsProps> = ({
             </div>
           )}
         </div>
+      </div>
   );
