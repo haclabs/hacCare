@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Calendar, FileText, AlertTriangle, Activity, Pill, Stethoscope, Bandage } from 'lucide-react';
+import { ArrowLeft, Edit, Calendar, FileText, AlertTriangle, Activity, Pill, Stethoscope, Ban as Bandage } from 'lucide-react';
 import { Patient, PatientNote, PatientAlert, PatientVitals, PatientMedication, PatientWound } from '../../types';
 import { patientService } from '../../lib/patientService';
 import { supabase } from '../../lib/supabase';
