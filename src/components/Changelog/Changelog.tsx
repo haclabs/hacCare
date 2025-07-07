@@ -37,6 +37,56 @@ export const Changelog: React.FC = () => {
    */
   const changelogData: ChangelogEntry[] = [
     {
+      version: "2.4.0",
+      date: "2025-07-06",
+      changes: [
+        {
+          type: "feature",
+          description: "Enhanced patient notes management with improved editing and deletion functionality"
+        },
+        {
+          type: "feature",
+          description: "Added visual indicators for note priority levels with appropriate color coding"
+        },
+        {
+          type: "feature",
+          description: "Implemented note deletion with confirmation dialog for data safety"
+        },
+        {
+          type: "improvement",
+          description: "Redesigned medication administration workflow with better organization"
+        },
+        {
+          type: "improvement",
+          description: "Added color-coded medication cards for due and overdue medications"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced medication history viewing experience with better filtering"
+        },
+        {
+          type: "improvement",
+          description: "Implemented tabbed interface for different medication types (scheduled, PRN, continuous)"
+        },
+        {
+          type: "bugfix",
+          description: "Fixed hospital bracelet button functionality with clearer labeling"
+        },
+        {
+          type: "bugfix",
+          description: "Resolved QrCode component reference issues in patient detail view"
+        },
+        {
+          type: "improvement",
+          description: "Added required field validation for admission records and advanced directives"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced form validation with better error handling and user feedback"
+        }
+      ]
+    },
+    {
       version: "2.3.0",
       date: "2025-07-4",
       changes: [
@@ -473,10 +523,10 @@ export const Changelog: React.FC = () => {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
         <h3 className="text-lg font-medium text-yellow-900 mb-3">Upcoming Features</h3>
         <div className="text-yellow-800 space-y-2 text-sm">
-          <p>• <strong>v2.4.0:</strong> Mobile app for iOS and Android</p>
-          <p>• <strong>v2.5.0:</strong> Integration with laboratory systems</p>
-          <p>• <strong>v2.6.0:</strong> Automated medication dispensing integration</p>
-          <p>• <strong>v2.7.0:</strong> Advanced reporting and analytics dashboard</p>
+          <p>• <strong>v2.5.0:</strong> Comprehensive patient education module</p>
+          <p>• <strong>v2.6.0:</strong> Integration with laboratory systems</p>
+          <p>• <strong>v2.7.0:</strong> Automated medication dispensing integration</p>
+          <p>• <strong>v2.8.0:</strong> Advanced reporting and analytics dashboard</p>
         </div>
       </div>
     </div>

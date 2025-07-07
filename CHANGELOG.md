@@ -5,6 +5,32 @@ All notable changes to the hacCare Hospital Patient Record System will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2025-07-06
+
+### Added
+- **Patient Notes Management**: Enhanced patient notes functionality
+  - Improved note editing with proper form population
+  - Implemented note deletion with confirmation dialog
+  - Added visual indicators for note priority levels
+  - Better organization of notes with chronological sorting
+
+### Improved
+- **Medication Administration**: Comprehensive medication management interface
+  - Redesigned medication administration workflow
+  - Color-coded medication cards for due and overdue medications
+  - Improved medication history viewing experience
+  - Better organization with tabbed interface for different medication types
+
+### Fixed
+- **Patient Bracelet Access**: Fixed hospital bracelet button functionality
+  - Added clear text label to bracelet button for better usability
+  - Ensured consistent access to hospital bracelet from patient detail view
+  - Fixed QrCode component reference issues
+- **Form Validation**: Enhanced form validation across the application
+  - Added required field validation for admission records
+  - Improved advanced directives form with proper validation
+  - Better error handling and user feedback
+
 ## [2.3.0] - 2025-07-04
 
 ### Added
@@ -147,7 +173,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Vital Signs Trend Analysis**: Interactive charts and historical data visualization
   - Mini-charts for each vital sign with clickable detailed views
   - Historical data showing last 5 readings over 20 hours
-  - Trend identification for temperature, heart rate, blood pressure, and oxygen saturation
+  - Trend identification for temperature, heart rate, blood pressure, and oxygen saturation 
   - Visual indicators for improving, stable, or concerning trends
 
 ### Improved
@@ -262,7 +288,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Medication Alerts**: Fixed timing inconsistencies in alert generation
   - Corrected medication due time calculations
   - Fixed alert timing for different medication frequencies
-  - Improved alert accuracy and reliability
+  - Improved alert accuracy and reliability 
   - Better synchronization with medication schedules
 
 ---
@@ -277,9 +303,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Upcoming Features
 
 - **v2.4.0**: Mobile app for iOS and Android
-- **v2.5.0**: Integration with laboratory systems
-- **v2.6.0**: Automated medication dispensing integration
-- **v2.7.0**: Advanced reporting and analytics dashboard
+- **v2.5.0**: Comprehensive patient education module
+- **v2.6.0**: Integration with laboratory systems
+- **v2.7.0**: Automated medication dispensing integration
+- **v2.8.0**: Advanced reporting and analytics dashboard
 
 ---
 
