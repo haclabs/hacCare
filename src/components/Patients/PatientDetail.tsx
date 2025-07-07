@@ -54,11 +54,9 @@ const PatientDetail: React.FC = () => {
     setLoading(false);
 
     // Fetch patient-specific data using service functions
-    // This would be implemented when the actual service functions are available
-    // Example:
-    // fetchPatientVitals(id).then(setVitals);
-    // fetchPatientMedications(id).then(setMedications);
-    // etc.
+    if (id) {
+      fetchPatientMedications(id).then(setMedications).catch(console.error);
+    }
   }, [patient, id, navigate]);
 
   if (!patient && !loading) {
@@ -349,7 +347,7 @@ const PatientDetail: React.FC = () => {
         );
 
       case 'medications':
-        return <MedicationAdministration patientId={id!} />;
+        return (
           <MedicationAdministration
             patientId={id!}
             patientName={patientName}
@@ -363,8 +361,9 @@ const PatientDetail: React.FC = () => {
               }
             }}
           />
+        );
       case 'notes':
-        return <PatientNoteForm patientId={id!} />;
+        return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
@@ -425,8 +424,9 @@ const PatientDetail: React.FC = () => {
               )}
             </div>
           </div>
+        );
       case 'assessments':
-        return <AssessmentForm patientId={id!} />;
+        return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">Assessments</h3>
@@ -444,11 +444,12 @@ const PatientDetail: React.FC = () => {
               <p className="text-gray-500 text-center py-8">No assessments recorded yet.</p>
             </div>
           </div>
+        );
       case 'wounds':
         return <WoundAssessment patientId={id!} />;
 
       case 'admission':
-        return <AdmissionRecordsForm patientId={id!} />;
+        return (
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Admission Records</h3>
@@ -466,8 +467,9 @@ const PatientDetail: React.FC = () => {
               <p className="text-gray-500 text-center py-8">No admission records found.</p>
             </div>
           </div>
+        );
       case 'directives':
-        return <AdvancedDirectivesForm patientId={id!} />;
+        return (
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Advanced Directives</h3>
@@ -485,6 +487,7 @@ const PatientDetail: React.FC = () => {
               <p className="text-gray-500 text-center py-8">No advanced directives found.</p>
             </div>
           </div>
+        );
       default:
         return null;
     }
