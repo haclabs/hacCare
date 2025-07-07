@@ -9,7 +9,7 @@ import { VitalsTrends } from './VitalsTrends';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
-import { AssessmentDetail } from './AssessmentDetail';
+import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { HospitalBracelet } from './HospitalBracelet';
@@ -395,7 +395,7 @@ export const PatientDetail: React.FC = () => {
         );
 
       case 'assessments': 
-        return <AssessmentDetail patientId={id!} />;
+        return <PatientAssessmentsTab patientId={id!} patientName={`${patient.first_name} ${patient.last_name}`} />;
 
       case 'wounds':
         return <WoundAssessment patientId={id!} />;
