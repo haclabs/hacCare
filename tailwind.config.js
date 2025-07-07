@@ -4,6 +4,12 @@ export default {
   darkMode: 'class', // Enable class-based dark mode
   theme: {
     extend: {
+      backgroundColor: {
+        dark: {
+          sidebar: '#1a1f2b',
+          card: '#1e2433'
+        }
+      },
       colors: {
         blue: {
           50: '#eff6ff',
@@ -88,19 +94,6 @@ export default {
           700: '#0e7490',
           800: '#155e75',
           900: '#164e63',
-        },
-        // Dark mode specific colors
-        gray: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
         }
       }
     },
@@ -116,4 +109,13 @@ export default {
     'dark:border-blue-600', 'dark:border-red-600', 'dark:border-green-600', 'dark:border-purple-600', 'dark:border-indigo-600', 'dark:border-teal-600',
     'dark:bg-gray-800', 'dark:bg-gray-900', 'dark:text-white', 'dark:text-gray-300', 'dark:border-gray-700'
   ]
+  // Add more safelist items for dark mode
+  .concat([
+    'dark:bg-dark-sidebar',
+    'dark:bg-dark-card',
+    'dark:text-gray-100',
+    'dark:text-gray-200',
+    'dark:hover:bg-gray-700',
+    'dark:hover:text-white'
+  ])
 };

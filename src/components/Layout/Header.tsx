@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 transition-colors">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 transition-colors shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex-shrink-0">
@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
             <div className="flex items-center">
               {/* HacCare Text */}
               <div className="text-left">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white leading-none">
+                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 leading-none">
                   haccare
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
 
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {profile?.first_name} {profile?.last_name}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
