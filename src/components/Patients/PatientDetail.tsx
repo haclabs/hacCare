@@ -3,14 +3,15 @@ import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Act
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { PatientNoteForm } from './PatientNoteForm';
-import { PatientBracelet } from './PatientBracelet';
 import { MedicationForm } from './MedicationForm';
+import { PatientBracelet } from './PatientBracelet';
 import { AssessmentForm } from './AssessmentForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
 import VitalsTrends from './VitalsTrends';
+import { fetchPatientMedications } from '../../lib/medicationService';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -29,9 +30,23 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
-  const [medications, setMedications] = useState<Medication[]>([]);
+  const [medications, setMedications] = useState<Medication[]>(patient.medications || []);
   const [notes, setNotes] = useState<PatientNote[]>([]);
   const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
+
+  // Load medications when component mounts or patient changes
+  useEffect(() => {
+    const loadMedications = async () => {
+      try {
+        const meds = await fetchPatientMedications(patient.id);
+        setMedications(meds);
+      } catch (error) {
+        console.error('Error loading medications:', error);
+      }
+    };
+    
+    loadMedications();
+  }, [patient.id]);
 
   const handleTabChange = (tab: string) => {
     // Close the vitals trends modal when switching tabs
@@ -280,16 +295,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
 
       case 'medications':
         return (
-          <div className="space-y-6">
-            <MedicationAdministration
-              patientId={patient.id}
-              patientName={`${patient.first_name} ${patient.last_name}`}
-              medications={medications}
-              onRefresh={() => {
-                // Refresh medications data
-              }}
-            />
-          </div>
+          <MedicationAdministration
+            patientId={patient.id}
+            patientName={`${patient.first_name} ${patient.last_name}`}
+            medications={medications}
+            onRefresh={async () => {
+              try {
+                const meds = await fetchPatientMedications(patient.id);
+                setMedications(meds);
+              } catch (error) {
+                console.error('Error refreshing medications:', error);
+              }
+            }}
+          />
         );
 
       case 'notes':
