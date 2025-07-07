@@ -43,6 +43,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastCheckTime, setLastCheckTime] = useState<Date>(new Date());
+  const [initialized, setInitialized] = useState(false);
   const { user } = useAuth();
 
   /**
@@ -61,6 +62,16 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       console.log('🔔 Loading alerts...');
       const fetchedAlerts = await fetchActiveAlerts();
+      
+      if (!fetchedAlerts || fetchedAlerts.length === 0) {
+        // If no alerts from database, use mock data
+        console.log('No alerts found in database, using mock data');
+        import('../data/mockData').then(({ mockAlerts }) => {
+          setAlerts(mockAlerts);
+          console.log(`✅ Loaded ${mockAlerts.length} mock alerts`);
+        });
+        return;
+      }
       
       // Deduplicate alerts based on message and patient
       const uniqueAlerts = deduplicateAlerts(fetchedAlerts);
@@ -161,7 +172,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     // Initial load
-    loadAlerts();
+    loadAlerts().then(() => setInitialized(true));
 
     // Set up real-time subscription
     const subscription = subscribeToAlerts((updatedAlerts) => {
@@ -174,16 +185,24 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Set up periodic alert checks (every 5 minutes)
     const alertCheckInterval = setInterval(async () => {
       console.log('⏰ Running scheduled alert checks...');
-      await runAlertChecks();
-      setLastCheckTime(new Date());
-      await loadAlerts();
+      try {
+        await runAlertChecks();
+        setLastCheckTime(new Date());
+        await loadAlerts();
+      } catch (error) {
+        console.error('Error in scheduled alert checks:', error);
+      }
     }, 5 * 60 * 1000);
 
     // Set up periodic cleanup (every hour)
     const cleanupInterval = setInterval(async () => {
       console.log('🧹 Running scheduled cleanup...');
-      await cleanupExpiredAlerts();
-      await loadAlerts();
+      try {
+        await cleanupExpiredAlerts();
+        await loadAlerts();
+      } catch (error) {
+        console.error('Error in scheduled alert cleanup:', error);
+      }
     }, 60 * 60 * 1000);
 
     // Cleanup function
@@ -198,7 +217,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isSupabaseConfigured]);
 
   // Calculate unread count
-  const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
+  const unreadCount = initialized ? alerts.filter(alert => !alert.acknowledged).length : 0;
 
   const value = {
     alerts,

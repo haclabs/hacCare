@@ -4,6 +4,7 @@ import { User, Activity, Pill, FileText, Calendar, ArrowLeft, Edit, Printer, Ale
 import { usePatients } from '../../contexts/PatientContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { VitalSignsEditor } from './VitalSignsEditor';
+import { fetchPatientVitalsHistory } from '../../lib/patientService';
 import { MedicationAdministration } from './MedicationAdministration';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
@@ -34,6 +35,7 @@ const PatientDetail: React.FC = () => {
   // Local state for patient-specific data
   const [vitals, setVitals] = useState<any[]>([]);
   const [medications, setMedications] = useState<any[]>([]);
+  const [loadingVitals, setLoadingVitals] = useState(false);
   const [notes, setNotes] = useState<any[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [wounds, setWounds] = useState<any[]>([]);
@@ -45,7 +47,7 @@ const PatientDetail: React.FC = () => {
 
   useEffect(() => {
     // Initialize with empty arrays/objects to prevent filter errors
-    setVitals([]);
+    fetchPatientVitalsData();
     setMedications([]);
     setNotes([]);
     setAssessments([]);
@@ -59,6 +61,35 @@ const PatientDetail: React.FC = () => {
       fetchPatientMedications(id).then(setMedications).catch(console.error);
     }
   }, [patient, id, navigate]);
+
+  // Fetch patient vitals data
+  const fetchPatientVitalsData = async () => {
+    if (!id) return;
+    
+    try {
+      setLoadingVitals(true);
+      console.log('Fetching vitals for patient:', id);
+      
+      const vitalsData = await fetchPatientVitalsHistory(id, 20);
+      console.log('Fetched vitals data:', vitalsData);
+      
+      // Convert to the format expected by the component
+      const formattedVitals = vitalsData.map(vital => ({
+        ...vital,
+        bloodPressure: {
+          systolic: vital.blood_pressure_systolic,
+          diastolic: vital.blood_pressure_diastolic
+        },
+        lastUpdated: vital.recorded_at
+      }));
+      
+      setVitals(formattedVitals);
+    } catch (error) {
+      console.error('Error fetching vitals:', error);
+    } finally {
+      setLoadingVitals(false);
+    }
+  };
 
   if (!patient && !loading) {
     return (
@@ -385,10 +416,13 @@ const PatientDetail: React.FC = () => {
             onRefresh={async () => {
               try {
                 const meds = await fetchPatientMedications(id!);
-                setMedications(meds);
-              } catch (error) {
+            onClose={() => {
+              setShowVitalForm(false);
+            }}
+            onSave={async (newVitals) => {
                 console.error('Error refreshing medications:', error);
-              }
+              // Refresh vitals data after saving
+              await fetchPatientVitalsData();
             }}
           />
         );
