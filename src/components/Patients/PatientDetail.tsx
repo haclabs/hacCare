@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2, Trash2, QrCode } from 'lucide-react';
+import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2, Trash2, QrCode, Lungs } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { PatientNoteForm } from './PatientNoteForm';
@@ -13,6 +13,8 @@ import { WoundAssessment } from './WoundAssessment';
 import { VitalsTrends } from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
 import { fetchPatientMedications } from '../../lib/medicationService';
+import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
+import { formatTime, getVitalStatus } from '../../utils/patientUtils';
 
 interface PatientDetailProps {
   patient: Patient;
@@ -43,6 +45,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [medications, setMedications] = useState<Medication[]>(patient.medications || []);
   const [notes, setNotes] = useState<PatientNote[]>(patient.notes || []);
   const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
+  
+  // Get the latest vitals from the patient's vitals array
+  const latestVitals = patient.vitals && patient.vitals.length > 0 
+    ? patient.vitals[0] 
+    : null;
 
   // Load medications when component mounts or patient changes
   useEffect(() => {
@@ -206,45 +213,86 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Thermometer className="h-5 w-5 text-red-500 mr-2" />
+                    <Thermometer className="h-5 w-5 text-red-600 mr-2" />
                     <span className="text-sm font-medium text-gray-600">Temperature</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">37.0°C</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className={`text-2xl font-bold ${latestVitals ? getVitalStatus('temperature', latestVitals.temperature) : 'text-gray-400'} mt-2`}>
+                  {latestVitals ? `${latestVitals.temperature.toFixed(1)}°C` : 'No data'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {latestVitals && latestVitals.recorded_at ? 
+                    formatDistanceToNow(parseISO(latestVitals.recorded_at), { addSuffix: true }) : 
+                    'No record'}
+                </p>
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Heart className="h-5 w-5 text-red-500 mr-2" />
+                    <Heart className="h-5 w-5 text-red-600 mr-2" />
                     <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">120/80</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className={`text-2xl font-bold ${latestVitals ? getVitalStatus('bloodPressureSystolic', latestVitals.bloodPressure.systolic) : 'text-gray-400'} mt-2`}>
+                  {latestVitals ? `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}` : 'No data'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {latestVitals && latestVitals.recorded_at ? 
+                    formatDistanceToNow(parseISO(latestVitals.recorded_at), { addSuffix: true }) : 
+                    'No record'}
+                </p>
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Activity className="h-5 w-5 text-green-500 mr-2" />
+                    <Activity className="h-5 w-5 text-green-600 mr-2" />
                     <span className="text-sm font-medium text-gray-600">Heart Rate</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">72 bpm</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className={`text-2xl font-bold ${latestVitals ? getVitalStatus('heartRate', latestVitals.heartRate) : 'text-gray-400'} mt-2`}>
+                  {latestVitals ? `${latestVitals.heartRate} bpm` : 'No data'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {latestVitals && latestVitals.recorded_at ? 
+                    formatDistanceToNow(parseISO(latestVitals.recorded_at), { addSuffix: true }) : 
+                    'No record'}
+                </p>
               </div>
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <Droplets className="h-5 w-5 text-blue-500 mr-2" />
+                    <Droplets className="h-5 w-5 text-blue-600 mr-2" />
                     <span className="text-sm font-medium text-gray-600">O2 Saturation</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">98%</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                <p className={`text-2xl font-bold ${latestVitals ? getVitalStatus('oxygenSaturation', latestVitals.oxygenSaturation) : 'text-gray-400'} mt-2`}>
+                  {latestVitals ? `${latestVitals.oxygenSaturation}%` : 'No data'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {latestVitals && latestVitals.recorded_at ? 
+                    formatDistanceToNow(parseISO(latestVitals.recorded_at), { addSuffix: true }) : 
+                    'No record'}
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Lungs className="h-5 w-5 text-purple-600 mr-2" />
+                    <span className="text-sm font-medium text-gray-600">Respiratory Rate</span>
+                  </div>
+                </div>
+                <p className={`text-2xl font-bold ${latestVitals ? getVitalStatus('respiratoryRate', latestVitals.respiratoryRate) : 'text-gray-400'} mt-2`}>
+                  {latestVitals ? `${latestVitals.respiratoryRate}/min` : 'No data'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {latestVitals && latestVitals.recorded_at ? 
+                    formatDistanceToNow(parseISO(latestVitals.recorded_at), { addSuffix: true }) : 
+                    'No record'}
+                </p>
               </div>
             </div>
 
@@ -258,7 +306,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Time
+                        Date & Time
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Temperature
@@ -272,26 +320,42 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         O2 Sat
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Resp Rate
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        2 hours ago
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
-                        37.0°C
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        120/80
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        72 bpm
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        98%
-                      </td>
-                    </tr>
+                    {patient.vitals && patient.vitals.length > 0 ? (
+                      patient.vitals.slice(0, 5).map((vital, index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {vital.recorded_at ? formatTime(vital.recorded_at) : 'N/A'}
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getVitalStatus('temperature', vital.temperature)}`}>
+                            {vital.temperature.toFixed(1)}°C
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getVitalStatus('bloodPressureSystolic', vital.bloodPressure.systolic)}`}>
+                            {vital.bloodPressure.systolic}/{vital.bloodPressure.diastolic}
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getVitalStatus('heartRate', vital.heartRate)}`}>
+                            {vital.heartRate} bpm
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getVitalStatus('oxygenSaturation', vital.oxygenSaturation)}`}>
+                            {vital.oxygenSaturation}%
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getVitalStatus('respiratoryRate', vital.respiratoryRate)}`}>
+                            {vital.respiratoryRate}/min
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                          No vital signs recorded yet
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
