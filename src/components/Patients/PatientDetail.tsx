@@ -254,7 +254,80 @@ export const PatientDetail: React.FC = () => {
             
             {/* Latest Vitals Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              {vitals.length > 0 ? (
+                <>
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Thermometer className="h-5 w-5 text-red-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-600">Temperature</span>
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0].temperature}°C</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {format(new Date(vitals[0].recorded_at || vitals[0].lastUpdated || new Date()), 'MMM dd, HH:mm')}
+                    </p>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Heart className="h-5 w-5 text-red-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">
+                      {vitals[0].bloodPressure?.systolic}/{vitals[0].bloodPressure?.diastolic}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {format(new Date(vitals[0].recorded_at || vitals[0].lastUpdated || new Date()), 'MMM dd, HH:mm')}
+                    </p>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Activity className="h-5 w-5 text-green-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-600">Heart Rate</span>
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0].heartRate} bpm</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {format(new Date(vitals[0].recorded_at || vitals[0].lastUpdated || new Date()), 'MMM dd, HH:mm')}
+                    </p>
+                  </div>
+
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Droplets className="h-5 w-5 text-blue-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-600">O2 Saturation</span>
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0].oxygenSaturation}%</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {format(new Date(vitals[0].recorded_at || vitals[0].lastUpdated || new Date()), 'MMM dd, HH:mm')}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                  <Activity className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No vital signs recorded yet</p>
+                  <button
+                    onClick={() => setShowVitalForm(true)}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    <span>Record First Vitals</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {/* Vitals History */}
+            {vitals.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Thermometer className="h-5 w-5 text-red-500 mr-2" />
@@ -270,96 +343,9 @@ export const PatientDetail: React.FC = () => {
                   <div className="flex items-center">
                     <Heart className="h-5 w-5 text-red-500 mr-2" />
                     <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">120/80</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Activity className="h-5 w-5 text-green-500 mr-2" />
-                    <span className="text-sm font-medium text-gray-600">Heart Rate</span>
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">72 bpm</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Droplets className="h-5 w-5 text-blue-500 mr-2" />
-                    <span className="text-sm font-medium text-gray-600">O2 Saturation</span>
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mt-2">98%</p>
-                <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-              </div>
-            </div>
-
-            {/* Vitals History */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-medium text-gray-900">Recent Measurements</h4>
-                  <span className="text-sm text-gray-500">Last 5 readings</span>
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Temperature
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Blood Pressure
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Heart Rate
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        O2 Sat
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200" id="vitals-table-body">
-                    {vitals.length > 0 ? (
-                      vitals.slice(0, 5).map((vital, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {format(new Date(vital.recorded_at || vital.lastUpdated || new Date()), 'MMM dd, HH:mm')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
-                            {vital.temperature}°C
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.bloodPressure?.systolic}/{vital.bloodPressure?.diastolic}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.heartRate} bpm
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.oxygenSaturation}%
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                          No vital signs recorded yet
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            )}
           </div>
         );
 
