@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2 } from 'lucide-react';
+import { ArrowLeft, Edit, Calendar, MapPin, Phone, User, Heart, Thermometer, Activity, Droplets, Clock, Pill, FileText, AlertTriangle, Plus, Stethoscope, TrendingUp, FileText as FileText2, Trash2 } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
+import { PatientBracelet } from './PatientBracelet';
 import { MedicationForm } from './MedicationForm';
 import { PatientNoteForm } from './PatientNoteForm';
 import { AssessmentForm } from './AssessmentForm';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 import { MedicationAdministration } from './MedicationAdministration';
+import { WoundAssessment } from './WoundAssessment';
 import VitalsTrends from './VitalsTrends';
 
 interface PatientDetailProps {
@@ -25,9 +27,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
   const [showAdvancedDirectivesForm, setShowAdvancedDirectivesForm] = useState(false);
   const [showMedicationAdmin, setShowMedicationAdmin] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [showPatientBracelet, setShowPatientBracelet] = useState(false);
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
+  const [selectedNote, setSelectedNote] = useState<PatientNote | null>(null);
 
   const handleTabChange = (tab: string) => {
     // Close the vitals trends modal when switching tabs
@@ -339,9 +343,39 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
                     <FileText className="h-5 w-5 text-blue-600 mt-1" />
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900">Assessment Note</h4>
-                      <p className="text-sm text-gray-600">by Nurse Johnson • 2 hours ago</p>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between w-full">
+                        <div>
+                          <h4 className="text-lg font-medium text-gray-900">Assessment Note</h4>
+                          <p className="text-sm text-gray-600">by Nurse Johnson • 2 hours ago</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => setSelectedNote({
+                              id: 'note-1',
+                              created_at: '2023-07-01T10:00:00Z',
+                              nurse_id: 'nurse-001',
+                              nurse_name: 'Nurse Johnson',
+                              type: 'Assessment',
+                              content: 'Patient is alert and oriented. Vital signs stable. No complaints of pain or discomfort. Ambulating independently. Diet tolerated well.',
+                              priority: 'Low'
+                            })}
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this note?')) {
+                                // Delete note logic
+                              }
+                            }}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
                       <p className="text-gray-700 mt-2">
                         Patient is alert and oriented. Vital signs stable. No complaints of pain or discomfort.
                         Ambulating independently. Diet tolerated well.
@@ -354,6 +388,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 </div>
               </div>
             </div>
+          </div>
+        );
+        
+      case 'wounds':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Wound Assessment</h3>
+            </div>
+            
+            <WoundAssessment patientId={patient.id} />
           </div>
         );
 
@@ -371,6 +416,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
             </div>
 
+            {/* Empty state for assessments */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <p className="text-gray-500 text-center py-8">No assessments recorded yet.</p>
             </div>
@@ -391,7 +437,20 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
             </div>
 
+            {/* Empty state for admission records */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Admission Details</h4>
+                  <p className="text-gray-500 text-sm">No admission details recorded yet.</p>
+                </div>
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Medical History</h4>
+                  <p className="text-gray-500 text-sm">No medical history recorded yet.</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-4">
               <p className="text-gray-500 text-center py-8">Admission records will be displayed here.</p>
             </div>
           </div>
@@ -411,7 +470,20 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               </button>
             </div>
 
+            {/* Empty state for advanced directives */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Legal Documents</h4>
+                  <p className="text-gray-500 text-sm">No legal documents recorded yet.</p>
+                </div>
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Healthcare Preferences</h4>
+                  <p className="text-gray-500 text-sm">No healthcare preferences recorded yet.</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-4">
               <p className="text-gray-500 text-center py-8">Advanced directives will be displayed here.</p>
             </div>
           </div>
@@ -435,10 +507,20 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
             <span>Back to Patients</span>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {patient.first_name} {patient.last_name}
-            </h1>
-            <p className="text-gray-600">Patient ID: {patient.patient_id}</p>
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {patient.first_name} {patient.last_name}
+              </h1>
+            </div>
+            <div className="flex items-center">
+              <p className="text-gray-600">Patient ID: {patient.patient_id}</p>
+              <button
+                onClick={() => setShowPatientBracelet(true)}
+                className="ml-2 text-blue-600 hover:text-blue-800 text-sm underline"
+              >
+                View Hospital Bracelet
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -449,9 +531,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           {[
             { id: 'overview', label: 'Overview', icon: User },
             { id: 'vitals', label: 'Vital Signs', icon: Activity },
-            { id: 'medications', label: 'Medications', icon: Pill },
+            { id: 'medications', label: 'MAR', icon: Pill },
             { id: 'notes', label: 'Notes', icon: FileText },
             { id: 'assessments', label: 'Assessments', icon: Stethoscope },
+            { id: 'wounds', label: 'Wound Assessment', icon: AlertTriangle },
             { id: 'admission', label: 'Admission', icon: Calendar },
             { id: 'directives', label: 'Directives', icon: FileText2 },
           ].map((tab) => {
@@ -575,6 +658,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
           }}
         />
       )}
+      
+      {showPatientBracelet && (
+        <PatientBracelet
+          patient={patient}
+          onClose={() => setShowPatientBracelet(false)}
+        />
+      )}
+      
     </div>
   );
 };

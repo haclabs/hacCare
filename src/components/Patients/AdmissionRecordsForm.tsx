@@ -33,13 +33,33 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       
       console.log('Loading admission record for patient:', patientId);
       let record = await fetchAdmissionRecord(patientId);
-      
-      // If no record exists, create default one
+
       if (!record) {
-        console.log('No admission record found, creating default');
-        record = await createDefaultAdmissionRecord(patientId);
+        // Create a blank record if none exists
+        record = {
+          patient_id: patientId,
+          admission_type: '',
+          attending_physician: '',
+          insurance_provider: '',
+          insurance_policy: '',
+          admission_source: '',
+          chief_complaint: '',
+          height: '',
+          weight: '',
+          bmi: '',
+          smoking_status: '',
+          alcohol_use: '',
+          exercise: '',
+          occupation: '',
+          family_history: '',
+          marital_status: '',
+          secondary_contact_name: '',
+          secondary_contact_relationship: '',
+          secondary_contact_phone: '',
+          secondary_contact_address: ''
+        };
       }
-      
+
       console.log('Admission record loaded:', record);
       setFormData(record);
     } catch (err: any) {

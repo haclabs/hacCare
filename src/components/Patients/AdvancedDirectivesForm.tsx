@@ -33,13 +33,23 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       
       console.log('Loading advanced directive for patient:', patientId);
       let directive = await fetchAdvancedDirective(patientId);
-      
-      // If no directive exists, create default one
+
       if (!directive) {
-        console.log('No advanced directive found, creating default');
-        directive = await createDefaultAdvancedDirective(patientId);
+        // Create a blank directive if none exists
+        directive = {
+          patient_id: patientId,
+          living_will_status: '',
+          living_will_date: '',
+          healthcare_proxy_name: '',
+          healthcare_proxy_phone: '',
+          dnr_status: '',
+          organ_donation_status: '',
+          organ_donation_details: '',
+          religious_preference: '',
+          special_instructions: ''
+        };
       }
-      
+
       console.log('Advanced directive loaded:', directive);
       setFormData(directive);
     } catch (err: any) {
