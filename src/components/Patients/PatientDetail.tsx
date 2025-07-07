@@ -16,25 +16,46 @@ import { VitalsTrends } from './VitalsTrends';
 const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { patients, vitals, medications, notes, assessments, wounds, admissionRecords, directives } = usePatients();
+  const { patients } = usePatients();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [showPatientBracelet, setShowPatientBracelet] = useState(false);
+  
+  // Local state for patient-specific data
+  const [vitals, setVitals] = useState<any[]>([]);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [assessments, setAssessments] = useState<any[]>([]);
+  const [wounds, setWounds] = useState<any[]>([]);
+  const [admissionRecords, setAdmissionRecords] = useState<any>(null);
+  const [directives, setDirectives] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const patient = patients.find(p => p.id === id);
-  const patientVitals = vitals.filter(v => v.patient_id === id);
-  const patientMedications = medications.filter(m => m.patient_id === id);
-  const patientNotes = notes.filter(n => n.patient_id === id);
-  const patientAssessments = assessments.filter(a => a.patient_id === id);
-  const patientWounds = wounds.filter(w => w.patient_id === id);
-  const patientAdmission = admissionRecords.find(a => a.patient_id === id);
-  const patientDirectives = directives.find(d => d.patient_id === id);
 
   useEffect(() => {
     if (!patient) {
       navigate('/patients');
+      return;
     }
-  }, [patient, navigate]);
+
+    // Initialize with empty arrays/objects to prevent filter errors
+    setVitals([]);
+    setMedications([]);
+    setNotes([]);
+    setAssessments([]);
+    setWounds([]);
+    setAdmissionRecords(null);
+    setDirectives(null);
+    setLoading(false);
+
+    // TODO: Fetch patient-specific data using service functions
+    // This would be implemented when the actual service functions are available
+    // Example:
+    // fetchPatientVitals(id).then(setVitals);
+    // fetchPatientMedications(id).then(setMedications);
+    // etc.
+  }, [patient, id, navigate]);
 
   if (!patient) {
     return (
@@ -47,13 +68,23 @@ const PatientDetail: React.FC = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Loading patient data...</h3>
+        </div>
+      </div>
+    );
+  }
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
 
   const getLatestVitals = () => {
-    if (patientVitals.length === 0) return null;
-    return patientVitals.sort((a, b) => 
+    if (vitals.length === 0) return null;
+    return vitals.sort((a, b) => 
       new Date(b.recorded_at || '').getTime() - new Date(a.recorded_at || '').getTime()
     )[0];
   };
