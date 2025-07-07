@@ -298,7 +298,6 @@ export const PatientDetail: React.FC = () => {
                 </button>
               </div>
             )}
-            )}
             
             {showVitalsEditor && (
               <VitalSignsEditor
