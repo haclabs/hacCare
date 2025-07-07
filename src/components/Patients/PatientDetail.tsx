@@ -75,88 +75,111 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       case 'overview':
         return (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Patient Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <User className="h-5 w-5 mr-2 text-blue-600" />
-                  Patient Information
+            {/* Patient Information - Left Column */}
+            <div className="space-y-6">
+              {/* Patient Information */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <User className="h-5 w-5 mr-2 text-blue-600" />
+                    Patient Information
+                  </h3>
+                  <button className="text-blue-600 hover:text-blue-700">
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-gray-600">Patient ID:</span>
+                    <p className="font-medium mt-1">{patient.patient_id}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Date of Birth:</span>
+                    <p className="font-medium mt-1">{patient.date_of_birth}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Gender:</span>
+                    <p className="font-medium mt-1">{patient.gender}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Blood Type:</span>
+                    <p className="font-medium mt-1">{patient.blood_type}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Room:</span>
+                    <p className="font-medium mt-1">{patient.room_number}-{patient.bed_number}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Allergies */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
+                  Allergies
                 </h3>
-                <button className="text-blue-600 hover:text-blue-700">
-                  <Edit className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Patient ID:</span>
-                  <span className="font-medium">{patient.patient_id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Date of Birth:</span>
-                  <span className="font-medium">{patient.date_of_birth}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Gender:</span>
-                  <span className="font-medium">{patient.gender}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Blood Type:</span>
-                  <span className="font-medium">{patient.blood_type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Room:</span>
-                  <span className="font-medium">{patient.room_number}-{patient.bed_number}</span>
-                </div>
+                {patient.allergies && patient.allergies.length > 0 ? (
+                  <div className="space-y-2">
+                    {patient.allergies.map((allergy, index) => (
+                      <span
+                        key={index}
+                        className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2"
+                      >
+                        {allergy}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No known allergies</p>
+                )}
               </div>
             </div>
 
-            {/* Current Condition */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Stethoscope className="h-5 w-5 mr-2 text-green-600" />
-                Current Condition
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-gray-600">Condition:</span>
-                  <p className="font-medium mt-1">{patient.condition}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Diagnosis:</span>
-                  <p className="font-medium mt-1">{patient.diagnosis}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Assigned Nurse:</span>
-                  <p className="font-medium mt-1">{patient.assigned_nurse}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600">Admission Date:</span>
-                  <p className="font-medium mt-1">{patient.admission_date}</p>
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Current Condition */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <Stethoscope className="h-5 w-5 mr-2 text-green-600" />
+                    Current Condition
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-gray-600">Condition:</span>
+                      <p className="font-medium mt-1">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          patient.condition === 'Critical' ? 'bg-red-100 text-red-800' :
+                          patient.condition === 'Stable' ? 'bg-green-100 text-green-800' :
+                          patient.condition === 'Improving' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {patient.condition}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Diagnosis:</span>
+                      <p className="font-medium mt-1">{patient.diagnosis}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Assigned Nurse:</span>
+                      <p className="font-medium mt-1">{patient.assigned_nurse}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Admission Date:</span>
+                      <p className="font-medium mt-1">{patient.admission_date}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Length of Stay:</span>
+                      <p className="font-medium mt-1">
+                        {isValid(parseISO(patient.admission_date)) ? 
+                          formatDistanceToNow(parseISO(patient.admission_date)) : 'Unknown'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Allergies */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
-                Allergies
-              </h3>
-              {patient.allergies && patient.allergies.length > 0 ? (
-                <div className="space-y-2">
-                  {patient.allergies.map((allergy, index) => (
-                    <span
-                      key={index}
-                      className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2"
-                    >
-                      {allergy}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No known allergies</p>
-              )}
-            </div>
 
             {/* Emergency Contact */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -179,6 +202,43 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
                 </div>
               </div>
             </div>
+            
+            {/* Last Update Information */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-indigo-600" />
+                Record Status
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <span className="text-gray-600">Last Updated:</span>
+                  <p className="font-medium mt-1">
+                    {patient.updated_at ? 
+                      formatDistanceToNow(parseISO(patient.updated_at), { addSuffix: true }) : 
+                      'Unknown'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-600">Active Medications:</span>
+                  <p className="font-medium mt-1">
+                    {patient.medications.filter(med => med.status === 'Active').length} medications
+                  </p>
+                </div>
+                <div>
+                  <span className="text-gray-600">Recent Notes:</span>
+                  <p className="font-medium mt-1">
+                    {patient.notes.length > 0 ? 
+                      `${patient.notes.length} notes (last: ${
+                        patient.notes[0].created_at ? 
+                        formatDistanceToNow(parseISO(patient.notes[0].created_at), { addSuffix: true }) : 
+                        'Unknown'
+                      })` : 
+                      'No notes recorded'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
           </div>
         );
 
