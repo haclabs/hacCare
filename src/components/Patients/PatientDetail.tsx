@@ -12,7 +12,7 @@ import WoundAssessment from './WoundAssessment';
 import VitalsTrends from './VitalsTrends';
 import { HospitalBracelet } from './HospitalBracelet';
 
-export default function PatientDetail() {
+export function PatientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patient, setPatient] = useState<Patient | null>(null);

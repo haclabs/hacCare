@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import PatientCard from './components/Patients/PatientCard';
-import PatientDetail from './components/Patients/PatientDetail';
+import { PatientDetail } from './components/Patients/PatientDetail';
 import { HospitalBracelet } from './components/Patients/HospitalBracelet';
 import { PatientManagement } from './components/Patients/PatientManagement';
 import { AlertPanel } from './components/Alerts/AlertPanel';
