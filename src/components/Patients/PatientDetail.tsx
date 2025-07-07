@@ -21,6 +21,15 @@ interface PatientDetailProps {
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // When changing tabs, ensure the VitalsTrends modal is closed
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Close the vitals trends modal when switching to any tab
+    if (showVitalsTrends) {
+      setShowVitalsTrends(false);
+    }
+  };
   const [showVitalForm, setShowVitalForm] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
@@ -53,14 +62,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
       setNotes(patient.notes);
     }
   }, [patient.id]);
-
-  const handleTabChange = (tab: string) => {
-    // Close the vitals trends modal when switching tabs
-    if (tab !== 'vitals' && showVitalsTrends) {
-      setShowVitalsTrends(false);
-    }
-    setActiveTab(tab);
-  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -182,8 +183,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patient, onBack })
               <div className="flex space-x-3">
                 <button
                   onClick={() => {
-                    setShowVitalsTrends(true);
-                    handleTabChange('vitals');
+                    setShowVitalsTrends(true); 
                   }}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   title="View vital signs trends"
