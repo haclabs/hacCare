@@ -35,15 +35,15 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       let directive = await fetchAdvancedDirective(patientId);
 
       if (!directive) {
-        // Create a blank directive if none exists
+        // Create a completely empty directive
         directive = {
           patient_id: patientId,
-          living_will_status: '',
+          living_will_status: 'Not Available',
           living_will_date: '',
           healthcare_proxy_name: '',
           healthcare_proxy_phone: '',
-          dnr_status: '',
-          organ_donation_status: '',
+          dnr_status: 'Full Code',
+          organ_donation_status: 'Not registered',
           organ_donation_details: '',
           religious_preference: '',
           special_instructions: ''

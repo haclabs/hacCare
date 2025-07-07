@@ -35,14 +35,14 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       let record = await fetchAdmissionRecord(patientId);
 
       if (!record) {
-        // Create a blank record if none exists
+        // Create a completely empty record
         record = {
           patient_id: patientId,
-          admission_type: '',
+          admission_type: 'Emergency',
           attending_physician: '',
           insurance_provider: '',
           insurance_policy: '',
-          admission_source: '',
+          admission_source: 'Emergency Department',
           chief_complaint: '',
           height: '',
           weight: '',
