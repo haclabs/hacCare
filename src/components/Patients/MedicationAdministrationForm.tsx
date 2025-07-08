@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, Save, Clock, User, FileText, AlertTriangle } from 'lucide-react';
 import { Medication, MedicationAdministration } from '../../types';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { formatLocalTime } from '../../utils/dateUtils';
 import { recordMedicationAdministration } from '../../lib/medicationService';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -25,9 +26,9 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
   const [formData, setFormData] = useState<Partial<MedicationAdministration>>({
     medication_id: medication?.id,
     patient_id: patientId,
-    administered_by: profile ? `${profile.first_name} ${profile.last_name}` : '',
+    administered_by: profile ? `${profile.first_name} ${profile.last_name}` : '', 
     administered_by_id: user?.id,
-    timestamp: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    timestamp: new Date().toISOString().slice(0, 16), // Format as YYYY-MM-DDTHH:MM for input
     notes: ''
   });
   
@@ -167,11 +168,15 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Date & Time *
-                </label>
+                </label> 
                 <input
                   type="datetime-local"
                   value={formData.timestamp}
-                  onChange={(e) => updateField('timestamp', e.target.value)}
+                  onChange={(e) => {
+                    // Store the ISO string representation
+                    const localDate = new Date(e.target.value);
+                    updateField('timestamp', localDate.toISOString());
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />

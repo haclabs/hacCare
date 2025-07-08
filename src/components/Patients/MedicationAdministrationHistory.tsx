@@ -3,6 +3,7 @@ import { Clock, User, FileText, Search, RefreshCw, X } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { fetchMedicationAdministrationHistory } from '../../lib/medicationService';
 import { MedicationAdministration } from '../../types';
+import { formatLocalTime } from '../../utils/dateUtils';
 import { usePatients } from '../../contexts/PatientContext';
 
 interface MedicationAdministrationHistoryProps {
@@ -63,13 +64,12 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
   // Safe date formatting
   const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
     if (!dateValue) return 'N/A';
-    
     try {
       const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
-    
       if (!isValid(date)) return 'N/A';
-    
-      return format(date, formatString);
+      
+      // Convert to local time for display
+      return formatLocalTime(date, formatString);
     } catch (error) {
       console.error('Error formatting date:', error, dateValue);
       return 'Invalid Date';
@@ -144,7 +144,7 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4 text-blue-600" />
                       <p className="text-sm font-medium text-gray-900">
-                        {safeFormatDate(admin.timestamp, 'MMM dd, yyyy HH:mm')}
+                        {safeFormatDate(admin.timestamp, 'MMM dd, yyyy h:mm a')}
                       </p>
                     </div>
                     <span className="text-xs text-gray-500">

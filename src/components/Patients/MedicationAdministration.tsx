@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
 import { Medication, MedicationAdministration as MedAdmin } from '../../types';
-import { format, isValid, parseISO } from 'date-fns';
+import { isValid, parseISO } from 'date-fns';
+import { formatLocalTime } from '../../utils/dateUtils';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 import { MedicationForm } from './MedicationForm';
@@ -145,10 +146,10 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
               <p><span className="font-medium">Route:</span> {medication.route}</p>
               <p><span className="font-medium">Frequency:</span> {medication.frequency}</p>
               {medication.next_due && (
-                <p><span className="font-medium">Next Due:</span> {format(parseISO(medication.next_due), 'MMM dd, yyyy HH:mm')}</p>
+                <p><span className="font-medium">Next Due:</span> {formatLocalTime(parseISO(medication.next_due), 'MMM dd, yyyy h:mm a')}</p>
               )}
               {medication.last_administered && (
-                <p><span className="font-medium">Last Given:</span> {format(parseISO(medication.last_administered), 'MMM dd, yyyy HH:mm')}</p>
+                <p><span className="font-medium">Last Given:</span> {formatLocalTime(parseISO(medication.last_administered), 'MMM dd, yyyy h:mm a')}</p>
               )}
             </div>
           </div>

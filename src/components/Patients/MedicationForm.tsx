@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
-import { createMedication, updateMedication } from '../../lib/medicationService';
-import { format, addHours, setHours, setMinutes, parseISO } from 'date-fns';
+import { createMedication, updateMedication } from '../../lib/medicationService'; 
+import { addHours, setHours, setMinutes, parseISO } from 'date-fns';
+import { formatLocalTime } from '../../utils/dateUtils';
 import { CheckCircle } from 'lucide-react';
 
 interface MedicationFormProps {
@@ -463,7 +464,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   Next Due
                 </label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600">
-                  {format(new Date(calculateNextDue(formData.frequency, formData.startDate)), 'MMM dd, yyyy HH:mm')}
+                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate)), 'MMM dd, yyyy h:mm a')}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Calculated based on frequency</p>
               </div>
