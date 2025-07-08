@@ -51,14 +51,14 @@ if (!hasValidConfig) {
  * Supabase Client Instance
  * Configured with optimized settings for the hospital management system
  */
-export const supabase = hasValidConfig ? createClient(
-  supabaseUrl,
-  supabaseAnonKey,
+export const supabase = createClient(
+  supabaseUrl || 'https://dummy.supabase.co',
+  supabaseAnonKey || 'dummy-key',
   {
     auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
+      autoRefreshToken: hasValidConfig,
+      persistSession: hasValidConfig,
+      detectSessionInUrl: hasValidConfig,
       flowType: 'pkce',
     },
     global: {
@@ -68,19 +68,11 @@ export const supabase = hasValidConfig ? createClient(
     },
     db: {
       schema: 'public'
-    }
-  }
-) : createClient(
-  'https://dummy.supabase.co',
-  'dummy-key',
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
     },
-    global: {
-      fetch: () => Promise.reject(new Error('Supabase not configured - please add your credentials to .env file'))
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
     }
   }
 );
@@ -124,9 +116,9 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
   try {
     console.log('🔍 Testing database connection...');
     
-    // Use a simple query that should always work
+    // Test connection with a simple query
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('patients')
       .select('id')
       .limit(1);
     
@@ -136,7 +128,7 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
       // Check for specific error types
       if (error.message.includes('Failed to fetch')) {
         console.error('Network connectivity issue detected');
-        throw new Error('Unable to connect to database. Please check your internet connection.');
+        return false;
       }
       
       return false;
@@ -172,7 +164,8 @@ export const clearSupabaseSession = async (): Promise<void> => {
     console.log('✅ Supabase session cleared successfully');
   } catch (error) {
     console.error('❌ Error clearing Supabase session:', error);
-    throw error;
+    // Don't throw error, just log it
+    return;
   }
 };
 
@@ -181,6 +174,7 @@ export const clearSupabaseSession = async (): Promise<void> => {
  */
 export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
   if (!isSupabaseConfigured) {
+    console.log('Supabase not configured, skipping connection test');
     return false;
   }
 
@@ -198,5 +192,6 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
       }
     }
   }
+  console.log('All connection attempts failed');
   return false;
 };
