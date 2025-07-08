@@ -160,6 +160,8 @@ export const updateMedicationNextDue = async (medicationId: string, nextDue: str
 export const recordMedicationAdministration = async (administration: Omit<MedicationAdministration, 'id'>): Promise<MedicationAdministration> => {
   try {
     console.log('Recording medication administration:', administration);
+    console.log('Medication ID:', administration.medication_id);
+    console.log('Patient ID:', administration.patient_id);
 
     // Validate required fields
     if (!administration.medication_id) {
@@ -181,7 +183,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     // Create a clean object without undefined values
     const cleanAdministration = Object.fromEntries(
       Object.entries(administration).filter(([_, v]) => v !== undefined)
-    );
+    ) as Omit<MedicationAdministration, 'id'>;
     
     console.log('Clean administration object:', cleanAdministration);
 
@@ -218,6 +220,9 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     // Update medication's last_administered time
     const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);
     
+    console.log('Updating medication with last_administered:', cleanAdministration.timestamp);
+    console.log('Next due time calculated as:', nextDueTime);
+    
     const { error: updateError } = await supabase
       .from('patient_medications')
       .update({ 
@@ -227,8 +232,8 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       })
       .eq('id', administration.medication_id);
     
-    if (updateError) {
-      console.error('Error updating medication last_administered:', updateError);
+    if (updateError) { 
+      console.error('Error updating medication last_administered and next_due:', updateError);
       // Continue anyway since the administration was recorded
     }
 
@@ -306,6 +311,7 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
 export const fetchMedicationAdministrationHistory = async (medicationId: string, patientId: string): Promise<MedicationAdministration[]> => {
   try {
     console.log('Fetching administration history for medication:', medicationId);
+    console.log('For patient:', patientId);
     
     const { data, error } = await supabase
       .from('medication_administrations')
@@ -316,13 +322,13 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
 
     if (error) {
       console.error('Error fetching administration history:', error);
-      throw error;
+      return []; // Return empty array instead of throwing to prevent UI crashes
     }
 
     console.log(`Found ${data?.length || 0} administration records for medication ${medicationId}`);
     return data || [];
   } catch (error) {
     console.error('Error fetching medication administration history:', error);
-    throw error;
+    return []; // Return empty array instead of throwing to prevent UI crashes
   }
 };

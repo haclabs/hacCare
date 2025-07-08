@@ -51,7 +51,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      console.log('Refreshing medications for patient:', patientId);
+      console.log('Refreshing medications for patient:', patientId); 
       const updatedMedications = await fetchPatientMedications(patientId);
       setAllMedications(updatedMedications);
       onRefresh();
@@ -154,7 +154,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             <button
               onClick={() => {
                 setSelectedMedication(medication);
-                console.log('Opening administration form for medication:', medication.id);
+                console.log('Opening administration form for medication:', medication.id); 
                 setShowAdminForm(true);
               }}
               className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
@@ -383,8 +383,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showAdminForm && selectedMedication && (
         <MedicationAdministrationForm
           medication={selectedMedication}
-          patientId={patientId}
-          patientName={patientName}
+          patientId={patientId} 
+          patientName={patientName || 'Unknown Patient'}
           onClose={() => {
             setShowAdminForm(false);
             setSelectedMedication(null);
@@ -402,7 +402,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           medicationId={selectedMedication.id}
           patientId={patientId}
           medicationName={selectedMedication.name}
-          patientName={patientName}
+          patientName={patientName || 'Unknown Patient'}
           onClose={() => {
             setShowHistory(false);
             setSelectedMedication(null);
@@ -415,7 +415,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           patientId={patientId}
           medication={medicationToEdit}
           onClose={() => {
-            setShowMedicationForm(false);
+            setShowMedicationForm(false); 
             setMedicationToEdit(null);
           }} 
           onSuccess={(medication) => {
@@ -428,7 +428,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       
       {showMedicationLabels && selectedMedication && (
         <MedicationBarcode
-          patient={{ id: patientId, first_name: patientName.split(' ')[0], last_name: patientName.split(' ')[1], patient_id: '' }}
+          patient={{ 
+            id: patientId, 
+            first_name: patientName ? patientName.split(' ')[0] : 'Unknown', 
+            last_name: patientName ? patientName.split(' ')[1] || '' : 'Patient', 
+            patient_id: '' 
+          }}
           medications={selectedMedication ? [selectedMedication] : allMedications}
           onClose={() => {
             setShowMedicationLabels(false);

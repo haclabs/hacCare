@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 interface MedicationAdministrationFormProps {
-  medication: Medication;
+  medication: Medication; 
   patientId: string;
   patientName: string;
   onClose: () => void;
@@ -23,7 +23,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
 }) => {
   const { user, profile } = useAuth();
   const [formData, setFormData] = useState<Partial<MedicationAdministration>>({
-    medication_id: medication.id,
+    medication_id: medication?.id,
     patient_id: patientId,
     administered_by: profile ? `${profile.first_name} ${profile.last_name}` : '',
     administered_by_id: user?.id,
@@ -49,9 +49,9 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
     try {
       // Ensure all required fields are present
       const adminData: Omit<MedicationAdministration, 'id'> = {
-        medication_id: formData.medication_id!,
-        patient_id: formData.patient_id!,
-        administered_by: formData.administered_by,
+        medication_id: medication.id, // Use medication ID directly from props
+        patient_id: patientId, // Use patient ID directly from props
+        administered_by: formData.administered_by!,
         administered_by_id: formData.administered_by_id || user?.id,
         timestamp: formData.timestamp || new Date().toISOString(),
         notes: formData.notes || ''
@@ -59,7 +59,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       
       // Save administration record
       const result = await recordMedicationAdministration(adminData);
-      console.log('Administration recorded successfully:', result);
+      console.log('Administration recorded successfully:', result); 
       onSuccess(); 
     } catch (err: any) {
       console.error('Error recording administration:', err);

@@ -3,6 +3,7 @@ import { Clock, User, FileText, Search, RefreshCw, X } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { fetchMedicationAdministrationHistory } from '../../lib/medicationService';
 import { MedicationAdministration } from '../../types';
+import { usePatients } from '../../contexts/PatientContext';
 
 interface MedicationAdministrationHistoryProps {
   medicationId: string;
@@ -21,6 +22,7 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const { refreshPatients } = usePatients();
 
   useEffect(() => {
     fetchAdministrations();
@@ -29,10 +31,13 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
   const fetchAdministrations = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError(''); 
       
       const data = await fetchMedicationAdministrationHistory(medicationId, patientId);
       setAdministrations(data);
+      
+      // Refresh patient data to ensure medication info is up to date
+      await refreshPatients();
     } catch (err: any) {
       console.error('Error fetching medication administrations:', err);
       setError(err.message || 'Failed to load administration history');
