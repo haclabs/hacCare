@@ -121,7 +121,7 @@ export const PatientDetail: React.FC = () => {
   const tabs = [ 
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Signs', icon: Activity },
-    { id: 'medications', label: 'Medications', icon: Pill, count: totalMedications > 0 ? totalMedications : undefined },
+    { id: 'medications', label: 'MAR', icon: Pill, count: totalMedications > 0 ? totalMedications : undefined },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: Stethoscope },
     { id: 'wounds', label: 'Wound Care', icon: Bandage },
@@ -366,7 +366,8 @@ export const PatientDetail: React.FC = () => {
         return (
           <MedicationAdministration
             patientId={id!}
-            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()} 
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
+            title="Medication Administration Record"
             medications={medications}
             onRefresh={async () => {
               try {
@@ -465,7 +466,7 @@ export const PatientDetail: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
-            onClick={() => navigate('/patients')}
+            onClick={() => navigate('/')}
             className="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -477,13 +478,6 @@ export const PatientDetail: React.FC = () => {
             <p className="text-gray-600">Patient ID: {patient.patient_id}</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate(`/patients/${id}/edit`)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Patient
-        </button>
       </div>
 
       <div className="border-b border-gray-200">

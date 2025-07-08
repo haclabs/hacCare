@@ -13,6 +13,7 @@ import { fetchPatientMedications, deleteMedication } from '../../lib/medicationS
 interface MedicationAdministrationProps {
   patientId: string;
   patientName?: string;
+  title?: string;
   medications: Medication[];
   onRefresh: () => void;
 }
@@ -29,6 +30,7 @@ const countMedicationsByCategory = (medications: Medication[]) => {
 export const MedicationAdministration: React.FC<MedicationAdministrationProps> = ({
   patientId,
   patientName,
+  title = "Medication Administration",
   medications,
   onRefresh
 }) => {
@@ -51,7 +53,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      console.log('Refreshing medications for patient:', patientId);
+      console.log('Refreshing medications for patient:', patientId, new Date().toISOString());
       const updatedMedications = await fetchPatientMedications(patientId);
       console.log(`Fetched ${updatedMedications.length} medications`);
       setAllMedications(updatedMedications);
@@ -309,7 +311,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Pill className="w-6 h-6 text-blue-600" />
-          Medication Administration - {patientName}
+          {title} - {patientName}
         </h2>
         
         <div className="flex gap-2">
@@ -389,15 +391,13 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           onClose={() => {
             setShowAdminForm(false);
             setSelectedMedication(null);
-          }}
+          }} 
           onSuccess={() => {
             console.log('Medication administration successful, refreshing data');
             setShowAdminForm(false);
             setSelectedMedication(null);
-            // Use setTimeout to ensure database has time to update
-            setTimeout(() => {
-              handleRefresh();
-            }, 500);
+            // Refresh immediately
+            handleRefresh();
           }}
         />
       )}

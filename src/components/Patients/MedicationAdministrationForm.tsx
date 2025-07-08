@@ -67,10 +67,8 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       const result = await recordMedicationAdministration(adminData);
       console.log('Administration recorded successfully:', result); 
       
-      // Add a small delay to ensure database has time to update
-      setTimeout(() => {
-        onSuccess();
-      }, 300);
+      // Call onSuccess immediately - the refresh will be handled by the parent component
+      onSuccess();
     } catch (err: any) {
       console.error('Error recording administration:', err);
       

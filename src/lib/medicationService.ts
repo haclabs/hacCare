@@ -195,10 +195,21 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     
     console.log('Clean administration object:', cleanAdministration);
 
-    // Ensure we have a timestamp in ISO format
-    if (typeof cleanAdministration.timestamp === 'string' && !cleanAdministration.timestamp.includes('T')) {
-      // Convert YYYY-MM-DD HH:MM format to ISO string
-      cleanAdministration.timestamp = new Date(cleanAdministration.timestamp).toISOString();
+    // Ensure timestamp is in ISO format
+    try {
+      if (typeof cleanAdministration.timestamp === 'string') {
+        // If it's already an ISO string, this will work fine
+        // If it's in YYYY-MM-DD HH:MM format, we need to convert it
+        if (!cleanAdministration.timestamp.includes('T')) {
+          cleanAdministration.timestamp = new Date(cleanAdministration.timestamp).toISOString();
+        }
+      } else if (cleanAdministration.timestamp instanceof Date) {
+        cleanAdministration.timestamp = cleanAdministration.timestamp.toISOString();
+      }
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      // Fallback to current time if there's an error
+      cleanAdministration.timestamp = new Date().toISOString();
     }
 
     const { data, error } = await supabase
@@ -231,19 +242,22 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     console.log(`Updating medication ${cleanAdministration.medication_id}:`);
     console.log(`- Last administered: ${cleanAdministration.timestamp}`);
     console.log(`- Next due: ${nextDueTime}`);
-    
-    const { error: updateError } = await supabase
+
+    // Update medication with last administered time and next due time
+    const { data: updatedMed, error: updateError } = await supabase
       .from('patient_medications')
       .update({ 
         last_administered: cleanAdministration.timestamp,
-        // Calculate next due time based on frequency
         next_due: nextDueTime
       })
-      .eq('id', administration.medication_id);
+      .eq('id', administration.medication_id)
+      .select();
     
     if (updateError) { 
       console.error('Error updating medication last_administered and next_due:', updateError);
       // Continue anyway since the administration was recorded
+    } else {
+      console.log('Medication updated successfully:', updatedMed);
     }
 
     console.log('Medication administration recorded successfully:', data);
