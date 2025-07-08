@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Alert } from '../../types';
 import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play, Filter } from 'lucide-react';
-import { format } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { formatLocalTime } from '../../utils/dateUtils';
 import { useAlerts } from '../../contexts/AlertContext';
 
 // Helper function to format alert timestamp
 const formatAlertTime = (timestamp: string) => {
   try {
-    const date = new Date(timestamp);
-    return format(date, 'MMM dd, HH:mm');
+    const date = parseISO(timestamp);
+    return formatLocalTime(date, 'MMM dd, HH:mm');
   } catch (error) {
     return 'Invalid date';
   }
@@ -78,6 +79,8 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   const handleRunChecks = async () => {
     try {
       await runChecks();
+      console.log('Alert checks completed, refreshing alerts');
+      await refreshAlerts();
     } catch (error) {
       console.error('Failed to run alert checks:', error);
     }
@@ -86,6 +89,15 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   // Get unique alert types and priorities for filters
   const alertTypes = ['all', ...new Set(alerts.map(alert => alert.type))];
   const alertPriorities = ['all', ...new Set(alerts.map(alert => alert.priority))];
+
+  // Count alerts by type
+  const alertCounts = {
+    'Medication Due': alerts.filter(a => a.type === 'Medication Due' && !a.acknowledged).length,
+    'Vital Signs Alert': alerts.filter(a => a.type === 'Vital Signs Alert' && !a.acknowledged).length,
+    'Emergency': alerts.filter(a => a.type === 'Emergency' && !a.acknowledged).length,
+    'Lab Results': alerts.filter(a => a.type === 'Lab Results' && !a.acknowledged).length,
+    'Discharge Ready': alerts.filter(a => a.type === 'Discharge Ready' && !a.acknowledged).length
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-end">
@@ -115,6 +127,8 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                 {alertTypes.map(type => (
                   <option key={type} value={type}>
                     {type === 'all' ? 'All Types' : type}
+                    {type !== 'all' && alertCounts[type as keyof typeof alertCounts] > 0 && 
+                      ` (${alertCounts[type as keyof typeof alertCounts]})`}
                   </option>
                 ))}
               </select>
@@ -151,10 +165,13 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
             <button
               onClick={handleRunChecks}
               disabled={loading}
-              className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors relative"
             >
               <Play className="h-4 w-4" />
               <span>Check Now</span>
+              {loading && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+              )}
             </button>
           </div>
 
@@ -184,13 +201,14 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               <div className="space-y-3">
                 {unacknowledgedAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type);
+                  const isOverdue = alert.type === 'Medication Due' && alert.message.includes('overdue');
                   return (
                     <div
                       key={alert.id}
-                      className={`border rounded-lg p-4 ${getPriorityColor(alert.priority)}`}
+                      className={`border rounded-lg p-4 ${isOverdue ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' : getPriorityColor(alert.priority)}`}
                     >
                       <div className="flex items-start space-x-3">
-                        <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                        <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${isOverdue ? 'animate-pulse' : ''}`} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
                             <p className="text-sm font-medium">{alert.patientName}</p>
