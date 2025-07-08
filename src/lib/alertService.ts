@@ -173,7 +173,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .eq('status', 'Active')
-      .lte('next_due', now.toISOString());
+      .lte('next_due', now);
     
     console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
 
