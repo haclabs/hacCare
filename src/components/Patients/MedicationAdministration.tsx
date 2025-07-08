@@ -51,8 +51,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      console.log('Refreshing medications for patient:', patientId); 
+      console.log('Refreshing medications for patient:', patientId);
       const updatedMedications = await fetchPatientMedications(patientId);
+      console.log(`Fetched ${updatedMedications.length} medications`);
       setAllMedications(updatedMedications);
       onRefresh();
     } catch (error) {
@@ -383,16 +384,20 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showAdminForm && selectedMedication && (
         <MedicationAdministrationForm
           medication={selectedMedication}
-          patientId={patientId} 
+          patientId={patientId}
           patientName={patientName || 'Unknown Patient'}
           onClose={() => {
             setShowAdminForm(false);
             setSelectedMedication(null);
           }}
           onSuccess={() => {
+            console.log('Medication administration successful, refreshing data');
             setShowAdminForm(false);
             setSelectedMedication(null);
-            handleRefresh();
+            // Use setTimeout to ensure database has time to update
+            setTimeout(() => {
+              handleRefresh();
+            }, 500);
           }}
         />
       )}

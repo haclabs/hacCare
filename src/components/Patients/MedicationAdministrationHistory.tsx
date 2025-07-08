@@ -26,14 +26,19 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
 
   useEffect(() => {
     fetchAdministrations();
-  }, [medicationId, patientId]);
+  }, [medicationId, patientId]); 
 
   const fetchAdministrations = async () => {
     try {
       setLoading(true);
       setError(''); 
       
+      console.log('Fetching administration history:');
+      console.log('- Medication ID:', medicationId);
+      console.log('- Patient ID:', patientId);
+      
       const data = await fetchMedicationAdministrationHistory(medicationId, patientId);
+      console.log(`Received ${data.length} administration records`);
       setAdministrations(data);
       
       // Refresh patient data to ensure medication info is up to date
@@ -41,6 +46,7 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
     } catch (err: any) {
       console.error('Error fetching medication administrations:', err);
       setError(err.message || 'Failed to load administration history');
+      setAdministrations([]);
     } finally {
       setLoading(false);
     }
@@ -58,11 +64,16 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
   const safeFormatDate = (dateValue: string | Date | null | undefined, formatString: string): string => {
     if (!dateValue) return 'N/A';
     
-    const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
+    try {
+      const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
     
-    if (!isValid(date)) return 'N/A';
+      if (!isValid(date)) return 'N/A';
     
-    return format(date, formatString);
+      return format(date, formatString);
+    } catch (error) {
+      console.error('Error formatting date:', error, dateValue);
+      return 'Invalid Date';
+    }
   };
 
   return (

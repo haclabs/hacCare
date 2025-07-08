@@ -37,8 +37,12 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
-    if (!formData.administered_by?.trim()) {
+    if (!medication) {
+      setError('Medication information is missing');
+      return;
+    }
+    
+    if (!formData.administered_by || !formData.administered_by.trim()) {
       setError('Administrator name is required');
       return;
     }
@@ -49,13 +53,15 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
     try {
       // Ensure all required fields are present
       const adminData: Omit<MedicationAdministration, 'id'> = {
-        medication_id: medication.id, // Use medication ID directly from props
-        patient_id: patientId, // Use patient ID directly from props
+        medication_id: medication.id,
+        patient_id: patientId,
         administered_by: formData.administered_by!,
         administered_by_id: formData.administered_by_id || user?.id,
         timestamp: formData.timestamp || new Date().toISOString(),
         notes: formData.notes || ''
       };
+      
+      console.log('Submitting administration data:', adminData);
       
       // Save administration record
       const result = await recordMedicationAdministration(adminData);
@@ -66,8 +72,8 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       
       // Provide more specific error messages
       if (err.message?.includes('permission denied') || err.message?.includes('foreign key constraint')) {
-        setError('Permission error: Unable to record administration. This may be due to a database configuration issue.');
-        console.error('This is likely due to a permission issue with the users table. A database migration is needed.');
+        setError('Permission error: Unable to record administration. Database configuration issue.');
+        console.error('Permission issue with database tables. Check RLS policies.');
       } else {
         setError(err.message || 'Failed to record administration');
       }

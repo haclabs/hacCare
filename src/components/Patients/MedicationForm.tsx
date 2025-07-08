@@ -44,6 +44,10 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     const start = new Date(startDate);
     const now = new Date();
     
+    console.log('Calculating next due time:');
+    console.log('- Frequency:', frequency);
+    console.log('- Start date:', startDate);
+    
     // If start date is in the future, use start date
     if (start > now) {
       return setHours(setMinutes(start, 0), 8).toISOString(); // 8:00 AM
@@ -185,7 +189,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         console.log('Creating new medication:', medicationData);
         const newMedication = await createMedication(medicationData as Omit<Medication, 'id'>);
         console.log('Medication created successfully:', newMedication);
-        onSuccess(newMedication);
+      console.log('Medication created successfully:', newMedication.id);
       }
     } catch (error) {
       console.error('Error saving medication:', error);
