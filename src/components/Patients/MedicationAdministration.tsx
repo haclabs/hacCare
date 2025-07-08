@@ -17,6 +17,15 @@ interface MedicationAdministrationProps {
   onRefresh: () => void;
 }
 
+// Helper function to count medications by category
+const countMedicationsByCategory = (medications: Medication[]) => {
+  return {
+    scheduled: medications.filter(med => med.category === 'scheduled' && med.status === 'Active').length,
+    prn: medications.filter(med => med.category === 'prn' && med.status === 'Active').length,
+    continuous: medications.filter(med => med.category === 'continuous' && med.status === 'Active').length
+  };
+};
+
 export const MedicationAdministration: React.FC<MedicationAdministrationProps> = ({
   patientId,
   patientName,
@@ -36,7 +45,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [showMedicationLabels, setShowMedicationLabels] = useState(false);
 
   useEffect(() => {
-    console.log('MedicationAdministration mounted with patientName:', patientName);
     setAllMedications(medications);
   }, [medications]);
 
@@ -71,6 +79,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       }
     }
   };
+
+  // Get medication counts by category
+  const medCounts = countMedicationsByCategory(allMedications);
 
   const filterMedicationsByCategory = (category: string) => {
     return allMedications.filter(med => med.category === category);
@@ -341,9 +352,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       <div className="flex space-x-1 mb-6 bg-gray-200 p-1 rounded-lg">
         {[
           { key: 'overview', label: 'Overview', icon: Activity },
-          { key: 'scheduled', label: 'Scheduled', icon: Calendar },
-          { key: 'prn', label: 'PRN', icon: CalendarDays },
-          { key: 'continuous', label: 'Continuous', icon: Activity }
+          { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled },
+          { key: 'prn', label: 'PRN', icon: CalendarDays, count: medCounts.prn },
+          { key: 'continuous', label: 'IV', icon: Activity, count: medCounts.continuous }
         ].map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -354,8 +365,13 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            <Icon className="w-4 h-4" />
-            {label}
+            <Icon className="w-4 h-4 mr-1" />
+            <span>{label}</span>
+            {key !== 'overview' && medCounts[key as keyof typeof medCounts] > 0 && (
+              <span className="ml-1.5 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                {medCounts[key as keyof typeof medCounts]}
+              </span>
+            )}
           </button>
         ))}
       </div>
