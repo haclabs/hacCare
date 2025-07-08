@@ -27,9 +27,15 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
   const handlePrint = () => {
     const printContent = document.getElementById('label-content');
     if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
+      // Create a new hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      document.body.appendChild(iframe);
+      
+      // Write content to the iframe
+      iframe.contentDocument?.write(`
           <html>
             <head>
               <title>Patient Labels - ${patient.patient_id}</title>
@@ -135,9 +141,18 @@ export const PatientBracelet: React.FC<PatientBraceletProps> = ({ patient, onClo
             </body>
           </html>
         `);
-        printWindow.document.close();
-        printWindow.print();
-      }
+      iframe.contentDocument?.close();
+      
+      // Wait for content to load before printing
+      iframe.onload = () => {
+        // Use the iframe's print function
+        iframe.contentWindow?.print();
+        
+        // Remove the iframe after printing (or after a delay)
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      };
     }
   };
 

@@ -81,16 +81,22 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   const handlePrint = () => {
     const printContent = document.getElementById('medication-labels-content');
     if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
+      // Create a new hidden iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      document.body.appendChild(iframe);
+      
+      // Write content to the iframe
+      iframe.contentDocument?.write(`
           <html>
             <head>
               <title>Medication Labels - ${selectedMedication.name}</title>
               <style>
                 @page {
                   size: 8.5in 11in;
-                  margin: 0.5in 0.25in 0.5in 0.25in;
+                  margin: 0.5in 0.25in;
                 }
                 body { 
                   margin: 0; 
@@ -101,6 +107,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
                 .label-sheet {
                   width: 8in;
                   height: 10in;
+                  margin: 0 auto;
                   display: flex;
                   flex-wrap: wrap;
                   justify-content: flex-start;
@@ -192,9 +199,18 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
             </body>
           </html>
         `);
-        printWindow.document.close();
-        printWindow.print();
-      }
+      iframe.contentDocument?.close();
+      
+      // Wait for content to load before printing
+      iframe.onload = () => {
+        // Use the iframe's print function
+        iframe.contentWindow?.print();
+        
+        // Remove the iframe after printing (or after a delay)
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      };
     }
   };
 
@@ -417,7 +433,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               <p className="text-xs text-gray-500 mt-1">Return address format optimized for medication containers</p>
             </div>
             
-            <div 
+            <div
               id="medication-labels-content" 
               className="bg-white shadow-lg mx-auto border border-gray-300"
               style={{
