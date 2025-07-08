@@ -5,7 +5,7 @@ All notable changes to the hacCare Hospital Patient Record System will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.0] - 2025-07-06
+## [2.4.0] - 2025-07-10
 
 ### Added
 - **Patient Notes Management**: Enhanced patient notes functionality
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Better documentation of security features
   - Optimized query performance for alert operations
 
-## [2.2.1] - 2025-07-01
+## [2.2.1] - 2025-07-03
 
 ### Added
 - **Comprehensive Admission Records**: Added detailed demo content to the Admission Records tab
