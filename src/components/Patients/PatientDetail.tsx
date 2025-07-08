@@ -301,6 +301,28 @@ export const PatientDetail: React.FC = () => {
                   <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.bloodPressure?.systolic}/{vitals[0]?.bloodPressure?.diastolic} mmHg</p>
                   <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
                 </div>
+
+               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                 <div className="flex items-center justify-between">
+                   <div className="flex items-center">
+                     <Droplets className="h-5 w-5 text-green-500 mr-2" />
+                     <span className="text-sm font-medium text-gray-600">Oxygen Saturation</span>
+                   </div>
+                 </div>
+                 <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.oxygenSaturation}%</p>
+                 <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
+               </div>
+
+               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                 <div className="flex items-center justify-between">
+                   <div className="flex items-center">
+                     <Wind className="h-5 w-5 text-purple-500 mr-2" />
+                     <span className="text-sm font-medium text-gray-600">Respiratory Rate</span>
+                   </div>
+                 </div>
+                 <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.respiratoryRate}/min</p>
+                 <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
+               </div>
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
