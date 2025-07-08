@@ -320,7 +320,7 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
 export const fetchMedicationAdministrationHistory = async (medicationId: string, patientId: string): Promise<MedicationAdministration[]> => {
   try {
     console.log('Fetching administration history for medication:', medicationId);
-    console.log('For patient:', patientId); 
+    console.log('For patient:', patientId);
     
     if (!medicationId || !patientId) {
       console.error('Missing required parameters for fetching history');
@@ -332,8 +332,8 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
     const { data, error } = await supabase
       .from('medication_administrations')
       .select('*')
-      .eq('medication_id', medicationId)
-      .eq('patient_id', patientId)
+      .eq('medication_id', medicationId) 
+      .eq('patient_id', patientId) 
       .order('timestamp', { ascending: false });
 
     if (error) {
@@ -344,9 +344,29 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
     console.log(`Found ${data?.length || 0} administration records for medication ${medicationId} and patient ${patientId}`);
     
     if (data && data.length > 0) {
-      console.log('First record:', data[0]);
+      console.log('First record:', JSON.stringify(data[0]));
     } else {
       console.log('No administration records found');
+      
+      // Check if there are any records for this medication at all
+      const { data: allRecords, error: allRecordsError } = await supabase
+        .from('medication_administrations')
+        .select('count')
+        .eq('medication_id', medicationId);
+        
+      if (!allRecordsError) {
+        console.log(`Total records for this medication (any patient): ${allRecords?.length || 0}`);
+      }
+      
+      // Check if there are any records for this patient
+      const { data: patientRecords, error: patientRecordsError } = await supabase
+        .from('medication_administrations')
+        .select('count')
+        .eq('patient_id', patientId);
+        
+      if (!patientRecordsError) {
+        console.log(`Total records for this patient (any medication): ${patientRecords?.length || 0}`);
+      }
     }
     
     return data || [];

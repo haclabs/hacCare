@@ -353,10 +353,10 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       <div className="flex space-x-1 mb-6 bg-gray-200 p-1 rounded-lg">
         {[
           { key: 'overview', label: 'Overview', icon: Activity },
-          { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled },
-          { key: 'prn', label: 'PRN', icon: CalendarDays, count: medCounts.prn },
+          { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled }, 
+          { key: 'prn', label: 'PRN', icon: CalendarDays, count: medCounts.prn }, 
           { key: 'continuous', label: 'IV', icon: Activity, count: medCounts.continuous }
-        ].map(({ key, label, icon: Icon }) => (
+        ].map(({ key, label, icon: Icon, count }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key as any)}
@@ -368,9 +368,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           >
             <Icon className="w-4 h-4 mr-1" />
             <span>{label}</span>
-            {key !== 'overview' && medCounts[key as keyof typeof medCounts] > 0 && (
+            {key !== 'overview' && count > 0 && (
               <span className="ml-1.5 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                {medCounts[key as keyof typeof medCounts]}
+                {count}
               </span>
             )}
           </button>

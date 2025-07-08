@@ -26,7 +26,19 @@ export const PatientDetail: React.FC = () => {
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
-  const [refreshingVitals, setRefreshingVitals] = useState(false);
+  const [refreshingVitals, setRefreshingVitals] = useState(false); 
+  
+  // Count medications by category
+  const getMedicationCounts = () => {
+    return {
+      scheduled: medications.filter(med => med.category === 'scheduled' && med.status === 'Active').length,
+      prn: medications.filter(med => med.category === 'prn' && med.status === 'Active').length,
+      continuous: medications.filter(med => med.category === 'continuous' && med.status === 'Active').length
+    };
+  };
+  
+  const medicationCounts = getMedicationCounts();
+  const totalMedications = medications.filter(med => med.status === 'Active').length;
 
   useEffect(() => {
     const loadPatientData = async () => {
@@ -109,7 +121,7 @@ export const PatientDetail: React.FC = () => {
   const tabs = [ 
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'vitals', label: 'Vital Signs', icon: Activity },
-    { id: 'medications', label: 'Medications', icon: Pill },
+    { id: 'medications', label: 'Medications', icon: Pill, count: totalMedications > 0 ? totalMedications : undefined },
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: Stethoscope },
     { id: 'wounds', label: 'Wound Care', icon: Bandage },
@@ -331,8 +343,8 @@ export const PatientDetail: React.FC = () => {
       case 'medications': 
         return (
           <MedicationAdministration
-            patientId={id!} 
-            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
+            patientId={id!}
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()} 
             medications={medications}
             onRefresh={async () => {
               try {
@@ -462,12 +474,17 @@ export const PatientDetail: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' 
                 }`}
               >
-                <Icon className="h-4 w-4 mr-2" />
-                {tab.label}
+                <Icon className="h-4 w-4 mr-2" /> 
+                <span>{tab.label}</span>
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className="ml-1.5 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {tab.count}
+                  </span>
+                )}
               </button>
             );
           })}

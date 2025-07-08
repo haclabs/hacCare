@@ -66,7 +66,11 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       // Save administration record
       const result = await recordMedicationAdministration(adminData);
       console.log('Administration recorded successfully:', result); 
-      onSuccess(); 
+      
+      // Add a small delay to ensure database has time to update
+      setTimeout(() => {
+        onSuccess();
+      }, 300);
     } catch (err: any) {
       console.error('Error recording administration:', err);
       
