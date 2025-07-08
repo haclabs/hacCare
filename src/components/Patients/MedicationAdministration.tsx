@@ -221,14 +221,18 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'overview':
         const dueMeds = getDueMedications();
         const overdueMeds = getOverdueMedications();
+        const totalDueMeds = dueMeds.length + overdueMeds.length;
         
         return (
           <div className="space-y-6">
             {overdueMeds.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2 relative">
                   <AlertTriangle className="w-5 h-5" />
                   Overdue Medications ({overdueMeds.length})
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5">
+                    {overdueMeds.length}
+                  </span>
                 </h3>
                 <div className="space-y-3">
                   {overdueMeds.map(renderMedicationCard)}
@@ -238,9 +242,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             
             {dueMeds.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-yellow-600 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-yellow-600 mb-3 flex items-center gap-2 relative">
                   <Clock className="w-5 h-5" />
                   Due Now ({dueMeds.length})
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-yellow-600 text-white text-xs font-bold rounded-full w-5 h-5">
+                    {dueMeds.length}
+                  </span>
                 </h3>
                 <div className="space-y-3">
                   {dueMeds.map(renderMedicationCard)}
@@ -260,7 +267,14 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'scheduled':
         const scheduledMeds = filterMedicationsByCategory('scheduled');
         return (
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
+            {scheduledMeds.length > 0 && (
+              <div className="absolute top-0 right-0">
+                <span className="flex items-center justify-center bg-red-600 text-white font-bold rounded-full w-6 h-6">
+                  {scheduledMeds.length}
+                </span>
+              </div>
+            )}
             {scheduledMeds.length > 0 ? (
               scheduledMeds.map(renderMedicationCard)
             ) : (
@@ -275,7 +289,14 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'prn':
         const prnMeds = filterMedicationsByCategory('prn');
         return (
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
+            {prnMeds.length > 0 && (
+              <div className="absolute top-0 right-0">
+                <span className="flex items-center justify-center bg-red-600 text-white font-bold rounded-full w-6 h-6">
+                  {prnMeds.length}
+                </span>
+              </div>
+            )}
             {prnMeds.length > 0 ? (
               prnMeds.map(renderMedicationCard)
             ) : (
@@ -290,7 +311,14 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'continuous':
         const continuousMeds = filterMedicationsByCategory('continuous');
         return (
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
+            {continuousMeds.length > 0 && (
+              <div className="absolute top-0 right-0">
+                <span className="flex items-center justify-center bg-red-600 text-white font-bold rounded-full w-6 h-6">
+                  {continuousMeds.length}
+                </span>
+              </div>
+            )}
             {continuousMeds.length > 0 ? (
               continuousMeds.map(renderMedicationCard)
             ) : (
@@ -356,8 +384,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       <div className="flex space-x-1 mb-6 bg-gray-200 p-1 rounded-lg">
         {[
           { key: 'overview', label: 'Overview', icon: Activity },
-          { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled }, 
-          { key: 'prn', label: 'PRN', icon: CalendarDays, count: medCounts.prn }, 
+          { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled },
+          { key: 'prn', label: 'PRN', icon: CalendarDays, count: medCounts.prn },
           { key: 'continuous', label: 'IV', icon: Activity, count: medCounts.continuous }
         ].map(({ key, label, icon: Icon, count }) => (
           <button
@@ -372,7 +400,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             <Icon className="w-4 h-4 mr-1" />
             <span>{label}</span>
             {key !== 'overview' && count > 0 && (
-              <span className="ml-1.5 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+              <span className="ml-1.5 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                 {count}
               </span>
             )}
