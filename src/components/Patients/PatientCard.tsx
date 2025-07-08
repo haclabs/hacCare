@@ -63,16 +63,6 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
       })[0]
     : null;
 
-  /**
-   * Handle bracelet button click
-   * Prevents event bubbling to avoid triggering card click
-   * @param {React.MouseEvent} e - Mouse event
-   */
-  const handleBraceletClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onShowBracelet?.();
-  }; 
-
   return (
     <div 
       className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
@@ -96,16 +86,6 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
           <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getConditionColor(patient.condition)}`}>
             {patient.condition}
           </span> 
-          {onShowBracelet && (
-            <button 
-              onClick={handleBraceletClick}
-              className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors flex items-center space-x-1"
-              title="View Hospital Bracelet"
-            >
-              <QrCode className="h-4 w-4" />
-              <span className="text-xs">Bracelet</span>
-            </button>
-          )}
         </div>
       </div>
 

@@ -36,7 +36,6 @@ function App() {
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
   const navigate = useNavigate();
-  const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
 
   // Get patients and alerts from context
@@ -103,7 +102,6 @@ function App() {
                       key={patient.id}
                       patient={patient}
                       onClick={() => handlePatientSelect(patient)}
-                      onShowBracelet={() => setBraceletPatient(patient)}
                     />
                   ))}
                 </div>
@@ -171,13 +169,6 @@ function App() {
         onClose={() => setShowAlerts(false)}
       />
 
-      {/* Hospital Bracelet Modal */}
-      {braceletPatient && (
-        <HospitalBracelet
-          patient={braceletPatient}
-          onClose={() => setBraceletPatient(null)}
-        />
-      )}
     </div>
   );
 }
