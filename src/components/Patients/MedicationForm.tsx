@@ -464,7 +464,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   Next Due
                 </label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600">
-                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate)), 'MMM dd, yyyy h:mm a')}
+                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate)), 'MMM dd, yyyy HH:mm')}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Calculated based on frequency</p>
               </div>

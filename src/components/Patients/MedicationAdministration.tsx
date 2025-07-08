@@ -146,10 +146,10 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
               <p><span className="font-medium">Route:</span> {medication.route}</p>
               <p><span className="font-medium">Frequency:</span> {medication.frequency}</p>
               {medication.next_due && (
-                <p><span className="font-medium">Next Due:</span> {formatLocalTime(parseISO(medication.next_due), 'MMM dd, yyyy h:mm a')}</p>
+                <p><span className="font-medium">Next Due:</span> {formatLocalTime(parseISO(medication.next_due), 'MMM dd, yyyy HH:mm')}</p>
               )}
               {medication.last_administered && (
-                <p><span className="font-medium">Last Given:</span> {formatLocalTime(parseISO(medication.last_administered), 'MMM dd, yyyy h:mm a')}</p>
+                <p><span className="font-medium">Last Given:</span> {formatLocalTime(parseISO(medication.last_administered), 'MMM dd, yyyy HH:mm')}</p>
               )}
             </div>
           </div>

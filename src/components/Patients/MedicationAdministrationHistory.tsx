@@ -144,7 +144,7 @@ export const MedicationAdministrationHistory: React.FC<MedicationAdministrationH
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4 text-blue-600" />
                       <p className="text-sm font-medium text-gray-900">
-                        {safeFormatDate(admin.timestamp, 'MMM dd, yyyy h:mm a')}
+                        {safeFormatDate(admin.timestamp, 'MMM dd, yyyy HH:mm')}
                       </p>
                     </div>
                     <span className="text-xs text-gray-500">
