@@ -331,8 +331,8 @@ export const PatientDetail: React.FC = () => {
       case 'medications': 
         return (
           <MedicationAdministration
-            patientId={id!}
-           patientName={`${patient.first_name} ${patient.last_name}`}
+            patientId={id!} 
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
             medications={medications}
             onRefresh={async () => {
               try {
@@ -404,9 +404,10 @@ export const PatientDetail: React.FC = () => {
       case 'admission':
         return (
           <AdmissionRecordsForm 
-            patientId={id!} 
-            patientName={`${patient.first_name} ${patient.last_name}`}
+            patientId={id!}
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
             onClose={() => setActiveTab('overview')}
+            onSave={() => setActiveTab('overview')}
           />
         );
 
@@ -414,8 +415,9 @@ export const PatientDetail: React.FC = () => {
         return (
           <AdvancedDirectivesForm 
             patientId={id!} 
-            patientName={`${patient.first_name} ${patient.last_name}`}
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
             onClose={() => setActiveTab('overview')}
+            onSave={() => setActiveTab('overview')}
           />
         );
 

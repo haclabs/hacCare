@@ -28,6 +28,14 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
   medications,
   onClose 
 }) => {
+  // Ensure patient data is valid
+  const safePatient = {
+    id: patient?.id || '',
+    first_name: patient?.first_name || 'Unknown',
+    last_name: patient?.last_name || 'Patient',
+    patient_id: patient?.patient_id || 'UNKNOWN'
+  };
+  
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(
     medications.length > 0 ? medications[0] : null
   );
@@ -369,7 +377,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-blue-900 mb-2">Select Medication</label>
                 <select 
-                  value={selectedMedication.id}
+                  value={selectedMedication?.id || ''}
                   onChange={(e) => {
                     const med = medications.find(m => m.id === e.target.value);
                     if (med) setSelectedMedication(med);
@@ -386,14 +394,14 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-blue-900"><strong>Medication:</strong> {selectedMedication.name}</p>
-                  <p className="text-blue-900"><strong>Dosage:</strong> <span className="text-red-600 font-bold">{selectedMedication.dosage}</span></p>
-                  <p className="text-blue-900"><strong>Frequency:</strong> {selectedMedication.frequency}</p>
-                  <p className="text-blue-900"><strong>Route:</strong> {selectedMedication.route}</p>
+                  <p className="text-blue-900"><strong>Medication:</strong> {selectedMedication?.name || 'N/A'}</p>
+                  <p className="text-blue-900"><strong>Dosage:</strong> <span className="text-red-600 font-bold">{selectedMedication?.dosage || 'N/A'}</span></p>
+                  <p className="text-blue-900"><strong>Frequency:</strong> {selectedMedication?.frequency || 'N/A'}</p>
+                  <p className="text-blue-900"><strong>Route:</strong> {selectedMedication?.route || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-blue-900"><strong>Patient:</strong> {patient.first_name} {patient.last_name}</p>
-                  <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patient_id}</p>
+                  <p className="text-blue-900"><strong>Patient:</strong> {safePatient.first_name} {safePatient.last_name}</p>
+                  <p className="text-blue-900"><strong>Patient ID:</strong> {safePatient.patient_id}</p>
                   <p className="text-blue-900"><strong>Barcode ID:</strong> {medicationBarcodeId}</p>
                   <p className="text-blue-900"><strong>Labels per Sheet:</strong> 20 identical labels</p>
                 </div>
@@ -465,14 +473,14 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
               <p><strong>Medication Details:</strong></p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p>• <strong>Name:</strong> {selectedMedication.name}</p>
-                  <p>• <strong>Dosage:</strong> <span className="text-red-600 font-bold">{selectedMedication.dosage}</span></p>
-                  <p>• <strong>Route:</strong> {selectedMedication.route}</p>
+                  <p>• <strong>Name:</strong> {selectedMedication?.name || 'N/A'}</p>
+                  <p>• <strong>Dosage:</strong> <span className="text-red-600 font-bold">{selectedMedication?.dosage || 'N/A'}</span></p>
+                  <p>• <strong>Route:</strong> {selectedMedication?.route || 'N/A'}</p>
                 </div>
                 <div>
-                  <p>• <strong>Frequency:</strong> {selectedMedication.frequency}</p>
-                  <p>• <strong>Prescribed by:</strong> {selectedMedication.prescribed_by}</p>
-                  <p>• <strong>Next Due:</strong> {formatSafeDate(selectedMedication.next_due)}</p>
+                  <p>• <strong>Frequency:</strong> {selectedMedication?.frequency || 'N/A'}</p>
+                  <p>• <strong>Prescribed by:</strong> {selectedMedication?.prescribed_by || 'N/A'}</p>
+                  <p>• <strong>Next Due:</strong> {selectedMedication?.next_due ? formatSafeDate(selectedMedication.next_due) : 'N/A'}</p>
                 </div>
               </div>
               <div className="bg-red-100 border border-red-300 rounded p-2 mt-3">
