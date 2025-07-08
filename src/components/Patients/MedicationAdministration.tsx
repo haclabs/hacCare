@@ -384,7 +384,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showHistory && selectedMedication && (
         <MedicationAdministrationHistory
           medicationId={selectedMedication.id}
-         patientId={patientId}
+          patientId={patientId}
           medicationName={selectedMedication.name}
           patientName={patientName}
           onClose={() => {
@@ -410,20 +410,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         />
       )}
       
-      {showMedicationLabels && (
+      {showMedicationLabels && selectedMedication && (
         <MedicationBarcode
           patient={{ id: patientId, first_name: patientName.split(' ')[0], last_name: patientName.split(' ')[1], patient_id: '' }}
-          medications={selectedMedication ? [selectedMedication] : allMedications}
-          onClose={() => {
-            setShowMedicationLabels(false);
-            setSelectedMedication(null);
-            handleRefresh();
-          }}
-        />
-      )}
-    </div>
-  );
-};
           medications={selectedMedication ? [selectedMedication] : allMedications}
           onClose={() => {
             setShowMedicationLabels(false);
