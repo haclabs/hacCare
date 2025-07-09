@@ -304,7 +304,6 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     // Create a new Date object for the next due time
     const currentTime = new Date();
     let nextDue = new Date(currentTime);
-    let nextDue = new Date(currentTime);
     
     // Calculate next due time based on frequency
     switch (medication.frequency) {
@@ -312,10 +311,6 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
         // If before 8 AM, due at 8 AM today, otherwise 8 AM tomorrow
         if (currentTime.getHours() < 8) {
           nextDue.setHours(8, 0, 0, 0);
-        } else {
-          nextDue.setDate(nextDue.getDate() + 1);
-          nextDue.setHours(8, 0, 0, 0);
-        }
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
           nextDue.setHours(8, 0, 0, 0);
@@ -329,18 +324,6 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
           nextDue.setDate(nextDue.getDate() + 1);
           nextDue.setHours(8, 0, 0, 0); // 8:00 AM tomorrow
         }
-        break;
-      case 'Three times daily':
-        const threeTimes = [8, 14, 20]; // 8 AM, 2 PM, 8 PM
-        for (const hour of threeTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
         break;
       case 'Three times daily':
         const threeTimes = [8, 14, 20]; // 8 AM, 2 PM, 8 PM
@@ -368,27 +351,9 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
         // If we're past all times today, set for tomorrow morning
         nextDue.setDate(nextDue.getDate() + 1);
         nextDue.setHours(6, 0, 0, 0);
-        for (const hour of sixHourTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(6, 0, 0, 0);
         break;
       case 'Every 8 hours':
         const eightHourTimes = [8, 16, 24]; // 8 AM, 4 PM, 12 AM
-        for (const hour of eightHourTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
         for (const hour of eightHourTimes) {
           if (currentTime.getHours() < hour) {
             nextDue.setHours(hour, 0, 0, 0);
@@ -410,29 +375,15 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
         // If we're past all times today, set for tomorrow morning
         nextDue.setDate(nextDue.getDate() + 1);
         nextDue.setHours(8, 0, 0, 0);
-        for (const hour of twelveHourTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
         break;
-      case 'As needed (PRN)':
-        return currentTime.toISOString(); // Immediate availability
       case 'As needed (PRN)':
         return currentTime.toISOString(); // Immediate availability
       default:
         // Default to 8 AM tomorrow
         nextDue.setDate(nextDue.getDate() + 1);
         nextDue.setHours(8, 0, 0, 0);
-        nextDue.setHours(8, 0, 0, 0);
     }
     
-    const result = nextDue.toISOString();
-    console.log(`Calculated next due time for ${medication.frequency}:`, result);
     const result = nextDue.toISOString();
     console.log(`Calculated next due time for ${medication.frequency}:`, result);
     return result;
@@ -442,6 +393,7 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   }
 };
+
 /**
  * Fetch medication administration history
  */
