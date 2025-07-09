@@ -30,8 +30,10 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const refreshAlerts = async () => {
     try {
       setLoading(true);
+      console.log('Refreshing alerts...');
       setError(null);
       const fetchedAlerts = await fetchActiveAlerts();
+      console.log(`Fetched ${fetchedAlerts.length} alerts`);
       setAlerts(fetchedAlerts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
@@ -61,8 +63,10 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const runChecks = async () => {
     try {
       setLoading(true);
+      console.log('Running alert checks...');
       setError(null);
       await runAlertChecks();
+      console.log('Alert checks completed, refreshing alerts');
       await refreshAlerts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run checks');

@@ -206,7 +206,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               <div className="space-y-3">
                 {unacknowledgedAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type);
-                  const isOverdue = alert.type === 'Medication Due' && alert.message.includes('overdue');
                   return (
                     <div
                       key={alert.id}

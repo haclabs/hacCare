@@ -54,10 +54,23 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      console.log('Refreshing medications for patient:', patientId, new Date().toISOString());
+      const now = new Date();
+      console.log('Refreshing medications for patient:', patientId, now.toISOString());
       const updatedMedications = await fetchPatientMedications(patientId);
       console.log(`Fetched ${updatedMedications.length} medications`);
       setAllMedications(updatedMedications);
+      
+      // After refreshing medications, also refresh alerts
+      try {
+        const { refreshAlerts } = await import('../../contexts/AlertContext');
+        if (refreshAlerts) {
+          console.log('Refreshing alerts after medication refresh');
+          await refreshAlerts();
+        }
+      } catch (error) {
+        console.error('Error refreshing alerts:', error);
+      }
+      
       onRefresh();
     } catch (error) {
       console.error('Error refreshing medications:', error);
@@ -93,6 +106,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
 
   const getDueMedications = () => {
     const now = new Date();
+    console.log('Checking for due medications at:', now.toISOString());
     return allMedications.filter(med => {
       try {
         if (!med.next_due) return false;
@@ -109,6 +123,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
 
   const getOverdueMedications = () => {
     const now = new Date();
+    console.log('Checking for overdue medications at:', now.toISOString());
     return allMedications.filter(med => {
       try {
         if (!med.next_due) return false;

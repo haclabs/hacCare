@@ -38,6 +38,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Submitting medication administration form');
     if (!medication) {
       setError('Medication information is missing');
       return;
@@ -64,11 +65,19 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       
       console.log('Submitting administration data:', adminData);
       
-      // Save administration record
+      // Save administration record and update medication
       const result = await recordMedicationAdministration(adminData);
       console.log('Administration recorded successfully:', result); 
       
-      // Call onSuccess immediately - the refresh will be handled by the parent component
+      // After recording administration, run alert checks to update alerts
+      try {
+        const { runAlertChecks } = await import('../../lib/alertService');
+        console.log('Running alert checks after medication administration');
+        await runAlertChecks();
+      } catch (error) {
+        console.error('Error running alert checks:', error);
+      }
+      
       onSuccess();
     } catch (err: any) {
       console.error('Error recording administration:', err);
