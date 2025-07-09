@@ -159,9 +159,9 @@ export const checkMedicationAlerts = async (): Promise<void> => {
   try {
     console.log('💊 Checking for medication due alerts...');
     
-    // Get current time with proper ISO string
-    const now = new Date().toISOString();
-    console.log('Current time for medication check:', now);
+    // Get current time as a Date object
+    const now = new Date();
+    console.log('Current time for medication check:', now.toISOString());
     
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
@@ -173,7 +173,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .eq('status', 'Active')
-      .lte('next_due', now);
+      .lte('next_due', now.toISOString());
     
     console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
 
@@ -190,13 +190,12 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       
       // Parse dates properly
       const dueTime = new Date(medication.next_due);
-      const currentTime = new Date();
-      const minutesUntilDue = Math.round((dueTime.getTime() - currentTime.getTime()) / (1000 * 60));
+      const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       const isOverdue = minutesUntilDue < 0;
       
       console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
       console.log(`- Due time: ${medication.next_due}`);
-      console.log(`- Current time: ${currentTime.toISOString()}`);
+      console.log(`- Current time: ${now.toISOString()}`);
       console.log(`- Minutes until due: ${minutesUntilDue}`);
       console.log(`- Is overdue: ${isOverdue}`);
       
@@ -227,8 +226,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           message: message,
           priority: priority,
           acknowledged: false,
-          // For overdue medications, set a longer expiration time
-          expires_at: new Date(currentTime.getTime() + (isOverdue ? 8 : 2) * 60 * 60 * 1000).toISOString()
+          // For overdue medications, set a longer expiration time (8 hours for overdue, 2 hours for due soon)
+          expires_at: new Date(now.getTime() + (isOverdue ? 8 : 2) * 60 * 60 * 1000).toISOString()
         };
         
         console.log(`Creating alert:`, alertData);
