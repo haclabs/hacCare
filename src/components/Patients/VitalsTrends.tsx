@@ -141,8 +141,29 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   ];
 
   const metricData = getMetricData(selectedMetric);
-  const maxValue = Math.max(...metricData.map(d => d.value), 0);
-  const minValue = Math.min(...metricData.map(d => d.value));
+  
+  // Calculate min and max values with fallbacks to prevent NaN
+  const values = metricData.map(d => d.value).filter(v => !isNaN(v) && v !== undefined);
+  const maxValue = values.length > 0 ? Math.max(...values) : 100;
+  const minValue = values.length > 0 ? Math.min(...values) : 0;
+  
+  // Set reasonable default ranges for each metric type if no data
+  const getMetricRange = () => {
+    if (values.length === 0) {
+      switch (selectedMetric) {
+        case 'temperature': return { min: 35, max: 40 };
+        case 'heartRate': return { min: 40, max: 120 };
+        case 'systolic': return { min: 90, max: 160 };
+        case 'diastolic': return { min: 50, max: 100 };
+        case 'oxygenSaturation': return { min: 90, max: 100 };
+        case 'respiratoryRate': return { min: 10, max: 25 };
+        default: return { min: 0, max: 100 };
+      }
+    }
+    return { min: minValue, max: maxValue };
+  };
+  
+  const range = getMetricRange();
 
   if (loading) {
     return (
@@ -242,8 +263,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                 <h3 className="text-lg font-semibold text-gray-900">
                   {getMetricLabel(selectedMetric)} Trend
                 </h3>
-                <div className="text-sm text-gray-600">
-                  Range: {minValue} - {maxValue} {getMetricUnit(selectedMetric)}
+                <div className="text-sm text-gray-600"> 
+                  Range: {range.min} - {range.max} {getMetricUnit(selectedMetric)}
                 </div>
               </div>
 
@@ -271,7 +292,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                       points={metricData
                         .map((point, index) => {
                           const x = (index / (metricData.length - 1)) * 800;
-                          const y = 200 - ((point.value - minValue) / (maxValue - minValue)) * 200;
+                          // Calculate y position with proper range values to prevent NaN
+                          const y = 200 - ((point.value - range.min) / Math.max(range.max - range.min, 1)) * 200;
                           return `${x},${y}`;
                         })
                         .join(' ')}
@@ -281,7 +303,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                   {/* Data points */}
                   {metricData.map((point, index) => {  
                     const x = (index / Math.max(metricData.length - 1, 1)) * 800;
-                    const y = 200 - ((point.value - minValue) / Math.max(maxValue - minValue, 1)) * 200;
+                    // Calculate y position with proper range values to prevent NaN
+                    const y = 200 - ((point.value - range.min) / Math.max(range.max - range.min, 1)) * 200;
                     return (
                       <g key={index}>
                         <circle
