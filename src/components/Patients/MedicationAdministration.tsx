@@ -104,16 +104,28 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         console.error('Error checking due medication:', error, med);
         return false;
       }
+        // Due medications are those due within the next hour but not overdue
+        const timeDiff = dueTime.getTime() - now.getTime();
+        return isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active';
+      } catch (error) {
+        console.error('Error checking due medication:', error, med);
+        return false;
+      }
     });
   };
 
   const getOverdueMedications = () => {
     const now = new Date();
-    return allMedications.filter(med => {
+      try {
       try {
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due);
         // Overdue medications are those whose due time has passed
+        return isValid(dueTime) && dueTime <= now && med.status === 'Active';
+      } catch (error) {
+        console.error('Error checking overdue medication:', error, med);
+        return false;
+      }
         return isValid(dueTime) && dueTime <= now && med.status === 'Active';
       } catch (error) {
         console.error('Error checking overdue medication:', error, med);

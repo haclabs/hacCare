@@ -162,6 +162,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
     // Get current time as a Date object
     const now = new Date();
     console.log('Current time for medication check:', now.toISOString());
+    console.log('Current time for medication check:', now.toISOString());
     
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
@@ -189,9 +190,28 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       const patient = medication.patients;
       
       // Parse dates properly
-      const dueTime = new Date(medication.next_due);
+      
+      // Ensure we have a valid date object for the due time
+      let dueTime;
+      try {
+        dueTime = new Date(medication.next_due);
+        if (isNaN(dueTime.getTime())) {
+          console.error('Invalid date format for next_due:', medication.next_due);
+          dueTime = new Date(); // Fallback to current time
+        }
+      } catch (error) {
+        console.error('Error parsing next_due date:', error);
+        dueTime = new Date(); // Fallback to current time
+      }
+      
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       const isOverdue = minutesUntilDue < 0;
+      
+      console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
+      console.log(`- Due time: ${medication.next_due}`);
+      console.log(`- Current time: ${now.toISOString()}`);
+      console.log(`- Minutes until due: ${minutesUntilDue}`);
+      console.log(`- Is overdue: ${isOverdue}`);
       
       console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
       console.log(`- Due time: ${medication.next_due}`);
@@ -217,6 +237,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           : `${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
         
         // Always set overdue medications to high priority
+        // Always set overdue medications to high priority
         const priority = isOverdue ? 'high' : (minutesUntilDue <= 30 ? 'high' : 'medium');
         
         const alertData = {
@@ -229,6 +250,10 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           // For overdue medications, set a longer expiration time (8 hours for overdue, 2 hours for due soon)
           expires_at: new Date(now.getTime() + (isOverdue ? 8 : 2) * 60 * 60 * 1000).toISOString()
         };
+        
+        console.log(`Creating alert:`, alertData);
+        const newAlert = await createAlert(alertData);
+        console.log(`Created alert for ${medication.name}:`, newAlert);
         
         console.log(`Creating alert:`, alertData);
         const newAlert = await createAlert(alertData);
@@ -431,8 +456,10 @@ export const runAlertChecks = async (): Promise<void> => {
     console.log('🔄 Running comprehensive alert checks...');
     
     console.log('⏱️ Starting medication checks at:', new Date().toISOString());
+    console.log('⏱️ Starting medication checks at:', new Date().toISOString());
     // Run medication checks first
     await checkMedicationAlerts();
+    console.log('✅ Medication checks completed at:', new Date().toISOString());
     console.log('✅ Medication checks completed at:', new Date().toISOString());
     
     // Run other checks in parallel

@@ -81,6 +81,8 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
       await runChecks();
       console.log('Alert checks completed, refreshing alerts');
       await refreshAlerts();
+      console.log('Alert checks completed, refreshing alerts');
+      await refreshAlerts();
     } catch (error) {
       console.error('Failed to run alert checks:', error);
     }
@@ -172,6 +174,9 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               {loading && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
               )}
+              {loading && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+              )}
             </button>
           </div>
 
@@ -201,6 +206,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               <div className="space-y-3">
                 {unacknowledgedAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type);
+                  const isOverdue = alert.type === 'Medication Due' && alert.message.includes('overdue');
                   const isOverdue = alert.type === 'Medication Due' && alert.message.includes('overdue');
                   return (
                     <div
