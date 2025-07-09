@@ -290,7 +290,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
 const calculateNextDueTime = async (medicationId: string): Promise<string> => {
   try {
     // Get the medication to check its frequency
-    const { data: medication, error } = await supabase
+    const { data: medication, error } = await supabase 
       .from('patient_medications')
       .select('frequency')
       .eq('id', medicationId)
@@ -301,14 +301,15 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
       return new Date().toISOString(); // Fallback to current time
     }
     
-    const now = new Date();
-    let nextDue = new Date(now);
+    // Create a new Date object for the next due time
+    const currentTime = new Date();
+    let nextDue = new Date(currentTime);
     
     // Calculate next due time based on frequency
     switch (medication.frequency) {
       case 'Once daily':
         // If before 8 AM, due at 8 AM today, otherwise 8 AM tomorrow
-        if (now.getHours() < 8) {
+        if (currentTime.getHours() < 8) {
           nextDue.setHours(8, 0, 0, 0);
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
@@ -317,32 +318,75 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
         break;
       case 'Twice daily':
         // If before 8 PM, next dose at 8 PM, otherwise next day at 8 AM
-        if (now.getHours() < 20) {
+        if (currentTime.getHours() < 20) {
           nextDue.setHours(20, 0, 0, 0);
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
-          nextDue.setHours(8, 0, 0, 0);
+          nextDue.setHours(8, 0, 0, 0); // 8:00 AM tomorrow
         }
         break;
+      case 'Three times daily':
+        const threeTimes = [8, 14, 20]; // 8 AM, 2 PM, 8 PM
+        for (const hour of threeTimes) {
+          if (currentTime.getHours() < hour) {
+            nextDue.setHours(hour, 0, 0, 0);
+            return nextDue.toISOString();
+          }
+        }
+        // If we're past all times today, set for tomorrow morning
+        nextDue.setDate(nextDue.getDate() + 1);
+        nextDue.setHours(8, 0, 0, 0);
+        break;
       case 'Every 4 hours':
-        nextDue.setHours(nextDue.getHours() + 4);
+        nextDue = new Date(currentTime.getTime() + 4 * 60 * 60 * 1000);
         break;
       case 'Every 6 hours':
-        nextDue.setHours(nextDue.getHours() + 6);
+        const sixHourTimes = [6, 12, 18, 24]; // 6 AM, 12 PM, 6 PM, 12 AM
+        for (const hour of sixHourTimes) {
+          if (currentTime.getHours() < hour) {
+            nextDue.setHours(hour, 0, 0, 0);
+            return nextDue.toISOString();
+          }
+        }
+        // If we're past all times today, set for tomorrow morning
+        nextDue.setDate(nextDue.getDate() + 1);
+        nextDue.setHours(6, 0, 0, 0);
         break;
       case 'Every 8 hours':
-        nextDue.setHours(nextDue.getHours() + 8);
+        const eightHourTimes = [8, 16, 24]; // 8 AM, 4 PM, 12 AM
+        for (const hour of eightHourTimes) {
+          if (currentTime.getHours() < hour) {
+            nextDue.setHours(hour, 0, 0, 0);
+            return nextDue.toISOString();
+          }
+        }
+        // If we're past all times today, set for tomorrow morning
+        nextDue.setDate(nextDue.getDate() + 1);
+        nextDue.setHours(8, 0, 0, 0);
         break;
       case 'Every 12 hours':
-        nextDue.setHours(nextDue.getHours() + 12);
+        const twelveHourTimes = [8, 20]; // 8 AM, 8 PM
+        for (const hour of twelveHourTimes) {
+          if (currentTime.getHours() < hour) {
+            nextDue.setHours(hour, 0, 0, 0);
+            return nextDue.toISOString();
+          }
+        }
+        // If we're past all times today, set for tomorrow morning
+        nextDue.setDate(nextDue.getDate() + 1);
+        nextDue.setHours(8, 0, 0, 0);
         break;
+      case 'As needed (PRN)':
+        return currentTime.toISOString(); // Immediate availability
       default:
-        // Default to 24 hours later
-        nextDue.setHours(nextDue.getHours() + 24);
+        // Default to 8 AM tomorrow
+        nextDue.setDate(nextDue.getDate() + 1);
+        nextDue.setHours(8, 0, 0, 0);
     }
     
-    console.log(`Calculated next due time for ${medication.frequency}:`, nextDue.toISOString());
-    return nextDue.toISOString();
+    const result = nextDue.toISOString();
+    console.log(`Calculated next due time for ${medication.frequency}:`, result);
+    return result;
   } catch (error) {
     console.error('Error calculating next due time:', error);
     // Return 24 hours from now as fallback
