@@ -254,10 +254,6 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         console.log(`Creating alert:`, alertData);
         const newAlert = await createAlert(alertData);
         console.log(`Created alert for ${medication.name}:`, newAlert);
-        
-        console.log(`Creating alert:`, alertData);
-        const newAlert = await createAlert(alertData);
-        console.log(`Created alert for ${medication.name}:`, newAlert);
       }
     }
   } catch (error) {
