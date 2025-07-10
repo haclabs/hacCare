@@ -5,7 +5,8 @@ import { format, parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
 import { recordMedicationAdministration } from '../../lib/medicationService';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase'; 
+import { runAlertChecks } from '../../lib/alertService';
 
 interface MedicationAdministrationFormProps {
   medication: Medication; 
@@ -71,7 +72,6 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       
       // After recording administration, run alert checks to update alerts
       try {
-        const { runAlertChecks } = await import('../../lib/alertService');
         console.log('Running alert checks after medication administration');
         await runAlertChecks();
       } catch (error) {
