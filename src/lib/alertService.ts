@@ -279,10 +279,6 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         } catch (alertError) {
           console.error(`Error creating alert for ${medication.name}:`, alertError);
         }
-          console.log(`Created alert for ${medication.name}:`, newAlert);
-        } catch (alertError) {
-          console.error(`Error creating alert for ${medication.name}:`, alertError);
-        }
       }
     }
   } catch (error) {
@@ -390,17 +386,23 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
           .ilike('message', `%${alertInfo.type}%`)
           .limit(1);
 
-          
-          const alertData = {
-            patient_id: patientId,
-            patient_name: `${patient.first_name} ${patient.last_name}`,
-            alert_type: 'vital_signs',
-            message: alertInfo.message,
-            priority: alertInfo.priority as 'low' | 'medium' | 'high' | 'critical',
-            acknowledged: false,
-            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Expires in 24 hours
-          });
-        }
+          if (!existingAlerts || existingAlerts.length === 0) {
+            const alertData = {
+              patient_id: patientId,
+              patient_name: `${patient.first_name} ${patient.last_name}`,
+              alert_type: 'vital_signs',
+              message: alertInfo.message,
+              priority: alertInfo.priority as 'low' | 'medium' | 'high' | 'critical',
+              acknowledged: false,
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Expires in 24 hours
+            };
+            
+            try {
+              await createAlert(alertData);
+            } catch (alertError) {
+              console.error('Error creating vital signs alert:', alertError);
+            }
+          }
       }
     }
   } catch (error) {
@@ -421,7 +423,6 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
       .select('id, first_name, last_name, patient_id')
       .neq('condition', 'Discharged')
       .order('created_at', { ascending: false });
-      .order('created_at', { ascending: false });
 
     if (patientsError) {
       console.error('Error fetching patients:', patientsError);
@@ -440,9 +441,6 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
 
       const now = new Date();
       // Different thresholds based on patient condition
-      const isPatientCritical = await isPatientConditionCritical(patient.id);
-      const hoursThreshold = isPatientCritical ? 4 : 8;
-      const hoursAgo = new Date(now.getTime() - hoursThreshold * 60 * 60 * 1000);
       const isPatientCritical = await isPatientConditionCritical(patient.id);
       const hoursThreshold = isPatientCritical ? 4 : 8;
       const hoursAgo = new Date(now.getTime() - hoursThreshold * 60 * 60 * 1000);
@@ -480,41 +478,11 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
           } catch (alertError) {
             console.error(`Error creating missing vitals alert:`, alertError);
           }
-          
-          try {
-            await createAlert(alertData);
-            console.log(`Created missing vitals alert for patient ${patient.first_name} ${patient.last_name}`);
-          } catch (alertError) {
-            console.error(`Error creating missing vitals alert:`, alertError);
-          }
         }
       }
     }
   } catch (error) {
     console.error('Error checking missing vitals alerts:', error);
-  }
-};
-
-/**
- * Check if a patient's condition is critical
- */
-const isPatientConditionCritical = async (patientId: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from('patients')
-      .select('condition')
-      .eq('id', patientId)
-      .single();
-    
-    if (error) {
-      console.error('Error checking patient condition:', error);
-      return false;
-    }
-    
-    return data?.condition === 'Critical';
-  } catch (error) {
-    console.error('Error checking patient condition:', error);
-    return false;
   }
 };
 
