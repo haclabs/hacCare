@@ -3,7 +3,6 @@ import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAler
 import { useAuth } from './AuthContext';
 import { Alert } from '../types'; 
 import { supabase } from '../lib/supabase';
-import { supabase } from '../lib/supabase';
 
 interface AlertContextType {
   alerts: Alert[];
@@ -27,7 +26,6 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const { user } = useAuth();
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -44,14 +42,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
       });
       
       console.log(`Fetched ${fetchedAlerts.length} active alerts`);
-      // Log each alert for debugging
-      fetchedAlerts.forEach(alert => {
-        console.log(`Alert: ${alert.type} - ${alert.message} - Priority: ${alert.priority} - Acknowledged: ${alert.acknowledged}`);
-      });
-      
-      console.log(`Fetched ${fetchedAlerts.length} active alerts`);
       setAlerts(fetchedAlerts);
-      setLastRefresh(new Date());
       setLastRefresh(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
@@ -95,32 +86,6 @@ export function AlertProvider({ children }: AlertProviderProps) {
 
   useEffect(() => {
     refreshAlerts();
-    
-    // Set up real-time subscription to alerts table
-    const alertsSubscription = supabase
-      .channel('alerts-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'patient_alerts' }, 
-        () => {
-          console.log('Alert table changed, refreshing alerts');
-          refreshAlerts();
-        }
-      )
-      .subscribe();
-      
-    // Run initial alert checks
-    runChecks();
-    
-    // Set up interval to run checks every 5 minutes
-    const checkInterval = setInterval(() => {
-      console.log('Running scheduled alert checks');
-      runChecks();
-    }, 5 * 60 * 1000);
-    
-    return () => {
-      alertsSubscription.unsubscribe();
-      clearInterval(checkInterval);
-    };
     
     // Set up real-time subscription to alerts table
     const alertsSubscription = supabase

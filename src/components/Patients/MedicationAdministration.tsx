@@ -11,7 +11,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
 import { runAlertChecks } from '../../lib/alertService';
-import { runAlertChecks } from '../../lib/alertService';
 
 interface MedicationAdministrationProps {
   patientId: string;
