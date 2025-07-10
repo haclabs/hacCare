@@ -11,41 +11,13 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
   const criticalPatients = patients.filter(p => p.condition === 'Critical').length;
   const activeAlerts = alerts.filter(a => !a.acknowledged).length;
   
-  console.log('QuickStats - Patients:', patients.length);
-  console.log('QuickStats - Alerts:', alerts.length);
-  
-  const medicationsDue = patients.reduce((count, patient) => {
-    console.log(`Checking medications for patient: ${patient.first_name} ${patient.last_name}`);
-    console.log(`Patient has ${patient.medications?.length || 0} medications`);
-    
-    const dueSoon = patient.medications?.filter(med => {
-      const dueTime = new Date(med.next_due);
-      const now = new Date();
-      const timeDiff = dueTime.getTime() - now.getTime();
-      
-      console.log(`Medication: ${med.name}, Due: ${med.next_due}, Status: ${med.status}`);
-      console.log(`Current time: ${now.toISOString()}`);
-      console.log(`Time difference: ${timeDiff}ms (${Math.round(timeDiff/60000)} minutes)`);
-      console.log(`Is due soon: ${(timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active')}`);
-      console.log(`Is overdue: ${(timeDiff <= 0 && med.status === 'Active')}`);
-      
-      // Count both due soon (within 1 hour) and overdue medications
-      return (timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active') || // Due within 1 hour
-             (timeDiff <= 0 && med.status === 'Active'); // Overdue medications
-    }) || [];
-    
-    console.log(`Patient ${patient.first_name} ${patient.last_name} has ${dueSoon.length} medications due`);
-    dueSoon.forEach(med => {
-      const dueTime = new Date(med.next_due);
-      const now = new Date();
-      const timeDiff = dueTime.getTime() - now.getTime();
-      console.log(`- ${med.name}: due ${timeDiff > 0 ? 'in ' + Math.round(timeDiff/60000) + ' minutes' : Math.abs(Math.round(timeDiff/60000)) + ' minutes overdue'}`);
-    });
-    
-    return count + dueSoon.length;
-  }, 0);
+  // Count medications due from alerts instead of patient data
+  const medicationsDue = alerts.filter(alert => 
+    alert.type === 'Medication Due' && !alert.acknowledged
+  ).length;
   
   console.log('QuickStats - Total medications due:', medicationsDue);
+  console.log('QuickStats - Medication alerts:', alerts.filter(a => a.type === 'Medication Due').length);
 
   const stats = [
     {
