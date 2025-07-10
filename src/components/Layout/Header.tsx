@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlerts } from '../../contexts/AlertContext';
 import { usePatients } from '../../contexts/PatientContext';
@@ -8,9 +8,10 @@ import { format } from 'date-fns';
 interface HeaderProps {
   onAlertsClick: () => void;
   dbError?: string | null;
+  isOffline?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
+export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, isOffline }) => {
   const { profile, signOut } = useAuth();
   const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
   const { isOffline: patientsOffline } = usePatients();
@@ -56,7 +57,12 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
 
           {/* Database Status Indicator */}
           <div className="flex items-center space-x-2">
-            {dbError ? (
+            {isOffline ? (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <WifiOff className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">Connection Error</span>
+              </div>
+            ) : dbError ? (
               <div className="flex items-center space-x-2 px-3 py-1 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                 <span className="text-sm text-red-700 dark:text-red-300 font-medium">DB Disconnected</span>

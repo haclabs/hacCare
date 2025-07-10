@@ -1,26 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Patient } from '../types';
-import { supabase, checkDatabaseHealth } from '../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
 import { 
   fetchPatients, 
   createPatient as createPatientDB, 
   updatePatient as updatePatientDB, 
   deletePatient as deletePatientDB 
 } from '../lib/patientService';
-import { mockPatients } from '../data/mockData';
 
 /**
  * Patient Context Interface
  */
 interface PatientContextType {
   patients: Patient[];
-  addPatient: (patient: Omit<Patient, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updatePatient: (id: string, updates: Partial<Patient>) => Promise<void>;
-  deletePatient: (id: string) => Promise<void>;
+  addPatient: (patient: Patient) => Promise<void>;
+  updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
+  deletePatient: (patientId: string) => Promise<void>;
   getPatient: (patientId: string) => Patient | undefined;
   loading: boolean;
   error: string | null;
-  isOffline: boolean;
   refreshPatients: () => Promise<void>;
 }
 
@@ -38,7 +36,6 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
 
   /**
    * Load patients from database
@@ -47,43 +44,48 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       setError(null);
-      
-      // Check if Supabase is available
-      if (!supabase) {
-        console.warn('📱 Using mock data - Supabase not configured');
-        setPatients(mockPatients);
-        setIsOffline(true);
+      console.log('🔄 Loading patients...');
+
+      if (!isSupabaseConfigured) {
+        console.error('❌ Supabase not configured');
+        setPatients([]);
+        setError('Database not configured. Please check your .env file and connect to Supabase.');
         return;
       }
-      
+
       // Check database health first
       const isHealthy = await checkDatabaseHealth();
       if (!isHealthy) {
-        console.warn('📱 Database unavailable - using mock data');
-        setPatients(mockPatients);
-        setIsOffline(true);
+        console.error('❌ Database connection failed');
+        setPatients([]);
+        setError('Database connection failed. Please check your Supabase configuration and internet connection.');
         return;
       }
 
-      const { data, error: fetchError } = await supabase
-        .from('patients')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (fetchError) {
-        console.warn('📱 Database error - falling back to mock data:', fetchError.message);
-        setPatients(mockPatients);
-        setIsOffline(true);
-        return;
+      console.log('📊 Fetching patients from Supabase...');
+      
+      try {
+        const dbPatients = await fetchPatients();
+        console.log(`✅ Loaded ${dbPatients.length} patients from database`);
+        setPatients(dbPatients);
+      } catch (fetchError: any) {
+        console.error('❌ Error fetching patients from database:', fetchError);
+        setPatients([]);
+        
+        // Provide more specific error messages
+        if (fetchError.message?.includes('Failed to fetch') || 
+            fetchError.message?.includes('NetworkError') ||
+            fetchError.message?.includes('fetch') ||
+            fetchError.message?.includes('Supabase not configured')) {
+          setError('Failed to connect to database. Please check your Supabase configuration and internet connection.');
+        } else {
+          setError('Failed to load patients. Please try again.');
+        }
       }
-
-      setPatients(data || []);
-      setIsOffline(false);
-      console.log('✅ Loaded patients from database');
     } catch (err: any) {
-      console.warn('📱 Network error - using mock data:', err);
-      setPatients(mockPatients);
-      setIsOffline(true);
+      console.error('❌ Error loading patients:', err);
+      setError(err.message || 'Failed to load patients');
+      setPatients([]);
     } finally {
       setLoading(false);
     }
@@ -97,34 +99,23 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   /**
    * Add a new patient
    */
-  const addPatient = async (patientData: Omit<Patient, 'id' | 'created_at' | 'updated_at'>) => {
+  const addPatient = async (patient: Patient) => {
     try {
       setError(null);
       
-      if (!supabase || isOffline) {
-        // Add to local state only
-        const newPatient: Patient = {
-          ...patientData,
-          id: crypto.randomUUID(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setPatients(prev => [...prev, newPatient]);
-        console.warn('📱 Added patient locally - database unavailable');
-        return;
+      if (!isSupabaseConfigured) {
+        throw new Error('Database not configured. Please check your .env file and connect to Supabase.');
       }
 
-      const { data, error } = await supabase
-        .from('patients')
-        .insert([patientData])
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
+      // Check database health first
+      const isHealthy = await checkDatabaseHealth();
+      if (!isHealthy) {
+        throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
       }
 
-      setPatients(prev => [data, ...prev]);
+      console.log('➕ Creating patient in database...');
+      const newPatient = await createPatientDB(patient);
+      setPatients(prev => [newPatient, ...prev]);
     } catch (err: any) {
       console.error('❌ Error adding patient:', err);
       
@@ -144,30 +135,31 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   /**
    * Update an existing patient
    */
-  const updatePatient = async (id: string, updates: Partial<Patient>) => {
+  const updatePatient = async (patientId: string, updates: Partial<Patient>) => {
     try {
       setError(null);
       
-      if (!supabase || isOffline) {
-        // Update local state only
-        setPatients(prev => prev.map(p => 
-          p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p
-        ));
-        console.warn('📱 Updated patient locally - database unavailable');
-        return;
+      if (!isSupabaseConfigured) {
+        throw new Error('Database not configured. Please check your .env file and connect to Supabase.');
       }
 
-      const { error } = await supabase
-        .from('patients')
-        .update(updates)
-        .eq('id', id);
-
-      if (error) {
-        throw error;
+      // Check database health first
+      const isHealthy = await checkDatabaseHealth();
+      if (!isHealthy) {
+        throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
       }
 
+      const currentPatient = patients.find(p => p.id === patientId);
+      if (!currentPatient) {
+        throw new Error('Patient not found');
+      }
+
+      const updatedPatient = { ...currentPatient, ...updates };
+      
+      console.log('✏️ Updating patient in database...');
+      const updated = await updatePatientDB(updatedPatient);
       setPatients(prev => prev.map(patient => 
-        patient.id === id ? { ...patient, ...updates } : patient
+        patient.id === updated.id ? updated : patient
       ));
     } catch (err: any) {
       console.error('❌ Error updating patient:', err);
@@ -188,27 +180,23 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
   /**
    * Delete a patient
    */
-  const deletePatient = async (id: string) => {
+  const deletePatient = async (patientId: string) => {
     try {
       setError(null);
       
-      if (!supabase || isOffline) {
-        // Remove from local state only
-        setPatients(prev => prev.filter(p => p.id !== id));
-        console.warn('📱 Deleted patient locally - database unavailable');
-        return;
+      if (!isSupabaseConfigured) {
+        throw new Error('Database not configured. Please check your .env file and connect to Supabase.');
       }
 
-      const { error } = await supabase
-        .from('patients')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        throw error;
+      // Check database health first
+      const isHealthy = await checkDatabaseHealth();
+      if (!isHealthy) {
+        throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
       }
 
-      setPatients(prev => prev.filter(patient => patient.id !== id));
+      console.log('🗑️ Deleting patient from database...');
+      await deletePatientDB(patientId);
+      setPatients(prev => prev.filter(patient => patient.id !== patientId));
     } catch (err: any) {
       console.error('❌ Error deleting patient:', err);
       
@@ -248,7 +236,6 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     getPatient,
     loading,
     error,
-    isOffline,
     refreshPatients
   };
 

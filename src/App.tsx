@@ -6,7 +6,7 @@ import PatientCard from './components/Patients/PatientCard';
 import { PatientDetail } from './components/Patients/PatientDetail';
 import { HospitalBracelet } from './components/Patients/HospitalBracelet';
 import { PatientManagement } from './components/Patients/PatientManagement';
-import { AlertPanel } from './components/Alerts/AlertPanel';
+import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
 import { UserManagement } from './components/Users/UserManagement';
 import { Documentation } from './components/Documentation/Documentation';
@@ -38,9 +38,12 @@ function App() {
   const navigate = useNavigate();
   const [showAlerts, setShowAlerts] = useState(false);
 
-  // Get patients and alerts from context
+  // Get patients, alerts, and connection status from context
   const { patients, error: dbError } = usePatients();
-  const { alerts } = useAlerts();
+  const { alerts, error: alertError, loading: alertLoading } = useAlerts();
+  
+  // Determine if we're in an offline state
+  const isOffline = !!dbError && dbError.includes('connection');
 
   /**
    * Handle tab change - clear selected patient when navigating away from patient detail
@@ -143,7 +146,8 @@ function App() {
       {/* Application Header */}
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
-        dbError={dbError}
+        dbError={dbError} 
+        isOffline={isOffline}
       />
       
       {/* Main Layout */}
