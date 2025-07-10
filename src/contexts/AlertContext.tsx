@@ -101,11 +101,16 @@ export function AlertProvider({ children }: AlertProviderProps) {
       // Wait a short time to ensure database operations complete
       console.log('Alert checks completed, waiting before refresh...');
       setTimeout(async () => {
-        console.log('Refreshing alerts after checks');
-        await refreshAlerts();
-        console.log('Alert refresh completed at:', new Date().toISOString());
-        setLoading(false);
-      }, 1500);
+        try {
+          console.log('Refreshing alerts after checks');
+          await refreshAlerts();
+          console.log('Alert refresh completed at:', new Date().toISOString());
+        } catch (refreshError) {
+          console.error('Error refreshing alerts after checks:', refreshError);
+        } finally {
+          setLoading(false);
+        }
+      }, 2000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to run checks';
       console.error('Alert checks error:', errorMessage);
