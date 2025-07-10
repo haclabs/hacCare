@@ -103,7 +103,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const getDueMedications = () => {
     const now = new Date();
     console.log('Checking for due medications at:', now.toISOString());
-    return allMedications.filter(med => {
+    const dueMeds = allMedications.filter(med => {
       try { 
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
@@ -119,12 +119,14 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         return false;
       }
     });
+    console.log(`Found ${dueMeds.length} medications due soon`);
+    return dueMeds;
   };
 
   const getOverdueMedications = () => {
     const now = new Date();
     console.log('Checking for overdue medications at:', now.toISOString());
-    return allMedications.filter(med => {
+    const overdueMeds = allMedications.filter(med => {
       try {
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
@@ -139,6 +141,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         return false;
       }
     });
+    console.log(`Found ${overdueMeds.length} overdue medications`);
+    return overdueMeds;
   };
 
   const renderMedicationCard = (medication: Medication) => {

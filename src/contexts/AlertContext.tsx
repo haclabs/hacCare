@@ -73,18 +73,24 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const runChecks = async () => {
     try {
       setLoading(true);
-      const checkTime = new Date();
-      console.log('Running alert checks at:', checkTime.toISOString());
+      const checkStartTime = new Date();
+      console.log('Running alert checks at:', checkStartTime.toISOString());
       setError(null);
       await runAlertChecks();
-      // Only refresh alerts once to avoid duplicates
-      console.log('Alert checks completed, refreshing alerts');
-      await refreshAlerts();
-      console.log('Alert refresh completed at:', new Date().toISOString());
+      
+      // Wait a short time to ensure database operations complete
+      console.log('Alert checks completed, waiting before refresh...');
+      setTimeout(async () => {
+        console.log('Refreshing alerts after checks');
+        await refreshAlerts();
+        console.log('Alert refresh completed at:', new Date().toISOString());
+        setLoading(false);
+      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run checks');
-    } finally {
       setLoading(false);
+    } finally {
+      // Loading state is now managed by the setTimeout callback
     }
   };
 
