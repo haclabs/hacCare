@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content: [
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}'
+  ],
   darkMode: 'class', // Enable class-based dark mode
   theme: {
     extend: {
@@ -98,7 +101,9 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    // Add any plugins here if needed
+  ],
   safelist: [
     // Ensure all color variants are included for both light and dark modes
     'text-blue-500', 'text-red-500', 'text-green-500', 'text-purple-500', 'text-indigo-500', 'text-teal-500',
