@@ -78,15 +78,26 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
   try {
     console.log('🚨 Creating new alert:', alert);
     
-    // Check if a similar alert already exists to prevent duplicates
-    const { data: existingAlerts, error: checkError } = await supabase
-      .from('patient_alerts')
-      .select('id, message')
-      .eq('patient_id', alert.patient_id)
-      .eq('alert_type', alert.alert_type) 
-      .eq('acknowledged', false)
-      .or(`message.ilike.%vitals overdue%,message.ilike.%${patient.first_name}%`)
-      .limit(1);
+    let existingAlerts = null;
+    let checkError = null;
+    
+    try {
+      // Check if a similar alert already exists to prevent duplicates
+      const result = await supabase
+        .from('patient_alerts')
+        .select('id, message')
+        .eq('patient_id', alert.patient_id)
+        .eq('alert_type', alert.alert_type) 
+        .eq('acknowledged', false)
+        .or(`message.ilike.%${alert.message.substring(0, 20)}%,message.ilike.%${alert.patient_name}%`)
+        .limit(1);
+      
+      existingAlerts = result.data;
+      checkError = result.error;
+    } catch (err) {
+      console.error('Error checking for existing alerts:', err);
+      checkError = err;
+    }
     
     if (checkError) {
       console.error('Error checking for existing alerts:', checkError);
@@ -446,21 +457,36 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
       // If no vitals or last vitals older than 8 hours
       if (!lastVital || new Date(lastVital.recorded_at) < hoursAgo) {
         // Check if alert already exists
-        const { data: existingAlerts } = await supabase
-          .from('patient_alerts')
-          .select('id')
-          .eq('patient_id', patient.id)
-          .eq('alert_type', 'vital_signs')
-          .eq('acknowledged', false)
-          .ilike('message', '%vitals overdue%')
-          .limit(1);
+        let existingAlerts = null;
+        
+        try {
+          // Add defensive check to ensure patient object exists and has an id
+          if (!patient || !patient.id) {
+            console.error('Invalid patient object:', patient);
+            continue; // Skip to next patient
+          }
+          
+          const result = await supabase
+            .from('patient_alerts')
+            .select('id')
+            .eq('patient_id', patient.id)
+            .eq('alert_type', 'vital_signs')
+            .eq('acknowledged', false)
+            .ilike('message', '%vitals overdue%')
+            .limit(1);
+            
+          existingAlerts = result.data;
+        } catch (err) {
+          console.error('Error checking for existing vital alerts:', err);
+          continue; // Skip to next patient if there's an error
+        }
 
         if (!existingAlerts || existingAlerts.length === 0) {
           const hoursOverdue = lastVital 
             ? Math.floor((now.getTime() - new Date(lastVital.recorded_at).getTime()) / (1000 * 60 * 60))
             : 24; // Assume 24 hours if no vitals ever recorded
           
-          // Add defensive check to ensure patient object exists
+          // Double-check patient object again for safety
           if (!patient || !patient.id) {
             console.error('Patient object is invalid:', patient);
             continue;
