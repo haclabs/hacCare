@@ -289,6 +289,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
  */
 const calculateNextDueTime = async (medicationId: string): Promise<string> => {
   try {
+    console.log('Calculating next due time for medication:', medicationId);
     // Get the medication to check its frequency
     const { data: medication, error } = await supabase 
       .from('patient_medications')
@@ -299,7 +300,12 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     if (error) {
       console.error('Error fetching medication for next due calculation:', error);
       return new Date().toISOString(); // Fallback to current time
+    } else if (!medication) {
+      console.error('Medication not found for next due calculation:', medicationId);
+      return new Date().toISOString(); // Fallback to current time
     }
+    
+    console.log('Medication frequency:', medication.frequency);
     
     // Create a new Date object for the next due time
     const currentTime = new Date();
@@ -310,19 +316,19 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
       case 'Once daily':
         // If current time is before 8 AM, due at 8 AM today, otherwise 8 AM tomorrow 
         if (currentTime.getHours() < 8) {
-          nextDue.setHours(8, 0, 0, 0);
+          nextDue.setHours(8, 0, 0, 0); // 8:00 AM today
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
-          nextDue.setHours(8, 0, 0, 0);
+          nextDue.setHours(8, 0, 0, 0); // 8:00 AM tomorrow
         }
         break;
       case 'Twice daily':
         // If before 8 PM, next dose at 8 PM, otherwise next day at 8 AM 
         if (currentTime.getHours() < 20) {
-          nextDue.setHours(20, 0, 0, 0);
+          nextDue.setHours(20, 0, 0, 0); // 8:00 PM today
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
-          nextDue.setHours(8, 0, 0, 0); // 8:00 AM tomorrow
+          nextDue.setHours(8, 0, 0, 0);  // 8:00 AM tomorrow
         }
         break;
       case 'Three times daily':
@@ -385,7 +391,9 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     }
     
     const result = nextDue.toISOString();
-    console.log(`Calculated next due time for ${medication.frequency}:`, result);
+    console.log(`Calculated next due time for ${medication?.frequency || 'unknown frequency'}:`, result);
+    console.log(`Current time:`, currentTime.toISOString());
+    console.log(`Time difference:`, nextDue.getTime() - currentTime.getTime(), 'ms');
     return result;
   } catch (error) {
     console.error('Error calculating next due time:', error);
