@@ -3,7 +3,6 @@ import { Patient, Alert } from '../../types';
 import { Users, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface QuickStatsProps {
-interface QuickStatsProps {
   patients: Patient[];
   alerts: Alert[];
 }
