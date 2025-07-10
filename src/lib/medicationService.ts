@@ -17,7 +17,8 @@ import { Medication, MedicationAdministration } from '../types';
 export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
     console.log('Fetching medications for patient:', patientId);
-    console.log('Current time:', new Date().toISOString());
+    const now = new Date();
+    console.log('Current time:', now.toISOString());
     
     const { data, error } = await supabase
       .from('patient_medications')
@@ -36,12 +37,25 @@ export const fetchPatientMedications = async (patientId: string): Promise<Medica
     // Log each medication's next_due time for debugging
     data.forEach(med => {
       const now = new Date();
-      const nextDue = new Date(med.next_due);
-      const isOverdue = nextDue < now;
+      let nextDue;
+      try {
+        nextDue = new Date(med.next_due);
+      } catch (e) {
+        console.error(`Invalid next_due date for medication ${med.name}:`, med.next_due);
+        nextDue = now; // Default to current time if invalid
+      }
+      
+      const isOverdue = nextDue < now && med.status === 'Active';
+      const isDueSoon = !isOverdue && (nextDue.getTime() - now.getTime() <= 60 * 60 * 1000) && med.status === 'Active';
+      
       console.log(`Medication ${med.name}:`, {
         next_due: med.next_due,
+        status: med.status,
         is_overdue: isOverdue,
-        minutes_overdue: isOverdue ? Math.round((now.getTime() - nextDue.getTime()) / (1000 * 60)) : 0
+        is_due_soon: isDueSoon,
+        minutes_diff: isOverdue 
+          ? -Math.round((now.getTime() - nextDue.getTime()) / (1000 * 60)) // Negative for overdue
+          : Math.round((nextDue.getTime() - now.getTime()) / (1000 * 60))  // Positive for due soon
       });
     });
 

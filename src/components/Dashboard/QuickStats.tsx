@@ -11,12 +11,23 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
   const criticalPatients = patients.filter(p => p.condition === 'Critical').length;
   const activeAlerts = alerts.filter(a => !a.acknowledged).length;
   const medicationsDue = patients.reduce((count, patient) => {
-    const dueSoon = patient.medications.filter(med => {
+    const dueSoon = patient.medications?.filter(med => {
       const dueTime = new Date(med.next_due);
       const now = new Date();
       const timeDiff = dueTime.getTime() - now.getTime();
-      return timeDiff <= 60 * 60 * 1000 && timeDiff > 0; // Due within 1 hour
+      // Count both due soon (within 1 hour) and overdue medications
+      return (timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active') || // Due within 1 hour
+             (timeDiff <= 0 && med.status === 'Active'); // Overdue medications
+    }) || [];
+    
+    console.log(`Patient ${patient.first_name} ${patient.last_name} has ${dueSoon.length} medications due`);
+    dueSoon.forEach(med => {
+      const dueTime = new Date(med.next_due);
+      const now = new Date();
+      const timeDiff = dueTime.getTime() - now.getTime();
+      console.log(`- ${med.name}: due ${timeDiff > 0 ? 'in ' + Math.round(timeDiff/60000) + ' minutes' : Math.abs(Math.round(timeDiff/60000)) + ' minutes overdue'}`);
     });
+    
     return count + dueSoon.length;
   }, 0);
 

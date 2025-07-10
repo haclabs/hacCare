@@ -103,19 +103,21 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const getDueMedications = () => {
     const now = new Date();
     console.log('Checking for due medications at:', now.toISOString());
-    return allMedications.filter(med => {
+    
+    // Get medications due within the next hour
+    const dueMeds = allMedications.filter(med => {
       try { 
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
         // Due medications are those due within the next hour but not overdue
         const timeDiff = dueTime.getTime() - now.getTime();
-        const isDue = isValid(dueTime) && 
-                     timeDiff <= 60 * 60 * 1000 && // Due within the next hour
-                     timeDiff > 0 &&               // Not overdue (positive time difference)
-                     med.status === 'Active';      // Only active medications
+        const isDue = isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active';
         
         if (isDue) {
-          console.log(`Medication ${med.name} is due soon: ${med.next_due}, time diff: ${timeDiff}ms`);
+          console.log(`Medication ${med.name} is due soon: ${med.next_due}`);
+          console.log(`- Current time: ${now.toISOString()}`);
+          console.log(`- Due time: ${dueTime.toISOString()}`);
+          console.log(`- Time diff: ${timeDiff}ms (${Math.round(timeDiff/60000)} minutes)`);
         }
         return isDue;
       } catch (error) {
@@ -123,22 +125,28 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         return false;
       }
     });
+    
+    console.log(`Found ${dueMeds.length} medications due soon`);
+    return dueMeds;
   };
 
   const getOverdueMedications = () => {
     const now = new Date();
     console.log('Checking for overdue medications at:', now.toISOString());
-    return allMedications.filter(med => {
+    
+    // Get medications that are overdue
+    const overdueMeds = allMedications.filter(med => {
       try {
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
-        const isOverdue = isValid(dueTime) && 
-                         dueTime.getTime() <= now.getTime() && // Less than or equal to current time
-                         med.status === 'Active';              // Only active medications
+        const isOverdue = isValid(dueTime) && dueTime.getTime() <= now.getTime() && med.status === 'Active';
         
         if (isOverdue) {
-          console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}, time diff: ${dueTime.getTime() - now.getTime()}ms`);
+          console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
+          console.log(`- Current time: ${now.toISOString()}`);
+          console.log(`- Due time: ${dueTime.toISOString()}`);
+          console.log(`- Time diff: ${dueTime.getTime() - now.getTime()}ms (${Math.round((dueTime.getTime() - now.getTime())/60000)} minutes)`);
         }
         return isOverdue;
       } catch (error) {
@@ -146,6 +154,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         return false;
       }
     });
+    
+    console.log(`Found ${overdueMeds.length} medications overdue`);
+    return overdueMeds;
   };
 
   const renderMedicationCard = (medication: Medication) => {
