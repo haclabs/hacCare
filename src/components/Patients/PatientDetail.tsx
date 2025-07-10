@@ -475,7 +475,7 @@ export const PatientDetail: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {patient.first_name} {patient.last_name}
             </h1>
-            <p className="text-gray-600 dark:text-gray-300">Patient ID: {patient.patient_id}</p>
+            <p className="text-gray-600 dark:text-gray-100">Patient ID: {patient.patient_id}</p>
           </div>
         </div>
       </div>

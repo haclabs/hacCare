@@ -167,7 +167,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.living_will_status}
                   onChange={(e) => updateField('living_will_status', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white ${
                     !formData.living_will_status ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   required
@@ -188,7 +188,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="date"
                   value={formData.living_will_date}
                   onChange={(e) => updateField('living_will_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -200,7 +200,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="text"
                   value={formData.healthcare_proxy_name}
                   onChange={(e) => updateField('healthcare_proxy_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                   placeholder="Name and relationship"
                 />
               </div>
@@ -213,7 +213,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="tel"
                   value={formData.healthcare_proxy_phone}
                   onChange={(e) => updateField('healthcare_proxy_phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -224,7 +224,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.dnr_status}
                   onChange={(e) => updateField('dnr_status', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white ${
                     !formData.dnr_status ? 'border-red-300' : 'border-gray-300'
                   }`}
                   required
@@ -255,7 +255,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.organ_donation_status}
                   onChange={(e) => updateField('organ_donation_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white" 
                 >
                   <option value="">Select donation status</option>
                   <option value="Registered organ donor">Registered organ donor</option>
@@ -273,7 +273,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="text"
                   value={formData.organ_donation_details}
                   onChange={(e) => updateField('organ_donation_details', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                   placeholder="All organs and tissues"
                 />
               </div>
@@ -296,7 +296,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="text"
                   value={formData.religious_preference}
                   onChange={(e) => updateField('religious_preference', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                   placeholder="Catholic, Protestant, Jewish, etc."
                 />
               </div>
@@ -310,7 +310,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 value={formData.special_instructions}
                 onChange={(e) => updateField('special_instructions', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                 placeholder="Any special instructions for care, family involvement, religious considerations, etc."
               />
             </div>

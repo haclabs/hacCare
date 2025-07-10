@@ -7,6 +7,16 @@
   body {
     @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
   }
+  
+  /* Improve form label visibility in dark mode */
+  label {
+    @apply dark:text-gray-200;
+  }
+  
+  /* Ensure form inputs have consistent styling in dark mode */
+  input, select, textarea {
+    @apply dark:bg-gray-600 dark:text-white dark:border-gray-500;
+  }
 }
 
 /* Add custom component styles */
