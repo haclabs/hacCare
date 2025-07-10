@@ -86,20 +86,20 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const runChecks = async () => {
     try {
       // Check if Supabase is configured before running checks
-      if (!isSupabaseConfigured) {
+      if (!isSupabaseConfigured) { 
         console.warn('⚠️ Supabase not configured, skipping alert checks');
         setError('Supabase not configured. Please check your environment variables.');
         return;
       }
 
       setLoading(true);
-      const checkStartTime = new Date();
-      console.log('Running alert checks at:', checkStartTime.toISOString());
+      const checkTime = new Date().toISOString();
+      console.log('Running alert checks at:', checkTime);
       setError(null);
       await runAlertChecks();
       
       // Wait a short time to ensure database operations complete
-      console.log('Alert checks completed, waiting before refresh...');
+      console.log('Alert checks completed at:', new Date().toISOString(), 'waiting before refresh...');
       setTimeout(async () => {
         try {
           console.log('Refreshing alerts after checks');
@@ -110,7 +110,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
         } finally {
           setLoading(false);
         }
-      }, 2000);
+      }, 3000); // Increased delay to ensure database operations complete
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to run checks';
       console.error('Alert checks error:', errorMessage);
@@ -154,13 +154,13 @@ export function AlertProvider({ children }: AlertProviderProps) {
     // Run initial alert checks
     setTimeout(() => {
       runChecks();
-    }, 2000); // Delay initial checks to allow app to fully load
+    }, 3000); // Increased delay for initial checks to allow app to fully load
     
     // Set up interval to run checks every 5 minutes
     const checkInterval = setInterval(() => {
       console.log('Running scheduled alert checks');
       runChecks();
-    }, 5 * 60 * 1000);
+    }, 3 * 60 * 1000); // Run checks every 3 minutes for more responsive alerts
     
     return () => {
       if (alertsSubscription) {

@@ -255,7 +255,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     // Update medication's last_administered time
     const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);
     
-    console.log(`Updating medication ${cleanAdministration.medication_id}:`);
+    console.log(`Updating medication ${cleanAdministration.medication_id} after administration:`);
     console.log(`- Last administered: ${cleanAdministration.timestamp}`);
     console.log(`- Next due: ${nextDueTime}`);
 
@@ -308,8 +308,8 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     // Calculate next due time based on frequency
     switch (medication.frequency) {
       case 'Once daily':
-        // If current time is before 8 AM, due at 8 AM today, otherwise 8 AM tomorrow
-        if (currentTime.getHours() < 8) { 
+        // If current time is before 8 AM, due at 8 AM today, otherwise 8 AM tomorrow 
+        if (currentTime.getHours() < 8) {
           nextDue.setHours(8, 0, 0, 0);
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
@@ -317,9 +317,9 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
         }
         break;
       case 'Twice daily':
-        // If before 8 PM, next dose at 8 PM, otherwise next day at 8 AM
+        // If before 8 PM, next dose at 8 PM, otherwise next day at 8 AM 
         if (currentTime.getHours() < 20) {
-          nextDue.setHours(20, 0, 0, 0); 
+          nextDue.setHours(20, 0, 0, 0);
         } else {
           nextDue.setDate(nextDue.getDate() + 1);
           nextDue.setHours(8, 0, 0, 0); // 8:00 AM tomorrow

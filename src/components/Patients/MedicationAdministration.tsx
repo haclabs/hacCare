@@ -103,13 +103,13 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const getDueMedications = () => {
     const now = new Date();
     console.log('Checking for due medications at:', now.toISOString());
-    const dueMeds = allMedications.filter(med => {
+    return allMedications.filter(med => {
       try { 
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
         // Due medications are those due within the next hour but not overdue
         const timeDiff = dueTime.getTime() - now.getTime();
-        const isDue = isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active'; 
+        const isDue = isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active';
         if (isDue) {
           console.log(`Medication ${med.name} is due soon: ${med.next_due}`);
         }
@@ -119,19 +119,18 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         return false;
       }
     });
-    console.log(`Found ${dueMeds.length} medications due soon`);
-    return dueMeds;
   };
 
   const getOverdueMedications = () => {
     const now = new Date();
     console.log('Checking for overdue medications at:', now.toISOString());
-    const overdueMeds = allMedications.filter(med => {
+    return allMedications.filter(med => {
       try {
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
-        const isOverdue = isValid(dueTime) && dueTime < now && med.status === 'Active';
+        // Use strict less than for more reliable detection
+        const isOverdue = isValid(dueTime) && dueTime.getTime() < now.getTime() && med.status === 'Active';
         if (isOverdue) {
           console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
         }
@@ -141,8 +140,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         return false;
       }
     });
-    console.log(`Found ${overdueMeds.length} overdue medications`);
-    return overdueMeds;
   };
 
   const renderMedicationCard = (medication: Medication) => {

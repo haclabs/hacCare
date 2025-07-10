@@ -188,11 +188,11 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
 export const checkMedicationAlerts = async (): Promise<void> => {
   try {
     console.log('💊 Checking for medication due alerts...');
+    console.log('Current time for medication check:', new Date().toISOString());
     console.log('Current time for check:', new Date().toISOString());
     
     // Get current time
     const now = new Date();
-    console.log('Current time for medication check:', now.toISOString());
     
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
@@ -203,7 +203,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .eq('status', 'Active')
-      .or(`next_due.lt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()}`)
+      .or(`next_due.lt.${now.toISOString()},and(next_due.gt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()})`)
       .order('next_due', { ascending: true });
     
     console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
@@ -235,18 +235,20 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       // Calculate if medication is overdue
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       const isOverdue = minutesUntilDue <= 0;
-      const isDueSoon = !isOverdue && minutesUntilDue <= 60;
+      const isDueSoon = !isOverdue && minutesUntilDue <= 60; 
       
       console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
       console.log(`- Due time: ${medication.next_due}`);
       console.log(`- Current time: ${now.toISOString()}`);
       console.log(`- Minutes until due: ${minutesUntilDue}`);
       console.log(`- Is overdue: ${isOverdue}`);
+      console.log(`- Is due soon: ${isDueSoon}`);
       
       // Improved check for existing alerts - more specific to avoid missing alerts
       let existingAlerts = null;
       let alertCheckError = null;
-      const medicationNamePattern = medication.name.replace(/[%_]/g, '\\$&'); // Escape special characters
+      // Create a clean pattern for SQL LIKE by removing special characters
+      const medicationNamePattern = medication.name.replace(/[%_]/g, '');
       
       try {
         const result = await supabase
@@ -255,7 +257,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           .eq('patient_id', patient.id) 
           .eq('alert_type', 'medication_due')
           .eq('acknowledged', false)
-          .ilike('message', `%${medicationNamePattern}%`)
+          .or(`message.ilike.%${medicationNamePattern}%,message.ilike.%${medication.dosage.replace(/[%_]/g, '')}%`)
           .order('created_at', { ascending: false })
           .limit(1);
         
@@ -279,8 +281,10 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       // Create alert if no existing alert or if status changed (e.g., from due soon to overdue)
       const existingIsOverdue = existingAlerts?.[0]?.message?.toLowerCase().includes('overdue');
       const statusChanged = (isOverdue && !existingIsOverdue) || (!isOverdue && existingIsOverdue);
-      const priorityChanged = (isOverdue && existingAlerts?.[0]?.priority !== 'critical') || 
-                             (isDueSoon && existingAlerts?.[0]?.priority !== 'high');
+      const priorityChanged = existingAlerts?.[0] && (
+        (isOverdue && existingAlerts[0].priority !== 'critical') || 
+        (isDueSoon && existingAlerts[0].priority !== 'high')
+      );
       
       if (!existingAlerts || existingAlerts.length === 0 || statusChanged || priorityChanged) {
         // If status changed and there's an existing alert, acknowledge it first
@@ -297,7 +301,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         }
         
         const message = isOverdue 
-          ? `OVERDUE: ${medication.name} ${medication.dosage} by ${Math.abs(minutesUntilDue)} minutes` 
+          ? `OVERDUE: ${medication.name} ${medication.dosage} is overdue by ${Math.abs(minutesUntilDue)} minutes` 
           : `${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
 
         // Set priority based on status
