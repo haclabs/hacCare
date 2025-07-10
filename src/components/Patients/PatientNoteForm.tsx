@@ -144,18 +144,18 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {note ? 'Edit Note' : 'Add New Note'}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">Patient: {patientName}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Patient: {patientName}</p>
           </div>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             type="button"
           >
             <X className="h-6 w-6" />
@@ -166,20 +166,20 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Note Information */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
               <FileText className="h-5 w-5 mr-2 text-blue-600" />
               Note Information
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Note Type
                 </label>
                 <select
                   value={formData.type}
                   onChange={(e) => updateField('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="General">General</option>
                   <option value="Assessment">Assessment</option>
@@ -190,13 +190,13 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Priority Level
                 </label>
                 <select
                   value={formData.priority}
                   onChange={(e) => updateField('priority', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
@@ -216,48 +216,48 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
 
           {/* Note Content */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Note Content *
             </label>
             <textarea
               value={formData.content}
               onChange={(e) => updateField('content', e.target.value)}
               rows={8}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.content ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                errors.content ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
               }`}
               placeholder="Enter detailed note content here..."
               required
             />
             {errors.content && (
-              <p className="text-red-600 text-xs mt-1">{errors.content}</p>
+              <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.content}</p>
             )}
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
               <span>Minimum 10 characters</span>
               <span>{formData.content.length}/2000 characters</span>
             </div>
           </div>
 
           {/* Note Metadata */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
               <User className="h-4 w-4 mr-2 text-gray-600" />
               Note Details
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
               <div>
-                <p className="text-gray-600">
+                <p>
                   <strong>Nurse:</strong> Sarah Johnson
                 </p>
-                <p className="text-gray-600">
+                <p>
                   <strong>Date:</strong> {format(new Date(), 'MMM dd, yyyy')}
                 </p>
               </div>
               <div>
-                <p className="text-gray-600">
+                <p>
                   <strong>Time:</strong> {format(new Date(), 'HH:mm')}
                 </p>
-                <p className="text-gray-600">
+                <p>
                   <strong>Patient:</strong> {patientName}
                 </p>
               </div>
@@ -265,12 +265,12 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           </div>
 
           {/* Guidelines */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-blue-600" />
-              <p className="text-blue-800 font-medium text-sm">Documentation Guidelines</p>
+              <AlertTriangle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <p className="text-blue-800 dark:text-blue-300 font-medium text-sm">Documentation Guidelines</p>
             </div>
-            <ul className="text-blue-700 text-xs space-y-1">
+            <ul className="text-blue-700 dark:text-blue-400 text-xs space-y-1">
               <li>• Be objective and factual in your documentation</li>
               <li>• Include relevant observations, interventions, and patient responses</li>
               <li>• Use appropriate medical terminology and abbreviations</li>
@@ -280,12 +280,12 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              className="px-6 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

@@ -127,14 +127,14 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Update Advanced Directives - {patientName}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             type="button"
           >
             <X className="h-6 w-6" />
@@ -143,32 +143,32 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <p className="text-red-800 font-medium">Error</p>
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <p className="text-red-800 dark:text-red-300 font-medium">Error</p>
               </div>
-              <p className="text-red-700 text-sm mt-1">{error}</p>
+              <p className="text-red-700 dark:text-red-400 text-sm mt-1">{error}</p>
             </div>
           )}
 
           {/* Legal Documents */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
               <FileCheck className="h-5 w-5 mr-2 text-blue-600" />
               Legal Documents & Directives
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Living Will Status
                 </label>
                 <select
                   value={formData.living_will_status}
                   onChange={(e) => updateField('living_will_status', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    !formData.living_will_status ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                    !formData.living_will_status ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   required
                 >

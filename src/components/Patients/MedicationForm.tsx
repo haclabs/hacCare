@@ -202,18 +202,18 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {medication ? 'Edit Medication' : 'Add New Medication'}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">Patient: {patientName}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Patient: {patientName}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -223,28 +223,28 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6" onReset={onCancel}>
           {/* Medication Information */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
               <Pill className="h-5 w-5 mr-2 text-green-600" />
               Medication Information
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Medication Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => updateField('name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                    errors.name ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="e.g., Lisinopril, Metformin, Aspirin"
                   required
                 />
                 {errors.name && (
-                  <p className="text-red-600 text-xs mt-1">{errors.name}</p>
+                  <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.name}</p>
                 )}
               </div>
 
