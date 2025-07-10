@@ -72,6 +72,7 @@ export const MedicationAdministrationForm: React.FC<MedicationAdministrationForm
       console.log('Administration recorded successfully:', result); 
       
       // After recording administration, run alert checks to update alerts
+      try {
         console.log('Running alert checks after medication administration');
         await runAlertChecks();
       } catch (error) {
