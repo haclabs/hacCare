@@ -2,6 +2,7 @@ import React from 'react';
 import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAlerts } from '../../contexts/AlertContext';
+import { usePatients } from '../../contexts/PatientContext';
 import { format } from 'date-fns';
 
 interface HeaderProps {
@@ -11,8 +12,10 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
   const { profile, signOut } = useAuth();
-  const { unreadCount, loading: alertsLoading } = useAlerts();
+  const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
+  const { isOffline: patientsOffline } = usePatients();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
+  const isOffline = patientsOffline || alertsOffline;
 
   const getRoleLabel = (role: string) => {
     switch (role) {
@@ -44,6 +47,13 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
         </div>
 
         <div className="flex items-center space-x-6">
+          {isOffline && (
+            <div className="flex items-center space-x-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs">
+              <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+              <span>Offline Mode</span>
+            </div>
+          )}
+
           {/* Database Status Indicator */}
           <div className="flex items-center space-x-2">
             {dbError ? (

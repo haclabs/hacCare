@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types'
 
 /**
  * Supabase Configuration and Client Setup
@@ -9,7 +8,7 @@ import type { Database } from '../types'
  * - Environment variable validation
  * - Client configuration with optimized settings
  * - Type definitions for user profiles and roles
- * - Fallback handling for unconfigured environments
+ * - Proper error handling for connection issues
  * 
  * IMPORTANT: This app uses ONLY Supabase for data persistence.
  * No localStorage or sessionStorage is used for application data.
@@ -43,11 +42,11 @@ const hasValidConfig = supabaseUrl &&
 console.log('✅ Configuration valid:', hasValidConfig);
 
 if (!hasValidConfig) {
-  console.error('Missing Supabase environment variables:', {
+  console.error('⚠️ Missing or invalid Supabase environment variables:', {
     hasUrl: !!supabaseUrl,
     hasKey: !!supabaseAnonKey,
     url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined'
-  })
+  });
   console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
   console.warn('🔗 Get your credentials from: https://app.supabase.com/project/[your-project]/settings/api');
 }
@@ -56,29 +55,31 @@ if (!hasValidConfig) {
  * Supabase Client Instance
  * Configured with optimized settings for the hospital management system
  */
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: hasValidConfig,
-        flowType: 'pkce',
-      },
-      global: {
-        headers: {
-          'x-application-name': 'nurse-dashboard'
-        }
-      },
-      db: {
-        schema: 'public'
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10
-        }
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: hasValidConfig,
+      flowType: 'pkce',
+    },
+    global: {
+      headers: {
+        'x-application-name': 'haccare-hospital'
       }
-    })
-  : null;
+    },
+    db: {
+      schema: 'public'
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    }
+  }
+);
 
 /**
  * Configuration status flag
@@ -111,25 +112,25 @@ export interface UserProfile {
  * Database Health Check with improved error handling
  */
 export const checkDatabaseHealth = async (): Promise<boolean> => {
-  if (!supabase) {
-    console.error('Supabase client not initialized - check environment variables')
-    return false
+  if (!isSupabaseConfigured) {
+    console.error('⚠️ Supabase client not properly configured - check environment variables');
+    return false;
   }
 
   try {
     console.log('🔍 Testing database connection...');
     
     // Use a simple query with timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     
     const { error } = await supabase
       .from('user_profiles')
       .select('count')
       .limit(1)
-      .abortSignal(controller.signal)
+      .abortSignal(controller.signal);
     
-    clearTimeout(timeoutId)
+    clearTimeout(timeoutId);
     
     if (error) {
       console.error('Database health check failed:', error.message);
@@ -148,39 +149,20 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
   } catch (error: any) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        console.error('Database connection timeout')
+        console.error('Database connection timeout');
       } else {
-        console.error('Database health check failed:', error.message)
+        console.error('Database health check failed:', error.message);
       }
     }
     
     // Provide more specific error messages
-    if (error.message.includes('fetch')) {
+    if (error.message?.includes('fetch')) {
       console.error('Network error: Unable to reach Supabase servers');
-    } else if (error.message.includes('timeout')) {
+    } else if (error.message?.includes('timeout')) {
       console.error('Connection timeout: Request took too long');
     }
     
     return false;
-  }
-};
-
-/**
- * Clear Supabase Session
- */
-export const clearSupabaseSession = async (): Promise<void> => {
-  if (!isSupabaseConfigured) {
-    console.log('Supabase not configured, skipping session clear');
-    return;
-  }
-
-  try {
-    await supabase.auth.signOut();
-    console.log('✅ Supabase session cleared successfully');
-  } catch (error) {
-    console.error('❌ Error clearing Supabase session:', error);
-    // Don't throw error, just log it
-    return;
   }
 };
 
@@ -210,18 +192,3 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
   console.log('All connection attempts failed');
   return false;
 };
-
-// Initialize connection check
-export async function initializeSupabase(): Promise<boolean> {
-  if (!supabase) {
-    console.warn('⚠️ Supabase not configured - running in offline mode')
-    return false
-  }
-  
-  const isHealthy = await checkDatabaseHealth()
-  if (!isHealthy) {
-    console.warn('⚠️ Database connection failed - some features may be limited')
-  }
-  
-  return isHealthy
-}

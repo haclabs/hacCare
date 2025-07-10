@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { isSupabaseConfigured, checkDatabaseHealth } from './supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from './supabase';
 import { Alert } from '../types';
 
 /**
@@ -60,6 +61,18 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
       return [];
     }
 
+    if (!supabase) {
+      console.warn('📱 Alerts unavailable - Supabase not configured')
+      return []
+    }
+    
+    // Check database health first
+    const isHealthy = await checkDatabaseHealth()
+    if (!isHealthy) {
+      console.warn('📱 Database unavailable - no alerts available')
+      return []
+    }
+
     console.log('🔔 Fetching active alerts...');
     const now = new Date();
     console.log('Current time for alert fetch:', now.toISOString());
@@ -72,7 +85,7 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching alerts:', error);
+      console.warn('📱 Error fetching alerts:', error.message)
       // Don't throw error, return empty array to prevent app crash
       console.warn('Returning empty alerts array due to database error');
       return [];
@@ -82,9 +95,8 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
     console.log(`✅ Fetched ${alerts.length} active alerts`);
     return alerts;
   } catch (error) {
-    console.error('Error fetching active alerts:', error);
-    // Return empty array instead of throwing to prevent app crash
-    return [];
+    console.warn('📱 Network error fetching alerts:', error)
+    return []
   }
 };
 
@@ -93,6 +105,10 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
  */
 export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'>): Promise<Alert> => {
   try {
+    if (!supabase) {
+      throw new Error('Cannot create alert - Supabase not configured')
+    }
+
     console.log('🚨 Creating new alert:', alert);
     
     let existingAlerts = null;
@@ -159,6 +175,10 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
  */
 export const acknowledgeAlert = async (alertId: string, userId: string): Promise<void> => {
   try {
+    if (!supabase) {
+      throw new Error('Cannot acknowledge alert - Supabase not configured')
+    }
+
     console.log('✅ Acknowledging alert:', alertId);
     
     const { error } = await supabase
@@ -189,16 +209,16 @@ export const checkMedicationAlerts = async (): Promise<void> => {
   try {
     console.log('💊 Checking for medication due alerts...');
     console.log('Current time for medication check:', new Date().toISOString());
+    console.log('Current time for medication check:', new Date().toISOString());
     console.log('Current time for check:', new Date().toISOString());
     
     // Get current time
     const now = new Date();
-    
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
     const { data: dueMedications, error } = await supabase
       .from('patient_medications')
-      .select(`
+      .from('patient_medications')
         *,
         patients!inner(id, first_name, last_name, patient_id)
       `)
@@ -235,7 +255,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       // Calculate if medication is overdue
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       const isOverdue = minutesUntilDue <= 0;
-      const isDueSoon = !isOverdue && minutesUntilDue <= 60; 
+      const isOverdue = minutesUntilDue <= 0;
+      const isDueSoon = !isOverdue && minutesUntilDue <= 60;
       
       console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
       console.log(`- Due time: ${medication.next_due}`);
@@ -243,7 +264,22 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       console.log(`- Minutes until due: ${minutesUntilDue}`);
       console.log(`- Is overdue: ${isOverdue}`);
       console.log(`- Is due soon: ${isDueSoon}`);
+      console.log(`- Is due soon: ${isDueSoon}`);
       
+      // Improved check for existing alerts - more specific to avoid missing alerts
+      let existingAlerts = null;
+      let alertCheckError = null;
+      // Create a clean pattern for SQL LIKE by removing special characters
+      const medicationNamePattern = medication.name.replace(/[%_]/g, '');
+      
+      try {
+        const result = await supabase
+          .from('patient_alerts')
+          .select('id, message, created_at, priority')
+          .eq('patient_id', patient.id) 
+          .eq('alert_type', 'medication_due')
+          .eq('acknowledged', false)
+          .or(`message.ilike.%${medicationNamePattern}%,message.ilike.%${medication.dosage.replace(/[%_]/g, '')}%`)
       // Improved check for existing alerts - more specific to avoid missing alerts
       let existingAlerts = null;
       let alertCheckError = null;
@@ -285,7 +321,25 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         (isOverdue && existingAlerts[0].priority !== 'critical') || 
         (isDueSoon && existingAlerts[0].priority !== 'high')
       );
+      const statusChanged = (isOverdue && !existingIsOverdue) || (!isOverdue && existingIsOverdue);
+      const priorityChanged = existingAlerts?.[0] && (
+        (isOverdue && existingAlerts[0].priority !== 'critical') || 
+        (isDueSoon && existingAlerts[0].priority !== 'high')
+      );
       
+      if (!existingAlerts || existingAlerts.length === 0 || statusChanged || priorityChanged) {
+        // If status changed and there's an existing alert, acknowledge it first
+        if ((statusChanged || priorityChanged) && existingAlerts && existingAlerts.length > 0) {
+          console.log(`Status or priority changed, acknowledging old alert`);
+          try {
+            await supabase
+              .from('patient_alerts')
+              .update({ acknowledged: true })
+              .eq('id', existingAlerts[0].id);
+          } catch (ackError) {
+            console.error('Error acknowledging old alert:', ackError);
+          }
+        }
       if (!existingAlerts || existingAlerts.length === 0 || statusChanged || priorityChanged) {
         // If status changed and there's an existing alert, acknowledge it first
         if ((statusChanged || priorityChanged) && existingAlerts && existingAlerts.length > 0) {
@@ -305,8 +359,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           : `${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
 
         // Set priority based on status
+        // Set priority based on status
         const priority = isOverdue ? 'critical' : (isDueSoon ? 'high' : 'medium');
-
         
         const alertData: any = {
           patient_id: patient.id,
@@ -318,14 +372,6 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           // For overdue medications, set a longer expiration time (12 hours for overdue, 2 hours for due soon)
           expires_at: new Date(now.getTime() + (isOverdue ? 12 : 2) * 60 * 60 * 1000).toISOString()
         };
-
-        console.log(`Alert data for ${medication.name}:`, {
-          patient: `${patient.first_name} ${patient.last_name}`,
-          message,
-          priority,
-          isOverdue,
-          minutesUntilDue
-        });
         
         console.log(`Creating alert:`, alertData);
         try {
@@ -359,7 +405,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .gte('recorded_at', fourHoursAgo.toISOString())
-      .order('recorded_at', { ascending: false });
+      .or(`next_due.lt.${now.toISOString()},and(next_due.gt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()})`)
 
     if (error) {
       console.error('Error checking vital signs:', error);
@@ -596,6 +642,19 @@ const isPatientConditionCritical = async (patientId: string): Promise<boolean> =
  */
 export const runAlertChecks = async (): Promise<void> => {
   try {
+    // Check if Supabase is properly configured
+    if (!isSupabaseConfigured) {
+      console.warn('⚠️ Supabase not configured, skipping alert checks');
+      return;
+    }
+
+    // Test database connection before attempting checks
+    const isHealthy = await checkDatabaseHealth();
+    if (!isHealthy) {
+      console.error('❌ Database connection failed, skipping alert checks');
+      return;
+    }
+
     console.log('🔄 Running comprehensive alert checks...');
     
     console.log('⏱️ Starting medication checks at:', new Date().toISOString());

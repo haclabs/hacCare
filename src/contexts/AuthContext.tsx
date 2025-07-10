@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, UserProfile, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
 
 /**
  * Authentication Context Interface
@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null;                                    // Current authenticated user from Supabase
   profile: UserProfile | null;                         // User profile data from our database
   loading: boolean;                                     // Loading state for auth operations
+  isOffline: boolean;                                   // Offline state indicator
   signIn: (email: string, password: string) => Promise<{ error: any }>; // Sign in function
   signOut: () => Promise<void>;                        // Sign out function
   hasRole: (roles: string | string[]) => boolean;     // Role-based access control helper
@@ -59,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null); // User profile from database
   const [loading, setLoading] = useState(true);                 // Overall loading state
   const [profileLoading, setProfileLoading] = useState(false);  // Profile-specific loading state
+  const [isOffline, setIsOffline] = useState(false);            // Offline state indicator
 
   /**
    * Initialize authentication on component mount
@@ -85,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('⚠️ Supabase not configured, using mock data mode');
           if (mounted) {
             setLoading(false);
+            setIsOffline(true);
           }
           return;
         }
@@ -271,6 +274,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📋 Fetching profile for user:', userId);
       setProfileLoading(true);
       
+      // Check database health first
+      const isHealthy = await checkDatabaseHealth();
+      if (!isHealthy) {
+        console.warn('📱 Database unavailable - cannot fetch user profile');
+        setIsOffline(true);
+        return;
+      }
+      
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
@@ -305,7 +316,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                      error.message?.includes('NetworkError') ||
                      error.message?.includes('fetch')) {
             // Network connectivity issues
-            console.error('🌐 Network error fetching profile - Supabase may not be configured properly');
+            console.warn('📱 Error fetching profile:', error.message);
+            setIsOffline(true);
             setProfile(null);
           } else if (error.code === '42501' || error.message?.includes('permission denied')) {
             // Permission/RLS policy issues
@@ -319,6 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           console.log('✅ Profile fetched successfully:', data?.email);
           setProfile(data);
+          setIsOffline(false);
         }
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
@@ -342,7 +355,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           error.message?.includes('timeout') ||
           error.message?.includes('fetch') ||
           error.message?.includes('Supabase not configured')) {
-        console.error('🌐 Network connectivity issue or Supabase not configured - falling back to mock data mode');
+        console.warn('📱 Network error fetching profile:', error);
+        setIsOffline(true);
       }
       
       setProfile(null);
@@ -557,6 +571,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     profile,
     loading: loading || profileLoading, // Include profile loading in overall loading state
+    isOffline,
     signIn,
     signOut,
     hasRole,

@@ -3,7 +3,7 @@ import {
   Database, CheckCircle, XCircle, RefreshCw, AlertTriangle,
   Wifi, WifiOff, Server, Globe
 } from 'lucide-react';
-import { isSupabaseConfigured, testSupabaseConnection } from '../../lib/supabase';
+import { isSupabaseConfigured, testSupabaseConnection, supabase } from '../../lib/supabase';
 
 /**
  * Connection Status Component
@@ -16,14 +16,24 @@ export const ConnectionStatus: React.FC = () => {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
   
   const checkConnection = async () => {
     setIsChecking(true);
     setStatus('checking');
     
+    if (!supabase) {
+      setIsConfigured(false);
+      setStatus('disconnected');
+      setLastChecked(new Date());
+      setIsChecking(false);
+      return;
+    }
+    
     try {
       const isConnected = await testSupabaseConnection();
       setStatus(isConnected ? 'connected' : 'disconnected');
+      setIsConfigured(true);
     } catch (error) {
       console.error('Connection check error:', error);
       setStatus('disconnected');
@@ -43,6 +53,7 @@ export const ConnectionStatus: React.FC = () => {
   }, []);
   
   const getStatusColor = (status: string) => {
+    if (!isConfigured) return 'text-orange-600 dark:text-orange-400';
     switch (status) {
       case 'connected': return 'text-green-600 dark:text-green-400';
       case 'disconnected': return 'text-red-600 dark:text-red-400';
@@ -52,12 +63,18 @@ export const ConnectionStatus: React.FC = () => {
   };
   
   const getStatusIcon = (status: string) => {
+    if (!isConfigured) return AlertTriangle;
     switch (status) {
       case 'connected': return CheckCircle;
       case 'disconnected': return XCircle;
       case 'checking': return RefreshCw;
       default: return AlertTriangle;
     }
+  };
+  
+  const getStatusText = (status: string) => {
+    if (!isConfigured) return 'Not Configured';
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
   
   const StatusIcon = getStatusIcon(status);
@@ -81,8 +98,8 @@ export const ConnectionStatus: React.FC = () => {
       <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3">
         <div className="flex items-center space-x-2">
           <StatusIcon className={`h-5 w-5 ${getStatusColor(status)} ${status === 'checking' ? 'animate-spin' : ''}`} />
-          <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
-            {status}
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            {getStatusText(status)}
           </span>
         </div>
         {lastChecked && (
@@ -91,6 +108,12 @@ export const ConnectionStatus: React.FC = () => {
           </span>
         )}
       </div>
+      
+      {!isConfigured && (
+        <div className="text-xs text-orange-600 dark:text-orange-400 mb-3">
+          Supabase environment variables not configured
+        </div>
+      )}
       
       <div className="flex justify-between items-center">
         <button
