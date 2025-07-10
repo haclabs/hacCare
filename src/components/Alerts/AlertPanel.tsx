@@ -79,8 +79,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   const handleRunChecks = async () => {
     try {
       await runChecks();
-      // After running checks, refresh alerts to ensure we have the latest data
-      setTimeout(() => refreshAlerts(), 1000);
     } catch (error) {
       console.error('Failed to run alert checks:', error);
     }
@@ -213,13 +211,13 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                       <div className="flex items-start space-x-3">
                         <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${alert.message.toLowerCase().includes('overdue') ? 'animate-pulse' : ''}`} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-medium">{alert.patientName}</p>
                             <span className="text-xs font-medium px-2 py-1 rounded-full bg-white dark:bg-gray-800 bg-opacity-50">
                               {alert.priority}
                             </span>
                           </div>
-                          <p className="text-sm mb-2">{alert.message}</p>
+                          <p className="text-sm mb-3 font-medium">{alert.message}</p>
                           <div className="flex items-center justify-between">
                             <p className="text-xs opacity-75">
                               {formatAlertTime(alert.timestamp)}
