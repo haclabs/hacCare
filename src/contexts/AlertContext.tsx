@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
 import { useAuth } from './AuthContext';
 import { Alert } from '../types'; 
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface AlertContextType {
   alerts: Alert[];
@@ -31,6 +31,15 @@ export function AlertProvider({ children }: AlertProviderProps) {
 
   const refreshAlerts = async () => {
     try {
+      // Check if Supabase is configured before attempting to fetch
+      if (!isSupabaseConfigured) {
+        console.warn('⚠️ Supabase not configured, skipping alert refresh');
+        setAlerts([]);
+        setError('Supabase not configured. Please check your environment variables.');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const refreshTime = new Date().toISOString();
       console.log('Refreshing alerts at:', refreshTime);
@@ -46,7 +55,11 @@ export function AlertProvider({ children }: AlertProviderProps) {
       setAlerts(fetchedAlerts);
       setLastRefresh(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch alerts';
+      console.error('Alert refresh error:', errorMessage);
+      setError(`Connection error: ${errorMessage}. Please check your Supabase configuration.`);
+      // Set empty alerts array on error to prevent undefined state
+      setAlerts([]);
     } finally {
       setLoading(false);
     }
@@ -72,6 +85,13 @@ export function AlertProvider({ children }: AlertProviderProps) {
 
   const runChecks = async () => {
     try {
+      // Check if Supabase is configured before running checks
+      if (!isSupabaseConfigured) {
+        console.warn('⚠️ Supabase not configured, skipping alert checks');
+        setError('Supabase not configured. Please check your environment variables.');
+        return;
+      }
+
       setLoading(true);
       const checkStartTime = new Date();
       console.log('Running alert checks at:', checkStartTime.toISOString());
@@ -87,7 +107,9 @@ export function AlertProvider({ children }: AlertProviderProps) {
         setLoading(false);
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to run checks');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to run checks';
+      console.error('Alert checks error:', errorMessage);
+      setError(`Connection error: ${errorMessage}. Please check your Supabase configuration.`);
       setLoading(false);
     } finally {
       // Loading state is now managed by the setTimeout callback
@@ -95,22 +117,39 @@ export function AlertProvider({ children }: AlertProviderProps) {
   };
 
   useEffect(() => {
+    // Only initialize if Supabase is configured
+    if (!isSupabaseConfigured) {
+      console.warn('⚠️ Supabase not configured, skipping alert initialization');
+      setError('Supabase not configured. Please check your environment variables.');
+      setLoading(false);
+      return;
+    }
+
     refreshAlerts();
     
     // Set up real-time subscription to alerts table
-    const alertsSubscription = supabase
-      .channel('alerts-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'patient_alerts' }, 
-        () => {
-          console.log('Alert table changed, refreshing alerts');
-          refreshAlerts();
-        }
-      )
-      .subscribe();
+    let alertsSubscription: any = null;
+    
+    try {
+      alertsSubscription = supabase
+        .channel('alerts-changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'patient_alerts' }, 
+          () => {
+            console.log('Alert table changed, refreshing alerts');
+            refreshAlerts();
+          }
+        )
+        .subscribe();
+    } catch (subscriptionError) {
+      console.error('Failed to set up real-time subscription:', subscriptionError);
+      // Continue without real-time updates
+    }
       
     // Run initial alert checks
-    runChecks();
+    setTimeout(() => {
+      runChecks();
+    }, 2000); // Delay initial checks to allow app to fully load
     
     // Set up interval to run checks every 5 minutes
     const checkInterval = setInterval(() => {
@@ -119,10 +158,16 @@ export function AlertProvider({ children }: AlertProviderProps) {
     }, 5 * 60 * 1000);
     
     return () => {
-      alertsSubscription.unsubscribe();
+      if (alertsSubscription) {
+        try {
+          alertsSubscription.unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing from alerts:', error);
+        }
+      }
       clearInterval(checkInterval);
     };
-  }, []);
+  }, [isSupabaseConfigured]);
 
   const value: AlertContextType = {
     alerts,

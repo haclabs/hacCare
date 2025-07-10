@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from './supabase';
 import { Alert } from '../types';
 
 /**
@@ -46,6 +47,19 @@ const convertDatabaseAlert = (dbAlert: DatabaseAlert): Alert => ({
  */
 export const fetchActiveAlerts = async (): Promise<Alert[]> => {
   try {
+    // Check if Supabase is properly configured
+    if (!isSupabaseConfigured) {
+      console.warn('⚠️ Supabase not configured, returning empty alerts array');
+      return [];
+    }
+
+    // Test database connection before attempting to fetch
+    const isHealthy = await checkDatabaseHealth();
+    if (!isHealthy) {
+      console.error('❌ Database connection failed, returning empty alerts array');
+      return [];
+    }
+
     console.log('🔔 Fetching active alerts...');
     const now = new Date();
     console.log('Current time for alert fetch:', now.toISOString());
@@ -59,7 +73,9 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
 
     if (error) {
       console.error('Error fetching alerts:', error);
-      throw error;
+      // Don't throw error, return empty array to prevent app crash
+      console.warn('Returning empty alerts array due to database error');
+      return [];
     }
 
     const alerts = (data || []).map(convertDatabaseAlert);
@@ -67,6 +83,7 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
     return alerts;
   } catch (error) {
     console.error('Error fetching active alerts:', error);
+    // Return empty array instead of throwing to prevent app crash
     return [];
   }
 };
@@ -448,6 +465,12 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
  */
 export const checkMissingVitalsAlerts = async (): Promise<void> => {
   try {
+    // Check if Supabase is properly configured
+    if (!isSupabaseConfigured) {
+      console.warn('⚠️ Supabase not configured, skipping missing vitals alerts check');
+      return;
+    }
+
     console.log('📊 Checking for missing vitals alerts...');
 
     // Get all active patients
