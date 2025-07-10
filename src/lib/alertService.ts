@@ -460,6 +460,12 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
             ? Math.floor((now.getTime() - new Date(lastVital.recorded_at).getTime()) / (1000 * 60 * 60))
             : 24; // Assume 24 hours if no vitals ever recorded
           
+          // Add defensive check to ensure patient object exists
+          if (!patient || !patient.id) {
+            console.error('Patient object is invalid:', patient);
+            continue;
+          }
+          
           const alertData = {
             patient_id: patient.id,
             patient_name: `${patient.first_name} ${patient.last_name}`,
