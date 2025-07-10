@@ -7,7 +7,6 @@ import { recordMedicationAdministration } from '../../lib/medicationService';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase'; 
 import { runAlertChecks } from '../../lib/alertService';
-import { runAlertChecks } from '../../lib/alertService';
 
 interface MedicationAdministrationFormProps {
   medication: Medication; 

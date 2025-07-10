@@ -49,8 +49,6 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
     console.log('🔔 Fetching active alerts...');
     const now = new Date();
     console.log('Current time for alert fetch:', now.toISOString());
-    const now = new Date();
-    console.log('Current time for alert fetch:', now.toISOString());
     
     const { data, error } = await supabase
       .from('patient_alerts')
