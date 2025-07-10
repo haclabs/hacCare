@@ -158,14 +158,13 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
 export const checkMedicationAlerts = async (): Promise<void> => {
   try {
     console.log('💊 Checking for medication due alerts...');
-
+    
     // Get current time
     const now = new Date();
     console.log('Current time for medication check:', now.toISOString());
     
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
-    
     const { data: dueMedications, error } = await supabase
       .from('patient_medications')
       .select(`
@@ -211,15 +210,19 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       console.log(`- Is overdue: ${isOverdue}`);
       
       // Check if alert already exists for this medication
-      const { data: existingAlerts } = await supabase
+      const { data: existingAlerts, error: alertCheckError } = await supabase
         .from('patient_alerts')
         .select('id')
         .eq('patient_id', patient.id)
         .eq('alert_type', 'medication_due')
         .eq('acknowledged', false)
-        .ilike('message', `%${medication.name}%`)
+        .or(`message.ilike.%${medication.name}%,message.ilike.%overdue%`)
         .limit(1);
 
+      if (alertCheckError) {
+        console.error('Error checking for existing alerts:', alertCheckError);
+      }
+      
       console.log(`- Existing alerts: ${existingAlerts?.length || 0}`);
 
       if (!existingAlerts || existingAlerts.length === 0) {
@@ -230,7 +233,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         // Always set overdue medications to high priority
         const priority = isOverdue ? 'high' : (minutesUntilDue <= 30 ? 'high' : 'medium');
         
-        const alertData = {
+        const alertData: any = {
           patient_id: patient.id,
           patient_name: `${patient.first_name} ${patient.last_name}`,
           alert_type: 'medication_due',
@@ -242,8 +245,12 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         };
         
         console.log(`Creating alert:`, alertData);
-        const newAlert = await createAlert(alertData);
-        console.log(`Created alert for ${medication.name}:`, newAlert);
+        try {
+          const newAlert = await createAlert(alertData);
+          console.log(`Created alert for ${medication.name}:`, newAlert);
+        } catch (alertError) {
+          console.error(`Error creating alert for ${medication.name}:`, alertError);
+        }
       }
     }
   } catch (error) {
@@ -375,12 +382,13 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
 export const checkMissingVitalsAlerts = async (): Promise<void> => {
   try {
     console.log('📊 Checking for missing vitals alerts...');
-    
+
     // Get all active patients
     const { data: patients, error: patientsError } = await supabase
       .from('patients')
       .select('id, first_name, last_name, patient_id')
-      .neq('condition', 'Discharged');
+      .neq('condition', 'Discharged')
+      .order('created_at', { ascending: false });
 
     if (patientsError) {
       console.error('Error fetching patients:', patientsError);
@@ -392,16 +400,19 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
       const { data: lastVital } = await supabase
         .from('patient_vitals')
         .select('recorded_at')
-        .eq('patient_id', patient.id)
+        .eq('patient_id', patient.id) 
         .order('recorded_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       const now = new Date();
-      const eightHoursAgo = new Date(now.getTime() - 8 * 60 * 60 * 1000);
+      // Different thresholds based on patient condition
+      const isPatientCritical = await isPatientConditionCritical(patient.id);
+      const hoursThreshold = isPatientCritical ? 4 : 8;
+      const hoursAgo = new Date(now.getTime() - hoursThreshold * 60 * 60 * 1000);
       
       // If no vitals or last vitals older than 8 hours
-      if (!lastVital || new Date(lastVital.recorded_at) < eightHoursAgo) {
+      if (!lastVital || new Date(lastVital.recorded_at) < hoursAgo) {
         // Check if alert already exists
         const { data: existingAlerts } = await supabase
           .from('patient_alerts')
@@ -416,21 +427,51 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
           const hoursOverdue = lastVital 
             ? Math.floor((now.getTime() - new Date(lastVital.recorded_at).getTime()) / (1000 * 60 * 60))
             : 24; // Assume 24 hours if no vitals ever recorded
-
-          await createAlert({
+          
+          const alertData = {
             patient_id: patient.id,
             patient_name: `${patient.first_name} ${patient.last_name}`,
             alert_type: 'vital_signs',
-            message: `Vital signs overdue - last recorded ${hoursOverdue} hours ago`,
-            priority: hoursOverdue > 12 ? 'high' : 'medium',
+            message: `Vital signs ${isPatientCritical ? 'CRITICAL' : ''} overdue - last recorded ${hoursOverdue} hours ago`,
+            priority: isPatientCritical || hoursOverdue > 12 ? 'high' : 'medium',
             acknowledged: false,
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-          });
+          };
+          
+          try {
+            await createAlert(alertData);
+            console.log(`Created missing vitals alert for patient ${patient.first_name} ${patient.last_name}`);
+          } catch (alertError) {
+            console.error(`Error creating missing vitals alert:`, alertError);
+          }
         }
       }
     }
   } catch (error) {
     console.error('Error checking missing vitals alerts:', error);
+  }
+};
+
+/**
+ * Check if a patient's condition is critical
+ */
+const isPatientConditionCritical = async (patientId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('patients')
+      .select('condition')
+      .eq('id', patientId)
+      .single();
+    
+    if (error) {
+      console.error('Error checking patient condition:', error);
+      return false;
+    }
+    
+    return data?.condition === 'Critical';
+  } catch (error) {
+    console.error('Error checking patient condition:', error);
+    return false;
   }
 };
 
@@ -444,15 +485,15 @@ export const runAlertChecks = async (): Promise<void> => {
     console.log('⏱️ Starting medication checks at:', new Date().toISOString());
     // Run medication checks first
     await checkMedicationAlerts();
-    console.log('✅ Medication checks completed at:', new Date().toISOString());
+    console.log('✅ Medication checks completed at:', new Date().toISOString()); 
     
     // Run other checks in parallel
-    await Promise.all([  
+    await Promise.all([
       checkVitalSignsAlerts(),
       checkMissingVitalsAlerts()
     ]);
     
-    console.log('✅ Alert checks completed');
+    console.log('✅ All alert checks completed');
   } catch (error) {
     console.error('Error running alert checks:', error);
   }
