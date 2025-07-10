@@ -32,10 +32,16 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const refreshAlerts = async () => {
     try {
       setLoading(true);
-      console.log('Refreshing alerts...');
+      console.log('Refreshing alerts at:', new Date().toISOString());
       setError(null);
       const fetchedAlerts = await fetchActiveAlerts();
-      console.log(`Fetched ${fetchedAlerts.length} alerts at ${new Date().toISOString()}`);
+      
+      // Log each alert for debugging
+      fetchedAlerts.forEach(alert => {
+        console.log(`Alert: ${alert.type} - ${alert.message} - Priority: ${alert.priority} - Acknowledged: ${alert.acknowledged}`);
+      });
+      
+      console.log(`Fetched ${fetchedAlerts.length} active alerts`);
       setAlerts(fetchedAlerts);
       setLastRefresh(new Date());
     } catch (err) {

@@ -47,12 +47,14 @@ const convertDatabaseAlert = (dbAlert: DatabaseAlert): Alert => ({
 export const fetchActiveAlerts = async (): Promise<Alert[]> => {
   try {
     console.log('🔔 Fetching active alerts...');
+    const now = new Date();
+    console.log('Current time for alert fetch:', now.toISOString());
     
     const { data, error } = await supabase
       .from('patient_alerts')
       .select('*')
       .eq('acknowledged', false)
-      .or('expires_at.is.null,expires_at.gt.now()')
+      .or(`expires_at.is.null,expires_at.gt.${now.toISOString()}`)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -81,9 +83,9 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
       .from('patient_alerts')
       .select('id')
       .eq('patient_id', alert.patient_id)
-      .eq('alert_type', alert.alert_type)
+      .eq('alert_type', 'medication_due') 
       .eq('acknowledged', false)
-      .ilike('message', `%${alert.message.substring(0, 20)}%`)
+      .ilike('message', `%${medication.name}%`)
       .limit(1);
     
     if (checkError) {
@@ -230,8 +232,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           ? `${medication.name} ${medication.dosage} is overdue by ${Math.abs(minutesUntilDue)} minutes` 
           : `${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
 
-        // Always set overdue medications to high priority
-        const priority = isOverdue ? 'high' : (minutesUntilDue <= 30 ? 'high' : 'medium');
+        // Set overdue medications to critical priority
+        const priority = isOverdue ? 'critical' : (minutesUntilDue <= 30 ? 'high' : 'medium');
         
         const alertData: any = {
           patient_id: patient.id,
@@ -243,6 +245,14 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           // For overdue medications, set a longer expiration time (8 hours for overdue, 2 hours for due soon)
           expires_at: new Date(now.getTime() + (isOverdue ? 8 : 2) * 60 * 60 * 1000).toISOString()
         };
+
+        console.log(`Alert data for ${medication.name}:`, {
+          patient: `${patient.first_name} ${patient.last_name}`,
+          message,
+          priority,
+          isOverdue,
+          minutesUntilDue
+        });
         
         console.log(`Creating alert:`, alertData);
         try {
