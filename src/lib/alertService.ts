@@ -353,6 +353,9 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
   try {
     console.log('🫀 Checking for vital signs alerts...');
     
+    // Get current time
+    const now = new Date();
+    
     // Get recent vital signs (last 4 hours)
     const fourHoursAgo = new Date();
     fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
@@ -363,8 +366,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
         *,
         patients!inner(id, first_name, last_name, patient_id)
       `)
-      .gte('recorded_at', fourHoursAgo.toISOString())
-      .or(`next_due.lt.${now.toISOString()},and(next_due.gt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()})`);
+      .gte('recorded_at', fourHoursAgo.toISOString());
 
     if (error) {
       console.error('Error checking vital signs:', error);
