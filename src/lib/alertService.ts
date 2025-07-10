@@ -210,13 +210,13 @@ export const checkMedicationAlerts = async (): Promise<void> => {
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
     const { data: dueMedications, error } = await supabase
-      .from('patient_medications')
+      .from('patient_medications') 
       .select(`
         *,
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .eq('status', 'Active')
-      .or(`next_due.lt.${now.toISOString()},and(next_due.gt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()})`)
+      .lte('next_due', new Date(now.getTime() + 60 * 60 * 1000).toISOString())
       .order('next_due', { ascending: true });
     
     console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
