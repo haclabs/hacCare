@@ -72,10 +72,13 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const runChecks = async () => {
     try {
       setLoading(true);
-      console.log('Running alert checks at:', new Date().toISOString());
+      const checkTime = new Date().toISOString();
+      console.log('Running alert checks at:', checkTime);
       setError(null);
       await runAlertChecks();
-      await refreshAlerts();
+      // Only refresh alerts once to avoid duplicates
+      console.log('Alert checks completed, refreshing alerts');
+      await refreshAlerts(); 
       console.log('Alert refresh completed at:', new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run checks');

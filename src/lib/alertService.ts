@@ -83,9 +83,9 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
       .from('patient_alerts')
       .select('id, message')
       .eq('patient_id', alert.patient_id)
-      .eq('alert_type', 'medication_due') 
+      .eq('alert_type', alert.alert_type) 
       .eq('acknowledged', false)
-      .or(`message.ilike.%${alert.message.substring(0, 20)}%,message.ilike.%${alert.patient_name}%`)
+      .or(`message.ilike.%vitals overdue%,message.ilike.%${patient.first_name}%`)
       .limit(1);
     
     if (checkError) {

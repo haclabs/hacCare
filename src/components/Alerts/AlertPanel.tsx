@@ -79,10 +79,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   const handleRunChecks = async () => {
     try {
       await runChecks();
-      console.log('Alert checks completed, refreshing alerts');
-      await refreshAlerts();
-      console.log('Alert checks completed, refreshing alerts');
-      await refreshAlerts();
     } catch (error) {
       console.error('Failed to run alert checks:', error);
     }
