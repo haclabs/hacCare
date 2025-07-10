@@ -3,6 +3,7 @@ import { Patient, Alert } from '../../types';
 import { Users, AlertTriangle, Activity, Clock } from 'lucide-react';
 
 interface QuickStatsProps {
+interface QuickStatsProps {
   patients: Patient[];
   alerts: Alert[];
 }
@@ -11,14 +12,20 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
   const criticalPatients = patients.filter(p => p.condition === 'Critical').length;
   const activeAlerts = alerts.filter(a => !a.acknowledged).length;
   
-  // Count medications due from alerts instead of patient data
-  const medicationsDue = alerts.filter(alert => 
-    alert.type === 'Medication Due' && !alert.acknowledged
+  // Count medications due directly from the alerts array
+  const medicationsDue = alerts.filter(a => 
+    a.type === 'Medication Due' && !a.acknowledged
   ).length;
   
-  console.log('QuickStats - Total medications due:', medicationsDue);
-  console.log('QuickStats - Medication alerts:', alerts.filter(a => a.type === 'Medication Due').length);
+  // Log medication alerts for debugging
+  console.log(`QuickStats - Medication alerts: ${medicationsDue} due medications from ${alerts.length} total alerts`);
+  alerts.forEach(alert => {
+    if (alert.type === 'Medication Due') {
+      console.log(`- ${alert.message} (${alert.acknowledged ? 'Acknowledged' : 'Unacknowledged'})`);
+    }
+  });
 
+  // Define stats cards
   const stats = [
     {
       label: 'Total Patients',
@@ -43,7 +50,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
     },
     {
       label: 'Medications Due',
-      value: medicationsDue,
+      value: medicationsDue, // This should now correctly show the count from alerts
       icon: Clock,
       color: 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-300',
       bgColor: 'bg-green-50 dark:bg-green-900/30'
