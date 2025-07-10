@@ -16,11 +16,10 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
   const criticalPatients = patients.filter(p => p.condition === 'Critical').length;
   const activeAlerts = alerts.filter(a => !a.acknowledged).length;
   
-  // Count medications due from alerts
-  const medicationsDue = alerts.filter(alert => 
-    alert.type === 'Medication Due' && !alert.acknowledged
-  ).length;
+  // Count medications due directly from alerts
+  const medicationsDue = alerts.filter(a => a.type === 'Medication Due' && !a.acknowledged).length;
   
+  // Simple log to verify the count
   console.log(`QuickStats - Found ${medicationsDue} medication alerts out of ${alerts.length} total alerts`);
 
   // Define stats cards
