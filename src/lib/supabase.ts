@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../types'
 
 /**
  * Supabase Configuration and Client Setup
@@ -16,8 +17,8 @@ import { createClient } from '@supabase/supabase-js';
  */
 
 // Extract environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
 // Log configuration status for debugging
 console.log('🔧 Supabase Environment Check:');
@@ -42,7 +43,11 @@ const hasValidConfig = supabaseUrl &&
 console.log('✅ Configuration valid:', hasValidConfig);
 
 if (!hasValidConfig) {
-  console.warn('⚠️ Supabase not configured properly. Please check your .env file.');
+  console.error('Missing Supabase environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined'
+  })
   console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
   console.warn('🔗 Get your credentials from: https://app.supabase.com/project/[your-project]/settings/api');
 }
@@ -51,31 +56,29 @@ if (!hasValidConfig) {
  * Supabase Client Instance
  * Configured with optimized settings for the hospital management system
  */
-export const supabase = createClient(
-  supabaseUrl || 'https://dummy.supabase.co',
-  supabaseAnonKey || 'dummy-key',
-  {
-    auth: {
-      autoRefreshToken: hasValidConfig,
-      persistSession: hasValidConfig,
-      detectSessionInUrl: hasValidConfig,
-      flowType: 'pkce',
-    },
-    global: {
-      headers: {
-        'x-client-info': 'haccare-hospital@1.0.0'
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: hasValidConfig,
+        flowType: 'pkce',
+      },
+      global: {
+        headers: {
+          'x-application-name': 'nurse-dashboard'
+        }
+      },
+      db: {
+        schema: 'public'
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10
+        }
       }
-    },
-    db: {
-      schema: 'public'
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10
-      }
-    }
-  }
-);
+    })
+  : null;
 
 /**
  * Configuration status flag
@@ -108,19 +111,25 @@ export interface UserProfile {
  * Database Health Check with improved error handling
  */
 export const checkDatabaseHealth = async (): Promise<boolean> => {
-  if (!isSupabaseConfigured) {
-    console.log('Database not configured, using mock data mode');
-    return false;
+  if (!supabase) {
+    console.error('Supabase client not initialized - check environment variables')
+    return false
   }
 
   try {
     console.log('🔍 Testing database connection...');
     
-    // Test connection with a simple query
-    const { data, error } = await supabase
-      .from('patients')
-      .select('id')
-      .limit(1);
+    // Use a simple query with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    const { error } = await supabase
+      .from('user_profiles')
+      .select('count')
+      .limit(1)
+      .abortSignal(controller.signal)
+    
+    clearTimeout(timeoutId)
     
     if (error) {
       console.error('Database health check failed:', error.message);
@@ -137,7 +146,13 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
     console.log('✅ Database connection successful');
     return true;
   } catch (error: any) {
-    console.error('Database health check error:', error.message);
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('Database connection timeout')
+      } else {
+        console.error('Database health check failed:', error.message)
+      }
+    }
     
     // Provide more specific error messages
     if (error.message.includes('fetch')) {
@@ -195,3 +210,18 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
   console.log('All connection attempts failed');
   return false;
 };
+
+// Initialize connection check
+export async function initializeSupabase(): Promise<boolean> {
+  if (!supabase) {
+    console.warn('⚠️ Supabase not configured - running in offline mode')
+    return false
+  }
+  
+  const isHealthy = await checkDatabaseHealth()
+  if (!isHealthy) {
+    console.warn('⚠️ Database connection failed - some features may be limited')
+  }
+  
+  return isHealthy
+}

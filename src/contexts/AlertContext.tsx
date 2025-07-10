@@ -2,12 +2,13 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
 import { useAuth } from './AuthContext';
 import { Alert } from '../types'; 
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
 
 interface AlertContextType {
   alerts: Alert[];
   loading: boolean;
   error: string | null;
+  isOffline: boolean;
   unreadCount: number;
   acknowledgeAlert: (alertId: string) => Promise<void>;
   refreshAlerts: () => Promise<void>;
@@ -24,6 +25,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const { user } = useAuth();
 
@@ -44,6 +46,16 @@ export function AlertProvider({ children }: AlertProviderProps) {
       const refreshTime = new Date().toISOString();
       console.log('Refreshing alerts at:', refreshTime);
       setError(null);
+      
+      // Check database health first
+      const isHealthy = await checkDatabaseHealth();
+      if (!isHealthy) {
+        console.warn('📱 Database unavailable - no alerts available');
+        setAlerts([]);
+        setIsOffline(true);
+        return;
+      }
+      
       const fetchedAlerts = await fetchActiveAlerts();
       
       // Log each alert for debugging
@@ -53,13 +65,15 @@ export function AlertProvider({ children }: AlertProviderProps) {
       
       console.log(`Fetched ${fetchedAlerts.length} active alerts`);
       setAlerts(fetchedAlerts);
+      setIsOffline(false);
       setLastRefresh(new Date());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch alerts';
-      console.error('Alert refresh error:', errorMessage);
+      console.warn('📱 Error refreshing alerts - running offline:', err);
       setError(`Connection error: ${errorMessage}. Please check your Supabase configuration.`);
       // Set empty alerts array on error to prevent undefined state
       setAlerts([]);
+      setIsOffline(true);
     } finally {
       setLoading(false);
     }
@@ -67,6 +81,19 @@ export function AlertProvider({ children }: AlertProviderProps) {
 
   const acknowledgeAlert = async (alertId: string) => {
     try {
+      if (isOffline) {
+        // Remove from local state only
+        setAlerts(prev => 
+          prev.map(alert => 
+            alert.id === alertId 
+              ? { ...alert, acknowledged: true, acknowledged_at: new Date().toISOString() }
+              : alert
+          )
+        );
+        console.warn('📱 Alert acknowledged locally - database unavailable');
+        return;
+      }
+      
       if (!user?.id) {
         throw new Error('User not authenticated');
       }
@@ -178,6 +205,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
     alerts,
     loading,
     error,
+    isOffline,
     unreadCount,
     acknowledgeAlert,
     refreshAlerts,
