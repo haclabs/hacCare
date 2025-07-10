@@ -364,7 +364,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .gte('recorded_at', fourHoursAgo.toISOString())
-      .order('recorded_at', { ascending: false });
+      .or(`next_due.lt.${now.toISOString()},and(next_due.gt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()})`);
 
     if (error) {
       console.error('Error checking vital signs:', error);
@@ -388,7 +388,6 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       if (vital.temperature > 38.0 || vital.temperature < 36.0) {
         alerts.push({
           type: 'Temperature',
-          message: \`Temperature ${vital.temperature.toFixed(1)}°C - ${vital.temperature > 38.0 ? 'Fever' : 'Hypothermia'}`,
           message: `Temperature ${vital.temperature.toFixed(1)}°C - ${vital.temperature > 38.0 ? 'Fever' : 'Hypothermia'}`,
           priority: vital.temperature > 39.0 || vital.temperature < 35.5 ? 'critical' : 'high'
         });
