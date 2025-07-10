@@ -32,13 +32,14 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const refreshAlerts = async () => {
     try {
       setLoading(true);
-      console.log('Refreshing alerts at:', new Date().toISOString());
+      const refreshTime = new Date().toISOString();
+      console.log('Refreshing alerts at:', refreshTime);
       setError(null);
       const fetchedAlerts = await fetchActiveAlerts();
       
       // Log each alert for debugging
       fetchedAlerts.forEach(alert => {
-        console.log(`Alert: ${alert.type} - ${alert.message} - Priority: ${alert.priority} - Acknowledged: ${alert.acknowledged}`);
+        console.log(`Alert: ${alert.type} - ${alert.message} - Priority: ${alert.priority} - Acknowledged: ${alert.acknowledged} - Timestamp: ${alert.timestamp}`);
       });
       
       console.log(`Fetched ${fetchedAlerts.length} active alerts`);
@@ -72,13 +73,13 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const runChecks = async () => {
     try {
       setLoading(true);
-      const checkTime = new Date().toISOString();
-      console.log('Running alert checks at:', checkTime);
+      const checkTime = new Date();
+      console.log('Running alert checks at:', checkTime.toISOString());
       setError(null);
       await runAlertChecks();
       // Only refresh alerts once to avoid duplicates
       console.log('Alert checks completed, refreshing alerts');
-      await refreshAlerts(); 
+      await refreshAlerts();
       console.log('Alert refresh completed at:', new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run checks');

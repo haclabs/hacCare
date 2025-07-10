@@ -129,7 +129,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
-        const isOverdue = isValid(dueTime) && dueTime <= now && med.status === 'Active';
+        const isOverdue = isValid(dueTime) && dueTime.getTime() <= now.getTime() && med.status === 'Active';
         if (isOverdue) {
           console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
         }
