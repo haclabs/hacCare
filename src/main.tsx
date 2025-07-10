@@ -8,10 +8,10 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import App from './App.tsx';
 import './index.css';
-import { initializeSupabase } from './lib/supabase'
+import { testSupabaseConnection } from './lib/supabase'
 
 // Initialize Supabase connection
-initializeSupabase().then((isConnected) => {
+testSupabaseConnection().then((isConnected) => {
   if (isConnected) {
     console.log('🚀 Application started with database connection')
   } else {
