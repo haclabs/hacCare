@@ -61,6 +61,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       const updatedMedications = await fetchPatientMedications(patientId);
       console.log(`Fetched ${updatedMedications.length} medications`);
       setAllMedications(updatedMedications); 
+      try {
         console.log('Running alert checks after medication refresh');
         await runAlertChecks();
       } catch (error) {
@@ -114,10 +115,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           console.log(`Medication ${med.name} is due soon: ${med.next_due}`);
         }
         return isDue;
-        if (isDue) {
-          console.log(`Medication ${med.name} is due soon: ${med.next_due}`);
-        }
-        return isDue;
       } catch (error) {
         console.error('Error checking due medication:', error, med);
         return false;
@@ -133,10 +130,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
-        const isOverdue = isValid(dueTime) && dueTime <= now && med.status === 'Active';
-        if (isOverdue) {
-          console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
-        }
         const isOverdue = isValid(dueTime) && dueTime <= now && med.status === 'Active';
         if (isOverdue) {
           console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
