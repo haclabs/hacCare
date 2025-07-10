@@ -490,14 +490,14 @@ export const PatientDetail: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' 
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600' 
                 }`}
               >
                 <Icon className="h-4 w-4 mr-2" /> 
                 <span>{tab.label}</span>
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="ml-1.5 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  <span className="ml-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">
                     {tab.count}
                   </span>
                 )}

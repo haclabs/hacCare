@@ -385,10 +385,10 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Pill className="w-6 h-6 text-blue-600" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <Pill className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           {title} - {patientName}
         </h2>
         
@@ -430,7 +430,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       )}
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 mb-6 bg-gray-200 p-1 rounded-lg">
+      <div className="flex space-x-1 mb-6 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg">
         {[
           { key: 'overview', label: 'Overview', icon: Activity },
           { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled },
@@ -442,8 +442,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             onClick={() => setActiveTab(key as any)}
             className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-colors ${
               activeTab === key
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
             <Icon className="w-4 h-4 mr-1" />

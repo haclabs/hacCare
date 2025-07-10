@@ -65,17 +65,17 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
 
   return (
     <div 
-      className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
      onClick={onClick}
     >
       {/* Patient Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
-            <User className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+            <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
               {patient.first_name} {patient.last_name}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">{age} years old • {patient.gender}</p>
@@ -93,11 +93,11 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
           <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-500" />
-          <span>Room {patient.room_number}{patient.bed_number}</span>
+          <span className="dark:text-gray-300">Room {patient.room_number}{patient.bed_number}</span>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
           <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-500" />
-          <span>Admitted {formattedAdmissionDate}</span>
+          <span className="dark:text-gray-300">Admitted {formattedAdmissionDate}</span>
         </div>
       </div>
 
