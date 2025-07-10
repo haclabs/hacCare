@@ -99,10 +99,10 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl p-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading advanced directives...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading advanced directives...</p>
           </div>
         </div>
       </div>
@@ -112,11 +112,11 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   if (!formData) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl p-8">
           <div className="text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <p className="text-gray-600">Failed to load advanced directives</p>
-            <button onClick={onClose} className="mt-4 bg-gray-600 text-white px-4 py-2 rounded-lg">
+            <AlertTriangle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Failed to load advanced directives</p>
+            <button onClick={onClose} className="mt-4 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
               Close
             </button>
           </div>
@@ -188,7 +188,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="date"
                   value={formData.living_will_date}
                   onChange={(e) => updateField('living_will_date', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -200,7 +200,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="text"
                   value={formData.healthcare_proxy_name}
                   onChange={(e) => updateField('healthcare_proxy_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Name and relationship"
                 />
               </div>
@@ -213,7 +213,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="tel"
                   value={formData.healthcare_proxy_phone}
                   onChange={(e) => updateField('healthcare_proxy_phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -255,7 +255,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 <select
                   value={formData.organ_donation_status}
                   onChange={(e) => updateField('organ_donation_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
                 >
                   <option value="">Select donation status</option>
                   <option value="Registered organ donor">Registered organ donor</option>
@@ -273,7 +273,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="text"
                   value={formData.organ_donation_details}
                   onChange={(e) => updateField('organ_donation_details', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="All organs and tissues"
                 />
               </div>
@@ -296,7 +296,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   type="text"
                   value={formData.religious_preference}
                   onChange={(e) => updateField('religious_preference', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Catholic, Protestant, Jewish, etc."
                 />
               </div>
@@ -310,19 +310,19 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                 value={formData.special_instructions}
                 onChange={(e) => updateField('special_instructions', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Any special instructions for care, family involvement, religious considerations, etc."
               />
             </div>
           </div>
 
           {/* Important Notes */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <p className="text-yellow-800 font-medium text-sm">Important Notes</p>
+              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+              <p className="text-yellow-800 dark:text-yellow-300 font-medium text-sm">Important Notes</p>
             </div>
-            <ul className="text-yellow-700 text-sm space-y-1">
+            <ul className="text-yellow-700 dark:text-yellow-400 text-sm space-y-1">
               <li>• All advance directives should be reviewed and updated regularly</li>
               <li>• Healthcare proxy should be contacted and aware of patient preferences</li>
               <li>• Patient competency should be assessed before making changes</li>
@@ -331,12 +331,12 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
               disabled={saving} 
-              className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              className="px-6 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
