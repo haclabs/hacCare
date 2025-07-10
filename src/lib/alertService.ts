@@ -203,7 +203,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .eq('status', 'Active')
-      .or(`next_due.lte.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()}`)
+      .or(`next_due.lt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()}`)
       .order('next_due', { ascending: true });
     
     console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
@@ -235,7 +235,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       // Calculate if medication is overdue
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       const isOverdue = minutesUntilDue <= 0;
-      const isDueSoon = minutesUntilDue > 0 && minutesUntilDue <= 60;
+      const isDueSoon = !isOverdue && minutesUntilDue <= 60;
       
       console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
       console.log(`- Due time: ${medication.next_due}`);
@@ -279,7 +279,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       // Create alert if no existing alert or if status changed (e.g., from due soon to overdue)
       const existingIsOverdue = existingAlerts?.[0]?.message?.toLowerCase().includes('overdue');
       const statusChanged = (isOverdue && !existingIsOverdue) || (!isOverdue && existingIsOverdue);
-      const priorityChanged = isOverdue && existingAlerts?.[0]?.priority !== 'critical';
+      const priorityChanged = (isOverdue && existingAlerts?.[0]?.priority !== 'critical') || 
+                             (isDueSoon && existingAlerts?.[0]?.priority !== 'high');
       
       if (!existingAlerts || existingAlerts.length === 0 || statusChanged || priorityChanged) {
         // If status changed and there's an existing alert, acknowledge it first
@@ -296,7 +297,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         }
         
         const message = isOverdue 
-          ? `${medication.name} ${medication.dosage} is overdue by ${Math.abs(minutesUntilDue)} minutes` 
+          ? `OVERDUE: ${medication.name} ${medication.dosage} by ${Math.abs(minutesUntilDue)} minutes` 
           : `${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
 
         // Set priority based on status
