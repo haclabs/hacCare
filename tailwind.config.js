@@ -123,4 +123,4 @@ export default {
     'dark:hover:bg-gray-700',
     'dark:hover:text-white'
   ])
-};
+}
