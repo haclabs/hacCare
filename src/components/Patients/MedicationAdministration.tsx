@@ -6,10 +6,11 @@ import { formatLocalTime } from '../../utils/dateUtils';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 import { MedicationForm } from './MedicationForm';
-import { MedicationBarcode } from './MedicationBarcode';
+import { MedicationBarcode } from './MedicationBarcode'; 
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
+import { runAlertChecks } from '../../lib/alertService';
 
 interface MedicationAdministrationProps {
   patientId: string;
@@ -58,15 +59,12 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       console.log('Refreshing medications for patient:', patientId, now.toISOString());
       const updatedMedications = await fetchPatientMedications(patientId);
       console.log(`Fetched ${updatedMedications.length} medications`);
-      setAllMedications(updatedMedications);
+      setAllMedications(updatedMedications); 
       
       // After refreshing medications, also refresh alerts
       try {
-        const { refreshAlerts } = await import('../../contexts/AlertContext');
-        if (refreshAlerts) {
-          console.log('Refreshing alerts after medication refresh');
-          await refreshAlerts();
-        }
+        console.log('Running alert checks after medication refresh');
+        await runAlertChecks();
       } catch (error) {
         console.error('Error refreshing alerts:', error);
       }
@@ -108,12 +106,16 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     const now = new Date();
     console.log('Checking for due medications at:', now.toISOString());
     return allMedications.filter(med => {
-      try {
+      try { 
         if (!med.next_due) return false;
         const dueTime = parseISO(med.next_due);
         // Due medications are those due within the next hour but not overdue
         const timeDiff = dueTime.getTime() - now.getTime();
-        return isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active';
+        const isDue = isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active';
+        if (isDue) {
+          console.log(`Medication ${med.name} is due soon: ${med.next_due}`);
+        }
+        return isDue;
       } catch (error) {
         console.error('Error checking due medication:', error, med);
         return false;
@@ -127,9 +129,13 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     return allMedications.filter(med => {
       try {
         if (!med.next_due) return false;
-        const dueTime = parseISO(med.next_due);
+        const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
-        return isValid(dueTime) && dueTime <= now && med.status === 'Active';
+        const isOverdue = isValid(dueTime) && dueTime <= now && med.status === 'Active';
+        if (isOverdue) {
+          console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
+        }
+        return isOverdue;
       } catch (error) {
         console.error('Error checking overdue medication:', error, med);
         return false;

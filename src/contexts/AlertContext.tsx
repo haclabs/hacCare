@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
 import { useAuth } from './AuthContext';
 import { Alert } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface AlertContextType {
   alerts: Alert[];
@@ -24,6 +25,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -33,8 +35,9 @@ export function AlertProvider({ children }: AlertProviderProps) {
       console.log('Refreshing alerts...');
       setError(null);
       const fetchedAlerts = await fetchActiveAlerts();
-      console.log(`Fetched ${fetchedAlerts.length} alerts`);
+      console.log(`Fetched ${fetchedAlerts.length} alerts at ${new Date().toISOString()}`);
       setAlerts(fetchedAlerts);
+      setLastRefresh(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch alerts');
     } finally {
@@ -63,11 +66,10 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const runChecks = async () => {
     try {
       setLoading(true);
-      console.log('Running alert checks...');
+      console.log('Running alert checks at:', new Date().toISOString());
       setError(null);
       await runAlertChecks();
-      console.log('Alert checks completed, refreshing alerts');
-      await refreshAlerts();
+      console.log('Alert refresh completed at:', new Date().toISOString());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run checks');
     } finally {
@@ -77,6 +79,32 @@ export function AlertProvider({ children }: AlertProviderProps) {
 
   useEffect(() => {
     refreshAlerts();
+    
+    // Set up real-time subscription to alerts table
+    const alertsSubscription = supabase
+      .channel('alerts-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'patient_alerts' }, 
+        () => {
+          console.log('Alert table changed, refreshing alerts');
+          refreshAlerts();
+        }
+      )
+      .subscribe();
+      
+    // Run initial alert checks
+    runChecks();
+    
+    // Set up interval to run checks every 5 minutes
+    const checkInterval = setInterval(() => {
+      console.log('Running scheduled alert checks');
+      runChecks();
+    }, 5 * 60 * 1000);
+    
+    return () => {
+      alertsSubscription.unsubscribe();
+      clearInterval(checkInterval);
+    };
   }, []);
 
   const value: AlertContextType = {
