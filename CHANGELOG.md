@@ -2,6 +2,27 @@
 
 All notable changes to the hacCare Hospital Patient Record System will be documented in this file.
 
+## [2.4.1] - 2025-07-15
+
+### Improved
+- **Alert System**: Enhanced real-time notification system
+  - Fixed overdue medication alerts to properly display in notification panel
+  - Implemented different vital signs monitoring thresholds based on patient condition (4 hours for Critical patients, 8 hours for others)
+  - Added automatic alert checks every 5 minutes
+  - Improved real-time alert synchronization with database changes
+  - Enhanced alert detection to prevent missed notifications
+  - Better error handling and logging throughout the alert system
+
+### Fixed
+- **Medication Alerts**: Resolved issues with overdue medication detection
+  - Fixed alert query to properly detect and display overdue medications
+  - Improved medication due time calculations and display
+  - Enhanced logging for medication timing for better troubleshooting
+- **Vital Signs Monitoring**: Fixed vital signs alert thresholds
+  - Implemented condition-based monitoring (more frequent for Critical patients)
+  - Added CRITICAL prefix to vital signs alerts for high-priority patients
+  - Fixed alert message formatting for better readability
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

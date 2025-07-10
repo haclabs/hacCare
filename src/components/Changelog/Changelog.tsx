@@ -37,6 +37,48 @@ export const Changelog: React.FC = () => {
    */
   const changelogData: ChangelogEntry[] = [
     {
+      version: "2.4.1",
+      date: "2025-07-15",
+      changes: [
+        {
+          type: "improvement",
+          description: "Enhanced real-time notification system with improved overdue medication alerts in notification panel"
+        },
+        {
+          type: "improvement",
+          description: "Implemented different vital signs monitoring thresholds based on patient condition (4 hours for Critical patients, 8 hours for others)"
+        },
+        {
+          type: "improvement",
+          description: "Added automatic alert checks every 5 minutes with real-time database synchronization"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced alert detection algorithms to prevent missed notifications"
+        },
+        {
+          type: "bugfix",
+          description: "Fixed alert query to properly detect and display overdue medications"
+        },
+        {
+          type: "bugfix",
+          description: "Improved medication due time calculations and display in the notification panel"
+        },
+        {
+          type: "bugfix",
+          description: "Fixed vital signs alert thresholds with condition-based monitoring frequency"
+        },
+        {
+          type: "bugfix",
+          description: "Added CRITICAL prefix to vital signs alerts for high-priority patients"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced logging and error handling throughout the alert system for better troubleshooting"
+        }
+      ]
+    },
+    {
       version: "2.4.0",
       date: "2025-07-10",
       changes: [
