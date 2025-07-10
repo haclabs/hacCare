@@ -2,11 +2,6 @@ import React from 'react';
 import { Patient, Alert } from '../../types';
 import { Users, AlertTriangle, Activity, Clock } from 'lucide-react';
 
-/**
- * QuickStats Component
- * 
- * Displays summary statistics for patients and alerts
- */
 interface QuickStatsProps {
   patients: Patient[];
   alerts: Alert[];
@@ -16,11 +11,14 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
   const criticalPatients = patients.filter(p => p.condition === 'Critical').length;
   const activeAlerts = alerts.filter(a => !a.acknowledged).length;
   
-  // Count medications due directly from alerts
   const medicationsDue = alerts.filter(a => a.type === 'Medication Due' && !a.acknowledged).length;
   
-  // Simple log to verify the count
-  console.log(`QuickStats - Found ${medicationsDue} medication alerts out of ${alerts.length} total alerts`);
+  console.log(`QuickStats - Found ${medicationsDue} medication due alerts out of ${alerts.length} total alerts`);
+  alerts.forEach(alert => {
+    if (alert.type === 'Medication Due') {
+      console.log(`Medication alert: ${alert.message} - Acknowledged: ${alert.acknowledged}`);
+    }
+  });
 
   // Define stats cards
   const stats = [
