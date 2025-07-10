@@ -139,8 +139,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         const isOverdue = isValid(dueTime) && 
                          dueTime.getTime() < now.getTime() && // Strictly less than current time
                          med.status === 'Active';             // Only active medications
-        const isOverdue = isValid(dueTime) && dueTime.getTime() < now.getTime() && med.status === 'Active';
-        const isOverdue = isValid(dueTime) && dueTime.getTime() < now.getTime() && med.status === 'Active';
         if (isOverdue) {
           console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
         }

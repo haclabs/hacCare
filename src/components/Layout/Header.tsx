@@ -8,10 +8,9 @@ import { format } from 'date-fns';
 interface HeaderProps {
   onAlertsClick: () => void;
   dbError?: string | null;
-  isOffline?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, isOffline }) => {
+export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
   const { profile, signOut } = useAuth();
   const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
   const { isOffline: patientsOffline } = usePatients();

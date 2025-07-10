@@ -66,13 +66,6 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
       return []
     }
     
-    // Check database health first
-    const isHealthy = await checkDatabaseHealth()
-    if (!isHealthy) {
-      console.warn('📱 Database unavailable - no alerts available')
-      return []
-    }
-
     console.log('🔔 Fetching active alerts...');
     const now = new Date();
     console.log('Current time for alert fetch:', now.toISOString());
@@ -218,7 +211,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
     // This includes both medications due within the next hour AND overdue medications
     const { data: dueMedications, error } = await supabase
       .from('patient_medications')
-      .from('patient_medications')
+      .select(`
         *,
         patients!inner(id, first_name, last_name, patient_id)
       `)
@@ -255,7 +248,6 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       // Calculate if medication is overdue
       const minutesUntilDue = Math.round((dueTime.getTime() - now.getTime()) / (1000 * 60));
       const isOverdue = minutesUntilDue <= 0;
-      const isOverdue = minutesUntilDue <= 0;
       const isDueSoon = !isOverdue && minutesUntilDue <= 60;
       
       console.log(`Medication ${medication.name} for ${patient.first_name} ${patient.last_name}:`);
@@ -280,20 +272,6 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           .eq('alert_type', 'medication_due')
           .eq('acknowledged', false)
           .or(`message.ilike.%${medicationNamePattern}%,message.ilike.%${medication.dosage.replace(/[%_]/g, '')}%`)
-      // Improved check for existing alerts - more specific to avoid missing alerts
-      let existingAlerts = null;
-      let alertCheckError = null;
-      // Create a clean pattern for SQL LIKE by removing special characters
-      const medicationNamePattern = medication.name.replace(/[%_]/g, '');
-      
-      try {
-        const result = await supabase
-          .from('patient_alerts')
-          .select('id, message, created_at, priority')
-          .eq('patient_id', patient.id) 
-          .eq('alert_type', 'medication_due')
-          .eq('acknowledged', false)
-          .or(\`message.ilike.%${medicationNamePattern}%,message.ilike.%${medication.dosage.replace(/[%_]/g, '')}%`)
           .order('created_at', { ascending: false })
           .limit(1);
         
@@ -321,29 +299,11 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         (isOverdue && existingAlerts[0].priority !== 'critical') || 
         (isDueSoon && existingAlerts[0].priority !== 'high')
       );
-      const statusChanged = (isOverdue && !existingIsOverdue) || (!isOverdue && existingIsOverdue);
-      const priorityChanged = existingAlerts?.[0] && (
-        (isOverdue && existingAlerts[0].priority !== 'critical') || 
-        (isDueSoon && existingAlerts[0].priority !== 'high')
-      );
       
       if (!existingAlerts || existingAlerts.length === 0 || statusChanged || priorityChanged) {
         // If status changed and there's an existing alert, acknowledge it first
         if ((statusChanged || priorityChanged) && existingAlerts && existingAlerts.length > 0) {
-          console.log(\`Status or priority changed, acknowledging old alert`);
-          try {
-            await supabase
-              .from('patient_alerts')
-              .update({ acknowledged: true })
-              .eq('id', existingAlerts[0].id);
-          } catch (ackError) {
-            console.error('Error acknowledging old alert:', ackError);
-          }
-        }
-      if (!existingAlerts || existingAlerts.length === 0 || statusChanged || priorityChanged) {
-        // If status changed and there's an existing alert, acknowledge it first
-        if ((statusChanged || priorityChanged) && existingAlerts && existingAlerts.length > 0) {
-          console.log(\`Status or priority changed, acknowledging old alert`);
+          console.log(`Status or priority changed, acknowledging old alert`);
           try {
             await supabase
               .from('patient_alerts')
@@ -355,16 +315,15 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         }
         
         const message = isOverdue 
-          ? \`OVERDUE: ${medication.name} ${medication.dosage} is overdue by ${Math.abs(minutesUntilDue)} minutes` 
-          : \`${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
+          ? `OVERDUE: ${medication.name} ${medication.dosage} is overdue by ${Math.abs(minutesUntilDue)} minutes` 
+          : `${medication.name} ${medication.dosage} is due ${minutesUntilDue <= 0 ? 'now' : `in ${minutesUntilDue} minutes`}`;
 
-        // Set priority based on status
         // Set priority based on status
         const priority = isOverdue ? 'critical' : (isDueSoon ? 'high' : 'medium');
         
         const alertData: any = {
           patient_id: patient.id,
-          patient_name: \`${patient.first_name} ${patient.last_name}`,
+          patient_name: `${patient.first_name} ${patient.last_name}`,
           alert_type: 'medication_due',
           message: message,
           priority: priority,
@@ -373,12 +332,12 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           expires_at: new Date(now.getTime() + (isOverdue ? 12 : 2) * 60 * 60 * 1000).toISOString()
         };
         
-        console.log(\`Creating alert:`, alertData);
+        console.log(`Creating alert:`, alertData);
         try {
           const newAlert = await createAlert(alertData);
-          console.log(\`Created alert for ${medication.name}:`, newAlert);
+          console.log(`Created alert for ${medication.name}:`, newAlert);
         } catch (alertError) {
-          console.error(\`Error creating alert for ${medication.name}:`, alertError);
+          console.error(`Error creating alert for ${medication.name}:`, alertError);
         }
       }
     }
@@ -405,7 +364,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
         patients!inner(id, first_name, last_name, patient_id)
       `)
       .gte('recorded_at', fourHoursAgo.toISOString())
-      .or(\`next_due.lt.${now.toISOString()},and(next_due.gt.${now.toISOString()},next_due.lt.${new Date(now.getTime() + 60 * 60 * 1000).toISOString()})`)
+      .order('recorded_at', { ascending: false });
 
     if (error) {
       console.error('Error checking vital signs:', error);
@@ -430,6 +389,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
         alerts.push({
           type: 'Temperature',
           message: \`Temperature ${vital.temperature.toFixed(1)}°C - ${vital.temperature > 38.0 ? 'Fever' : 'Hypothermia'}`,
+          message: `Temperature ${vital.temperature.toFixed(1)}°C - ${vital.temperature > 38.0 ? 'Fever' : 'Hypothermia'}`,
           priority: vital.temperature > 39.0 || vital.temperature < 35.5 ? 'critical' : 'high'
         });
       }
@@ -439,7 +399,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
           vital.blood_pressure_diastolic > 110 || vital.blood_pressure_diastolic < 60) {
         alerts.push({
           type: 'Blood Pressure',
-          message: \`Blood Pressure ${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic} mmHg - ${
+          message: `Blood Pressure ${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic} mmHg - ${
             vital.blood_pressure_systolic > 180 || vital.blood_pressure_diastolic > 110 ? 'Hypertensive Crisis' : 'Hypotension'
           }`,
           priority: vital.blood_pressure_systolic > 180 || vital.blood_pressure_diastolic > 110 ? 'critical' : 'high'
@@ -450,7 +410,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       if (vital.heart_rate > 120 || vital.heart_rate < 50) {
         alerts.push({
           type: 'Heart Rate',
-          message: \`Heart Rate ${vital.heart_rate} BPM - ${vital.heart_rate > 120 ? 'Tachycardia' : 'Bradycardia'}`,
+          message: `Heart Rate ${vital.heart_rate} BPM - ${vital.heart_rate > 120 ? 'Tachycardia' : 'Bradycardia'}`,
           priority: vital.heart_rate > 150 || vital.heart_rate < 40 ? 'critical' : 'high'
         });
       }
@@ -459,7 +419,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       if (vital.oxygen_saturation < 95) {
         alerts.push({
           type: 'Oxygen Saturation',
-          message: \`O2 Saturation ${vital.oxygen_saturation}% - Hypoxemia`,
+          message: `O2 Saturation ${vital.oxygen_saturation}% - Hypoxemia`,
           priority: vital.oxygen_saturation < 90 ? 'critical' : 'high'
         });
       }
@@ -468,7 +428,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       if (vital.respiratory_rate > 24 || vital.respiratory_rate < 12) {
         alerts.push({
           type: 'Respiratory Rate',
-          message: \`Respiratory Rate ${vital.respiratory_rate}/min - ${
+          message: `Respiratory Rate ${vital.respiratory_rate}/min - ${
             vital.respiratory_rate > 24 ? 'Tachypnea' : 'Bradypnea'
           }`,
           priority: vital.respiratory_rate > 30 || vital.respiratory_rate < 8 ? 'critical' : 'high'
@@ -490,7 +450,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
           if (!existingAlerts || existingAlerts.length === 0) {
             const alertData = {
               patient_id: patientId,
-              patient_name: \`${patient.first_name} ${patient.last_name}`,
+              patient_name: `${patient.first_name} ${patient.last_name}`,
               alert_type: 'vital_signs',
               message: alertInfo.message,
               priority: alertInfo.priority as 'low' | 'medium' | 'high' | 'critical',
@@ -592,9 +552,9 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
           
           const alertData = {
             patient_id: patient.id,
-            patient_name: \`${patient.first_name} ${patient.last_name}`,
+            patient_name: `${patient.first_name} ${patient.last_name}`,
             alert_type: 'vital_signs',
-            message: \`Vital signs ${isPatientCritical ? 'CRITICAL' : ''} overdue - last recorded ${hoursOverdue} hours ago`,
+            message: `Vital signs ${isPatientCritical ? 'CRITICAL' : ''} overdue - last recorded ${hoursOverdue} hours ago`,
             priority: isPatientCritical || hoursOverdue > 12 ? 'high' : 'medium',
             acknowledged: false,
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
@@ -602,9 +562,9 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
           
           try {
             await createAlert(alertData);
-            console.log(\`Created missing vitals alert for patient ${patient.first_name} ${patient.last_name}`);
+            console.log(`Created missing vitals alert for patient ${patient.first_name} ${patient.last_name}`);
           } catch (alertError) {
-            console.error(\`Error creating missing vitals alert:`, alertError);
+            console.error(`Error creating missing vitals alert:`, alertError);
           }
         }
       }
