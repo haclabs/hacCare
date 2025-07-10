@@ -3,7 +3,7 @@ import { Alert } from '../../types';
 import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play, Filter } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
-import { useAlerts } from '../../contexts/AlertContext';
+import { useAlerts } from '../../contexts/AlertContext'; 
 
 // Helper function to format alert timestamp
 const formatAlertTime = (timestamp: string) => {
@@ -206,6 +206,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               <div className="space-y-3">
                 {unacknowledgedAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type);
+                  const isOverdue = alert.message.toLowerCase().includes('overdue');
                   return (
                     <div
                       key={alert.id}
