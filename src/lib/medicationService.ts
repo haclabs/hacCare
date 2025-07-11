@@ -545,7 +545,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     const { data, error } = await supabase
       .from('patient_medications')
       .select('id, patient_id')
-      .or(`id.eq.${extractedId},id::text.ilike.%${extractedId}%`)
+      .or(`id.eq.${extractedId},id.ilike.%${extractedId}%`)
       .limit(1);
 
     if (error) {
