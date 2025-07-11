@@ -540,13 +540,13 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     
     // Extract the actual medication ID from the barcode format (e.g., "MED123456" -> "123456")
     const extractedId = medicationId.startsWith('MED') ? medicationId.substring(3) : medicationId;
+    console.log('Extracted ID from barcode:', extractedId);
     
-    // Query the database to find the medication and its associated patient
+    // Fetch all medications to perform client-side matching
     const { data, error } = await supabase
       .from('patient_medications')
       .select('id, patient_id')
-      .eq('id', extractedId)
-      .limit(1);
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error looking up patient by medication ID:', error);
@@ -554,15 +554,30 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     }
 
     if (!data || data.length === 0) {
-      console.log('No medication found with ID:', medicationId);
+      console.log('No medications found in database');
       return null;
     }
 
-    console.log('Found patient for medication:', data[0]);
-    return {
-      patientId: data[0].patient_id,
-      medicationId: data[0].id
-    };
+    console.log(`Checking ${data.length} medications for a match with ${extractedId}`);
+    
+    // Find medication whose ID ends with the extracted ID (last 6 characters)
+    const matchedMedication = data.find(med => {
+      // Get the last 6 characters of the medication ID
+      const medIdSuffix = med.id.substring(med.id.length - 6);
+      console.log(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId}`);
+      return medIdSuffix === extractedId;
+    });
+    
+    if (matchedMedication) {
+      console.log('Found matching medication:', matchedMedication);
+      return {
+        patientId: matchedMedication.patient_id,
+        medicationId: matchedMedication.id
+      };
+    } else {
+      console.log('No medication found with ID suffix:', extractedId);
+      return null;
+    }
   } catch (error) {
     console.error('Error in getPatientByMedicationId:', error);
     return null;
