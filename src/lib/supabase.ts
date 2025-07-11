@@ -113,7 +113,7 @@ export interface UserProfile {
  */
 export const checkDatabaseHealth = async (): Promise<boolean> => {
   if (!isSupabaseConfigured) {
-    console.error('⚠️ Supabase client not properly configured - check environment variables');
+    console.warn('⚠️ Supabase client not properly configured - check environment variables');
     return false;
   }
 
@@ -133,35 +133,15 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
     clearTimeout(timeoutId);
     
     if (error) {
-      console.error('Database health check failed:', error.message);
-      
-      // Check for specific error types
-      if (error.message.includes('Failed to fetch')) {
-        console.error('Network connectivity issue detected');
-        return false;
-      }
-      
+      console.warn('🔌 Database connection failed - please check your Supabase configuration and internet connection');
       return false;
     }
     
     console.log('✅ Database connection successful');
     return true;
   } catch (error: any) {
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        console.error('Database connection timeout');
-      } else {
-        console.error('Database health check failed:', error.message);
-      }
-    }
-    
-    // Provide more specific error messages
-    if (error.message?.includes('fetch')) {
-      console.error('Network error: Unable to reach Supabase servers');
-    } else if (error.message?.includes('timeout')) {
-      console.error('Connection timeout: Request took too long');
-    }
-    
+    // Consolidate all network-related errors into a single informative message
+    console.warn('🔌 Unable to connect to database - please verify your Supabase URL and API key in .env file');
     return false;
   }
 };
