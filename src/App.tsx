@@ -82,11 +82,13 @@ function App() {
         const patientId = barcode.substring(2); // Remove 'PT' prefix
         console.log('Extracted patient ID:', patientId);
         console.log('All patients:', patients.map(p => ({ id: p.id, patient_id: p.patient_id, name: `${p.first_name} ${p.last_name}` })));
-        
-        // Log each patient's ID for comparison
-        patients.forEach(p => {
-          console.log(`Comparing: Patient ${p.first_name} ${p.last_name} - ID: "${p.patient_id}" vs Scanned: "${patientId}"`);
-        });
+
+        // Only log detailed comparison in debug mode to reduce console spam
+        if (localStorage.getItem('debug-mode') === 'true') {
+          patients.forEach(p => {
+            console.log(`Comparing: Patient ${p.first_name} ${p.last_name} - ID: "${p.patient_id}" vs Scanned: "${patientId}"`);
+          });
+        }
         
         const patient = patients.find(p => p.patient_id === patientId);
         if (patient) {
@@ -96,7 +98,7 @@ function App() {
           console.warn(`Patient with ID ${patientId} not found`);
           
           // Try a more flexible search
-          console.log('Trying flexible search...');
+          console.log('Patient not found with exact match, trying flexible search...');
           const flexibleMatch = patients.find(p => 
             p.patient_id.includes(patientId) || 
             patientId.includes(p.patient_id)
@@ -104,9 +106,27 @@ function App() {
           
           if (flexibleMatch) {
             console.log('Found patient with flexible matching:', flexibleMatch);
-            console.log(`Flexible match: "${flexibleMatch.patient_id}" vs "${patientId}"`);
+            console.log(`Match found: "${flexibleMatch.patient_id}" contains or is contained in "${patientId}"`);
+            navigate(`/patient/${flexibleMatch.id}`);
+            return;
           } else {
-            console.log('No patient found even with flexible matching');
+            console.log('No patient found with flexible matching, trying numeric-only matching...');
+            
+            // Try matching just the numeric part (for when PT prefix is missing)
+            const numericMatch = patients.find(p => {
+              // Extract numeric part from patient_id (remove PT prefix if present)
+              const numericPatientId = p.patient_id.replace(/^PT/, '');
+              return numericPatientId === patientId;
+            });
+            
+            if (numericMatch) {
+              console.log('Found patient with numeric-only matching:', numericMatch);
+              console.log(`Match found: numeric part of "${numericMatch.patient_id}" matches "${patientId}"`);
+              navigate(`/patient/${numericMatch.id}`);
+              return;
+            } else {
+              console.log('No patient found with any matching method');
+            }
           }
         }
       } else if (barcode.startsWith('MED')) {

@@ -18,18 +18,26 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onScan,
   isScanning = false
 }) => {
-  const [manualInput, setManualInput] = useState('');
+  const [manualInput, setManualInput] = useState<string>('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
 
   const handleManualScan = () => {
     if (manualInput.trim()) {
-      console.log('Manual barcode scan:', manualInput.trim());
+      const trimmedInput = manualInput.trim();
+      console.log('Manual barcode scan:', trimmedInput);
       onScan(manualInput.trim());
-      setLastScanned(manualInput.trim());
+      setLastScanned(trimmedInput);
       setManualInput('');
       setShowManualInput(false);
     }
+  };
+
+  // Add a debug mode toggle
+  const toggleDebugMode = () => {
+    const currentMode = localStorage.getItem('debug-mode') === 'true';
+    localStorage.setItem('debug-mode', (!currentMode).toString());
+    console.log(`Debug mode ${!currentMode ? 'enabled' : 'disabled'}`);
   };
 
   return (
@@ -41,14 +49,20 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
           isScanning 
             ? 'bg-green-100 text-green-700 border border-green-300 animate-pulse' 
             : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-        }`}
+          } flex items-center`}
         title="Scan barcode or enter manually"
       >
         <Barcode className="h-4 w-4" />
         <span>Scan Barcode</span>
         {lastScanned && (
-          <span className="ml-1 text-xs text-gray-500">Last: {lastScanned}</span>
+          <span className="ml-1 text-xs text-gray-500">Last: {lastScanned.length > 10 ? lastScanned.substring(0, 10) + '...' : lastScanned}</span>
         )}
+        {/* Hidden debug mode toggle - double click to activate */}
+        <button 
+          className="ml-1 w-2 h-2 rounded-full bg-transparent hover:bg-gray-300 focus:outline-none"
+          onClick={toggleDebugMode}
+          title="Toggle debug mode"
+        />
       </button>
 
       {/* Manual Input Dropdown */}
@@ -65,7 +79,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
               placeholder="Enter barcode value"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               onKeyDown={(e) => e.key === 'Enter' && handleManualScan()}
               autoFocus
             />
@@ -80,6 +94,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
           <div className="mt-2 text-xs text-gray-500">
             <p>Example formats:</p>
             <p>• Patient: PT12345</p>
+            <p>• Patient (numeric only): 12345</p>
             <p>• Medication: MED123456</p>
           </div>
         </div>
