@@ -33,6 +33,7 @@ export const useBarcodeScanner = (
   // Process keydown events
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      console.log('Barcode scanner keydown:', event.key);
       const currentTime = new Date().getTime();
       
       // Ignore if the target is an input element
@@ -41,6 +42,7 @@ export const useBarcodeScanner = (
         event.target instanceof HTMLTextAreaElement ||
         event.target instanceof HTMLSelectElement
       ) {
+        console.log('Ignoring keydown in input element');
         return;
       }
 
@@ -48,23 +50,35 @@ export const useBarcodeScanner = (
       const isLikelyBarcodeScanner = 
         currentTime - lastKeyTime < options.maxInputInterval || 
         buffer.length === 0;
+      
+      console.log('Barcode scanner timing:', {
+        currentTime,
+        lastKeyTime,
+        diff: currentTime - lastKeyTime,
+        maxInterval: options.maxInputInterval,
+        isLikelyBarcodeScanner,
+        bufferLength: buffer.length
+      });
 
       setLastKeyTime(currentTime);
 
       // If it's not likely from a scanner, reset
       if (!isLikelyBarcodeScanner && !isScanning) {
+        console.log('Not from scanner, clearing buffer');
         clearBuffer();
         return;
       }
 
       // Start scanning mode if not already started
       if (!isScanning) {
+        console.log('Starting scanning mode');
         setIsScanning(true);
       }
 
       // Process the key
       if (event.key === 'Enter') {
         // Enter key signals end of barcode
+        console.log('Enter key detected, processing barcode:', buffer);
         if (buffer.length >= options.minLength) {
           onScan(buffer);
         }
@@ -72,6 +86,7 @@ export const useBarcodeScanner = (
         event.preventDefault();
       } else if (event.key.length === 1) {
         // Only add printable characters to the buffer
+        console.log('Adding character to buffer:', event.key);
         setBuffer(prev => prev + event.key);
       }
     },
@@ -91,10 +106,12 @@ export const useBarcodeScanner = (
   // Set up reset timeout
   useEffect(() => {
     if (buffer.length > 0) {
+      console.log('Setting reset timeout for buffer:', buffer);
       const timeoutId = setTimeout(() => {
         if (buffer.length >= options.minLength) {
           // If we have enough characters but no Enter key was pressed,
           // still consider it a valid scan
+          console.log('Reset timeout triggered, processing buffer:', buffer);
           onScan(buffer);
         }
         clearBuffer();

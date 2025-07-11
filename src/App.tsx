@@ -76,20 +76,46 @@ function App() {
   const handleBarcodeScan = async (barcode: string) => {
     try {
       setIsScanning(true);
+      console.log('Barcode scanned:', barcode);
       if (barcode.startsWith('PT')) {
         // Patient barcode - extract patient ID and navigate to patient detail
         const patientId = barcode.substring(2); // Remove 'PT' prefix
+        console.log('Extracted patient ID:', patientId);
+        console.log('All patients:', patients.map(p => ({ id: p.id, patient_id: p.patient_id, name: `${p.first_name} ${p.last_name}` })));
+        
+        // Log each patient's ID for comparison
+        patients.forEach(p => {
+          console.log(`Comparing: Patient ${p.first_name} ${p.last_name} - ID: "${p.patient_id}" vs Scanned: "${patientId}"`);
+        });
+        
         const patient = patients.find(p => p.patient_id === patientId);
         if (patient) {
+          console.log('Patient found:', patient);
           navigate(`/patient/${patient.id}`);
         } else {
           console.warn(`Patient with ID ${patientId} not found`);
+          
+          // Try a more flexible search
+          console.log('Trying flexible search...');
+          const flexibleMatch = patients.find(p => 
+            p.patient_id.includes(patientId) || 
+            patientId.includes(p.patient_id)
+          );
+          
+          if (flexibleMatch) {
+            console.log('Found patient with flexible matching:', flexibleMatch);
+            console.log(`Flexible match: "${flexibleMatch.patient_id}" vs "${patientId}"`);
+          } else {
+            console.log('No patient found even with flexible matching');
+          }
         }
       } else if (barcode.startsWith('MED')) {
         // Medication barcode - look up patient by medication ID
         const medicationId = barcode.substring(3); // Remove 'MED' prefix
+        console.log('Extracted medication ID:', medicationId);
         const patient = await getPatientByMedicationId(medicationId);
         if (patient) {
+          console.log('Patient found via medication:', patient);
           navigate(`/patient/${patient.patientId}`, { 
             state: { activeTab: 'medications' } 
           });
@@ -97,6 +123,19 @@ function App() {
           console.warn(`Patient for medication ID ${medicationId} not found`);
         }
       } else {
+        console.log('Unknown barcode format, raw value:', barcode);
+        
+        // Try to guess the format
+        if (/^\d+$/.test(barcode)) {
+          console.log('Barcode appears to be numeric only, might be a patient ID without PT prefix');
+          
+          // Try to find patient with this numeric ID
+          const numericMatch = patients.find(p => p.patient_id === `PT${barcode}` || p.patient_id === barcode);
+          if (numericMatch) {
+            console.log('Found patient with numeric ID match:', numericMatch);
+          }
+        }
+        
         console.warn(`Unknown barcode format: ${barcode}`);
       }
     } catch (error) {
