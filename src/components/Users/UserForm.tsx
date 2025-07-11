@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Phone, Building, CreditCard } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../lib/supabase';
+import { parseAuthError } from '../../utils/authErrorParser';
 
 interface UserFormProps {
   user?: UserProfile | null;
@@ -46,7 +47,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           .eq('id', user.id);
 
         if (updateError) {
-          setError(updateError.message);
+          setError(parseAuthError(updateError));
           return;
         }
       } else {
@@ -63,7 +64,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         });
 
         if (authError) {
-          setError(authError.message);
+          setError(parseAuthError(authError));
           return;
         }
 
@@ -81,7 +82,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             .eq('id', authData.user.id);
 
           if (profileError) {
-            setError(profileError.message);
+            setError(parseAuthError(profileError));
             return;
           }
         }
@@ -89,7 +90,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
       onSuccess();
     } catch (error: any) {
-      setError(error.message);
+      setError(parseAuthError(error));
     } finally {
       setLoading(false);
     }

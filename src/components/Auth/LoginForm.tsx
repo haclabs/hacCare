@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, AlertCircle, Info, Heart, Wifi, WifiOff, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 
 export const LoginForm: React.FC = () => {
@@ -41,32 +42,25 @@ export const LoginForm: React.FC = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
-        // Provide more user-friendly error messages
-        if (error.message?.includes('Invalid login credentials')) {
-          setError('Invalid email or password. Please check your credentials and try again.');
-        } else if (error.message?.includes('Email not confirmed')) {
-          setError('Please confirm your email address before signing in.');
-        } else if (error.message?.includes('Too many requests')) {
-          setError('Too many login attempts. Please wait a moment before trying again.');
-        } else if (error.message?.includes('Network error') || 
-                   error.message?.includes('Failed to fetch') ||
-                   error.message?.includes('timeout')) {
-          setError('Network connection error. Please check your internet connection and try again.');
+        setError(parseAuthError(error));
+        
+        // Update connection status for network-related errors
+        if (error.message?.includes('Network error') || 
+            error.message?.includes('Failed to fetch') ||
+            error.message?.includes('timeout')) {
           setConnectionStatus('disconnected');
-        } else {
-          setError(error.message || 'An error occurred during sign in. Please try again.');
-        }
+        } 
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      setError(parseAuthError(error));
+      
+      // Update connection status for network-related errors
       if (error.message?.includes('Failed to fetch') || 
           error.message?.includes('NetworkError') ||
           error.message?.includes('timeout')) {
-        setError('Connection timeout. Please check your internet connection and try again.');
-        setConnectionStatus('disconnected');
-      } else {
-        setError(error.message || 'An unexpected error occurred');
-      }
+          setConnectionStatus('disconnected');
+      } 
     } finally {
       setLoading(false);
     }
@@ -82,26 +76,29 @@ export const LoginForm: React.FC = () => {
       const { error } = await signIn(demoEmail, demoPassword);
       
       if (error) {
+        // Special case for demo accounts
         if (error.message?.includes('Invalid login credentials')) {
           setError('Demo account not found. Please ensure the demo accounts have been set up in your Supabase project.');
-        } else if (error.message?.includes('Network error') || 
-                   error.message?.includes('Failed to fetch') ||
-                   error.message?.includes('timeout')) {
-          setError('Network connection error. Please check your internet connection and try again.');
-          setConnectionStatus('disconnected');
         } else {
-          setError(error.message || 'Failed to sign in with demo account.');
+          setError(parseAuthError(error));
+        }
+        
+        // Update connection status for network-related errors
+        if (error.message?.includes('Network error') || 
+            error.message?.includes('Failed to fetch') ||
+            error.message?.includes('timeout')) {
+            setConnectionStatus('disconnected');
         }
       }
     } catch (error: any) {
       console.error('Demo login error:', error);
+      setError(parseAuthError(error));
+      
+      // Update connection status for network-related errors
       if (error.message?.includes('Failed to fetch') || 
           error.message?.includes('NetworkError') ||
           error.message?.includes('timeout')) {
-        setError('Connection timeout. Please check your internet connection and try again.');
-        setConnectionStatus('disconnected');
-      } else {
-        setError(error.message || 'An unexpected error occurred');
+          setConnectionStatus('disconnected');
       }
     } finally {
       setLoading(false);

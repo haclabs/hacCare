@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { parseAuthError } from '../../utils/authErrorParser';
 
 /**
  * Security Settings Component
@@ -129,7 +130,7 @@ export const SecuritySettings: React.FC = () => {
       setSuccess('Password updated successfully');
     } catch (err: any) {
       console.error('Error updating password:', err);
-      setError(err.message || 'Failed to update password');
+      setError(parseAuthError(err));
     } finally {
       setLoading(false);
     }

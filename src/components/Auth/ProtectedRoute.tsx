@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
 import { LoadingSpinner } from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { parseAuthError } from '../../utils/authErrorParser';
 import { User, AlertCircle, RefreshCw, CheckCircle, Heart } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -55,7 +56,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         await createProfile();
       } catch (error: any) {
         console.error('Failed to create profile:', error);
-        setProfileError(error.message || 'Failed to create profile');
+        setProfileError(parseAuthError(error));
       } finally {
         setCreatingProfile(false);
       }

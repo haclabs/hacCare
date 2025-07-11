@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
+import { parseAuthError } from '../../utils/authErrorParser';
 
 /**
  * Authentication Context Interface
@@ -442,7 +443,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           error.message?.includes('timeout') ||
           error.message?.includes('fetch') ||
           error.message?.includes('Supabase not configured')) {
-        throw new Error('Unable to connect to database. Please check your internet connection and Supabase configuration.');
+        throw new Error(parseAuthError(error));
       }
       
       throw error;
@@ -518,7 +519,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           error.message?.includes('NetworkError') ||
           error.message?.includes('fetch') ||
           error.message?.includes('Supabase not configured')) {
-        return { error: { message: 'Connection timeout - please check your internet connection and Supabase configuration' } };
+        return { error: { message: parseAuthError(error) } };
       }
       
       return { error };
