@@ -71,7 +71,7 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
     console.log('Current time for alert fetch:', now.toISOString());
     
     const { data, error } = await supabase
-      .from('patient_alerts')
+      .from<DatabaseAlert>('patient_alerts')
       .select('*')
       .eq('acknowledged', false)
       .or(`expires_at.is.null,expires_at.gt.${now.toISOString()}`)
@@ -110,7 +110,7 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
     try {
       // Check if a similar alert already exists to prevent duplicates
       const result = await supabase
-        .from('patient_alerts')
+        .from<DatabaseAlert>('patient_alerts')
         .select('id, message')
         .eq('patient_id', alert.patient_id)
         .eq('alert_type', alert.alert_type) 
@@ -135,7 +135,7 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
       
       // Return the existing alert
       const { data: existingAlert } = await supabase
-        .from('patient_alerts')
+        .from<DatabaseAlert>('patient_alerts')
         .select('*')
         .eq('id', existingAlerts[0].id)
         .single();
@@ -144,7 +144,7 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
     }
     
     const { data, error } = await supabase
-      .from('patient_alerts')
+      .from<DatabaseAlert>('patient_alerts')
       .insert(alert)
       .select()
       .single();
@@ -175,7 +175,7 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
     console.log('✅ Acknowledging alert:', alertId);
     
     const { error } = await supabase
-      .from('patient_alerts')
+      .from<DatabaseAlert>('patient_alerts')
       .update({
         acknowledged: true,
         acknowledged_by: userId,
@@ -210,7 +210,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
     // Get all active medications that are due now or overdue
     // This includes both medications due within the next hour AND overdue medications
     const { data: dueMedications, error } = await supabase
-      .from('patient_medications') 
+      .from<any>('patient_medications') 
       .select(`
         *,
         patients!inner(id, first_name, last_name, patient_id)
@@ -266,7 +266,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       
       try {
         const result = await supabase
-          .from('patient_alerts')
+          .from<DatabaseAlert>('patient_alerts')
           .select('id, message, created_at, priority')
           .eq('patient_id', patient.id) 
           .eq('alert_type', 'medication_due')
@@ -306,7 +306,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           console.log(`Status or priority changed, acknowledging old alert`);
           try {
             await supabase
-              .from('patient_alerts')
+              .from<DatabaseAlert>('patient_alerts')
               .update({ acknowledged: true })
               .eq('id', existingAlerts[0].id);
           } catch (ackError) {
@@ -361,7 +361,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
     fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
     
     const { data: recentVitals, error } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .select(`
         *,
         patients!inner(id, first_name, last_name, patient_id)
@@ -440,7 +440,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       for (const alertInfo of alerts) {
         // Check if similar alert already exists
         const { data: existingAlerts } = await supabase
-          .from('patient_alerts')
+          .from<DatabaseAlert>('patient_alerts')
           .select('id')
           .eq('patient_id', patientId)
           .eq('alert_type', 'vital_signs')
@@ -487,7 +487,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
 
     // Get all active patients
     const { data: patients, error: patientsError } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .select('id, first_name, last_name, patient_id')
       .neq('condition', 'Discharged')
       .order('created_at', { ascending: false });
@@ -500,7 +500,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
     // Check each patient's last vitals
     for (const patient of patients || []) {
       const { data: lastVital } = await supabase
-        .from('patient_vitals')
+        .from<DatabaseVitals>('patient_vitals')
         .select('recorded_at')
         .eq('patient_id', patient.id) 
         .order('recorded_at', { ascending: false })
@@ -526,7 +526,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
           }
           
           const result = await supabase
-            .from('patient_alerts')
+            .from<DatabaseAlert>('patient_alerts')
             .select('id')
             .eq('patient_id', patient.id)
             .eq('alert_type', 'vital_signs')
@@ -581,7 +581,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
 const isPatientConditionCritical = async (patientId: string): Promise<boolean> => {
   try {
     const { data, error } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .select('condition')
       .eq('id', patientId)
       .single();
@@ -668,7 +668,7 @@ export const cleanupExpiredAlerts = async (): Promise<void> => {
     console.log('🧹 Cleaning up expired alerts...');
     
     const { error } = await supabase
-      .from('patient_alerts')
+      .from<DatabaseAlert>('patient_alerts')
       .delete()
       .lt('expires_at', new Date().toISOString());
 

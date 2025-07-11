@@ -131,7 +131,7 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     
     // Fetch patients
     const { data: patients, error: patientsError } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -148,7 +148,7 @@ export const fetchPatients = async (): Promise<Patient[]> => {
 
     // Fetch vitals for all patients
     const { data: allVitals, error: vitalsError } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .select('*')
       .order('recorded_at', { ascending: false });
 
@@ -187,7 +187,7 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
     
     // Fetch patient
     const { data: patient, error: patientError } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .select('*')
       .eq('id', patientId)
       .single();
@@ -210,7 +210,7 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
 
     // Fetch vitals for this patient
     const { data: vitals, error: vitalsError } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false });
@@ -238,7 +238,7 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
     const dbPatient = convertToDatabase(patient);
     
     const { data, error } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .insert(dbPatient)
       .select()
       .single();
@@ -262,7 +262,7 @@ export const updatePatient = async (patient: Patient): Promise<Patient> => {
     const dbPatient = convertToDatabase(patient);
     
     const { data, error } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .update(dbPatient)
       .eq('id', patient.id)
       .select()
@@ -285,7 +285,7 @@ export const updatePatient = async (patient: Patient): Promise<Patient> => {
 export const deletePatient = async (patientId: string): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .delete()
       .eq('id', patientId);
 
@@ -307,7 +307,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
     console.log('Storing temperature in Celsius:', vitals.temperature);
     
     const { error } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .insert({
         patient_id: patientId,
         temperature: vitals.temperature, // Store as Celsius
@@ -356,7 +356,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
     console.log('Fetching latest vitals for patient:', patientId);
     
     const { data, error } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false })
@@ -404,7 +404,7 @@ export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[
     console.log('Fetching notes for patient:', patientId);
     
     const { data, error } = await supabase
-      .from('patient_notes')
+      .from<any>('patient_notes')
       .select('*')
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false });
@@ -451,7 +451,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
     
     // First, verify the patient exists to avoid deleting wrong records
     const { data: patient, error: patientError } = await supabase
-      .from('patients')
+      .from<DatabasePatient>('patients')
       .select('id')
       .eq('id', patientId)
       .single();
@@ -463,7 +463,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
     
     // Delete all vitals for this patient with explicit patient_id check
     const { error } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .delete()
       .eq('patient_id', patientId);
 
@@ -487,7 +487,7 @@ export const fetchPatientVitalsHistory = async (patientId: string, limit: number
     console.log('Fetching vitals history for patient:', patientId);
     
     const { data, error } = await supabase
-      .from('patient_vitals')
+      .from<DatabaseVitals>('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false })
