@@ -1,16 +1,18 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff, Barcode } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
+import { BarcodeScanner } from '../UI/BarcodeScanner';
 
 interface HeaderProps {
   onAlertsClick: () => void;
   dbError?: string | null;
+  onBarcodeScan?: (barcode: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
+export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
   const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
   const { isOffline: patientsOffline } = usePatients();
@@ -47,6 +49,13 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError }) => {
         </div>
 
         <div className="flex items-center space-x-6">
+          {/* Barcode Scanner */}
+          {onBarcodeScan && (
+            <div className="mr-2">
+              <BarcodeScanner onScan={onBarcodeScan} />
+            </div>
+          )}
+          
           {isOffline && (
             <div className="flex items-center space-x-1 px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs">
               <span className="w-2 h-2 bg-orange-500 rounded-full"></span>

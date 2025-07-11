@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Medication, MedicationAdministration } from '../types';
 import { logAction } from './auditService';
+import { Patient } from '../types';
 
 /**
  * Medication Service
@@ -526,5 +527,44 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
   } catch (error) {
     console.error('Error fetching medication administration history:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
+  }
+};
+
+/**
+ * Get patient by medication ID
+ * Looks up the patient associated with a medication barcode
+ */
+export const getPatientByMedicationId = async (medicationId: string): Promise<{ patientId: string, medicationId: string } | null> => {
+  try {
+    console.log('Looking up patient by medication ID:', medicationId);
+    
+    // Extract the actual medication ID from the barcode format (e.g., "MED123456" -> "123456")
+    const extractedId = medicationId.startsWith('MED') ? medicationId.substring(3) : medicationId;
+    
+    // Query the database to find the medication and its associated patient
+    const { data, error } = await supabase
+      .from('patient_medications')
+      .select('id, patient_id')
+      .or(`id.eq.${extractedId},id.ilike.%${extractedId}%`)
+      .limit(1);
+
+    if (error) {
+      console.error('Error looking up patient by medication ID:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No medication found with ID:', medicationId);
+      return null;
+    }
+
+    console.log('Found patient for medication:', data[0]);
+    return {
+      patientId: data[0].patient_id,
+      medicationId: data[0].id
+    };
+  } catch (error) {
+    console.error('Error in getPatientByMedicationId:', error);
+    return null;
   }
 };

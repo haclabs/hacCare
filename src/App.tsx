@@ -170,6 +170,7 @@ function App() {
       {/* Application Header */}
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
+        onBarcodeScan={handleBarcodeScan}
         dbError={dbError} 
         isOffline={isOffline}
       />
