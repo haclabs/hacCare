@@ -3,7 +3,7 @@ import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Medication } from '../../types';
 import { createMedication, updateMedication } from '../../lib/medicationService'; 
-import { addHours, setHours, setMinutes, parseISO } from 'date-fns';
+import { addHours, setHours, setMinutes, parseISO, format } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
 import { CheckCircle } from 'lucide-react';
 
