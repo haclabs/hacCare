@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Save, Edit, Trash2, ArrowRight, Square, Type, Ruler } from 'lucide-react';
-import ReactImageAnnotate from 'react-image-annotate';
+import ImageAnnotationTool from 'react-image-annotation-tool';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../lib/imageService';
@@ -380,17 +380,11 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
               {renderAnnotationTypeSelector()}
               
               <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <ReactImageAnnotate
+                <ImageAnnotationTool
                   src={selectedImage.image_url}
-                  taskDescription="Annotate the wound or injury"
-                  images={[{
-                    src: selectedImage.image_url,
-                    name: selectedImage.description || 'Patient image'
-                  }]}
-                  onExit={(output: any) => {
-                    if (output && output.length > 0) {
-                      setAnnotations(output[0].annotation || []);
-                    }
+                  annotations={annotations}
+                  onChange={(newAnnotations: any) => {
+                    setAnnotations(newAnnotations);
                   }}
                 />
               </div>
