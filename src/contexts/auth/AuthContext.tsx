@@ -549,6 +549,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       // Always clear local state regardless of Supabase call success
       console.log('🧹 Clearing local authentication state');
+      
+      // Clear Supabase session data from localStorage to prevent refresh token errors
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('sb-')) {
+            localStorage.removeItem(key);
+            console.log('🗑️ Removed localStorage key:', key);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error clearing localStorage:', error);
+      }
+      
       setUser(null);
       setProfile(null);
     }
