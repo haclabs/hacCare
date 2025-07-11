@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Security Settings Component
