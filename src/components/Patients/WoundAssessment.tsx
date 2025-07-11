@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, MapPin, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../lib/woundService';
+import { useAuth } from '../../hooks/useAuth';
 
 export interface WoundAssessmentProps {
   patientId: string;
