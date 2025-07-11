@@ -204,8 +204,7 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
   };
 
   return (
-    <div className="space-y-6">
-      {/* Controls */}
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
       <div className="flex items-center justify-end space-x-3">
         <button
           onClick={handlePrint}
@@ -439,7 +438,6 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

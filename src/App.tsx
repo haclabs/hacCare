@@ -246,12 +246,14 @@ function App() {
 
       {/* Wrap HospitalBracelet in Suspense */}
       {braceletPatient && (
-        <Suspense fallback={<LoadingSpinner />}>
-          <HospitalBracelet
-            patient={braceletPatient}
-            onClose={() => setBraceletPatient(null)}
-          />
-        </Suspense>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <Suspense fallback={<LoadingSpinner />}>
+            <HospitalBracelet
+              patient={braceletPatient}
+              onClose={() => setBraceletPatient(null)}
+            />
+          </Suspense>
+        </div>
       )}
     </div>
   );
