@@ -166,39 +166,39 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     return (
       <div
         key={medication.id}
-        className={`bg-white rounded-lg border-2 p-4 transition-all duration-200 hover:shadow-md ${
-          isOverdue ? 'border-red-300 bg-red-50' : 
+        className={`bg-white dark:bg-gray-800 rounded-lg border-2 p-4 transition-all duration-200 hover:shadow-md ${
+          isOverdue ? 'border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20' : 
           isDue ? 'border-yellow-300 bg-yellow-50' : 
-          'border-gray-200'
+          'border-gray-200 dark:border-gray-700'
         }`}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Pill className={`w-5 h-5 ${
-                isOverdue ? 'text-red-600' : 
+                isOverdue ? 'text-purple-600 dark:text-purple-400' : 
                 isDue ? 'text-yellow-600' : 
-                'text-blue-600'
+                'text-blue-600 dark:text-blue-400'
               }`} />
-              <h3 className="font-semibold text-gray-900">{medication.name}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{medication.name}</h3>
               {(isDue || isOverdue) && (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  isOverdue ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                  isOverdue ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                 }`}>
                   {isOverdue ? 'Overdue' : 'Due'}
                 </span>
               )}
             </div>
             
-            <div className="space-y-1 text-sm text-gray-600">
-              <p><span className="font-medium">Dosage:</span> {medication.dosage}</p>
-              <p><span className="font-medium">Route:</span> {medication.route}</p>
-              <p><span className="font-medium">Frequency:</span> {medication.frequency}</p>
+            <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <p><span className="font-medium dark:text-gray-200">Dosage:</span> {medication.dosage}</p>
+              <p><span className="font-medium dark:text-gray-200">Route:</span> {medication.route}</p>
+              <p><span className="font-medium dark:text-gray-200">Frequency:</span> {medication.frequency}</p>
               {medication.next_due && (
-                <p><span className="font-medium">Next Due:</span> {formatLocalTime(parseISO(medication.next_due), 'MMM dd, yyyy HH:mm')}</p>
+                <p><span className="font-medium dark:text-gray-200">Next Due:</span> {formatLocalTime(parseISO(medication.next_due), 'MMM dd, yyyy HH:mm')}</p>
               )}
               {medication.last_administered && (
-                <p><span className="font-medium">Last Given:</span> {formatLocalTime(parseISO(medication.last_administered), 'MMM dd, yyyy HH:mm')}</p>
+                <p><span className="font-medium dark:text-gray-200">Last Given:</span> {formatLocalTime(parseISO(medication.last_administered), 'MMM dd, yyyy HH:mm')}</p>
               )}
             </div>
           </div>

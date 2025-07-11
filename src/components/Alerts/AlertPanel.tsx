@@ -206,10 +206,22 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                   return (
                     <div
                       key={alert.id}
-                      className={`border rounded-lg p-4 ${alert.message.toLowerCase().includes('overdue') ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' : getPriorityColor(alert.priority)}`}
+                      className={`border rounded-lg p-4 ${
+                        alert.message.toLowerCase().includes('overdue') && alert.type === 'Medication Due' 
+                          ? 'bg-purple-100 border-purple-300 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800' 
+                        : alert.message.toLowerCase().includes('overdue') && alert.type === 'Vital Signs Alert'
+                          ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800'
+                        : getPriorityColor(alert.priority)
+                      }`}
                     >
                       <div className="flex items-start space-x-3">
-                        <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${alert.message.toLowerCase().includes('overdue') ? 'animate-pulse' : ''}`} />
+                        <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
+                          alert.message.toLowerCase().includes('overdue') ? 'animate-pulse' : ''
+                        } ${
+                          alert.message.toLowerCase().includes('overdue') && alert.type === 'Medication Due' 
+                            ? 'text-purple-600 dark:text-purple-400' 
+                          : ''
+                        }`} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
                             <p className="text-sm font-medium">{alert.patientName}</p>
@@ -218,7 +230,11 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                             </span>
                           </div>
                           <p className={`text-sm mb-2 ${alert.message.toLowerCase().includes('overdue') ? 'font-bold text-red-700 dark:text-red-400' : 'font-medium'}`}>{alert.message}</p>
-                          <div className="flex items-center justify-between">
+                            alert.message.toLowerCase().includes('overdue') && alert.type === 'Medication Due' 
+                              ? 'font-bold text-purple-700 dark:text-purple-400' 
+                            : alert.message.toLowerCase().includes('overdue') && alert.type === 'Vital Signs Alert'
+                              ? 'font-bold text-red-700 dark:text-red-400'
+                            : 'font-medium'
                             <p className="text-xs opacity-75">
                               {formatAlertTime(alert.timestamp)}
                             </p>
