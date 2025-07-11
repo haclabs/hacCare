@@ -204,7 +204,7 @@ function App() {
       {/* Wrap HospitalBracelet in Suspense */}
       {braceletPatient && (
         <Suspense fallback={<LoadingSpinner />}>
-          <LazyHospitalBracelet
+          <HospitalBracelet
             patient={braceletPatient}
             onClose={() => setBraceletPatient(null)}
           />
