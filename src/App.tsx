@@ -76,7 +76,7 @@ function App() {
   const handleBarcodeScan = async (barcode: string) => {
     try {
       setIsScanning(true);
-      console.log('🔍 Barcode scanned:', barcode, typeof barcode);
+      console.log('🔍 Barcode scanned:', barcode, typeof barcode, 'Length:', barcode.length);
       
       // Log all patients for debugging
       console.log('👥 All patients:', patients.map(p => ({ 
@@ -186,20 +186,44 @@ function App() {
       } else if (barcode.startsWith('MED')) {
         // Medication barcode - look up patient by medication ID
         const medicationId = barcode.substring(3); // Remove 'MED' prefix
-        console.log('💊 Extracted medication ID from barcode:', medicationId);
+        console.log('💊 Extracted medication ID from barcode:', medicationId, 'Original barcode:', barcode);
         
         // First try to find the medication directly in our loaded medications
         let foundMedication = null;
         let patientWithMedication = null;
         
+        // Log all medications for debugging
+        console.log('💊 All medications:');
+        patients.forEach(patient => {
+          if (patient.medications && patient.medications.length > 0) {
+            console.log(`Patient ${patient.first_name} ${patient.last_name} medications:`, 
+              patient.medications.map(med => ({ 
+                id: med.id, 
+                name: med.name,
+                category: med.category
+              }))
+            );
+          }
+        });
+        
         // Check each patient's medications
         for (const patient of patients) {
           if (patient.medications && patient.medications.length > 0) {
             // Look for medication ID that ends with the scanned ID (last 6 chars)
-            const matchingMed = patient.medications.find(med => 
-              med.id.endsWith(medicationId) || 
-              med.id.includes(medicationId)
-            );
+            const matchingMed = patient.medications.find(med => {
+              // Try different matching strategies
+              const endsWithMatch = med.id.endsWith(medicationId);
+              const includesMatch = med.id.includes(medicationId);
+              const exactMatch = med.id === medicationId;
+              
+              console.log(`Checking medication ${med.id} against ${medicationId}:`, {
+                endsWithMatch,
+                includesMatch,
+                exactMatch
+              });
+              
+              return endsWithMatch || includesMatch || exactMatch;
+            });
             
             if (matchingMed) {
               console.log('✅ Found medication directly in patient data:', matchingMed);
@@ -224,6 +248,7 @@ function App() {
           // Fallback to API lookup if not found in local data
           console.log('🔍 Medication not found in local data, trying API lookup');
           const result = await getPatientByMedicationId(medicationId);
+          console.log('API lookup result:', result);
           if (result) {
             console.log('✅ Patient found via medication API lookup:', result);
             navigate(`/patient/${result.patientId}`, { 
@@ -234,6 +259,20 @@ function App() {
             });
           } else {
             console.warn(`⚠️ Patient for medication ID ${medicationId} not found`);
+            // Try one more approach - direct lookup with the full barcode
+            console.log('🔍 Trying direct lookup with full barcode:', barcode);
+            const directResult = await getPatientByMedicationId(barcode);
+            if (directResult) {
+              console.log('✅ Patient found via direct barcode lookup:', directResult);
+              navigate(`/patient/${directResult.patientId}`, { 
+                state: { 
+                  activeTab: 'medications',
+                  medicationCategory: 'scheduled' // Default to scheduled tab
+                } 
+              });
+            } else {
+              console.warn(`⚠️ Patient for full barcode ${barcode} not found`);
+            }
           }
         }
       } else {

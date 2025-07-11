@@ -537,11 +537,11 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
 export const getPatientByMedicationId = async (medicationId: string): Promise<{ patientId: string, medicationId: string } | null> => {
   try {
     console.log('Looking up patient by medication ID:', medicationId);
-    console.log('Medication ID type:', typeof medicationId);
+    console.log('Medication ID type:', typeof medicationId, 'Length:', medicationId.length);
     
     // Extract the actual medication ID from the barcode format (e.g., "MED123456" -> "123456")
     const extractedId = medicationId.startsWith('MED') ? medicationId.substring(3) : medicationId;
-    console.log('Extracted ID from barcode:', extractedId, typeof extractedId);
+    console.log('Extracted ID from barcode:', extractedId, typeof extractedId, 'Length:', extractedId.length);
     
     // Fetch all medications to perform client-side matching
     const { data, error } = await supabase
@@ -561,13 +561,30 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
 
     console.log(`Checking ${data.length} medications for a match with ${extractedId}`);
     
+    // Log all medication IDs for debugging
+    console.log('All medication IDs in database:');
+    data.forEach(med => {
+      console.log(`- Medication ID: ${med.id}, Patient ID: ${med.patient_id}`);
+    });
+    
     // Find medication whose ID ends with the extracted ID (last 6 characters)
     const matchedMedication = data.find(med => {
       // Get the last 6 characters of the medication ID
-      const medIdSuffix = med.id.substring(Math.max(0, med.id.length - 6));
+      const medIdSuffix = med.id.length >= 6 ? med.id.substring(med.id.length - 6) : med.id;
       // Also try to match by including the ID anywhere in the medication ID
-      const isMatch = medIdSuffix === extractedId || med.id.includes(extractedId);
-      console.log(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId} - Match: ${isMatch}`);
+      const isMatch = medIdSuffix === extractedId || 
+                     med.id.includes(extractedId) || 
+                     extractedId.includes(med.id) ||
+                     med.id === medicationId;
+      
+      console.log(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId}:`, {
+        suffixMatch: medIdSuffix === extractedId,
+        medIncludesExtracted: med.id.includes(extractedId),
+        extractedIncludesMed: extractedId.includes(med.id),
+        exactMatch: med.id === medicationId,
+        isMatch: isMatch
+      });
+      
       return isMatch;
     });
     
@@ -578,7 +595,41 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
         medicationId: matchedMedication.id
       };
     } else {
-      console.log('No medication found with ID suffix:', extractedId);
+      console.log('No medication found with ID:', extractedId);
+      
+      // Try a more flexible approach - check if any medication ID contains any part of the extracted ID
+      console.log('Trying more flexible matching...');
+      
+      // If extractedId is very short (less than 3 chars), it might match too many things
+      // So only do this for longer IDs
+      if (extractedId.length >= 3) {
+        for (const med of data) {
+          // Check if any part of the medication ID contains any part of the extracted ID
+          // or vice versa
+          for (let i = 0; i < med.id.length - 2; i++) {
+            const medSubstring = med.id.substring(i, i + 3);
+            if (extractedId.includes(medSubstring)) {
+              console.log(`Found partial match: Medication ${med.id} substring "${medSubstring}" is in extracted ID "${extractedId}"`);
+              return {
+                patientId: med.patient_id,
+                medicationId: med.id
+              };
+            }
+          }
+          
+          for (let i = 0; i < extractedId.length - 2; i++) {
+            const extractedSubstring = extractedId.substring(i, i + 3);
+            if (med.id.includes(extractedSubstring)) {
+              console.log(`Found partial match: Extracted ID "${extractedId}" substring "${extractedSubstring}" is in medication ID "${med.id}"`);
+              return {
+                patientId: med.patient_id,
+                medicationId: med.id
+              };
+            }
+          }
+        }
+      }
+      
       return null;
     }
   } catch (error) {
