@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Save, Edit, Trash2, ArrowRight, Square, Type, Ruler } from 'lucide-react';
-import ReactImageAnnotation from 'react-image-annotation';
-import { Annotation } from 'react-image-annotation/lib/types';
+import ReactImageAnnotate from 'react-image-annotate';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../lib/imageService';
@@ -21,8 +20,8 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   const { user, profile } = useAuth();
   const [images, setImages] = useState<PatientImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<PatientImage | null>(null);
-  const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [annotation, setAnnotation] = useState<Annotation | null>(null);
+  const [annotations, setAnnotations] = useState<any[]>([]);
+  const [annotation, setAnnotation] = useState<any | null>(null);
   const [annotationType, setAnnotationType] = useState<'RECTANGLE' | 'ARROW' | 'TEXT' | 'POINT'>('RECTANGLE');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -105,12 +104,12 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   }
   
   // Handle annotation changes
-  const handleAnnotationChange = (annotation: Annotation) => {
+  const handleAnnotationChange = (annotation: any) => {
     setAnnotation(annotation);
   };
   
   // Handle annotation submission
-  const handleAnnotationSubmit = (annotation: Annotation) => {
+  const handleAnnotationSubmit = (annotation: any) => {
     const { geometry, data } = annotation;
     
     // Create a new annotation with a unique ID
@@ -381,14 +380,18 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
               {renderAnnotationTypeSelector()}
               
               <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <ReactImageAnnotation
+                <ReactImageAnnotate
                   src={selectedImage.image_url}
-                  alt={selectedImage.description || 'Patient image'}
-                  annotations={annotations}
-                  type={annotationType}
-                  value={annotation}
-                  onChange={handleAnnotationChange}
-                  onSubmit={handleAnnotationSubmit}
+                  taskDescription="Annotate the wound or injury"
+                  images={[{
+                    src: selectedImage.image_url,
+                    name: selectedImage.description || 'Patient image'
+                  }]}
+                  onExit={(output: any) => {
+                    if (output && output.length > 0) {
+                      setAnnotations(output[0].annotation || []);
+                    }
+                  }}
                 />
               </div>
               
