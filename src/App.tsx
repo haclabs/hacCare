@@ -13,7 +13,7 @@ import { Documentation } from './components/Documentation/Documentation';
 import { Changelog } from './components/Changelog/Changelog';
 import { Settings } from './components/Settings/Settings';
 import { usePatients } from './contexts/PatientContext';
-import { useAlerts } from './contexts/AlertContext';
+import { useAlerts } from './hooks/useAlerts';
 import { Patient } from './types';
 
 /**
