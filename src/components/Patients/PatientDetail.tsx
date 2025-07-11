@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw, Image } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes, clearPatientVitals } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
@@ -10,6 +10,7 @@ import { RecentActivity } from './RecentActivity';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
+import { ImageAnnotation } from './ImageAnnotation';
 import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
@@ -30,6 +31,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [showImageAnnotation, setShowImageAnnotation] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [refreshingVitals, setRefreshingVitals] = useState(false); 
   
@@ -130,6 +132,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     { id: 'notes', label: 'Notes', icon: FileText },
     { id: 'assessments', label: 'Assessments', icon: Stethoscope },
     { id: 'wounds', label: 'Wound Care', icon: Bandage },
+    { id: 'images', label: 'Images', icon: Image },
     { id: 'admission', label: 'Admission', icon: Clipboard },
     { id: 'directives', label: 'Directives', icon: Shield }
   ];
@@ -441,6 +444,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       case 'wounds':
         return <WoundAssessment patientId={id!} />;
 
+      case 'images':
+        return (
+          <ImageAnnotation 
+            patientId={id!} 
+            patientName={`${patient.first_name} ${patient.last_name}`}
+          />
+        );
+
       case 'admission':
         return (
           <AdmissionRecordsForm 
@@ -530,6 +541,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
           patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowActivity(false)}
         />
+      )}
+      
+      {/* Image Annotation Modal */}
+      {showImageAnnotation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <ImageAnnotation
+              patientId={id!}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              onClose={() => setShowImageAnnotation(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
