@@ -9,7 +9,6 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { usePatients } from './hooks/usePatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
-import { getPatientByMedicationId } from './lib/medicationService';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { Patient } from './types';
 
