@@ -38,6 +38,7 @@ const Settings = lazy(() => import('./components/Settings/Settings').then(module
 function App() {
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
+  const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const [showAlerts, setShowAlerts] = useState(false);
 
