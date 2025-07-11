@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Sidebar Navigation Component

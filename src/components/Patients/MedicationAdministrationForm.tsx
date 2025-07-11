@@ -4,7 +4,7 @@ import { Medication, MedicationAdministration } from '../../types';
 import { format, parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
 import { recordMedicationAdministration } from '../../lib/medicationService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase'; 
 import { runAlertChecks } from '../../lib/alertService';
 

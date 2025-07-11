@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit, Trash2, Shield, Search } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { UserForm } from './UserForm';
 
 export const UserManagement: React.FC = () => {

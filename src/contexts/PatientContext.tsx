@@ -24,13 +24,7 @@ interface PatientContextType {
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
-export const usePatients = () => {
-  const context = useContext(PatientContext);
-  if (context === undefined) {
-    throw new Error('usePatients must be used within a PatientProvider');
-  }
-  return context;
-};
+export { PatientContext };
 
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [patients, setPatients] = useState<Patient[]>([]);

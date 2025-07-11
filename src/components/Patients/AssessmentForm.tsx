@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Save, Stethoscope, Activity, Heart, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { createAssessment, PatientAssessment } from '../../lib/assessmentService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Assessment Form Component

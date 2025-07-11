@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, AlertCircle, Info, Heart, Wifi, WifiOff, Shield } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 
 export const LoginForm: React.FC = () => {

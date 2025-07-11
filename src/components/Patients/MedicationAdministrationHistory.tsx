@@ -3,8 +3,8 @@ import { Clock, User, FileText, Search, RefreshCw, X } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { fetchMedicationAdministrationHistory } from '../../lib/medicationService';
 import { MedicationAdministration } from '../../types';
-import { formatLocalTime } from '../../utils/dateUtils';
-import { usePatients } from '../../contexts/PatientContext';
+import { formatLocalTime } from '../../utils/time';
+import { usePatients } from '../../hooks/usePatients';
 
 interface MedicationAdministrationHistoryProps {
   medicationId: string;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
 import { LoadingSpinner } from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';

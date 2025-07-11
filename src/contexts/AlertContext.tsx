@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { Alert } from '../types'; 
 import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
 
@@ -16,7 +16,11 @@ interface AlertContextType {
 
 const AlertContext = createContext<AlertContextType | undefined>(undefined);
 
-interface AlertProviderProps {
+export { AlertContext };
+
+export type { AlertContextType };
+
+export interface AlertProviderProps {
   children: ReactNode;
 }
 
@@ -215,12 +219,4 @@ export function AlertProvider({ children }: AlertProviderProps) {
       {children}
     </AlertContext.Provider>
   );
-}
-
-export function useAlerts() {
-  const context = useContext(AlertContext);
-  if (context === undefined) {
-    throw new Error('useAlerts must be used within an AlertProvider');
-  }
-  return context;
 }

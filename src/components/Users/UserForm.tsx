@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Phone, Building, CreditCard } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
 
 interface UserFormProps {
   user?: UserProfile | null;

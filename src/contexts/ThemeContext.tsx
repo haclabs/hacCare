@@ -17,18 +17,6 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 /**
- * Custom hook to access theme context
- * Throws an error if used outside of ThemeProvider
- */
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
-/**
  * Theme Provider Component
  * Manages theme state and applies dark/light mode classes to the document
  * 
@@ -95,3 +83,5 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </ThemeContext.Provider>
   );
 };
+
+export { ThemeContext };

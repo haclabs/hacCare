@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
 import { AdvancedDirective, fetchAdvancedDirective, upsertAdvancedDirective, createDefaultAdvancedDirective } from '../../lib/admissionService';
-import { usePatients } from '../../contexts/PatientContext';
+import { usePatients } from '../../hooks/usePatients';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;

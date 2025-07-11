@@ -9,8 +9,8 @@ import { UserManagement } from './Users/UserManagement';
 import { Documentation } from './Documentation/Documentation';
 import { Changelog } from './Changelog/Changelog';
 import { Settings } from './Settings/Settings';
-import { usePatients } from '../contexts/PatientContext';
-import { useAlerts } from '../contexts/AlertContext';
+import { usePatients } from '../hooks/usePatients';
+import { useAlerts } from '../hooks/useAlerts';
 import { Patient } from '../types';
 
 export const MainApp: React.FC = () => {

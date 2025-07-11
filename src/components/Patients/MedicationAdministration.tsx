@@ -7,7 +7,7 @@ import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 import { MedicationForm } from './MedicationForm';
 import { MedicationBarcode } from './MedicationBarcode'; 
-import { useAuth } from '../../contexts/AuthContext'; 
+import { useAuth } from '../../hooks/useAuth'; 
 import { supabase } from '../../lib/supabase';
 import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
 import { runAlertChecks } from '../../lib/alertService';

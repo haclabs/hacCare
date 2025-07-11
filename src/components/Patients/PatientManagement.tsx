@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Patient } from '../../types';
-import { usePatients } from '../../contexts/PatientContext';
+import { usePatients } from '../../hooks/usePatients';
 import { PatientForm } from './PatientForm';
 import { PatientDetail } from './PatientDetail';
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useAlerts } from '../../contexts/AlertContext';
-import { usePatients } from '../../contexts/PatientContext';
+import { useAuth } from '../../hooks/useAuth';
+import { useAlerts } from '../../hooks/useAlerts';
+import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
 
 interface HeaderProps {
