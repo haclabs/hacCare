@@ -205,60 +205,70 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
 
   return (
     <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
-      <div className="flex items-center justify-end space-x-3">
-        <button
-          onClick={handlePrint}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <Printer className="h-4 w-4" />
-          <span>Print Bracelet</span>
-        </button>
-        <button
-          onClick={handleDownload}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-        >
-          <Download className="h-4 w-4" />
-          <span>Download</span>
-        </button>
-      </div>
-
-      {/* Patient Information Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-lg font-medium text-blue-900 mb-3">Bracelet Information</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="text-blue-900"><strong>Patient:</strong> {patient.last_name}, {patient.first_name}</p>
-            <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patient_id}</p>
-            <p className="text-blue-900"><strong>Date of Birth:</strong> {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</p>
-          </div>
-          <div>
-            <p className="text-blue-900"><strong>Room:</strong> {patient.room_number}{patient.bed_number}</p>
-            <p className="text-blue-900"><strong>Blood Type:</strong> {patient.blood_type}</p>
-            <p className="text-blue-900"><strong>Allergies:</strong> {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}</p>
-          </div>
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-900">Hospital Bracelet - {patient.patient_id}</h2>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handlePrint}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Printer className="h-4 w-4" />
+            <span>Print Bracelet</span>
+          </button>
+          <button
+            onClick={handleDownload}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+          >
+            <Download className="h-4 w-4" />
+            <span>Download</span>
+          </button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
         </div>
       </div>
 
-      {/* Hospital Bracelet Design */}
-      <div className="bg-gray-100 p-8 rounded-lg overflow-x-auto">
-        <div className="text-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">Hospital Patient Identification Bracelet</h4>
-          <p className="text-sm text-gray-600">Professional medical identification with UPC-128 barcode and security features</p>
+      <div className="p-6">
+        {/* Patient Information Summary */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-lg font-medium text-blue-900 mb-3">Bracelet Information</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-blue-900"><strong>Patient:</strong> {patient.last_name}, {patient.first_name}</p>
+              <p className="text-blue-900"><strong>Patient ID:</strong> {patient.patient_id}</p>
+              <p className="text-blue-900"><strong>Date of Birth:</strong> {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</p>
+            </div>
+            <div>
+              <p className="text-blue-900"><strong>Room:</strong> {patient.room_number}{patient.bed_number}</p>
+              <p className="text-blue-900"><strong>Blood Type:</strong> {patient.blood_type}</p>
+              <p className="text-blue-900"><strong>Allergies:</strong> {patient.allergies && patient.allergies.length > 0 ? patient.allergies.join(', ') : 'None'}</p>
+            </div>
+          </div>
         </div>
-        
-        <div 
-          id="hospital-bracelet-content" 
-          className="bg-white mx-auto border-2 border-dashed border-gray-300 relative"
-          style={{
-            width: '800px',
-            height: '280px',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            borderRadius: '15px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-            transform: 'scale(0.8)',
-            transformOrigin: 'center'
-          }}
-        >
+
+        {/* Hospital Bracelet Design */}
+        <div className="bg-gray-100 p-8 rounded-lg overflow-x-auto">
+          <div className="text-center mb-4">
+            <h4 className="text-lg font-medium text-gray-900">Hospital Patient Identification Bracelet</h4>
+            <p className="text-sm text-gray-600">Professional medical identification with UPC-128 barcode and security features</p>
+          </div>
+          
+          <div 
+            id="hospital-bracelet-content" 
+            className="bg-white mx-auto border-2 border-dashed border-gray-300 relative"
+            style={{
+              width: '800px',
+              height: '280px',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              borderRadius: '15px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              transform: 'scale(0.8)',
+              transformOrigin: 'center'
+            }}
+          >
               {/* Hospital Logo Section - Better positioned with proper padding */}
               <div 
                 className="absolute bg-blue-600 text-white rounded-lg flex flex-col items-center justify-center"
