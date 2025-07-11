@@ -230,11 +230,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                             </span>
                           </div>
                           <p className={`text-sm mb-2 ${alert.message.toLowerCase().includes('overdue') ? 'font-bold text-red-700 dark:text-red-400' : 'font-medium'}`}>{alert.message}</p>
-                            alert.message.toLowerCase().includes('overdue') && alert.type === 'Medication Due' 
-                              ? 'font-bold text-purple-700 dark:text-purple-400' 
-                            : alert.message.toLowerCase().includes('overdue') && alert.type === 'Vital Signs Alert'
-                              ? 'font-bold text-red-700 dark:text-red-400'
-                            : 'font-medium'
                             <p className="text-xs opacity-75">
                               {formatAlertTime(alert.timestamp)}
                             </p>
