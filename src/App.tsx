@@ -107,40 +107,6 @@ function App() {
   };
 
   /**
-   * Handle barcode scan from handheld scanner
-   * @param {string} barcode - The scanned barcode string
-   */
-  const handleBarcodeScan = async (barcode: string) => {
-    try {
-      if (barcode.startsWith('PT')) {
-        // Patient barcode - extract patient ID and navigate to patient detail
-        const patientId = barcode.substring(2); // Remove 'PT' prefix
-        const patient = patients.find(p => p.patient_id === patientId);
-        if (patient) {
-          navigate(`/patient/${patient.id}`);
-        } else {
-          console.warn(`Patient with ID ${patientId} not found`);
-        }
-      } else if (barcode.startsWith('MED')) {
-        // Medication barcode - look up patient by medication ID
-        const medicationId = barcode.substring(3); // Remove 'MED' prefix
-        const patient = await getPatientByMedicationId(medicationId);
-        if (patient) {
-          navigate(`/patient/${patient.id}`, { 
-            state: { activeTab: 'medications' } 
-          });
-        } else {
-          console.warn(`Patient for medication ID ${medicationId} not found`);
-        }
-      } else {
-        console.warn(`Unknown barcode format: ${barcode}`);
-      }
-    } catch (error) {
-      console.error('Error processing barcode scan:', error);
-    }
-  };
-
-  /**
    * Render main content based on active tab
    * Handles routing between different application sections
    * 
