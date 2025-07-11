@@ -46,8 +46,8 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
       label: 'Medications Due',
       value: medicationsDue, // This should now correctly show the count from alerts
       icon: Clock,
-      color: 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-300',
-      bgColor: 'bg-green-50 dark:bg-green-900/30'
+      color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-300',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/30'
     }
   ];
 
