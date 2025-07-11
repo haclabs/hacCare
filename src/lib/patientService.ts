@@ -355,7 +355,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
   try {
     console.log('Fetching latest vitals for patient:', patientId);
     
-    const { data, error } = await supabase 
+    const { data, error } = await supabase
       .from('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
