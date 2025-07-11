@@ -42,7 +42,7 @@ function App() {
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const [showAlerts, setShowAlerts] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Get patients, alerts, and connection status from context
   const { patients, error: dbError } = usePatients();
@@ -77,11 +77,18 @@ function App() {
     try {
       setIsScanning(true);
       console.log('Barcode scanned:', barcode);
+      
+      // Log all patients for debugging
+      console.log('All patients:', patients.map(p => ({ 
+        id: p.id, 
+        patient_id: p.patient_id, 
+        name: `${p.first_name} ${p.last_name}` 
+      })));
+      
       if (barcode.startsWith('PT')) {
         // Patient barcode - extract patient ID and navigate to patient detail
         const patientId = barcode.substring(2); // Remove 'PT' prefix
         console.log('Extracted patient ID:', patientId);
-        console.log('All patients:', patients.map(p => ({ id: p.id, patient_id: p.patient_id, name: `${p.first_name} ${p.last_name}` })));
 
         // Only log detailed comparison in debug mode to reduce console spam
         if (localStorage.getItem('debug-mode') === 'true') {
@@ -153,6 +160,8 @@ function App() {
           const numericMatch = patients.find(p => p.patient_id === `PT${barcode}` || p.patient_id === barcode);
           if (numericMatch) {
             console.log('Found patient with numeric ID match:', numericMatch);
+            navigate(`/patient/${numericMatch.id}`);
+            return;
           }
         }
         

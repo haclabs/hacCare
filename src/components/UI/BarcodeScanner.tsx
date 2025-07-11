@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scan, QrCode, SearchCode as Barcode } from 'lucide-react';
+import { QrCode, SearchCode as Barcode } from 'lucide-react';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -67,7 +67,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
       {/* Manual Input Dropdown */}
       {showManualInput && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50">
           <div className="flex items-center space-x-2 mb-2">
             <QrCode className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium">Manual Barcode Entry</span>
@@ -76,10 +76,10 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
           <div className="flex space-x-2">
             <input
               type="text"
+              className="barcode-scanner-input flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
               placeholder="Enter barcode value"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               onKeyDown={(e) => e.key === 'Enter' && handleManualScan()}
               autoFocus
             />

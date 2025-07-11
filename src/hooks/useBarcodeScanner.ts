@@ -16,7 +16,7 @@ export const useBarcodeScanner = (
   onScan: (barcode: string) => void,
   options = {
     minLength: 5,
-    maxInputInterval: 50,
+    maxInputInterval: 100, // Increased to be more lenient with slower scanners
     resetTimeout: 300,
   }
 ) => {
@@ -40,12 +40,17 @@ export const useBarcodeScanner = (
       
       // Ignore if the target is an input element
       if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
+        (event.target instanceof HTMLInputElement && 
+         !(event.target as HTMLInputElement).classList.contains('barcode-scanner-input')) ||
+        (event.target instanceof HTMLTextAreaElement) ||
+        (event.target instanceof HTMLSelectElement)
       ) {
-        if (isDebugMode) console.log('Ignoring keydown in input element');
-        return;
+        // Allow input in elements with the barcode-scanner-input class
+        if (!(event.target instanceof HTMLInputElement && 
+              event.target.classList.contains('barcode-scanner-input'))) {
+          if (isDebugMode) console.log('Ignoring keydown in input element');
+          return;
+        }
       }
 
       // Check if this is likely from a barcode scanner (fast input)
