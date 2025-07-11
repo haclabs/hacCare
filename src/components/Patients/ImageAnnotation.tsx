@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Save, Edit, Trash2, ArrowRight, Square, Type, Ruler } from 'lucide-react';
-import ImageAnnotationTool from 'react-image-annotation-tool';
+import ImageMarker from 'react-image-marker';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../lib/imageService';
@@ -20,9 +20,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   const { user, profile } = useAuth();
   const [images, setImages] = useState<PatientImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<PatientImage | null>(null);
-  const [annotations, setAnnotations] = useState<any[]>([]);
-  const [annotation, setAnnotation] = useState<any | null>(null);
-  const [annotationType, setAnnotationType] = useState<'RECTANGLE' | 'ARROW' | 'TEXT' | 'POINT'>('RECTANGLE');
+  const [markers, setMarkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +65,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   // Handle image selection
   const handleSelectImage = (image: PatientImage) => {
     setSelectedImage(image);
-    setAnnotations(image.annotations || []);
+    setMarkers(image.annotations || []);
   };
   
   // Handle image upload
@@ -93,7 +91,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       
       // Select the uploaded image
       setSelectedImage(uploadedImage);
-      setAnnotations([]);
+      setMarkers([]);
       setImageDescription('');
     } catch (err: any) {
       console.error('Error uploading image:', err);
@@ -103,40 +101,27 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
     }
   }
   
-  // Handle annotation changes
-  const handleAnnotationChange = (annotation: any) => {
-    setAnnotation(annotation);
-  };
-  
-  // Handle annotation submission
-  const handleAnnotationSubmit = (annotation: any) => {
-    const { geometry, data } = annotation;
-    
-    // Create a new annotation with a unique ID
-    const newAnnotation = {
-      ...annotation,
-      data: {
-        ...data,
-        id: Math.random().toString(16).slice(2)
-      }
+  // Handle adding markers
+  const handleAddMarker = (marker: any) => {
+    const newMarker = {
+      ...marker,
+      id: Math.random().toString(16).slice(2)
     };
-    
-    setAnnotations([...annotations, newAnnotation]);
-    setAnnotation(null);
+    setMarkers([...markers, newMarker]);
   };
   
-  // Save annotations to database
-  const saveAnnotations = async () => {
+  // Save markers to database
+  const saveMarkers = async () => {
     if (!selectedImage) return;
     
     try {
       setUploading(true);
       setError(null);
       
-      // Update annotations in database
+      // Update markers in database
       const updatedImage = await updateImageAnnotations(
         selectedImage.id,
-        annotations
+        markers
       );
       
       // Update local state
@@ -169,7 +154,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       // Update local state
       setImages(prev => prev.filter(img => img.id !== selectedImage.id));
       setSelectedImage(images.length > 1 ? images.find(img => img.id !== selectedImage.id) || null : null);
-      setAnnotations([]);
+      setMarkers([]);
     } catch (err: any) {
       console.error('Error deleting image:', err);
       setError(err.message || 'Failed to delete image');
@@ -177,48 +162,6 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       setUploading(false);
     }
   };
-  
-  // Render annotation type selector
-  const renderAnnotationTypeSelector = () => (
-    <div className="flex space-x-2 mb-4">
-      <button
-        onClick={() => setAnnotationType('RECTANGLE')}
-        className={`p-2 rounded-lg flex items-center ${
-          annotationType === 'RECTANGLE' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-        }`}
-        title="Highlight Area"
-      >
-        <Square className="h-4 w-4" />
-      </button>
-      <button
-        onClick={() => setAnnotationType('ARROW')}
-        className={`p-2 rounded-lg flex items-center ${
-          annotationType === 'ARROW' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-        }`}
-        title="Add Arrow"
-      >
-        <ArrowRight className="h-4 w-4" />
-      </button>
-      <button
-        onClick={() => setAnnotationType('TEXT')}
-        className={`p-2 rounded-lg flex items-center ${
-          annotationType === 'TEXT' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-        }`}
-        title="Add Text"
-      >
-        <Type className="h-4 w-4" />
-      </button>
-      <button
-        onClick={() => setAnnotationType('POINT')}
-        className={`p-2 rounded-lg flex items-center ${
-          annotationType === 'POINT' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-        }`}
-        title="Add Measurement Point"
-      >
-        <Ruler className="h-4 w-4" />
-      </button>
-    </div>
-  );
   
   // Render image upload form
   const renderImageUploadForm = () => (
@@ -356,7 +299,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
             {selectedImage && (
               <div className="flex space-x-2">
                 <button
-                  onClick={saveAnnotations}
+                  onClick={saveMarkers}
                   disabled={uploading}
                   className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
@@ -377,15 +320,11 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
           
           {selectedImage ? (
             <div className="space-y-4">
-              {renderAnnotationTypeSelector()}
-              
               <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <ImageAnnotationTool
+                <ImageMarker
                   src={selectedImage.image_url}
-                  annotations={annotations}
-                  onChange={(newAnnotations: any) => {
-                    setAnnotations(newAnnotations);
-                  }}
+                  markers={markers}
+                  onAddMarker={handleAddMarker}
                 />
               </div>
               
@@ -398,7 +337,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
                   </div>
                   <div>
                     <p className="text-gray-600"><strong>Description:</strong> {selectedImage.description || 'No description'}</p>
-                    <p className="text-gray-600"><strong>Annotations:</strong> {annotations.length}</p>
+                    <p className="text-gray-600"><strong>Markers:</strong> {markers.length}</p>
                   </div>
                 </div>
               </div>
