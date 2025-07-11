@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { Medication, MedicationAdministration } from '../types';
+import { logAction } from './auditService';
 
 /**
  * Medication Service
@@ -89,6 +90,20 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       throw error;
     }
 
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'created_medication',
+      medication.patient_id || '',
+      'patient',
+      { 
+        medication_id: data.id,
+        name: medication.name,
+        dosage: medication.dosage
+      }
+    );
+
     console.log('Medication created successfully:', data);
     return data;
   } catch (error) {
@@ -115,6 +130,20 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       console.error('Error updating medication:', error);
       throw error;
     }
+
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'updated_medication',
+      data.patient_id,
+      'patient',
+      { 
+        medication_id: medicationId,
+        name: data.name,
+        changes: Object.keys(updates)
+      }
+    );
 
     console.log('Medication updated successfully:', data);
     return data;
@@ -265,6 +294,28 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       
       throw error;
     }
+
+    // Get medication details for the audit log
+    const { data: medicationData } = await supabase
+      .from('patient_medications')
+      .select('name, dosage')
+      .eq('id', administration.medication_id)
+      .single();
+
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'administered_medication',
+      administration.patient_id,
+      'patient',
+      { 
+        medication_id: administration.medication_id,
+        name: medicationData?.name || 'Unknown medication',
+        dosage: medicationData?.dosage || '',
+        administered_at: cleanAdministration.timestamp
+      }
+    );
 
     // Update medication's last_administered time
     const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);

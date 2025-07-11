@@ -6,6 +6,7 @@ import { fetchPatientById, fetchPatientVitals, fetchPatientNotes, clearPatientVi
 import { fetchPatientMedications } from '../../lib/medicationService';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
+import { RecentActivity } from './RecentActivity';
 import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
@@ -29,6 +30,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
   const [refreshingVitals, setRefreshingVitals] = useState(false); 
   
   // Count medications by category
@@ -481,6 +483,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             <p className="text-gray-600 dark:text-gray-100">Patient ID: {patient.patient_id}</p>
           </div>
         </div>
+        <button
+          onClick={() => setShowActivity(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+        >
+          <Clock className="h-4 w-4" />
+          <span>Recent Activity</span>
+        </button>
       </div>
 
       <div className="border-b border-gray-200">
@@ -513,6 +522,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       <div className="mt-6">
         {renderTabContent()}
       </div>
+      
+      {/* Recent Activity Modal */}
+      {showActivity && (
+        <RecentActivity
+          patientId={id!}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+          onClose={() => setShowActivity(false)}
+        />
+      )}
     </div>
   );
 };

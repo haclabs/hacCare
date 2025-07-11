@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { Patient, VitalSigns, Medication, PatientNote, MedicationAdministration } from '../types';
+import { logAction } from './auditService';
 
 /**
  * Patient Service
@@ -247,6 +248,16 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
       throw error;
     }
 
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'created_patient',
+      data.id,
+      'patient',
+      { patient_id: data.patient_id }
+    );
+
     return convertDatabasePatient(data);
   } catch (error) {
     console.error('Error creating patient:', error);
@@ -272,6 +283,16 @@ export const updatePatient = async (patient: Patient): Promise<Patient> => {
       throw error;
     }
 
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'updated_patient',
+      data.id,
+      'patient',
+      { patient_id: data.patient_id }
+    );
+
     return convertDatabasePatient(data);
   } catch (error) {
     console.error('Error updating patient:', error);
@@ -284,6 +305,13 @@ export const updatePatient = async (patient: Patient): Promise<Patient> => {
  */
 export const deletePatient = async (patientId: string): Promise<void> => {
   try {
+    // Get patient info before deletion for audit log
+    const { data: patient } = await supabase
+      .from<DatabasePatient>('patients')
+      .select('patient_id')
+      .eq('id', patientId)
+      .single();
+
     const { error } = await supabase
       .from<DatabasePatient>('patients')
       .delete()
@@ -292,6 +320,16 @@ export const deletePatient = async (patientId: string): Promise<void> => {
     if (error) {
       throw error;
     }
+    
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'deleted_patient',
+      patientId,
+      'patient',
+      { patient_id: patient?.patient_id }
+    );
   } catch (error) {
     console.error('Error deleting patient:', error);
     throw error;
@@ -322,6 +360,21 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
       console.error('Database error inserting vitals:', error);
       throw error;
     }
+
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'recorded_vitals',
+      patientId,
+      'patient',
+      {
+        temperature: vitals.temperature,
+        blood_pressure: `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic}`,
+        heart_rate: vitals.heartRate,
+        oxygen_saturation: vitals.oxygenSaturation
+      }
+    );
 
     console.log('Vitals inserted successfully');
   } catch (error) {
