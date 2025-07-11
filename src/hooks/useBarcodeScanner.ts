@@ -38,8 +38,7 @@ export const useBarcodeScanner = (
   }, []);
 
   // Process keydown events
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
       // Skip if we're not listening
       if (!isListening) return;
       
@@ -48,17 +47,17 @@ export const useBarcodeScanner = (
       if (isDebugMode) console.log('🔍 Barcode scanner keydown:', event.key, event.keyCode);
       const currentTime = new Date().getTime();
       
-      // Only ignore if the target is a text input, textarea, or select element
-      // AND it doesn't have the barcode-scanner-input class
-      if (
-        ((event.target instanceof HTMLInputElement && 
-          event.target.type !== 'button' &&
-          event.target.type !== 'checkbox' &&
-          event.target.type !== 'radio' &&
-          !(event.target as HTMLInputElement).classList.contains('barcode-scanner-input')) ||
-         (event.target instanceof HTMLTextAreaElement) ||
-         (event.target instanceof HTMLSelectElement))
-      ) {
+      // Check if we're in an input field that should handle its own input
+      const isInputField = 
+        (event.target instanceof HTMLInputElement && 
+         event.target.type !== 'button' &&
+         event.target.type !== 'checkbox' &&
+         event.target.type !== 'radio' &&
+         !(event.target as HTMLInputElement).classList.contains('barcode-scanner-input')) ||
+        (event.target instanceof HTMLTextAreaElement) ||
+        (event.target instanceof HTMLSelectElement);
+        
+      if (isInputField) {
         if (isDebugMode) console.log('Ignoring keydown in input element');
         return;
       }
@@ -94,6 +93,13 @@ export const useBarcodeScanner = (
         setIsScanning(true);
       }
 
+      // Prevent default browser actions for all keys during scanning
+      // This prevents browser shortcuts from being triggered
+      if (isScanning || buffer.length > 0 || event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
       // Process the key
       if (event.key === 'Enter') {
         // Enter key signals end of barcode
@@ -101,12 +107,11 @@ export const useBarcodeScanner = (
         // Process any code that ends with Enter, regardless of length
         if (buffer.length > 0) { 
           onScan(buffer);
-          event.preventDefault(); // Prevent form submissions
-          event.stopPropagation(); // Stop event bubbling
         }
         clearBuffer();
-      } else if (event.key.length === 1) {
+      } else if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
         // Only add printable characters to the buffer
+        // Exclude any key combinations that might trigger browser shortcuts
         if (isDebugMode) console.log('Adding character to buffer:', event.key);
         setBuffer(prev => prev + event.key);
       }
