@@ -381,70 +381,71 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
 
         {/* Instructions and Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h4 className="font-medium text-yellow-900 mb-2 flex items-center space-x-2">
-            <Printer className="h-4 w-4" />
-            <span>Printing Instructions</span>
-          </h4>
-          <ul className="text-sm text-yellow-800 space-y-1">
-            <li>• Use waterproof, tear-resistant bracelet material</li>
-            <li>• Print at high resolution for barcode clarity</li>
-            <li>• Ensure secure attachment to patient's wrist</li>
-            <li>• Verify all information before application</li>
-            <li>• Replace if damaged or illegible</li>
-          </ul>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-medium text-green-900 mb-2">Security Features</h4>
-          <ul className="text-sm text-green-800 space-y-1">
-            <li>• UPC-128 barcode for reliable scanning</li>
-            <li>• Tamper-evident security pattern</li>
-            <li>• High-contrast allergy alerts in red</li>
-            <li>• Medical symbol for quick identification</li>
-            <li>• Secure ID number for verification</li>
-          </ul>
-        </div>
-      </div>
-
-      {patient.allergies && patient.allergies.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
-            <h4 className="font-medium text-red-900">Critical Allergy Information</h4>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 className="font-medium text-yellow-900 mb-2 flex items-center space-x-2">
+              <Printer className="h-4 w-4" />
+              <span>Printing Instructions</span>
+            </h4>
+            <ul className="text-sm text-yellow-800 space-y-1">
+              <li>• Use waterproof, tear-resistant bracelet material</li>
+              <li>• Print at high resolution for barcode clarity</li>
+              <li>• Ensure secure attachment to patient's wrist</li>
+              <li>• Verify all information before application</li>
+              <li>• Replace if damaged or illegible</li>
+            </ul>
           </div>
-          <div className="text-sm text-red-800">
-            <p className="mb-2"><strong>Patient Allergies:</strong></p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {patient.allergies.map((allergy, index) => (
-                <span key={index} className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-300">
-                  {allergy}
-                </span>
-              ))}
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-medium text-green-900 mb-2">Security Features</h4>
+            <ul className="text-sm text-green-800 space-y-1">
+              <li>• UPC-128 barcode for reliable scanning</li>
+              <li>• Tamper-evident security pattern</li>
+              <li>• High-contrast allergy alerts in red</li>
+              <li>• Medical symbol for quick identification</li>
+              <li>• Secure ID number for verification</li>
+            </ul>
+          </div>
+        </div>
+
+        {patient.allergies && patient.allergies.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <h4 className="font-medium text-red-900">Critical Allergy Information</h4>
             </div>
-            <div className="bg-red-100 border border-red-300 rounded p-2">
-              <p className="text-xs font-bold">
-                ⚠️ CRITICAL: This bracelet displays allergy information prominently in RED to immediately alert all medical staff of potential adverse reactions.
-              </p>
+            <div className="text-sm text-red-800">
+              <p className="mb-2"><strong>Patient Allergies:</strong></p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {patient.allergies.map((allergy, index) => (
+                  <span key={index} className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-300">
+                    {allergy}
+                  </span>
+                ))}
+              </div>
+              <div className="bg-red-100 border border-red-300 rounded p-2">
+                <p className="text-xs font-bold">
+                  ⚠️ CRITICAL: This bracelet displays allergy information prominently in RED to immediately alert all medical staff of potential adverse reactions.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">Hospital Bracelet Standards</h4>
-        <div className="text-sm text-gray-700 grid grid-cols-2 gap-4">
-          <div>
-            <p>• Material: Medical-grade vinyl or Tyvek</p>
-            <p>• Size: 10" x 1" (adjustable)</p>
-            <p>• Closure: Tamper-evident adhesive</p>
-            <p>• Durability: Water and tear resistant</p>
-          </div>
-          <div>
-            <p>• Barcode: UPC-128 format for compatibility</p>
-            <p>• Colors: High contrast for readability</p>
-            <p>• Security: Unique ID and pattern</p>
-            <p>• Compliance: HIPAA and hospital standards</p>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="font-medium text-gray-900 mb-2">Hospital Bracelet Standards</h4>
+          <div className="text-sm text-gray-700 grid grid-cols-2 gap-4">
+            <div>
+              <p>• Material: Medical-grade vinyl or Tyvek</p>
+              <p>• Size: 10" x 1" (adjustable)</p>
+              <p>• Closure: Tamper-evident adhesive</p>
+              <p>• Durability: Water and tear resistant</p>
+            </div>
+            <div>
+              <p>• Barcode: UPC-128 format for compatibility</p>
+              <p>• Colors: High contrast for readability</p>
+              <p>• Security: Unique ID and pattern</p>
+              <p>• Compliance: HIPAA and hospital standards</p>
+            </div>
           </div>
         </div>
       </div>
