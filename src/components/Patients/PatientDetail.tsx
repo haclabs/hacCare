@@ -22,7 +22,7 @@ interface PatientDetailProps {
 export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation<{ activeTab?: string; medicationCategory?: string }>();
   const [patient, setPatient] = useState<Patient | null>(null); 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -32,6 +32,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [activeTab, setActiveTab] = useState(
     location.state?.activeTab || 'overview'
   );
+  // Get medication category from location state if available
+  const initialMedicationCategory = location.state?.medicationCategory || 'scheduled';
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
@@ -381,6 +383,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
             title="Medication Administration Record"
             medications={medications}
+            initialCategory={initialMedicationCategory}
             onRefresh={async () => {
               try {
                 const meds = await fetchPatientMedications(id!);

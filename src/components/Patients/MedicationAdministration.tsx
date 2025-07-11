@@ -18,6 +18,7 @@ interface MedicationAdministrationProps {
   patientName?: string;
   title?: string;
   medications: Medication[];
+  initialCategory?: string;
   onRefresh: () => void;
 }
 
@@ -35,10 +36,15 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   patientName,
   title = "Medication Administration",
   medications,
+  initialCategory = 'overview',
   onRefresh
 }) => {
   const { hasRole } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'scheduled' | 'prn' | 'continuous'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'scheduled' | 'prn' | 'continuous'>(
+    initialCategory === 'scheduled' || initialCategory === 'prn' || initialCategory === 'continuous' 
+      ? initialCategory 
+      : 'overview'
+  );
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);

@@ -76,7 +76,7 @@ function App() {
   const handleBarcodeScan = async (barcode: string) => {
     try {
       setIsScanning(true);
-      console.log('🔍 Barcode scanned:', barcode);
+      console.log('🔍 Barcode scanned:', barcode, typeof barcode);
       
       // Log all patients for debugging
       console.log('👥 All patients:', patients.map(p => ({ 
@@ -186,15 +186,55 @@ function App() {
       } else if (barcode.startsWith('MED')) {
         // Medication barcode - look up patient by medication ID
         const medicationId = barcode.substring(3); // Remove 'MED' prefix
-        console.log('💊 Extracted medication ID:', medicationId);
-        const patient = await getPatientByMedicationId(medicationId);
-        if (patient) {
-          console.log('✅ Patient found via medication:', patient);
-          navigate(`/patient/${patient.patientId}`, { 
-            state: { activeTab: 'medications' } 
+        console.log('💊 Extracted medication ID from barcode:', medicationId);
+        
+        // First try to find the medication directly in our loaded medications
+        let foundMedication = null;
+        let patientWithMedication = null;
+        
+        // Check each patient's medications
+        for (const patient of patients) {
+          if (patient.medications && patient.medications.length > 0) {
+            // Look for medication ID that ends with the scanned ID (last 6 chars)
+            const matchingMed = patient.medications.find(med => 
+              med.id.endsWith(medicationId) || 
+              med.id.includes(medicationId)
+            );
+            
+            if (matchingMed) {
+              console.log('✅ Found medication directly in patient data:', matchingMed);
+              console.log('✅ Patient:', patient.first_name, patient.last_name);
+              foundMedication = matchingMed;
+              patientWithMedication = patient;
+              break;
+            }
+          }
+        }
+        
+        // If found in local data, navigate directly
+        if (patientWithMedication && foundMedication) {
+          console.log('✅ Navigating to patient MAR with medication category:', foundMedication.category);
+          navigate(`/patient/${patientWithMedication.id}`, { 
+            state: { 
+              activeTab: 'medications',
+              medicationCategory: foundMedication.category || 'scheduled'
+            } 
           });
         } else {
-          console.warn(`⚠️ Patient for medication ID ${medicationId} not found`);
+          // Fallback to API lookup if not found in local data
+          console.log('🔍 Medication not found in local data, trying API lookup');
+          const result = await getPatientByMedicationId(medicationId);
+          if (result) {
+            console.log('✅ Patient found via medication API lookup:', result);
+            navigate(`/patient/${result.patientId}`, { 
+              state: { 
+                activeTab: 'medications',
+                medicationCategory: 'scheduled' // Default to scheduled tab
+              } 
+            });
+          } else {
+            console.warn(`⚠️ Patient for medication ID ${medicationId} not found`);
+          }
         }
       } else {
         console.log('❓ Unknown barcode format, raw value:', barcode);

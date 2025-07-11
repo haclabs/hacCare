@@ -537,10 +537,11 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
 export const getPatientByMedicationId = async (medicationId: string): Promise<{ patientId: string, medicationId: string } | null> => {
   try {
     console.log('Looking up patient by medication ID:', medicationId);
+    console.log('Medication ID type:', typeof medicationId);
     
     // Extract the actual medication ID from the barcode format (e.g., "MED123456" -> "123456")
     const extractedId = medicationId.startsWith('MED') ? medicationId.substring(3) : medicationId;
-    console.log('Extracted ID from barcode:', extractedId);
+    console.log('Extracted ID from barcode:', extractedId, typeof extractedId);
     
     // Fetch all medications to perform client-side matching
     const { data, error } = await supabase
@@ -563,9 +564,11 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     // Find medication whose ID ends with the extracted ID (last 6 characters)
     const matchedMedication = data.find(med => {
       // Get the last 6 characters of the medication ID
-      const medIdSuffix = med.id.substring(med.id.length - 6);
-      console.log(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId}`);
-      return medIdSuffix === extractedId;
+      const medIdSuffix = med.id.substring(Math.max(0, med.id.length - 6));
+      // Also try to match by including the ID anywhere in the medication ID
+      const isMatch = medIdSuffix === extractedId || med.id.includes(extractedId);
+      console.log(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId} - Match: ${isMatch}`);
+      return isMatch;
     });
     
     if (matchedMedication) {
