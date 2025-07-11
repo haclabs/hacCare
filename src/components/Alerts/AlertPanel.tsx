@@ -170,9 +170,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               {loading && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
               )}
-              {loading && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
-              )}
             </button>
           </div>
 
@@ -229,7 +226,10 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                               {alert.priority}
                             </span>
                           </div>
-                          <p className={`text-sm mb-2 ${alert.message.toLowerCase().includes('overdue') ? 'font-bold text-red-700 dark:text-red-400' : 'font-medium'}`}>{alert.message}</p>
+                          <p className={`text-sm mb-2 ${alert.message.toLowerCase().includes('overdue') ? 'font-bold text-red-700 dark:text-red-400' : 'font-medium'}`}>
+                            {alert.message}
+                          </p>
+                          <div className="flex items-center justify-between">
                             <p className="text-xs opacity-75">
                               {formatAlertTime(alert.timestamp)}
                             </p>
