@@ -416,7 +416,7 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
               <p className="text-xs font-bold">
                 ⚠️ CRITICAL: This bracelet displays allergy information prominently in RED to immediately alert all medical staff of potential adverse reactions.
               </p>
-              </div>
+            </div>
           </div>
         </div>
       )}
@@ -438,6 +438,7 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
