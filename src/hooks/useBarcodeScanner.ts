@@ -15,14 +15,15 @@ import { useEffect, useState, useCallback } from 'react';
 export const useBarcodeScanner = (
   onScan: (barcode: string) => void,
   options = {
-    minLength: 5,
-    maxInputInterval: 100, // Increased to be more lenient with slower scanners
+    minLength: 3, // Reduced minimum length to catch shorter codes
+    maxInputInterval: 150, // Further increased to be more lenient with slower scanners
     resetTimeout: 300,
   }
 ) => {
   const [buffer, setBuffer] = useState<string>('');
   const [lastKeyTime, setLastKeyTime] = useState<number>(0);
   const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [isListening, setIsListening] = useState<boolean>(true);
 
   // Clear the buffer
   const clearBuffer = useCallback(() => {
@@ -30,33 +31,43 @@ export const useBarcodeScanner = (
     setIsScanning(false);
   }, []);
 
+  // Force the scanner to start listening
+  const startListening = useCallback(() => {
+    setIsListening(true);
+    console.log('Barcode scanner started listening');
+  }, []);
+
   // Process keydown events
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      // Skip if we're not listening
+      if (!isListening) return;
+      
       // Only log in debug mode to reduce console spam
       const isDebugMode = localStorage.getItem('debug-mode') === 'true';
       if (isDebugMode) console.log('Barcode scanner keydown:', event.key);
       const currentTime = new Date().getTime();
       
-      // Ignore if the target is an input element
+      // Only ignore if the target is a text input, textarea, or select element
+      // AND it doesn't have the barcode-scanner-input class
       if (
-        (event.target instanceof HTMLInputElement && 
-         !(event.target as HTMLInputElement).classList.contains('barcode-scanner-input')) ||
-        (event.target instanceof HTMLTextAreaElement) ||
-        (event.target instanceof HTMLSelectElement)
+        ((event.target instanceof HTMLInputElement && 
+          event.target.type !== 'button' &&
+          event.target.type !== 'checkbox' &&
+          event.target.type !== 'radio' &&
+          !(event.target as HTMLInputElement).classList.contains('barcode-scanner-input')) ||
+         (event.target instanceof HTMLTextAreaElement) ||
+         (event.target instanceof HTMLSelectElement))
       ) {
-        // Allow input in elements with the barcode-scanner-input class
-        if (!(event.target instanceof HTMLInputElement && 
-              event.target.classList.contains('barcode-scanner-input'))) {
-          if (isDebugMode) console.log('Ignoring keydown in input element');
-          return;
-        }
+        if (isDebugMode) console.log('Ignoring keydown in input element');
+        return;
       }
 
       // Check if this is likely from a barcode scanner (fast input)
       const isLikelyBarcodeScanner = 
-        currentTime - lastKeyTime < options.maxInputInterval || 
-        buffer.length === 0;
+        (currentTime - lastKeyTime < options.maxInputInterval) || 
+        buffer.length === 0 ||
+        isScanning;
 
       if (isDebugMode) {
         console.log('Barcode scanner timing:', {
@@ -74,7 +85,8 @@ export const useBarcodeScanner = (
       // If it's not likely from a scanner, reset
       if (!isLikelyBarcodeScanner && !isScanning) {
         if (isDebugMode) console.log('Not from scanner, clearing buffer');
-        clearBuffer();
+        // Don't clear buffer immediately, give it a chance
+        // setTimeout(() => clearBuffer(), 50);
         return;
       }
 
@@ -88,7 +100,8 @@ export const useBarcodeScanner = (
       if (event.key === 'Enter') {
         // Enter key signals end of barcode
         console.log('Barcode scan complete:', buffer);
-        if (buffer.length >= options.minLength) {
+        // Process even shorter codes if they end with Enter
+        if (buffer.length > 0) {
           onScan(buffer);
         }
         clearBuffer();
@@ -134,4 +147,5 @@ export const useBarcodeScanner = (
   }, [buffer, options.resetTimeout, options.minLength, onScan, clearBuffer]);
 
   return { buffer, clearBuffer };
+  return { buffer, clearBuffer, startListening };
 };

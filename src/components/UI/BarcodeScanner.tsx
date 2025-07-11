@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { QrCode, SearchCode as Barcode } from 'lucide-react';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -18,6 +19,8 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onScan,
   isScanning = false
 }) => {
+  // Use the barcode scanner hook directly in the component
+  const { buffer, startListening } = useBarcodeScanner(onScan);
   const [manualInput, setManualInput] = useState<string>('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
@@ -25,7 +28,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   const handleManualScan = () => {
     if (manualInput.trim()) {
       const trimmedInput = manualInput.trim();
-      console.log('Manual barcode scan:', trimmedInput);
+      console.log('🔍 Manual barcode scan:', trimmedInput);
       onScan(manualInput.trim());
       setLastScanned(trimmedInput);
       setManualInput('');
@@ -43,31 +46,42 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   return (
     <div className="relative">
       {/* Scanner Button */}
-      <button
-        onClick={() => setShowManualInput(!showManualInput)}
-        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-          isScanning 
-            ? 'bg-green-100 text-green-700 border border-green-300 animate-pulse' 
-            : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-          } flex items-center`}
-        title="Scan barcode or enter manually"
-      >
-        <Barcode className="h-4 w-4" />
-        <span>Scan Barcode</span>
-        {lastScanned && (
-          <span className="ml-1 text-xs text-gray-500">Last: {lastScanned.length > 10 ? lastScanned.substring(0, 10) + '...' : lastScanned}</span>
+      <div>
+        <button
+          onClick={() => {
+            setShowManualInput(!showManualInput);
+            // Force the scanner to start listening when button is clicked
+            startListening();
+          }}
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+            isScanning || buffer.length > 0
+              ? 'bg-green-100 text-green-700 border border-green-300 animate-pulse' 
+              : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+            } flex items-center`}
+          title="Scan barcode or enter manually"
+        >
+          <Barcode className="h-4 w-4" />
+          <span>Scan Barcode</span>
+          {lastScanned && (
+            <span className="ml-1 text-xs text-gray-500">Last: {lastScanned.length > 10 ? lastScanned.substring(0, 10) + '...' : lastScanned}</span>
+          )}
+          {/* Hidden debug mode toggle - double click to activate */}
+          <button 
+            className="ml-1 w-2 h-2 rounded-full bg-transparent hover:bg-gray-300 focus:outline-none"
+            onClick={toggleDebugMode}
+            title="Toggle debug mode"
+          />
+        </button>
+        {buffer.length > 0 && (
+          <div className="absolute top-full left-0 mt-1 text-xs text-green-600 font-mono">
+            Scanning: {buffer}
+          </div>
         )}
-        {/* Hidden debug mode toggle - double click to activate */}
-        <button 
-          className="ml-1 w-2 h-2 rounded-full bg-transparent hover:bg-gray-300 focus:outline-none"
-          onClick={toggleDebugMode}
-          title="Toggle debug mode"
-        />
-      </button>
+      </div>
 
       {/* Manual Input Dropdown */}
       {showManualInput && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-[100]">
           <div className="flex items-center space-x-2 mb-2">
             <QrCode className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium">Manual Barcode Entry</span>
@@ -94,7 +108,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
           <div className="mt-2 text-xs text-gray-500">
             <p>Example formats:</p>
             <p>• Patient: PT12345</p>
-            <p>• Patient (numeric only): 12345</p>
+            <p>• Patient (numeric only): 13951</p>
             <p>• Medication: MED123456</p>
           </div>
         </div>
