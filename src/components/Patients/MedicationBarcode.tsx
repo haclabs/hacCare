@@ -3,7 +3,6 @@ import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { Medication } from '../../types';
 import { format, isValid } from 'date-fns';
 import { generateCode128SVG } from '../../utils/barcodeUtils';
-import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 /**
  * Medication Label Component
