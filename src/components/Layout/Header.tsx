@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff, Barcode } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff, SearchCode as Barcode } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';

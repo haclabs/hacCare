@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scan, QrCode, Barcode } from 'lucide-react';
+import { Scan, QrCode, SearchCode as Barcode } from 'lucide-react';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
