@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import PatientCard from './components/Patients/PatientCard';
 import { PatientDetail } from './components/Patients/PatientDetail';
-import { HospitalBracelet } from './components/Patients/HospitalBracelet';
-import { PatientManagement } from './components/Patients/PatientManagement';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
-import { UserManagement } from './components/Users/UserManagement';
-import { Documentation } from './components/Documentation/Documentation';
-import { Changelog } from './components/Changelog/Changelog';
-import { Settings } from './components/Settings/Settings';
 import { usePatients } from './hooks/usePatients';
 import { useAlerts } from './hooks/useAlerts';
+import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { Patient } from './types';
+
+// Lazy-loaded components
+const HospitalBracelet = lazy(() => import('./components/Patients/HospitalBracelet').then(module => ({ default: module.HospitalBracelet })));
+const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
+const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
+const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
+const Changelog = lazy(() => import('./components/Changelog/Changelog').then(module => ({ default: module.Changelog })));
+const Settings = lazy(() => import('./components/Settings/Settings').then(module => ({ default: module.Settings })));
 
 /**
  * Main Application Component
@@ -114,16 +117,32 @@ function App() {
         );
 
       case 'patient-management':
-        return <PatientManagement />;
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <PatientManagement />
+          </Suspense>
+        );
 
       case 'user-management':
-        return <UserManagement />;
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <UserManagement />
+          </Suspense>
+        );
 
       case 'documentation':
-        return <Documentation />;
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Documentation />
+          </Suspense>
+        );
 
       case 'changelog':
-        return <Changelog />;
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Changelog />
+          </Suspense>
+        );
       
       case 'schedule':
         return (
@@ -134,7 +153,11 @@ function App() {
         );
       
       case 'settings':
-        return <Settings />;
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Settings />
+          </Suspense>
+        );
       
       default:
         return null;
@@ -161,7 +184,11 @@ function App() {
         {/* Main Content Area */}
         <main className="flex-1 p-8">
           <Routes>
-            <Route path="/patient/:id" element={<PatientDetail />} />
+            <Route path="/patient/:id" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <PatientDetail />
+              </Suspense>
+            } />
             <Route path="*" element={renderContent()} />
           </Routes>
         </main>
@@ -173,6 +200,15 @@ function App() {
         onClose={() => setShowAlerts(false)}
       />
 
+      {/* Wrap HospitalBracelet in Suspense */}
+      {braceletPatient && (
+        <Suspense fallback={<LoadingSpinner />}>
+          <HospitalBracelet
+            patient={braceletPatient}
+            onClose={() => setBraceletPatient(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
