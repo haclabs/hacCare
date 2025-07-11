@@ -33,7 +33,7 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
     id: patient?.id || '',
     first_name: patient?.first_name || 'Unknown',
     last_name: patient?.last_name || 'Patient',
-    patient_id: patient?.patient_id || 'UNKNOWN'
+    patient_id: patient?.patient_id || 'Unknown'
   };
   
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(
@@ -64,6 +64,12 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
 
   // Generate unique medication barcode based on medication ID and details
   const medicationBarcodeId = `MED${selectedMedication.id.slice(-6).toUpperCase()}`;
+
+  console.log('Medication barcode patient data:', {
+    patientId: safePatient.patient_id,
+    medicationId: medicationBarcodeId,
+    patientName: `${safePatient.first_name} ${safePatient.last_name}`
+  });
 
   // Generate barcode SVG
   const barcodeSvg = generateCode128SVG(selectedMedication.id, {

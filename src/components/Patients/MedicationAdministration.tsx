@@ -6,11 +6,12 @@ import { formatLocalTime } from '../../utils/dateUtils';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 import { MedicationForm } from './MedicationForm';
-import { MedicationBarcode } from './MedicationBarcode'; 
+import { MedicationBarcode } from './MedicationBarcode';
 import { useAuth } from '../../hooks/useAuth'; 
 import { supabase } from '../../lib/supabase';
 import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
 import { runAlertChecks } from '../../lib/alertService';
+import { usePatients } from '../../hooks/usePatients';
 
 interface MedicationAdministrationProps {
   patientId: string;
@@ -47,6 +48,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [medicationToEdit, setMedicationToEdit] = useState<Medication | null>(null);
   const [showMedicationLabels, setShowMedicationLabels] = useState(false);
+  const { getPatient } = usePatients();
 
   useEffect(() => {
     setAllMedications(medications);
@@ -515,7 +517,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             id: patientId, 
             first_name: patientName ? patientName.split(' ')[0] : 'Unknown', 
             last_name: patientName ? patientName.split(' ')[1] || '' : 'Patient', 
-            patient_id: '' 
+            patient_id: getPatient(patientId)?.patient_id || 'Unknown'
           }}
           medications={selectedMedication ? [selectedMedication] : allMedications}
           onClose={() => {
