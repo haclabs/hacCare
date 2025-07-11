@@ -3,6 +3,7 @@ import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw }
 import { format, parseISO, isValid } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { usePatients } from '../../hooks/usePatients';
 import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../lib/patientService';
 
 interface VitalsTrendsProps {
