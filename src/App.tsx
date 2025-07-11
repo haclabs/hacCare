@@ -9,6 +9,7 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { usePatients } from './hooks/usePatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
+import { getPatientByMedicationId } from './lib/medicationService';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { Patient } from './types';
 
@@ -42,6 +43,7 @@ function App() {
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const [showAlerts, setShowAlerts] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Get patients, alerts, and connection status from context
   const { patients, error: dbError } = usePatients();
@@ -66,6 +68,43 @@ function App() {
    */
   const handlePatientSelect = (patient: Patient) => {
     navigate(`/patient/${patient.id}`);
+  };
+
+  /**
+   * Handle barcode scan from handheld scanner
+   * @param {string} barcode - The scanned barcode string
+   */
+  const handleBarcodeScan = async (barcode: string) => {
+    try {
+      setIsScanning(true);
+      if (barcode.startsWith('PT')) {
+        // Patient barcode - extract patient ID and navigate to patient detail
+        const patientId = barcode.substring(2); // Remove 'PT' prefix
+        const patient = patients.find(p => p.patient_id === patientId);
+        if (patient) {
+          navigate(`/patient/${patient.id}`);
+        } else {
+          console.warn(`Patient with ID ${patientId} not found`);
+        }
+      } else if (barcode.startsWith('MED')) {
+        // Medication barcode - look up patient by medication ID
+        const medicationId = barcode.substring(3); // Remove 'MED' prefix
+        const patient = await getPatientByMedicationId(medicationId);
+        if (patient) {
+          navigate(`/patient/${patient.patientId}`, { 
+            state: { activeTab: 'medications' } 
+          });
+        } else {
+          console.warn(`Patient for medication ID ${medicationId} not found`);
+        }
+      } else {
+        console.warn(`Unknown barcode format: ${barcode}`);
+      }
+    } catch (error) {
+      console.error('Error processing barcode scan:', error);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   /**
@@ -206,7 +245,10 @@ function App() {
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
         onBarcodeScan={handleBarcodeScan}
+        isScanning={isScanning}
+        onBarcodeScan={handleBarcodeScan}
         dbError={dbError} 
+        isOffline={isOffline}
         isOffline={isOffline}
       />
       

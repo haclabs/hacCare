@@ -3,6 +3,7 @@ import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { Medication } from '../../types';
 import { format, isValid } from 'date-fns';
 import { generateCode128SVG } from '../../utils/barcodeUtils';
+import { generateCode128SVG } from '../../utils/barcodeUtils';
 
 /**
  * Medication Label Component
@@ -333,19 +334,11 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
           <div className="barcode-section" style={{ width: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div className="barcode" style={{ marginBottom: '2px' }}>
               {/* Compact barcode for small labels */}
-              {Array.from({length: 12}, (_, i) => (
-                <div
-                  key={i}
-                  className="barcode-line"
-                  style={{
-                    width: `${(i % 3) + 1}px`,
-                    height: i % 2 === 0 ? '20px' : '16px',
-                    background: 'black',
-                    margin: '0 0.2px',
-                    display: 'inline-block'
-                  }}
-                />
-              ))}
+              {generateCode128SVG(medicationBarcodeId, {
+                width: 80,
+                height: 20,
+                showText: false
+              })}
             </div>
             <div className="barcode-id" style={{ fontSize: '8px', fontWeight: 'bold' }}>{medicationBarcodeId}</div>
             <div className="med-id" style={{ fontSize: '7px', color: '#666' }}>{selectedMedication.id.slice(-6)}</div>
