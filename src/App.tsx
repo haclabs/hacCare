@@ -76,7 +76,7 @@ function App() {
   const handleBarcodeScan = async (barcode: string) => {
     try {
       setIsScanning(true);
-      console.log('🔍 Barcode scanned (Code-128):', barcode);
+      console.log('🔍 Barcode scanned:', barcode);
       
       // Log all patients for debugging
       console.log('👥 All patients:', patients.map(p => ({ 

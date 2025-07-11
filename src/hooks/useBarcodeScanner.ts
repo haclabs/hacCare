@@ -15,9 +15,9 @@ import { useEffect, useState, useCallback } from 'react';
 export const useBarcodeScanner = (
   onScan: (barcode: string) => void,
   options = {
-    minLength: 2, // Further reduced minimum length to catch any codes
-    maxInputInterval: 200, // Increased to be more lenient with Code-128 scanners
-    resetTimeout: 300,
+    minLength: 1, // Minimum length to consider as a valid barcode
+    maxInputInterval: 300, // Maximum time between keystrokes to be considered part of the same scan
+    resetTimeout: 500, // Time to wait after last keystroke before processing the barcode
   }
 ) => {
   const [buffer, setBuffer] = useState<string>('');
@@ -65,9 +65,8 @@ export const useBarcodeScanner = (
 
       // Check if this is likely from a barcode scanner (fast input)
       const isLikelyBarcodeScanner = 
-        (currentTime - lastKeyTime < options.maxInputInterval) || 
-        buffer.length === 0 || 
-        isScanning;
+        (currentTime - lastKeyTime < options.maxInputInterval && buffer.length > 0) || 
+        buffer.length === 0;
 
       if (isDebugMode) {
         console.log('Barcode scanner timing:', {
@@ -83,11 +82,10 @@ export const useBarcodeScanner = (
       setLastKeyTime(currentTime);
 
       // If it's not likely from a scanner, reset
-      if (!isLikelyBarcodeScanner && !isScanning) {
+      if (!isLikelyBarcodeScanner && buffer.length > 0) {
         if (isDebugMode) console.log('Not from scanner, clearing buffer');
-        // Don't clear buffer immediately, give it a chance
-        // setTimeout(() => clearBuffer(), 50);
-        return;
+        clearBuffer();
+        return; 
       }
 
       // Start scanning mode if not already started
@@ -103,9 +101,10 @@ export const useBarcodeScanner = (
         // Process any code that ends with Enter, regardless of length
         if (buffer.length > 0) { 
           onScan(buffer);
+          event.preventDefault(); // Prevent form submissions
+          event.stopPropagation(); // Stop event bubbling
         }
         clearBuffer();
-        event.preventDefault();
       } else if (event.key.length === 1) {
         // Only add printable characters to the buffer
         if (isDebugMode) console.log('Adding character to buffer:', event.key);
