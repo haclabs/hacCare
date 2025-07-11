@@ -184,10 +184,10 @@ export function AlertProvider({ children }: AlertProviderProps) {
     // Run initial alert checks
     setTimeout(() => {
       runChecks();
-    }, 3000); // Increased delay for initial checks to allow app to fully load
+    }, 3000);
     
     // Set up interval to run checks every 5 minutes
-    const checkInterval = setInterval(() => {
+    let checkInterval = setInterval(() => {
       console.log('Running scheduled alert checks');
       runChecks();
     }, 5 * 60 * 1000); // Run checks every 5 minutes
@@ -200,7 +200,10 @@ export function AlertProvider({ children }: AlertProviderProps) {
           console.error('Error unsubscribing from alerts:', error);
         }
       }
-      clearInterval(checkInterval);
+      if (checkInterval) {
+        clearInterval(checkInterval);
+        checkInterval = null;
+      }
     };
   }, [isSupabaseConfigured]);
 
