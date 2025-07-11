@@ -147,7 +147,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             type="button"
-          >
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -178,7 +178,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                 <select
                   value={formData.admission_type}
                   onChange={(e) => updateField('admission_type', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                     !formData.admission_type ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   required
@@ -199,7 +199,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.attending_physician}
                   onChange={(e) => updateField('attending_physician', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                     !formData.attending_physician ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Dr. Name"
@@ -215,7 +215,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.insurance_provider}
                   onChange={(e) => updateField('insurance_provider', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -227,7 +227,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.insurance_policy}
                   onChange={(e) => updateField('insurance_policy', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                 <select
                   value={formData.admission_source}
                   onChange={(e) => updateField('admission_source', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white" 
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
                 >
                   <option value="">Select admission source</option>
                   <option value="Emergency Department">Emergency Department</option>
@@ -256,7 +256,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.chief_complaint}
                   onChange={(e) => updateField('chief_complaint', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                     !formData.chief_complaint ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Reason for admission"
@@ -282,7 +282,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.height}
                   onChange={(e) => updateField('height', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -294,7 +294,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.weight}
                   onChange={(e) => updateField('weight', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -306,7 +306,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.bmi}
                   onChange={(e) => updateField('bmi', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -328,7 +328,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.smoking_status}
                   onChange={(e) => updateField('smoking_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -340,7 +340,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.alcohol_use}
                   onChange={(e) => updateField('alcohol_use', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -352,7 +352,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.exercise}
                   onChange={(e) => updateField('exercise', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -364,7 +364,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.occupation}
                   onChange={(e) => updateField('occupation', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -376,7 +376,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.marital_status}
                   onChange={(e) => updateField('marital_status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -410,7 +410,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.secondary_contact_name}
                   onChange={(e) => updateField('secondary_contact_name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -422,7 +422,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.secondary_contact_relationship}
                   onChange={(e) => updateField('secondary_contact_relationship', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -434,7 +434,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="tel"
                   value={formData.secondary_contact_phone}
                   onChange={(e) => updateField('secondary_contact_phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -446,7 +446,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   type="text"
                   value={formData.secondary_contact_address}
                   onChange={(e) => updateField('secondary_contact_address', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
