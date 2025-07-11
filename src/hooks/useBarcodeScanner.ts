@@ -15,8 +15,8 @@ import { useEffect, useState, useCallback } from 'react';
 export const useBarcodeScanner = (
   onScan: (barcode: string) => void,
   options = {
-    minLength: 3, // Reduced minimum length to catch shorter codes
-    maxInputInterval: 150, // Further increased to be more lenient with slower scanners
+    minLength: 2, // Further reduced minimum length to catch any codes
+    maxInputInterval: 200, // Increased to be more lenient with Code-128 scanners
     resetTimeout: 300,
   }
 ) => {
@@ -43,9 +43,9 @@ export const useBarcodeScanner = (
       // Skip if we're not listening
       if (!isListening) return;
       
-      // Only log in debug mode to reduce console spam
+      // Debug logging
       const isDebugMode = localStorage.getItem('debug-mode') === 'true';
-      if (isDebugMode) console.log('Barcode scanner keydown:', event.key);
+      if (isDebugMode) console.log('🔍 Barcode scanner keydown:', event.key, event.keyCode);
       const currentTime = new Date().getTime();
       
       // Only ignore if the target is a text input, textarea, or select element
@@ -66,7 +66,7 @@ export const useBarcodeScanner = (
       // Check if this is likely from a barcode scanner (fast input)
       const isLikelyBarcodeScanner = 
         (currentTime - lastKeyTime < options.maxInputInterval) || 
-        buffer.length === 0 ||
+        buffer.length === 0 || 
         isScanning;
 
       if (isDebugMode) {
@@ -100,8 +100,8 @@ export const useBarcodeScanner = (
       if (event.key === 'Enter') {
         // Enter key signals end of barcode
         console.log('Barcode scan complete:', buffer);
-        // Process even shorter codes if they end with Enter
-        if (buffer.length > 0) {
+        // Process any code that ends with Enter, regardless of length
+        if (buffer.length > 0) { 
           onScan(buffer);
         }
         clearBuffer();
@@ -146,6 +146,5 @@ export const useBarcodeScanner = (
     }
   }, [buffer, options.resetTimeout, options.minLength, onScan, clearBuffer]);
 
-  return { buffer, clearBuffer };
   return { buffer, clearBuffer, startListening };
 };

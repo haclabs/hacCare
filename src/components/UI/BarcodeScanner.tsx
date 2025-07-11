@@ -20,7 +20,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   isScanning = false
 }) => {
   // Use the barcode scanner hook directly in the component
-  const { buffer, startListening } = useBarcodeScanner(onScan);
+  const { buffer, clearBuffer, startListening } = useBarcodeScanner(onScan);
   const [manualInput, setManualInput] = useState<string>('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
@@ -108,9 +108,16 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
           <div className="mt-2 text-xs text-gray-500">
             <p>Example formats:</p>
             <p>• Patient: PT12345</p>
-            <p>• Patient (numeric only): 13951</p>
+            <p>• Patient (numeric only): 13951 (Heather Gordon)</p>
             <p>• Medication: MED123456</p>
           </div>
+        </div>
+      )}
+      
+      {/* Show scanning buffer for debugging */}
+      {buffer.length > 0 && (
+        <div className="absolute top-full left-0 mt-1 text-xs text-green-600 font-mono">
+          Scanning: {buffer}
         </div>
       )}
     </div>
