@@ -29,7 +29,7 @@ interface HospitalBraceletProps {
   onClose: () => void;
 }
 
-export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose }) => {
+const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose }) => {
   /**
    * Handle print functionality
    * Opens print dialog with bracelet design
@@ -442,3 +442,5 @@ export const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onC
     </div>
   );
 };
+
+export default HospitalBracelet;

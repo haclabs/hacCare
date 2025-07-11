@@ -13,7 +13,7 @@ import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { Patient } from './types';
 
 // Lazy-loaded components
-const HospitalBracelet = lazy(() => import('./components/Patients/HospitalBracelet').then(module => ({ default: module.HospitalBracelet })));
+const HospitalBracelet = lazy(() => import('./components/Patients/HospitalBracelet'));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
