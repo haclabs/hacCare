@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw, X } from 'lucide-react';
+import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes, clearPatientVitals } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
@@ -13,7 +13,11 @@ import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
 
-export const PatientDetail: React.FC = () => {
+interface PatientDetailProps {
+  onShowBracelet?: (patient: Patient) => void;
+}
+
+export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patient, setPatient] = useState<Patient | null>(null); 
@@ -139,7 +143,7 @@ export const PatientDetail: React.FC = () => {
                 Patient Information
               </h3>
               <button
-                onClick={() => setActiveTab('bracelet')}
+                onClick={() => onShowBracelet?.(patient)}
                 className="absolute top-4 right-4 flex items-center text-blue-600 hover:text-blue-800 text-sm"
               >
                 <User className="h-4 w-4 mr-1" />
@@ -509,26 +513,6 @@ export const PatientDetail: React.FC = () => {
       <div className="mt-6">
         {renderTabContent()}
       </div>
-      
-      {/* Hospital Bracelet Modal */}
-      {activeTab === 'bracelet' && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Hospital Patient Bracelet</h2>
-              <button
-                onClick={() => setActiveTab('overview')}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="p-4">
-              <HospitalBracelet patient={patient} />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

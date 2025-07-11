@@ -187,7 +187,7 @@ function App() {
           <Routes>
             <Route path="/patient/:id" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <PatientDetail />
+                <PatientDetail onShowBracelet={setBraceletPatient} />
               </Suspense>
             } />
             <Route path="*" element={renderContent()} />
