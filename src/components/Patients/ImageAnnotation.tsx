@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Save, Edit, Trash2, ArrowRight, Square, Type, Ruler } from 'lucide-react';
+import ImageAnnotationTool from 'react-image-annotation-tool';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../lib/imageService';
@@ -27,9 +28,6 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [imageDescription, setImageDescription] = useState('');
   const [imageType, setImageType] = useState<'wound' | 'injury' | 'other'>('wound');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   
   // Dropzone setup
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -108,82 +106,6 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   // Handle annotation changes
   const handleAnnotationChange = (annotation: any) => {
     setAnnotation(annotation);
-  };
-  
-  // Canvas drawing functions
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    setIsDrawing(true);
-    setStartPos({ x, y });
-  };
-  
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // Clear canvas and redraw image
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw the image
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // Draw annotation based on type
-      ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = 2;
-      
-      if (annotationType === 'RECTANGLE') {
-        ctx.strokeRect(startPos.x, startPos.y, x - startPos.x, y - startPos.y);
-      } else if (annotationType === 'ARROW') {
-        // Draw arrow
-        ctx.beginPath();
-        ctx.moveTo(startPos.x, startPos.y);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        
-        // Draw arrowhead
-        const angle = Math.atan2(y - startPos.y, x - startPos.x);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x - 10 * Math.cos(angle - Math.PI / 6), y - 10 * Math.sin(angle - Math.PI / 6));
-        ctx.moveTo(x, y);
-        ctx.lineTo(x - 10 * Math.cos(angle + Math.PI / 6), y - 10 * Math.sin(angle + Math.PI / 6));
-        ctx.stroke();
-      }
-    };
-    img.src = selectedImage?.image_url || '';
-  };
-  
-  const stopDrawing = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    
-    // Save the annotation
-    const newAnnotation = {
-      id: Math.random().toString(16).slice(2),
-      type: annotationType,
-      startPos,
-      endPos: { x: 0, y: 0 }, // This would be set from the mouse position
-      timestamp: new Date().toISOString()
-    };
-    
-    setAnnotations([...annotations, newAnnotation]);
   };
   
   // Handle annotation submission
@@ -457,32 +379,12 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
             <div className="space-y-4">
               {renderAnnotationTypeSelector()}
               
-              <div className="border border-gray-200 rounded-lg overflow-hidden relative">
-                <canvas
-                  ref={canvasRef}
-                  width={600}
-                  height={400}
-                  className="w-full h-auto cursor-crosshair"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                />
-                <img
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <ImageAnnotationTool
                   src={selectedImage.image_url}
-                  alt="Patient image"
-                  className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none opacity-0"
-                  onLoad={(e) => {
-                    const canvas = canvasRef.current;
-                    if (!canvas) return;
-                    
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) return;
-                    
-                    const img = e.target as HTMLImageElement;
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    ctx.drawImage(img, 0, 0);
+                  annotations={annotations}
+                  onChange={(newAnnotations: any) => {
+                    setAnnotations(newAnnotations);
                   }}
                 />
               </div>
