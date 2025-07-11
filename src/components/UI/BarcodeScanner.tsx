@@ -20,10 +20,13 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 }) => {
   const [manualInput, setManualInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [lastScanned, setLastScanned] = useState<string | null>(null);
 
   const handleManualScan = () => {
     if (manualInput.trim()) {
+      console.log('Manual barcode scan:', manualInput.trim());
       onScan(manualInput.trim());
+      setLastScanned(manualInput.trim());
       setManualInput('');
       setShowManualInput(false);
     }
@@ -43,6 +46,9 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       >
         <Barcode className="h-4 w-4" />
         <span>Scan Barcode</span>
+        {lastScanned && (
+          <span className="ml-1 text-xs text-gray-500">Last: {lastScanned}</span>
+        )}
       </button>
 
       {/* Manual Input Dropdown */}
@@ -61,6 +67,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               placeholder="Enter barcode value"
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
               onKeyDown={(e) => e.key === 'Enter' && handleManualScan()}
+              autoFocus
             />
             <button
               onClick={handleManualScan}
