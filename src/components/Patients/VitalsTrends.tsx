@@ -171,7 +171,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
         <div className="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-center py-12">
             <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mr-3" />
-            <span className="ml-3 text-lg">Loading vital signs...</span>
+            <span className="text-lg">Loading vital signs...</span>
           </div>
         </div>
       </div>
@@ -271,17 +271,19 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               <div className="relative h-64">  
                 <svg className="w-full h-full" viewBox="0 0 800 200">
                   {/* Grid lines */}
-                  {[0, 1, 2, 3, 4].map(i => (
-                    <line
-                      key={i}
-                      x1="0"
-                      y1={i * 50}
-                      x2="800"
-                      y2={i * 50}
-                      stroke="#e5e7eb"
-                      strokeWidth="1"
-                    />
-                  ))}
+                  <g>
+                    {[0, 1, 2, 3, 4].map(i => (
+                      <line
+                        key={i}
+                        x1="0"
+                        y1={i * 50}
+                        x2="800"
+                        y2={i * 50}
+                        stroke="#e5e7eb"
+                        strokeWidth="1"
+                      />
+                    ))}
+                  </g>
 
                   {/* Data line */}
                   {metricData.length > 1 && (  
@@ -301,45 +303,46 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                   )}
 
                   {/* Data points */}
-                  {metricData.map((point, index) => {  
-                    const x = (index / Math.max(metricData.length - 1, 1)) * 800;
-                    // Calculate y position with proper range values to prevent NaN
-                    const y = 200 - ((point.value - range.min) / Math.max(range.max - range.min, 1)) * 200;
-                    return (
-                      <g key={index}>
-                        <circle
-                          cx={x}
-                          cy={y}
-                          r="4"
-                          fill="#2563eb"
-                        />
-                        <text
-                          x={x}
-                          y={y - 10}
-                          textAnchor="middle"
-                          className="text-xs fill-gray-600"
-                        >
-                          {point.value}
-                        </text>
-                      </g>
-                    );
-                  })}
+                  <g>
+                    {metricData.map((point, index) => {  
+                      const x = (index / Math.max(metricData.length - 1, 1)) * 800;
+                      // Calculate y position with proper range values to prevent NaN
+                      const y = 200 - ((point.value - range.min) / Math.max(range.max - range.min, 1)) * 200;
+                      return (
+                        <g key={index}>
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r="4"
+                            fill="#2563eb"
+                          />
+                          <text
+                            x={x}
+                            y={y - 10}
+                            textAnchor="middle"
+                            className="text-xs fill-gray-600"
+                          >
+                            {point.value}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </g>
                 </svg>
               </div>
 
               {/* Time labels */}
-              <div className="flex justify-between mt-2 text-xs text-gray-600">  
-                {metricData.map((point, index) => {
-                  if (index % Math.ceil(metricData.length / 6) === 0 || index === metricData.length - 1) {
+              <div className="flex justify-between mt-2 text-xs text-gray-600">
+                {metricData
+                  .filter((_, index) => index % Math.ceil(metricData.length / 6) === 0 || index === metricData.length - 1)
+                  .map((point, index) => {
                     const date = parseISO(point.timestamp);
                     return (
                       <span key={index}>
                         {isValid(date) ? format(date, 'MM/dd HH:mm') : 'Invalid Date'}
                       </span>
                     );
-                  }
-                  return null;
-                })}
+                  })}
               </div>
             </div>
 
