@@ -3,6 +3,7 @@ import { X, Save, FileText, AlertTriangle, User } from 'lucide-react';
 import { PatientNote } from '../../types';
 import { format } from 'date-fns';
 import { useAuth } from '../../hooks/useAuth';
+import { createPatientNote, updatePatientNote } from '../../lib/patientService';
 
 /**
  * Patient Note Form Component
@@ -45,9 +46,9 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   
   // Form state management
   const [formData, setFormData] = useState({
-    type: note?.type || 'General',
-    content: note?.content || '', 
-    priority: note?.priority || 'Medium'
+    type: note?.type || note?.type || 'General',
+    content: note?.content || note?.content || '', 
+    priority: note?.priority || note?.priority || 'Medium'
   });
 
   const [loading, setLoading] = useState(false);
@@ -111,17 +112,30 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
     
     try {
       // Create note object
-      const noteData: PatientNote = {
-        id: note?.id || `note-${Date.now()}`, 
-        created_at: note?.created_at || format(new Date(), 'yyyy-MM-dd HH:mm:ss'), 
-        nurse_id: user?.id || 'unknown-user',
-        nurse_name: profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown User',
-        type: formData.type as PatientNote['type'],
-        content: formData.content.trim(),
-        priority: formData.priority as PatientNote['priority']
-      };
+      if (note) {
+        // Update existing note
+        const updatedNote = {
+          ...note,
+          type: formData.type as PatientNote['type'],
+          content: formData.content.trim(),
+          priority: formData.priority as PatientNote['priority']
+        };
+        await onSave(updatedNote);
+      } else {
+        // Create new note
+        const newNote: PatientNote = {
+          id: `note-${Date.now()}`, 
+          created_at: format(new Date(), 'yyyy-MM-dd HH:mm:ss'), 
+          nurse_id: user?.id || 'unknown-user',
+          nurse_name: profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown User',
+          type: formData.type as PatientNote['type'],
+          content: formData.content.trim(),
+          priority: formData.priority as PatientNote['priority'],
+          patient_id: patientId
+        };
+        await onSave(newNote);
+      }
 
-      await onSave(noteData);
     } catch (error) {
       console.error('Error saving note:', error);
       alert('Failed to save note. Please try again.');
@@ -251,6 +265,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
               <div>
                 <p>
                 <strong>Nurse:</strong> {profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown'}
+                </p>
+                <p>
                 </p>
                 <p>
                   <strong>Date:</strong> {format(new Date(), 'MMM dd, yyyy')}

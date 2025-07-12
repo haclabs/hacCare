@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, Clock } from 'lucide-react';
+import { Edit, Trash2, Clock, RefreshCw } from 'lucide-react';
 import { PatientNote } from '../../types';
 import { PatientNoteForm } from './PatientNoteForm';
-import { fetchPatientNotes, deletePatientNote } from '../../lib/patientService';
+import { fetchPatientNotes, deletePatientNote, createPatientNote, updatePatientNote } from '../../lib/patientService';
 import { useAuth } from '../../hooks/useAuth';
 import { format, parseISO, isValid } from 'date-fns';
 
@@ -22,30 +22,58 @@ export const NotesContent: React.FC<NotesContentProps> = ({
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [editingNote, setEditingNote] = useState<PatientNote | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const { hasRole } = useAuth();
+  const { hasRole, user, profile } = useAuth();
   
   // Format date safely
   const formatDate = (dateString: string) => {
     try {
-      const date = parseISO(dateString);
+      // Handle both createdAt and created_at field names
+      const date = parseISO(dateString || '');
       return isValid(date) ? format(date, 'MMM dd, yyyy HH:mm') : 'Unknown date';
     } catch (error) {
       return 'Invalid date';
     }
   };
 
-  const handleNoteAdded = async () => {
+  const handleNoteAdded = async (note: PatientNote) => {
     if (!patientId) return;
     try {
+      if (!user || !profile) {
+        console.error('User not authenticated');
+        return;
+      }
+      
+      if (editingNote) {
+        // Update existing note
+        await updatePatientNote(editingNote.id, {
+          type: note.type,
+          content: note.content,
+          priority: note.priority
+        });
+      } else {
+        // Create new note
+        await createPatientNote({
+          patient_id: patientId,
+          nurse_id: user.id,
+          nurse_name: `${profile.first_name} ${profile.last_name}`,
+          type: note.type,
+          content: note.content,
+          priority: note.priority
+        });
+      }
+      
+      // Refresh notes
       const notesData = await fetchPatientNotes(patientId);
       onNotesUpdated(notesData);
       setShowNoteForm(false);
+      setEditingNote(null);
     } catch (error) {
       console.error('Error updating notes:', error);
     }
   };
 
   const handleEditNote = (note: PatientNote) => {
+    console.log('Editing note:', note);
     setEditingNote(note);
     setShowNoteForm(true);
   };
@@ -100,19 +128,23 @@ export const NotesContent: React.FC<NotesContentProps> = ({
                 <span className="text-sm font-medium text-gray-900">{note.nurse_name || 'Unknown'}</span>
                 <span className="mx-2 text-gray-300">•</span>
                 <span className="text-sm text-gray-500">{note.type}</span>
-                <span className="mx-2 text-gray-300">•</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  note.priority === 'High' ? 'bg-red-100 text-red-800' :
-                  note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {note.priority}
-                </span>
+                {note.priority && (
+                  <>
+                    <span className="mx-2 text-gray-300">•</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      note.priority === 'High' || note.priority === 'Critical' ? 'bg-red-100 text-red-800' :
+                      note.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {note.priority}
+                    </span>
+                  </>
+                )}
               </div>
               <div className="flex items-center">
                 <span className="text-xs text-gray-500 flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  {formatDate(note.created_at)}
+                  {formatDate(note.created_at || note.createdAt)}
                 </span>
                 
                 {/* Edit/Delete buttons for super users */}

@@ -64,12 +64,14 @@ export interface MedicationAdministration {
 
 export interface PatientNote {
   id: string;
-  created_at: string;
-  nurse_id: string;
-  nurse_name: string;
+  created_at?: string;
+  createdAt?: string;
+  nurse_id?: string;
+  nurse_name?: string;
   type: 'Assessment' | 'Medication' | 'Vital Signs' | 'General' | 'Incident';
   content: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  patient_id?: string;
 }
 
 export interface Nurse {

@@ -340,16 +340,16 @@ export const deletePatient = async (patientId: string): Promise<void> => {
 /**
  * Create a new patient note
  */
-export const createPatientNote = async (note: Omit<PatientNote, 'id' | 'created_at'>): Promise<PatientNote> => {
+export const createPatientNote = async (note: any): Promise<PatientNote> => {
   try {
     console.log('Creating patient note:', note);
     
     const { data, error } = await supabase
       .from('patient_notes')
       .insert({
-        patient_id: note.patientId,
-        nurse_id: note.nurseId,
-        nurse_name: note.nurseName,
+        patient_id: note.patient_id,
+        nurse_id: note.nurse_id,
+        nurse_name: note.nurse_name,
         type: note.type,
         content: note.content,
         priority: note.priority
@@ -367,7 +367,7 @@ export const createPatientNote = async (note: Omit<PatientNote, 'id' | 'created_
     await logAction(
       user,
       'created_note',
-      note.patientId,
+      note.patient_id,
       'patient',
       { type: note.type, priority: note.priority }
     );
@@ -375,13 +375,13 @@ export const createPatientNote = async (note: Omit<PatientNote, 'id' | 'created_
     // Convert to app format
     const createdNote: PatientNote = {
       id: data.id,
-      patientId: data.patient_id,
-      nurseId: data.nurse_id,
-      nurseName: data.nurse_name,
+      patient_id: data.patient_id,
+      nurse_id: data.nurse_id,
+      nurse_name: data.nurse_name,
       type: data.type,
       content: data.content,
       priority: data.priority,
-      createdAt: data.created_at
+      created_at: data.created_at
     };
 
     console.log('Note created successfully:', createdNote);
@@ -430,13 +430,13 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
     // Convert to app format
     const updatedNote: PatientNote = {
       id: data.id,
-      patientId: data.patient_id,
-      nurseId: data.nurse_id,
-      nurseName: data.nurse_name,
+      patient_id: data.patient_id,
+      nurse_id: data.nurse_id,
+      nurse_name: data.nurse_name,
       type: data.type,
       content: data.content,
       priority: data.priority,
-      createdAt: data.created_at
+      created_at: data.created_at
     };
 
     console.log('Note updated successfully:', updatedNote);
@@ -626,13 +626,13 @@ export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[
     // Convert to app format
     const notes: PatientNote[] = data.map(note => ({
       id: note.id,
-      patientId: note.patient_id,
-      nurseId: note.nurse_id,
-      nurseName: note.nurse_name,
+      patient_id: note.patient_id,
+      nurse_id: note.nurse_id,
+      nurse_name: note.nurse_name,
       type: note.type,
       content: note.content,
       priority: note.priority as 'Low' | 'Medium' | 'High',
-      createdAt: note.created_at
+      created_at: note.created_at
     }));
 
     console.log(`Found ${notes.length} notes for patient ${patientId}`);
