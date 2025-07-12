@@ -4,16 +4,15 @@ import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, C
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
-import { VitalSignsEditor } from './VitalSignsEditor';
-import { VitalsTrends } from './VitalsTrends';
 import { RecentActivity } from './RecentActivity';
-import { PatientNoteForm } from './PatientNoteForm';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from './WoundAssessment';
 import { ImageAnnotation } from './ImageAnnotation';
 import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { AdmissionRecordsForm } from './AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
+import { VitalsContent } from './VitalsContent';
+import { NotesContent } from './NotesContent';
 
 interface PatientDetailProps {
   onShowBracelet?: (patient: Patient) => void;
@@ -27,18 +26,16 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   // Check if we have an initial tab from location state (e.g., from barcode scan)
   const [activeTab, setActiveTab] = useState(
     location.state?.activeTab || 'overview'
   );
   // Get medication category from location state if available
   const initialMedicationCategory = location.state?.medicationCategory || 'scheduled';
-  const [showVitalsEditor, setShowVitalsEditor] = useState(false);
-  const [showNoteForm, setShowNoteForm] = useState(false);
-  const [showVitalsTrends, setShowVitalsTrends] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
-  const [refreshingVitals, setRefreshingVitals] = useState(false); 
+  // State for active sub-tab
+  const [activeSubTab, setActiveSubTab] = useState<string>('vitals');
   
   // Count medications by category
   const getMedicationCounts = () => {
@@ -79,41 +76,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     loadPatientData();
   }, [id]);
 
-  const handleVitalsUpdate = async () => { 
-    if (!id) return;
-    try {
-      const vitalsData = await fetchPatientVitals(id);
-      setVitals(vitalsData);
-      setShowVitalsEditor(false);
-    } catch (error) {
-      console.error('Error updating vitals:', error);
-    }
-  };
-
-  const refreshVitals = async () => {
-    if (!id) return;
-    try {
-      setRefreshingVitals(true);
-      const vitalsData = await fetchPatientVitals(id);
-      setVitals(vitalsData);
-    } catch (error) {
-      console.error('Error refreshing vitals:', error);
-    } finally {
-      setRefreshingVitals(false);
-    }
-  };
-
-  const handleNoteAdded = async () => {
-    if (!id) return;
-    try {
-      const notesData = await fetchPatientNotes(id);
-      setNotes(notesData);
-      setShowNoteForm(false);
-    } catch (error) {
-      console.error('Error updating notes:', error);
-    }
-  };
-
   if (loading) { 
     return (
       <div className="flex items-center justify-center h-64">
@@ -136,15 +98,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     { id: 'assessments', label: 'Assessments', icon: Stethoscope, subTabs: [
       { id: 'vitals', label: 'Vital Signs', icon: Activity },
       { id: 'notes', label: 'Notes', icon: FileText },
-      { id: 'wounds', label: 'Wound Care', icon: Bandage },
+      { id: 'wounds', label: 'Wound Care', icon: Bandage }
     ]},
     { id: 'images', label: 'Images', icon: Image },
     { id: 'admission', label: 'Admission', icon: Clipboard },
     { id: 'directives', label: 'Directives', icon: Shield }
   ];
-
-  // State for active sub-tab
-  const [activeSubTab, setActiveSubTab] = useState<string>('vitals');
 
   const renderTabContent = () => { 
     switch (activeTab) {
@@ -280,10 +239,23 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             </div>
 
             {/* Render content based on active sub-tab */}
-            {activeSubTab === 'vitals' && renderVitalsContent()}
-            {activeSubTab === 'notes' && renderNotesContent()}
+            {activeSubTab === 'vitals' && (
+              <VitalsContent 
+                patientId={id!} 
+                patientName={`${patient.first_name} ${patient.last_name}`}
+                vitals={vitals}
+                onVitalsUpdated={(updatedVitals) => setVitals(updatedVitals)}
+              />
+            )}
+            {activeSubTab === 'notes' && (
+              <NotesContent
+                patientId={id!}
+                patientName={`${patient.first_name} ${patient.last_name}`}
+                notes={notes}
+                onNotesUpdated={(updatedNotes) => setNotes(updatedNotes)}
+              />
+            )}
             {activeSubTab === 'wounds' && <WoundAssessment patientId={id!} />}
-            {activeSubTab === 'assessments' && <PatientAssessmentsTab patientId={id!} patientName={`${patient.first_name} ${patient.last_name}`} />}
           </div>
         );
 
@@ -337,186 +309,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       default:
         return null;
     }
-  };
-
-  // Helper function to render vitals content
-  const renderVitalsContent = () => {
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowVitalsTrends(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  title="View vital signs trends"
-                >
-                  <TrendingUp className="h-4 w-4" />
-                  <span>View Trends</span>
-                </button>
-                <button
-                  onClick={refreshVitals}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  <RefreshCw className={`h-4 w-4 ${refreshingVitals ? 'animate-spin' : ''}`} />
-                  <span>Refresh</span>
-                </button>
-                <button
-                  onClick={() => setShowVitalsEditor(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  <span>Record Vitals</span>
-                </button>
-              </div>
-            </div>
-
-            {vitals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Thermometer className="h-5 w-5 text-red-500 mr-2" />
-                      <span className="text-sm font-medium text-gray-600">Temperature</span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.temperature?.toFixed(1)}°C</p>
-                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Heart className="h-5 w-5 text-red-500 mr-2" />
-                      <span className="text-sm font-medium text-gray-600">Heart Rate</span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.heartRate} bpm</p>
-                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Activity className="h-5 w-5 text-blue-500 mr-2" />
-                      <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.bloodPressure?.systolic}/{vitals[0]?.bloodPressure?.diastolic} mmHg</p>
-                  <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
-                </div>
-
-               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                 <div className="flex items-center justify-between">
-                   <div className="flex items-center">
-                     <Droplets className="h-5 w-5 text-green-500 mr-2" />
-                     <span className="text-sm font-medium text-gray-600">Oxygen Saturation</span>
-                   </div>
-                 </div>
-                 <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.oxygenSaturation}%</p>
-                 <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
-               </div>
-
-               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                 <div className="flex items-center justify-between">
-                   <div className="flex items-center">
-                     <Wind className="h-5 w-5 text-purple-500 mr-2" />
-                     <span className="text-sm font-medium text-gray-600">Respiratory Rate</span>
-                   </div>
-                 </div>
-                 <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.respiratoryRate}/min</p>
-                 <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
-               </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Vital Signs Recorded</h3>
-                <p className="text-gray-600 mb-6">Start recording vital signs to see patient health data.</p>
-                <button
-                  onClick={() => setShowVitalsEditor(true)}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Record First Vitals
-                </button>
-              </div>
-            )}
-            
-            {showVitalsEditor && (
-              <VitalSignsEditor
-                patientId={id!}
-                onSave={handleVitalsUpdate}
-                onCancel={() => setShowVitalsEditor(false)}
-              />
-            )}
-            
-            {showVitalsTrends && (
-              <VitalsTrends
-                patientId={id!}
-                patientName={`${patient.first_name} ${patient.last_name}`}
-                onClose={() => setShowVitalsTrends(false)}
-                onRecordVitals={() => {
-                  console.log("Record vitals clicked from trends");
-                  setShowVitalsTrends(false);
-                  setShowVitalsEditor(true);
-                }}
-              />
-            )}
-          </div>
-        );
-  };
-
-  // Helper function to render notes content
-  const renderNotesContent = () => {
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
-              <button
-                onClick={() => setShowNoteForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Add Note
-              </button>
-            </div>
-
-            {showNoteForm && (
-              <PatientNoteForm
-                patientId={id!}
-                onSave={handleNoteAdded}
-                onCancel={() => setShowNoteForm(false)}
-              />
-            )}
-
-            <div className="space-y-4">
-              {notes.map((note) => (
-                <div key={note.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900">{note.nurse_name}</span>
-                      <span className="mx-2 text-gray-300">•</span>
-                      <span className="text-sm text-gray-500">{note.type}</span>
-                      <span className="mx-2 text-gray-300">•</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        note.priority === 'high' ? 'bg-red-100 text-red-800' :
-                        note.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {note.priority}
-                      </span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {new Date(note.created_at!).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700">{note.content}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
   };
 
   return ( 
