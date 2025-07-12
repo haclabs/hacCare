@@ -169,6 +169,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const renderMedicationCard = (medication: Medication) => {
     const isDue = getDueMedications().includes(medication);
     const isOverdue = getOverdueMedications().includes(medication);
+    const medicationBarcodeId = `MED${medication.id.slice(-6).toUpperCase()}`;
     
     return (
       <div
@@ -198,6 +199,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             </div>
             
             <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <p><span className="font-medium dark:text-gray-200">Barcode ID:</span> {medicationBarcodeId}</p>
               <p><span className="font-medium dark:text-gray-200">Dosage:</span> {medication.dosage}</p>
               <p><span className="font-medium dark:text-gray-200">Route:</span> {medication.route}</p>
               <p><span className="font-medium dark:text-gray-200">Frequency:</span> {medication.frequency}</p>
