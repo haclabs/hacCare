@@ -306,5 +306,3 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
     </div>
   );
 };
-  )
-}
