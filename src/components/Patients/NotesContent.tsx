@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Edit } from 'lucide-react';
+import { Edit, Trash2, Clock } from 'lucide-react';
 import { PatientNote } from '../../types';
 import { PatientNoteForm } from './PatientNoteForm';
-import { fetchPatientNotes } from '../../lib/patientService';
+import { fetchPatientNotes, deletePatientNote } from '../../lib/patientService';
+import { useAuth } from '../../hooks/useAuth';
+import { format, parseISO, isValid } from 'date-fns';
 
 interface NotesContentProps {
   patientId: string;
@@ -18,6 +20,19 @@ export const NotesContent: React.FC<NotesContentProps> = ({
   onNotesUpdated
 }) => {
   const [showNoteForm, setShowNoteForm] = useState(false);
+  const [editingNote, setEditingNote] = useState<PatientNote | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { hasRole } = useAuth();
+  
+  // Format date safely
+  const formatDate = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return isValid(date) ? format(date, 'MMM dd, yyyy HH:mm') : 'Unknown date';
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
 
   const handleNoteAdded = async () => {
     if (!patientId) return;
@@ -27,6 +42,27 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       setShowNoteForm(false);
     } catch (error) {
       console.error('Error updating notes:', error);
+    }
+  };
+
+  const handleEditNote = (note: PatientNote) => {
+    setEditingNote(note);
+    setShowNoteForm(true);
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!window.confirm('Are you sure you want to delete this note?')) return;
+    
+    try {
+      setDeleting(true);
+      await deletePatientNote(noteId);
+      // Refresh notes after deletion
+      const notesData = await fetchPatientNotes(patientId);
+      onNotesUpdated(notesData);
+    } catch (error) {
+      console.error('Error deleting note:', error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -45,10 +81,14 @@ export const NotesContent: React.FC<NotesContentProps> = ({
 
       {showNoteForm && (
         <PatientNoteForm
+          note={editingNote}
           patientId={patientId}
           patientName={patientName}
           onSave={handleNoteAdded}
-          onCancel={() => setShowNoteForm(false)}
+          onCancel={() => {
+            setShowNoteForm(false);
+            setEditingNote(null);
+          }}
         />
       )}
 
@@ -57,7 +97,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
           <div key={note.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex justify-between items-start mb-2">
               <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-900">{note.nurse_name}</span>
+                <span className="text-sm font-medium text-gray-900">{note.nurse_name || 'Unknown'}</span>
                 <span className="mx-2 text-gray-300">•</span>
                 <span className="text-sm text-gray-500">{note.type}</span>
                 <span className="mx-2 text-gray-300">•</span>
@@ -69,9 +109,30 @@ export const NotesContent: React.FC<NotesContentProps> = ({
                   {note.priority}
                 </span>
               </div>
-              <span className="text-xs text-gray-500">
-                {new Date(note.created_at).toLocaleString()}
-              </span>
+              <div className="flex items-center">
+                <span className="text-xs text-gray-500 flex items-center">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {formatDate(note.created_at)}
+                </span>
+                
+                {/* Edit/Delete buttons for super users */}
+                {hasRole(['admin', 'super_admin']) && (
+                  <div className="ml-3 flex space-x-2">
+                    <button 
+                      onClick={() => handleEditNote(note)}
+                      className="text-blue-600 hover:text-blue-800 p-1"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
             <p className="text-sm text-gray-700">{note.content}</p>
           </div>

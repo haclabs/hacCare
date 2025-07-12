@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Patient, VitalSigns, Medication, PatientNote, MedicationAdministration } from '../types';
 import { logAction } from './auditService';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Patient Service
@@ -332,6 +333,157 @@ export const deletePatient = async (patientId: string): Promise<void> => {
     );
   } catch (error) {
     console.error('Error deleting patient:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create a new patient note
+ */
+export const createPatientNote = async (note: Omit<PatientNote, 'id' | 'created_at'>): Promise<PatientNote> => {
+  try {
+    console.log('Creating patient note:', note);
+    
+    const { data, error } = await supabase
+      .from('patient_notes')
+      .insert({
+        patient_id: note.patientId,
+        nurse_id: note.nurseId,
+        nurse_name: note.nurseName,
+        type: note.type,
+        content: note.content,
+        priority: note.priority
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating patient note:', error);
+      throw error;
+    }
+
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'created_note',
+      note.patientId,
+      'patient',
+      { type: note.type, priority: note.priority }
+    );
+
+    // Convert to app format
+    const createdNote: PatientNote = {
+      id: data.id,
+      patientId: data.patient_id,
+      nurseId: data.nurse_id,
+      nurseName: data.nurse_name,
+      type: data.type,
+      content: data.content,
+      priority: data.priority,
+      createdAt: data.created_at
+    };
+
+    console.log('Note created successfully:', createdNote);
+    return createdNote;
+  } catch (error) {
+    console.error('Error creating patient note:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing patient note
+ */
+export const updatePatientNote = async (noteId: string, updates: Partial<PatientNote>): Promise<PatientNote> => {
+  try {
+    console.log('Updating patient note:', noteId, updates);
+    
+    // Convert to database format
+    const dbUpdates: any = {};
+    if (updates.type) dbUpdates.type = updates.type;
+    if (updates.content) dbUpdates.content = updates.content;
+    if (updates.priority) dbUpdates.priority = updates.priority;
+    
+    const { data, error } = await supabase
+      .from('patient_notes')
+      .update(dbUpdates)
+      .eq('id', noteId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating patient note:', error);
+      throw error;
+    }
+
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'updated_note',
+      data.patient_id,
+      'patient',
+      { note_id: noteId, type: updates.type }
+    );
+
+    // Convert to app format
+    const updatedNote: PatientNote = {
+      id: data.id,
+      patientId: data.patient_id,
+      nurseId: data.nurse_id,
+      nurseName: data.nurse_name,
+      type: data.type,
+      content: data.content,
+      priority: data.priority,
+      createdAt: data.created_at
+    };
+
+    console.log('Note updated successfully:', updatedNote);
+    return updatedNote;
+  } catch (error) {
+    console.error('Error updating patient note:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a patient note
+ */
+export const deletePatientNote = async (noteId: string): Promise<void> => {
+  try {
+    console.log('Deleting patient note:', noteId);
+    
+    // Get note info before deletion for audit log
+    const { data: note } = await supabase
+      .from('patient_notes')
+      .select('patient_id, type')
+      .eq('id', noteId)
+      .single();
+
+    const { error } = await supabase
+      .from('patient_notes')
+      .delete()
+      .eq('id', noteId);
+
+    if (error) {
+      console.error('Error deleting patient note:', error);
+      throw error;
+    }
+
+    // Log the action
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'deleted_note',
+      note?.patient_id || 'unknown',
+      'patient',
+      { note_id: noteId, type: note?.type }
+    );
+
+    console.log('Note deleted successfully');
+  } catch (error) {
+    console.error('Error deleting patient note:', error);
     throw error;
   }
 };

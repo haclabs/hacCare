@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Save, FileText, AlertTriangle, User } from 'lucide-react';
 import { PatientNote } from '../../types';
 import { format } from 'date-fns';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Patient Note Form Component
@@ -40,6 +41,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   onSave,
   onCancel
 }) => {
+  const { user, profile } = useAuth();
+  
   // Form state management
   const [formData, setFormData] = useState({
     type: note?.type || 'General',
@@ -111,8 +114,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
       const noteData: PatientNote = {
         id: note?.id || `note-${Date.now()}`, 
         created_at: note?.created_at || format(new Date(), 'yyyy-MM-dd HH:mm:ss'), 
-        nurse_id: 'nurse-001', // In real app, this would come from auth context
-        nurse_name: 'Sarah Johnson', // In real app, this would come from auth context
+        nurse_id: user?.id || 'unknown-user',
+        nurse_name: profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown User',
         type: formData.type as PatientNote['type'],
         content: formData.content.trim(),
         priority: formData.priority as PatientNote['priority']
@@ -242,13 +245,13 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
               <User className="h-4 w-4 mr-2 text-gray-600" />
-              Note Details
+              {note ? 'Edit Note' : 'New Note'}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
               <div>
                 <p>
                   <strong>Nurse:</strong> Sarah Johnson
-                </p>
+                <strong>Nurse:</strong> {profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown'}
                 <p>
                   <strong>Date:</strong> {format(new Date(), 'MMM dd, yyyy')}
                 </p>
