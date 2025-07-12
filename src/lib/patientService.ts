@@ -458,6 +458,15 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
 export const deletePatientNote = async (noteId: string): Promise<void> => {
   try {
     console.log('Deleting patient note:', noteId);
+    
+    // Get the patient_id before deleting the note
+    const { data: noteData } = await supabase
+      .from('patient_notes')
+      .select('patient_id')
+      .eq('id', noteId)
+      .maybeSingle();
+    
+    const patientId = noteData?.patient_id;
 
     // Delete the note directly without checking first
     const { error } = await supabase
@@ -485,7 +494,7 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
         await logAction(
           user,
           'deleted_note',
-          patientId || 'unknown',
+          patientId || 'unknown-patient',
           'patient',
           { note_id: noteId }
         );
