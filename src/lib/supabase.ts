@@ -19,10 +19,19 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
-// Log configuration status for debugging
+// Log configuration status for debugging (with more details for troubleshooting)
 console.log('🔧 Supabase Environment Check:');
-console.log('  URL:', supabaseUrl ? `${supabaseUrl.substring(0, 50)}...` : 'Not set');
-console.log('  Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 30)}...` : 'Not set');
+if (supabaseUrl) {
+  console.log('  URL:', `${supabaseUrl.substring(0, 50)}...`);
+} else {
+  console.error('  URL: Not set - Please check your .env file');
+}
+
+if (supabaseAnonKey) {
+  console.log('  Key:', `${supabaseAnonKey.substring(0, 30)}...`);
+} else {
+  console.error('  Key: Not set - Please check your .env file');
+}
 
 /**
  * Validate Supabase configuration
@@ -114,31 +123,45 @@ export interface UserProfile {
 export const checkDatabaseHealth = async (): Promise<boolean> => {
   if (!isSupabaseConfigured) {
     console.warn('⚠️ Supabase client not properly configured - check environment variables');
-    return false;
+    return false; 
   }
 
   try {
     console.log('🔍 Testing database connection...');
     
     // Use a simple query with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const controller = new AbortController(); 
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout to 15 seconds
     
-    const { error } = await supabase
-      .from('user_profiles')
-      .select('count')
-      .limit(1)
-      .abortSignal(controller.signal);
-    
-    clearTimeout(timeoutId);
-    
-    if (error) {
-      console.warn('🔌 Database connection failed - please check your Supabase configuration and internet connection');
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .select('count')
+        .limit(1)
+        .abortSignal(controller.signal);
+      
+      clearTimeout(timeoutId);
+      
+      if (error) {
+        console.warn('🔌 Database connection failed:', error.message);
+        console.warn('🔌 Database connection failed - please check your Supabase configuration and internet connection');
+        return false;
+      }
+      
+      console.log('✅ Database connection successful');
+      return true;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.warn('🔌 Database connection timeout - request took too long');
+      } else {
+        console.warn('🔌 Database connection error:', fetchError.message);
+      }
+      
       return false;
     }
     
-    console.log('✅ Database connection successful');
-    return true;
   } catch (error: any) {
     // Consolidate all network-related errors into a single informative message
     console.warn('🔌 Unable to connect to database - please verify your Supabase URL and API key in .env file');
@@ -152,20 +175,24 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
 export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
   if (!isSupabaseConfigured) {
     console.log('Supabase not configured, skipping connection test');
-    return false;
+    return false; 
   }
 
   for (let i = 0; i < retries; i++) {
     try {
       const isHealthy = await checkDatabaseHealth();
       if (isHealthy) {
+        console.log(`✅ Connection successful on attempt ${i + 1}`);
         return true;
       }
+      console.log(`❌ Connection attempt ${i + 1} failed, will retry ${retries - i - 1} more times`);
     } catch (error) {
       console.log(`Connection attempt ${i + 1} failed:`, error);
       if (i < retries - 1) {
         // Wait before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        const backoffTime = Math.pow(2, i) * 1000;
+        console.log(`Waiting ${backoffTime}ms before next attempt...`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
   }

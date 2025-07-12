@@ -50,19 +50,20 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
   try {
     // Check if Supabase is properly configured
     if (!isSupabaseConfigured) {
-      console.warn('⚠️ Supabase not configured, returning empty alerts array');
+      console.warn('⚠️ Supabase not configured, returning empty alerts array - check your .env file');
       return [];
     }
 
     // Test database connection before attempting to fetch
     const isHealthy = await checkDatabaseHealth();
     if (!isHealthy) {
-      console.error('❌ Database connection failed, returning empty alerts array');
+      console.error('❌ Database connection failed, returning empty alerts array - check your Supabase configuration');
+      // Return empty array instead of throwing to prevent app crash
       return [];
     }
 
     if (!supabase) {
-      console.warn('📱 Alerts unavailable - Supabase not configured')
+      console.warn('📱 Alerts unavailable - Supabase not configured - check your .env file')
       return []
     }
     
@@ -70,25 +71,32 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
     const now = new Date();
     console.log('Current time for alert fetch:', now.toISOString());
     
-    const { data, error } = await supabase
-      .from<DatabaseAlert>('patient_alerts')
-      .select('*')
-      .eq('acknowledged', false)
-      .or(`expires_at.is.null,expires_at.gt.${now.toISOString()}`)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from<DatabaseAlert>('patient_alerts')
+        .select('*')
+        .eq('acknowledged', false)
+        .or(`expires_at.is.null,expires_at.gt.${now.toISOString()}`)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.warn('📱 Error fetching alerts:', error.message)
-      // Don't throw error, return empty array to prevent app crash
-      console.warn('Returning empty alerts array due to database error');
+      if (error) {
+        console.warn('📱 Error fetching alerts:', error.message)
+        // Don't throw error, return empty array to prevent app crash
+        console.warn('Returning empty alerts array due to database error');
+        return [];
+      }
+
+      const alerts = (data || []).map(convertDatabaseAlert);
+      console.log(`✅ Fetched ${alerts.length} active alerts`);
+      return alerts;
+    } catch (fetchError: any) {
+      console.warn('📱 Error during alert fetch operation:', fetchError.message);
+      // Return empty array to prevent app crash
       return [];
     }
-
-    const alerts = (data || []).map(convertDatabaseAlert);
-    console.log(`✅ Fetched ${alerts.length} active alerts`);
-    return alerts;
   } catch (error) {
-    console.warn('📱 Network error fetching alerts:', error)
+    console.warn('📱 Network error fetching alerts:', error);
+    console.warn('Returning empty alerts array to prevent app crash');
     return []
   }
 };
