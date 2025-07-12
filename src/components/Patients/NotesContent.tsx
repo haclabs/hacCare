@@ -45,11 +45,17 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       
       if (editingNote) {
         // Update existing note
-        await updatePatientNote(editingNote.id, {
+        const updatedNote = await updatePatientNote(editingNote.id, {
           type: note.type,
           content: note.content,
           priority: note.priority
         });
+        
+        if (!updatedNote) {
+          console.error('Note not found or could not be updated');
+          alert('Error: Note not found or could not be updated. It may have been deleted.');
+          return;
+        }
       } else {
         // Create new note
         await createPatientNote({
