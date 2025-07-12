@@ -44,11 +44,30 @@ export const uploadPatientImage = async (
 ): Promise<PatientImage> => {
   try {
     console.log('Uploading patient image:', file.name);
+    console.log('Checking if storage bucket exists...');
     
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${patientId}/${fileName}`;
+    
+    // Check if bucket exists
+    const { data: buckets, error: bucketsError } = await supabase
+      .storage
+      .listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error checking buckets:', bucketsError);
+      throw new Error(`Storage error: ${bucketsError.message}`);
+    }
+    
+    console.log('Available buckets:', buckets?.map(b => b.name));
+    
+    const bucketExists = buckets?.some(b => b.name === 'patient-images');
+    if (!bucketExists) {
+      console.error('Bucket "patient-images" not found');
+      throw new Error('Storage bucket "patient-images" not found. Please create it in the Supabase dashboard.');
+    }
     
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase
