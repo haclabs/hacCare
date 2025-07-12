@@ -125,17 +125,7 @@ export const mockPatients: Patient[] = [
         status: 'Active'
       }
     ],
-    notes: [
-      {
-        id: 'note-001',
-        created_at: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
-        nurse_id: 'nurse-001',
-        nurse_name: 'Sarah Johnson',
-        type: 'Assessment',
-        content: 'Patient ambulating well, no complaints of pain. Incision site clean and dry.',
-        priority: 'Low'
-      }
-    ]
+    notes: []
   },
   {
     id: patient2Id,
@@ -179,17 +169,7 @@ export const mockPatients: Patient[] = [
         status: 'Active'
       }
     ],
-    notes: [
-      {
-        id: 'note-002',
-        created_at: format(subHours(new Date(), 30), 'yyyy-MM-dd HH:mm:ss'),
-        nurse_id: 'nurse-001',
-        nurse_name: 'Sarah Johnson',
-        type: 'Vital Signs',
-        content: 'Elevated temperature and BP. Physician notified. Increased monitoring ordered.',
-        priority: 'High'
-      }
-    ]
+    notes: []
   },
   {
     id: patient3Id,
