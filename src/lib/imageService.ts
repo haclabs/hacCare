@@ -44,32 +44,14 @@ export const uploadPatientImage = async (
 ): Promise<PatientImage> => {
   try {
     console.log('Uploading patient image:', file.name);
-    console.log('Checking if storage bucket exists...');
     
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${patientId}/${fileName}`;
     
-    // Check if bucket exists
-    const { data: buckets, error: bucketsError } = await supabase
-      .storage
-      .listBuckets();
-    
-    if (bucketsError) {
-      console.error('Error checking buckets:', bucketsError);
-      throw new Error(`Storage error: ${bucketsError.message}`);
-    }
-    
-    console.log('Available buckets:', buckets?.map(b => b.name));
-    
-    const bucketExists = buckets?.some(b => b.name === 'patient-images');
-    if (!bucketExists) {
-      console.error('Bucket "patient-images" not found');
-      throw new Error('Storage bucket "patient-images" not found. Please create it in the Supabase dashboard.');
-    }
-    
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (skip bucket check and try direct upload)
+    console.log('Attempting to upload to patient-images bucket...');
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('patient-images')
@@ -80,14 +62,26 @@ export const uploadPatientImage = async (
     
     if (uploadError) {
       console.error('Error uploading image:', uploadError);
-      throw uploadError;
+      
+      // Provide more helpful error messages based on the error type
+      if (uploadError.message?.includes('Bucket not found')) {
+        throw new Error('Storage bucket "patient-images" not found or not accessible. Please check bucket permissions in Supabase dashboard.');
+      } else if (uploadError.message?.includes('not allowed')) {
+        throw new Error('Upload not allowed. Please check storage policies for the patient-images bucket.');
+      } else {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
     }
+    
+    console.log('Upload successful:', uploadData);
     
     // Get the public URL
     const { data: { publicUrl } } = supabase
       .storage
       .from('patient-images')
       .getPublicUrl(filePath);
+    
+    console.log('Generated public URL:', publicUrl);
     
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -97,6 +91,7 @@ export const uploadPatientImage = async (
     }
     
     // Create database record
+    console.log('Creating database record...');
     const { data, error } = await supabase
       .from('patient_images')
       .insert({
@@ -112,17 +107,22 @@ export const uploadPatientImage = async (
     
     if (error) {
       console.error('Error creating image record:', error);
-      throw error;
+      throw new Error(`Failed to save image record: ${error.message}`);
     }
     
     // Log the action
-    await logAction(
-      user,
-      'uploaded_image',
-      patientId,
-      'patient',
-      { image_type: imageType, description }
-    );
+    try {
+      await logAction(
+        user,
+        'uploaded_image',
+        patientId,
+        'patient',
+        { image_type: imageType, description }
+      );
+    } catch (logError) {
+      console.warn('Failed to log action:', logError);
+      // Don't fail the upload if logging fails
+    }
     
     console.log('Image uploaded successfully:', data);
     return data;
