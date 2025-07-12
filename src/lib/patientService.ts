@@ -458,45 +458,42 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
 export const deletePatientNote = async (noteId: string): Promise<void> => {
   try {
     console.log('Deleting patient note:', noteId);
-    
-    // First check if the note exists
-    const { data: note, error: checkError } = await supabase
-      .from('patient_notes')
-      .select('patient_id, type')
-      .eq('id', noteId)
-      .single();
-      
-    if (checkError) {
-      console.error('Error checking note existence:', checkError);
-      if (checkError.code === 'PGRST116') {
-        // Note doesn't exist, nothing to delete
-        console.log('Note not found, nothing to delete');
-        return;
-      }
-      throw checkError;
-    }
 
+    // Delete the note directly without checking first
     const { error } = await supabase
       .from('patient_notes')
       .delete()
       .eq('id', noteId);
 
     if (error) {
-      console.error('Error deleting patient note:', error);
-      throw error;
+      // If the note doesn't exist, just log it and return
+      if (error.code === 'PGRST116') {
+        console.log('Note not found, nothing to delete');
+        return;
+      } else {
+        console.error('Error deleting patient note:', error);
+        throw error;
+      }
     } else {
       console.log('Note deleted successfully');
     }
 
     // Log the action
     const user = (await supabase.auth.getUser()).data.user;
-    await logAction(
-      user,
-      'deleted_note',
-      note.patient_id,
-      'patient',
-      { note_id: noteId, type: note.type }
-    );
+    if (user) {
+      try {
+        await logAction(
+          user,
+          'deleted_note',
+          patientId || 'unknown',
+          'patient',
+          { note_id: noteId }
+        );
+      } catch (logError) {
+        console.warn('Failed to log note deletion:', logError);
+        // Continue even if logging fails
+      }
+    }
   } catch (error) {
     console.error('Error deleting patient note:', error);
     throw error;

@@ -22,6 +22,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [editingNote, setEditingNote] = useState<PatientNote | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { hasRole, user, profile } = useAuth();
   
   // Format date safely
@@ -111,17 +112,68 @@ export const NotesContent: React.FC<NotesContentProps> = ({
     }
   };
 
+  const handleRefreshNotes = async () => {
+    if (!patientId) return;
+    try {
+      setRefreshing(true);
+      const notesData = await fetchPatientNotes(patientId);
+      onNotesUpdated(notesData);
+    } catch (error) {
+      console.error('Error refreshing notes:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleDeleteAllNotes = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL notes for this patient?')) return;
+    
+    try {
+      setDeleting(true);
+      
+      // Delete each note one by one
+      for (const note of notes) {
+        try {
+          await deletePatientNote(note.id);
+          console.log(`Note ${note.id} deleted successfully`);
+        } catch (deleteError) {
+          console.error(`Error deleting note ${note.id}:`, deleteError);
+        }
+      }
+      
+      // Refresh notes after deletion
+      await handleRefreshNotes();
+    } catch (error) {
+      console.error('Error deleting all notes:', error);
+      alert('Failed to delete all notes.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
-        <button
-          onClick={() => setShowNoteForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-        >
-          <Edit className="h-4 w-4 mr-2" />
-          Add Note
-        </button>
+        <div className="flex space-x-2">
+          {notes.length > 0 && hasRole(['admin', 'super_admin']) && (
+            <button
+              onClick={handleDeleteAllNotes}
+              disabled={deleting || refreshing}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {deleting ? 'Deleting...' : 'Delete All Notes'}
+            </button>
+          )}
+          <button
+            onClick={() => setShowNoteForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Add Note
+          </button>
+        </div>
       </div>
 
       {showNoteForm && (
