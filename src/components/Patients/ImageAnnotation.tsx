@@ -72,6 +72,8 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   async function handleImageDrop(acceptedFiles: File[]) {
     if (acceptedFiles.length === 0) return;
     
+    console.log('File dropped:', acceptedFiles[0].name, acceptedFiles[0].type, acceptedFiles[0].size);
+    
     try {
       setUploading(true);
       setError(null);
@@ -88,6 +90,9 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       
       // Add to images list
       setImages(prev => [uploadedImage, ...prev]);
+      
+      console.log('Image uploaded successfully:', uploadedImage);
+      console.log('Image URL:', uploadedImage.image_url);
       
       // Select the uploaded image
       setSelectedImage(uploadedImage);

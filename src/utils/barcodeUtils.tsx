@@ -106,7 +106,7 @@ export const generateCode128SVG = (
     showText?: boolean;
     className?: string;
   } = {}
-) => {
+): JSX.Element => {
   const {
     width = 200,
     height = 50,
