@@ -250,8 +250,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300">
               <div>
                 <p>
-                  <strong>Nurse:</strong> Sarah Johnson
                 <strong>Nurse:</strong> {profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown'}
+                </p>
                 <p>
                   <strong>Date:</strong> {format(new Date(), 'MMM dd, yyyy')}
                 </p>
