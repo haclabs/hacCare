@@ -459,12 +459,22 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
   try {
     console.log('Deleting patient note:', noteId);
     
-    // Get note info before deletion for audit log
-    const { data: note } = await supabase
+    // First check if the note exists
+    const { data: note, error: checkError } = await supabase
       .from('patient_notes')
       .select('patient_id, type')
       .eq('id', noteId)
-      .maybeSingle();
+      .single();
+      
+    if (checkError) {
+      console.error('Error checking note existence:', checkError);
+      if (checkError.code === 'PGRST116') {
+        // Note doesn't exist, nothing to delete
+        console.log('Note not found, nothing to delete');
+        return;
+      }
+      throw checkError;
+    }
 
     const { error } = await supabase
       .from('patient_notes')
@@ -474,6 +484,8 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
     if (error) {
       console.error('Error deleting patient note:', error);
       throw error;
+    } else {
+      console.log('Note deleted successfully');
     }
 
     // Log the action
@@ -481,12 +493,10 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
     await logAction(
       user,
       'deleted_note',
-      note?.patient_id || 'unknown',
+      note.patient_id,
       'patient',
-      { note_id: noteId, type: note?.type }
+      { note_id: noteId, type: note.type }
     );
-
-    console.log('Note deleted successfully');
   } catch (error) {
     console.error('Error deleting patient note:', error);
     throw error;

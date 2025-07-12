@@ -87,14 +87,25 @@ export const NotesContent: React.FC<NotesContentProps> = ({
   const handleDeleteNote = async (noteId: string) => {
     if (!window.confirm('Are you sure you want to delete this note?')) return;
     
+    console.log('Deleting note with ID:', noteId);
     try {
       setDeleting(true);
-      await deletePatientNote(noteId);
+      
+      // Call the delete function
+      try {
+        await deletePatientNote(noteId);
+        console.log('Note deleted successfully');
+      } catch (deleteError) {
+        console.error('Error during note deletion:', deleteError);
+        alert('Failed to delete note. It may have already been deleted.');
+      }
+      
       // Refresh notes after deletion
       const notesData = await fetchPatientNotes(patientId);
       onNotesUpdated(notesData);
     } catch (error) {
       console.error('Error deleting note:', error);
+      alert('Failed to refresh notes after deletion.');
     } finally {
       setDeleting(false);
     }
