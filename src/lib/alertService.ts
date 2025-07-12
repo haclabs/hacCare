@@ -588,6 +588,19 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
  */
 const isPatientConditionCritical = async (patientId: string): Promise<boolean> => {
   try {
+    // Check if Supabase is properly configured
+    if (!isSupabaseConfigured) {
+      console.warn('⚠️ Supabase not configured, skipping patient condition check');
+      return false;
+    }
+
+    // Check database health first
+    const isHealthy = await checkDatabaseHealth();
+    if (!isHealthy) {
+      console.warn('📱 Database unavailable - cannot check patient condition');
+      return false;
+    }
+
     const { data, error } = await supabase
       .from<DatabasePatient>('patients')
       .select('condition')
@@ -600,8 +613,9 @@ const isPatientConditionCritical = async (patientId: string): Promise<boolean> =
     }
     
     return data?.condition === 'Critical';
-  } catch (error) {
-    console.error('Error checking patient condition:', error);
+  } catch (error: any) {
+    console.error('Error checking patient condition:', error?.message || error);
+    // Don't throw error, just return false to prevent app crashes
     return false;
   }
 };
