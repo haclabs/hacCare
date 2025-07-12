@@ -409,15 +409,15 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
       .from('patient_notes')
       .update(dbUpdates)
       .eq('id', noteId)
-      .select();
+      .select()
+      .single();
 
     if (error) {
       console.error('Error updating patient note:', error);
       throw error;
     }
 
-    // Check if any rows were returned
-    if (!data || data.length === 0) {
+    if (!data) {
       console.log('No note found with ID:', noteId);
       return null;
     }
@@ -427,21 +427,21 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
     await logAction(
       user,
       'updated_note',
-      data[0].patient_id,
+      data.patient_id,
       'patient',
       { note_id: noteId, type: updates.type }
     );
 
     // Convert to app format
     const updatedNote: PatientNote = {
-      id: data[0].id,
-      patient_id: data[0].patient_id,
-      nurse_id: data[0].nurse_id,
-      nurse_name: data[0].nurse_name,
-      type: data[0].type,
-      content: data[0].content,
-      priority: data[0].priority,
-      created_at: data[0].created_at
+      id: data.id,
+      patient_id: data.patient_id,
+      nurse_id: data.nurse_id,
+      nurse_name: data.nurse_name,
+      type: data.type,
+      content: data.content,
+      priority: data.priority,
+      created_at: data.created_at
     };
 
     console.log('Note updated successfully:', updatedNote);
