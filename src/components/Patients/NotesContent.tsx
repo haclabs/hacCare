@@ -125,20 +125,11 @@ export const NotesContent: React.FC<NotesContentProps> = ({
     }
   };
 
-  // Clear mock notes from state
-  const clearMockNotes = () => {
-    console.log('Clearing mock notes from state');
-    onNotesUpdated([]);
-  };
-
   const handleDeleteAllNotes = async () => {
     if (!window.confirm('Are you sure you want to delete ALL notes for this patient?')) return;
     
     try {
       setDeleting(true);
-      
-      // First clear any mock notes from state
-      clearMockNotes();
       
       // Delete each note one by one
       for (const note of notes) {
@@ -175,15 +166,6 @@ export const NotesContent: React.FC<NotesContentProps> = ({
               {deleting ? 'Deleting...' : 'Delete All Notes'}
             </button>
           )}
-         {notes.length > 0 && (
-           <button
-             onClick={clearMockNotes}
-             className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center"
-           >
-             <Trash2 className="h-4 w-4 mr-2" />
-             Clear Mock Notes
-           </button>
-         )}
           <button
             onClick={() => setShowNoteForm(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
