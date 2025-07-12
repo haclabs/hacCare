@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
-import { Medication, MedicationAdministration as MedAdmin } from '../../types';
 import { isValid, parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
 import { MedicationAdministrationForm } from './MedicationAdministrationForm';
