@@ -218,7 +218,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
                 console.log('Opening administration form for medication:', medication.id); 
                 setShowAdminForm(true);
               }}
-              className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
+              className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1 relative"
             >
               <CheckCircle className="w-4 h-4" />
               Give
@@ -324,14 +324,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'scheduled':
         const scheduledMeds = filterMedicationsByCategory('scheduled');
         return (
-          <div className="space-y-3 relative">
-            {scheduledMeds.length > 0 && (
-              <div className="absolute top-0 right-0">
-                <span className="flex items-center justify-center bg-red-600 text-white font-bold rounded-full w-6 h-6">
-                  {scheduledMeds.length}
-                </span>
-              </div>
-            )}
+          <div className="space-y-3">
             {scheduledMeds.length > 0 ? (
               scheduledMeds.map(renderMedicationCard)
             ) : (
@@ -368,14 +361,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'continuous':
         const continuousMeds = filterMedicationsByCategory('continuous');
         return (
-          <div className="space-y-3 relative">
-            {continuousMeds.length > 0 && (
-              <div className="absolute top-0 right-0">
-                <span className="flex items-center justify-center bg-red-600 text-white font-bold rounded-full w-6 h-6">
-                  {continuousMeds.length}
-                </span>
-              </div>
-            )}
+          <div className="space-y-3">
             {continuousMeds.length > 0 ? (
               continuousMeds.map(renderMedicationCard)
             ) : (
