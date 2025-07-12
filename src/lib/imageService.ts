@@ -76,10 +76,11 @@ export const uploadPatientImage = async (
     console.log('Upload successful:', uploadData);
     
     // Get the public URL
-    const { data: { publicUrl } } = supabase
+    // Use the correct method to get a public URL that works
+    const publicUrl = supabase
       .storage
       .from('patient-images')
-      .getPublicUrl(filePath);
+      .getPublicUrl(filePath).data.publicUrl;
     
     console.log('Generated public URL:', publicUrl);
     
@@ -222,9 +223,27 @@ export const deletePatientImage = async (imageId: string): Promise<void> => {
     }
     
     // Extract file path from URL
-    const url = new URL(imageData.image_url);
-    const pathParts = url.pathname.split('/');
-    const filePath = pathParts.slice(pathParts.indexOf('patient-images') + 1).join('/');
+    // Handle both URL formats (with or without full domain)
+    let filePath;
+    try {
+      const url = new URL(imageData.image_url);
+      const pathParts = url.pathname.split('/');
+      // Find the part after 'patient-images' in the path
+      const bucketIndex = pathParts.indexOf('patient-images');
+      if (bucketIndex !== -1) {
+        filePath = pathParts.slice(bucketIndex + 1).join('/');
+      } else {
+        // If 'patient-images' not found in path, use the last part
+        filePath = pathParts[pathParts.length - 1];
+      }
+    } catch (parseError) {
+      // If URL parsing fails, try to extract the filename directly
+      console.warn('Error parsing image URL, using fallback method:', parseError);
+      const parts = imageData.image_url.split('/');
+      filePath = parts[parts.length - 1];
+    }
+    
+    console.log('Extracted file path for deletion:', filePath);
     
     // Delete from storage
     const { error: storageError } = await supabase
