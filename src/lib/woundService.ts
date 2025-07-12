@@ -76,9 +76,9 @@ const convertToUIFormat = (wound: Wound): WoundUI => {
 /**
  * Convert UI wound to database format
  */
-const convertToDatabaseFormat = (wound: WoundUI): Omit<Wound, 'id' | 'created_at' | 'updated_at'> => {
+const convertToDatabaseFormat = (wound: WoundUI, patientId: string): Omit<Wound, 'id' | 'created_at' | 'updated_at'> => {
   return {
-    patient_id: wound.id.includes('wound-') ? '' : wound.id, // Handle temporary IDs
+    patient_id: patientId,
     location: wound.location,
     coordinates_x: wound.coordinates.x,
     coordinates_y: wound.coordinates.y,
@@ -125,12 +125,12 @@ export const fetchPatientWounds = async (patientId: string): Promise<WoundUI[]> 
 /**
  * Create a new wound
  */
-export const createWound = async (wound: Wound, patientId: string): Promise<WoundUI> => {
+export const createWound = async (wound: WoundUI, patientId: string): Promise<WoundUI> => {
   try {
     console.log('Creating wound for patient:', patientId);
     
-    // Make sure patient_id is set correctly
-    const dbWound = { ...wound, patient_id: patientId };
+    // Convert UI format to database format
+    const dbWound = convertToDatabaseFormat(wound, patientId);
     
     const { data, error } = await supabase
       .from('patient_wounds')
