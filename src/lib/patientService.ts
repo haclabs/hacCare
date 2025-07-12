@@ -410,7 +410,7 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
       .update(dbUpdates)
       .eq('id', noteId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating patient note:', error);
@@ -464,7 +464,7 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
       .from('patient_notes')
       .select('patient_id, type')
       .eq('id', noteId)
-      .single();
+      .maybeSingle();
 
     const { error } = await supabase
       .from('patient_notes')
