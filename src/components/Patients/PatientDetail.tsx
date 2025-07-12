@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw, Image } from 'lucide-react';
+import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
@@ -100,7 +100,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       { id: 'notes', label: 'Notes', icon: FileText },
       { id: 'wounds', label: 'Wound Care', icon: Bandage }
     ]},
-    { id: 'images', label: 'Images', icon: Image },
     { id: 'admission', label: 'Admission', icon: Clipboard },
     { id: 'directives', label: 'Directives', icon: Shield }
   ];
@@ -275,14 +274,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 console.error('Error refreshing medications:', error);
               }
             }}
-          />
-        );
-
-      case 'images':
-        return (
-          <ImageAnnotation 
-            patientId={id!} 
-            patientName={`${patient.first_name} ${patient.last_name}`}
           />
         );
 

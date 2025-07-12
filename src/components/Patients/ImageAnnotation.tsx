@@ -4,6 +4,7 @@ import ImageMarker from 'react-image-marker';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../lib/imageService';
+import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
 
 interface ImageAnnotationProps {
@@ -25,7 +26,8 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageDescription, setImageDescription] = useState('');
-  const [imageType, setImageType] = useState<'wound' | 'injury' | 'other'>('wound');
+  const [imageType, setImageType] = useState<'wound' | 'injury' | 'other'>('wound'); 
+  const { refreshPatients } = usePatients();
   
   // Dropzone setup
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -97,7 +99,14 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       // Select the uploaded image
       setSelectedImage(uploadedImage);
       setMarkers([]);
-      setImageDescription('');
+      setImageDescription(''); 
+      
+      // Refresh patient data to reflect the new image
+      try {
+        await refreshPatients();
+      } catch (refreshError) {
+        console.warn('Failed to refresh patient data after image upload:', refreshError);
+      }
     } catch (err: any) {
       console.error('Error uploading image:', err);
       setError(err.message || 'Failed to upload image');
@@ -139,7 +148,14 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       setSelectedImage(updatedImage);
     } catch (err: any) {
       console.error('Error saving annotations:', err);
-      setError(err.message || 'Failed to save annotations');
+      setError(err.message || 'Failed to save annotations'); 
+      
+      // Refresh patient data to reflect the updated annotations
+      try {
+        await refreshPatients();
+      } catch (refreshError) {
+        console.warn('Failed to refresh patient data after annotation update:', refreshError);
+      }
     } finally {
       setUploading(false);
     }
@@ -159,7 +175,14 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       // Update local state
       setImages(prev => prev.filter(img => img.id !== selectedImage.id));
       setSelectedImage(images.length > 1 ? images.find(img => img.id !== selectedImage.id) || null : null);
-      setMarkers([]);
+      setMarkers([]); 
+      
+      // Refresh patient data to reflect the deleted image
+      try {
+        await refreshPatients();
+      } catch (refreshError) {
+        console.warn('Failed to refresh patient data after image deletion:', refreshError);
+      }
     } catch (err: any) {
       console.error('Error deleting image:', err);
       setError(err.message || 'Failed to delete image');
@@ -285,6 +308,10 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h4 className="text-lg font-medium text-gray-900 mb-4">Upload New Image</h4>
             {renderImageUploadForm()}
+            <div className="mt-4 text-sm text-gray-600">
+              <p>Images uploaded here will be associated with this patient's wound documentation.</p>
+              <p>You can add annotations to highlight specific areas of the wound.</p>
+            </div>
           </div>
           
           {images.length > 0 && (

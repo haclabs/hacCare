@@ -43,6 +43,7 @@ export interface WoundUI {
   assessedBy: string;
   assessmentDate: string;
   healingProgress: 'Improving' | 'Stable' | 'Deteriorating' | 'New';
+  imageId?: string;
 }
 
 /**

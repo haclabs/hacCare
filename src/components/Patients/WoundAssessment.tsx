@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, MapPin, Save, X } from 'lucide-react';
+import { Plus, Trash2, MapPin, Save, X, Image } from 'lucide-react';
 import { format } from 'date-fns';
 import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../lib/woundService';
 import { useAuth } from '../../hooks/useAuth';
+import { ImageAnnotation } from './ImageAnnotation';
 
 export interface WoundAssessmentProps {
   patientId: string;
@@ -13,6 +14,7 @@ export interface WoundAssessmentProps {
 export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onClose, onSave }) => {
   const [wounds, setWounds] = useState<WoundUI[]>([]);
   
+  const [showImageAnnotation, setShowImageAnnotation] = useState(false);
   const [selectedView, setSelectedView] = useState<'anterior' | 'posterior'>('anterior');
   const [showAddWound, setShowAddWound] = useState(false);
   const [selectedWound, setSelectedWound] = useState<WoundUI | null>(null);
@@ -330,6 +332,13 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
         <h3 className="text-lg font-semibold text-gray-900">Wound Assessment</h3>
         <div className="flex space-x-2">
           <button
+            onClick={() => setShowImageAnnotation(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Image className="h-4 w-4" />
+            <span>Wound Images</span>
+          </button>
+          <button
             onClick={() => setShowAddWound(!showAddWound)}
             className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
               showAddWound 
@@ -553,13 +562,23 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
                 </label>
-                <textarea
-                  value={newWound.description || ''}
-                  onChange={(e) => setNewWound(prev => ({ ...prev, description: e.target.value }))} 
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Describe wound appearance, drainage, surrounding tissue..."
-                />
+                <div className="space-y-2">
+                  <textarea
+                    value={newWound.description || ''}
+                    onChange={(e) => setNewWound(prev => ({ ...prev, description: e.target.value }))} 
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Describe wound appearance, drainage, surrounding tissue..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowImageAnnotation(true)}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Image className="h-4 w-4" />
+                    <span>Add Wound Images</span>
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -655,6 +674,30 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
           </div>
         )}
       </div>
+      
+      {/* Image Annotation Modal */}
+      {showImageAnnotation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Wound Images</h2>
+              <button
+                onClick={() => setShowImageAnnotation(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <ImageAnnotation 
+                patientId={patientId} 
+                patientName="Wound Documentation"
+                onClose={() => setShowImageAnnotation(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Selected Wound Details Modal */}
       {selectedWound && (
