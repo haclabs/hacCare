@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw, Image } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientNotes, clearPatientVitals } from '../../lib/patientService';
+import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
@@ -37,7 +37,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
-  const [showImageAnnotation, setShowImageAnnotation] = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [refreshingVitals, setRefreshingVitals] = useState(false); 
   
@@ -133,15 +132,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
 
   const tabs = [ 
     { id: 'overview', label: 'Overview', icon: User },
-    { id: 'vitals', label: 'Vital Signs', icon: Activity },
     { id: 'medications', label: 'MAR', icon: Pill, count: totalMedications > 0 ? totalMedications : undefined },
-    { id: 'notes', label: 'Notes', icon: FileText },
-    { id: 'assessments', label: 'Assessments', icon: Stethoscope },
-    { id: 'wounds', label: 'Wound Care', icon: Bandage },
+    { id: 'assessments', label: 'Assessments', icon: Stethoscope, subTabs: [
+      { id: 'vitals', label: 'Vital Signs', icon: Activity },
+      { id: 'notes', label: 'Notes', icon: FileText },
+      { id: 'wounds', label: 'Wound Care', icon: Bandage },
+    ]},
     { id: 'images', label: 'Images', icon: Image },
     { id: 'admission', label: 'Admission', icon: Clipboard },
     { id: 'directives', label: 'Directives', icon: Shield }
   ];
+
+  // State for active sub-tab
+  const [activeSubTab, setActiveSubTab] = useState<string>('vitals');
 
   const renderTabContent = () => { 
     switch (activeTab) {
@@ -250,7 +253,94 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
           </div>
         );
 
-      case 'vitals': 
+      case 'assessments':
+        // Render sub-tabs navigation
+        return (
+          <div className="space-y-6">
+            <div className="border-b border-gray-200 dark:border-gray-700">
+              <nav className="-mb-px flex space-x-8 overflow-x-auto">
+                {tabs.find(tab => tab.id === 'assessments')?.subTabs?.map(subTab => {
+                  const Icon = subTab.icon;
+                  return (
+                    <button
+                      key={subTab.id}
+                      onClick={() => setActiveSubTab(subTab.id)}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center ${
+                        activeSubTab === subTab.id
+                          ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600' 
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 mr-2" /> 
+                      <span>{subTab.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Render content based on active sub-tab */}
+            {activeSubTab === 'vitals' && renderVitalsContent()}
+            {activeSubTab === 'notes' && renderNotesContent()}
+            {activeSubTab === 'wounds' && <WoundAssessment patientId={id!} />}
+            {activeSubTab === 'assessments' && <PatientAssessmentsTab patientId={id!} patientName={`${patient.first_name} ${patient.last_name}`} />}
+          </div>
+        );
+
+      case 'medications': 
+        return (
+          <MedicationAdministration
+            patientId={id!}
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
+            title="Medication Administration Record"
+            medications={medications}
+            initialCategory={initialMedicationCategory}
+            onRefresh={async () => {
+              try {
+                const meds = await fetchPatientMedications(id!);
+                setMedications(meds);
+              } catch (error) {
+                console.error('Error refreshing medications:', error);
+              }
+            }}
+          />
+        );
+
+      case 'images':
+        return (
+          <ImageAnnotation 
+            patientId={id!} 
+            patientName={`${patient.first_name} ${patient.last_name}`}
+          />
+        );
+
+      case 'admission':
+        return (
+          <AdmissionRecordsForm 
+            patientId={id!}
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
+            onClose={() => setActiveTab('overview')}
+            onSave={() => setActiveTab('overview')}
+          />
+        );
+
+      case 'directives':
+        return (
+          <AdvancedDirectivesForm 
+            patientId={id!} 
+            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
+            onClose={() => setActiveTab('overview')}
+            onSave={() => setActiveTab('overview')}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Helper function to render vitals content
+  const renderVitalsContent = () => {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -375,27 +465,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             )}
           </div>
         );
+  };
 
-      case 'medications': 
-        return (
-          <MedicationAdministration
-            patientId={id!}
-            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
-            title="Medication Administration Record"
-            medications={medications}
-            initialCategory={initialMedicationCategory}
-            onRefresh={async () => {
-              try {
-                const meds = await fetchPatientMedications(id!);
-                setMedications(meds);
-              } catch (error) {
-                console.error('Error refreshing medications:', error);
-              }
-            }}
-          />
-        );
-
-      case 'notes': 
+  // Helper function to render notes content
+  const renderNotesContent = () => {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -444,44 +517,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             </div>
           </div>
         );
-
-      case 'assessments': 
-        return <PatientAssessmentsTab patientId={id!} patientName={`${patient.first_name} ${patient.last_name}`} />;
-
-      case 'wounds':
-        return <WoundAssessment patientId={id!} />;
-
-      case 'images':
-        return (
-          <ImageAnnotation 
-            patientId={id!} 
-            patientName={`${patient.first_name} ${patient.last_name}`}
-          />
-        );
-
-      case 'admission':
-        return (
-          <AdmissionRecordsForm 
-            patientId={id!}
-            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
-            onClose={() => setActiveTab('overview')}
-            onSave={() => setActiveTab('overview')}
-          />
-        );
-
-      case 'directives':
-        return (
-          <AdvancedDirectivesForm 
-            patientId={id!} 
-            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
-            onClose={() => setActiveTab('overview')}
-            onSave={() => setActiveTab('overview')}
-          />
-        );
-
-      default:
-        return null;
-    }
   };
 
   return ( 
@@ -548,19 +583,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
           patientName={`${patient.first_name} ${patient.last_name}`}
           onClose={() => setShowActivity(false)}
         />
-      )}
-      
-      {/* Image Annotation Modal */}
-      {showImageAnnotation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-            <ImageAnnotation
-              patientId={id!}
-              patientName={`${patient.first_name} ${patient.last_name}`}
-              onClose={() => setShowImageAnnotation(false)}
-            />
-          </div>
-        </div>
       )}
     </div>
   );
