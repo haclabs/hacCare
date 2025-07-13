@@ -216,10 +216,10 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
             <button
               onClick={() => {
                 setSelectedMedication(medication);
-                console.log('Opening administration form for medication:', medication.id); 
+                console.log('Opening administration form for medication:', medication.id);
                 setShowAdminForm(true);
               }}
-              className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1 relative"
+              className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
             >
               <CheckCircle className="w-4 h-4" />
               Give
@@ -341,13 +341,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         const prnMeds = filterMedicationsByCategory('prn');
         return (
           <div className="space-y-3 relative">
-            {prnMeds.length > 0 && (
-              <div className="absolute top-0 right-0">
-                <span className="flex items-center justify-center bg-red-600 text-white font-bold rounded-full w-6 h-6">
-                  {prnMeds.length}
-                </span>
-              </div>
-            )}
             {prnMeds.length > 0 ? (
               prnMeds.map(renderMedicationCard)
             ) : (
@@ -362,7 +355,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'continuous':
         const continuousMeds = filterMedicationsByCategory('continuous');
         return (
-          <div className="space-y-3">
+          <div className="space-y-3 relative">
             {continuousMeds.length > 0 ? (
               continuousMeds.map(renderMedicationCard)
             ) : (
@@ -384,7 +377,8 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Pill className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          {title} - {patientName}
+          {title}
+          {patientName && <span className="text-lg ml-1">- {patientName}</span>}
         </h2>
         
         <div className="flex gap-2">
