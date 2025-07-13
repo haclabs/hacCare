@@ -270,7 +270,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       let existingAlerts = null;
       let alertCheckError = null;
       // Create a clean pattern for SQL LIKE by removing special characters
-      const medicationNamePattern = medication.name.replace(/[%_]/g, '');
+      const medicationNamePattern = medication.name.replace(/[%_,]/g, '');
+      const cleanedDosage = medication.dosage.replace(/[%_,]/g, '');
       
       try {
         const result = await supabase
@@ -279,7 +280,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           .eq('patient_id', patient.id) 
           .eq('alert_type', 'medication_due')
           .eq('acknowledged', false)
-          .or(`message.ilike.%${medicationNamePattern}%,message.ilike.%${medication.dosage.replace(/[%_]/g, '')}%`)
+          .or(`message.ilike.%${medicationNamePattern}%,message.ilike.%${cleanedDosage}%`)
           .order('created_at', { ascending: false })
           .limit(1);
         
