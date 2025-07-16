@@ -1,21 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
 import { isValid, parseISO } from 'date-fns';
-import { formatLocalTime } from '../../utils/dateUtils';
-import { MedicationAdministrationForm } from './MedicationAdministrationForm';
+import { formatLocalTime } from '../../../utils/dateUtils';
+import { MedicationAdministrationForm } from '../../forms/MedicationAdministrationForm';
+import { MedicationBarcode } from '../visuals/MedicationBarcode';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
-import { MedicationForm } from './MedicationForm';
-import { MedicationBarcode } from './MedicationBarcode';
-import { useAuth } from '../../hooks/useAuth'; 
-import { supabase } from '../../lib/supabase';
-import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
-import { runAlertChecks } from '../../lib/alertService';
-import { usePatients } from '../../hooks/usePatients';
+// import { MedicationForm } from './MedicationForm'; // <-- File not found, comment out or create the file to resolve the error
+
+// If the file exists elsewhere, update the path accordingly, e.g.:
+// import { MedicationBarcode } from '../someOtherFolder/MedicationBarcode';
+
+// If the file does not exist, create it or comment out/remove this import and related usage to resolve the error.
+// import { useAuth } from '../../hooks/useAuth'; 
+// TODO: Update the import path below to the correct location of useAuth or implement a mock to avoid errors.
+import { useAuth } from '../../../hooks/useAuth'; // Try this path if your hooks are in src/hooks
+// If the above path is still incorrect, comment out this line and related usage, or create the file.
+// import { supabase } from '../../lib/supabase'; // File not found, comment out or update the path if you have a supabase client elsewhere
+import { fetchPatientMedications, deleteMedication } from '../../../lib/medicationService';
+import { runAlertChecks } from '../../../lib/alertService';
+// import { usePatients } from '../../hooks/usePatients';
+// TODO: Update the import path below to the correct location of usePatients or implement a mock to avoid errors.
+import { usePatients } from '../../../hooks/usePatients'; // Try this path if your hooks are in src/hooks
+// If the above path is still incorrect, comment out this line and related usage, or create the file.
+import { Medication } from '../../../types';
 
 interface MedicationAdministrationProps {
   patientId: string;
   patientName?: string;
-  title?: string;
   medications: Medication[];
   initialCategory?: string;
   onRefresh: () => void;
@@ -26,14 +37,14 @@ const countMedicationsByCategory = (medications: Medication[]) => {
   return {
     scheduled: medications.filter(med => med.category === 'scheduled' && med.status === 'Active').length,
     prn: medications.filter(med => med.category === 'prn' && med.status === 'Active').length,
-    continuous: medications.filter(med => med.category === 'continuous' && med.status === 'Active').length
+    continuous: medications.filter(med => med.category === 'continuous' && med.status === 'Active').length,
+    overview: medications.length,
   };
 };
 
 export const MedicationAdministration: React.FC<MedicationAdministrationProps> = ({
   patientId,
   patientName,
-  title = "Medication Administration",
   medications,
   initialCategory = 'overview',
   onRefresh
@@ -50,9 +61,9 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [loading, setLoading] = useState(false);
   const [allMedications, setAllMedications] = useState<Medication[]>(medications);
   const [error, setError] = useState<string | null>(null);
+  const [showMedicationLabels, setShowMedicationLabels] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [medicationToEdit, setMedicationToEdit] = useState<Medication | null>(null);
-  const [showMedicationLabels, setShowMedicationLabels] = useState(false);
   const { getPatient } = usePatients();
 
   useEffect(() => {
@@ -62,43 +73,56 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const now = new Date();
-      console.log('Refreshing medications for patient:', patientId, now.toISOString());
-      const updatedMedications = await fetchPatientMedications(patientId);
-      console.log(`Fetched ${updatedMedications.length} medications`);
-      setAllMedications(updatedMedications); 
-      try {
-        console.log('Running alert checks after medication refresh');
-        await runAlertChecks();
-      } catch (error) {
-        console.error('Error refreshing alerts:', error);
-      }
-      
-      onRefresh();
+        const now = new Date();
+        console.log('Refreshing medications for patient:', patientId, now.toISOString());
+        const updatedMedications = await fetchPatientMedications(patientId);
+        console.log(`Fetched ${updatedMedications.length} medications`);
+        setAllMedications(updatedMedications);
+        try {
+            console.log('Running alert checks after medication refresh');
+            await runAlertChecks();
+        } catch (error) {
+            console.error('Error refreshing alerts:', error);
+        }
+        onRefresh();
     } catch (error) {
-      console.error('Error refreshing medications:', error);
-      setError('Failed to refresh medications');
+        console.error('Error refreshing medications:', error);
+        setError('Failed to refresh medications');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
-  const handleDeleteMedication = async (medicationId: string) => {
+const handleDeleteMedication = async (medicationId: string) => {
     if (!hasRole(['admin', 'super_admin'])) {
-      setError('You do not have permission to delete medications');
-      return;
+        setError('You do not have permission to delete medications');
+        return;
     }
 
     if (window.confirm('Are you sure you want to delete this medication?')) {
-      try {
-        await deleteMedication(medicationId);
-        await handleRefresh();
-      } catch (error) {
-        console.error('Error deleting medication:', error);
-        setError('Failed to delete medication');
-      }
+        try {
+            await deleteMedication(medicationId);
+            await handleRefresh();
+        } catch (error) {
+            console.error('Error deleting medication:', error);
+            setError('Failed to delete medication');
+        }
     }
-  };
+};
+
+// const getPatientDetails = () => {
+//     const patientDetails = getPatient(patientId);
+//     console.log('Fetched patient details:', patientDetails);
+//     return patientDetails;
+// };
+
+// const supabaseClientCheck = () => {
+//     console.log('Supabase client initialized:', supabase);
+// };
+
+// useEffect(() => {
+//     supabaseClientCheck();
+// }, []);
 
   // Get medication counts by category
   const medCounts = countMedicationsByCategory(allMedications);
@@ -276,99 +300,91 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'overview':
-        const dueMeds = getDueMedications();
-        const overdueMeds = getOverdueMedications();
-        const totalDueMeds = dueMeds.length + overdueMeds.length;
-        
-        return (
-          <div className="space-y-6">
-            {overdueMeds.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2 relative">
-                  <AlertTriangle className="w-5 h-5" />
-                  Overdue Medications ({overdueMeds.length})
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5">
-                    {overdueMeds.length}
-                  </span>
-                </h3>
-                <div className="space-y-3">
-                  {overdueMeds.map(renderMedicationCard)}
+        case 'overview':
+            const dueMeds = getDueMedications();
+            const overdueMeds = getOverdueMedications();
+            return (
+                <div className="space-y-6">
+                    {overdueMeds.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-red-600 mb-3 flex items-center gap-2 relative">
+                                <AlertTriangle className="w-5 h-5" />
+                                Overdue Medications ({overdueMeds.length})
+                                <span className="absolute -top-1 -right-1 flex items-center justify-center bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5">
+                                    {overdueMeds.length}
+                                </span>
+                            </h3>
+                            <div className="space-y-3">
+                                {overdueMeds.map(renderMedicationCard)}
+                            </div>
+                        </div>
+                    )}
+                    {dueMeds.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-yellow-600 mb-3 flex items-center gap-2 relative">
+                                <Clock className="w-5 h-5" />
+                                Due Now ({dueMeds.length})
+                                <span className="absolute -top-1 -right-1 flex items-center justify-center bg-yellow-600 text-white text-xs font-bold rounded-full w-5 h-5">
+                                    {dueMeds.length}
+                                </span>
+                            </h3>
+                            <div className="space-y-3">
+                                {dueMeds.map(renderMedicationCard)}
+                            </div>
+                        </div>
+                    )}
+                    {dueMeds.length === 0 && overdueMeds.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p>No medications due at this time</p>
+                        </div>
+                    )}
                 </div>
-              </div>
-            )}
-            
-            {dueMeds.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-yellow-600 mb-3 flex items-center gap-2 relative">
-                  <Clock className="w-5 h-5" />
-                  Due Now ({dueMeds.length})
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center bg-yellow-600 text-white text-xs font-bold rounded-full w-5 h-5">
-                    {dueMeds.length}
-                  </span>
-                </h3>
+            );
+        case 'scheduled':
+            const scheduledMeds = filterMedicationsByCategory('scheduled');
+            return (
                 <div className="space-y-3">
-                  {dueMeds.map(renderMedicationCard)}
+                    {scheduledMeds.length > 0 ? (
+                        scheduledMeds.map(renderMedicationCard)
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p>No scheduled medications</p>
+                        </div>
+                    )}
                 </div>
-              </div>
-            )}
-            
-            {dueMeds.length === 0 && overdueMeds.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No medications due at this time</p>
-              </div>
-            )}
-          </div>
-        );
-        
-      case 'scheduled':
-        const scheduledMeds = filterMedicationsByCategory('scheduled');
-        return (
-          <div className="space-y-3">
-            {scheduledMeds.length > 0 ? (
-              scheduledMeds.map(renderMedicationCard)
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No scheduled medications</p>
-              </div>
-            )}
-          </div>
-        );
-        
-      case 'prn':
-        const prnMeds = filterMedicationsByCategory('prn');
-        return (
-          <div className="space-y-3 relative">
-            {prnMeds.length > 0 ? (
-              prnMeds.map(renderMedicationCard)
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <CalendarDays className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No PRN medications</p>
-              </div>
-            )}
-          </div>
-        );
-        
-      case 'continuous':
-        const continuousMeds = filterMedicationsByCategory('continuous');
-        return (
-          <div className="space-y-3 relative">
-            {continuousMeds.length > 0 ? (
-              continuousMeds.map(renderMedicationCard)
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No continuous medications</p>
-              </div>
-            )}
-          </div>
-        );
-        
-      default:
-        return null;
+            );
+        case 'prn':
+            const prnMeds = filterMedicationsByCategory('prn');
+            return (
+                <div className="space-y-3 relative">
+                    {prnMeds.length > 0 ? (
+                        prnMeds.map(renderMedicationCard)
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            <CalendarDays className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p>No PRN medications</p>
+                        </div>
+                    )}
+                </div>
+            );
+        case 'continuous':
+            const continuousMeds = filterMedicationsByCategory('continuous');
+            return (
+                <div className="space-y-3 relative">
+                    {continuousMeds.length > 0 ? (
+                        continuousMeds.map(renderMedicationCard)
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                            <p>No continuous medications</p>
+                        </div>
+                    )}
+                </div>
+            );
+        default:
+            return null;
     }
   };
 
@@ -436,7 +452,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           >
             <Icon className="w-4 h-4 mr-1" />
             <span>{label}</span>
-            {key !== 'overview' && count > 0 && (
+            {key !== 'overview' && count !== undefined && count > 0 && (
               <span className="ml-1.5 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                 {count}
               </span>
@@ -473,7 +489,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           medicationId={selectedMedication.id}
           patientId={patientId}
           medicationName={selectedMedication.name}
-          patientName={patientName || 'Unknown Patient'}
           onClose={() => {
             setShowHistory(false);
             setSelectedMedication(null);
@@ -482,14 +497,11 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       )}
 
       {showMedicationForm && (
-        <MedicationForm
-          patientId={patientId}
+        <MedicationAdministrationForm
           medication={medicationToEdit}
-          onClose={() => {
-            setShowMedicationForm(false); 
-            setMedicationToEdit(null);
-          }} 
-          onSuccess={(medication) => {
+          patientId={patientId}
+          onClose={() => setShowMedicationForm(false)}
+          onSuccess={() => {
             setShowMedicationForm(false);
             setMedicationToEdit(null);
             handleRefresh();

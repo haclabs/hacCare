@@ -2,18 +2,18 @@ import React, { useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-import PatientCard from './components/Patients/PatientCard';
-import { PatientDetail } from './components/Patients/PatientDetail';
+import PatientCard from './components/Patients/records/PatientCard';
+import { PatientDetail } from './components/Patients/records/PatientDetail';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
 import { usePatients } from './hooks/usePatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
-import { LoadingSpinner } from './components/UI/LoadingSpinner';
+import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient } from './types';
 
 // Lazy-loaded components
-const HospitalBracelet = lazy(() => import('./components/Patients/HospitalBracelet'));
+const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
@@ -42,14 +42,14 @@ function App() {
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const [showAlerts, setShowAlerts] = useState(false);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
+  // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Get patients, alerts, and connection status from context
   const { patients, error: dbError } = usePatients();
-  const { alerts, error: alertError, loading: alertLoading } = useAlerts();
+  const { alerts } = useAlerts();
   
   // Determine if we're in an offline state
-  const isOffline = !!dbError && dbError.includes('connection');
+
 
   /**
    * Handle tab change - clear selected patient when navigating away from patient detail
@@ -75,7 +75,6 @@ function App() {
    */
   const handleBarcodeScan = async (barcode: string) => {
     try {
-      setIsScanning(true);
       console.log('🔍 Barcode scanned:', barcode, typeof barcode, 'Length:', barcode.length);
       
       // Log all patients for debugging
@@ -297,7 +296,7 @@ function App() {
               navigate(`/patient/${fullBarcodeResult.patientId}`, { 
                 state: { 
                   activeTab: 'medications',
-                  medicationCategory: fullBarcodeResult.category || 'scheduled'
+                  medicationCategory: 'scheduled'
                 } 
               });
               return;
@@ -311,7 +310,7 @@ function App() {
             navigate(`/patient/${result.patientId}`, { 
               state: { 
                 activeTab: 'medications',
-                medicationCategory: result.category || 'scheduled'
+                medicationCategory: 'scheduled'
               } 
             });
             return;
@@ -392,7 +391,7 @@ function App() {
     } catch (error) {
       console.error('❌ Error processing barcode scan:', error);
     } finally {
-      setIsScanning(false);
+      // Removed setIsScanning
     }
   };
 
@@ -499,10 +498,8 @@ function App() {
       {/* Application Header */}
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
-        isScanning={isScanning}
         onBarcodeScan={handleBarcodeScan}
         dbError={dbError} 
-        isOffline={isOffline}
       />
       
       {/* Main Layout */}

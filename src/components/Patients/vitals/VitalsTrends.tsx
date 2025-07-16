@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../hooks/useAuth';
-import { usePatients } from '../../hooks/usePatients';
-import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../lib/patientService';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../hooks/useAuth';
+import { usePatients } from '../../../hooks/usePatients';
+import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../../lib/patientService';
 
 interface VitalsTrendsProps {
   patientId: string;
@@ -70,7 +70,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           value = vital.temperature;
           break;
         case 'heartRate':
-          value = vital.heartRate;
+          value = vital.heart_rate;
           break;
         case 'systolic':
           value = vital.blood_pressure_systolic;
@@ -79,10 +79,10 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           value = vital.blood_pressure_diastolic;
           break;
         case 'oxygenSaturation':
-          value = vital.oxygenSaturation;
+          value = vital.oxygen_saturation;
           break;
         case 'respiratoryRate':
-          value = vital.respiratoryRate;
+          value = vital.respiratory_rate;
           break;
         default:
           value = 0;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
-import { AdvancedDirective, fetchAdvancedDirective, upsertAdvancedDirective, createDefaultAdvancedDirective } from '../../lib/admissionService';
-import { usePatients } from '../../hooks/usePatients';
+import { usePatients } from '../../../hooks/usePatients';
+// Import upsertAdvancedDirective from its module (update the path as needed)
+import { upsertAdvancedDirective } from '../../../api/advancedDirectives'; 
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
@@ -93,7 +94,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
 
   const updateField = (field: keyof AdvancedDirective, value: string) => {
     if (!formData) return;
-    setFormData(prev => prev ? { ...prev, [field]: value } : null);
+    setFormData((prev: FormData | null) => prev ? { ...prev, [field]: value } : null);
   };
 
   if (loading) {

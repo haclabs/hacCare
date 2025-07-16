@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Edit, TrendingUp, RefreshCw, Plus, Thermometer, Heart, Activity, Droplets, Wind } from 'lucide-react';
-import { VitalSigns } from '../../types';
+import { VitalSigns } from '../../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
-import { fetchPatientVitals } from '../../lib/patientService';
+import { fetchPatientVitals } from '../../../lib/patientService';
 
 interface VitalsContentProps {
   patientId: string;

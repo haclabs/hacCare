@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Heart, Thermometer, Activity, Droplets, Clock, User, Calendar, MapPin, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, TrendingUp, Plus, Wind, RefreshCw } from 'lucide-react';
-import { Patient, VitalSigns, Medication, PatientNote } from '../../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../lib/patientService';
-import { fetchPatientMedications } from '../../lib/medicationService';
+import { Patient, VitalSigns, Medication, PatientNote } from '../../../types';
+import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../lib/patientService';
+import { fetchPatientMedications } from '../../../lib/medicationService';
 import { RecentActivity } from './RecentActivity';
 import { MedicationAdministration } from './MedicationAdministration';
-import { WoundAssessment } from './WoundAssessment';
-import { ImageAnnotation } from './ImageAnnotation';
+import { WoundAssessment } from '../forms/WoundAssessment';
+// import { ImageAnnotation } from '../visuals/ImageAnnotation';
 import { PatientAssessmentsTab } from './PatientAssessmentsTab';
-import { AdmissionRecordsForm } from './AdmissionRecordsForm';
-import { AdvancedDirectivesForm } from './AdvancedDirectivesForm';
-import { VitalsContent } from './VitalsContent';
+import { AdmissionRecordsForm } from '../forms/AdmissionRecordsForm';
+import { AdvancedDirectivesForm } from '../forms/AdvancedDirectivesForm';
+import { VitalsContent } from '../vitals/VitalsContent';
 import { NotesContent } from './NotesContent';
 
 interface PatientDetailProps {
@@ -21,7 +21,7 @@ interface PatientDetailProps {
 export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation<{ activeTab?: string; medicationCategory?: string }>();
+  const location = useLocation();
   const [patient, setPatient] = useState<Patient | null>(null); 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
