@@ -12,7 +12,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   debug = false,
   className = ''
 }) => {
-  const { buffer, clearBuffer } = useBarcodeScanner(onScan, {
+  const { buffer } = useBarcodeScanner(onScan, {
     debug,
     triggerKeys: ['Enter'],
     minLength: 3
