@@ -5,17 +5,19 @@ interface BarcodeScannerProps {
   onScan: (code: string) => void;
   debug?: boolean;
   className?: string;
+  isScanning?: boolean;
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onScan,
   debug = false,
-  className = ''
+  className = '',
+  isScanning = false
 }) => {
-  const { buffer, clearBuffer } = useBarcodeScanner(onScan, {
-    debug,
-    triggerKeys: ['Enter'],
-    minLength: 3
+  const { buffer } = useBarcodeScanner(onScan, {
+    minLength: 3,
+    maxInputInterval: 300,
+    resetTimeout: 500
   });
 
   useEffect(() => {
@@ -25,6 +27,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   return (
     <div className={`text-sm text-gray-500 ${className}`}>
       {debug && <div>Buffer: {buffer}</div>}
+      {/* Optionally show scanning status visually */}
+      {isScanning && <div className="text-blue-500">Scanning...</div>}
     </div>
   );
 };

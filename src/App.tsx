@@ -1,19 +1,23 @@
-import React, { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-import PatientCard from './components/Patients/PatientCard';
-import { PatientDetail } from './components/Patients/PatientDetail';
+// Update the import path below to match the actual file name and casing
+import PatientCard from './components/Patients/records/PatientCard.tsx'; // <-- Example: change to './components/Patients/patientCard' if that's the actual file name
+// Update the import path below to match the actual file name and casing
+import { PatientDetail } from './components/Patients/records/PatientDetail'; // <-- Make sure this matches the actual file name and casing
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
 import { usePatients } from './hooks/usePatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
-import { LoadingSpinner } from './components/UI/LoadingSpinner';
-import { Patient } from './types';
+import LoadingSpinner from './components/UI/LoadingSpinner';
+import type { Patient } from './types';
 
 // Lazy-loaded components
-const HospitalBracelet = lazy(() => import('./components/Patients/HospitalBracelet'));
+// Update the import path below to match the actual file name and casing
+// Update the import path below to match the actual file name and casing
+const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet.tsx').then(module => ({ default: module.HospitalBracelet })));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
@@ -46,10 +50,8 @@ function App() {
 
   // Get patients, alerts, and connection status from context
   const { patients, error: dbError } = usePatients();
-  const { alerts, error: alertError, loading: alertLoading } = useAlerts();
+  const { alerts } = useAlerts();
   
-  // Determine if we're in an offline state
-  const isOffline = !!dbError && dbError.includes('connection');
 
   /**
    * Handle tab change - clear selected patient when navigating away from patient detail
@@ -297,7 +299,7 @@ function App() {
               navigate(`/patient/${fullBarcodeResult.patientId}`, { 
                 state: { 
                   activeTab: 'medications',
-                  medicationCategory: fullBarcodeResult.category || 'scheduled'
+                  medicationCategory: 'scheduled'
                 } 
               });
               return;
@@ -311,7 +313,7 @@ function App() {
             navigate(`/patient/${result.patientId}`, { 
               state: { 
                 activeTab: 'medications',
-                medicationCategory: result.category || 'scheduled'
+                medicationCategory: 'scheduled'
               } 
             });
             return;
@@ -501,8 +503,7 @@ function App() {
         onAlertsClick={() => setShowAlerts(true)}
         isScanning={isScanning}
         onBarcodeScan={handleBarcodeScan}
-        dbError={dbError} 
-        isOffline={isOffline}
+        dbError={dbError}
       />
       
       {/* Main Layout */}

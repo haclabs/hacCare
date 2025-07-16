@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { Medication } from '../../../types';
 import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
 import { isValid, parseISO } from 'date-fns';
-import { formatLocalTime } from '../../utils/dateUtils';
-import { MedicationAdministrationForm } from './MedicationAdministrationForm';
+import { formatLocalTime } from '../../../utils/dateUtils';
+import { MedicationAdministrationForm } from '../forms/MedicationAdministrationForm';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
-import { MedicationForm } from './MedicationForm';
-import { MedicationBarcode } from './MedicationBarcode';
-import { useAuth } from '../../hooks/useAuth'; 
-import { supabase } from '../../lib/supabase';
-import { fetchPatientMedications, deleteMedication } from '../../lib/medicationService';
-import { runAlertChecks } from '../../lib/alertService';
-import { usePatients } from '../../hooks/usePatients';
+import { MedicationForm } from '../forms/MedicationForm';
+import { MedicationBarcode } from '../visuals/MedicationBarcode';
+import { useAuth } from '../../../hooks/useAuth';
+// import { supabase } from '../../../lib/supabase';
+import { fetchPatientMedications, deleteMedication } from '../../../lib/medicationService';
+import { runAlertChecks } from '../../../lib/alertService';
+import { usePatients } from '../../../hooks/usePatients';
 
 interface MedicationAdministrationProps {
   patientId: string;
@@ -279,7 +280,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       case 'overview':
         const dueMeds = getDueMedications();
         const overdueMeds = getOverdueMedications();
-        const totalDueMeds = dueMeds.length + overdueMeds.length;
+        // const totalDueMeds = dueMeds.length + overdueMeds.length;
         
         return (
           <div className="space-y-6">
@@ -436,7 +437,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           >
             <Icon className="w-4 h-4 mr-1" />
             <span>{label}</span>
-            {key !== 'overview' && count > 0 && (
+            {key !== 'overview' && !!count && count > 0 && (
               <span className="ml-1.5 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                 {count}
               </span>
@@ -473,7 +474,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
           medicationId={selectedMedication.id}
           patientId={patientId}
           medicationName={selectedMedication.name}
-          patientName={patientName || 'Unknown Patient'}
+          // patientName={patientName || 'Unknown Patient'}
           onClose={() => {
             setShowHistory(false);
             setSelectedMedication(null);
@@ -484,12 +485,13 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       {showMedicationForm && (
         <MedicationForm
           patientId={patientId}
+          patientName={patientName || 'Unknown Patient'}
           medication={medicationToEdit}
           onClose={() => {
             setShowMedicationForm(false); 
             setMedicationToEdit(null);
           }} 
-          onSuccess={(medication) => {
+          onSuccess={() => {
             setShowMedicationForm(false);
             setMedicationToEdit(null);
             handleRefresh();

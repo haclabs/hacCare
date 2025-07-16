@@ -1,23 +1,25 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff, SearchCode as Barcode } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Database, AlertTriangle, WifiOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
-import { BarcodeScanner } from '../UI/BarcodeScanner';
+import BarcodeScanner from '../UI/BarcodeScanner';
 
 interface HeaderProps {
   onAlertsClick: () => void;
   dbError?: string | null;
   onBarcodeScan?: (barcode: string) => void;
+  isScanning: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan }) => {
+export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan, isScanning }) => {
   const { profile, signOut } = useAuth();
-  const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
-  const { isOffline: patientsOffline } = usePatients();
+  const { unreadCount, loading: alertsLoading } = useAlerts();
+  const { loading, error } = usePatients();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
-  const isOffline = patientsOffline || alertsOffline;
+  // Consider offline if loading failed (error) or still loading
+  const isOffline = !!error || loading;
 
   const getRoleLabel = (role: string) => {
     switch (role) {
@@ -52,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcod
           {/* Barcode Scanner */}
           {onBarcodeScan && (
             <div className="mr-2">
-              <BarcodeScanner onScan={onBarcodeScan} />
+              <BarcodeScanner onScan={onBarcodeScan} isScanning={isScanning} />
             </div>
           )}
           
