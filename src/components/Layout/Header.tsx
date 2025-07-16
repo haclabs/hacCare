@@ -1,10 +1,10 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff, SearchCode as Barcode } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Database, AlertTriangle, WifiOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
-import { BarcodeScanner } from '../UI/BarcodeScanner';
+import BarcodeScanner from '../UI/BarcodeScanner';
 
 interface HeaderProps {
   onAlertsClick: () => void;
@@ -14,10 +14,10 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
-  const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
-  const { isOffline: patientsOffline } = usePatients();
+  const { unreadCount, loading: alertsLoading } = useAlerts();
+  const { } = usePatients();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
-  const isOffline = patientsOffline || alertsOffline;
+  const isOffline = false; // Remove offline logic for now
 
   const getRoleLabel = (role: string) => {
     switch (role) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert } from '../../types';
-import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play, Filter } from 'lucide-react';
+import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
 import { useAlerts } from '../../hooks/useAlerts';
@@ -10,7 +10,7 @@ const formatAlertTime = (timestamp: string) => {
   try {
     const date = parseISO(timestamp);
     return formatLocalTime(date, 'MMM dd, HH:mm');
-  } catch (error) {
+  } catch {
     return 'Invalid date';
   }
 };
@@ -199,7 +199,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               <div className="space-y-3">
                 {unacknowledgedAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type);
-                  const isOverdue = alert.message.toLowerCase().includes('overdue');
                   return (
                     <div
                       key={alert.id}

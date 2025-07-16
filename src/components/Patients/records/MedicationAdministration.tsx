@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
 import { isValid, parseISO } from 'date-fns';
 import { formatLocalTime } from '../../../utils/dateUtils';
-import { MedicationAdministrationForm } from '../../forms/MedicationAdministrationForm';
+import { MedicationAdministrationForm } from '../forms/MedicationAdministrationForm';
 import { MedicationBarcode } from '../visuals/MedicationBarcode';
 import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
 // import { MedicationForm } from './MedicationForm'; // <-- File not found, comment out or create the file to resolve the error
@@ -498,8 +498,9 @@ const handleDeleteMedication = async (medicationId: string) => {
 
       {showMedicationForm && (
         <MedicationAdministrationForm
-          medication={medicationToEdit}
+          medication={medicationToEdit as Medication}
           patientId={patientId}
+          patientName={patientName || 'Unknown Patient'}
           onClose={() => setShowMedicationForm(false)}
           onSuccess={() => {
             setShowMedicationForm(false);

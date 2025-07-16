@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
 import { usePatients } from '../../../hooks/usePatients';
-// Import upsertAdvancedDirective from its module (update the path as needed)
-import { upsertAdvancedDirective } from '../../../api/advancedDirectives'; 
+import { upsertAdvancedDirective, AdvancedDirective } from '../../../api/advancedDirectives'; 
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
@@ -32,14 +31,15 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       setLoading(true);
       
       // Always start with a completely empty form
-      const emptyDirective = {
+      const emptyDirective: AdvancedDirective = {
         patient_id: patientId,
+        living_will_exists: false,
         living_will_status: '',
         living_will_date: '',
         healthcare_proxy_name: '',
         healthcare_proxy_phone: '',
-        dnr_status: '',
-        organ_donation_status: '',
+        dnr_status: false,
+        organ_donation_status: false,
         organ_donation_details: '',
         religious_preference: '',
         special_instructions: ''
@@ -92,9 +92,15 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
     }
   };
 
-  const updateField = (field: keyof AdvancedDirective, value: string) => {
+  const updateField = (field: keyof AdvancedDirective, value: string | boolean) => {
     if (!formData) return;
-    setFormData((prev: FormData | null) => prev ? { ...prev, [field]: value } : null);
+    setFormData((prev: AdvancedDirective | null) => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const updateBooleanField = (field: keyof AdvancedDirective, value: string) => {
+    if (!formData) return;
+    const boolValue = value === 'true' || value === 'yes';
+    setFormData((prev: AdvancedDirective | null) => prev ? { ...prev, [field]: boolValue } : null);
   };
 
   if (loading) {
@@ -223,16 +229,13 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   DNR Status
                 </label>
                 <select
-                  value={formData.dnr_status}
-                  onChange={(e) => updateField('dnr_status', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    !formData.dnr_status ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  value={formData.dnr_status ? 'yes' : 'no'}
+                  onChange={(e) => updateBooleanField('dnr_status', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600`}
                   required
                 >
-                  <option value="">Select DNR status</option>
-                  <option value="Full Code">Full Code</option>
-                  <option value="DNR">Do Not Resuscitate</option>
+                  <option value="no">No DNR</option>
+                  <option value="yes">DNR (Do Not Resuscitate)</option>
                   <option value="DNI">Do Not Intubate</option>
                   <option value="DNR/DNI">DNR/DNI</option>
                   <option value="Comfort Care">Comfort Care Only</option>
@@ -254,15 +257,12 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   Organ Donation Status
                 </label>
                 <select
-                  value={formData.organ_donation_status}
-                  onChange={(e) => updateField('organ_donation_status', e.target.value)}
+                  value={formData.organ_donation_status ? 'yes' : 'no'}
+                  onChange={(e) => updateBooleanField('organ_donation_status', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
                 >
-                  <option value="">Select donation status</option>
-                  <option value="Registered organ donor">Registered organ donor</option>
-                  <option value="Not registered">Not registered</option>
-                  <option value="Declined">Declined</option>
-                  <option value="Family decision">Family decision</option>
+                  <option value="no">Not an organ donor</option>
+                  <option value="yes">Registered organ donor</option>
                 </select>
               </div>
 

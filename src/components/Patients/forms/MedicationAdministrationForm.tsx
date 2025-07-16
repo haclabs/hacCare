@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { X, Save, Clock, User, FileText, AlertTriangle } from 'lucide-react';
-import { Medication, MedicationAdministration } from '../../types';
-import { format, parseISO } from 'date-fns';
-import { formatLocalTime } from '../../utils/dateUtils';
-import { recordMedicationAdministration } from '../../lib/medicationService';
-import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabase'; 
-import { runAlertChecks } from '../../lib/alertService';
+import { Medication, MedicationAdministration } from '../../../types';
+import { recordMedicationAdministration } from '../../../lib/medicationService';
+import { useAuth } from '../../../hooks/useAuth';
+import { runAlertChecks } from '../../../lib/alertService';
 
 interface MedicationAdministrationFormProps {
   medication: Medication; 
