@@ -17,7 +17,7 @@ import type { Patient } from './types';
 // Lazy-loaded components
 // Update the import path below to match the actual file name and casing
 // Update the import path below to match the actual file name and casing
-const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet.tsx').then(module => ({ default: module.HospitalBracelet })));
+const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet.tsx'));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
