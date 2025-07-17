@@ -51,8 +51,11 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcod
         <div className="flex items-center space-x-6">
           {/* Barcode Scanner */}
           {onBarcodeScan && (
-            <div className="mr-2">
-              <BarcodeScanner onScan={onBarcodeScan} />
+            <div className="mr-2 flex items-center space-x-2">
+              <div className="flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">📱 Barcode Scanner Active</div>
+              </div>
+              <BarcodeScanner onScan={onBarcodeScan} debug={true} />
             </div>
           )}
           

@@ -15,6 +15,7 @@ import { Patient } from './types';
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
+const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
 const Changelog = lazy(() => import('./components/Changelog/Changelog').then(module => ({ default: module.Changelog })));
 const Settings = lazy(() => import('./components/Settings/Settings').then(module => ({ default: module.Settings })));
@@ -448,6 +449,13 @@ function App() {
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <UserManagement />
+          </Suspense>
+        );
+
+      case 'patient-management':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <PatientManagement />
           </Suspense>
         );
 

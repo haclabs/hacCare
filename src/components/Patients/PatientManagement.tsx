@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Users, Plus, Edit, Trash2, Search, Filter, Eye, 
-  Calendar, MapPin, Heart, AlertTriangle, User, Phone, Mail, RefreshCw 
+  Users, Plus, Edit, Trash2, Search, Eye, 
+  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw 
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { Patient } from '../../types';
 import { usePatients } from '../../hooks/usePatients';
-import { PatientForm } from './PatientForm';
-import { PatientDetail } from './PatientDetail';
+import { PatientForm } from './forms/PatientForm';
 
 /**
  * Patient Management Component
@@ -29,12 +28,12 @@ import { PatientDetail } from './PatientDetail';
 export const PatientManagement: React.FC = () => {
   // Get patient data and functions from context
   const { patients, addPatient, updatePatient, deletePatient, loading, error, refreshPatients } = usePatients();
+  const navigate = useNavigate();
   
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [showDetail, setShowDetail] = useState(false);
   const [filterCondition, setFilterCondition] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'room' | 'admission' | 'condition'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -103,10 +102,9 @@ export const PatientManagement: React.FC = () => {
       setActionLoading(true);
       await deletePatient(patientId);
       
-      // Close detail view if deleted patient was selected
+      // Clear selected patient if deleted patient was selected
       if (selectedPatient?.id === patientId) {
         setSelectedPatient(null);
-        setShowDetail(false);
       }
     } catch (error) {
       console.error('Error deleting patient:', error);
@@ -181,18 +179,13 @@ export const PatientManagement: React.FC = () => {
     return age;
   };
 
-  // Show patient detail view
-  if (showDetail && selectedPatient) {
-    return (
-      <PatientDetail
-        patient={selectedPatient}
-        onBack={() => {
-          setShowDetail(false);
-          setSelectedPatient(null);
-        }}
-      />
-    );
-  }
+  /**
+   * Handle viewing patient details
+   * @param {Patient} patient - Patient to view details for
+   */
+  const handleViewPatient = (patient: Patient) => {
+    navigate(`/patient/${patient.id}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -472,10 +465,7 @@ export const PatientManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => {
-                            setSelectedPatient(patient);
-                            setShowDetail(true);
-                          }}
+                          onClick={() => handleViewPatient(patient)}
                           className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1 rounded"
                           title="View Details"
                         >

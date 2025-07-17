@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, X, Calendar, Activity, BarChart3, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { TrendingUp, X, Activity, BarChart3, Plus, Trash2, RefreshCw } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
-import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePatients } from '../../../hooks/usePatients';
 import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../../lib/patientService';
@@ -35,9 +34,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
       setLoading(true);
       setError(null);
       
-      // Fetch the last 20 vital readings to ensure we have enough data for trends
-      const vitalsHistory = await fetchPatientVitalsHistory(patientId, 20);
-      console.log('Fetched vitals history:', vitalsHistory);
+      // Fetch the last 5 vital readings as specified in the user requirement
+      const vitalsHistory = await fetchPatientVitalsHistory(patientId, 5);
+      console.log('Fetched last 5 vitals for trends:', vitalsHistory);
       setVitals(vitalsHistory);
     } catch (err) {
       console.error('Error fetching vitals:', err);
@@ -178,8 +177,8 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     );
   }
 
-  // Get the last 5 vitals for the table display
-  const recentVitals = vitals.slice(0, 5);
+  // Get all 5 vitals for the table display (all of them since we only fetch 5)
+  const recentVitals = vitals;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -331,25 +330,23 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                 </svg>
               </div>
 
-              {/* Time labels */}
+              {/* Time labels - Show all 5 readings */}
               <div className="flex justify-between mt-2 text-xs text-gray-600">
-                {metricData
-                  .filter((_, index) => index % Math.ceil(metricData.length / 6) === 0 || index === metricData.length - 1)
-                  .map((point, index) => {
-                    const date = parseISO(point.timestamp);
-                    return (
-                      <span key={index}>
-                        {isValid(date) ? format(date, 'MM/dd HH:mm') : 'Invalid Date'}
-                      </span>
-                    );
-                  })}
+                {metricData.map((point, index) => {
+                  const date = parseISO(point.timestamp);
+                  return (
+                    <span key={index}>
+                      {isValid(date) ? format(date, 'MM/dd HH:mm') : 'Invalid Date'}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 
             {/* Recent Readings Table */}
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">  
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Readings</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Last 5 Vital Readings</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
