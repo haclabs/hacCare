@@ -6,19 +6,14 @@ import PatientCard from './components/Patients/records/PatientCard';
 import { PatientDetail } from './components/Patients/records/PatientDetail';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
-import { usePatients } from './hooks/usePatients';
-import { useAlerts } from './hooks/useAlerts';
+import { usePatients } from './hooks/queries/usePatients';
+import { useActiveAlerts } from './hooks/queries/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient } from './types';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
-const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
-const PatientManagementRQ = lazy(() => import('./components/Patients/PatientManagementRQ').then(module => ({ default: module.PatientManagementRQ })));
-const AuthenticationRQDemo = lazy(() => import('./components/Auth/AuthenticationRQDemo').then(module => ({ default: module.AuthenticationRQDemo })));
-const AlertsRQDemo = lazy(() => import('./components/Alerts/AlertsRQDemo').then(module => ({ default: module.AlertsRQDemo })));
-const SpecializedServicesRQDemo = lazy(() => import('./components/SpecializedServices/SpecializedServicesRQDemo').then(module => ({ default: module.SpecializedServicesRQDemo })));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
 const Changelog = lazy(() => import('./components/Changelog/Changelog').then(module => ({ default: module.Changelog })));
@@ -48,9 +43,9 @@ function App() {
   const [showAlerts, setShowAlerts] = useState(false);
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
-  // Get patients, alerts, and connection status from context
-  const { patients, error: dbError } = usePatients();
-  const { alerts } = useAlerts();
+  // Get patients and alerts using React Query hooks
+  const { data: patients = [], error: dbError, isLoading: patientsLoading } = usePatients();
+  const { data: alerts = [], isLoading: alertsLoading } = useActiveAlerts();
   
   // Determine if we're in an offline state
 
@@ -426,7 +421,7 @@ function App() {
               {dbError ? (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
                   <h3 className="text-lg font-medium text-red-800 dark:text-red-300 mb-2">Database Connection Error</h3>
-                  <p className="text-red-600 dark:text-red-400">{dbError}</p>
+                  <p className="text-red-600 dark:text-red-400">{dbError.message}</p>
                   <p className="text-sm text-red-500 dark:text-red-400 mt-2">Please check your Supabase connection and try again.</p>
                 </div>
               ) : patients.length === 0 ? (
@@ -447,34 +442,6 @@ function App() {
               )}
             </div>
           </div>
-        );
-
-      case 'patient-management':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <PatientManagementRQ />
-          </Suspense>
-        );
-
-      case 'auth-demo':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <AuthenticationRQDemo />
-          </Suspense>
-        );
-
-      case 'alerts-demo':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <AlertsRQDemo />
-          </Suspense>
-        );
-
-      case 'specialized-services-demo':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <SpecializedServicesRQDemo />
-          </Suspense>
         );
 
       case 'user-management':
@@ -524,7 +491,7 @@ function App() {
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
         onBarcodeScan={handleBarcodeScan}
-        dbError={dbError} 
+        dbError={dbError?.message || null} 
       />
       
       {/* Main Layout */}

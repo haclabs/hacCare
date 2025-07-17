@@ -38,12 +38,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     ...(hasRole('super_admin') ? [
       { id: 'patient-management', label: 'Patient Management', icon: UserPlus }
     ] : []),
-    // React Query Demos - Only for Admins and Super Admins
-    ...(hasRole(['admin', 'super_admin']) ? [
-      { id: 'auth-demo', label: '🔐 Auth Demo (RQ)', icon: UserCheck },
-      { id: 'alerts-demo', label: '🚨 Alerts Demo (RQ)', icon: Settings },
-      { id: 'specialized-services-demo', label: '🏥 Phase 3 Demo (RQ)', icon: Settings }
-    ] : []),
     // User Management - For Admins and Super Admins
     ...(hasRole(['admin', 'super_admin']) ? [
       { id: 'user-management', label: 'User Management', icon: UserCheck }
