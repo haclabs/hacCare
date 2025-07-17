@@ -3,8 +3,7 @@ import { Alert } from '../../types';
 import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
-import { useActiveAlerts, useAcknowledgeAlert } from '../../hooks/queries/useAlerts';
-import { runAlertChecks } from '../../lib/alertService';
+import { useAlerts } from '../../hooks/useAlerts';
 
 // Helper function to format alert timestamp
 const formatAlertTime = (timestamp: string) => {
@@ -25,21 +24,13 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   isOpen, 
   onClose
 }) => {
-  const { data: alerts = [], isLoading: loading, error, refetch: refreshAlerts } = useActiveAlerts();
-  const acknowledgeMutation = useAcknowledgeAlert();
+  const { alerts, loading, error, acknowledgeAlert: contextAcknowledgeAlert, refreshAlerts, runChecks: contextRunChecks } = useAlerts();
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
-  
-  const acknowledgeAlert = async (alertId: string) => {
-    await acknowledgeMutation.mutateAsync({ 
-      alertId, 
-      userId: 'current-user-id' // In real app, get from auth context
-    });
-  };
+  const [acknowledgingAlerts, setAcknowledgingAlerts] = useState<Set<string>>(new Set());
   
   const runChecks = async () => {
-    await runAlertChecks();
-    refreshAlerts();
+    await contextRunChecks();
   };
 
   if (!isOpen) return null;
@@ -75,10 +66,29 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   const acknowledgedAlerts = filteredAlerts.filter(alert => alert.acknowledged);
 
   const handleAcknowledge = async (alertId: string) => {
+    // Prevent double-clicking acknowledgment
+    if (acknowledgingAlerts.has(alertId)) {
+      console.log('Alert already being acknowledged, skipping...', alertId);
+      return;
+    }
+
     try {
-      await acknowledgeAlert(alertId);
+      setAcknowledgingAlerts(prev => new Set(prev).add(alertId));
+      console.log('🔄 Starting acknowledgment for alert:', alertId);
+      await contextAcknowledgeAlert(alertId);
+      console.log('✅ Alert acknowledged successfully:', alertId);
     } catch (error) {
-      console.error('Failed to acknowledge alert:', error);
+      console.error('❌ Failed to acknowledge alert:', alertId, error);
+    } finally {
+      // Remove from acknowledging set after a longer delay to prevent rapid re-acknowledgment
+      setTimeout(() => {
+        setAcknowledgingAlerts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(alertId);
+          console.log('🔓 Alert acknowledgment cooldown ended for:', alertId);
+          return newSet;
+        });
+      }, 5000); // Increased to 5 second cooldown
     }
   };
 
@@ -191,7 +201,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
             <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                <p className="text-red-800 dark:text-red-300 text-sm">{error?.message}</p>
+                <p className="text-red-800 dark:text-red-300 text-sm">{typeof error === 'string' ? error : 'Failed to load alerts'}</p>
               </div>
             </div>
           )}
@@ -248,10 +258,13 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
                             </p>
                             <button
                               onClick={() => handleAcknowledge(alert.id)}
-                              className="text-xs bg-white dark:bg-gray-800 bg-opacity-50 hover:bg-opacity-75 px-3 py-1 rounded-full transition-colors flex items-center space-x-1"
+                              disabled={acknowledgingAlerts.has(alert.id)}
+                              className={`text-xs bg-white dark:bg-gray-800 bg-opacity-50 hover:bg-opacity-75 px-3 py-1 rounded-full transition-colors flex items-center space-x-1 ${
+                                acknowledgingAlerts.has(alert.id) ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
                             >
                               <CheckCircle className="h-3 w-3" />
-                              <span>Acknowledge</span>
+                              <span>{acknowledgingAlerts.has(alert.id) ? 'Acknowledging...' : 'Acknowledge'}</span>
                             </button>
                           </div>
                         </div>

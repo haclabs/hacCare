@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { isSupabaseConfigured, checkDatabaseHealth } from './supabase';
-import { isSupabaseConfigured, checkDatabaseHealth } from './supabase';
 import { Alert } from '../types';
 
 /**
@@ -266,12 +265,9 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       console.log(`- Is due soon: ${isDueSoon}`);
       console.log(`- Is due soon: ${isDueSoon}`);
       
-      // Improved check for existing alerts - more specific to avoid missing alerts
+      // Improved check for existing alerts - more specific to avoid duplicates
       let existingAlerts = null;
       let alertCheckError = null;
-      // Create a clean pattern for SQL LIKE by removing special characters
-      const medicationNamePattern = medication.name.replace(/[%_,]/g, '');
-      const cleanedDosage = medication.dosage.replace(/[%_,]/g, '');
       
       try {
         const result = await supabase
@@ -280,7 +276,8 @@ export const checkMedicationAlerts = async (): Promise<void> => {
           .eq('patient_id', patient.id) 
           .eq('alert_type', 'medication_due')
           .eq('acknowledged', false)
-          .or(`message.ilike.%${medicationNamePattern}%,message.ilike.%${cleanedDosage}%`)
+          .ilike('message', `%${medication.name}%`)
+          .gte('created_at', new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString()) // Only check alerts from last 2 hours
           .order('created_at', { ascending: false })
           .limit(1);
         
@@ -447,21 +444,22 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
 
       // Create alerts for abnormal vitals
       for (const alertInfo of alerts) {
-        // Check if similar alert already exists
+        // Check if similar alert already exists for this patient and vital type
         const { data: existingAlerts } = await supabase
-          .from<DatabaseAlert>('patient_alerts')
-          .select('id')
+          .from('patient_alerts')
+          .select('id, created_at')
           .eq('patient_id', patientId)
           .eq('alert_type', 'vital_signs')
           .eq('acknowledged', false)
           .ilike('message', `%${alertInfo.type}%`)
+          .gte('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()) // Only check alerts from last 4 hours
           .limit(1);
 
           if (!existingAlerts || existingAlerts.length === 0) {
             const alertData = {
               patient_id: patientId,
               patient_name: `${patient.first_name} ${patient.last_name}`,
-              alert_type: 'vital_signs',
+              alert_type: 'vital_signs' as const,
               message: alertInfo.message,
               priority: alertInfo.priority as 'low' | 'medium' | 'high' | 'critical',
               acknowledged: false,
@@ -470,9 +468,12 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
             
             try {
               await createAlert(alertData);
+              console.log(`✅ Created vital signs alert: ${alertInfo.message}`);
             } catch (alertError) {
               console.error('Error creating vital signs alert:', alertError);
             }
+          } else {
+            console.log(`⏭️ Skipping duplicate vital signs alert for ${alertInfo.type} - existing alert found`);
           }
       }
     }
@@ -560,12 +561,12 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
             continue;
           }
           
-          const alertData = {
+          const alertData: Omit<DatabaseAlert, 'id' | 'created_at'> = {
             patient_id: patient.id,
             patient_name: `${patient.first_name} ${patient.last_name}`,
             alert_type: 'vital_signs',
             message: `Vital signs ${isPatientCritical ? 'CRITICAL' : ''} overdue - last recorded ${hoursOverdue} hours ago`,
-            priority: isPatientCritical || hoursOverdue > 12 ? 'high' : 'medium',
+            priority: (isPatientCritical || hoursOverdue > 12 ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
             acknowledged: false,
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
           };
@@ -622,6 +623,88 @@ const isPatientConditionCritical = async (patientId: string): Promise<boolean> =
 };
 
 /**
+ * Clean up duplicate alerts for the same patient and alert type
+ */
+export const cleanupDuplicateAlerts = async (): Promise<void> => {
+  try {
+    console.log('🧹 Cleaning up duplicate alerts...');
+    
+    // Get all unacknowledged alerts grouped by patient and type
+    const { data: alerts, error } = await supabase
+      .from('patient_alerts')
+      .select('id, patient_id, alert_type, message, created_at')
+      .eq('acknowledged', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching alerts for cleanup:', error);
+      return;
+    }
+
+    // Group alerts by patient and type
+    const alertGroups = new Map<string, any[]>();
+    
+    for (const alert of alerts || []) {
+      let messageKey = alert.message;
+      
+      // For medication alerts, extract medication name for grouping
+      if (alert.alert_type === 'medication_due') {
+        const medicationMatch = alert.message.match(/^(OVERDUE: )?([^0-9]+)/);
+        messageKey = medicationMatch ? medicationMatch[2].trim() : alert.message;
+      }
+      
+      // For vital signs alerts, extract vital type for grouping
+      if (alert.alert_type === 'vital_signs') {
+        const vitalMatch = alert.message.match(/^(Temperature|Blood Pressure|Heart Rate|Oxygen Saturation|Respiratory Rate)/);
+        messageKey = vitalMatch ? vitalMatch[1] : alert.message;
+      }
+      
+      const key = `${alert.patient_id}-${alert.alert_type}-${messageKey}`;
+      
+      if (!alertGroups.has(key)) {
+        alertGroups.set(key, []);
+      }
+      alertGroups.get(key)!.push(alert);
+    }
+
+    // Remove duplicates (keep only the most recent)
+    const alertsToDelete: string[] = [];
+    
+    for (const [key, groupAlerts] of alertGroups) {
+      if (groupAlerts.length > 1) {
+        // Sort by created_at and keep the most recent
+        groupAlerts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
+        // Mark older alerts for deletion
+        for (let i = 1; i < groupAlerts.length; i++) {
+          alertsToDelete.push(groupAlerts[i].id);
+        }
+        
+        console.log(`Found ${groupAlerts.length} duplicate alerts for key: ${key}, will delete ${groupAlerts.length - 1} older alerts`);
+      }
+    }
+
+    // Delete duplicate alerts
+    if (alertsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('patient_alerts')
+        .delete()
+        .in('id', alertsToDelete);
+
+      if (deleteError) {
+        console.error('Error deleting duplicate alerts:', deleteError);
+      } else {
+        console.log(`✅ Deleted ${alertsToDelete.length} duplicate alerts`);
+      }
+    } else {
+      console.log('✅ No duplicate alerts found');
+    }
+  } catch (error) {
+    console.error('Error cleaning up duplicate alerts:', error);
+  }
+};
+
+/**
  * Run all alert checks
  */
 export const runAlertChecks = async (): Promise<void> => {
@@ -641,6 +724,9 @@ export const runAlertChecks = async (): Promise<void> => {
 
     console.log('🔄 Running comprehensive alert checks...');
     
+    // Clean up duplicates first
+    await cleanupDuplicateAlerts();
+    
     console.log('⏱️ Starting medication checks at:', new Date().toISOString());
     // Run medication checks first
     await checkMedicationAlerts();
@@ -651,6 +737,9 @@ export const runAlertChecks = async (): Promise<void> => {
       checkVitalSignsAlerts(),
       checkMissingVitalsAlerts()
     ]);
+    
+    // Clean up duplicates again after generating new alerts
+    await cleanupDuplicateAlerts();
     
     console.log('✅ All alert checks completed');
   } catch (error) {

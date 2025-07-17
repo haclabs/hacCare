@@ -7,7 +7,7 @@ import { PatientDetail } from './components/Patients/records/PatientDetail';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
 import { usePatients } from './hooks/queries/usePatients';
-import { useActiveAlerts } from './hooks/queries/useAlerts';
+import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient } from './types';
@@ -44,9 +44,11 @@ function App() {
   const [showAlerts, setShowAlerts] = useState(false);
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
-  // Get patients and alerts using React Query hooks
+  // Get patients using React Query hooks
   const { data: patients = [], error: dbError } = usePatients();
-  const { data: alerts = [] } = useActiveAlerts();
+  
+  // Get alerts from AlertContext (avoid React Query conflicts)
+  const { alerts } = useAlerts();
   
   // Determine if we're in an offline state
 
