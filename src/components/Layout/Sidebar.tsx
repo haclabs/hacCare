@@ -28,23 +28,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { hasRole } = useAuth();
 
   /**
-   * Menu items configuration
-   * Each item includes id, label, icon, and optional role requirements
+   * Menu items configuration with colored icons
+   * Each item includes id, label, icon, color, and optional role requirements
    */
   const menuItems = [
-    { id: 'patients', label: 'Patients', icon: Users },
-    { id: 'schedule', label: 'Schedule', icon: Calendar },
+    { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
+    { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     // Patient Management - Only for Super Admins
     ...(hasRole('super_admin') ? [
-      { id: 'patient-management', label: 'Patient Management', icon: UserPlus }
+      { id: 'patient-management', label: 'Patient Management', icon: UserPlus, color: 'text-purple-600' }
     ] : []),
     // User Management - For Admins and Super Admins
     ...(hasRole(['admin', 'super_admin']) ? [
-      { id: 'user-management', label: 'User Management', icon: UserCheck }
+      { id: 'user-management', label: 'User Management', icon: UserCheck, color: 'text-indigo-600' }
     ] : []),
-    { id: 'documentation', label: 'Documentation', icon: BookOpen },
-    { id: 'changelog', label: 'Changelog', icon: FileText },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'documentation', label: 'Documentation', icon: BookOpen, color: 'text-orange-600' },
+    { id: 'changelog', label: 'Changelog', icon: FileText, color: 'text-teal-600' },
+    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
   ];
 
   return (
@@ -65,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.color + ' dark:text-gray-400'}`} />
                   <span className="font-medium">{item.label}</span>
                 </button>
               </li>

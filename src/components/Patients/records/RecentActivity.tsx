@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, User, FileText, RefreshCw, Activity, Edit, Plus, Trash2, Pill, Stethoscope } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
-import { fetchTargetActivity, AuditLog } from '../../lib/auditService';
-import { formatLocalTime } from '../../utils/dateUtils';
+import { fetchTargetActivity, AuditLog } from '../../../lib/auditService';
+import { formatLocalTime } from '../../../utils/dateUtils';
 
 interface RecentActivityProps {
   patientId: string;

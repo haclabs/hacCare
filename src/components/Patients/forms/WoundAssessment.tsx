@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, MapPin, Save, X, Image } from 'lucide-react';
 import { format } from 'date-fns';
-import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../lib/woundService';
-import { useAuth } from '../../hooks/useAuth';
-import { ImageAnnotation } from './ImageAnnotation';
+import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../../lib/woundService';
+import { useAuth } from '../../../hooks/useAuth';
+import { ImageAnnotation } from '../visuals/ImageAnnotation';
 
 export interface WoundAssessmentProps {
   patientId: string;
@@ -19,7 +19,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
   const [showAddWound, setShowAddWound] = useState(false);
   const [selectedWound, setSelectedWound] = useState<WoundUI | null>(null);
   const [newWoundCoords, setNewWoundCoords] = useState<{ x: number; y: number } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { profile } = useAuth();
 
@@ -135,7 +135,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
     }
   };
 
-  const getWoundColor = (wound: Wound) => {
+  const getWoundColor = (wound: WoundUI) => {
     switch (wound.healingProgress) {
       case 'Improving': return '#10b981'; // green
       case 'Stable': return '#3b82f6'; // blue
@@ -472,7 +472,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                   </label>
                   <select
                     value={newWound.type || 'Pressure Ulcer'}
-                    onChange={(e) => setNewWound(prev => ({ ...prev, type: e.target.value as Wound['type'] }))}
+                    onChange={(e) => setNewWound(prev => ({ ...prev, type: e.target.value as WoundUI['type'] }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   >
                     <option value="Pressure Ulcer">Pressure Ulcer</option>
@@ -491,7 +491,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                   </label>
                   <select
                     value={newWound.stage || 'Stage 1'}
-                    onChange={(e) => setNewWound(prev => ({ ...prev, stage: e.target.value as Wound['stage'] }))}
+                    onChange={(e) => setNewWound(prev => ({ ...prev, stage: e.target.value as WoundUI['stage'] }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   >
                     <option value="Stage 1">Stage 1</option>

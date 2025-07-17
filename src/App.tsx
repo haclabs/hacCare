@@ -1,25 +1,21 @@
-import { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-// Update the import path below to match the actual file name and casing
-import PatientCard from './components/Patients/records/PatientCard.tsx'; // <-- Example: change to './components/Patients/patientCard' if that's the actual file name
-// Update the import path below to match the actual file name and casing
-import { PatientDetail } from './components/Patients/records/PatientDetail'; // <-- Make sure this matches the actual file name and casing
+import PatientCard from './components/Patients/records/PatientCard';
+import { PatientDetail } from './components/Patients/records/PatientDetail';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
-import { usePatients } from './hooks/usePatients';
-import { useAlerts } from './hooks/useAlerts';
+import { usePatients } from './hooks/queries/usePatients';
+import { useActiveAlerts } from './hooks/queries/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
-import type { Patient } from './types';
+import { Patient } from './types';
 
 // Lazy-loaded components
-// Update the import path below to match the actual file name and casing
-// Update the import path below to match the actual file name and casing
-const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet.tsx'));
-const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
+const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
+const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
 const Changelog = lazy(() => import('./components/Changelog/Changelog').then(module => ({ default: module.Changelog })));
 const Settings = lazy(() => import('./components/Settings/Settings').then(module => ({ default: module.Settings })));
@@ -46,12 +42,14 @@ function App() {
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const [showAlerts, setShowAlerts] = useState(false);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
+  // const [isScanning, setIsScanning] = useState<boolean>(false);
 
-  // Get patients, alerts, and connection status from context
-  const { patients, error: dbError } = usePatients();
-  const { alerts } = useAlerts();
+  // Get patients and alerts using React Query hooks
+  const { data: patients = [], error: dbError, isLoading: patientsLoading } = usePatients();
+  const { data: alerts = [], isLoading: alertsLoading } = useActiveAlerts();
   
+  // Determine if we're in an offline state
+
 
   /**
    * Handle tab change - clear selected patient when navigating away from patient detail
@@ -77,7 +75,6 @@ function App() {
    */
   const handleBarcodeScan = async (barcode: string) => {
     try {
-      setIsScanning(true);
       console.log('🔍 Barcode scanned:', barcode, typeof barcode, 'Length:', barcode.length);
       
       // Log all patients for debugging
@@ -394,7 +391,7 @@ function App() {
     } catch (error) {
       console.error('❌ Error processing barcode scan:', error);
     } finally {
-      setIsScanning(false);
+      // Removed setIsScanning
     }
   };
 
@@ -425,7 +422,7 @@ function App() {
               {dbError ? (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
                   <h3 className="text-lg font-medium text-red-800 dark:text-red-300 mb-2">Database Connection Error</h3>
-                  <p className="text-red-600 dark:text-red-400">{dbError}</p>
+                  <p className="text-red-600 dark:text-red-400">{dbError.message}</p>
                   <p className="text-sm text-red-500 dark:text-red-400 mt-2">Please check your Supabase connection and try again.</p>
                 </div>
               ) : patients.length === 0 ? (
@@ -448,17 +445,17 @@ function App() {
           </div>
         );
 
-      case 'patient-management':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <PatientManagement />
-          </Suspense>
-        );
-
       case 'user-management':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <UserManagement />
+          </Suspense>
+        );
+
+      case 'patient-management':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <PatientManagement />
           </Suspense>
         );
 
@@ -501,9 +498,8 @@ function App() {
       {/* Application Header */}
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
-        isScanning={isScanning}
         onBarcodeScan={handleBarcodeScan}
-        dbError={dbError}
+        dbError={dbError?.message || null} 
       />
       
       {/* Main Layout */}

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Save, FileText, AlertTriangle, User } from 'lucide-react';
-import { PatientNote } from '../../types';
+import { PatientNote } from '../../../types';
 import { format } from 'date-fns';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth';
 import { createPatientNote, updatePatientNote } from '../../lib/patientService';
 
 /**

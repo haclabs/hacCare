@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, Clock, RefreshCw } from 'lucide-react';
-import { PatientNote } from '../../types';
-import { PatientNoteForm } from './PatientNoteForm';
-import { fetchPatientNotes, deletePatientNote, createPatientNote, updatePatientNote } from '../../lib/patientService';
-import { useAuth } from '../../hooks/useAuth';
+import { PatientNote } from '../../../types';
+import { PatientNoteForm } from '../forms/PatientNoteForm';
+import { fetchPatientNotes, deletePatientNote, createPatientNote, updatePatientNote } from '../../../lib/patientService';
+import { useAuth } from '../../../hooks/useAuth';
 import { format, parseISO, isValid } from 'date-fns';
 
 interface NotesContentProps {
@@ -186,6 +186,10 @@ export const NotesContent: React.FC<NotesContentProps> = ({
             setShowNoteForm(false);
             setEditingNote(null);
           }}
+          onClose={() => {
+            setShowNoteForm(false);
+            setEditingNote(null);
+          }}
         />
       )}
 
@@ -213,7 +217,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
               <div className="flex items-center">
                 <span className="text-xs text-gray-500 flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  {formatDate(note.created_at || note.createdAt)}
+                  {formatDate(note.created_at ?? note.createdAt ?? '')}
                 </span>
                 
                 {/* Edit/Delete buttons for super users */}

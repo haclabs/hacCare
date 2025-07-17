@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Patient } from '../../types';
-import { User, MapPin, Calendar, AlertTriangle, Heart, QrCode } from 'lucide-react';
+import { Patient } from '../../../types';
+import { User, MapPin, Calendar, AlertTriangle, Heart, QrCode, Activity, Thermometer, Clock, Stethoscope, Droplets, Wind } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 
 /**
@@ -32,17 +32,43 @@ interface PatientCardProps {
 
 const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet }) => {
   /**
-   * Get CSS classes for patient condition styling
+   * Get CSS classes for patient condition styling with enhanced gradients
    * @param {Patient['condition']} condition - Patient's current condition
    * @returns {string} CSS classes for condition badge
    */
   const getConditionColor = (condition: Patient['condition']) => {
     switch (condition) {
-      case 'Critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Stable': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Improving': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Discharged': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Critical': return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300 shadow-red-100';
+      case 'Stable': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300 shadow-green-100';
+      case 'Improving': return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300 shadow-blue-100';
+      case 'Discharged': return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300 shadow-gray-100';
+      default: return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300 shadow-gray-100';
+    }
+  };
+
+  /**
+   * Get condition-specific accent colors for the card border
+   */
+  const getCardAccent = (condition: Patient['condition']) => {
+    switch (condition) {
+      case 'Critical': return 'border-l-4 border-l-red-500';
+      case 'Stable': return 'border-l-4 border-l-green-500';
+      case 'Improving': return 'border-l-4 border-l-blue-500';
+      case 'Discharged': return 'border-l-4 border-l-gray-400';
+      default: return 'border-l-4 border-l-gray-400';
+    }
+  };
+
+  /**
+   * Get avatar background color based on condition
+   */
+  const getAvatarColor = (condition: Patient['condition']) => {
+    switch (condition) {
+      case 'Critical': return 'bg-gradient-to-br from-red-100 to-red-200 text-red-600';
+      case 'Stable': return 'bg-gradient-to-br from-green-100 to-green-200 text-green-600';
+      case 'Improving': return 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600';
+      case 'Discharged': return 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600';
+      default: return 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600';
     }
   };
 
@@ -63,70 +89,179 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
       })[0]
     : null;
 
+  // Get time since last vitals check
+  const getVitalsStatus = () => {
+    if (!latestVitals) return { text: 'No vitals recorded', color: 'text-gray-500' };
+    
+    const lastCheck = new Date(latestVitals.recorded_at || latestVitals.lastUpdated || 0);
+    const hoursAgo = Math.floor((Date.now() - lastCheck.getTime()) / (1000 * 60 * 60));
+    
+    if (hoursAgo < 2) return { text: 'Recent vitals', color: 'text-green-600' };
+    if (hoursAgo < 6) return { text: `${hoursAgo}h ago`, color: 'text-yellow-600' };
+    return { text: `${hoursAgo}h ago`, color: 'text-red-600' };
+  };
+
+  const vitalsStatus = getVitalsStatus();
+
   return (
     <div 
-      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+      className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:shadow-blue-100/50 transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${getCardAccent(patient.condition)}`}
      onClick={onClick}
     >
-      {/* Patient Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
-            <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+      {/* Patient Header with Enhanced Avatar */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div className={`p-3 rounded-full shadow-lg ${getAvatarColor(patient.condition)}`}>
+            <User className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               {patient.first_name} {patient.last_name}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{age} years old • {patient.gender}</p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-mono">{patient.patient_id}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-2">
+              <span>{age} years old</span>
+              <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+              <span>{patient.gender}</span>
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-mono bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md mt-1">
+              {patient.patient_id}
+            </p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getConditionColor(patient.condition)}`}>
+        <div className="flex flex-col items-end space-y-2">
+          <span className={`px-4 py-2 rounded-full text-sm font-semibold border shadow-lg ${getConditionColor(patient.condition)}`}>
             {patient.condition}
-          </span> 
+          </span>
+          {onShowBracelet && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onShowBracelet();
+              }}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Generate Patient Bracelet"
+            >
+              <QrCode className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Patient Location and Admission Info */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-          <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-500" />
-          <span className="dark:text-gray-300">Room {patient.room_number}{patient.bed_number}</span>
+      {/* Enhanced Location and Admission Info */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+            <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Location</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Room {patient.room_number}{patient.bed_number}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-          <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-500" />
-          <span className="dark:text-gray-300">Admitted {formattedAdmissionDate}</span>
+        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+            <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Admitted</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formattedAdmissionDate}</p>
+          </div>
         </div>
       </div>
 
-      {/* Vital Signs Summary */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Heart className="h-4 w-4 text-red-500 dark:text-red-400" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {latestVitals?.heartRate || 'N/A'} BPM • {latestVitals?.bloodPressure?.systolic || 'N/A'}/{latestVitals?.bloodPressure?.diastolic || 'N/A'}
+      {/* Enhanced Vital Signs Display */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-red-100 dark:bg-red-900/50 rounded-lg">
+              <Heart className="h-4 w-4 text-red-600 dark:text-red-400" />
+            </div>
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Vital Signs</h4>
+          </div>
+          <span className={`text-xs font-medium ${vitalsStatus.color} flex items-center space-x-1`}>
+            <Clock className="h-3 w-3" />
+            <span>{vitalsStatus.text}</span>
           </span>
         </div>
         
-        {/* Allergy Indicator */}
-        {patient.allergies && patient.allergies.length > 0 && (
-          <div className="flex items-center space-x-1">
-            <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Allergies</span>
+        {latestVitals ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center space-x-2 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <Thermometer className="h-4 w-4 text-red-500" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Temp</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {latestVitals.temperature ? `${latestVitals.temperature.toFixed(1)}°C` : 'N/A'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Activity className="h-4 w-4 text-blue-500" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">HR/BP</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {latestVitals.heartRate || 'N/A'} • {latestVitals.bloodPressure?.systolic || 'N/A'}/{latestVitals.bloodPressure?.diastolic || 'N/A'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <Droplets className="h-4 w-4 text-green-500" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">O2 Sat</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {latestVitals.oxygenSaturation ? `${latestVitals.oxygenSaturation}%` : 'N/A'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <Wind className="h-4 w-4 text-purple-500" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Resp</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {latestVitals.respiratoryRate ? `${latestVitals.respiratoryRate}/min` : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <Stethoscope className="h-5 w-5 text-gray-400 mr-2" />
+            <span className="text-sm text-gray-500 dark:text-gray-400">No vitals recorded</span>
           </div>
         )}
       </div>
 
-      {/* Active Medications Count */}
-      {patient.medications && patient.medications.filter(med => med.status === 'Active').length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {patient.medications.filter(med => med.status === 'Active').length} active medications
-          </p>
+      {/* Enhanced Footer with Alerts and Medications */}
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+        {/* Allergy Indicator */}
+        {patient.allergies && patient.allergies.length > 0 && (
+          <div className="flex items-center space-x-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
+              {patient.allergies.length} Allergies
+            </span>
+          </div>
+        )}
+
+        {/* Active Medications Count */}
+        <div className="flex items-center space-x-4">
+          {patient.medications && patient.medications.filter(med => med.status === 'Active').length > 0 && (
+            <div className="flex items-center space-x-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                {patient.medications.filter(med => med.status === 'Active').length} Active Meds
+              </span>
+            </div>
+          )}
+          
+          {/* Days in hospital */}
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Day {Math.ceil((Date.now() - new Date(patient.admission_date).getTime()) / (1000 * 60 * 60 * 24))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

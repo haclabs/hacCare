@@ -10,16 +10,14 @@ interface HeaderProps {
   onAlertsClick: () => void;
   dbError?: string | null;
   onBarcodeScan?: (barcode: string) => void;
-  isScanning: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan, isScanning }) => {
+export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
   const { unreadCount, loading: alertsLoading } = useAlerts();
-  const { loading, error } = usePatients();
+  const { } = usePatients();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
-  // Consider offline if loading failed (error) or still loading
-  const isOffline = !!error || loading;
+  const isOffline = false; // Remove offline logic for now
 
   const getRoleLabel = (role: string) => {
     switch (role) {
@@ -53,8 +51,11 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcod
         <div className="flex items-center space-x-6">
           {/* Barcode Scanner */}
           {onBarcodeScan && (
-            <div className="mr-2">
-              <BarcodeScanner onScan={onBarcodeScan} isScanning={isScanning} />
+            <div className="mr-2 flex items-center space-x-2">
+              <div className="flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">📱 Barcode Scanner Active</div>
+              </div>
+              <BarcodeScanner onScan={onBarcodeScan} debug={true} />
             </div>
           )}
           

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, Printer, Download, AlertTriangle } from 'lucide-react';
-import { Medication } from '../../types';
+import { X, Printer, Download } from 'lucide-react';
+import { Medication } from '../../../types';
 import { format, isValid } from 'date-fns';
-import { generateCode128SVG } from '../../utils/barcodeUtils';
+import { generateCode128SVG } from '../../../utils/barcodeUtils';
 
 /**
  * Medication Label Component
@@ -40,11 +40,6 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
     medications.length > 0 ? medications[0] : null
   );
   
-  // Avery 5167 specifications
-  const labelWidth = 4; // inches
-  const labelHeight = 1.33; // inches
-  const labelsPerSheet = 20; // 4 across, 5 down
-
   if (!selectedMedication) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -69,13 +64,6 @@ export const MedicationBarcode: React.FC<MedicationBarcodeProps> = ({
     patientId: safePatient.patient_id,
     medicationId: medicationBarcodeId,
     patientName: `${safePatient.first_name} ${safePatient.last_name}`
-  });
-
-  // Generate barcode SVG
-  const barcodeSvg = generateCode128SVG(selectedMedication.id, {
-    width: 200,
-    height: 30,
-    showText: false
   });
 
   // Helper function to safely format dates

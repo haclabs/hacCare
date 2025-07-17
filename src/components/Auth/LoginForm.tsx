@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, Info, Heart, Wifi, WifiOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Info, Wifi, WifiOff, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
