@@ -15,6 +15,10 @@ import { Patient } from './types';
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
+const PatientManagementRQ = lazy(() => import('./components/Patients/PatientManagementRQ').then(module => ({ default: module.PatientManagementRQ })));
+const AuthenticationRQDemo = lazy(() => import('./components/Auth/AuthenticationRQDemo').then(module => ({ default: module.AuthenticationRQDemo })));
+const AlertsRQDemo = lazy(() => import('./components/Alerts/AlertsRQDemo').then(module => ({ default: module.AlertsRQDemo })));
+const SpecializedServicesRQDemo = lazy(() => import('./components/SpecializedServices/SpecializedServicesRQDemo').then(module => ({ default: module.SpecializedServicesRQDemo })));
 const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
 const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
 const Changelog = lazy(() => import('./components/Changelog/Changelog').then(module => ({ default: module.Changelog })));
@@ -448,7 +452,28 @@ function App() {
       case 'patient-management':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <PatientManagement />
+            <PatientManagementRQ />
+          </Suspense>
+        );
+
+      case 'auth-demo':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <AuthenticationRQDemo />
+          </Suspense>
+        );
+
+      case 'alerts-demo':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <AlertsRQDemo />
+          </Suspense>
+        );
+
+      case 'specialized-services-demo':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <SpecializedServicesRQDemo />
           </Suspense>
         );
 
