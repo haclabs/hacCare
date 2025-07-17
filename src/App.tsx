@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -45,8 +45,8 @@ function App() {
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Get patients and alerts using React Query hooks
-  const { data: patients = [], error: dbError, isLoading: patientsLoading } = usePatients();
-  const { data: alerts = [], isLoading: alertsLoading } = useActiveAlerts();
+  const { data: patients = [], error: dbError } = usePatients();
+  const { data: alerts = [] } = useActiveAlerts();
   
   // Determine if we're in an offline state
 

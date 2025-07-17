@@ -169,6 +169,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
 
             {/* Enhanced Cards Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Enhanced Cards Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Patient Information Card */}
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
