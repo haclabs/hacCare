@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, Save, Edit, Trash2, ArrowRight, Square, Type, Ruler } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Save, Trash2 } from 'lucide-react';
 import ImageMarker from 'react-image-marker';
 import { useDropzone } from 'react-dropzone';
-import { useAuth } from '../../hooks/useAuth';
-import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../lib/imageService';
-import { usePatients } from '../../hooks/usePatients';
+import { useAuth } from '../../../hooks/useAuth';
+import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../../lib/imageService';
+import { usePatients } from '../../../hooks/usePatients';
 import { format } from 'date-fns';
 
 interface ImageAnnotationProps {
@@ -15,14 +15,15 @@ interface ImageAnnotationProps {
 
 export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   patientId,
-  patientName,
   onClose
 }) => {
-  const { user, profile } = useAuth();
+  // useAuth() is called here, but its return value is unused.
+  useAuth();
+
   const [images, setImages] = useState<PatientImage[]>([]);
   const [selectedImage, setSelectedImage] = useState<PatientImage | null>(null);
   const [markers, setMarkers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageDescription, setImageDescription] = useState('');

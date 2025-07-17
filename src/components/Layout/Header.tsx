@@ -1,10 +1,10 @@
 import React from 'react';
-import { Bell, User, LogOut, Clock, Heart, Database, AlertTriangle, WifiOff, SearchCode as Barcode } from 'lucide-react';
+import { Bell, User, LogOut, Clock, Database, AlertTriangle, WifiOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
-import { BarcodeScanner } from '../UI/BarcodeScanner';
+import BarcodeScanner from '../UI/BarcodeScanner';
 
 interface HeaderProps {
   onAlertsClick: () => void;
@@ -14,10 +14,10 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
-  const { unreadCount, loading: alertsLoading, isOffline: alertsOffline } = useAlerts();
-  const { isOffline: patientsOffline } = usePatients();
+  const { unreadCount, loading: alertsLoading } = useAlerts();
+  const { } = usePatients();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
-  const isOffline = patientsOffline || alertsOffline;
+  const isOffline = false; // Remove offline logic for now
 
   const getRoleLabel = (role: string) => {
     switch (role) {
@@ -51,8 +51,11 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcod
         <div className="flex items-center space-x-6">
           {/* Barcode Scanner */}
           {onBarcodeScan && (
-            <div className="mr-2">
-              <BarcodeScanner onScan={onBarcodeScan} />
+            <div className="mr-2 flex items-center space-x-2">
+              <div className="flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">📱 Barcode Scanner Active</div>
+              </div>
+              <BarcodeScanner onScan={onBarcodeScan} debug={true} />
             </div>
           )}
           

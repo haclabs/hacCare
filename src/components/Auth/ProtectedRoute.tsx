@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
-import { LoadingSpinner } from '../UI/LoadingSpinner';
+import LoadingSpinner from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { User, AlertCircle, RefreshCw, CheckCircle, Heart } from 'lucide-react';
+import { User, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

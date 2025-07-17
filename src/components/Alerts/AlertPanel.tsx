@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Alert } from '../../types';
-import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play, Filter } from 'lucide-react';
+import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
-import { useAlerts } from '../../hooks/useAlerts';
+import { useActiveAlerts, useAcknowledgeAlert } from '../../hooks/queries/useAlerts';
+import { runAlertChecks } from '../../lib/alertService';
 
 // Helper function to format alert timestamp
 const formatAlertTime = (timestamp: string) => {
   try {
     const date = parseISO(timestamp);
     return formatLocalTime(date, 'MMM dd, HH:mm');
-  } catch (error) {
+  } catch {
     return 'Invalid date';
   }
 };
@@ -24,9 +25,22 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   isOpen, 
   onClose
 }) => {
-  const { alerts, loading, error, acknowledgeAlert, refreshAlerts, runChecks } = useAlerts();
+  const { data: alerts = [], isLoading: loading, error, refetch: refreshAlerts } = useActiveAlerts();
+  const acknowledgeMutation = useAcknowledgeAlert();
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
+  
+  const acknowledgeAlert = async (alertId: string) => {
+    await acknowledgeMutation.mutateAsync({ 
+      alertId, 
+      userId: 'current-user-id' // In real app, get from auth context
+    });
+  };
+  
+  const runChecks = async () => {
+    await runAlertChecks();
+    refreshAlerts();
+  };
 
   if (!isOpen) return null;
 
@@ -177,7 +191,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
             <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
+                <p className="text-red-800 dark:text-red-300 text-sm">{error?.message}</p>
               </div>
             </div>
           )}
@@ -199,7 +213,6 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
               <div className="space-y-3">
                 {unacknowledgedAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type);
-                  const isOverdue = alert.message.toLowerCase().includes('overdue');
                   return (
                     <div
                       key={alert.id}
