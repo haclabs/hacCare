@@ -384,11 +384,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {patient.first_name} {patient.last_name}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-100">Patient ID: {patient.patient_id}</p>
+          <div className="flex items-center space-x-4">
+            <div>
+              <div className="flex items-center space-x-3">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {patient.first_name} {patient.last_name}
+                </h1>
+              </div>
+              <p className="text-gray-600 dark:text-gray-100">Patient ID: {patient.patient_id}</p>
+            </div>
           </div>
         </div>
         <button

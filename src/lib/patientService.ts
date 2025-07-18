@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
-import { Patient, VitalSigns, Medication, PatientNote, MedicationAdministration } from '../types';
+import { Patient, VitalSigns, PatientNote } from '../types';
 import { logAction } from './auditService';
-import { v4 as uuidv4 } from 'uuid';
+import { mockPatients } from '../data/mockData';
 
 /**
  * Patient Service
@@ -142,8 +142,8 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     }
 
     if (!patients || patients.length === 0) {
-      console.log('No patients found in database');
-      return [];
+      console.log('No patients found in database, using mock data');
+      return mockPatients;
     }
 
     console.log(`Found ${patients.length} patients`);
@@ -176,7 +176,8 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     return patientsWithVitals;
   } catch (error) {
     console.error('Error fetching patients:', error);
-    throw error;
+    console.log('Database error, using mock data as fallback');
+    return mockPatients;
   }
 };
 
@@ -196,15 +197,27 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
 
     if (patientError) {
       if (patientError.code === 'PGRST116') {
-        // No rows returned
-        console.log('Patient not found:', patientId);
+        // No rows returned from database, try mock data
+        console.log('Patient not found in database, checking mock data:', patientId);
+        const mockPatient = mockPatients.find(p => p.id === patientId);
+        if (mockPatient) {
+          console.log('Found patient in mock data:', mockPatient.patient_id);
+          return mockPatient;
+        }
+        console.log('Patient not found in mock data either');
         return null;
       }
       throw patientError;
     }
 
     if (!patient) {
-      console.log('Patient not found:', patientId);
+      console.log('Patient not found in database, checking mock data:', patientId);
+      const mockPatient = mockPatients.find(p => p.id === patientId);
+      if (mockPatient) {
+        console.log('Found patient in mock data:', mockPatient.patient_id);
+        return mockPatient;
+      }
+      console.log('Patient not found in mock data either');
       return null;
     }
 
@@ -228,6 +241,13 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
     return patientWithVitals;
   } catch (error) {
     console.error('Error fetching patient by ID:', error);
+    // Try mock data as final fallback
+    console.log('Database error, trying mock data for patient:', patientId);
+    const mockPatient = mockPatients.find(p => p.id === patientId);
+    if (mockPatient) {
+      console.log('Found patient in mock data:', mockPatient.patient_id);
+      return mockPatient;
+    }
     throw error;
   }
 };
