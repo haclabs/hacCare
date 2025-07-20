@@ -139,6 +139,10 @@ const handleDeleteMedication = async (medicationId: string) => {
     const dueMeds = allMedications.filter(med => {
       try { 
         if (!med.next_due) return false;
+        
+        // PRN medications are never "due" since they're given only as needed, not on schedule
+        if (med.category === 'prn') return false;
+        
         const dueTime = parseISO(med.next_due); 
         // Due medications are those due within the next hour but not overdue
         const timeDiff = dueTime.getTime() - now.getTime();
@@ -169,6 +173,10 @@ const handleDeleteMedication = async (medicationId: string) => {
     const overdueMeds = allMedications.filter(med => {
       try {
         if (!med.next_due) return false;
+        
+        // PRN medications are never overdue since they're given only as needed
+        if (med.category === 'prn') return false;
+        
         const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
         const isOverdue = isValid(dueTime) && dueTime.getTime() <= now.getTime() && med.status === 'Active';
