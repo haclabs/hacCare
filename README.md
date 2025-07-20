@@ -574,7 +574,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history and feature updates.
 
-### Version 1.0.0 (Current)
+### Version 2.4.1 (Current)
 - ✅ Complete patient management system
 - ✅ Advanced barcode scanning integration
 - ✅ Real-time alert system with deduplication
@@ -585,6 +585,6 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and feature update
 
 ---
 
-**🏥 hacCare** - *Revolutionizing healthcare management with modern technology, security-first architecture, and healthcare professional-focused design.*
+**🏥 hacCare**
 
 **Built with ❤️ by the hacCare Team** | **Powered by React, TypeScript, and Supabase**
