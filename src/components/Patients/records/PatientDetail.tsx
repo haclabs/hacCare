@@ -404,26 +404,42 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         </button>
       </div>
 
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
-          {tabs.map((tab) => {
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
+        <nav className="flex space-x-0 overflow-x-auto scrollbar-hide">
+          {tabs.map((tab, index) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            const isFirst = index === 0;
+            const isLast = index === tabs.length - 1;
+            
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400' 
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600' 
+                className={`relative px-6 py-4 font-medium text-sm whitespace-nowrap flex items-center transition-all duration-300 transform hover:scale-105 ${
+                  isFirst ? 'rounded-tl-lg' : ''
+                } ${
+                  isLast ? 'rounded-tr-lg' : ''
+                } ${
+                  isActive
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg border-b-4 border-blue-700' 
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-200 border-b-4 border-transparent hover:border-gray-300 dark:hover:border-gray-500' 
                 }`}
               >
-                <Icon className="h-4 w-4 mr-2" /> 
-                <span>{tab.label}</span>
+                <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-white' : 'text-current'}`} /> 
+                <span className="font-semibold">{tab.label}</span>
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="ml-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                  <span className={`ml-3 text-xs font-bold px-2.5 py-1 rounded-full flex items-center justify-center min-w-[1.5rem] h-6 ${
+                    isActive 
+                      ? 'bg-white/20 text-white border border-white/30' 
+                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                  }`}>
                     {tab.count}
                   </span>
+                )}
+                {/* Active indicator */}
+                {isActive && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"></div>
                 )}
               </button>
             );
