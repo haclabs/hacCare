@@ -331,7 +331,8 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
   );
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Wound Assessment</h3>
         <div className="flex space-x-2">
@@ -678,6 +679,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
           </div>
         )}
       </div>
+      </div>
       
       {/* Image Annotation Modal */}
       {showImageAnnotation && (
@@ -766,6 +768,6 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };

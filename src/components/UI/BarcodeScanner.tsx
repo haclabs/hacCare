@@ -13,9 +13,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   className = ''
 }) => {
   const { buffer } = useBarcodeScanner(onScan, {
-    debug,
-    triggerKeys: ['Enter'],
-    minLength: 3
+    minLength: 3,
+    maxInputInterval: 300,
+    resetTimeout: 500
   });
 
   useEffect(() => {

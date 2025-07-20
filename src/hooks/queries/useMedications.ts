@@ -134,12 +134,16 @@ export function useDueMedications(patientId: string) {
 /**
  * Get overdue medications for a patient
  * Critical for patient safety alerts
+ * Excludes PRN medications as they are given only as needed
  */
 export function useOverdueMedications(patientId: string) {
   const { data: medications = [] } = usePatientMedications(patientId);
   
   const overdueMedications = medications.filter(med => {
     if (!med.next_due || med.status !== 'Active') return false;
+    
+    // PRN medications are never overdue since they're given only as needed
+    if (med.category === 'prn') return false;
     
     try {
       const now = new Date();
@@ -232,10 +236,10 @@ export function useCreateMedication() {
       }
       console.error('❌ Failed to create medication:', error);
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, _variables) => {
       console.log(`✅ Medication "${data.name}" created successfully`);
     },
-    onSettled: (data, error, variables) => {
+    onSettled: (_data, _error, variables) => {
       // Always refetch to ensure data consistency
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.patientMedications(variables.patient_id!) 
@@ -261,7 +265,7 @@ export function useUpdateMedication() {
       });
       
       let patientId: string | undefined;
-      for (const [queryKey, medications] of allQueries) {
+      for (const [_queryKey, medications] of allQueries) {
         if (medications) {
           const medication = medications.find(m => m.id === medicationId);
           if (medication) {
@@ -295,7 +299,7 @@ export function useUpdateMedication() {
       
       return { previousMedications, patientId };
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousMedications && context?.patientId) {
         queryClient.setQueryData(
@@ -308,7 +312,7 @@ export function useUpdateMedication() {
     onSuccess: (data) => {
       console.log(`✅ Medication "${data.name}" updated successfully`);
     },
-    onSettled: (data, error, variables, context) => {
+    onSettled: (_data, _error, _variables, context) => {
       // Always refetch to ensure data consistency
       if (context?.patientId) {
         queryClient.invalidateQueries({ 
@@ -337,7 +341,7 @@ export function useDeleteMedication() {
       let patientId: string | undefined;
       let medicationToDelete: Medication | undefined;
       
-      for (const [queryKey, medications] of allQueries) {
+      for (const [_queryKey, medications] of allQueries) {
         if (medications) {
           medicationToDelete = medications.find(m => m.id === medicationId);
           if (medicationToDelete) {
@@ -367,7 +371,7 @@ export function useDeleteMedication() {
       
       return { previousMedications, patientId, medicationToDelete };
     },
-    onError: (error, medicationId, context) => {
+    onError: (error, _medicationId, context) => {
       // Rollback on error
       if (context?.previousMedications && context?.patientId) {
         queryClient.setQueryData(
@@ -377,10 +381,10 @@ export function useDeleteMedication() {
       }
       console.error('❌ Failed to delete medication:', error);
     },
-    onSuccess: (data, medicationId, context) => {
+    onSuccess: (_data, _medicationId, context) => {
       console.log(`✅ Medication "${context?.medicationToDelete?.name}" deleted successfully`);
     },
-    onSettled: (data, error, medicationId, context) => {
+    onSettled: (_data, _error, _medicationId, context) => {
       // Always refetch to ensure data consistency
       if (context?.patientId) {
         queryClient.invalidateQueries({ 
@@ -432,7 +436,7 @@ export function useRecordMedicationAdministration() {
       
       return { previousMedications, patientId, medicationId };
     },
-    onError: (error, administration, context) => {
+    onError: (error, _administration, context) => {
       // Rollback on error
       if (context?.previousMedications && context?.patientId) {
         queryClient.setQueryData(
@@ -442,7 +446,7 @@ export function useRecordMedicationAdministration() {
       }
       console.error('❌ Failed to record medication administration:', error);
     },
-    onSuccess: (data, administration, context) => {
+    onSuccess: (_data, _administration, context) => {
       console.log(`✅ Medication administration recorded successfully`);
       
       // Invalidate medication history
@@ -452,7 +456,7 @@ export function useRecordMedicationAdministration() {
         });
       }
     },
-    onSettled: (data, error, administration, context) => {
+    onSettled: (_data, _error, _administration, context) => {
       // Always refetch to ensure data consistency
       if (context?.patientId) {
         queryClient.invalidateQueries({ 
@@ -473,7 +477,7 @@ export function useUpdateMedicationNextDue() {
   return useMutation({
     mutationFn: ({ medicationId, nextDue }: { medicationId: string; nextDue: string }) =>
       updateMedicationNextDue(medicationId, nextDue),
-    onSuccess: (data, { medicationId }) => {
+    onSuccess: (_data, { medicationId }) => {
       // Invalidate all medication queries to ensure consistency
       queryClient.invalidateQueries({ 
         queryKey: ['patients'] 
