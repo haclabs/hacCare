@@ -15,15 +15,18 @@ import {
 } from '../../lib/patientService';
 import { fetchPatientMedications } from '../../lib/medicationService';
 import { Patient, VitalSigns, PatientNote } from '../../types';
+import { useTenant } from '../../contexts/TenantContext';
 
 /**
- * Hook to fetch all patients
+ * Hook to fetch all patients with organization filtering
  * Replaces the patients state in PatientContext
  */
 export function usePatients() {
+  const { currentOrganization } = useTenant();
+  
   return useQuery({
-    queryKey: queryKeys.patients,
-    queryFn: fetchPatients,
+    queryKey: queryKeys.patients.concat(currentOrganization?.id || 'no-org'),
+    queryFn: () => fetchPatients(currentOrganization?.id),
     staleTime: 2 * 60 * 1000, // Patient list is fresh for 2 minutes
     select: (patients) => {
       // Sort patients by admission date (newest first)
@@ -31,6 +34,7 @@ export function usePatients() {
         new Date(b.admission_date).getTime() - new Date(a.admission_date).getTime()
       );
     },
+    enabled: !!currentOrganization?.id, // Only fetch when we have an organization
   });
 }
 
@@ -85,16 +89,24 @@ export function usePatientMedications(patientId: string | undefined) {
 
 /**
  * Mutation hook to create a new patient
- * Includes automatic cache updates
+ * Includes automatic cache updates and organization assignment
  */
 export function useCreatePatient() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useTenant();
   
   return useMutation({
-    mutationFn: createPatient,
+    mutationFn: (patientData: Patient) => {
+      // Ensure organization_id is set
+      if (!patientData.organization_id && currentOrganization) {
+        patientData.organization_id = currentOrganization.id;
+      }
+      return createPatient(patientData);
+    },
     onSuccess: (newPatient) => {
       // Add the new patient to the patients list cache
-      queryClient.setQueryData(queryKeys.patients, (oldPatients: Patient[] = []) => {
+      const queryKey = queryKeys.patients.concat(currentOrganization?.id || 'no-org');
+      queryClient.setQueryData(queryKey, (oldPatients: Patient[] = []) => {
         return [newPatient, ...oldPatients];
       });
       
@@ -102,7 +114,7 @@ export function useCreatePatient() {
       queryClient.setQueryData(queryKeys.patient(newPatient.id), newPatient);
       
       // Invalidate patients list to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+      queryClient.invalidateQueries({ queryKey });
     },
     onError: (error) => {
       console.error('Failed to create patient:', error);
@@ -116,6 +128,7 @@ export function useCreatePatient() {
  */
 export function useUpdatePatient() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useTenant();
   
   return useMutation({
     mutationFn: ({ patientId, updates }: { patientId: string; updates: Partial<Patient> }) => 
@@ -136,7 +149,8 @@ export function useUpdatePatient() {
       });
       
       // Update the patient in the patients list as well
-      queryClient.setQueryData(queryKeys.patients, (oldPatients: Patient[] = []) => {
+      const patientsQueryKey = queryKeys.patients.concat(currentOrganization?.id || 'no-org');
+      queryClient.setQueryData(patientsQueryKey, (oldPatients: Patient[] = []) => {
         return oldPatients.map(patient => 
           patient.id === patientId ? { ...patient, ...updates } : patient
         );
@@ -159,7 +173,8 @@ export function useUpdatePatient() {
     // Always refetch after error or success
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.patient(variables.patientId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+      const patientsQueryKey = queryKeys.patients.concat(currentOrganization?.id || 'no-org');
+      queryClient.invalidateQueries({ queryKey: patientsQueryKey });
     },
   });
 }
@@ -169,12 +184,14 @@ export function useUpdatePatient() {
  */
 export function useDeletePatient() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useTenant();
   
   return useMutation({
     mutationFn: deletePatient,
     onSuccess: (_, patientId) => {
       // Remove patient from patients list
-      queryClient.setQueryData(queryKeys.patients, (oldPatients: Patient[] = []) => {
+      const patientsQueryKey = queryKeys.patients.concat(currentOrganization?.id || 'no-org');
+      queryClient.setQueryData(patientsQueryKey, (oldPatients: Patient[] = []) => {
         return oldPatients.filter(patient => patient.id !== patientId);
       });
       
@@ -318,10 +335,12 @@ export function useDeletePatientNote() {
  */
 export function useRefreshPatientData() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useTenant();
   
   return {
     refreshAll: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients });
+      const patientsQueryKey = queryKeys.patients.concat(currentOrganization?.id || 'no-org');
+      queryClient.invalidateQueries({ queryKey: patientsQueryKey });
     },
     refreshPatient: (patientId: string) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.patient(patientId) });
