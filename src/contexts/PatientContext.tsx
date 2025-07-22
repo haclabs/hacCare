@@ -7,6 +7,7 @@ import {
   updatePatient as updatePatientDB, 
   deletePatient as deletePatientDB 
 } from '../lib/patientService';
+import { useTenant } from './TenantContext';
 
 /**
  * Patient Context Interface
@@ -27,12 +28,13 @@ const PatientContext = createContext<PatientContextType | undefined>(undefined);
 export { PatientContext };
 
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentOrganization } = useTenant();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Load patients from database
+   * Load patients from database with organization filtering
    */
   const loadPatients = async () => {
     try {
@@ -59,8 +61,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.log('📊 Fetching patients from Supabase...');
       
       try {
-        const dbPatients = await fetchPatients();
-        console.log(`✅ Loaded ${dbPatients.length} patients from database`);
+        // Fetch patients with organization filtering
+        const organizationId = currentOrganization?.id;
+        const dbPatients = await fetchPatients(organizationId);
+        console.log(`✅ Loaded ${dbPatients.length} patients from database${organizationId ? ` for organization: ${currentOrganization.name}` : ''}`);
         setPatients(dbPatients);
       } catch (fetchError: any) {
         console.error('❌ Error fetching patients from database:', fetchError);
@@ -85,10 +89,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Initialize patients on mount
+  // Initialize patients on mount and when organization changes
   useEffect(() => {
     loadPatients();
-  }, []);
+  }, [currentOrganization]);
 
   /**
    * Add a new patient
@@ -105,6 +109,11 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const isHealthy = await checkDatabaseHealth();
       if (!isHealthy) {
         throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
+      }
+
+      // Ensure patient has organization_id
+      if (!patient.organization_id && currentOrganization) {
+        patient.organization_id = currentOrganization.id;
       }
 
       console.log('➕ Creating patient in database...');

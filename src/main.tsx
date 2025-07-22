@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './contexts/auth/AuthContext';
+import { TenantProvider } from './contexts/TenantContext';
 import { PatientProvider } from './contexts/PatientContext';
 import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -28,13 +29,15 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
-            <PatientProvider>
-              <AlertProvider>
-                <ProtectedRoute>
-                  <App />
-                </ProtectedRoute>
-              </AlertProvider>
-            </PatientProvider>
+            <TenantProvider>
+              <PatientProvider>
+                <AlertProvider>
+                  <ProtectedRoute>
+                    <App />
+                  </ProtectedRoute>
+                </AlertProvider>
+              </PatientProvider>
+            </TenantProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

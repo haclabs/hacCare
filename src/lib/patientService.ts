@@ -26,6 +26,7 @@ export interface DatabasePatient {
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
   assigned_nurse: string;
+  organization_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -38,7 +39,8 @@ export interface DatabaseVitals {
   blood_pressure_diastolic: number;
   heart_rate: number; 
   respiratory_rate: number; 
-  oxygen_saturation: number; 
+  oxygen_saturation: number;
+  organization_id: string;
   recorded_at: string;
 }
 
@@ -94,6 +96,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
     emergency_contact_relationship: dbPatient.emergency_contact_relationship,
     emergency_contact_phone: dbPatient.emergency_contact_phone,
     assigned_nurse: dbPatient.assigned_nurse,
+    organization_id: dbPatient.organization_id,
     vitals: vitals ? convertDatabaseVitals(vitals) : [],
     medications: [], // Will be loaded separately
     notes: [] // Will be loaded separately
@@ -120,22 +123,29 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
     emergency_contact_name: patient.emergency_contact_name,
     emergency_contact_relationship: patient.emergency_contact_relationship,
     emergency_contact_phone: patient.emergency_contact_phone,
-    assigned_nurse: patient.assigned_nurse
+    assigned_nurse: patient.assigned_nurse,
+    organization_id: patient.organization_id!
   };
 };
 
 /**
- * Fetch all patients from database
+ * Fetch all patients from database (with optional organization filtering)
  */
-export const fetchPatients = async (): Promise<Patient[]> => {
+export const fetchPatients = async (organizationId?: string): Promise<Patient[]> => {
   try {
-    console.log('Fetching patients from database...');
+    console.log('Fetching patients from database...', organizationId ? `for organization: ${organizationId}` : 'all');
     
-    // Fetch patients
-    const { data: patients, error: patientsError } = await supabase
+    // Build query with optional organization filter
+    let query = supabase
       .from<DatabasePatient>('patients')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (organizationId) {
+      query = query.eq('organization_id', organizationId);
+    }
+
+    const { data: patients, error: patientsError } = await query;
 
     if (patientsError) {
       throw patientsError;
@@ -148,11 +158,17 @@ export const fetchPatients = async (): Promise<Patient[]> => {
 
     console.log(`Found ${patients.length} patients`);
 
-    // Fetch vitals for all patients
-    const { data: allVitals, error: vitalsError } = await supabase
+    // Fetch vitals for all patients with organization filter
+    let vitalsQuery = supabase
       .from<DatabaseVitals>('patient_vitals')
       .select('*')
       .order('recorded_at', { ascending: false });
+
+    if (organizationId) {
+      vitalsQuery = vitalsQuery.eq('organization_id', organizationId);
+    }
+
+    const { data: allVitals, error: vitalsError } = await vitalsQuery;
 
     if (vitalsError) {
       console.error('Error fetching vitals:', vitalsError);

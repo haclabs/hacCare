@@ -101,6 +101,21 @@ export const isSupabaseConfigured = hasValidConfig;
 export type UserRole = 'nurse' | 'admin' | 'super_admin';
 
 /**
+ * Organization Interface
+ */
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  settings: Record<string, any>;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
  * User Profile Interface
  */
 export interface UserProfile {
@@ -109,6 +124,8 @@ export interface UserProfile {
   first_name: string;
   last_name: string;
   role: UserRole;
+  organization_id?: string;
+  organization?: Organization;
   department?: string;
   license_number?: string;
   phone?: string;

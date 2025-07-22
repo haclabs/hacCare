@@ -16,9 +16,22 @@ export interface Patient {
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
   assigned_nurse: string;
+  organization_id?: string;
   vitals: VitalSigns[];
   medications: Medication[];
   notes: PatientNote[];
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  settings: Record<string, any>;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface VitalSigns {
