@@ -5,6 +5,7 @@ import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
+import { OrganizationSwitcher } from '../Admin/OrganizationSwitcher';
 
 interface HeaderProps {
   onAlertsClick: () => void;
@@ -90,6 +91,9 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcod
             <Clock className="h-4 w-4" />
             <span>{currentTime}</span>
           </div>
+
+          {/* Organization Switcher for Super Admins */}
+          <OrganizationSwitcher />
 
           <button
             onClick={onAlertsClick}
