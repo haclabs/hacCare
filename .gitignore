@@ -18,6 +18,11 @@ dist-ssr/
 .env.test.local
 .env.production.local
 
+# Test outputs and temporary files
+tests/temp-*
+tests/*.tmp
+tests/test-output-*
+
 # Editor directories and files
 .vscode/
 !.vscode/extensions.json

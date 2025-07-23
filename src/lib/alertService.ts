@@ -11,6 +11,7 @@ export interface DatabaseAlert {
   id: string;
   patient_id: string;
   patient_name: string;
+  tenant_id?: string;
   alert_type: 'medication_due' | 'vital_signs' | 'emergency' | 'lab_results' | 'discharge_ready';
   message: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -28,6 +29,7 @@ const convertDatabaseAlert = (dbAlert: DatabaseAlert): Alert => ({
   id: dbAlert.id,
   patientId: dbAlert.patient_id,
   patientName: dbAlert.patient_name,
+  tenant_id: dbAlert.tenant_id,
   type: dbAlert.alert_type === 'medication_due' ? 'Medication Due' :
         dbAlert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
         dbAlert.alert_type === 'emergency' ? 'Emergency' :

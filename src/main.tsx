@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/auth/AuthContext';
 import { PatientProvider } from './contexts/PatientContext';
 import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { queryClient } from './lib/queryClient';
 import App from './App.tsx';
@@ -28,13 +29,15 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
-            <PatientProvider>
-              <AlertProvider>
-                <ProtectedRoute>
-                  <App />
-                </ProtectedRoute>
-              </AlertProvider>
-            </PatientProvider>
+            <TenantProvider>
+              <PatientProvider>
+                <AlertProvider>
+                  <ProtectedRoute>
+                    <App />
+                  </ProtectedRoute>
+                </AlertProvider>
+              </PatientProvider>
+            </TenantProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

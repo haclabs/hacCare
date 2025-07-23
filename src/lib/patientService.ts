@@ -1,16 +1,20 @@
 import { supabase } from './supabase';
 import { Patient, VitalSigns, PatientNote } from '../types';
 import { logAction } from './auditService';
-import { mockPatients } from '../data/mockData';
 
 /**
- * Patient Service
+ *    // Fetch vitals for all patients
+    const { data: vitals, error: vitalsError } = await supabase
+      .from('patient_vitals')
+      .select('*')
+      .order('recorded_at', { ascending: false });ent Service
  * Handles all database operations for patient data
  */
 
 export interface DatabasePatient {
   id: string;
   patient_id: string;
+  tenant_id?: string;
   first_name: string;
   last_name: string;
   date_of_birth: string;
@@ -79,6 +83,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
   return {
     id: dbPatient.id,
     patient_id: dbPatient.patient_id,
+    tenant_id: dbPatient.tenant_id,
     first_name: dbPatient.first_name,
     last_name: dbPatient.last_name,
     date_of_birth: dbPatient.date_of_birth,
@@ -133,7 +138,7 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     
     // Fetch patients
     const { data: patients, error: patientsError } = await supabase
-      .from<DatabasePatient>('patients')
+      .from('patients')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -142,15 +147,15 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     }
 
     if (!patients || patients.length === 0) {
-      console.log('No patients found in database, using mock data');
-      return mockPatients;
+      console.log('No patients found in database');
+      return [];
     }
 
     console.log(`Found ${patients.length} patients`);
 
     // Fetch vitals for all patients
     const { data: allVitals, error: vitalsError } = await supabase
-      .from<DatabaseVitals>('patient_vitals')
+      .from('patient_vitals')
       .select('*')
       .order('recorded_at', { ascending: false });
 
@@ -176,8 +181,8 @@ export const fetchPatients = async (): Promise<Patient[]> => {
     return patientsWithVitals;
   } catch (error) {
     console.error('Error fetching patients:', error);
-    console.log('Database error, using mock data as fallback');
-    return mockPatients;
+    console.log('Database error, returning empty array');
+    return [];
   }
 };
 
@@ -190,34 +195,22 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
     
     // Fetch patient
     const { data: patient, error: patientError } = await supabase
-      .from<DatabasePatient>('patients')
+      .from('patients')
       .select('*')
       .eq('id', patientId)
       .single();
 
     if (patientError) {
       if (patientError.code === 'PGRST116') {
-        // No rows returned from database, try mock data
-        console.log('Patient not found in database, checking mock data:', patientId);
-        const mockPatient = mockPatients.find(p => p.id === patientId);
-        if (mockPatient) {
-          console.log('Found patient in mock data:', mockPatient.patient_id);
-          return mockPatient;
-        }
-        console.log('Patient not found in mock data either');
+        // No rows returned from database
+        console.log('Patient not found in database:', patientId);
         return null;
       }
       throw patientError;
     }
 
     if (!patient) {
-      console.log('Patient not found in database, checking mock data:', patientId);
-      const mockPatient = mockPatients.find(p => p.id === patientId);
-      if (mockPatient) {
-        console.log('Found patient in mock data:', mockPatient.patient_id);
-        return mockPatient;
-      }
-      console.log('Patient not found in mock data either');
+      console.log('Patient not found in database:', patientId);
       return null;
     }
 
@@ -225,7 +218,7 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
 
     // Fetch vitals for this patient
     const { data: vitals, error: vitalsError } = await supabase
-      .from<DatabaseVitals>('patient_vitals')
+      .from('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false });
@@ -241,13 +234,6 @@ export const fetchPatientById = async (patientId: string): Promise<Patient | nul
     return patientWithVitals;
   } catch (error) {
     console.error('Error fetching patient by ID:', error);
-    // Try mock data as final fallback
-    console.log('Database error, trying mock data for patient:', patientId);
-    const mockPatient = mockPatients.find(p => p.id === patientId);
-    if (mockPatient) {
-      console.log('Found patient in mock data:', mockPatient.patient_id);
-      return mockPatient;
-    }
     throw error;
   }
 };
@@ -260,7 +246,7 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
     const dbPatient = convertToDatabase(patient);
     
     const { data, error } = await supabase
-      .from<DatabasePatient>('patients')
+      .from('patients')
       .insert(dbPatient)
       .select()
       .single();
@@ -294,7 +280,7 @@ export const updatePatient = async (patient: Patient): Promise<Patient> => {
     const dbPatient = convertToDatabase(patient);
     
     const { data, error } = await supabase
-      .from<DatabasePatient>('patients')
+      .from('patients')
       .update(dbPatient)
       .eq('id', patient.id)
       .select()
@@ -328,13 +314,13 @@ export const deletePatient = async (patientId: string): Promise<void> => {
   try {
     // Get patient info before deletion for audit log
     const { data: patient } = await supabase
-      .from<DatabasePatient>('patients')
+      .from('patients')
       .select('patient_id')
       .eq('id', patientId)
       .single();
 
     const { error } = await supabase
-      .from<DatabasePatient>('patients')
+      .from('patients')
       .delete()
       .eq('id', patientId);
 
@@ -538,7 +524,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
     console.log('Storing temperature in Celsius:', vitals.temperature);
     
     const { error } = await supabase
-      .from<DatabaseVitals>('patient_vitals')
+      .from('patient_vitals')
       .insert({
         patient_id: patientId,
         temperature: vitals.temperature, // Store as Celsius
@@ -602,7 +588,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
     console.log('Fetching latest vitals for patient:', patientId);
     
     const { data, error } = await supabase
-      .from<DatabaseVitals>('patient_vitals')
+      .from('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false })
@@ -650,7 +636,7 @@ export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[
     console.log('Fetching notes for patient:', patientId);
     
     const { data, error } = await supabase
-      .from<any>('patient_notes')
+      .from('patient_notes')
       .select('*')
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false });
@@ -696,8 +682,8 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
     console.log('Clearing all vitals for patient:', patientId);
     
     // First, verify the patient exists to avoid deleting wrong records
-    const { data: patient, error: patientError } = await supabase
-      .from<DatabasePatient>('patients')
+    const { error: patientError } = await supabase
+      .from('patients')
       .select('id')
       .eq('id', patientId)
       .single();
@@ -709,7 +695,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
     
     // Delete all vitals for this patient with explicit patient_id check
     const { error } = await supabase
-      .from<DatabaseVitals>('patient_vitals')
+      .from('patient_vitals')
       .delete()
       .eq('patient_id', patientId);
 
@@ -733,7 +719,7 @@ export const fetchPatientVitalsHistory = async (patientId: string, limit: number
     console.log('Fetching vitals history for patient:', patientId);
     
     const { data, error } = await supabase
-      .from<DatabaseVitals>('patient_vitals')
+      .from('patient_vitals')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false })

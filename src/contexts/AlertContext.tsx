@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
 import { useAuth } from '../hooks/useAuth';
+import { useTenant } from './TenantContext';
 import { Alert } from '../types'; 
-import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
+import { filterByTenant } from '../lib/tenantService';
 
 /**
  * Deduplicate alerts based on patient, type, and message similarity
@@ -65,6 +67,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const [isRunningChecks, setIsRunningChecks] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const { user } = useAuth();
+  const { currentTenant, isMultiTenantAdmin, selectedTenantId } = useTenant();
 
   const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -102,8 +105,33 @@ export function AlertProvider({ children }: AlertProviderProps) {
       
       const fetchedAlerts = await fetchActiveAlerts();
       
+      // Filter alerts by tenant
+      let filteredAlerts = fetchedAlerts;
+      
+      if (isMultiTenantAdmin) {
+        if (selectedTenantId) {
+          // Super admin viewing a specific tenant
+          console.log('🔓 Super admin filtering alerts for tenant:', selectedTenantId);
+          filteredAlerts = filterByTenant(fetchedAlerts, selectedTenantId);
+          console.log(`Filtered ${fetchedAlerts.length} alerts to ${filteredAlerts.length} for selected tenant`);
+        } else {
+          // Super admin viewing all tenants
+          console.log('🔓 Super admin - showing all alerts from all tenants');
+          filteredAlerts = fetchedAlerts;
+        }
+      } else if (currentTenant) {
+        // Regular user - filter by their tenant
+        console.log('🏢 Filtering alerts for user tenant:', currentTenant.name);
+        filteredAlerts = filterByTenant(fetchedAlerts, currentTenant.id);
+        console.log(`Filtered ${fetchedAlerts.length} alerts to ${filteredAlerts.length} for tenant`);
+      } else {
+        // User has no tenant
+        console.log('⚠️ User has no tenant - showing no alerts');
+        filteredAlerts = [];
+      }
+      
       // Deduplicate alerts based on patient, type, and similar messages
-      const deduplicatedAlerts = deduplicateAlerts(fetchedAlerts);
+      const deduplicatedAlerts = deduplicateAlerts(filteredAlerts);
       
       // Log each alert for debugging
       deduplicatedAlerts.forEach(alert => {
@@ -290,6 +318,13 @@ export function AlertProvider({ children }: AlertProviderProps) {
       }
     };
   }, [isSupabaseConfigured]);
+
+  // Refresh alerts when tenant selection changes
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      refreshAlerts();
+    }
+  }, [currentTenant, selectedTenantId, isMultiTenantAdmin]);
 
   const value: AlertContextType = {
     alerts,

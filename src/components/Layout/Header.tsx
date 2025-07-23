@@ -5,6 +5,7 @@ import { useAlerts } from '../../hooks/useAlerts';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
+import { TenantSwitcher } from './TenantSwitcher';
 
 interface HeaderProps {
   onAlertsClick: () => void;
@@ -90,6 +91,9 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, dbError, onBarcod
             <Clock className="h-4 w-4" />
             <span>{currentTime}</span>
           </div>
+
+          {/* Tenant Switcher for Super Admins */}
+          <TenantSwitcher />
 
           <button
             onClick={onAlertsClick}
