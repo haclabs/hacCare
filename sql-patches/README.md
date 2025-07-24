@@ -1,51 +1,55 @@
-# SQL Patches for hacCare Multi-Tenant System
+# SQL Patches Directory
 
-This folder contains SQL patches that were created to fix various issues in the hacCare multi-tenant system. Below is the order in which they should be applied to a fresh Supabase instance:
+This directory contains SQL scripts for database schema changes, fixes, and maintenance.
 
-## Essential Patches (Run in Order)
+## Structure
 
-### 1. Core Database Setup
-- **`fix-tenant-constraint.sql`** - Removes NOT NULL constraint from tenants.admin_user_id
-- **`setup-profiles-and-tables.sql`** - Creates profiles, tenants, and tenant_users tables with proper structure
-- **`quick-fix-function.sql`** - Adds the essential assign_user_to_tenant function
+- **`setup/`** - Initial setup and configuration scripts
+- **`fixes/`** - Bug fixes, patches, and maintenance scripts  
+- **`diagnostics/`** - Scripts for debugging and checking database state
 
-### 2. RLS Policy Fixes
-- **`fix-rls-recursion.sql`** - Fixes infinite recursion in Row Level Security policies
-- **`fix-user-lookup-functions.sql`** - Creates robust user lookup functions
+## Usage
 
-## Optional/Diagnostic Patches
+⚠️ **Important**: Always backup your database before running any SQL patches!
 
-### Debugging & Testing
-- **`debug-user-creation.sql`** - Diagnostic queries to check user creation issues
-- **`diagnose-patient-user-issue.sql`** - Diagnostic queries for patient/user data integrity
-- **`test-user-creation-console.js`** - Browser console script to test user creation process
+### Running SQL Files
 
-### Additional Enhancements
-- **`fix-missing-function.sql`** - Complete version with additional helper functions
-- **`enhanced-create-tenant-modal.tsx`** - React component example for better tenant creation UI
+You can run these files using your preferred database client or command line:
 
-## Quick Setup for New Instances
+```bash
+# Using psql (PostgreSQL)
+psql -h your-host -d your-database -f sql-patches/setup/setup_multi_tenant.sql
 
-If setting up a fresh Supabase instance, run these patches in order:
+# Using Supabase CLI
+supabase db reset
+supabase db push
+```
 
-1. `fix-tenant-constraint.sql`
-2. `setup-profiles-and-tables.sql`
-3. `quick-fix-function.sql`
-4. `fix-rls-recursion.sql`
-5. `fix-user-lookup-functions.sql`
+### File Naming Convention
 
-## Issues Fixed
+- **`setup-*`** - Initial setup scripts
+- **`fix-*`** - Bug fixes and patches
+- **`check-*`** - Diagnostic queries (read-only)
+- **`debug-*`** - Debugging queries
+- **`diagnose-*`** - Problem diagnosis queries
+- **`cleanup-*`** - Data cleanup scripts
+- **`migrate-*`** - Data migration scripts
 
-- ✅ Missing assign_user_to_tenant function
-- ✅ Infinite recursion in RLS policies
-- ✅ Tenant creation requiring UIDs instead of emails
-- ✅ User creation not showing up in lists
-- ✅ Database constraint violations
-- ✅ Missing profiles table and auto-profile creation
+## Safety Guidelines
 
-## Notes
+1. Always test patches on a development database first
+2. Create backups before applying fixes
+3. Review the SQL content before execution
+4. Run diagnostic scripts first to understand current state
+5. Apply patches in the correct order when dependencies exist
 
-- All patches are designed to be idempotent (safe to run multiple times)
-- Patches include proper error handling and fallbacks
-- Functions use SECURITY DEFINER to bypass RLS when needed
-- Created for remote Supabase instances (not local development)
+## Directory Contents
+
+### Setup Scripts
+Scripts for initial database setup and configuration.
+
+### Fix Scripts  
+Scripts to resolve specific issues and apply patches.
+
+### Diagnostic Scripts
+Read-only scripts to check database state and diagnose issues.

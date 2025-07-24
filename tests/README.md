@@ -1,67 +1,61 @@
-# Test Files Documentation
+# Tests Directory
 
-This directory contains test files for the hacCare multi-tenant system.
+This directory contains organized test files for the hacCare multi-tenant system.
 
-## 🧪 Core Tests
+## Structure
 
-### `test-tenant-creation.mjs`
-- **Purpose**: Tests basic tenant creation functionality
-- **Use**: Verify that super admins can create tenants
-- **Run**: `node tests/test-tenant-creation.mjs`
+- **`integration/`** - End-to-end integration tests
+- **`unit/`** - Unit tests for specific components/functions  
+- **`utilities/`** - Utility tests and test helpers
+- **`run-tests.js`** - Test runner script
 
-### `test-super-admin-only.mjs`
-- **Purpose**: Confirms only super admins can create tenants
-- **Use**: Validate RLS policies are working correctly
-- **Run**: `node tests/test-super-admin-only.mjs`
+## Running Tests
 
-### `test-final-tenant-creation.mjs`
-- **Purpose**: Comprehensive tenant creation tests for different user roles
-- **Use**: Full regression testing of tenant creation permissions
-- **Run**: `node tests/test-final-tenant-creation.mjs`
-
-## 🔧 Utility Tests
-
-### `check-rls-status.mjs`
-- **Purpose**: Check current RLS policies on tenants table
-- **Use**: Debug RLS policy issues
-- **Run**: `node tests/check-rls-status.mjs`
-
-### `show-available-admins.js`
-- **Purpose**: Display available users for tenant admin selection
-- **Use**: Help with tenant creation by showing admin options
-- **Run**: `node tests/show-available-admins.js`
-
-## 🚀 Setup/Migration Tests
-
-### `apply-rls-fix.mjs`
-- **Purpose**: Apply RLS policies for tenant creation
-- **Use**: One-time setup or policy fixes
-- **Note**: Only run if RLS policies need to be reapplied
-
-## 📊 Quick Test Commands
-
+### All Tests
 ```bash
-# Test tenant creation (recommended)
-node tests/test-tenant-creation.mjs
-
-# Check available admin users
-node tests/show-available-admins.js
-
-# Full tenant permission testing
-node tests/test-final-tenant-creation.mjs
+node tests/run-tests.js
 ```
 
-## 🗑️ When to Clean Up
+### Specific Test Categories
+```bash
+# Integration tests
+node tests/integration/test-final-tenant-creation.mjs
 
-Consider removing these files when:
-- ✅ Your tenant system is fully stable
-- ✅ You have proper unit tests in place
-- ✅ You haven't needed them for 3+ months
-- ✅ Your team is confident in the tenant functionality
+# Unit tests  
+node tests/unit/test-connection.js
 
-## 📝 Notes
+# Utility tests
+node tests/utilities/test-user-creation.js
+```
 
-- All tests use the actual Supabase database
-- Tests clean up after themselves (delete test tenants)
-- Some tests require authentication with specific users
-- Keep these files during active development
+## Test Categories
+
+### Integration Tests
+Full end-to-end tests that verify complete workflows:
+- Tenant creation and management
+- User permissions and RLS
+- Super admin functionality
+
+### Unit Tests
+Focused tests for specific components:
+- Database connections
+- Individual functions
+- Foreign key constraints
+
+### Utility Tests
+Helper tests and maintenance utilities:
+- Data deduplication
+- User creation flows
+- Dashboard updates
+
+## Quick Test Commands
+
+```bash
+# Test tenant system
+node tests/integration/test-final-tenant-creation.mjs
+
+# Test database connection
+node tests/unit/test-connection.js
+
+# Test user creation
+node tests/utilities/test-user-creation.js
