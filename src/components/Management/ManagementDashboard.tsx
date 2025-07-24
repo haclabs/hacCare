@@ -11,6 +11,7 @@ import {
   permanentlyDeleteTenant,
   getTenantUsers
 } from '../../lib/tenantService';
+import { getTenantPatientStats } from '../../lib/multiTenantPatientService';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
 export const ManagementDashboard: React.FC = () => {
@@ -22,6 +23,11 @@ export const ManagementDashboard: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [tenantUsers, setTenantUsers] = useState<TenantUser[]>([]);
+  const [tenantPatientStats, setTenantPatientStats] = useState<{
+    total: number;
+    by_condition: Record<string, number>;
+    recent_admissions: number;
+  } | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -53,15 +59,28 @@ export const ManagementDashboard: React.FC = () => {
 
   const handleSelectTenant = async (tenant: Tenant) => {
     setSelectedTenant(tenant);
+    
     try {
-      const { data: users, error } = await getTenantUsers(tenant.id);
-      if (error) {
-        console.error('Error loading tenant users:', error);
+      // Load tenant users
+      const { data: users, error: usersError } = await getTenantUsers(tenant.id);
+      
+      if (usersError) {
+        console.error('Error loading tenant users:', usersError);
       } else {
         setTenantUsers(users || []);
       }
+
+      // Load tenant patient stats
+      const { data: patientStats, error: patientError } = await getTenantPatientStats(tenant.id);
+      
+      if (patientError) {
+        console.error('❌ Error loading tenant patient stats:', patientError);
+      } else {
+        console.log('✅ Loaded patient stats:', patientStats);
+        setTenantPatientStats(patientStats);
+      }
     } catch (err) {
-      console.error('Error loading tenant users:', err);
+      console.error('💥 Exception loading tenant data:', err);
     }
   };
 
@@ -325,12 +344,22 @@ export const ManagementDashboard: React.FC = () => {
                 <p className="text-gray-900 capitalize">{selectedTenant.subscription_plan}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Max Users</label>
-                <p className="text-gray-900">{selectedTenant.max_users}</p>
+                <label className="text-sm font-medium text-gray-500">Users</label>
+                <p className="text-gray-900">
+                  {tenantUsers.length} / {selectedTenant.max_users}
+                  {tenantUsers.length >= selectedTenant.max_users && (
+                    <span className="text-red-600 text-sm ml-1">(At Limit)</span>
+                  )}
+                </p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Max Patients</label>
-                <p className="text-gray-900">{selectedTenant.max_patients}</p>
+                <label className="text-sm font-medium text-gray-500">Patients</label>
+                <p className="text-gray-900">
+                  {tenantPatientStats?.total || 0} / {selectedTenant.max_patients}
+                  {(tenantPatientStats?.total || 0) >= selectedTenant.max_patients && (
+                    <span className="text-red-600 text-sm ml-1">(At Limit)</span>
+                  )}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">Created</label>
@@ -341,19 +370,53 @@ export const ManagementDashboard: React.FC = () => {
               <div className="mt-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Users ({tenantUsers.length})</h3>
                 <div className="space-y-2">
-                  {tenantUsers.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{(user as any).profiles?.full_name || 'Unknown User'}</p>
-                        <p className="text-sm text-gray-500">{(user as any).profiles?.email}</p>
+                  {tenantUsers.length > 0 ? (
+                    tenantUsers.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {user.user_profiles?.full_name || 'Unknown User'}
+                          </p>
+                          <p className="text-sm text-gray-500">{user.user_profiles?.email || 'No email'}</p>
+                        </div>
+                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                          {user.role}
+                        </span>
                       </div>
-                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                        {user.role}
-                      </span>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No users assigned to this tenant</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
+
+              {/* Tenant Patients Summary */}
+              {tenantPatientStats && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Patients ({tenantPatientStats.total})</h3>
+                  {tenantPatientStats.total > 0 ? (
+                    <div className="space-y-2">
+                      {Object.entries(tenantPatientStats.by_condition).map(([condition, count]) => (
+                        <div key={condition} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <span className="text-sm text-gray-700">{condition}</span>
+                          <span className="text-sm font-medium text-gray-900">{count}</span>
+                        </div>
+                      ))}
+                      <div className="mt-2 p-2 bg-blue-50 rounded">
+                        <span className="text-xs text-blue-600">Recent admissions (30 days): {tenantPatientStats.recent_admissions}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <Building2 className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No patients in this tenant</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-6 text-center text-gray-500">

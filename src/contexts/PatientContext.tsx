@@ -154,10 +154,25 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       let newPatient: Patient;
       
       if (isMultiTenantAdmin) {
-        // Super admins can create patients without tenant restriction
-        // But they should specify which tenant the patient belongs to
-        console.log('🔓 Super admin creating patient');
-        newPatient = await createPatientDB(patient);
+        if (selectedTenantId) {
+          // Super admin creating patient for a specific tenant
+          console.log('🔓 Super admin creating patient for selected tenant:', selectedTenantId);
+          const { data, error } = await createPatientWithTenant(patient, selectedTenantId);
+          
+          if (error) {
+            throw error;
+          }
+          
+          if (!data) {
+            throw new Error('Failed to create patient - no data returned');
+          }
+          
+          newPatient = data;
+        } else {
+          // Super admin creating patient without tenant restriction (global)
+          console.log('🔓 Super admin creating global patient');
+          newPatient = await createPatientDB(patient);
+        }
       } else if (currentTenant) {
         // Regular users create patients in their tenant
         console.log('🏢 Creating patient for tenant:', currentTenant.name);

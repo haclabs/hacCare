@@ -100,7 +100,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
     emergency_contact_phone: dbPatient.emergency_contact_phone,
     assigned_nurse: dbPatient.assigned_nurse,
     vitals: vitals ? convertDatabaseVitals(vitals) : [],
-    medications: [], // Will be loaded separately
+    medications: [], // Always initialize as empty array - medications loaded separately
     notes: [] // Will be loaded separately
   };
 };

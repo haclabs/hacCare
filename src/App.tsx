@@ -6,7 +6,7 @@ import PatientCard from './components/Patients/records/PatientCard';
 import { PatientDetail } from './components/Patients/records/PatientDetail';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
-import { usePatients } from './hooks/queries/usePatients';
+import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
@@ -45,8 +45,8 @@ function App() {
   const [showAlerts, setShowAlerts] = useState(false);
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
-  // Get patients using React Query hooks
-  const { data: patients = [], error: dbError } = usePatients();
+  // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
+  const { patients = [], error: dbError } = useMultiTenantPatients();
   
   // Get alerts from AlertContext (avoid React Query conflicts)
   const { alerts } = useAlerts();

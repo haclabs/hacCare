@@ -150,16 +150,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
           </div>
         )}
 
-        {/* Active Medications Count */}
+        {/* Active Medications Count - Note: medications are loaded separately */}
         <div className="flex items-center space-x-4">
-          {patient.medications && patient.medications.filter(med => med.status === 'Active').length > 0 && (
-            <div className="flex items-center space-x-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                {patient.medications.filter(med => med.status === 'Active').length} Active Meds
-              </span>
-            </div>
-          )}
+          {/* Removed medications display as it should be handled by separate medication service */}
           
           {/* Days in hospital */}
           <div className="text-xs text-gray-500 dark:text-gray-400">

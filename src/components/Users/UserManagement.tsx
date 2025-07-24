@@ -10,6 +10,7 @@ export const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const { hasRole } = useAuth();
 
   useEffect(() => {
@@ -21,7 +22,6 @@ export const UserManagement: React.FC = () => {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
-        .eq('is_active', true)  // Only fetch active users
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -92,12 +92,20 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    // Apply search filter
+    const matchesSearch = user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Apply status filter
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && user.is_active) ||
+      (statusFilter === 'inactive' && !user.is_active);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) {
     return (
@@ -130,15 +138,38 @@ export const UserManagement: React.FC = () => {
 
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="p-6 border-b border-gray-200">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+          <div className="flex gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Users</option>
+                <option value="active">Active Users</option>
+                <option value="inactive">Inactive Users</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Summary */}
+          <div className="mt-4 text-sm text-gray-600">
+            Showing {filteredUsers.length} of {users.length} users
+            {statusFilter !== 'all' && (
+              <span className="ml-2">
+                ({statusFilter === 'active' ? 'active only' : 'inactive only'})
+              </span>
+            )}
           </div>
         </div>
 
@@ -170,11 +201,14 @@ export const UserManagement: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user.id} className={`hover:bg-gray-50 ${!user.is_active ? 'opacity-60 bg-gray-50' : ''}`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className={`text-sm font-medium ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
                         {user.first_name} {user.last_name}
+                        {!user.is_active && (
+                          <span className="ml-2 text-xs text-red-600 font-normal">(Inactive)</span>
+                        )}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                       {user.license_number && (
@@ -188,7 +222,7 @@ export const UserManagement: React.FC = () => {
                       {getRoleLabel(user.role)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
                     {user.department || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -198,7 +232,7 @@ export const UserManagement: React.FC = () => {
                       {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-500' : 'text-gray-400'}`}>
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   {hasRole(['admin', 'super_admin']) && (
@@ -241,7 +275,23 @@ export const UserManagement: React.FC = () => {
         {filteredUsers.length === 0 && (
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No users found</p>
+            {searchTerm ? (
+              <div>
+                <p className="text-gray-500 mb-2">No users found matching "{searchTerm}"</p>
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="text-blue-600 hover:text-blue-700 text-sm"
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : statusFilter === 'active' ? (
+              <p className="text-gray-500">No active users found</p>
+            ) : statusFilter === 'inactive' ? (
+              <p className="text-gray-500">No inactive users found</p>
+            ) : (
+              <p className="text-gray-500">No users found</p>
+            )}
           </div>
         )}
       </div>

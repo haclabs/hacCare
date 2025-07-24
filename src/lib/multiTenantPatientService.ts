@@ -67,14 +67,17 @@ export async function getPatientsByTenant(tenantId: string): Promise<{ data: Pat
  * Create a new patient with tenant association
  */
 export async function createPatientWithTenant(
-  patientData: Omit<Patient, 'id' | 'vitals' | 'medications' | 'notes'>, 
+  patientData: any, // Accept any data and filter it
   tenantId: string
 ): Promise<{ data: Patient | null; error: any }> {
   try {
     console.log('👤 Creating new patient for tenant:', tenantId);
 
+    // Remove fields that don't belong in the patients table
+    const { medications, vitals, notes, id, ...patientDataForDB } = patientData;
+
     const dbPatient = {
-      ...patientData,
+      ...patientDataForDB,
       tenant_id: tenantId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -105,7 +108,7 @@ export async function createPatientWithTenant(
  */
 export async function updatePatientWithTenant(
   patientId: string, 
-  updates: Partial<Patient>, 
+  updates: any, // Accept any data and filter it
   tenantId: string
 ): Promise<{ data: Patient | null; error: any }> {
   try {
@@ -123,9 +126,12 @@ export async function updatePatientWithTenant(
       return { data: null, error: { message: 'Patient not found or access denied' } };
     }
 
+    // Remove fields that don't belong in the patients table
+    const { medications, vitals, notes, id, ...updatesForDB } = updates;
+
     const { data: patient, error } = await supabase
       .from('patients')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...updatesForDB, updated_at: new Date().toISOString() })
       .eq('id', patientId)
       .eq('tenant_id', tenantId)
       .select()
@@ -400,7 +406,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: any[]): Pat
     emergency_contact_phone: dbPatient.emergency_contact_phone,
     assigned_nurse: dbPatient.assigned_nurse,
     vitals: vitals ? convertDatabaseVitals(vitals) : [],
-    medications: [], // Will be loaded separately
+    medications: [], // Always initialize as empty array - medications loaded separately
     notes: [] // Will be loaded separately
   };
 };

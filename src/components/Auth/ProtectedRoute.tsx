@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -9,24 +10,30 @@ import { User, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRoles?: string[];
+  redirectTo?: string;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRoles = [] 
+  requiredRoles = [],
+  redirectTo
 }) => {
   const { user, profile, loading, hasRole, createProfile, signOut } = useAuth();
   const [creatingProfile, setCreatingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
 
-  console.log('ProtectedRoute state:', { 
-    user: !!user, 
-    profile: !!profile, 
-    loading,
-    isSupabaseConfigured,
-    userEmail: user?.email,
-    profileRole: profile?.role 
-  });
+  useEffect(() => {
+    // Only log in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ProtectedRoute - Auth state:', { 
+        hasUser: !!user, 
+        hasProfile: !!profile,
+        userRole: profile?.role,
+        requiredRoles,
+        isSupabaseConfigured
+      });
+    }
+  }, [user, profile, requiredRoles]);
 
   // Show loading spinner while auth is initializing
   if (loading) {
@@ -40,13 +47,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // If no user, show login
   if (!user) {
-    console.log('No user found, showing login form');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('No user found, showing login form');
+    }
     return <LoginForm />;
   }
 
   // If user exists but no profile, show profile creation screen
   if (user && !profile) {
-    console.log('User exists but no profile found');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('User exists but no profile found');
+    }
     
     const handleCreateProfile = async () => {
       setCreatingProfile(true);
@@ -148,20 +159,63 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Check role permissions
-  if (requiredRoles.length > 0 && !hasRole(requiredRoles)) {
-    console.log('User does not have required roles:', requiredRoles);
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600">You don't have permission to access this area.</p>
-          <p className="text-sm text-gray-500 mt-2">Your role: {profile?.role}</p>
+  // Check role-based access if roles are specified
+  if (requiredRoles.length > 0) {
+    const userRole = profile?.role;
+    const hasRequiredRole = requiredRoles.some(role => hasRole([role]));
+
+    if (!hasRequiredRole) {
+      // If redirectTo is specified, redirect unauthorized users
+      if (redirectTo) {
+        return <Navigate to={redirectTo} replace />;
+      }
+
+      // Otherwise, show access denied message
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
+            <div className="mb-6">
+              <svg 
+                className="mx-auto h-16 w-16 text-red-500" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" 
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Access Denied
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You don't have the required permissions to access this page.
+            </p>
+            <p className="text-sm text-gray-500">
+              Required role(s): {requiredRoles.join(', ')}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Your current role: {userRole || 'None'}
+            </p>
+            <button 
+              onClick={() => window.history.back()}
+              className="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
-  console.log('Auth successful, rendering main app');
+  // User is authenticated, has profile, and has required role (if specified)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Auth successful, rendering main app');
+  }
   return <>{children}</>;
 };

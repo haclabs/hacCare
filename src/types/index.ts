@@ -18,7 +18,7 @@ export interface Patient {
   emergency_contact_phone: string;
   assigned_nurse: string;
   vitals: VitalSigns[];
-  medications: Medication[];
+  medications?: Medication[]; // Optional since medications are loaded separately
   notes: PatientNote[];
 }
 
@@ -97,7 +97,7 @@ export interface Alert {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   timestamp: string;
   acknowledged: boolean;
-  tenant_id?: string;
+  tenant_id: string; // Made required for multi-tenant support
 }
 
 // Multi-tenant types

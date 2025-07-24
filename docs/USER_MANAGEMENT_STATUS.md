@@ -1,5 +1,11 @@
 # User Management Issue Resolution Summary
 
+## Latest Update (July 24, 2025)
+🎉 **NEW FIX**: Added status filter functionality to view inactive users
+- **Issue**: Users were not visible because they were marked as inactive
+- **Solution**: Removed active-only filter and added status dropdown ("All Users", "Active Users", "Inactive Users")
+- **UI Improvements**: Enhanced visual distinction for inactive users with grayed-out styling
+
 ## Current Status
 
 ✅ **Fixed Issues:**

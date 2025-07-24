@@ -19,18 +19,20 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
-// Log configuration status for debugging (with more details for troubleshooting)
-console.log('🔧 Supabase Environment Check:');
-if (supabaseUrl) {
-  console.log('  URL:', `${supabaseUrl.substring(0, 50)}...`);
-} else {
-  console.error('  URL: Not set - Please check your .env file');
-}
+// Log configuration status for debugging (development only)
+if (import.meta.env.DEV) {
+  console.log('🔧 Supabase Environment Check:');
+  if (supabaseUrl) {
+    console.log('  URL:', `${supabaseUrl.substring(0, 50)}...`);
+  } else {
+    console.error('  URL: Not set - Please check your .env file');
+  }
 
-if (supabaseAnonKey) {
-  console.log('  Key:', `${supabaseAnonKey.substring(0, 30)}...`);
-} else {
-  console.error('  Key: Not set - Please check your .env file');
+  if (supabaseAnonKey) {
+    console.log('  Key:', `${supabaseAnonKey.substring(0, 30)}...`);
+  } else {
+    console.error('  Key: Not set - Please check your .env file');
+  }
 }
 
 /**
@@ -44,16 +46,20 @@ const isValidUrl = supabaseUrl && (
 const isValidKey = supabaseAnonKey && supabaseAnonKey.length > 50;
 const hasValidConfig = isValidUrl && isValidKey;
 
-console.log('✅ Configuration valid:', hasValidConfig);
+if (import.meta.env.DEV) {
+  console.log('✅ Configuration valid:', hasValidConfig);
+}
 
 if (!hasValidConfig) {
-  console.error('⚠️ Missing or invalid Supabase environment variables:', {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined'
-  });
-  console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
-  console.warn('🔗 Get your credentials from: https://app.supabase.com/project/[your-project]/settings/api');
+  if (import.meta.env.DEV) {
+    console.error('⚠️ Missing or invalid Supabase environment variables:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined'
+    });
+    console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
+    console.warn('🔗 Get your credentials from: https://app.supabase.com/project/[your-project]/settings/api');
+  }
 }
 
 /**

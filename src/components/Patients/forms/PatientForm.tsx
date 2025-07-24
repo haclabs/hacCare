@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, User, MapPin, Phone, AlertTriangle, Save } from 'lucide-react';
+import { X, User, MapPin, Phone, AlertTriangle, Save, ChevronDown } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { Patient } from '../../types';
+import { Patient } from '../../../types';
+import { useTenantNurses } from '../../../hooks/useTenantNurses';
 
 /**
  * Patient Form Component
@@ -17,6 +18,9 @@ interface PatientFormProps {
 }
 
 export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSave }) => {
+  // Get nurses for the current tenant
+  const { nurses, loading: nursesLoading, error: nursesError } = useTenantNurses();
+
   // Form state management
   const [formData, setFormData] = useState<Partial<Patient>>({
     patient_id: patient?.patient_id || generatePatientId(),
@@ -105,7 +109,11 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
     if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required';
     if (!formData.room_number?.trim()) newErrors.room_number = 'Room number is required';
     if (!formData.diagnosis?.trim()) newErrors.diagnosis = 'Diagnosis is required';
-    if (!formData.assigned_nurse?.trim()) newErrors.assigned_nurse = 'Assigned nurse is required';
+    if (!formData.assigned_nurse?.trim()) {
+      newErrors.assigned_nurse = nurses.length === 0 
+        ? 'No nurses available for this tenant. Contact your administrator.'
+        : 'Assigned nurse is required';
+    }
 
     // Emergency contact validation
     if (!formData.emergency_contact_name?.trim()) {
@@ -391,18 +399,64 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Assigned Nurse *
                 </label>
-                <input
-                  type="text"
-                  value={formData.assigned_nurse}
-                  onChange={(e) => updateField('assigned_nurse', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    errors.assigned_nurse ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  placeholder="Sarah Johnson"
-                  required
-                />
+                <div className="relative">
+                  <select
+                    value={formData.assigned_nurse}
+                    onChange={(e) => updateField('assigned_nurse', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none pr-10 ${
+                      errors.assigned_nurse ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    required
+                    disabled={nursesLoading}
+                  >
+                    <option value="">
+                      {nursesLoading ? 'Loading nurses...' : 'Select a nurse'}
+                    </option>
+                    
+                    {/* Show current assigned nurse if not in the list (for backward compatibility) */}
+                    {formData.assigned_nurse && 
+                     !nurses.find(n => n.name === formData.assigned_nurse) && 
+                     !nursesLoading && (
+                      <option value={formData.assigned_nurse}>
+                        {formData.assigned_nurse} (Currently assigned)
+                      </option>
+                    )}
+                    
+                    {/* Show available nurses */}
+                    {nurses.map((nurse) => (
+                      <option key={nurse.id} value={nurse.name}>
+                        {nurse.name}
+                        {nurse.department && ` - ${nurse.department}`}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+                
+                {/* Show various status messages */}
+                {nursesError && (
+                  <p className="text-orange-600 dark:text-orange-400 text-xs mt-1">
+                    ⚠️ {nursesError}
+                  </p>
+                )}
+                
+                {formData.assigned_nurse && 
+                 !nurses.find(n => n.name === formData.assigned_nurse) && 
+                 !nursesLoading && 
+                 !nursesError && (
+                  <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
+                    ℹ️ Currently assigned nurse may not be in this tenant anymore.
+                  </p>
+                )}
+                
                 {errors.assigned_nurse && (
                   <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.assigned_nurse}</p>
+                )}
+                
+                {nurses.length === 0 && !nursesLoading && !nursesError && (
+                  <p className="text-yellow-600 dark:text-yellow-400 text-xs mt-1">
+                    No nurses found for this tenant. Contact your administrator.
+                  </p>
                 )}
               </div>
             </div>

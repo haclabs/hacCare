@@ -150,11 +150,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
         </div>
       </div>
 
-        </div>
-      </div>
-
       {/* Enhanced Footer with Alerts and Medications - Fixed at Bottom */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">      {/* Enhanced Footer with Alerts and Medications - Fixed at Bottom */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
         {/* Allergy Indicator */}
         <div className="flex items-center space-x-2">
@@ -168,16 +164,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
           )}
         </div>
 
-        {/* Active Medications Count and Days */}
+        {/* Active Medications Count - Note: medications are loaded separately */}
         <div className="flex items-center space-x-2 text-right">
-          {patient.medications && patient.medications.filter(med => med.status === 'Active').length > 0 && (
-            <div className="flex items-center space-x-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                {patient.medications.filter(med => med.status === 'Active').length} Meds
-              </span>
-            </div>
-          )}
+          {/* Removed medications display as it should be handled by separate medication service */}
           
           {/* Days in hospital */}
           <div className="text-xs text-gray-500 dark:text-gray-400">

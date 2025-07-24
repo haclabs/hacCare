@@ -434,33 +434,35 @@ export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUs
     }
 
     // Transform the data to match the expected TenantUser interface
-    const tenantUsers: TenantUser[] = data?.map((row: any) => ({
-      id: `${row.user_id}-${row.tenant_id}`, // Generate a unique ID
-      user_id: row.user_id,
-      tenant_id: row.tenant_id,
-      role: row.role,
-      permissions: row.permissions, // This is now TEXT[] instead of JSONB
-      is_active: row.is_active,
-      created_at: new Date().toISOString(), // These fields might not be returned by RPC
-      updated_at: new Date().toISOString(),
-      user_profiles: {
-        id: row.user_id,
-        email: row.email,
-        first_name: row.first_name,
-        last_name: row.last_name,
+    const tenantUsers: TenantUser[] = data?.map((row: any) => {
+      console.log('🛠️ Processing row:', row);
+      
+      const user = {
+        id: `${row.user_id}-${row.tenant_id}`, // Generate a unique ID
+        user_id: row.user_id,
+        tenant_id: row.tenant_id,
         role: row.role,
-        department: row.department,
-        license_number: row.license_number,
-        phone: row.phone,
-        is_active: row.user_is_active,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    })) || [];
+        permissions: row.permissions, // This is now TEXT[] instead of JSONB
+        is_active: row.is_active,
+        created_at: new Date().toISOString(), // These fields might not be returned by RPC
+        updated_at: new Date().toISOString(),
+        user_profiles: {
+          id: row.user_id,
+          email: row.email,
+          full_name: row.first_name && row.last_name 
+            ? `${row.first_name} ${row.last_name}`.trim()
+            : row.email, // Fallback to email if names not available
+          avatar_url: null
+        }
+      };
+      
+      console.log('✅ Transformed user:', user);
+      return user;
+    }) || [];
 
     return { data: tenantUsers, error: null };
   } catch (error) {
-    console.error('Error fetching tenant users:', error);
+    console.error('Error in getTenantUsers:', error);
     return { data: null, error };
   }
 }

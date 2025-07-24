@@ -45,7 +45,7 @@ export function useMultiTenantPatients() {
 
   // Create patient mutation
   const createPatientMutation = useMutation({
-    mutationFn: (patientData: Omit<Patient, 'id' | 'vitals' | 'medications' | 'notes'>) => {
+    mutationFn: (patientData: any) => { // Accept any data, filtering happens in the service
       if (!currentTenant) throw new Error('No tenant selected');
       return createPatientWithTenant(patientData, currentTenant.id);
     },
@@ -57,7 +57,7 @@ export function useMultiTenantPatients() {
 
   // Update patient mutation
   const updatePatientMutation = useMutation({
-    mutationFn: ({ patientId, updates }: { patientId: string; updates: Partial<Patient> }) => {
+    mutationFn: ({ patientId, updates }: { patientId: string; updates: any }) => { // Accept any updates, filtering happens in the service
       if (!currentTenant) throw new Error('No tenant selected');
       return updatePatientWithTenant(patientId, updates, currentTenant.id);
     },

@@ -11,7 +11,7 @@ export interface DatabaseAlert {
   id: string;
   patient_id: string;
   patient_name: string;
-  tenant_id?: string;
+  tenant_id: string; // Made required for multi-tenant support
   alert_type: 'medication_due' | 'vital_signs' | 'emergency' | 'lab_results' | 'discharge_ready';
   message: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -109,6 +109,11 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
   try {
     if (!supabase) {
       throw new Error('Cannot create alert - Supabase not configured')
+    }
+
+    // Validate that tenant_id is provided
+    if (!alert.tenant_id) {
+      throw new Error('Cannot create alert - tenant_id is required for multi-tenant support');
     }
 
     console.log('🚨 Creating new alert:', alert);
@@ -222,7 +227,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
       .from('patient_medications')
       .select(`
         *,
-        patients!inner(id, first_name, last_name, patient_id)
+        patients!inner(id, first_name, last_name, patient_id, tenant_id)
       `)
       .eq('status', 'Active')
       .lte('next_due', new Date(now.getTime() + 60 * 60 * 1000).toISOString())
@@ -336,6 +341,7 @@ export const checkMedicationAlerts = async (): Promise<void> => {
         const alertData: any = {
           patient_id: patient.id,
           patient_name: `${patient.first_name} ${patient.last_name}`,
+          tenant_id: patient.tenant_id,
           alert_type: 'medication_due',
           message: message,
           priority: priority,
@@ -373,7 +379,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
       .from('patient_vitals')
       .select(`
         *,
-        patients!inner(id, first_name, last_name, patient_id)
+        patients!inner(id, first_name, last_name, patient_id, tenant_id)
       `)
       .gte('recorded_at', fourHoursAgo.toISOString());
 
@@ -462,6 +468,7 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
             const alertData = {
               patient_id: patientId,
               patient_name: `${patient.first_name} ${patient.last_name}`,
+              tenant_id: patient.tenant_id,
               alert_type: 'vital_signs' as const,
               message: alertInfo.message,
               priority: alertInfo.priority as 'low' | 'medium' | 'high' | 'critical',
@@ -501,7 +508,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
     // Get all active patients
     const { data: patients, error: patientsError } = await supabase
       .from('patients')
-      .select('id, first_name, last_name, patient_id')
+      .select('id, first_name, last_name, patient_id, tenant_id')
       .neq('condition', 'Discharged')
       .order('created_at', { ascending: false });
 
@@ -567,6 +574,7 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
           const alertData: Omit<DatabaseAlert, 'id' | 'created_at'> = {
             patient_id: patient.id,
             patient_name: `${patient.first_name} ${patient.last_name}`,
+            tenant_id: patient.tenant_id,
             alert_type: 'vital_signs',
             message: `Vital signs ${isPatientCritical ? 'CRITICAL' : ''} overdue - last recorded ${hoursOverdue} hours ago`,
             priority: (isPatientCritical || hoursOverdue > 12 ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
