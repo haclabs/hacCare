@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3 } from 'lucide-react';
 import { Tenant, ManagementDashboardStats, TenantUser } from '../../types';
+import { supabase } from '../../lib/supabase';
 import {
   getAllTenants,
   getManagementDashboardStats,
   createTenant,
   updateTenant,
   deleteTenant,
+  permanentlyDeleteTenant,
   getTenantUsers
 } from '../../lib/tenantService';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -63,20 +65,58 @@ export const ManagementDashboard: React.FC = () => {
     }
   };
 
-  const handleDeleteTenant = async (tenantId: string) => {
-    if (!confirm('Are you sure you want to deactivate this tenant?')) return;
+  const handleDeleteTenant = async (tenantId: string, permanent: boolean = false) => {
+    const actionText = permanent ? 'permanently delete' : 'deactivate';
+    const warningText = permanent 
+      ? 'Are you sure you want to PERMANENTLY DELETE this tenant? This will delete ALL tenant data including patients, users, and settings. THIS CANNOT BE UNDONE!' 
+      : 'Are you sure you want to deactivate this tenant? The tenant will be hidden but data will be preserved.';
+
+    if (!confirm(warningText)) {
+      return;
+    }
 
     try {
-      const { error } = await deleteTenant(tenantId);
-      if (error) {
-        throw new Error(error.message);
+      setLoading(true);
+      setError(null);
+      
+      console.log(`Starting ${actionText} for tenant:`, tenantId);
+      
+      // Add timeout for permanent deletions
+      if (permanent) {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Operation timed out')), 30000)
+        );
+        
+        const deletePromise = permanentlyDeleteTenant(tenantId);
+        const { error } = await Promise.race([deletePromise, timeoutPromise]) as { error: any };
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        const { error } = await deleteTenant(tenantId);
+        if (error) {
+          throw new Error(error.message);
+        }
       }
+      
+      console.log(`✓ ${actionText} completed, refreshing dashboard...`);
+      
+      // Force refresh the dashboard data
       await loadDashboardData();
+      
+      // Clear selected tenant if it was the one deleted
       if (selectedTenant?.id === tenantId) {
         setSelectedTenant(null);
       }
+      
+      console.log('✓ Dashboard refreshed');
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete tenant');
+      console.error(`Error in ${actionText}:`, err);
+      setError(err instanceof Error ? err.message : `Failed to ${actionText} tenant`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -215,18 +255,47 @@ export const ManagementDashboard: React.FC = () => {
                         setShowEditForm(true);
                       }}
                       className="p-1 text-gray-400 hover:text-blue-600"
+                      title="Edit tenant"
                     >
                       <Edit3 className="h-4 w-4" />
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteTenant(tenant.id);
-                      }}
-                      className="p-1 text-gray-400 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    
+                    {/* Dropdown for delete options */}
+                    <div className="relative group">
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 text-gray-400 hover:text-red-600"
+                        title="Delete options"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      
+                      {/* Dropdown menu */}
+                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                        <div className="py-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTenant(tenant.id, false);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Deactivate
+                            <div className="text-xs text-gray-500">Hide tenant, keep data</div>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTenant(tenant.id, true);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            Delete Permanently
+                            <div className="text-xs text-red-500">Remove all data forever</div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -332,10 +401,94 @@ const CreateTenantModal: React.FC<{
     subscription_plan: 'basic' as 'basic' | 'premium' | 'enterprise',
     max_users: 10,
     max_patients: 100,
-    admin_user_id: '',
+    admin_email: '', // Changed from admin_user_id to admin_email
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableAdmins, setAvailableAdmins] = useState<any[]>([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(true);
+
+  // Load available admins when component mounts
+  useEffect(() => {
+    loadAvailableAdmins();
+  }, []);
+
+  const loadAvailableAdmins = async () => {
+    try {
+      setLoadingAdmins(true);
+      
+      // Try the new RPC function first
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_available_admin_users');
+      
+      if (!rpcError && rpcData) {
+        setAvailableAdmins(rpcData.map((user: any) => ({
+          id: user.user_id,
+          email: user.email,
+          first_name: user.email.split('@')[0], // Use email prefix as name fallback
+          last_name: '',
+          role: 'admin'
+        })));
+        return;
+      }
+      
+      // Fallback: Try to get users with admin roles from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name, role')
+        .in('role', ['admin', 'super_admin'])
+        .eq('is_active', true)
+        .order('email');
+      
+      if (!profileError && profileData) {
+        setAvailableAdmins(profileData);
+        return;
+      }
+      
+      console.error('Error loading admins:', { rpcError, profileError });
+      setError('Could not load available admins. You can still enter an email manually.');
+      setAvailableAdmins([]);
+      
+    } catch (err) {
+      console.error('Error loading available admins:', err);
+      setError('Could not load available admins. You can still enter an email manually.');
+      setAvailableAdmins([]);
+    } finally {
+      setLoadingAdmins(false);
+    }
+  };
+
+  const findUserByEmail = async (email: string): Promise<string | null> => {
+    if (!email) return null;
+    
+    try {
+      // First try the RPC function
+      const { data: rpcData, error: rpcError } = await supabase.rpc('find_user_by_email', { 
+        email_param: email 
+      });
+      
+      if (!rpcError && rpcData && rpcData.length > 0) {
+        return rpcData[0].user_id;
+      }
+      
+      // Fallback: Try profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+      
+      if (!profileError && profileData) {
+        return profileData.id;
+      }
+      
+      console.error('User not found:', { email, rpcError, profileError });
+      return null;
+      
+    } catch (err) {
+      console.error('Error finding user by email:', err);
+      return null;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,8 +496,17 @@ const CreateTenantModal: React.FC<{
     setError(null);
 
     try {
+      // First, find the user ID from the email
+      const adminUserId = await findUserByEmail(formData.admin_email);
+      if (!adminUserId) {
+        setError('Admin user not found with the provided email');
+        setLoading(false);
+        return;
+      }
+
       const tenantData = {
         ...formData,
+        admin_user_id: adminUserId, // Convert email to user_id
         status: 'active' as const,
         settings: {
           timezone: 'UTC',
@@ -371,7 +533,10 @@ const CreateTenantModal: React.FC<{
         },
       };
 
-      const { error } = await createTenant(tenantData);
+      // Remove admin_email from tenantData since it's not part of the Tenant type
+      const { admin_email, ...finalTenantData } = tenantData;
+
+      const { error } = await createTenant(finalTenantData);
       if (error) {
         throw new Error(error.message);
       }
@@ -440,15 +605,41 @@ const CreateTenantModal: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Admin User ID
+              Admin User Email
             </label>
-            <input
-              type="text"
-              value={formData.admin_user_id}
-              onChange={(e) => setFormData({ ...formData, admin_user_id: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
-              required
-            />
+            {loadingAdmins ? (
+              <div className="text-sm text-gray-500">Loading available admins...</div>
+            ) : (
+              <>
+                {availableAdmins.length > 0 && (
+                  <select
+                    value={formData.admin_email}
+                    onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+                  >
+                    <option value="">Select an admin user</option>
+                    {availableAdmins.map((admin) => (
+                      <option key={admin.id} value={admin.email}>
+                        {admin.first_name} {admin.last_name} ({admin.email}) - {admin.role}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <input
+                  type="email"
+                  value={formData.admin_email}
+                  onChange={(e) => setFormData({ ...formData, admin_email: e.target.value })}
+                  placeholder="Enter admin email address"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  required
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  {availableAdmins.length > 0 
+                    ? "Select from dropdown or enter email manually" 
+                    : "Enter the email address of the admin user"}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

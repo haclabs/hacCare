@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit3, Trash2, Users, Building2, Filter } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, Users, Building2, Filter, RefreshCw } from 'lucide-react';
 import { Tenant, TenantUser } from '../../types';
 import {
   getAllTenants,
   createTenant,
   updateTenant,
   deleteTenant,
+  permanentlyDeleteTenant,
   getTenantUsers
 } from '../../lib/tenantService';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -38,12 +39,15 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
   const loadTenants = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading tenants...');
       const { data, error } = await getAllTenants();
       if (error) {
         throw new Error(error.message);
       }
+      console.log(`📋 Setting ${data?.length || 0} tenants in state`);
       setTenants(data || []);
     } catch (err) {
+      console.error('❌ Error loading tenants:', err);
       setError(err instanceof Error ? err.message : 'Failed to load tenants');
     } finally {
       setLoading(false);
@@ -98,22 +102,58 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
     }
   };
 
-  const handleDeleteTenant = async (tenantId: string) => {
-    if (!confirm('Are you sure you want to deactivate this tenant? This action cannot be undone.')) {
+  const handleDeleteTenant = async (tenantId: string, permanent: boolean = false) => {
+    const actionText = permanent ? 'permanently delete' : 'deactivate';
+    const warningText = permanent 
+      ? 'Are you sure you want to PERMANENTLY DELETE this tenant? This will delete ALL tenant data including patients, users, and settings. THIS CANNOT BE UNDONE!' 
+      : 'Are you sure you want to deactivate this tenant? The tenant will be hidden but data will be preserved.';
+
+    if (!confirm(warningText)) {
       return;
     }
 
     try {
-      const { error } = await deleteTenant(tenantId);
-      if (error) {
-        throw new Error(error.message);
+      setLoading(true);
+      setError(null);
+      
+      console.log(`Starting ${actionText} for tenant:`, tenantId);
+      
+      // Add timeout for permanent deletions
+      if (permanent) {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Operation timed out')), 30000)
+        );
+        
+        const deletePromise = permanentlyDeleteTenant(tenantId);
+        const { error } = await Promise.race([deletePromise, timeoutPromise]) as { error: any };
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        const { error } = await deleteTenant(tenantId);
+        if (error) {
+          throw new Error(error.message);
+        }
       }
+      
+      console.log(`✓ ${actionText} completed, refreshing tenant list...`);
+      
+      // Force refresh the tenant list
       await loadTenants();
+      
+      // Clear selected tenant if it was the one deleted
       if (selectedTenant?.id === tenantId) {
         setSelectedTenant(null);
       }
+      
+      console.log('✓ Tenant list refreshed');
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete tenant');
+      console.error(`Error in ${actionText}:`, err);
+      setError(err instanceof Error ? err.message : `Failed to ${actionText} tenant`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,13 +187,23 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
           <h2 className="text-2xl font-bold text-gray-900">Tenant Management</h2>
           <p className="text-gray-600">Manage tenants and their configurations</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-        >
-          <Plus className="h-5 w-5" />
-          Add Tenant
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={loadTenants}
+            disabled={loading}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Plus className="h-5 w-5" />
+            Add Tenant
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -259,15 +309,40 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
                       setShowEditModal(true);
                     }}
                     className="p-1 text-gray-400 hover:text-blue-600"
+                    title="Edit tenant"
                   >
                     <Edit3 className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => handleDeleteTenant(tenant.id)}
-                    className="p-1 text-gray-400 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  
+                  {/* Dropdown for delete options */}
+                  <div className="relative group">
+                    <button
+                      className="p-1 text-gray-400 hover:text-red-600"
+                      title="Delete options"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    
+                    {/* Dropdown menu */}
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                      <div className="py-1">
+                        <button
+                          onClick={() => handleDeleteTenant(tenant.id, false)}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Deactivate
+                          <div className="text-xs text-gray-500">Hide tenant, keep data</div>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTenant(tenant.id, true)}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Delete Permanently
+                          <div className="text-xs text-red-500">Remove all data forever</div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

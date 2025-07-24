@@ -6,6 +6,11 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   root: '.',
+  server: {
+    port: 5173,
+    host: true,
+    hmr: false // Disable HMR to avoid WebSocket issues in Codespaces
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

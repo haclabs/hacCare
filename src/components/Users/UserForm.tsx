@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { X, User, Mail, Phone, Building, CreditCard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, User, Mail, Phone, Building, CreditCard, Users } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
+import { useAuth } from '../../hooks/useAuth';
+import { getAllTenants } from '../../lib/tenantService';
+import { Tenant } from '../../types';
 
 interface UserFormProps {
   user?: UserProfile | null;
@@ -10,6 +13,9 @@ interface UserFormProps {
 }
 
 export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
+  const { hasRole } = useAuth();
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('');
   const [formData, setFormData] = useState({
     email: user?.email || '',
     password: '',
@@ -23,7 +29,51 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { hasRole } = useAuth();
+
+  // Load tenants for super admin
+  useEffect(() => {
+    if (hasRole('super_admin')) {
+      loadTenants();
+    }
+  }, [hasRole]);
+
+  // Initialize selected tenant when user changes
+  useEffect(() => {
+    if (user?.id && hasRole('super_admin')) {
+      // Load the user's current tenant
+      const loadUserTenant = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('tenant_users')
+            .select('tenant_id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (data && !error) {
+            setSelectedTenantId(data.tenant_id);
+          }
+        } catch (error) {
+          console.error('Error loading user tenant:', error);
+        }
+      };
+      loadUserTenant();
+    }
+  }, [user, hasRole]);
+
+  const loadTenants = async () => {
+    try {
+      const { data: allTenants, error } = await getAllTenants();
+      if (error) {
+        console.error('Error loading tenants:', error);
+        setError('Failed to load tenants');
+        return;
+      }
+      setTenants(allTenants || []);
+    } catch (error) {
+      console.error('Error loading tenants:', error);
+      setError('Failed to load tenants');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +100,40 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           setError(parseAuthError(updateError));
           return;
         }
+
+        // Handle tenant assignment for super admin
+        if (hasRole('super_admin') && selectedTenantId) {
+          try {
+            const { error: assignError } = await supabase
+              .rpc('assign_user_to_tenant', {
+                user_id_param: user.id,
+                tenant_id_param: selectedTenantId
+              });
+
+            if (assignError) {
+              console.error('Error assigning user to tenant:', assignError);
+              setError('User updated but failed to assign to tenant: ' + parseAuthError(assignError));
+              return;
+            }
+          } catch (assignError: any) {
+            console.error('Error in tenant assignment:', assignError);
+            setError('User updated but failed to assign to tenant: ' + parseAuthError(assignError));
+            return;
+          }
+        }
       } else {
-        // Create new user - this requires admin privileges
+        // Create new user
+        if (!formData.email || !formData.password) {
+          setError('Email and password are required');
+          return;
+        }
+
+        // For super admin, require tenant selection
+        if (hasRole('super_admin') && !selectedTenantId) {
+          setError('Please select a tenant for this user');
+          return;
+        }
+
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -84,6 +166,28 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           if (profileError) {
             setError(parseAuthError(profileError));
             return;
+          }
+
+          // Assign user to tenant (for super admin or default tenant)
+          const tenantToAssign = hasRole('super_admin') ? selectedTenantId : null;
+          if (tenantToAssign) {
+            try {
+              const { error: assignError } = await supabase
+                .rpc('assign_user_to_tenant', {
+                  user_id_param: authData.user.id,
+                  tenant_id_param: tenantToAssign
+                });
+
+              if (assignError) {
+                console.error('Error assigning new user to tenant:', assignError);
+                setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
+                return;
+              }
+            } catch (assignError: any) {
+              console.error('Error in new user tenant assignment:', assignError);
+              setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
+              return;
+            }
           }
         }
       }
@@ -202,6 +306,40 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               {hasRole('super_admin') && <option value="super_admin">Super Admin</option>}
             </select>
           </div>
+
+          {hasRole('super_admin') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tenant
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <select
+                  value={selectedTenantId}
+                  onChange={(e) => setSelectedTenantId(e.target.value)}
+                  required={!user} // Required for new users
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a tenant...</option>
+                  {tenants.map((tenant) => (
+                    <option key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {!user && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Select which tenant this user will belong to
+                </p>
+              )}
+              {user && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Changing tenant will reassign the user
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

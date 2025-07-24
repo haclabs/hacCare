@@ -37,16 +37,12 @@ if (supabaseAnonKey) {
  * Validate Supabase configuration
  * Checks if environment variables are properly set and valid
  */
-const hasValidConfig = supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseUrl !== 'your_supabase_url_here' && 
-  supabaseAnonKey !== 'your_supabase_anon_key_here' &&
-  supabaseUrl !== 'https://your-project-id.supabase.co' &&
-  supabaseAnonKey !== 'your-anon-key-here' &&
-  supabaseUrl.startsWith('https://') &&
-  supabaseUrl.includes('.supabase.co') &&
-  supabaseUrl.length > 30 &&
-  supabaseAnonKey.length > 50;
+// Validate configuration - strict validation for production environment
+const isValidUrl = supabaseUrl && (
+  supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co')
+);
+const isValidKey = supabaseAnonKey && supabaseAnonKey.length > 50;
+const hasValidConfig = isValidUrl && isValidKey;
 
 console.log('✅ Configuration valid:', hasValidConfig);
 

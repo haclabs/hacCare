@@ -12,7 +12,22 @@ import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { queryClient } from './lib/queryClient';
 import App from './App.tsx';
 import './index.css';
-import { testSupabaseConnection } from './lib/supabase'
+import { testSupabaseConnection } from './lib/supabase';
+import { getCurrentSubdomain } from './lib/subdomainService';
+
+// Initialize subdomain detection for production
+if (import.meta.env.NODE_ENV === 'production') {
+  // Force HTTPS in production
+  if (window.location.protocol !== 'https:') {
+    window.location.replace(`https:${window.location.href.substring(window.location.protocol.length)}`);
+  }
+  
+  // Log subdomain for debugging
+  const subdomain = getCurrentSubdomain();
+  if (subdomain) {
+    console.log('🏢 Tenant subdomain detected:', subdomain);
+  }
+}
 
 // Initialize Supabase connection
 testSupabaseConnection().then((isConnected) => {
@@ -21,28 +36,27 @@ testSupabaseConnection().then((isConnected) => {
   } else {
     console.log('🚀 Application started in offline mode')
   }
-})
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
             <TenantProvider>
-              <PatientProvider>
-                <AlertProvider>
+              <AlertProvider>
+                <PatientProvider>
                   <ProtectedRoute>
                     <App />
                   </ProtectedRoute>
-                </AlertProvider>
-              </PatientProvider>
+                </PatientProvider>
+              </AlertProvider>
             </TenantProvider>
           </AuthProvider>
         </ThemeProvider>
-      </BrowserRouter>
-      {/* React Query DevTools - only in development */}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </BrowserRouter>
   </StrictMode>
 );

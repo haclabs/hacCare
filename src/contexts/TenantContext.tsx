@@ -5,8 +5,10 @@ import {
   getTenantById,
   getSuperAdminSelectedTenant,
   switchTenantContext,
-  clearSuperAdminTenantSelection 
+  clearSuperAdminTenantSelection,
+  getTenantBySubdomain
 } from '../lib/tenantService';
+import { getCurrentSubdomain } from '../lib/subdomainService';
 import { useAuth } from './auth/AuthContext';
 
 /**
@@ -68,6 +70,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   /**
    * Load current user's tenant or super admin selected tenant
+   * Also handles subdomain-based tenant detection for production
    */
   const loadCurrentTenant = async () => {
     // Don't proceed if auth is still loading
@@ -84,6 +87,18 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       setLoading(true);
       setError(null);
+
+      // In production, try to detect tenant from subdomain first
+      const currentSubdomain = getCurrentSubdomain();
+      if (currentSubdomain && process.env.NODE_ENV === 'production') {
+        const { data: subdomainTenant, error: subdomainError } = await getTenantBySubdomain(currentSubdomain);
+        if (subdomainTenant && !subdomainError) {
+          setCurrentTenant(subdomainTenant);
+          setSelectedTenantId(subdomainTenant.id);
+          setLoading(false);
+          return;
+        }
+      }
 
       if (isMultiTenantAdmin) {
         // For super admin, check if they have a selected tenant

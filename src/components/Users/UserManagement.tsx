@@ -21,6 +21,7 @@ export const UserManagement: React.FC = () => {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
+        .eq('is_active', true)  // Only fetch active users
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -36,17 +37,23 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!confirm('Are you sure you want to deactivate this user?')) return;
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      const { error } = await supabase.rpc('deactivate_user', { 
+        target_user_id: userId 
+      });
+      
       if (error) {
-        console.error('Error deleting user:', error);
+        console.error('Error deactivating user:', error);
+        alert('Error deactivating user: ' + error.message);
       } else {
+        alert('User deactivated successfully');
         await fetchUsers();
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error deactivating user:', error);
+      alert('Error deactivating user');
     }
   };
 
