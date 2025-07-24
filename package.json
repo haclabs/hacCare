@@ -26,8 +26,7 @@
     "test:coverage": "vitest --coverage",
     "clean": "rm -rf dist node_modules/.vite",
     "deps:update": "ncu -u && npm install",
-    "deps:check": "ncu",
-    "prepare": "npm run type-check"
+    "deps:check": "ncu"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
