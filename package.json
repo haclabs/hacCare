@@ -16,17 +16,18 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npx tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit",
+    "type-check": "npx tsc --noEmit",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "clean": "rm -rf dist node_modules/.vite",
     "deps:update": "ncu -u && npm install",
-    "deps:check": "ncu"
+    "deps:check": "ncu",
+    "postinstall": "echo 'Dependencies installed successfully'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
