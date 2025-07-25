@@ -686,15 +686,10 @@ export const ValidationHelpers = {
     // NOTE: For actual HTML sanitization, prefer using sanitizeHtml() which uses DOMPurify
     // This function is kept for validation purposes only
     
-    // More robust regex that handles script tags with various formats:
-    // - <script> opening tags with optional attributes
-    // - </script> closing tags with optional spaces/attributes
-    // - Handles case insensitivity and whitespace variations
-    const scriptRegex = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+    // Use DOMPurify to sanitize the input
+    const sanitizedInput = DOMPurify.sanitize(input);
     
-    // Also check for script tags without proper closing (incomplete tags)
-    const incompleteScriptRegex = /<script\b[^>]*>(?![\s\S]*<\/script\s*>)/gi;
-    
-    return !scriptRegex.test(input) && !incompleteScriptRegex.test(input);
+    // Check for the presence of <script> tags in the sanitized output
+    return !/<script\b[^>]*>/i.test(sanitizedInput);
   },
 } as const;
