@@ -3,9 +3,10 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import PatientCard from './components/Patients/records/PatientCard';
-import { PatientDetail } from './components/Patients/records/PatientDetail';
+import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
+import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
@@ -525,7 +526,12 @@ function App() {
           <Routes>
             <Route path="/patient/:id" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <PatientDetail onShowBracelet={setBraceletPatient} />
+                <ModularPatientDashboard onShowBracelet={setBraceletPatient} />
+              </Suspense>
+            } />
+            <Route path="/patient/:id/modular" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <ModularPatientSystemDemo />
               </Suspense>
             } />
             <Route path="*" element={renderContent()} />
