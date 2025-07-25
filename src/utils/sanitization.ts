@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 /**
  * Input Sanitization Utilities
  * 
@@ -7,50 +9,114 @@
 
 /**
  * Sanitize HTML content by removing potentially dangerous elements and attributes.
- * This uses DOMParser to safely parse the HTML and then removes dangerous parts.
+ * This uses DOMPurify, the industry-standard HTML sanitization library.
+ * 
+ * @param input - The HTML string to sanitize
+ * @returns Sanitized HTML string safe for rendering
+ * 
+ * @example
+ * ```typescript
+ * const safeHtml = sanitizeHtml('<p>Safe content</p><script>alert("xss")</script>');
+ * // Returns: '<p>Safe content</p>'
+ * ```
  */
 export const sanitizeHtml = (input: string): string => {
   if (typeof input !== 'string' || !input) return '';
 
-  // Use DOMParser to safely parse the string into a document
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(input, 'text/html');
-
-  // Remove script and style elements
-  doc.querySelectorAll('script, style').forEach(elem => elem.remove());
-
-  // Remove all attributes starting with 'on' (e.g., onclick, onmouseover)
-  doc.querySelectorAll('*').forEach(elem => {
-    for (const attr of [...elem.attributes]) {
-      if (attr.name.startsWith('on')) {
-        elem.removeAttribute(attr.name);
-      }
-      // Remove links with dangerous schemes
-      if ((attr.name === 'href' || attr.name === 'src') && /^(javascript|data|vbscript):/i.test(attr.value)) {
-        elem.removeAttribute(attr.name);
-      }
-    }
+  // Use DOMPurify for robust HTML sanitization
+  return DOMPurify.sanitize(input, {
+    // Allow safe HTML elements for healthcare content
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 'b', 'i', 'span', 'div',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'blockquote', 'pre', 'code',
+      'a', 'img'
+    ],
+    // Allow safe attributes
+    ALLOWED_ATTR: [
+      'class', 'id', 'title', 'alt', 'src', 'href', 'target',
+      'style', 'width', 'height', 'colspan', 'rowspan'
+    ],
+    // Additional security options
+    ALLOW_DATA_ATTR: false,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+    FORBID_TAGS: ['script', 'object', 'embed', 'iframe', 'form'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+    // Return DOM instead of string for better performance if needed
+    RETURN_DOM: false,
+    RETURN_DOM_FRAGMENT: false,
+    // Sanitize SVG
+    USE_PROFILES: { html: true }
   });
+};
 
-  // Return the sanitized HTML from the body
-  return doc.body.innerHTML;
+/**
+ * Sanitize HTML content with stricter rules for sensitive healthcare data.
+ * This version only allows basic text formatting and removes all links and images.
+ * 
+ * @param input - The HTML string to sanitize with strict rules
+ * @returns Sanitized HTML string with only basic text formatting
+ * 
+ * @example
+ * ```typescript
+ * const strictHtml = sanitizeHtmlStrict('<p>Text with <a href="link">link</a></p>');
+ * // Returns: '<p>Text with link</p>'
+ * ```
+ */
+export const sanitizeHtmlStrict = (input: string): string => {
+  if (typeof input !== 'string' || !input) return '';
+
+  return DOMPurify.sanitize(input, {
+    // Only allow basic text formatting elements
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 'b', 'i', 'span',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li',
+      'blockquote', 'pre', 'code'
+    ],
+    // Minimal safe attributes
+    ALLOWED_ATTR: ['class'],
+    ALLOW_DATA_ATTR: false,
+    ALLOW_UNKNOWN_PROTOCOLS: false,
+    FORBID_TAGS: ['script', 'object', 'embed', 'iframe', 'form', 'a', 'img', 'link'],
+    FORBID_ATTR: ['href', 'src', 'style', 'onclick', 'onerror', 'onload'],
+    RETURN_DOM: false,
+    USE_PROFILES: { html: true }
+  });
 };
 
 /**
  * Sanitize user input for database storage. This is a stricter version of sanitizeHtml.
+ * Strips all HTML tags and prevents SQL injection patterns.
+ * 
+ * @param input - The user input string to sanitize
+ * @returns Plain text string safe for database storage
+ * 
+ * @example
+ * ```typescript
+ * const safeInput = sanitizeUserInput('<script>alert("xss")</script>User input');
+ * // Returns: 'User input'
+ * ```
  */
 export const sanitizeUserInput = (input: string): string => {
   if (typeof input !== 'string' || !input) return '';
 
-  // For general user input, it's often safest to treat it as text.
-  // The sanitizeHtml function above can be used if some HTML is desired.
-  // For many inputs, simply escaping HTML is the goal.
-  const temp = document.createElement('div');
-  temp.textContent = input;
-  let sanitized = temp.innerHTML;
+  // For general user input, treat it as plain text (no HTML allowed)
+  // DOMPurify will escape any HTML tags when ALLOWED_TAGS is empty
+  let sanitized = DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+    ALLOW_DATA_ATTR: false,
+    KEEP_CONTENT: true // Keep text content but remove HTML tags
+  });
 
   // Additionally, remove potential SQL injection patterns
   sanitized = sanitized.replace(/(['";]|--|\*|\/\*|\*\/)/g, '');
+  
+  // Remove common SQL injection keywords (case insensitive)
+  sanitized = sanitized.replace(/\b(DROP|DELETE|UPDATE|INSERT|CREATE|ALTER|TRUNCATE|EXEC|EXECUTE|UNION|SELECT)\s+/gi, '');
   
   // Normalize whitespace
   return sanitized.replace(/\s+/g, ' ').trim();
@@ -192,6 +258,9 @@ export const ValidationHelpers = {
   },
 
   containsNoScripts: (input: string): boolean => {
+    // NOTE: For actual HTML sanitization, prefer using sanitizeHtml() which uses DOMPurify
+    // This function is kept for validation purposes only
+    
     // More robust regex that handles script tags with various formats:
     // - <script> opening tags with optional attributes
     // - </script> closing tags with optional spaces/attributes
