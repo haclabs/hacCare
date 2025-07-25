@@ -370,9 +370,6 @@ export class SmartSanitizationEngine {
     return words.filter(word => this.medicalTerms.has(word)).length;
   }
 
-  private containsMedicalTerms(text: string): boolean {
-    return this.countMedicalTerms(text) > 0;
-  }
 
   private calculatePHIConfidence(type: string, value: string): number {
     // Simple confidence calculation - in real implementation, this would be more sophisticated

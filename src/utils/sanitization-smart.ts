@@ -67,7 +67,7 @@ export class SmartSanitizationEngine {
     const threatScore = this.calculateThreatScore(input, classification);
     
     // Step 4: Apply intelligent sanitization based on classification
-    const sanitized = this.applySanitization(input, classification, phiMatches, context);
+    const sanitized = this.applySanitization(input, classification, phiMatches);
     
     // Step 5: Generate recommendations
     const recommendations = this.generateRecommendations(classification, phiMatches, threatScore);
@@ -161,11 +161,10 @@ export class SmartSanitizationEngine {
    * 🛡️ Intelligent Sanitization Application
    * Applies different sanitization strategies based on content type
    */
-  private applySanitization(
+    private applySanitization(
     input: string, 
     classification: ContentClassification, 
-    phiMatches: PHIMatch[],
-    context?: any
+    phiMatches: PHIMatch[]
   ): string {
     let sanitized = input;
 
