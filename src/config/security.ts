@@ -112,14 +112,30 @@ export const SecurityUtils = {
   },
 
   /**
-   * Check if content appears to be malicious
+   * Sanitize input to prevent XSS and other injection attacks.
+   * This function should be used on any user-provided string that will be rendered as HTML.
    */
   sanitizeInput: (input: string): string => {
-    // Remove potential XSS vectors
-    return input
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .replace(/on\w+\s*=/gi, '')
-      .trim();
+    if (typeof input !== 'string' || !input) return '';
+
+    // Use DOMParser for safe HTML parsing and sanitization
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(input, 'text/html');
+
+    // Remove potentially harmful elements
+    doc.querySelectorAll('script, style, link, object, embed, iframe').forEach(elem => elem.remove());
+
+    // Remove all attributes that could execute script
+    doc.querySelectorAll('*').forEach(elem => {
+      for (const attr of [...elem.attributes]) {
+        const attrName = attr.name.toLowerCase();
+        if (attrName.startsWith('on') || ['href', 'src', 'formaction'].includes(attrName) && /^(javascript|data|vbscript):/i.test(attr.value)) {
+          elem.removeAttribute(attr.name);
+        }
+      }
+    });
+
+    // Return the sanitized HTML from the body
+    return doc.body.innerHTML;
   },
 } as const;

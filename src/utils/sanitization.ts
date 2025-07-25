@@ -6,34 +6,54 @@
  */
 
 /**
- * Sanitize HTML content by removing potentially dangerous elements
+ * Sanitize HTML content by removing potentially dangerous elements and attributes.
+ * This uses DOMParser to safely parse the HTML and then removes dangerous parts.
  */
 export const sanitizeHtml = (input: string): string => {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== 'string' || !input) return '';
 
-  // Create a temporary div to parse HTML
-  const temp = document.createElement('div');
-  temp.textContent = input; // This automatically escapes HTML
-  return temp.innerHTML;
+  // Use DOMParser to safely parse the string into a document
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(input, 'text/html');
+
+  // Remove script and style elements
+  doc.querySelectorAll('script, style').forEach(elem => elem.remove());
+
+  // Remove all attributes starting with 'on' (e.g., onclick, onmouseover)
+  doc.querySelectorAll('*').forEach(elem => {
+    for (const attr of [...elem.attributes]) {
+      if (attr.name.startsWith('on')) {
+        elem.removeAttribute(attr.name);
+      }
+      // Remove links with dangerous schemes
+      if ((attr.name === 'href' || attr.name === 'src') && /^(javascript|data|vbscript):/i.test(attr.value)) {
+        elem.removeAttribute(attr.name);
+      }
+    }
+  });
+
+  // Return the sanitized HTML from the body
+  return doc.body.innerHTML;
 };
 
 /**
- * Sanitize user input for database storage
+ * Sanitize user input for database storage. This is a stricter version of sanitizeHtml.
  */
 export const sanitizeUserInput = (input: string): string => {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== 'string' || !input) return '';
 
-  return input
-    .trim()
-    // Remove potential XSS vectors
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '')
-    // Remove potential SQL injection patterns
-    .replace(/(['";]|--|\*|\/\*|\*\/)/g, '')
-    // Normalize whitespace
-    .replace(/\s+/g, ' ')
-    .trim();
+  // For general user input, it's often safest to treat it as text.
+  // The sanitizeHtml function above can be used if some HTML is desired.
+  // For many inputs, simply escaping HTML is the goal.
+  const temp = document.createElement('div');
+  temp.textContent = input;
+  let sanitized = temp.innerHTML;
+
+  // Additionally, remove potential SQL injection patterns
+  sanitized = sanitized.replace(/(['";]|--|\*|\/\*|\*\/)/g, '');
+  
+  // Normalize whitespace
+  return sanitized.replace(/\s+/g, ' ').trim();
 };
 
 /**
