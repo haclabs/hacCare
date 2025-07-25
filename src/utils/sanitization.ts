@@ -192,7 +192,15 @@ export const ValidationHelpers = {
   },
 
   containsNoScripts: (input: string): boolean => {
-    const scriptRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
-    return !scriptRegex.test(input);
+    // More robust regex that handles script tags with various formats:
+    // - <script> opening tags with optional attributes
+    // - </script> closing tags with optional spaces/attributes
+    // - Handles case insensitivity and whitespace variations
+    const scriptRegex = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+    
+    // Also check for script tags without proper closing (incomplete tags)
+    const incompleteScriptRegex = /<script\b[^>]*>(?![\s\S]*<\/script\s*>)/gi;
+    
+    return !scriptRegex.test(input) && !incompleteScriptRegex.test(input);
   },
 } as const;
