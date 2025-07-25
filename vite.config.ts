@@ -9,7 +9,7 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
-    hmr: false // Disable HMR to avoid WebSocket issues in Codespaces
+    hmr: process.env.CODESPACES ? false : true // Conditionally disable HMR in Codespaces
   },
   build: {
     outDir: 'dist',

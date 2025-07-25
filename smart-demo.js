@@ -31,7 +31,9 @@ class SmartSanitizationEngine {
     ]);
     
     this.threatPatterns = new Map([
-      ['xss', /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi],
+      ['xss', /<script\b[^>]*>[\s\S]*?<\/script\s*[^>]*>/gi],
+      ['javascript_protocol', /javascript\s*:/gi],
+      ['event_handlers', /\bon\w+\s*=/gi],
       ['sql_injection', /(\bUNION\b.*\bSELECT\b|\bDROP\s+TABLE\b)/gi],
       ['command_injection', /(\||;|`|\$\(|\${)/g]
     ]);

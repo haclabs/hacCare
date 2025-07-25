@@ -17,8 +17,10 @@ import { getCurrentSubdomain } from './lib/subdomainService';
 
 // Initialize subdomain detection for production
 if (import.meta.env.NODE_ENV === 'production') {
-  // Force HTTPS in production
-  if (window.location.protocol !== 'https:') {
+  // SECURITY NOTE: This client-side HTTPS redirect can be bypassed
+  // For proper security, configure HTTPS redirect at the server/CDN level
+  // This is a fallback measure only
+  if (window.location.protocol !== 'https:' && import.meta.env.VITE_ENABLE_HTTPS_REDIRECT !== 'false') {
     window.location.replace(`https://${window.location.host}${window.location.pathname}${window.location.search}`);
   }
   

@@ -346,8 +346,10 @@ export class SmartSanitizationEngine {
     this.phiPatterns.set('mrn', /\b(MRN|MR#?)\s*:?\s*([A-Z0-9]{6,12})\b/gi);
     this.phiPatterns.set('email', /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g);
 
-    // Threat Patterns
-    this.threatPatterns.set('xss', /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi);
+    // Threat Patterns - More robust XSS detection
+    this.threatPatterns.set('xss', /<script\b[^>]*>[\s\S]*?<\/script\s*[^>]*>/gi);
+    this.threatPatterns.set('javascript_protocol', /javascript\s*:/gi);
+    this.threatPatterns.set('event_handlers', /\bon\w+\s*=/gi);
     this.threatPatterns.set('sql_injection', /(\bUNION\b.*\bSELECT\b|\bDROP\s+TABLE\b)/gi);
     this.threatPatterns.set('command_injection', /(\||;|`|\$\(|\${)/g);
   }
@@ -672,18 +674,28 @@ export const ValidationHelpers = {
   },
 
   containsNoScripts: (input: string): boolean => {
-    // NOTE: For actual HTML sanitization, prefer using sanitizeHtml() which uses DOMPurify
-    // This function is kept for validation purposes only
+    // WARNING: This function is for validation purposes only
+    // For actual HTML sanitization, always use sanitizeHtml() which uses DOMPurify
     
-    // More robust regex that handles script tags with various formats:
-    // - <script> opening tags with optional attributes
-    // - </script> closing tags with optional spaces/attributes
-    // - Handles case insensitivity and whitespace variations
-    const scriptRegex = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+    // Robust regex that properly handles script tags with various whitespace patterns:
+    // - Matches <script> opening tags (case insensitive)
+    // - Handles any attributes in opening tag
+    // - Matches content between opening and closing tags
+    // - Properly matches </script> closing tags with optional whitespace/attributes
+    const scriptRegex = /<script\b[^>]*>[\s\S]*?<\/script\s*[^>]*>/gi;
     
-    // Also check for script tags without proper closing (incomplete tags)
-    const incompleteScriptRegex = /<script\b[^>]*>(?![\s\S]*<\/script\s*>)/gi;
+    // Also check for incomplete script tags (potential XSS attempts)
+    const incompleteScriptRegex = /<script\b[^>]*>(?![\s\S]*<\/script\s*[^>]*>)/gi;
     
-    return !scriptRegex.test(input) && !incompleteScriptRegex.test(input);
+    // Check for javascript: protocol URLs
+    const javascriptProtocolRegex = /javascript\s*:/gi;
+    
+    // Check for event handlers
+    const eventHandlerRegex = /\bon\w+\s*=/gi;
+    
+    return !scriptRegex.test(input) && 
+           !incompleteScriptRegex.test(input) && 
+           !javascriptProtocolRegex.test(input) && 
+           !eventHandlerRegex.test(input);
   },
 } as const;

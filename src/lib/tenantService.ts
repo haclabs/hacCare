@@ -381,9 +381,6 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
   await new Promise(resolve => setTimeout(resolve, 500));
   
   return { error: null };
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return { error: null };
 
   } catch (error) {
     console.error('Error permanently deleting tenant:', error);
