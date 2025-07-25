@@ -1,7 +1,4 @@
-import { StrictMode  // Force HTTPS in production
-  if (window.location.protocol !== 'https:') {
-    window.location.replace(`https://${window.location.host}${window.location.pathname}${window.location.search}`);
-  }rom 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
