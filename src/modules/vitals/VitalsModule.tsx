@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Activity, TrendingUp, Plus, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Plus, AlertTriangle, TrendingDown, Minus, Activity } from 'lucide-react';
 import { VitalsTrends } from '../../components/Patients/vitals/VitalsTrends';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
@@ -29,7 +29,7 @@ interface VitalsModuleProps {
   };
 }
 
-type VitalsView = 'entry' | 'review' | 'trends';
+type VitalsView = 'entry' | 'trends';
 
 export const VitalsModule: React.FC<VitalsModuleProps> = ({
   patient,
@@ -37,11 +37,12 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   onVitalsUpdate,
   currentUser
 }) => {
-  const [activeView, setActiveView] = useState<VitalsView>('entry');
+  const [activeView, setActiveView] = useState<VitalsView>('trends');
   const [isLoading, setIsLoading] = useState(false);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showVitalsModal, setShowVitalsModal] = useState(false);
 
   // Register schemas on component mount
   useEffect(() => {
@@ -114,6 +115,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       setShowSuccessMessage(true);
       console.log('Vitals recorded successfully');
       
+      // Close the modal
+      setShowVitalsModal(false);
+      
       // Hide success message after 5 seconds
       setTimeout(() => {
         setShowSuccessMessage(false);
@@ -152,60 +156,219 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     return age;
   };
 
-  // Render vitals summary card
-  const renderVitalsSummary = () => {
+  // Vitals analysis functions
+  const getVitalStatus = (vitalType: string, value: number, age: number) => {
+    const ranges: Record<string, { normal: number[], warning: number[] }> = {
+      heartRate: age >= 18 ? { normal: [60, 100], warning: [50, 120] } : { normal: [70, 130], warning: [60, 140] },
+      temperature: { normal: [36.1, 37.2], warning: [35.5, 38.5] },
+      systolic: age >= 18 ? { normal: [90, 140], warning: [80, 160] } : { normal: [95, 120], warning: [85, 130] },
+      diastolic: age >= 18 ? { normal: [60, 90], warning: [50, 100] } : { normal: [55, 80], warning: [45, 90] },
+      oxygenSaturation: { normal: [95, 100], warning: [90, 94] },
+      respiratoryRate: age >= 18 ? { normal: [12, 20], warning: [8, 30] } : { normal: [16, 24], warning: [12, 32] }
+    };
+
+    const range = ranges[vitalType];
+    if (!range) return { status: 'normal', color: 'text-gray-600', bgColor: 'bg-gray-50' };
+
+    if (value >= range.normal[0] && value <= range.normal[1]) {
+      return { status: 'normal', color: 'text-green-600', bgColor: 'bg-green-50' };
+    } else if (value >= range.warning[0] && value <= range.warning[1]) {
+      return { status: 'warning', color: 'text-yellow-600', bgColor: 'bg-yellow-50' };
+    } else {
+      return { status: 'critical', color: 'text-red-600', bgColor: 'bg-red-50' };
+    }
+  };
+
+  const getTrendDirection = (currentVital: VitalSigns, previousVital: VitalSigns | undefined, vitalType: string) => {
+    if (!previousVital) return { icon: Minus, color: 'text-gray-400', trend: 'no-data' };
+
+    let current: number, previous: number;
+    
+    switch (vitalType) {
+      case 'heartRate':
+        current = currentVital.heartRate;
+        previous = previousVital.heartRate;
+        break;
+      case 'temperature':
+        current = currentVital.temperature || 0;
+        previous = previousVital.temperature || 0;
+        break;
+      case 'systolic':
+        current = currentVital.bloodPressure.systolic;
+        previous = previousVital.bloodPressure.systolic;
+        break;
+      case 'diastolic':
+        current = currentVital.bloodPressure.diastolic;
+        previous = previousVital.bloodPressure.diastolic;
+        break;
+      case 'oxygenSaturation':
+        current = currentVital.oxygenSaturation;
+        previous = previousVital.oxygenSaturation;
+        break;
+      case 'respiratoryRate':
+        current = currentVital.respiratoryRate;
+        previous = previousVital.respiratoryRate;
+        break;
+      default:
+        return { icon: Minus, color: 'text-gray-400', trend: 'stable' };
+    }
+
+    const difference = current - previous;
+    const threshold = current * 0.05; // 5% threshold for meaningful change
+
+    if (Math.abs(difference) < threshold) {
+      return { icon: Minus, color: 'text-gray-400', trend: 'stable' };
+    } else if (difference > 0) {
+      return { icon: TrendingUp, color: 'text-blue-500', trend: 'increasing' };
+    } else {
+      return { icon: TrendingDown, color: 'text-blue-500', trend: 'decreasing' };
+    }
+  };
+
+  const calculateHeartRateVariability = (recentVitals: VitalSigns[]) => {
+    if (recentVitals.length < 3) return null;
+    
+    const heartRates = recentVitals.slice(0, 10).map(v => v.heartRate);
+    const mean = heartRates.reduce((sum, hr) => sum + hr, 0) / heartRates.length;
+    const variance = heartRates.reduce((sum, hr) => sum + Math.pow(hr - mean, 2), 0) / heartRates.length;
+    const standardDeviation = Math.sqrt(variance);
+    
+    return {
+      mean: Math.round(mean),
+      variability: Math.round(standardDeviation * 10) / 10,
+      status: standardDeviation < 5 ? 'low' : standardDeviation > 15 ? 'high' : 'normal'
+    };
+  };
+
+  // Enhanced vitals summary with color coding and trends
+  const renderEnhancedVitalsSummary = () => {
     if (vitals.length === 0) {
       return (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
           <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Vital Signs Recorded</h3>
-          <p className="text-gray-600">Use the form below to record the first set of vital signs.</p>
+          <p className="text-gray-600">Record vitals to see color-coded indicators and trends.</p>
         </div>
       );
     }
 
     const latestVitals = vitals[0];
+    const previousVitals = vitals.length > 1 ? vitals[1] : undefined;
+    const patientAge = calculateAge(patient.date_of_birth || '1990-01-01');
+    const hrv = calculateHeartRateVariability(vitals);
+
+    const vitalItems = [
+      {
+        label: 'Temperature',
+        value: `${latestVitals.temperature?.toFixed(1)}°C`,
+        rawValue: latestVitals.temperature || 0,
+        type: 'temperature'
+      },
+      {
+        label: 'Heart Rate',
+        value: `${latestVitals.heartRate} BPM`,
+        rawValue: latestVitals.heartRate,
+        type: 'heartRate'
+      },
+      {
+        label: 'Blood Pressure',
+        value: `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}`,
+        rawValue: latestVitals.bloodPressure.systolic,
+        type: 'systolic'
+      },
+      {
+        label: 'O2 Saturation',
+        value: `${latestVitals.oxygenSaturation}%`,
+        rawValue: latestVitals.oxygenSaturation,
+        type: 'oxygenSaturation'
+      },
+      {
+        label: 'Respiratory Rate',
+        value: `${latestVitals.respiratoryRate}/min`,
+        rawValue: latestVitals.respiratoryRate,
+        type: 'respiratoryRate'
+      }
+    ];
+
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
-          <span className="text-sm text-gray-500">
-            {new Date(latestVitals.lastUpdated || '').toLocaleString()}
-          </span>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Temperature</p>
-            <p className="text-xl font-semibold text-gray-900">
-              {latestVitals.temperature?.toFixed(1)}°C
-            </p>
+      <div className="space-y-6">
+        {/* Main Vitals Grid */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
+            <span className="text-sm text-gray-500">
+              {new Date(latestVitals.lastUpdated || '').toLocaleString()}
+            </span>
           </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Heart Rate</p>
-            <p className="text-xl font-semibold text-gray-900">
-              {latestVitals.heartRate} BPM
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Blood Pressure</p>
-            <p className="text-xl font-semibold text-gray-900">
-              {latestVitals.bloodPressure.systolic}/{latestVitals.bloodPressure.diastolic}
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600">O2 Saturation</p>
-            <p className="text-xl font-semibold text-gray-900">
-              {latestVitals.oxygenSaturation}%
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Respiratory Rate</p>
-            <p className="text-xl font-semibold text-gray-900">
-              {latestVitals.respiratoryRate}/min
-            </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {vitalItems.map((vital) => {
+              const status = getVitalStatus(vital.type, vital.rawValue, patientAge);
+              const trend = getTrendDirection(latestVitals, previousVitals, vital.type);
+              const TrendIcon = trend.icon;
+
+              return (
+                <div key={vital.type} className={`${status.bgColor} border border-gray-200 rounded-lg p-4 text-center relative`}>
+                  <div className="absolute top-2 right-2">
+                    <TrendIcon className={`h-4 w-4 ${trend.color}`} />
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">{vital.label}</p>
+                  <p className={`text-xl font-semibold ${status.color}`}>
+                    {vital.value}
+                  </p>
+                  <div className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${
+                    status.status === 'normal' ? 'bg-green-100 text-green-700' :
+                    status.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {status.status.toUpperCase()}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+
+        {/* Heart Rate Variability */}
+        {hrv && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <Activity className="h-5 w-5 text-blue-600 mr-2" />
+              <h4 className="text-lg font-medium text-gray-900">Heart Rate Variability</h4>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Average HR</p>
+                <p className="text-2xl font-semibold text-gray-900">{hrv.mean}</p>
+                <p className="text-xs text-gray-500">BPM</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Variability</p>
+                <p className="text-2xl font-semibold text-gray-900">{hrv.variability}</p>
+                <p className="text-xs text-gray-500">SD</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Status</p>
+                <div className={`text-lg font-semibold px-3 py-1 rounded-full inline-block ${
+                  hrv.status === 'normal' ? 'bg-green-100 text-green-700' :
+                  hrv.status === 'low' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {hrv.status.toUpperCase()}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>HRV Insight:</strong> {
+                  hrv.status === 'normal' ? 'Heart rate variability is within normal range, indicating good cardiovascular health.' :
+                  hrv.status === 'low' ? 'Low variability may indicate stress or fatigue. Consider rest and monitoring.' :
+                  'High variability detected. May indicate irregular heart rhythm - consider further assessment.'
+                }
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -305,34 +468,15 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         {/* View Toggle */}
         <div className="flex space-x-2">
           <button
-            onClick={() => setActiveView('entry')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'entry'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            onClick={() => setShowVitalsModal(true)}
+            className="px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 inline mr-2" />
             Record Vitals
           </button>
           <button
-            onClick={() => setActiveView('review')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'review'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Activity className="h-4 w-4 inline mr-2" />
-            Review
-          </button>
-          <button
             onClick={() => setActiveView('trends')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'trends'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className="px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
           >
             <TrendingUp className="h-4 w-4 inline mr-2" />
             Trends
@@ -347,51 +491,54 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       {renderSuccessMessage()}
 
       {/* Current View Content */}
-      {activeView === 'entry' && (
+      {activeView === 'trends' && (
         <div className="space-y-6">
-          {renderVitalsSummary()}
+          {/* Enhanced Vitals Summary with Color Coding and Trends */}
+          {renderEnhancedVitalsSummary()}
           
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-6">Record New Vital Signs</h3>
-            <DynamicForm
-              schemaId="vitals-entry-v1"
-              initialData={{
-                patientId: patient.patient_id,
-                recordedBy: currentUser?.name || ''
-              }}
-              context={generateFormContext()}
-              onSubmit={handleVitalsSubmission}
-              onChange={handleFormChange}
-              onValidationChange={handleValidationChange}
-              autoSave={false}
-              className="max-w-none"
-            />
-          </div>
-        </div>
-      )}
-
-      {activeView === 'review' && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-6">Vitals Review & Analysis</h3>
-          <DynamicForm
-            schemaId="vitals-review-v1"
-            initialData={{
-              patientId: patient.patient_id
-            }}
-            context={generateFormContext()}
-            readOnly={false}
-            className="max-w-none"
+          {/* Detailed Trends Component */}
+          <VitalsTrends
+            patientId={patient.id}
+            patientName={`${patient.first_name} ${patient.last_name}`}
+            onClose={() => setActiveView('trends')}
+            onRecordVitals={() => setShowVitalsModal(true)}
           />
         </div>
       )}
 
-      {activeView === 'trends' && (
-        <VitalsTrends
-          patientId={patient.id}
-          patientName={`${patient.first_name} ${patient.last_name}`}
-          onClose={() => setActiveView('entry')}
-          onRecordVitals={() => setActiveView('entry')}
-        />
+      {/* Vitals Recording Modal */}
+      {showVitalsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Record New Vital Signs</h3>
+                <button
+                  onClick={() => setShowVitalsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <DynamicForm
+                schemaId="vitals-entry-v1"
+                initialData={{
+                  patientId: patient.patient_id,
+                  recordedBy: currentUser?.name || ''
+                }}
+                context={generateFormContext()}
+                onSubmit={handleVitalsSubmission}
+                onChange={handleFormChange}
+                onValidationChange={handleValidationChange}
+                autoSave={false}
+                className="max-w-none"
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Loading Overlay */}
