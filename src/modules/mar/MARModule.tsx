@@ -16,7 +16,7 @@ import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
 import { medicationAdministrationSchema, medicationReconciliationSchema } from '../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../types';
-import { type FormData as SchemaFormData, ValidationResult, FormGenerationContext } from '../../types/schema';
+import { ValidationResult, FormGenerationContext } from '../../types/schema';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -42,7 +42,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [activeView, setActiveView] = useState<MARView>('administration');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<MedicationCategory | 'All'>('All');
   const [isLoading, setIsLoading] = useState(false);
-  const [alerts, setAlerts] = useState<any[]>([]);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -118,10 +117,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
       onMedicationUpdate(updatedMedications);
 
       // Check for clinical alerts
+      // Check for clinical alerts
       if (validation.clinicalAlerts && validation.clinicalAlerts.length > 0) {
-        setAlerts(validation.clinicalAlerts);
+        console.log('Clinical alerts detected:', validation.clinicalAlerts);
       }
-
       console.log('Medication administration recorded successfully');
     } catch (error) {
       console.error('Error recording medication administration:', error);
@@ -131,7 +130,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   };
 
   // Handle medication reconciliation
-  const handleMedicationReconciliation = async (data: FormData, validation: ValidationResult) => {
+  const handleMedicationReconciliation = async (data: any, validation: ValidationResult) => {
     if (!validation.valid) return;
 
     setIsLoading(true);

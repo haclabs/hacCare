@@ -1,0 +1,38 @@
+[
+  {
+    "file": "src/utils/sanitization.ts.backup",
+    "action": "deleted",
+    "reason": "Auto-cleanup: backup/debug file",
+    "timestamp": "2025-07-26T21:02:38.075Z"
+  },
+  {
+    "file": "debug-tenant-counts.js",
+    "action": "deleted",
+    "reason": "Auto-cleanup: backup/debug file",
+    "timestamp": "2025-07-26T21:02:38.079Z"
+  },
+  {
+    "file": "smart-demo.js",
+    "action": "archived",
+    "reason": "Potentially unused demo/test file",
+    "timestamp": "2025-07-26T21:02:38.080Z"
+  },
+  {
+    "file": "test-dompurify.mjs",
+    "action": "archived",
+    "reason": "Potentially unused demo/test file",
+    "timestamp": "2025-07-26T21:02:38.080Z"
+  },
+  {
+    "file": "smart-sanitization-demo.mjs",
+    "action": "archived",
+    "reason": "Potentially unused demo/test file",
+    "timestamp": "2025-07-26T21:02:38.080Z"
+  },
+  {
+    "file": "test-sanitization-fix.js",
+    "action": "archived",
+    "reason": "Potentially unused demo/test file",
+    "timestamp": "2025-07-26T21:02:38.081Z"
+  }
+]
