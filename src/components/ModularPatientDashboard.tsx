@@ -21,34 +21,28 @@ import {
   Pill, 
   FileText, 
   User, 
-  ChevronLeft, 
-  ArrowLeft, 
   Settings,
   Calendar,
   Clock,
-  TrendingUp,
-  Heart,
-  Thermometer,
-  Stethoscope,
   AlertTriangle,
   CheckCircle,
   Users,
   BedDouble,
-  Phone,
   Badge,
-  Zap
+  FileCheck,
+  ArrowRight
 } from 'lucide-react';
 import { VitalsModule } from '../modules/vitals/VitalsModule';
 import { MARModule } from '../modules/mar/MARModule';
 import { FormsModule } from '../modules/forms/FormsModule';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { Patient } from '../types';
-import { fetchPatientById } from '../lib/patientService';
+import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
+import { fetchPatientMedications } from '../lib/medicationService';
 import { useTenant } from '../contexts/TenantContext';
 
 interface ModularPatientDashboardProps {
   onShowBracelet?: (patient: Patient) => void;
-  onClose?: () => void;
   currentUser?: {
     id: string;
     name: string;
@@ -70,7 +64,6 @@ interface ModuleConfig {
 
 export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = ({
   onShowBracelet,
-  onClose,
   currentUser
 }) => {
   const { id } = useParams<{ id: string }>();
@@ -82,6 +75,644 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
+
+  // Generate comprehensive hospital-style patient record
+  const handlePrintRecord = async () => {
+    if (!patient?.id) {
+      alert('Patient data not available for record generation.');
+      return;
+    }
+
+    try {
+      // Get all patient data for comprehensive record
+      const [vitalsData, medicationsData, notesData] = await Promise.all([
+        fetchPatientVitals(patient.id),
+        fetchPatientMedications(patient.id),
+        fetchPatientNotes(patient.id)
+      ]);
+
+      // Create a new window for the hospital record
+      const reportWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+      
+      if (!reportWindow) {
+        alert('Please allow popups to generate the patient record.');
+        return;
+      }
+
+      reportWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Patient Medical Record - ${patient.first_name} ${patient.last_name}</title>
+            <style>
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              
+              body { 
+                font-family: 'Times New Roman', serif;
+                font-size: 12px;
+                line-height: 1.4;
+                color: #000;
+                background: #fff;
+                padding: 0;
+                margin: 0;
+              }
+              
+              .record-container {
+                max-width: 8.5in;
+                margin: 0 auto;
+                padding: 0.75in;
+                background: white;
+                min-height: 11in;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+              }
+              
+              .hospital-header {
+                text-align: center;
+                border-bottom: 3px double #000;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+              }
+              
+              .hospital-logo {
+                font-size: 24px;
+                font-weight: bold;
+                color: #000;
+                margin-bottom: 3px;
+                letter-spacing: 1px;
+              }
+              
+              .hospital-address {
+                font-size: 10px;
+                color: #333;
+                margin-bottom: 8px;
+              }
+              
+              .record-type {
+                font-size: 16px;
+                font-weight: bold;
+                color: #000;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                margin-top: 8px;
+              }
+              
+              .patient-id-bar {
+                background: #f0f0f0;
+                border: 2px solid #000;
+                padding: 10px;
+                margin: 15px 0;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+              }
+              
+              .form-section {
+                margin-bottom: 25px;
+                border: 1px solid #000;
+                page-break-inside: avoid;
+              }
+              
+              .section-header {
+                background: #000;
+                color: #fff;
+                padding: 8px 12px;
+                font-weight: bold;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              }
+              
+              .section-content {
+                padding: 15px;
+              }
+              
+              .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 15px;
+              }
+              
+              .info-row {
+                display: flex;
+                margin-bottom: 8px;
+                align-items: baseline;
+              }
+              
+              .info-label {
+                font-weight: bold;
+                min-width: 120px;
+                margin-right: 10px;
+                text-transform: uppercase;
+                font-size: 11px;
+              }
+              
+              .info-value {
+                flex: 1;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 2px;
+                font-size: 12px;
+              }
+              
+              .alert-box {
+                background: #fff3cd;
+                border: 3px solid #dc3545;
+                padding: 12px;
+                margin: 15px 0;
+                font-weight: bold;
+                text-align: center;
+                font-size: 14px;
+              }
+              
+              .alert-box.no-alerts {
+                background: #d4edda;
+                border-color: #28a745;
+                color: #155724;
+              }
+              
+              .medication-table, .vitals-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+              }
+              
+              .medication-table th, .medication-table td,
+              .vitals-table th, .vitals-table td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+                font-size: 11px;
+              }
+              
+              .medication-table th, .vitals-table th {
+                background: #f5f5f5;
+                font-weight: bold;
+                text-transform: uppercase;
+              }
+              
+              .notes-section {
+                margin-top: 15px;
+              }
+              
+              .note-entry {
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+                padding: 10px;
+                background: #fafafa;
+              }
+              
+              .note-header {
+                font-weight: bold;
+                font-size: 11px;
+                color: #333;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+              }
+              
+              .note-content {
+                font-size: 11px;
+                line-height: 1.5;
+                margin-bottom: 5px;
+              }
+              
+              .note-meta {
+                font-size: 9px;
+                color: #666;
+                font-style: italic;
+              }
+              
+              .signature-section {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #000;
+              }
+              
+              .signature-line {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+              }
+              
+              .sig-field {
+                flex: 1;
+                margin-right: 30px;
+              }
+              
+              .sig-field:last-child {
+                margin-right: 0;
+              }
+              
+              .sig-line {
+                border-bottom: 1px solid #000;
+                height: 30px;
+                margin-bottom: 5px;
+              }
+              
+              .sig-label {
+                font-size: 10px;
+                font-weight: bold;
+                text-transform: uppercase;
+              }
+              
+              .record-footer {
+                margin-top: 30px;
+                padding-top: 15px;
+                border-top: 1px solid #ccc;
+                font-size: 9px;
+                color: #666;
+                text-align: center;
+              }
+              
+              .confidentiality-notice {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                padding: 10px;
+                margin-top: 15px;
+                font-size: 9px;
+                text-align: justify;
+              }
+              
+              .action-buttons {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                display: flex;
+                gap: 10px;
+              }
+              
+              .btn {
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: bold;
+                text-transform: uppercase;
+              }
+              
+              .btn-print {
+                background: #007bff;
+                color: white;
+              }
+              
+              .btn-close {
+                background: #6c757d;
+                color: white;
+              }
+              
+              .btn:hover {
+                opacity: 0.8;
+              }
+              
+              @media print {
+                .action-buttons { display: none; }
+                .record-container { 
+                  box-shadow: none; 
+                  padding: 0.5in;
+                  max-width: none;
+                }
+                @page { 
+                  margin: 0.5in;
+                  size: letter;
+                }
+              }
+              
+              @media screen and (max-width: 768px) {
+                .record-container {
+                  padding: 20px;
+                  max-width: 100%;
+                }
+                .info-grid {
+                  grid-template-columns: 1fr;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="action-buttons">
+              <button class="btn btn-print" onclick="window.print()">Print Record</button>
+              <button class="btn btn-close" onclick="window.close()">Close</button>
+            </div>
+            
+            <div class="record-container">
+              <div class="hospital-header">
+                <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
+                <div class="hospital-address">
+                  1234 Healthcare Drive • Medical City, MC 12345<br>
+                  Phone: (555) 123-4567 • Fax: (555) 123-4568
+                </div>
+                <div class="record-type">Official Medical Record</div>
+              </div>
+
+              <div class="patient-id-bar">
+                PATIENT: ${patient.first_name?.toUpperCase()} ${patient.last_name?.toUpperCase()} | ID: ${patient.patient_id} | DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Patient Demographics</div>
+                <div class="section-content">
+                  <div class="info-grid">
+                    <div>
+                      <div class="info-row">
+                        <span class="info-label">Last Name:</span>
+                        <span class="info-value">${patient.last_name}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">First Name:</span>
+                        <span class="info-value">${patient.first_name}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Date of Birth:</span>
+                        <span class="info-value">${new Date(patient.date_of_birth).toLocaleDateString()}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Age:</span>
+                        <span class="info-value">${new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} years</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="info-row">
+                        <span class="info-label">Gender:</span>
+                        <span class="info-value">${patient.gender}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Blood Type:</span>
+                        <span class="info-value">${patient.blood_type}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Room Number:</span>
+                        <span class="info-value">${patient.room_number}</span>
+                      </div>
+                      <div class="info-row">
+                        <span class="info-label">Bed Number:</span>
+                        <span class="info-value">${patient.bed_number}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Admission Information</div>
+                <div class="section-content">
+                  <div class="info-row">
+                    <span class="info-label">Admission Date:</span>
+                    <span class="info-value">${new Date(patient.admission_date).toLocaleDateString()}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Current Condition:</span>
+                    <span class="info-value">${patient.condition}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Primary Diagnosis:</span>
+                    <span class="info-value">${patient.diagnosis}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Assigned Nurse:</span>
+                    <span class="info-value">${patient.assigned_nurse}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Emergency Contact Information</div>
+                <div class="section-content">
+                  <div class="info-row">
+                    <span class="info-label">Contact Name:</span>
+                    <span class="info-value">${patient.emergency_contact_name}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Relationship:</span>
+                    <span class="info-value">${patient.emergency_contact_relationship}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Phone Number:</span>
+                    <span class="info-value">${patient.emergency_contact_phone}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Allergies and Medical Alerts</div>
+                <div class="section-content">
+                  ${patient.allergies && patient.allergies.length > 0 
+                    ? `<div class="alert-box">
+                        ⚠️ CRITICAL ALLERGIES: ${patient.allergies.join(' • ')}
+                      </div>`
+                    : `<div class="alert-box no-alerts">✓ NO KNOWN ALLERGIES</div>`
+                  }
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Current Medications</div>
+                <div class="section-content">
+                  <table class="medication-table">
+                    <thead>
+                      <tr>
+                        <th>Medication Name</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Route</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${medicationsData.filter(med => med.status === 'Active').length > 0 
+                        ? medicationsData.filter(med => med.status === 'Active').map(med => `
+                          <tr>
+                            <td>${med.name}</td>
+                            <td>${med.dosage}</td>
+                            <td>${med.frequency}</td>
+                            <td>${med.route}</td>
+                            <td>${med.status}</td>
+                          </tr>
+                        `).join('')
+                        : '<tr><td colspan="5" style="text-align: center; font-style: italic;">No active medications recorded</td></tr>'
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Latest Vital Signs</div>
+                <div class="section-content">
+                  ${vitalsData.length > 0 ? `
+                    <table class="vitals-table">
+                      <thead>
+                        <tr>
+                          <th>Temperature</th>
+                          <th>Heart Rate</th>
+                          <th>Blood Pressure</th>
+                          <th>Respiratory Rate</th>
+                          <th>O2 Saturation</th>
+                          <th>Recorded</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>${vitalsData[0].temperature}°F</td>
+                          <td>${vitalsData[0].heartRate} bpm</td>
+                          <td>${vitalsData[0].bloodPressure}</td>
+                          <td>${vitalsData[0].respiratoryRate}/min</td>
+                          <td>${vitalsData[0].oxygenSaturation}%</td>
+                          <td>${vitalsData[0].recorded_at ? new Date(vitalsData[0].recorded_at).toLocaleString() : 'Not recorded'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  ` : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No vital signs recorded</p>'}
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">Clinical Notes and Assessments</div>
+                <div class="section-content">
+                  <div class="notes-section">
+                    ${notesData.length > 0 ? notesData.slice(0, 8).map(note => `
+                      <div class="note-entry">
+                        <div class="note-header">${note.type || 'Clinical Note'}</div>
+                        <div class="note-content">${note.content}</div>
+                        <div class="note-meta">Recorded: ${new Date(note.created_at || new Date()).toLocaleString()}</div>
+                      </div>
+                    `).join('') : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No clinical notes recorded</p>'}
+                  </div>
+                </div>
+              </div>
+
+              <div class="signature-section">
+                <div class="signature-line">
+                  <div class="sig-field">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Attending Physician Signature</div>
+                  </div>
+                  <div class="sig-field">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Date</div>
+                  </div>
+                </div>
+                <div class="signature-line">
+                  <div class="sig-field">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Nurse Signature</div>
+                  </div>
+                  <div class="sig-field">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Date</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="record-footer">
+                <div><strong>Record Generated:</strong> ${new Date().toLocaleString()}</div>
+                <div><strong>Generated By:</strong> hacCare Medical Records System</div>
+                
+                <div class="confidentiality-notice">
+                  <strong>CONFIDENTIALITY NOTICE:</strong> This medical record contains confidential patient health information protected by federal and state privacy laws including HIPAA. This information is intended solely for the use of authorized healthcare providers and personnel involved in the patient's care. Any unauthorized review, disclosure, copying, distribution, or use of this information is strictly prohibited and may be subject to legal penalties. If you have received this record in error, please notify the sender immediately and destroy all copies.
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      
+      reportWindow.document.close();
+      reportWindow.focus();
+      
+    } catch (error) {
+      console.error('Error generating patient record:', error);
+      alert('Error generating patient record. Please try again.');
+    }
+  };
+
+  // Action Cards Configuration
+  const actionCards = [
+    {
+      id: 'patient-record',
+      title: 'View Patient Record',
+      description: 'Generate comprehensive medical record',
+      icon: FileText,
+      action: handlePrintRecord,
+      color: 'blue'
+    },
+    {
+      id: 'discharge-summary',
+      title: 'Discharge Summary',
+      description: 'Create discharge documentation',
+      icon: FileCheck,
+      action: () => alert('Discharge Summary feature coming soon!'),
+      color: 'green'
+    },
+    {
+      id: 'transfer-request',
+      title: 'Transfer Request',
+      description: 'Initiate patient transfer process',
+      icon: ArrowRight,
+      action: () => alert('Transfer Request feature coming soon!'),
+      color: 'purple'
+    }
+  ];
+
+  // Render Action Cards
+  const renderActionCards = () => {
+    return (
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Patient Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {actionCards.map((card) => {
+            const IconComponent = card.icon;
+            return (
+              <div
+                key={card.id}
+                onClick={card.action}
+                className={`
+                  bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 
+                  p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer
+                  hover:border-${card.color}-300 dark:hover:border-${card.color}-600
+                  group hover:scale-[1.02]
+                `}
+              >
+                <div className="flex items-center mb-4">
+                  <div className={`
+                    p-3 rounded-lg mr-4
+                    ${card.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/50 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/70' :
+                      card.color === 'green' ? 'bg-green-100 dark:bg-green-900/50 group-hover:bg-green-200 dark:group-hover:bg-green-800/70' :
+                      'bg-purple-100 dark:bg-purple-900/50 group-hover:bg-purple-200 dark:group-hover:bg-purple-800/70'}
+                    transition-colors duration-300
+                  `}>
+                    <IconComponent className={`h-6 w-6 ${
+                      card.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                      card.color === 'green' ? 'text-green-600 dark:text-green-400' :
+                      'text-purple-600 dark:text-purple-400'
+                    }`} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                      {card.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {card.description}
+                    </p>
+                  </div>
+                </div>
+                <div className={`
+                  text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  ${card.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                    card.color === 'green' ? 'text-green-600 dark:text-green-400' :
+                    'text-purple-600 dark:text-purple-400'}
+                `}>
+                  Click to {card.title.toLowerCase()}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Load patient data from URL parameter
   useEffect(() => {
@@ -331,10 +962,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   <span>{patient.gender}</span>
                 </span>
                 <span className="flex items-center space-x-1">
-                  <Phone className="h-4 w-4" />
-                  <span>{patient.phone_number || 'No contact'}</span>
-                </span>
-                <span className="flex items-center space-x-1">
                   <Clock className="h-4 w-4" />
                   <span>Updated {lastUpdated.toLocaleTimeString()}</span>
                 </span>
@@ -363,14 +990,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 Edit Template
               </button>
             )}
-            <button
-              onClick={() => window.print()}
-              className="flex items-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-4 py-2.5 rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300 hover:scale-105 font-medium"
-              title="Print Patient Summary"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Print Summary
-            </button>
             {/* Contact button removed as requested */}
           </div>
           {/* End Modern Action Row */}
@@ -398,6 +1017,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         {activeModule === 'overview' ? (
           <div className="space-y-8">
             {renderPatientOverview()}
+            {renderActionCards()}
             {renderModuleSelector()}
           </div>
         ) : (

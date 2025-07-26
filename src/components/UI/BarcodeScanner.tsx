@@ -23,9 +23,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   }, [buffer, debug]);
 
   return (
-    <div className={`text-sm text-gray-500 ${className}`}>
-      {debug && <div>Buffer: {buffer}</div>}
-    </div>
+    <div className={`text-sm text-gray-500 ${className}`}></div>
   );
 };
 
