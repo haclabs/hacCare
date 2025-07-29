@@ -39,10 +39,13 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log('🔐 Attempting to sign in user...');
       const { error } = await signIn(email, password);
       
       if (error) {
+        console.error('❌ Sign in error:', error);
         setError(parseAuthError(error));
+        setLoading(false); // Only set loading to false on error
         
         // Update connection status for network-related errors
         if (error.message?.includes('Network error') || 
@@ -50,10 +53,15 @@ export const LoginForm: React.FC = () => {
             error.message?.includes('timeout')) {
           setConnectionStatus('disconnected');
         } 
+      } else {
+        console.log('✅ Sign in successful, waiting for auth state change...');
+        // Don't set loading to false - let AuthContext handle the loading state
+        // The auth state change will trigger and AuthContext will manage loading
       }
     } catch (error: any) {
       console.error('Login error:', error);
       setError(parseAuthError(error));
+      setLoading(false); // Only set loading to false on error
       
       // Update connection status for network-related errors
       if (error.message?.includes('Failed to fetch') || 
@@ -61,9 +69,8 @@ export const LoginForm: React.FC = () => {
           error.message?.includes('timeout')) {
           setConnectionStatus('disconnected');
       } 
-    } finally {
-      setLoading(false);
     }
+    // Removed finally block - let AuthContext manage loading state on success
   };
 
   const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
@@ -73,15 +80,18 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log('🔐 Attempting demo login...');
       const { error } = await signIn(demoEmail, demoPassword);
       
       if (error) {
+        console.error('❌ Demo login error:', error);
         // Special case for demo accounts
         if (error.message?.includes('Invalid login credentials')) {
           setError('Demo account not found. Please ensure the demo accounts have been set up in your Supabase project.');
         } else {
           setError(parseAuthError(error));
         }
+        setLoading(false); // Only set loading to false on error
         
         // Update connection status for network-related errors
         if (error.message?.includes('Network error') || 
@@ -89,10 +99,14 @@ export const LoginForm: React.FC = () => {
             error.message?.includes('timeout')) {
             setConnectionStatus('disconnected');
         }
+      } else {
+        console.log('✅ Demo login successful, waiting for auth state change...');
+        // Don't set loading to false - let AuthContext handle the loading state
       }
     } catch (error: any) {
       console.error('Demo login error:', error);
       setError(parseAuthError(error));
+      setLoading(false); // Only set loading to false on error
       
       // Update connection status for network-related errors
       if (error.message?.includes('Failed to fetch') || 
@@ -100,9 +114,8 @@ export const LoginForm: React.FC = () => {
           error.message?.includes('timeout')) {
           setConnectionStatus('disconnected');
       }
-    } finally {
-      setLoading(false);
     }
+    // Removed finally block - let AuthContext manage loading state on success
   };
 
   const getConnectionStatusIcon = () => {

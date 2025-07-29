@@ -71,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
@@ -85,9 +86,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        // Set a timeout to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          console.log('⏰ Auth initialization timeout reached');
+          if (mounted) {
+            setLoading(false);
+          }
+        }, 10000); // 10 second timeout
+
         console.log('🔍 Checking session with retry logic...');
         
         const { data: { session }, error } = await supabase.auth.getSession();
+
+        // Clear timeout since we got a response
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
 
         if (error) {
           console.error('❌ Error getting session:', error);
@@ -131,36 +145,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('🔄 Auth state changed:', event);
+        console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
+
+        // Clear any existing timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
 
         if (session?.user) {
           console.log('👤 User signed in:', session.user.email);
           setUser(session.user);
-          await fetchUserProfile(session.user.id);
+          try {
+            await fetchUserProfile(session.user.id);
+          } catch (error) {
+            console.error('Error fetching profile after sign in:', error);
+          }
         } else {
-          console.log('👋 User signed out');
+          console.log('👋 User signed out or no session');
           setUser(null);
           setProfile(null);
         }
         
+        // Always set loading to false after auth state change
+        console.log('✅ Setting loading to false after auth state change');
         setLoading(false);
       }
     );
 
     return () => {
       mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔐 AuthContext: Starting sign in process...');
+      setLoading(true); // Set loading while signing in
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      return { error };
+      
+      if (error) {
+        console.error('❌ AuthContext: Sign in failed:', error.message);
+        setLoading(false); // Set loading to false on error
+        return { error };
+      }
+      
+      console.log('✅ AuthContext: Sign in request successful, waiting for auth state change...');
+      // Don't set loading to false here - let the auth state change handle it
+      return { error: null };
     } catch (error) {
+      console.error('💥 AuthContext: Exception during sign in:', error);
+      setLoading(false); // Only set loading to false on error
       return { error };
     }
   };
