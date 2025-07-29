@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
+import { debugAuthEnvironment } from '../../lib/authDebug';
 
 interface AuthContextType {
   user: User | null;
@@ -28,6 +29,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
+
+  // Add a hard timeout fallback
+  useEffect(() => {
+    const hardTimeout = setTimeout(() => {
+      console.log('🚨 HARD TIMEOUT: Forcing loading to false after 5 seconds');
+      setLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(hardTimeout);
+  }, []);
 
   const fetchUserProfile = async (userId: string): Promise<void> => {
     if (!userId) {
@@ -76,6 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         console.log('🔄 Starting basic auth initialization...');
+        
+        // Debug environment variables
+        const envDebug = debugAuthEnvironment();
+        console.log('🔧 Environment Debug:', envDebug);
         
         if (!isSupabaseConfigured) {
           console.log('⚠️ Supabase not configured, using mock data mode');
