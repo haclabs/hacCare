@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
+import { initializeSessionPersistence, checkSessionWithRetry } from '../../lib/authPersistence';
 
 /**
  * Authentication Context Interface
@@ -22,7 +23,7 @@ interface AuthContextType {
  * Authentication Context
  * React context for managing authentication state throughout the application
  */
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * Custom hook to access authentication context
@@ -81,7 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
      */
     const initializeAuth = async () => {
       try {
-        console.log('🔄 Starting auth initialization...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Starting enhanced auth initialization...');
+        }
         
         // Skip initialization if Supabase is not configured
         if (!isSupabaseConfigured) {
@@ -93,6 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        // Initialize enhanced session persistence
+        await initializeSessionPersistence();
+
         // Set timeout to prevent infinite loading (15 seconds)
         timeoutId = setTimeout(() => {
           console.log('⏰ Auth initialization timeout reached');
@@ -101,83 +107,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }, 15000);
 
-        console.log('🔍 Getting initial session from Supabase...');
+        console.log('🔍 Checking session with retry logic...');
         
-        // Create abort controller for timeout handling
-        const controller = new AbortController();
-        const sessionTimeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        // Attempt to get current session with timeout protection
-        // This uses Supabase's internal session management, not localStorage
-        const sessionPromise = supabase.auth.getSession();
-        
-        let sessionResult;
-        try {
-          sessionResult = await Promise.race([
-            sessionPromise,
-            new Promise<any>((_, reject) => 
-              setTimeout(() => reject(new Error('Session timeout')), 10000)
-            )
-          ]);
-          clearTimeout(sessionTimeoutId);
-        } catch (timeoutError) {
-          clearTimeout(sessionTimeoutId);
-          controller.abort();
-          throw timeoutError;
-        }
-        
-        const { data: { session }, error } = sessionResult;
+        // Use enhanced session check with retry logic
+        const sessionExists = await checkSessionWithRetry(3);
         
         // Clear timeout since we got a response
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
-        
-        // Handle session retrieval errors
-        if (error) {
-          console.error('❌ Error getting session:', error);
-          
-          // Handle refresh token errors specifically
-          // These occur when stored tokens are invalid or expired
-          if (error.message?.includes('Invalid Refresh Token') || 
-              error.message?.includes('Refresh Token Not Found') ||
-              error.message?.includes('refresh_token_not_found')) {
-            console.log('🔄 Invalid refresh token detected, clearing session...');
-            await signOut(); // Clear invalid session data via Supabase
-          }
-          
-          if (mounted) {
-            setLoading(false);
-          }
-          return;
-        }
 
-        console.log('✅ Session result:', session?.user?.email || 'No session');
-
-        // Process successful session
-        if (mounted) {
-          if (session?.user) {
-            console.log('👤 User found, fetching profile...');
-            setUser(session.user);
+        if (sessionExists) {
+          // Get the actual session data
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('❌ Error getting session after successful check:', error);
             
-            // Fetch user profile and wait for completion
-            // This prevents UI flash between user existing and profile loading
-            try {
-              await fetchUserProfile(session.user.id);
-            } catch (error) {
-              console.error('Profile fetch failed during init:', error);
-              // Don't fail entire auth process if profile fetch fails
+            // Handle refresh token errors specifically
+            if (error.message?.includes('Invalid Refresh Token') || 
+                error.message?.includes('Refresh Token Not Found') ||
+                error.message?.includes('refresh_token_not_found')) {
+              console.log('🔄 Invalid refresh token detected, clearing session...');
+              await signOut();
             }
             
             if (mounted) {
               setLoading(false);
             }
-          } else {
-            console.log('👤 No user, stopping loading');
+            return;
+          }
+
+          if (session?.user && mounted) {
+            console.log('👤 User session restored successfully:', session.user.email);
+            setUser(session.user);
+            
+            // Fetch user profile and wait for completion
+            try {
+              await fetchUserProfile(session.user.id);
+            } catch (error) {
+              console.error('Profile fetch failed during init:', error);
+            }
+            
+            setLoading(false);
+          }
+        } else {
+          console.log('👤 No session found, user needs to log in');
+          if (mounted) {
             setUser(null);
             setProfile(null);
             setLoading(false);
           }
+        }
+
+        // Debug auth state in development mode (optional debugging can be added here if needed)
+        if (import.meta.env.DEV) {
+          // Debug logging handled elsewhere
         }
       } catch (error: any) {
         console.error('💥 Error in initializeAuth:', error);
@@ -217,7 +202,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('🔄 Auth state changed:', event, session?.user?.email || 'No user');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Auth state changed:', event, session?.user?.email || 'No user');
+        }
         
         // Clear any existing timeout
         if (timeoutId) {
@@ -272,7 +259,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      console.log('📋 Fetching profile for user:', userId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching profile for user:', userId);
+      }
       setProfileLoading(true);
       
       // Check database health first
@@ -330,7 +319,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setProfile(null);
           }
         } else {
-          console.log('✅ Profile fetched successfully:', data?.email);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Profile fetched successfully:', data?.email);
+          }
           setProfile(data);
           setIsOffline(false);
         }
@@ -596,4 +587,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export { AuthContext }
+// AuthContext is already exported in the createContext line above

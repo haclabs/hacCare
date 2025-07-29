@@ -206,8 +206,14 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               Clear All
             </button>
             <button
-              onClick={onClose}  
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('VitalsTrends close button clicked');
+                onClose();
+              }}  
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>

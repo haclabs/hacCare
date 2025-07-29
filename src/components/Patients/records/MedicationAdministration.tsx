@@ -2,26 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Pill, Trash2, X, Activity, RefreshCw, Calendar, CalendarDays, AlertTriangle, Plus, FileText } from 'lucide-react';
 import { isValid, parseISO } from 'date-fns';
 import { formatLocalTime } from '../../../utils/dateUtils';
-import { MedicationAdministrationForm } from '../forms/MedicationAdministrationForm';
-import { MedicationBarcode } from '../visuals/MedicationBarcode';
-import { MedicationAdministrationHistory } from './MedicationAdministrationHistory';
-// import { MedicationForm } from './MedicationForm'; // <-- File not found, comment out or create the file to resolve the error
-
-// If the file exists elsewhere, update the path accordingly, e.g.:
-// import { MedicationBarcode } from '../someOtherFolder/MedicationBarcode';
-
-// If the file does not exist, create it or comment out/remove this import and related usage to resolve the error.
-// import { useAuth } from '../../hooks/useAuth'; 
-// TODO: Update the import path below to the correct location of useAuth or implement a mock to avoid errors.
-import { useAuth } from '../../../hooks/useAuth'; // Try this path if your hooks are in src/hooks
-// If the above path is still incorrect, comment out this line and related usage, or create the file.
-// import { supabase } from '../../lib/supabase'; // File not found, comment out or update the path if you have a supabase client elsewhere
+// import { MedicationBarcode } from '../visuals/MedicationBarcode'; // Component not found
+// import { MedicationAdministrationHistory } from './MedicationAdministrationHistory'; // Component not found
+import { MedicationForm } from '../forms/MedicationForm';
+import { useAuth } from '../../../hooks/useAuth';
 import { fetchPatientMedications, deleteMedication } from '../../../lib/medicationService';
 import { runAlertChecks } from '../../../lib/alertService';
-// import { usePatients } from '../../hooks/usePatients';
-// TODO: Update the import path below to the correct location of usePatients or implement a mock to avoid errors.
-import { usePatients } from '../../../hooks/usePatients'; // Try this path if your hooks are in src/hooks
-// If the above path is still incorrect, comment out this line and related usage, or create the file.
+// import { usePatients } from '../../../hooks/usePatients'; // Commented out as not currently used
 import { Medication } from '../../../types';
 
 interface MedicationAdministrationProps {
@@ -56,7 +43,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
       : 'overview'
   );
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
-  const [showAdminForm, setShowAdminForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [allMedications, setAllMedications] = useState<Medication[]>(medications);
@@ -64,7 +50,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   const [showMedicationLabels, setShowMedicationLabels] = useState(false);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [medicationToEdit, setMedicationToEdit] = useState<Medication | null>(null);
-  const { getPatient } = usePatients();
+  // const { getPatient } = usePatients(); // Commented out as not currently used
 
   useEffect(() => {
     setAllMedications(medications);
@@ -295,7 +281,8 @@ const handleDeleteMedication = async (medicationId: string) => {
               onClick={() => {
                 setSelectedMedication(medication);
                 console.log('Opening administration form for medication:', medication.id);
-                setShowAdminForm(true);
+                // TODO: Implement medication administration form
+                alert('Medication administration form not yet implemented');
               }}
               className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
@@ -306,7 +293,8 @@ const handleDeleteMedication = async (medicationId: string) => {
             <button
               onClick={() => {
                 setSelectedMedication(medication);
-                setShowMedicationLabels(true);
+                // TODO: Implement medication labels/barcode functionality
+                alert('Medication labels feature not yet implemented');
               }}
               className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 text-sm flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
@@ -540,43 +528,38 @@ const handleDeleteMedication = async (medicationId: string) => {
       {renderTabContent()}
 
       {/* Modals */}
-      {showAdminForm && selectedMedication && (
-        <MedicationAdministrationForm
-          medication={selectedMedication}
-          patientId={patientId}
-          patientName={patientName || 'Unknown Patient'}
-          onClose={() => {
-            setShowAdminForm(false);
-            setSelectedMedication(null);
-          }} 
-          onSuccess={() => {
-            console.log('Medication administration successful, refreshing data');
-            setShowAdminForm(false);
-            setSelectedMedication(null);
-            // Refresh immediately
-            handleRefresh();
-          }}
-        />
-      )}
+      {/* Medication Administration Form - TODO: Implement when component is available */}
 
+      {/* Medication History - TODO: Implement when component is available */}
       {showHistory && selectedMedication && (
-        <MedicationAdministrationHistory
-          medicationId={selectedMedication.id}
-          patientId={patientId}
-          medicationName={selectedMedication.name}
-          onClose={() => {
-            setShowHistory(false);
-            setSelectedMedication(null);
-          }}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Medication History</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              History for {selectedMedication.name} - Feature coming soon
+            </p>
+            <button
+              onClick={() => {
+                setShowHistory(false);
+                setSelectedMedication(null);
+              }}
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
 
       {showMedicationForm && (
-        <MedicationAdministrationForm
-          medication={medicationToEdit as Medication}
+        <MedicationForm
+          medication={medicationToEdit}
           patientId={patientId}
           patientName={patientName || 'Unknown Patient'}
-          onClose={() => setShowMedicationForm(false)}
+          onClose={() => {
+            setShowMedicationForm(false);
+            setMedicationToEdit(null);
+          }}
           onSuccess={() => {
             setShowMedicationForm(false);
             setMedicationToEdit(null);
@@ -585,21 +568,26 @@ const handleDeleteMedication = async (medicationId: string) => {
         />
       )}
       
+      {/* Medication Labels/Barcode - TODO: Implement when component is available */}
       {showMedicationLabels && selectedMedication && (
-        <MedicationBarcode
-          patient={{ 
-            id: patientId, 
-            first_name: patientName ? patientName.split(' ')[0] : 'Unknown', 
-            last_name: patientName ? patientName.split(' ')[1] || '' : 'Patient', 
-            patient_id: getPatient(patientId)?.patient_id || 'Unknown'
-          }}
-          medications={selectedMedication ? [selectedMedication] : allMedications}
-          onClose={() => {
-            setShowMedicationLabels(false);
-            setSelectedMedication(null);
-            handleRefresh();
-          }}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Medication Labels</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Labels for {selectedMedication.name} - Feature coming soon
+            </p>
+            <button
+              onClick={() => {
+                setShowMedicationLabels(false);
+                setSelectedMedication(null);
+                handleRefresh();
+              }}
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

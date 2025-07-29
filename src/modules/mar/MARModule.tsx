@@ -11,19 +11,23 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, Shield } from 'lucide-react';
+import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, Shield, QrCode } from 'lucide-react';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
 import { medicationAdministrationSchema, medicationReconciliationSchema } from '../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../types';
 import { ValidationResult, FormGenerationContext } from '../../types/schema';
+import { createMedication } from '../../lib/medicationService';
+import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
+import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
+import { useBCMA } from '../../hooks/useBCMA';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
 interface MARModuleProps {
   patient: Patient;
   medications: Medication[];
-  onMedicationUpdate: (medications: Medication[]) => void;
+  onMedicationUpdate: (medications: Medication[]) => void | Promise<void>;
   currentUser?: {
     id: string;
     name: string;
@@ -46,6 +50,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showBarcodeLabels, setShowBarcodeLabels] = useState(false);
+
+  // BCMA Integration
+  const bcma = useBCMA();
 
   // Register schemas on component mount
   useEffect(() => {
@@ -81,6 +89,54 @@ export const MARModule: React.FC<MARModuleProps> = ({
       }
     };
   };
+
+  // Handle BCMA administration completion
+  const handleBCMAComplete = async (success: boolean, log?: any) => {
+    if (success && log && selectedMedication) {
+      // Update medication with new administration record
+      const updatedMedications = medications.map(med => {
+        if (med.id === selectedMedication.id) {
+          return {
+            ...med,
+            last_administered: log.timestamp,
+            next_due: log.next_due || med.next_due,
+            administrations: [...(med.administrations || []), log]
+          };
+        }
+        return med;
+      });
+
+      onMedicationUpdate(updatedMedications);
+      setSelectedMedication(null);
+      bcma.cancelBCMAProcess();
+
+      // Show success message
+      setSuccessMessage(`${selectedMedication.name} administered successfully via BCMA`);
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 5000);
+
+      console.log('BCMA administration completed:', log);
+    } else {
+      bcma.cancelBCMAProcess();
+      setSelectedMedication(null);
+    }
+  };
+
+  // Handle barcode scanning integration
+  useEffect(() => {
+    const handleGlobalBarcodeScanned = (event: CustomEvent) => {
+      if (bcma.state.isActive) {
+        bcma.handleBarcodeScanned(event.detail.barcode);
+      }
+    };
+
+    // Listen for barcode events from your existing scanning infrastructure
+    document.addEventListener('barcodescanned', handleGlobalBarcodeScanned as EventListener);
+
+    return () => {
+      document.removeEventListener('barcodescanned', handleGlobalBarcodeScanned as EventListener);
+    };
+  }, [bcma]);
 
   // Handle medication administration form submission
   const handleMedicationAdministration = async (data: any, validation: ValidationResult) => {
@@ -154,8 +210,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
     setIsLoading(true);
     try {
-      const newMedication: Medication = {
-        id: `med-${Date.now()}`,
+      // Create medication data object for database
+      const medicationData: Omit<Medication, 'id'> = {
         patient_id: patient.id,
         name: data.name,
         dosage: data.dosage,
@@ -165,12 +221,20 @@ export const MARModule: React.FC<MARModuleProps> = ({
         status: 'Active',
         prescribed_by: data.prescribed_by,
         start_date: data.start_date,
-        end_date: data.end_date || null,
-        next_due: data.category === 'prn' ? '' : calculateNextDue(data.frequency),
-        administrations: []
+        end_date: data.end_date || undefined,
+        next_due: data.category === 'prn' ? new Date().toISOString() : calculateNextDue(data.frequency),
+        last_administered: undefined
       };
 
-      const updatedMedications = [...medications, newMedication];
+      console.log('Creating medication in database:', medicationData);
+      
+      // Save to database using the medication service
+      const savedMedication = await createMedication(medicationData);
+      
+      console.log('Medication saved to database successfully:', savedMedication);
+
+      // Update local state with the saved medication (which now has a real database ID)
+      const updatedMedications = [...medications, savedMedication];
       onMedicationUpdate(updatedMedications);
 
       // Show success message
@@ -183,9 +247,18 @@ export const MARModule: React.FC<MARModuleProps> = ({
         setShowSuccessMessage(false);
       }, 5000);
 
-      console.log('New medication added successfully');
+      console.log('New medication added and persisted successfully');
     } catch (error) {
       console.error('Error adding medication:', error);
+      
+      // Show error message to user
+      setSuccessMessage(`Error adding medication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowSuccessMessage(true);
+      
+      // Hide error message after 5 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 5000);
     } finally {
       setIsLoading(false);
     }
@@ -467,23 +540,37 @@ export const MARModule: React.FC<MARModuleProps> = ({
               </p>
             </div>
             
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedMedication(medication);
-              }}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                shouldAlert && isDue 
-                  ? (isOverdue && alertLevel === 'critical' 
-                      ? 'bg-red-600 text-white hover:bg-red-700' 
-                      : 'bg-orange-500 text-white hover:bg-orange-600')
-                  : category === 'prn'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              {category === 'prn' ? 'Give PRN' : 'Administer'}
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  bcma.startBCMAProcess(patient, medication);
+                }}
+                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors flex items-center space-x-1"
+                title="BCMA - Barcode Administration"
+              >
+                <QrCode className="h-3 w-3" />
+                <span>BCMA</span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedMedication(medication);
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  shouldAlert && isDue 
+                    ? (isOverdue && alertLevel === 'critical' 
+                        ? 'bg-red-600 text-white hover:bg-red-700' 
+                        : 'bg-orange-500 text-white hover:bg-orange-600')
+                    : category === 'prn'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {category === 'prn' ? 'Give PRN' : 'Administer'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -539,11 +626,64 @@ export const MARModule: React.FC<MARModuleProps> = ({
             <Clock className="h-4 w-4 inline mr-2" />
             History
           </button>
+          
+          <button
+            onClick={() => setShowBarcodeLabels(!showBarcodeLabels)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+            title="Show/Hide Barcode Labels"
+          >
+            <QrCode className="h-4 w-4" />
+            <span>Labels</span>
+          </button>
         </div>
       </div>
 
       {/* Clinical Alerts */}
       {renderAlerts()}
+
+      {/* Barcode Labels Section */}
+      {showBarcodeLabels && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Printable Barcode Labels</h3>
+            <button
+              onClick={() => setShowBarcodeLabels(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Patient Barcode */}
+            <BarcodeGenerator
+              data={bcma.generatePatientBarcode(patient)}
+              type="patient"
+              label={`${patient.first_name} ${patient.last_name} - ${patient.patient_id}`}
+            />
+            
+            {/* Medication Barcodes */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-900">Active Medications</h4>
+              {medications.filter(med => med.status === 'Active').slice(0, 3).map(medication => (
+                <BarcodeGenerator
+                  key={medication.id}
+                  data={bcma.generateMedicationBarcode(medication)}
+                  type="medication"
+                  label={`${medication.name} - ${medication.dosage}`}
+                />
+              ))}
+              {medications.filter(med => med.status === 'Active').length > 3 && (
+                <p className="text-sm text-gray-500">
+                  ... and {medications.filter(med => med.status === 'Active').length - 3} more medications
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Current View Content */}
       {activeView === 'administration' && (
@@ -780,6 +920,17 @@ export const MARModule: React.FC<MARModuleProps> = ({
             <span className="text-gray-900">Processing medication administration...</span>
           </div>
         </div>
+      )}
+
+      {/* BCMA Administration Modal */}
+      {bcma.state.isActive && bcma.state.currentMedication && currentUser && (
+        <BCMAAdministration
+          patient={patient}
+          medication={bcma.state.currentMedication}
+          currentUser={currentUser}
+          onAdministrationComplete={handleBCMAComplete}
+          onCancel={() => bcma.cancelBCMAProcess()}
+        />
       )}
     </div>
   );

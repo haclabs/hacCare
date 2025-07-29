@@ -1,7 +1,6 @@
 import { supabase } from './supabase';
 import { Medication, MedicationAdministration } from '../types';
 import { logAction } from './auditService';
-import { Patient } from '../types';
 
 /**
  * Medication Service
@@ -18,9 +17,8 @@ import { Patient } from '../types';
  */
 export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
-    console.log('Fetching medications for patient:', patientId);
-    const now = new Date();
-    console.log('Current time:', now.toISOString());
+    console.log('🔍 DEBUGGING: Fetching medications for patient:', patientId);
+    console.log('🔍 DEBUGGING: Current timestamp:', new Date().toISOString());
     
     const { data, error } = await supabase
       .from('patient_medications')
@@ -28,41 +26,39 @@ export const fetchPatientMedications = async (patientId: string): Promise<Medica
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false });
 
+    console.log('🔍 DEBUGGING: Supabase query response:', { data, error });
+    console.log('🔍 DEBUGGING: Number of medications returned:', data?.length || 0);
+
     if (error) {
-      console.error('Error fetching medications:', error);
+      console.error('❌ DEBUGGING: Database error:', error);
       throw error;
     } else if (!data || data.length === 0) {
-      console.log('No medications found for patient:', patientId);
+      console.log('⚠️ DEBUGGING: No medications found for patient:', patientId);
+      console.log('⚠️ DEBUGGING: This could be due to RLS filtering or no medications exist');
       return [];
     }
 
-    // Log each medication's next_due time for debugging
-    data.forEach(med => {
-      const now = new Date();
-      let nextDue;
-      try {
-        nextDue = new Date(med.next_due);
-      } catch (e) {
-        console.error(`Invalid next_due date for medication ${med.name}:`, med.next_due);
-        nextDue = now; // Default to current time if invalid
-      }
-      
-      const isOverdue = nextDue < now && med.status === 'Active';
-      const isDueSoon = !isOverdue && (nextDue.getTime() - now.getTime() <= 60 * 60 * 1000) && med.status === 'Active';
-      
-      console.log(`Medication ${med.name}:`, {
-        next_due: med.next_due,
-        status: med.status,
-        is_overdue: isOverdue,
-        is_due_soon: isDueSoon,
-        minutes_diff: isOverdue 
-          ? -Math.round((now.getTime() - nextDue.getTime()) / (1000 * 60)) // Negative for overdue
-          : Math.round((nextDue.getTime() - now.getTime()) / (1000 * 60))  // Positive for due soon
-      });
+    // Map database fields to Medication interface
+    const medications: Medication[] = data.map(dbMed => {
+      return {
+        id: dbMed.id,
+        patient_id: dbMed.patient_id,
+        name: dbMed.name,
+        category: dbMed.category || 'scheduled',
+        dosage: dbMed.dosage,
+        frequency: dbMed.frequency,
+        route: dbMed.route,
+        start_date: dbMed.start_date,
+        end_date: dbMed.end_date,
+        prescribed_by: dbMed.prescribed_by || '',
+        last_administered: dbMed.last_administered,
+        next_due: dbMed.next_due || new Date().toISOString(),
+        status: dbMed.status || 'Active'
+      } as Medication;
     });
 
-    console.log(`Found ${data.length} medications for patient ${patientId}`);
-    return data;
+    console.log(`Found ${medications.length} medications for patient ${patientId}`);
+    return medications;
   } catch (error) {
     console.error('Error fetching patient medications:', error);
     throw error;
@@ -76,13 +72,47 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
   try {
     console.log('Creating medication:', medication);
     
+    // Get the patient's tenant_id to ensure proper tenant association
+    const { data: patientData, error: patientError } = await supabase
+      .from('patients')
+      .select('tenant_id')
+      .eq('id', medication.patient_id)
+      .single();
+    
+    if (patientError) {
+      console.error('Error fetching patient tenant:', patientError);
+      throw new Error('Could not determine patient tenant');
+    }
+    
+    // Get current user info to help with debugging
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    console.log('🔧 Current user creating medication:', currentUser?.id, currentUser?.email);
+    console.log('🔧 Patient tenant_id:', patientData?.tenant_id);
+    
+    // Create medication with the actual database columns
+    const dbMedication = {
+      patient_id: medication.patient_id,
+      name: medication.name,
+      dosage: medication.dosage,
+      frequency: medication.frequency,
+      route: medication.route,
+      start_date: medication.start_date,
+      end_date: medication.end_date || null,
+      prescribed_by: medication.prescribed_by || null,
+      last_administered: medication.last_administered || null,
+      next_due: medication.next_due || new Date().toISOString(), // Provide default if null
+      status: medication.status || 'Active',
+      category: medication.category || 'scheduled',
+      tenant_id: patientData?.tenant_id // Explicitly set tenant_id from patient
+    };
+    
+    console.log('🔧 Inserting medication with tenant_id:', dbMedication.tenant_id);
+    
+    console.log('Inserting medication with database fields:', dbMedication);
+    
     const { data, error } = await supabase
       .from('patient_medications')
-      .insert({
-        ...medication,
-        // Ensure category is set to a valid value
-        category: medication.category || 'scheduled'
-      })
+      .insert(dbMedication)
       .select()
       .single();
 
@@ -90,6 +120,23 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       console.error('Error creating medication:', error);
       throw error;
     }
+
+    // Map database response back to Medication interface
+    const createdMedication: Medication = {
+      id: data.id,
+      patient_id: data.patient_id,
+      name: data.name,
+      category: data.category || 'scheduled',
+      dosage: data.dosage,
+      frequency: data.frequency,
+      route: data.route,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      prescribed_by: data.prescribed_by || '',
+      last_administered: data.last_administered,
+      next_due: data.next_due || new Date().toISOString(),
+      status: data.status || 'Active'
+    };
 
     // Log the action
     const user = (await supabase.auth.getUser()).data.user;
@@ -105,8 +152,8 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       }
     );
 
-    console.log('Medication created successfully:', data);
-    return data;
+    console.log('Medication created successfully:', createdMedication);
+    return createdMedication;
   } catch (error) {
     console.error('Error creating medication:', error);
     throw error;
@@ -120,9 +167,26 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
   try {
     console.log('Updating medication:', medicationId, updates);
     
+    // Map Medication interface fields to database column names for the update
+    const dbUpdates: any = {};
+    
+    if (updates.name !== undefined) dbUpdates.medication_name = updates.name;
+    if (updates.dosage !== undefined) dbUpdates.dosage = updates.dosage;
+    if (updates.frequency !== undefined) dbUpdates.frequency = updates.frequency;
+    if (updates.route !== undefined) dbUpdates.route = updates.route;
+    if (updates.start_date !== undefined) dbUpdates.start_date = updates.start_date;
+    if (updates.end_date !== undefined) dbUpdates.end_date = updates.end_date;
+    if (updates.prescribed_by !== undefined) dbUpdates.prescribed_by = updates.prescribed_by;
+    if (updates.status !== undefined) dbUpdates.is_active = updates.status === 'Active';
+    if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.next_due !== undefined) dbUpdates.next_due = updates.next_due;
+    if (updates.last_administered !== undefined) dbUpdates.last_administered = updates.last_administered;
+    
+    console.log('Database updates:', dbUpdates);
+    
     const { data, error } = await supabase
       .from('patient_medications')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', medicationId)
       .select()
       .single();
@@ -131,6 +195,23 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       console.error('Error updating medication:', error);
       throw error;
     }
+
+    // Map database response back to Medication interface
+    const updatedMedication: Medication = {
+      id: data.id,
+      patient_id: data.patient_id,
+      name: data.medication_name, // Map 'medication_name' back to 'name'
+      category: data.category || 'scheduled',
+      dosage: data.dosage,
+      frequency: data.frequency,
+      route: data.route,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      prescribed_by: data.prescribed_by || '',
+      last_administered: data.last_administered,
+      next_due: data.next_due || '',
+      status: data.is_active ? 'Active' : 'Discontinued'
+    };
 
     // Log the action
     const user = (await supabase.auth.getUser()).data.user;
@@ -141,13 +222,13 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       'patient',
       { 
         medication_id: medicationId,
-        name: data.name,
+        name: updatedMedication.name,
         changes: Object.keys(updates)
       }
     );
 
-    console.log('Medication updated successfully:', data);
-    return data;
+    console.log('Medication updated successfully:', updatedMedication);
+    return updatedMedication;
   } catch (error) {
     console.error('Error updating medication:', error);
     throw error;
@@ -263,8 +344,9 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
         if (!cleanAdministration.timestamp.includes('T')) {
           cleanAdministration.timestamp = new Date(cleanAdministration.timestamp).toISOString();
         }
-      } else if (cleanAdministration.timestamp instanceof Date) {
-        cleanAdministration.timestamp = cleanAdministration.timestamp.toISOString();
+      } else if (cleanAdministration.timestamp && typeof cleanAdministration.timestamp === 'object') {
+        // Handle case where timestamp might be a Date object
+        cleanAdministration.timestamp = (cleanAdministration.timestamp as Date).toISOString();
       }
     } catch (error) {
       console.error('Error formatting timestamp:', error);
@@ -319,27 +401,29 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     );
 
     // Update medication's last_administered time
-    const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);
-    
-    console.log(`Updating medication ${cleanAdministration.medication_id} after administration:`);
-    console.log(`- Last administered: ${cleanAdministration.timestamp}`);
-    console.log(`- Next due: ${nextDueTime}`);
+    if (cleanAdministration.medication_id) {
+      const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);
+      
+      console.log(`Updating medication ${cleanAdministration.medication_id} after administration:`);
+      console.log(`- Last administered: ${cleanAdministration.timestamp}`);
+      console.log(`- Next due: ${nextDueTime}`);
 
-    // Update medication with last administered time and next due time
-    const { data: updatedMed, error: updateError } = await supabase
-      .from('patient_medications')
-      .update({ 
-        last_administered: cleanAdministration.timestamp,
-        next_due: nextDueTime
-      })
-      .eq('id', administration.medication_id)
-      .select();
-    
-    if (updateError) { 
-      console.error('Error updating medication last_administered and next_due:', updateError);
-      // Continue anyway since the administration was recorded
-    } else {
-      console.log('Medication updated successfully:', updatedMed);
+      // Update medication with last administered time and next due time
+      const { data: updatedMed, error: updateError } = await supabase
+        .from('patient_medications')
+        .update({ 
+          last_administered: cleanAdministration.timestamp,
+          next_due: nextDueTime
+        })
+        .eq('id', cleanAdministration.medication_id)
+        .select();
+      
+      if (updateError) { 
+        console.error('Error updating medication last_administered and next_due:', updateError);
+        // Continue anyway since the administration was recorded
+      } else {
+        console.log('Medication updated successfully:', updatedMed);
+      }
     }
 
     console.log('Medication administration recorded successfully:', data);
@@ -604,8 +688,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
       console.log('Found matching medication:', matchedMedication.id, matchedMedication.name);
       return {
         patientId: matchedMedication.patient_id,
-        medicationId: matchedMedication.id,
-        category: matchedMedication.category || 'scheduled'
+        medicationId: matchedMedication.id
       };
     } else {
       console.log('No medication found with ID:', extractedId);
@@ -625,8 +708,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
               console.log(`Found partial match: Medication ${med.id} substring "${medSubstring}" is in extracted ID "${extractedId}"`);
               return {
                 patientId: med.patient_id,
-                medicationId: med.id,
-                category: med.category || 'scheduled'
+                medicationId: med.id
               };
             }
           }
@@ -637,8 +719,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
               console.log(`Found partial match: Extracted ID "${extractedId}" substring "${extractedSubstring}" is in medication ID "${med.id}"`);
               return {
                 patientId: med.patient_id,
-                medicationId: med.id,
-                category: med.category || 'scheduled'
+                medicationId: med.id
               };
             }
           }
@@ -650,7 +731,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
         console.log("Special case handling for FE0FCA barcode");
         
         // Look for any medication for Heather Gordon (as mentioned in the user request)
-        const heatherMeds = data.filter(med => {
+        const heatherMeds = data.filter(() => {
           // We don't have direct access to patient names here, so we'll return all medications
           // and let the caller handle finding Heather's medications
           return true;
@@ -661,8 +742,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
           // Return the first one as a fallback
           return {
             patientId: heatherMeds[0].patient_id,
-            medicationId: heatherMeds[0].id,
-            category: heatherMeds[0].category || 'scheduled'
+            medicationId: heatherMeds[0].id
           };
         }
       }

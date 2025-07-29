@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import { Medication } from '../../types';
-import { createMedication, updateMedication } from '../../lib/medicationService'; 
-import { addHours, setHours, setMinutes, parseISO, format } from 'date-fns';
-import { formatLocalTime } from '../../utils/dateUtils';
+import { Medication } from '../../../types';
+import { createMedication, updateMedication } from '../../../lib/medicationService'; 
+import { addHours, setHours, setMinutes, format } from 'date-fns';
+import { formatLocalTime } from '../../../utils/dateUtils';
 import { CheckCircle } from 'lucide-react';
 
 interface MedicationFormProps {
@@ -164,33 +163,46 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     setLoading(true);
     
     try {
-      const medicationData: Omit<Medication, 'id'> = {
-        id: medication?.id || uuidv4(),
-        patient_id: patientId,
-        name: formData.name,
-        category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
-        dosage: formData.dosage,
-        frequency: formData.frequency,
-        route: formData.route,
-        start_date: formData.startDate,
-        end_date: formData.endDate || undefined,
-        prescribed_by: formData.prescribedBy,
-        next_due: calculateNextDue(formData.frequency, formData.startDate),
-        status: formData.status
-      };
-
       if (medication) {
-        // Update existing medication
+        // Update existing medication - include all fields for update
+        const medicationData = {
+          patient_id: patientId,
+          name: formData.name,
+          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
+          dosage: formData.dosage,
+          frequency: formData.frequency,
+          route: formData.route,
+          start_date: formData.startDate,
+          end_date: formData.endDate || undefined,
+          prescribed_by: formData.prescribedBy,
+          next_due: calculateNextDue(formData.frequency, formData.startDate),
+          status: formData.status
+        };
+        
         console.log('Updating existing medication:', medicationData);
         const updatedMedication = await updateMedication(medication.id, medicationData);
         console.log('Medication updated successfully:', updatedMedication);
         onSuccess(updatedMedication);
       } else {
-        // Create new medication
+        // Create new medication - exclude ID to let database generate it
+        const medicationData: Omit<Medication, 'id'> = {
+          patient_id: patientId,
+          name: formData.name,
+          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
+          dosage: formData.dosage,
+          frequency: formData.frequency,
+          route: formData.route,
+          start_date: formData.startDate,
+          end_date: formData.endDate || undefined,
+          prescribed_by: formData.prescribedBy,
+          next_due: calculateNextDue(formData.frequency, formData.startDate),
+          status: formData.status
+        };
+        
         console.log('Creating new medication:', medicationData);
-        const newMedication = await createMedication(medicationData as Omit<Medication, 'id'>);
-        console.log('Medication created successfully:', newMedication);
-      console.log('Medication created successfully:', newMedication.id);
+        const newMedication = await createMedication(medicationData);
+        console.log('New medication added successfully:', newMedication);
+        onSuccess(newMedication);
       }
     } catch (error) {
       console.error('Error saving medication:', error);

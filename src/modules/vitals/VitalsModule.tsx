@@ -15,6 +15,7 @@ import { VitalsTrends } from '../../components/Patients/vitals/VitalsTrends';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
 import { vitalsEntrySchema, vitalsReviewSchema } from '../../schemas/vitalsSchemas';
+import { updatePatientVitals } from '../../lib/patientService';
 import { Patient, VitalSigns } from '../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 
@@ -29,7 +30,7 @@ interface VitalsModuleProps {
   };
 }
 
-type VitalsView = 'entry' | 'trends';
+type VitalsView = 'trends';
 
 export const VitalsModule: React.FC<VitalsModuleProps> = ({
   patient,
@@ -37,12 +38,13 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   onVitalsUpdate,
   currentUser
 }) => {
-  const [activeView, setActiveView] = useState<VitalsView>('trends');
   const [isLoading, setIsLoading] = useState(false);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showVitalsModal, setShowVitalsModal] = useState(false);
+  const [showTrendsDetail, setShowTrendsDetail] = useState(false);
+  const [activeView] = useState<VitalsView>('trends');
 
   // Register schemas on component mount
   useEffect(() => {
@@ -101,7 +103,12 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         lastUpdated: new Date().toISOString()
       };
 
-      // Update vitals through parent component
+      // Save vitals to database
+      console.log('Saving vitals to database for patient:', patient.id);
+      await updatePatientVitals(patient.id, newVitals);
+      console.log('Vitals saved to database successfully');
+
+      // Update local state through parent component
       const updatedVitals = [newVitals, ...vitals];
       onVitalsUpdate(updatedVitals);
 
@@ -124,6 +131,12 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       }, 5000);
     } catch (error) {
       console.error('Error recording vitals:', error);
+      // Show error message to user
+      setAlerts([{
+        severity: 'critical',
+        message: 'Failed to save vital signs. Please try again.',
+        recommendedAction: 'Check your connection and retry the operation.'
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -296,9 +309,18 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
-            <span className="text-sm text-gray-500">
-              {new Date(latestVitals.lastUpdated || '').toLocaleString()}
-            </span>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowTrendsDetail(true)}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <TrendingUp className="h-4 w-4 mr-1" />
+                View Trends
+              </button>
+              <span className="text-sm text-gray-500">
+                {new Date(latestVitals.lastUpdated || '').toLocaleString()}
+              </span>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -465,7 +487,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           <p className="text-gray-600">Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})</p>
         </div>
         
-        {/* View Toggle */}
+        {/* Action Buttons */}
         <div className="flex space-x-2">
           <button
             onClick={() => setShowVitalsModal(true)}
@@ -473,13 +495,6 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           >
             <Plus className="h-4 w-4 inline mr-2" />
             Record Vitals
-          </button>
-          <button
-            onClick={() => setActiveView('trends')}
-            className="px-4 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white hover:bg-green-700"
-          >
-            <TrendingUp className="h-4 w-4 inline mr-2" />
-            Trends
           </button>
         </div>
       </div>
@@ -495,14 +510,23 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         <div className="space-y-6">
           {/* Enhanced Vitals Summary with Color Coding and Trends */}
           {renderEnhancedVitalsSummary()}
-          
-          {/* Detailed Trends Component */}
-          <VitalsTrends
-            patientId={patient.id}
-            patientName={`${patient.first_name} ${patient.last_name}`}
-            onClose={() => setActiveView('trends')}
-            onRecordVitals={() => setShowVitalsModal(true)}
-          />
+        </div>
+      )}
+
+      {/* Detailed Trends Modal */}
+      {showTrendsDetail && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <VitalsTrends
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              onClose={() => setShowTrendsDetail(false)}
+              onRecordVitals={() => {
+                setShowTrendsDetail(false);
+                setShowVitalsModal(true);
+              }}
+            />
+          </div>
         </div>
       )}
 

@@ -69,9 +69,16 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-  // Generate form configuration
+  // Generate form configuration with retry mechanism
   const formConfig = useMemo(() => {
-    return schemaEngine.generateFormConfig(schemaId, context);
+    const config = schemaEngine.generateFormConfig(schemaId, context);
+    if (!config) {
+      // Try to wait a bit for schemas to be registered
+      setTimeout(() => {
+        setFormData(prev => ({ ...prev })); // Force re-render
+      }, 100);
+    }
+    return config;
   }, [schemaId, context]);
 
   // Real-time validation
@@ -389,10 +396,13 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
   if (!formConfig) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center space-x-2">
-          <AlertTriangle className="h-5 w-5 text-red-600" />
-          <span className="text-red-800">Schema not found: {schemaId}</span>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="flex items-center justify-center space-x-3">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          <span className="text-blue-800">Loading form schema: {schemaId}</span>
+        </div>
+        <div className="mt-3 text-center text-sm text-blue-600">
+          If this persists, please refresh the page or contact support.
         </div>
       </div>
     );

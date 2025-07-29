@@ -5,7 +5,7 @@ import { Patient, VitalSigns, Medication, PatientNote } from '../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../lib/patientService';
 import { fetchPatientMedications } from '../../../lib/medicationService';
 import { RecentActivity } from './RecentActivity';
-import { MedicationAdministration } from './MedicationAdministration';
+import { MARModule } from '../../../modules/mar/MARModule';
 import { WoundAssessment } from '../forms/WoundAssessment';
 // import { ImageAnnotation } from '../visuals/ImageAnnotation';
 import { AdmissionRecordsForm } from '../forms/AdmissionRecordsForm';
@@ -31,8 +31,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [activeTab, setActiveTab] = useState(
     location.state?.activeTab || 'overview'
   );
-  // Get medication category from location state if available
-  const initialMedicationCategory = location.state?.medicationCategory || 'scheduled';
   const [showActivity, setShowActivity] = useState(false);
   // State for active sub-tab
   const [activeSubTab, setActiveSubTab] = useState<string>('vitals');
@@ -335,18 +333,27 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
 
       case 'medications': 
         return (
-          <MedicationAdministration
-            patientId={id!}
-            patientName={`${patient.first_name || ''} ${patient.last_name || ''}`.trim()}
+          <MARModule
+            patient={patient}
             medications={medications}
-            initialCategory={initialMedicationCategory}
-            onRefresh={async () => {
+            onMedicationUpdate={async (updatedMedications) => {
+              // Update local state immediately for responsive UI
+              setMedications(updatedMedications);
+              
+              // Also refresh from database to ensure consistency
               try {
-                const meds = await fetchPatientMedications(id!);
-                setMedications(meds);
+                const freshMedications = await fetchPatientMedications(id!);
+                setMedications(freshMedications);
+                console.log('Medications refreshed from database after update');
               } catch (error) {
-                console.error('Error refreshing medications:', error);
+                console.error('Error refreshing medications after update:', error);
+                // Keep the local update if database refresh fails
               }
+            }}
+            currentUser={{
+              id: 'current-user', // TODO: Get from auth context
+              name: 'Current User',
+              role: 'nurse'
             }}
           />
         );

@@ -523,16 +523,30 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
     console.log('Inserting vitals for patient:', patientId, vitals);
     console.log('Storing temperature in Celsius:', vitals.temperature);
     
+    // Get the patient's tenant_id first for proper tenant support
+    const { data: patient, error: patientError } = await supabase
+      .from('patients')
+      .select('tenant_id')
+      .eq('id', patientId)
+      .single();
+
+    if (patientError) {
+      console.error('Error fetching patient for tenant_id:', patientError);
+      throw patientError;
+    }
+    
     const { error } = await supabase
       .from('patient_vitals')
       .insert({
         patient_id: patientId,
+        tenant_id: patient?.tenant_id, // Include tenant_id for multi-tenant support
         temperature: vitals.temperature, // Store as Celsius
         blood_pressure_systolic: vitals.bloodPressure.systolic,
         blood_pressure_diastolic: vitals.bloodPressure.diastolic,
         heart_rate: vitals.heartRate,
         respiratory_rate: vitals.respiratoryRate,
-        oxygen_saturation: vitals.oxygenSaturation
+        oxygen_saturation: vitals.oxygenSaturation,
+        recorded_at: new Date().toISOString() // Add the recorded_at timestamp
       });
 
     if (error) {
@@ -556,6 +570,16 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
     );
 
     console.log('Vitals inserted successfully');
+    
+    // Trigger alert checks after saving vitals to update missing vitals alerts
+    try {
+      console.log('Triggering alert checks after vitals update');
+      const { runAlertChecks } = await import('./alertService');
+      await runAlertChecks();
+    } catch (alertError) {
+      console.warn('Alert checks failed, but vitals were saved successfully:', alertError);
+      // Don't throw error here as vitals were saved successfully
+    }
   } catch (error) {
     console.error('Error updating patient vitals:', error);
     throw error;

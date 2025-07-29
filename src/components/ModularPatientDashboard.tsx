@@ -722,8 +722,26 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       try {
         setLoading(true);
         setError(null);
-        const patientData = await fetchPatientById(id);
-        setPatient(patientData);
+        
+        // Fetch patient data and medications simultaneously
+        const [patientData, medicationsData] = await Promise.all([
+          fetchPatientById(id),
+          fetchPatientMedications(id).catch(err => {
+            console.warn('Failed to fetch medications:', err);
+            return []; // Return empty array if medications fail to load
+          })
+        ]);
+        
+        if (patientData) {
+          // Include medications in patient data
+          const patientWithMedications = {
+            ...patientData,
+            medications: medicationsData
+          };
+          setPatient(patientWithMedications);
+          console.log(`✅ Patient loaded with ${medicationsData.length} medications`);
+        }
+        
         setLastUpdated(new Date());
       } catch (err) {
         console.error('Error loading patient:', err);

@@ -98,6 +98,38 @@ export const CLINICAL_CONSTANTS = {
 } as const;
 
 // Utility Functions
+
+/**
+ * Initialize the modular patient system
+ * Registers all schemas and performs system setup
+ */
+export const initializeModularPatientSystem = () => {
+  console.log('🔧 Initializing Modular Patient System...');
+  
+  try {
+    // Register all schemas
+    schemaEngine.registerSchema(vitalsEntrySchema);
+    schemaEngine.registerSchema(vitalsReviewSchema);
+    schemaEngine.registerSchema(medicationAdministrationSchema);
+    schemaEngine.registerSchema(medicationReconciliationSchema);
+    schemaEngine.registerSchema(nursingAssessmentSchema);
+    schemaEngine.registerSchema(admissionAssessmentSchema);
+    
+    console.log('✅ All schemas registered successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error initializing modular patient system:', error);
+    return false;
+  }
+};
+
+// Auto-initialize on module load
+if (typeof window !== 'undefined') {
+  // Only initialize in browser environment
+  setTimeout(() => {
+    initializeModularPatientSystem();
+  }, 0);
+}
 export const utilities = {
   /**
    * Initialize the modular patient system

@@ -5,6 +5,7 @@ import { LoginForm } from './LoginForm';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
+import { forceSessionCheck } from '../../lib/directAuthFix';
 import { User, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -21,6 +22,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, profile, loading, hasRole, createProfile, signOut } = useAuth();
   const [creatingProfile, setCreatingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [sessionCheckComplete, setSessionCheckComplete] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(false);
 
   useEffect(() => {
     // Only log in development mode
@@ -30,14 +33,84 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         hasProfile: !!profile,
         userRole: profile?.role,
         requiredRoles,
-        isSupabaseConfigured
+        isSupabaseConfigured,
+        sessionCheckComplete,
+        loading
       });
     }
-  }, [user, profile, requiredRoles]);
+  }, [user, profile, requiredRoles, sessionCheckComplete, loading]);
 
-  // Show loading spinner while auth is initializing
-  if (loading) {
-    return <LoadingSpinner />;
+  // Enhanced session check when no user is found
+  useEffect(() => {
+    let mounted = true;
+
+    const performEnhancedSessionCheck = async () => {
+      // Only perform additional check if:
+      // 1. Auth context is not loading
+      // 2. No user is found
+      // 3. Session check hasn't been completed yet
+      // 4. Not already checking
+      if (loading || user || sessionCheckComplete || isCheckingSession) {
+        return;
+      }
+
+      setIsCheckingSession(true);
+
+      try {
+        const sessionFound = await forceSessionCheck();
+        
+        if (mounted) {
+          setSessionCheckComplete(true);
+          
+          if (sessionFound) {
+            // Give AuthContext a moment to update
+            setTimeout(() => {
+              if (mounted && !user) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Session found but user context not updated');
+                }
+              }
+            }, 1000);
+          }
+        }
+      } catch (error) {
+        console.error('Enhanced session check failed:', error);
+        if (mounted) {
+          setSessionCheckComplete(true);
+        }
+      } finally {
+        if (mounted) {
+          setIsCheckingSession(false);
+        }
+      }
+    };
+
+    performEnhancedSessionCheck();
+
+    return () => {
+      mounted = false;
+    };
+  }, [loading, user, sessionCheckComplete, isCheckingSession]);
+
+  // Mark session check complete if user is found
+  useEffect(() => {
+    if (user && !sessionCheckComplete) {
+      setSessionCheckComplete(true);
+    }
+  }, [user, sessionCheckComplete]);
+
+  // Show loading spinner while auth is initializing OR while checking session
+  if (loading || isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner />
+          <p className="text-gray-600 mt-4">
+            {loading ? 'Initializing authentication...' : 'Checking session...'}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // If Supabase is not configured, show login form with warning
@@ -45,12 +118,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <LoginForm />;
   }
 
-  // If no user, show login
-  if (!user) {
+  // If no user and session check is complete, show login
+  if (!user && sessionCheckComplete) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('No user found, showing login form');
+      console.log('ProtectedRoute - No user found after session check, showing login');
     }
     return <LoginForm />;
+  }
+
+  // If no user but session check not complete yet, wait
+  if (!user && !sessionCheckComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner />
+          <p className="text-gray-600 mt-4">
+            Checking authentication...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // If user exists but no profile, show profile creation screen

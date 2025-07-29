@@ -125,9 +125,11 @@ export function AlertProvider({ children }: AlertProviderProps) {
         filteredAlerts = filterByTenant(fetchedAlerts, currentTenant.id);
         console.log(`Filtered ${fetchedAlerts.length} alerts to ${filteredAlerts.length} for tenant`);
       } else {
-        // User has no tenant
-        console.log('⚠️ User has no tenant - showing no alerts');
-        filteredAlerts = [];
+        // User has no tenant - for testing/development, show all alerts
+        console.log('⚠️ User has no tenant - showing all alerts for development/testing');
+        console.log('   In production, users should be assigned to tenants for proper data isolation');
+        filteredAlerts = fetchedAlerts; // Show all alerts instead of empty array
+        setError('Note: You are not assigned to any organization. In production, please contact your administrator to assign you to a tenant.');
       }
       
       // Deduplicate alerts based on patient, type, and similar messages

@@ -37,11 +37,23 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [savedForms, setSavedForms] = useState<any[]>([]);
   const [completedAssessments, setCompletedAssessments] = useState<any[]>([]);
+  const [schemasRegistered, setSchemasRegistered] = useState(false);
 
-  // Register schemas on component mount
+  // Register schemas immediately on component mount
   useEffect(() => {
-    schemaEngine.registerSchema(nursingAssessmentSchema);
-    schemaEngine.registerSchema(admissionAssessmentSchema);
+    const registerSchemas = () => {
+      try {
+        schemaEngine.registerSchema(nursingAssessmentSchema);
+        schemaEngine.registerSchema(admissionAssessmentSchema);
+        setSchemasRegistered(true);
+        console.log('✅ Forms schemas registered successfully');
+      } catch (error) {
+        console.error('❌ Error registering schemas:', error);
+        setSchemasRegistered(false);
+      }
+    };
+
+    registerSchemas();
   }, []);
 
   // Generate form context with patient and clinical data
@@ -216,7 +228,7 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-lg font-medium text-gray-900">
-                    {assessment.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {assessment.type.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                   </h4>
                   <p className="text-gray-600 mt-1">
                     Completed by {assessment.submittedBy}
@@ -256,7 +268,7 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
           {drafts.map((draft) => (
             <div key={draft.id} className="flex items-center justify-between">
               <span className="text-sm text-yellow-700">
-                {draft.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} 
+                {draft.type.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} 
                 - Saved {new Date(draft.lastSaved).toLocaleString()}
               </span>
               <button 
@@ -325,39 +337,57 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
             {activeView === 'nursing-assessment' && (
               <>
                 <h3 className="text-lg font-medium text-gray-900 mb-6">Comprehensive Nursing Assessment</h3>
-                <DynamicForm
-                  schemaId="nursing-assessment-v1"
-                  initialData={{
-                    patientId: patient.patient_id,
-                    nurseName: currentUser?.name || '',
-                    assessmentDate: new Date().toISOString().slice(0, 16)
-                  }}
-                  context={generateFormContext()}
-                  onSubmit={handleAssessmentSubmission}
-                  onChange={handleFormAutoSave}
-                  autoSave={true}
-                  autoSaveInterval={60000} // Auto-save every minute
-                  className="max-w-none"
-                />
+                {schemasRegistered ? (
+                  <DynamicForm
+                    schemaId="nursing-assessment-v1"
+                    initialData={{
+                      patientId: patient.patient_id,
+                      nurseName: currentUser?.name || '',
+                      assessmentDate: new Date().toISOString().slice(0, 16)
+                    }}
+                    context={generateFormContext()}
+                    onSubmit={handleAssessmentSubmission}
+                    onChange={handleFormAutoSave}
+                    autoSave={true}
+                    autoSaveInterval={60000} // Auto-save every minute
+                    className="max-w-none"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading assessment form...</p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
             {activeView === 'admission-assessment' && (
               <>
                 <h3 className="text-lg font-medium text-gray-900 mb-6">Patient Admission Assessment</h3>
-                <DynamicForm
-                  schemaId="admission-assessment-v1"
-                  initialData={{
-                    patientId: patient.patient_id,
-                    admissionDate: new Date().toISOString().slice(0, 16)
-                  }}
-                  context={generateFormContext()}
-                  onSubmit={handleAssessmentSubmission}
-                  onChange={handleFormAutoSave}
-                  autoSave={true}
-                  autoSaveInterval={60000}
-                  className="max-w-none"
-                />
+                {schemasRegistered ? (
+                  <DynamicForm
+                    schemaId="admission-assessment-v1"
+                    initialData={{
+                      patientId: patient.patient_id,
+                      admissionDate: new Date().toISOString().slice(0, 16)
+                    }}
+                    context={generateFormContext()}
+                    onSubmit={handleAssessmentSubmission}
+                    onChange={handleFormAutoSave}
+                    autoSave={true}
+                    autoSaveInterval={60000}
+                    className="max-w-none"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading assessment form...</p>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

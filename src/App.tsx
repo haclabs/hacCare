@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -11,6 +11,7 @@ import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
 import { useAlerts } from './hooks/useAlerts';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
+import { initializeModularPatientSystem } from './modular-patient-system';
 import { Patient } from './types';
 
 // Lazy-loaded components
@@ -39,6 +40,11 @@ const Settings = lazy(() => import('./components/Settings/Settings').then(module
  * @returns {JSX.Element} The main application component
  */
 function App() {
+  // Initialize modular patient system on app start
+  useEffect(() => {
+    initializeModularPatientSystem();
+  }, []);
+
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
