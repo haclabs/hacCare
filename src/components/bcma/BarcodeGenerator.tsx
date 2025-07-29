@@ -37,27 +37,27 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       // Try CODE128 first (most common for medical applications)
       JsBarcode(canvas, data, {
         format: "CODE128",
-        width: 2,
-        height: 100,
+        width: 1.5, // Reduced width for smaller barcodes
+        height: 80,  // Reduced height  
         displayValue: true,
         text: data,
-        fontSize: 14,
+        fontSize: 12,
         background: "#ffffff",
         lineColor: "#000000",
-        margin: 10
+        margin: 8
       });
 
       // Also generate SVG version for better print quality
       JsBarcode(svg, data, {
         format: "CODE128", 
-        width: 2,
-        height: 100,
+        width: 1.5, // Reduced width for smaller barcodes
+        height: 80,  // Reduced height
         displayValue: true,
         text: data,
-        fontSize: 14,
+        fontSize: 12,
         background: "#ffffff",
         lineColor: "#000000",
-        margin: 10
+        margin: 8
       });
       
     } catch (error) {
@@ -66,26 +66,26 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       try {
         JsBarcode(canvas, data, {
           format: "CODE39",
-          width: 2,
-          height: 100,
+          width: 1.5, // Reduced width for smaller barcodes
+          height: 80,  // Reduced height
           displayValue: true,
           text: data,
-          fontSize: 14,
+          fontSize: 12,
           background: "#ffffff",
           lineColor: "#000000",
-          margin: 10
+          margin: 8
         });
 
         JsBarcode(svg, data, {
           format: "CODE39",
-          width: 2,
-          height: 100,
+          width: 1.5, // Reduced width for smaller barcodes
+          height: 80,  // Reduced height
           displayValue: true,
           text: data,
-          fontSize: 14,
+          fontSize: 12,
           background: "#ffffff",
           lineColor: "#000000",
-          margin: 10
+          margin: 8
         });
       } catch (secondError) {
         console.error('Both barcode formats failed:', secondError);

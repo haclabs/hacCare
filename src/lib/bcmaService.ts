@@ -39,14 +39,20 @@ export interface BCMAValidationResult {
 }
 
 class BCMAService {
-  // Generate medication barcode ID
+  // Generate medication barcode ID - shortened for scanner compatibility
   generateMedicationBarcode(medication: Medication): string {
-    return `MED-${medication.id}`;
+    // Create a shorter, more readable medication code
+    // Use first 3 letters of name + last 6 chars of ID for uniqueness
+    const namePrefix = medication.name.replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
+    const idSuffix = medication.id.slice(-6).toUpperCase();
+    return `${namePrefix}${idSuffix}`;
   }
 
-  // Generate patient barcode ID
+  // Generate patient barcode ID - also shortened
   generatePatientBarcode(patient: Patient): string {
-    return `PT-${patient.patient_id}`;
+    // Use last 8 characters of patient_id for shorter barcode
+    const shortId = patient.patient_id.slice(-8).toUpperCase();
+    return `PT${shortId}`;
   }
 
   // Validate scanned barcodes against expected patient/medication

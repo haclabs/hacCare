@@ -76,10 +76,16 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   }, [currentStep]);
 
   const handleBarcodeScanned = (barcode: string) => {
+    console.log('🔵 BCMA: Barcode scanned:', barcode);
+    console.log('🔵 BCMA: Current step:', currentStep);
+    console.log('🔵 BCMA: Scanned patient ID:', scannedPatientId);
+    
     if (currentStep === 'scan-patient') {
+      console.log('🔵 BCMA: Setting patient barcode:', barcode);
       setScannedPatientId(barcode);
       setCurrentStep('scan-medication');
     } else if (currentStep === 'scan-medication') {
+      console.log('🔵 BCMA: Setting medication barcode:', barcode);
       setScannedMedicationId(barcode);
       
       // Validate both barcodes
@@ -90,6 +96,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         medication
       );
       
+      console.log('🔵 BCMA: Validation result:', validation);
       setValidationResult(validation);
       setCurrentStep('verify');
     }

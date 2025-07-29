@@ -52,20 +52,29 @@ export const useBCMA = () => {
   }, []);
 
   const handleBarcodeScanned = useCallback((barcode: string) => {
-    if (!state.isActive || !state.currentPatient || !state.currentMedication) return;
+    console.log('🔵 useBCMA: Barcode received:', barcode);
+    console.log('🔵 useBCMA: Current state:', state);
+    
+    if (!state.isActive || !state.currentPatient || !state.currentMedication) {
+      console.log('🔵 useBCMA: Not active or missing patient/medication');
+      return;
+    }
 
-    // Determine if this is a patient or medication barcode
-    const isPatientBarcode = barcode.includes('PT-') || barcode.includes('PAT-') || 
-                            barcode === state.currentPatient.patient_id;
-    const isMedicationBarcode = barcode.includes('MED-') || barcode.includes('RX-') || 
-                               barcode === state.currentMedication.id;
+    // Updated patterns for new shorter barcode format
+    const isPatientBarcode = barcode.startsWith('PT') || barcode === state.currentPatient.patient_id;
+    const isMedicationBarcode = !barcode.startsWith('PT') && barcode.length >= 6 && barcode.length <= 10;
+
+    console.log('🔵 useBCMA: Is patient barcode:', isPatientBarcode);
+    console.log('🔵 useBCMA: Is medication barcode:', isMedicationBarcode);
 
     if (isPatientBarcode && !state.scannedPatientId) {
+      console.log('🔵 useBCMA: Setting scanned patient ID');
       setState(prev => ({
         ...prev,
         scannedPatientId: barcode
       }));
     } else if (isMedicationBarcode && !state.scannedMedicationId) {
+      console.log('🔵 useBCMA: Setting scanned medication ID');
       const newState = {
         ...state,
         scannedMedicationId: barcode
@@ -73,6 +82,7 @@ export const useBCMA = () => {
 
       // If we have both scans, validate
       if (state.scannedPatientId) {
+        console.log('🔵 useBCMA: Both barcodes scanned, validating...');
         const validation = bcmaService.validateBarcodes(
           state.scannedPatientId,
           barcode,
