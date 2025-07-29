@@ -93,10 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔧 Environment Debug:', envDebug);
         
         if (!isSupabaseConfigured) {
-          console.log('⚠️ Supabase not configured, using mock data mode');
+          console.log('⚠️ Supabase not configured, entering offline mode');
           if (mounted) {
             setLoading(false);
             setIsOffline(true);
+            // Show a user-friendly message instead of infinite loading
+            alert('⚠️ App is running in offline mode. Database connection not configured. Please contact administrator.');
           }
           return;
         }

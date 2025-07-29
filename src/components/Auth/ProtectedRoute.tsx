@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { OfflineMode } from '../OfflineMode';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { forceSessionCheck } from '../../lib/directAuthFix';
@@ -19,7 +20,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles = [],
   redirectTo
 }) => {
-  const { user, profile, loading, hasRole, createProfile, signOut } = useAuth();
+  const { user, profile, loading, hasRole, createProfile, signOut, isOffline } = useAuth();
   const [creatingProfile, setCreatingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [sessionCheckComplete, setSessionCheckComplete] = useState(false);
@@ -111,6 +112,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </div>
       </div>
     );
+  }
+
+  // Show offline mode if the app is offline (e.g., missing environment variables)
+  if (isOffline && !isSupabaseConfigured) {
+    return <OfflineMode message="Database connection not configured. Please contact your administrator to set up the application." />;
   }
 
   // If Supabase is not configured, show login form with warning
