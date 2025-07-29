@@ -86,17 +86,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        // Set a timeout to prevent infinite loading
+        // Set a shorter timeout to prevent hanging
         timeoutId = setTimeout(() => {
-          console.log('⏰ Auth initialization timeout reached');
+          console.log('⏰ Auth initialization timeout reached - forcing login page');
           if (mounted) {
+            setUser(null);
+            setProfile(null);
             setLoading(false);
           }
-        }, 10000); // 10 second timeout
+        }, 3000); // Reduced to 3 seconds
 
-        console.log('🔍 Checking session with retry logic...');
+        console.log('🔍 Checking session...');
         
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Wrap the session check in a Promise.race with timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session check timeout')), 2000)
+        );
+
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any;
 
         // Clear timeout since we got a response
         if (timeoutId) {
@@ -116,7 +127,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user && mounted) {
           console.log('✅ Session found:', session.user.email);
           setUser(session.user);
-          await fetchUserProfile(session.user.id);
+          // Don't wait for profile fetch - do it in background
+          fetchUserProfile(session.user.id).catch(err => 
+            console.error('Background profile fetch failed:', err)
+          );
         } else {
           console.log('👤 No session found, user needs to log in');
           if (mounted) {
@@ -131,6 +145,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       } catch (error: any) {
         console.error('💥 Error in initializeAuth:', error);
+        // Clear timeout on error
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         if (mounted) {
           setUser(null);
           setProfile(null);
@@ -139,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
+    // Start initialization immediately
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -155,11 +174,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           console.log('👤 User signed in:', session.user.email);
           setUser(session.user);
-          try {
-            await fetchUserProfile(session.user.id);
-          } catch (error) {
-            console.error('Error fetching profile after sign in:', error);
-          }
+          // Don't wait for profile fetch
+          fetchUserProfile(session.user.id).catch(err => 
+            console.error('Profile fetch failed in auth change:', err)
+          );
         } else {
           console.log('👋 User signed out or no session');
           setUser(null);

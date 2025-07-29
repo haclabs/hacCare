@@ -14,7 +14,7 @@ import App from './App.tsx';
 import './index.css';
 import { testSupabaseConnection } from './lib/supabase';
 import { getCurrentSubdomain } from './lib/subdomainService';
-import { initializeAuth } from './lib/browserAuthFix';
+// import { initializeAuth } from './lib/browserAuthFix'; // Disabled for deployment fix
 
 // Initialize subdomain detection for production
 if (import.meta.env.NODE_ENV === 'production') {
@@ -32,11 +32,8 @@ if (import.meta.env.NODE_ENV === 'production') {
   }
 }
 
-// Initialize Supabase connection and authentication persistence
-Promise.all([
-  testSupabaseConnection(),
-  initializeAuth()
-]).then(([isConnected, _]) => {
+// Initialize Supabase connection - auth persistence disabled for deployment fix
+testSupabaseConnection().then((isConnected) => {
   console.log('🚀 Application initialization complete');
   console.log('📡 Database connected:', isConnected);
 });
