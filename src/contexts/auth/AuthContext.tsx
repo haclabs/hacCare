@@ -30,16 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
 
-  // Add a hard timeout fallback
-  useEffect(() => {
-    const hardTimeout = setTimeout(() => {
-      console.log('🚨 HARD TIMEOUT: Forcing loading to false after 5 seconds');
-      setLoading(false);
-    }, 5000);
-
-    return () => clearTimeout(hardTimeout);
-  }, []);
-
   const fetchUserProfile = async (userId: string): Promise<void> => {
     if (!userId) {
       setProfile(null);

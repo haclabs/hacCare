@@ -6,7 +6,6 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { OfflineMode } from '../OfflineMode';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { forceSessionCheck } from '../../lib/directAuthFix';
 import { User, AlertCircle, RefreshCw, CheckCircle } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -24,7 +23,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [creatingProfile, setCreatingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [sessionCheckComplete, setSessionCheckComplete] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(false);
 
   useEffect(() => {
     // Only log in development mode
@@ -41,57 +39,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }, [user, profile, requiredRoles, sessionCheckComplete, loading]);
 
-  // Enhanced session check when no user is found
+  // Enhanced session check when no user is found - DISABLED for deployment fix
   useEffect(() => {
-    let mounted = true;
-
-    const performEnhancedSessionCheck = async () => {
-      // Only perform additional check if:
-      // 1. Auth context is not loading
-      // 2. No user is found
-      // 3. Session check hasn't been completed yet
-      // 4. Not already checking
-      if (loading || user || sessionCheckComplete || isCheckingSession) {
-        return;
-      }
-
-      setIsCheckingSession(true);
-
-      try {
-        const sessionFound = await forceSessionCheck();
-        
-        if (mounted) {
-          setSessionCheckComplete(true);
-          
-          if (sessionFound) {
-            // Give AuthContext a moment to update
-            setTimeout(() => {
-              if (mounted && !user) {
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('Session found but user context not updated');
-                }
-              }
-            }, 1000);
-          }
-        }
-      } catch (error) {
-        console.error('Enhanced session check failed:', error);
-        if (mounted) {
-          setSessionCheckComplete(true);
-        }
-      } finally {
-        if (mounted) {
-          setIsCheckingSession(false);
-        }
-      }
-    };
-
-    performEnhancedSessionCheck();
-
-    return () => {
-      mounted = false;
-    };
-  }, [loading, user, sessionCheckComplete, isCheckingSession]);
+    // Skip enhanced session check - AuthContext handles session management
+    if (!loading && !user && !sessionCheckComplete) {
+      console.log('📝 Skipping enhanced session check - using AuthContext session state');
+      setSessionCheckComplete(true);
+    }
+  }, [loading, user, sessionCheckComplete]);
 
   // Mark session check complete if user is found
   useEffect(() => {
@@ -100,14 +55,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }, [user, sessionCheckComplete]);
 
-  // Show loading spinner while auth is initializing OR while checking session
-  if (loading || isCheckingSession) {
+  // Show loading spinner while auth is initializing
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner />
           <p className="text-gray-600 mt-4">
-            {loading ? 'Initializing authentication...' : 'Checking session...'}
+            Initializing authentication...
           </p>
         </div>
       </div>
