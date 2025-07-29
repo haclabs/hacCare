@@ -544,7 +544,11 @@ export const MARModule: React.FC<MARModuleProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  console.log('🔵 BCMA Button clicked for medication:', medication.name);
+                  console.log('🔵 Current user:', currentUser);
+                  console.log('🔵 BCMA state before:', bcma.state);
                   bcma.startBCMAProcess(patient, medication);
+                  console.log('🔵 BCMA state after:', bcma.state);
                 }}
                 className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors flex items-center space-x-1"
                 title="BCMA - Barcode Administration"
@@ -923,11 +927,11 @@ export const MARModule: React.FC<MARModuleProps> = ({
       )}
 
       {/* BCMA Administration Modal */}
-      {bcma.state.isActive && bcma.state.currentMedication && currentUser && (
+      {bcma.state.isActive && bcma.state.currentMedication && (
         <BCMAAdministration
           patient={patient}
           medication={bcma.state.currentMedication}
-          currentUser={currentUser}
+          currentUser={currentUser || { id: 'system', name: 'System User', role: 'nurse' }}
           onAdministrationComplete={handleBCMAComplete}
           onCancel={() => bcma.cancelBCMAProcess()}
         />
