@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { isBCMACurrentlyActive } from '../lib/bcmaState';
 
 /**
  * Custom hook for barcode scanner integration
@@ -41,6 +42,12 @@ export const useBarcodeScanner = (
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // Skip if we're not listening
     if (!isListening) return;
+    
+    // Skip if BCMA is active - let BCMA handle barcode events
+    if (isBCMACurrentlyActive()) {
+      console.log('🔵 Header barcode scanner: BCMA is active, skipping event handling');
+      return;
+    }
     
     // Debug logging
     const isDebugMode = localStorage.getItem('debug-mode') === 'true';

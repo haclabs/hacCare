@@ -3,6 +3,7 @@ import { Patient } from '../../../types';
 import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { generateCode128SVG } from '../../../utils/barcodeUtils';
+import { bcmaService } from '../../../lib/bcmaService';
 
 /**
  * Hospital Bracelet Component
@@ -343,7 +344,7 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
                   })}
                 </div>
                 
-                {/* Centered patient ID below barcode */}
+                {/* Centered patient ID below barcode - matches BCMA format */}
                 <div className="text-sm text-gray-800 font-mono font-bold text-center">
                   {patient.patient_id}
                 </div>

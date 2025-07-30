@@ -8,6 +8,8 @@ import { QrCode, Check, X, AlertTriangle, Clock, User, Pill, CheckCircle } from 
 import { Patient, Medication } from '../../types';
 import { bcmaService, BCMAValidationResult } from '../../lib/bcmaService';
 import { BarcodeGenerator } from './BarcodeGenerator';
+import { simulateBarcodeScan } from '../../lib/barcodeScanner';
+import { setBCMAActive } from '../../lib/bcmaState';
 
 interface BCMAAdministrationProps {
   patient: Patient;
@@ -36,42 +38,46 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const [currentStep, setCurrentStep] = useState<'scan-patient' | 'scan-medication' | 'verify' | 'complete'>('scan-patient');
   const [showBarcodes, setShowBarcodes] = useState(false);
 
-  // Listen for barcode scans from existing infrastructure
+  // Set BCMA as active when component mounts
   useEffect(() => {
+    console.log('🔵 BCMA: Component mounting, setting BCMA active');
+    setBCMAActive(true);
+    
+    return () => {
+      console.log('🔵 BCMA: Component unmounting, setting BCMA inactive');
+      setBCMAActive(false);
+    };
+  }, []);
+
+  // Listen for barcode scans from global barcode dispatcher
+  useEffect(() => {
+    console.log('🔵 BCMA: Setting up barcode listener for step:', currentStep);
+    console.log('🔵 BCMA: Component mounted and listening for barcodescanned events');
+    
     const handleBarcodeInput = (event: CustomEvent) => {
+      console.log('🔵 BCMA: Received barcode event:', event.detail.barcode);
+      console.log('🔵 BCMA: Event type:', event.type);
+      console.log('🔵 BCMA: Current step when received:', currentStep);
       const barcode = event.detail.barcode;
       handleBarcodeScanned(barcode);
     };
 
-    // Listen for custom barcode events
+    // Listen for custom barcode events from global dispatcher
     document.addEventListener('barcodescanned', handleBarcodeInput as EventListener);
-
-    // Also listen for keyboard input as fallback
-    let inputBuffer = '';
-    let inputTimer: NodeJS.Timeout;
-
-    const handleKeyPress = (e: KeyboardEvent) => {
-      clearTimeout(inputTimer);
-      inputTimer = setTimeout(() => {
-        inputBuffer = '';
-      }, 100);
-
-      if (e.key === 'Enter') {
-        if (inputBuffer.length > 3) {
-          handleBarcodeScanned(inputBuffer);
-          inputBuffer = '';
-        }
-      } else if (e.key.length === 1) {
-        inputBuffer += e.key;
-      }
+    
+    // Test that event listener is working
+    console.log('🔵 BCMA: Event listener attached to document');
+    
+    // Add a test function to the component instance for debugging
+    (window as any).bcmaTestScan = (barcode: string) => {
+      console.log('🧪 Direct BCMA test scan:', barcode);
+      handleBarcodeScanned(barcode);
     };
 
-    document.addEventListener('keypress', handleKeyPress);
-
     return () => {
+      console.log('🔵 BCMA: Cleaning up barcode listener');
       document.removeEventListener('barcodescanned', handleBarcodeInput as EventListener);
-      document.removeEventListener('keypress', handleKeyPress);
-      clearTimeout(inputTimer);
+      delete (window as any).bcmaTestScan;
     };
   }, [currentStep]);
 
@@ -265,6 +271,25 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                   type="medication"
                   label={medication.name}
                 />
+              </div>
+
+              {/* Test Buttons for Debugging */}
+              <div className="mt-4 p-3 bg-blue-50 rounded border">
+                <p className="text-sm text-blue-700 mb-2">🧪 Test Barcode Scanning:</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => simulateBarcodeScan(bcmaService.generatePatientBarcode(patient))}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  >
+                    Test Patient Scan
+                  </button>
+                  <button
+                    onClick={() => simulateBarcodeScan(bcmaService.generateMedicationBarcode(medication))}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                  >
+                    Test Medication Scan
+                  </button>
+                </div>
               </div>
             </div>
           )}

@@ -100,21 +100,39 @@ class BCMAService {
 
   // Validate patient barcode
   private validatePatientBarcode(scannedId: string, patient: Patient): boolean {
+    // Handle both old and new barcode formats
+    const generatedBarcode = this.generatePatientBarcode(patient);
     const validIds = [
-      patient.patient_id,
-      `PT-${patient.patient_id}`,
-      `PAT-${patient.patient_id}`
+      patient.patient_id,           // Direct patient ID (PT12345)
+      generatedBarcode,             // New format (PT12345 -> PT12345)
+      `PT-${patient.patient_id}`,   // Legacy format
+      `PAT-${patient.patient_id}`   // Alternative legacy format
     ];
+    
+    console.log('🔵 Validating patient barcode:', scannedId);
+    console.log('🔵 Valid patient IDs:', validIds);
+    console.log('🔵 Patient ID:', patient.patient_id);
+    console.log('🔵 Generated barcode:', generatedBarcode);
+    
     return validIds.includes(scannedId);
   }
 
   // Validate medication barcode
   private validateMedicationBarcode(scannedId: string, medication: Medication): boolean {
+    // Handle both old and new barcode formats
+    const generatedBarcode = this.generateMedicationBarcode(medication);
     const validIds = [
-      medication.id,
-      `MED-${medication.id}`,
-      `RX-${medication.id}`
+      medication.id,                // Direct medication ID
+      generatedBarcode,             // New format (ASP123456)
+      `MED-${medication.id}`,       // Legacy format
+      `RX-${medication.id}`         // Alternative legacy format
     ];
+    
+    console.log('🔵 Validating medication barcode:', scannedId);
+    console.log('🔵 Valid medication IDs:', validIds);
+    console.log('🔵 Medication ID:', medication.id);
+    console.log('🔵 Generated barcode:', generatedBarcode);
+    
     return validIds.includes(scannedId);
   }
 

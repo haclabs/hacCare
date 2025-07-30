@@ -10,6 +10,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { queryClient } from './lib/queryClient';
+import { initializeBarcodeScanner } from './lib/barcodeScanner';
 import App from './App.tsx';
 import './index.css';
 import { testSupabaseConnection } from './lib/supabase';
@@ -31,6 +32,9 @@ if (import.meta.env.NODE_ENV === 'production') {
     console.log('🏢 Tenant subdomain detected:', subdomain);
   }
 }
+
+// Initialize barcode scanner for BCMA functionality
+const cleanupBarcodeScanner = initializeBarcodeScanner();
 
 // Initialize Supabase connection - auth persistence disabled for deployment fix
 testSupabaseConnection().then((isConnected) => {
@@ -60,3 +64,8 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>
 );
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  cleanupBarcodeScanner();
+});
