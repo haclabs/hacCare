@@ -307,3 +307,6 @@ export const Documentation: React.FC = () => {
     </div>
   );
 };
+
+// Add default export for lazy loading
+export default Documentation;

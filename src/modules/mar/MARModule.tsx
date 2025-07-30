@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, Shield, QrCode } from 'lucide-react';
+import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, Shield, QrCode, Droplets } from 'lucide-react';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
 import { medicationAdministrationSchema, medicationReconciliationSchema } from '../../schemas/medicationSchemas';
@@ -21,6 +21,7 @@ import { createMedication } from '../../lib/medicationService';
 import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
+import DiabeticRecordModule from '../../components/DiabeticRecordModule';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -35,7 +36,7 @@ interface MARModuleProps {
   };
 }
 
-type MARView = 'administration' | 'reconciliation' | 'history' | 'add-medication';
+type MARView = 'administration' | 'reconciliation' | 'history' | 'diabetic-record' | 'add-medication';
 
 export const MARModule: React.FC<MARModuleProps> = ({
   patient,
@@ -550,19 +551,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   bcma.startBCMAProcess(patient, medication);
                   console.log('🔵 BCMA state after:', bcma.state);
                 }}
-                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors flex items-center space-x-1"
-                title="BCMA - Barcode Administration"
-              >
-                <QrCode className="h-3 w-3" />
-                <span>BCMA</span>
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedMedication(medication);
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1 ${
                   shouldAlert && isDue 
                     ? (isOverdue && alertLevel === 'critical' 
                         ? 'bg-red-600 text-white hover:bg-red-700' 
@@ -571,8 +560,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-green-600 text-white hover:bg-green-700'
                 }`}
+                title="BCMA - Barcode Administration"
               >
-                {category === 'prn' ? 'Give PRN' : 'Administer'}
+                <QrCode className="h-4 w-4" />
+                <span>{category === 'prn' ? 'Give PRN' : 'Administer'}</span>
               </button>
             </div>
           </div>
@@ -629,6 +620,17 @@ export const MARModule: React.FC<MARModuleProps> = ({
           >
             <Clock className="h-4 w-4 inline mr-2" />
             History
+          </button>
+          <button
+            onClick={() => setActiveView('diabetic-record')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeView === 'diabetic-record'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Droplets className="h-4 w-4 inline mr-2" />
+            Diabetic Record
           </button>
           
           <button
@@ -749,6 +751,13 @@ export const MARModule: React.FC<MARModuleProps> = ({
             </p>
           </div>
         </div>
+      )}
+
+      {activeView === 'diabetic-record' && (
+        <DiabeticRecordModule 
+          patientId={patient.patient_id} 
+          patientName={`${patient.first_name} ${patient.last_name}`}
+        />
       )}
 
       {/* Add Medication Modal */}

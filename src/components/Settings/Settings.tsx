@@ -695,3 +695,6 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+
+// Add default export for lazy loading
+export default Settings;

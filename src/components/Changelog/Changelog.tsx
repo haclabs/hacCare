@@ -574,3 +574,6 @@ export const Changelog: React.FC = () => {
     </div>
   );
 };
+
+// Add default export for lazy loading
+export default Changelog;

@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { Patient, VitalSigns, PatientNote } from '../types';
 import { logAction } from './auditService';
+import { runAlertChecks } from './alertService';
 
 /**
  *    // Fetch vitals for all patients
@@ -574,7 +575,6 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
     // Trigger alert checks after saving vitals to update missing vitals alerts
     try {
       console.log('Triggering alert checks after vitals update');
-      const { runAlertChecks } = await import('./alertService');
       await runAlertChecks();
     } catch (alertError) {
       console.warn('Alert checks failed, but vitals were saved successfully:', alertError);

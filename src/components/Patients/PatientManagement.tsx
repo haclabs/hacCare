@@ -513,3 +513,6 @@ export const PatientManagement: React.FC = () => {
     </div>
   );
 };
+
+// Add default export for lazy loading
+export default PatientManagement;

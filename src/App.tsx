@@ -13,15 +13,16 @@ import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { initializeModularPatientSystem } from './modular-patient-system';
 import { Patient } from './types';
+import { useAuth } from './hooks/useAuth';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
-const UserManagement = lazy(() => import('./components/Users/UserManagement').then(module => ({ default: module.UserManagement })));
-const PatientManagement = lazy(() => import('./components/Patients/PatientManagement').then(module => ({ default: module.PatientManagement })));
-const ManagementDashboard = lazy(() => import('./components/Management/ManagementDashboard').then(module => ({ default: module.ManagementDashboard })));
-const Documentation = lazy(() => import('./components/Documentation/Documentation').then(module => ({ default: module.Documentation })));
-const Changelog = lazy(() => import('./components/Changelog/Changelog').then(module => ({ default: module.Changelog })));
-const Settings = lazy(() => import('./components/Settings/Settings').then(module => ({ default: module.Settings })));
+const UserManagement = lazy(() => import('./components/Users/UserManagement'));
+const PatientManagement = lazy(() => import('./components/Patients/PatientManagement'));
+const ManagementDashboard = lazy(() => import('./components/Management/ManagementDashboard'));
+const Documentation = lazy(() => import('./components/Documentation/Documentation'));
+const Changelog = lazy(() => import('./components/Changelog/Changelog'));
+const Settings = lazy(() => import('./components/Settings/Settings'));
 
 /**
  * Main Application Component
@@ -45,6 +46,9 @@ function App() {
     initializeModularPatientSystem();
   }, []);
 
+  // Authentication
+  const { user, profile } = useAuth();
+
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
@@ -57,6 +61,14 @@ function App() {
   
   // Get alerts from AlertContext (avoid React Query conflicts)
   const { alerts } = useAlerts();
+
+  // Create currentUser object for components that need it
+  const currentUser = user && profile ? {
+    id: user.id,
+    name: `${profile.first_name} ${profile.last_name}`.trim() || profile.email || 'Unknown User',
+    role: profile.role,
+    department: profile.department || 'General'
+  } : undefined;
   
   // Determine if we're in an offline state
 
@@ -532,7 +544,10 @@ function App() {
           <Routes>
             <Route path="/patient/:id" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <ModularPatientDashboard onShowBracelet={setBraceletPatient} />
+                <ModularPatientDashboard 
+                  onShowBracelet={setBraceletPatient}
+                  currentUser={currentUser}
+                />
               </Suspense>
             } />
             <Route path="/patient/:id/modular" element={
