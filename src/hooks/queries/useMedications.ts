@@ -6,6 +6,7 @@ import {
   deleteMedication,
   recordMedicationAdministration,
   fetchMedicationAdministrationHistory,
+  fetchPatientAdministrationHistory24h,
   getPatientByMedicationId,
   updateMedicationNextDue
 } from '../../lib/medicationService';
@@ -487,5 +488,20 @@ export function useUpdateMedicationNextDue() {
     onError: (error) => {
       console.error('❌ Failed to update medication next due time:', error);
     },
+  });
+}
+
+/**
+ * Get patient's medication administration history for the last 24 hours
+ * Used for MAR history view
+ */
+export function usePatientAdministrationHistory24h(patientId: string) {
+  return useQuery({
+    queryKey: ['patient', patientId, 'administration-history-24h'],
+    queryFn: () => fetchPatientAdministrationHistory24h(patientId),
+    staleTime: 2 * 60 * 1000, // 2 minutes - recent administrations
+    gcTime: 5 * 60 * 1000,
+    enabled: !!patientId,
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 }

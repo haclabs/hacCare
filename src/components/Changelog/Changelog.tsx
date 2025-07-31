@@ -37,6 +37,56 @@ export const Changelog: React.FC = () => {
    */
   const changelogData: ChangelogEntry[] = [
     {
+      version: "3.0.0",
+      date: "2025-07-31",
+      changes: [
+        {
+          type: "feature",
+          description: "Complete BCMA (Barcode Medication Administration) system with Five Rights verification"
+        },
+        {
+          type: "feature",
+          description: "Professional barcode generation and printing for patients and medications"
+        },
+        {
+          type: "feature",
+          description: "Diabetic record management with glucose monitoring and insulin tracking"
+        },
+        {
+          type: "feature",
+          description: "Enhanced security framework with AI-powered threat detection and secure logging"
+        },
+        {
+          type: "feature",
+          description: "24-hour medication administration history with comprehensive tracking"
+        },
+        {
+          type: "improvement",
+          description: "Major UI/UX improvements with enhanced medication cards and visual feedback"
+        },
+        {
+          type: "improvement",
+          description: "Enhanced database architecture with improved RLS policies and performance"
+        },
+        {
+          type: "security",
+          description: "HIPAA-compliant secure logging service with PHI redaction capabilities"
+        },
+        {
+          type: "security",
+          description: "Comprehensive security headers and real-time monitoring systems"
+        },
+        {
+          type: "bugfix",
+          description: "Fixed BCMA administration database record creation and foreign key constraints"
+        },
+        {
+          type: "bugfix",
+          description: "Resolved infinite recursion in tenant user policies and authentication persistence"
+        }
+      ]
+    },
+    {
       version: "2.4.1",
       date: "2025-07-15",
       changes: [

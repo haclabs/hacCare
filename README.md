@@ -1,6 +1,6 @@
 # 🏥 hacCare - Advanced Healthcare Management System
 
-A comprehensive, modern healthcare management platform built with React 18, TypeScript, and Supabase, designed for real-world clinical environments with advanced barcode scanning, patient management, alert systems, and medical documentation.
+A comprehensive, modern healthcare management platform built with React 18, TypeScript, and Supabase, designed for real-world clinical environments with advanced BCMA (Barcode Medication Administration), patient management, security diagnostics, diabetic care, and medical documentation systems.
 
 ## 🌟 Key Highlights
 
@@ -8,8 +8,10 @@ A comprehensive, modern healthcare management platform built with React 18, Type
 - **📱 Mobile-First Design**: Responsive interface optimized for tablets and mobile devices
 - **🔒 Enterprise Security**: Row Level Security, role-based access control, HIPAA-compliant data handling
 - **⚡ Real-Time Updates**: Live patient data synchronization and alert notifications
-- **🔍 Advanced Barcode Scanning**: Multi-format barcode support for patient IDs and medications
+- **🔍 Advanced Barcode Scanning**: Multi-format barcode support with BCMA integration
+- **🏥 BCMA System**: Complete barcode-driven medication administration with Five Rights verification
 - **📊 Comprehensive Analytics**: Patient statistics, medication tracking, and clinical insights
+- **🩺 Specialized Care Modules**: Diabetic record management and advanced clinical documentation
 
 ## 🚀 Core Features
 
@@ -17,17 +19,24 @@ A comprehensive, modern healthcare management platform built with React 18, Type
 - **Complete Patient Profiles**: Demographics, medical history, allergies, emergency contacts
 - **Vital Signs Monitoring**: Real-time tracking with automated alert thresholds
 - **Medication Administration**: Due time tracking, administration history, drug interaction alerts
+- **BCMA Integration**: Barcode-driven medication safety with Five Rights verification
+- **Diabetic Care Management**: Specialized glucose monitoring and insulin tracking
 - **Clinical Assessments**: Wound care documentation, admission records, advanced directives
 - **Patient Notes System**: Categorized notes with priority levels and search functionality
 - **Medical History Timeline**: Chronological view of patient care events
+- **24-Hour MAR View**: Comprehensive medication administration tracking
 
-### 🔍 Smart Barcode Integration
+### 🔍 Smart Barcode Integration & BCMA System
+- **BCMA (Barcode Medication Administration)**: Complete Five Rights verification system
+- **Professional Barcode Generation**: Patient wristbands and medication labels with print capability
 - **Multi-Format Scanner Support**: Patient IDs (PT12345), medication barcodes, specimen labels
 - **Intelligent Input Detection**: Distinguishes scanner input from manual keyboard entry
 - **Patient Identification**: Instant lookup via hospital bracelets and chart labels
-- **Medication Verification**: Barcode-driven administration with safety checks
+- **Medication Verification**: Barcode-driven administration with comprehensive safety checks
 - **Equipment Tracking**: Medical device and supply management
 - **Debug & Troubleshooting**: Visual feedback and comprehensive logging
+- **Five Rights Verification**: Patient, Medication, Dose, Route, and Time validation
+- **Audit Trail Compliance**: Complete logging for regulatory requirements
 
 ### 🚨 Advanced Alert System
 - **Real-Time Monitoring**: Continuous patient status and medication due alerts
@@ -38,18 +47,33 @@ A comprehensive, modern healthcare management platform built with React 18, Type
 - **Escalation Rules**: Automatic escalation for critical unacknowledged alerts
 
 ### 📊 Clinical Documentation & Reporting
-- **Hospital Bracelets**: Generate UPC-128 compatible patient identification
+- **Hospital Bracelets**: Generate UPC-128 compatible patient identification with print capability
+- **BCMA Barcode Labels**: Professional medication and patient barcode generation
 - **Label Generation**: Avery 5160 compatible labels for charts and specimens
 - **Wound Assessment Tools**: Detailed measurement tracking and photo documentation
 - **Image Annotation**: Advanced medical image markup with measurement tools
 - **Admission Processing**: Comprehensive intake and documentation workflows
 - **Analytics Dashboard**: Patient statistics, medication compliance, alert trends
+- **Diabetic Record Reports**: Glucose trends, insulin tracking, and clinical insights
+- **Audit Trail Reports**: Comprehensive logging for regulatory compliance
 
-### 🔐 Security & Compliance
-- **HIPAA Compliance**: Secure data handling and audit trails
+### 🩺 Specialized Clinical Modules
+- **Diabetic Record Management**: Comprehensive diabetes care with glucose monitoring
+- **Insulin Administration Tracking**: Basal-Bolus therapy support with correction insulin units
+- **Glucose Trend Analysis**: Time-in-range calculations and clinical decision support
+- **MAR Integration**: Seamless medication administration record management
+- **24-Hour Medication History**: Complete administration tracking and audit trails
+- **BCMA Workflow**: Barcode-driven medication safety with Five Rights verification
+- **Clinical Assessment Tools**: Wound care, vital signs, and patient monitoring
+
+### 🔐 Advanced Security & Compliance
+- **HIPAA Compliance**: Secure data handling with comprehensive audit trails
+- **Enhanced Security Diagnostics**: AI-powered threat detection and monitoring
+- **Secure Logging Service**: PHI-compliant logging with automatic redaction
 - **Role-Based Access**: Nurse, admin, and super admin permission levels
 - **Session Management**: Automatic timeout and secure authentication
 - **Data Encryption**: End-to-end encryption for sensitive medical data
+- **Real-time Security Monitoring**: Continuous assessment and threat detection
 - **Audit Logging**: Comprehensive activity tracking and compliance reporting
 
 ## 🛠️ Technology Stack
@@ -72,10 +96,12 @@ A comprehensive, modern healthcare management platform built with React 18, Type
 
 ### Healthcare-Specific Libraries
 - **date-fns 3.2.0** - Comprehensive date manipulation for medical scheduling
-- **uuid 11.1.0** - Unique identifier generation for patient records
+- **uuid 11.1.0** - Unique identifier generation for patient records and audit trails
 - **react-dropzone 14.3.8** - File upload system for medical documents and images
 - **react-image-marker 1.2.0** - Advanced medical image annotation and measurement
-- **Custom Barcode Scanner** - Healthcare-optimized barcode detection engine
+- **dompurify 3.2.6** - XSS protection and sanitization for medical data inputs
+- **Custom BCMA Service** - Healthcare-optimized barcode medication administration
+- **Custom Security Framework** - HIPAA-compliant logging and threat detection
 - **UPC-128 Generation** - Patient bracelet and label barcode creation
 
 ### Development & Quality Tools
@@ -235,10 +261,16 @@ hacCare/
 │   │   ├── 📁 Auth/                # Authentication components
 │   │   │   ├── 📄 LoginForm.tsx     # User login interface
 │   │   │   └── 📄 ProtectedRoute.tsx # Route protection wrapper
+│   │   ├── 📁 bcma/                # BCMA (Barcode Medication Administration)
+│   │   │   ├── 📄 BCMAAdministration.tsx # Main BCMA workflow
+│   │   │   ├── 📄 BarcodeGenerator.tsx # Barcode generation and printing
+│   │   │   └── 📄 BCMAVerification.tsx # Five Rights verification
 │   │   ├── 📁 Changelog/           # Version and update tracking
 │   │   │   └── 📄 Changelog.tsx     # Application changelog display
 │   │   ├── 📁 Dashboard/           # Analytics and overview
 │   │   │   └── 📄 QuickStats.tsx    # Patient statistics dashboard
+│   │   ├── 📁 DiabeticRecordModule/ # Diabetic care management
+│   │   │   └── 📄 DiabeticRecordModule.tsx # Glucose and insulin tracking
 │   │   ├── 📁 Documentation/       # Help and documentation
 │   │   │   └── 📄 Documentation.tsx # User documentation interface
 │   │   ├── 📁 Layout/              # Application layout components
@@ -253,6 +285,7 @@ hacCare/
 │   │   │   └── 📁 vitals/          # Vital signs components
 │   │   ├── 📁 Settings/            # System configuration
 │   │   │   ├── 📄 ConnectionDiagnostics.tsx # Network diagnostics
+│   │   │   ├── 📄 SecurityConnectionDiagnostics.tsx # Security monitoring
 │   │   │   ├── 📄 SecuritySettings.tsx # Security configuration
 │   │   │   └── 📄 Settings.tsx      # General settings interface
 │   │   ├── 📁 StatusMonitor/       # System health monitoring
@@ -296,15 +329,24 @@ hacCare/
 │   │   ├── 📄 alertService.ts      # Alert processing service
 │   │   ├── 📄 assessmentService.ts # Clinical assessment service
 │   │   ├── 📄 auditService.ts      # Audit trail and logging
+│   │   ├── 📄 bcmaService.ts       # BCMA medication administration
 │   │   ├── 📄 connectionTest.ts    # Network connectivity testing
 │   │   ├── 📄 imageService.ts      # Medical image processing
 │   │   ├── 📄 medicationService.ts # Medication management
 │   │   ├── 📄 patientService.ts    # Patient data operations
 │   │   ├── 📄 queryClient.ts       # TanStack Query configuration
+│   │   ├── 📄 secureLogger.ts      # HIPAA-compliant logging service
+│   │   ├── 📄 securityHeaders.ts   # Security headers configuration
 │   │   ├── 📄 supabase.ts          # Supabase client setup
 │   │   └── 📄 woundService.ts      # Wound care management
 │   │
-│   ├── 📁 Patients/               # Legacy patient components
+│   ├── 📁 modules/                 # Feature modules
+│   │   └── 📁 mar/                # Medication Administration Record
+│   │       ├── 📄 MARModule.tsx    # Main MAR interface with BCMA integration
+│   │       └── 📁 components/     # MAR-specific components
+│   │           └── 📄 MedicationHistoryView.tsx # 24-hour medication history
+│   │
+│   ├── 📁 Patients/               # Legacy patient components  
 │   │   └── 📁 records/            # Medical record components
 │   │       └── 📄 MedicationAdministration.tsx
 │   │
@@ -316,6 +358,7 @@ hacCare/
 │       ├── 📄 barcodeUtils.tsx    # Barcode processing utilities
 │       ├── 📄 dateUtils.ts        # Date manipulation helpers
 │       ├── 📄 patientUtils.ts     # Patient data utilities
+│       ├── 📄 sanitization.ts     # Data sanitization and PHI protection
 │       └── 📄 time.ts             # Time formatting and calculations
 │
 ├── 📄 package.json               # Project dependencies and scripts
@@ -486,7 +529,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 
 # Optional Production Settings
-VITE_APP_VERSION=1.0.0
+VITE_APP_VERSION=3.0.0
 VITE_DEBUG_MODE=false
 VITE_SENTRY_DSN=your-sentry-dsn
 VITE_ANALYTICS_ID=your-analytics-id
@@ -574,17 +617,20 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history and feature updates.
 
-### Version 1.0.0 (Current)
-- ✅ Complete patient management system
-- ✅ Advanced barcode scanning integration
-- ✅ Real-time alert system with deduplication
-- ✅ Medical image annotation capabilities
-- ✅ HIPAA-compliant data handling
-- ✅ Mobile-responsive design
-- ✅ Comprehensive testing suite
+### Version 3.0.0 (Current) - Major Feature Release
+- ✅ Complete BCMA (Barcode Medication Administration) system
+- ✅ Five Rights medication verification workflow
+- ✅ Professional barcode generation and printing
+- ✅ Diabetic record management with glucose monitoring
+- ✅ Enhanced security diagnostics with AI-powered threat detection
+- ✅ 24-hour medication administration history tracking
+- ✅ Secure logging service with PHI protection
+- ✅ Comprehensive audit trails and compliance reporting
+- ✅ Enhanced database architecture with improved RLS policies
+- ✅ Major UI/UX improvements and mobile optimization
 
 ---
 
-**🏥 hacCare** - *Revolutionizing healthcare management with modern technology, security-first architecture, and healthcare professional-focused design.*
+**🏥 hacCare v3.0.0** - *Revolutionizing healthcare management with BCMA medication administration, diabetic care, advanced security diagnostics, and healthcare professional-focused design.*
 
 **Built with ❤️ by the hacCare Team** | **Powered by React, TypeScript, and Supabase**

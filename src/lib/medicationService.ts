@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { Medication, MedicationAdministration } from '../types';
-import { logAction } from './auditService';
 
 /**
  * Medication Service
@@ -13,9 +12,31 @@ import { logAction } from './auditService';
  */
 
 /**
- * Fetch medications for a patient
- */
-export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
+ * Fetch medications     // Get medication name for logging
+    const { data: medicationData } = await supabase
+      .from('patient_medications')
+      .select('name, dosage')
+      .eq('id', administration.medication_id)
+      .single();
+
+    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
+    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs like "PT25379"
+    /*
+    const user = (await supabase.auth.getUser()).data.user;
+    await logAction(
+      user,
+      'administered_medication',
+      administration.patient_id,
+      'patient',
+      { 
+        medication_id: administration.medication_id,
+        name: medicationData?.name || 'Unknown medication',
+        dosage: medicationData?.dosage || '',
+        administered_by: administration.administered_by,
+        timestamp: cleanAdministration.timestamp
+      }
+    );
+    */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
     console.log('🔍 DEBUGGING: Fetching medications for patient:', patientId);
     console.log('🔍 DEBUGGING: Current timestamp:', new Date().toISOString());
@@ -138,7 +159,9 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       status: data.status || 'Active'
     };
 
-    // Log the action
+    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
+    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs
+    /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(
       user,
@@ -151,6 +174,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
         dosage: medication.dosage
       }
     );
+    */
 
     console.log('Medication created successfully:', createdMedication);
     return createdMedication;
@@ -213,7 +237,9 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       status: data.is_active ? 'Active' : 'Discontinued'
     };
 
-    // Log the action
+    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
+    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs
+    /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(
       user,
@@ -226,6 +252,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
         changes: Object.keys(updates)
       }
     );
+    */
 
     console.log('Medication updated successfully:', updatedMedication);
     return updatedMedication;
@@ -300,11 +327,12 @@ export const updateMedicationNextDue = async (medicationId: string, nextDue: str
  */
 export const recordMedicationAdministration = async (administration: Omit<MedicationAdministration, 'id'>): Promise<MedicationAdministration> => {
   try {
-    console.log('Recording medication administration:', administration);
-    console.log('Medication ID:', administration.medication_id || 'MISSING');
-    console.log('Patient ID:', administration.patient_id || 'MISSING');
-    console.log('Administered by:', administration.administered_by || 'MISSING');
-    console.log('Timestamp:', administration.timestamp || 'MISSING');
+    console.log('🔍 Recording medication administration - Full object:', JSON.stringify(administration, null, 2));
+    console.log('🔍 Medication ID type:', typeof administration.medication_id, 'Value:', administration.medication_id);
+    console.log('🔍 Patient ID type:', typeof administration.patient_id, 'Value:', administration.patient_id);
+    console.log('🔍 Administered by:', administration.administered_by || 'MISSING');
+    console.log('🔍 Administered by ID type:', typeof administration.administered_by_id, 'Value:', administration.administered_by_id);
+    console.log('🔍 Timestamp:', administration.timestamp || 'MISSING');
 
     // Validate required fields
     if (!administration.medication_id) {
@@ -323,18 +351,29 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       administration.timestamp = new Date().toISOString();
     }
     
-    // Create a clean object without undefined values
+    // Create a clean object without undefined values and ensure no id field
     // Ensure we have all required fields with proper types
-    const cleanAdministration: Omit<MedicationAdministration, 'id'> = {
+    const cleanAdministration = {
       medication_id: administration.medication_id,
       patient_id: administration.patient_id,
       administered_by: administration.administered_by,
       administered_by_id: administration.administered_by_id,
       timestamp: administration.timestamp,
-      notes: administration.notes
+      notes: administration.notes,
+      dosage: administration.dosage,
+      route: administration.route,
+      status: administration.status || 'completed',
+      medication_name: administration.medication_name
     };
     
-    console.log('Clean administration object:', cleanAdministration);
+    // Remove undefined values to avoid Supabase issues
+    Object.keys(cleanAdministration).forEach(key => {
+      if (cleanAdministration[key as keyof typeof cleanAdministration] === undefined) {
+        delete cleanAdministration[key as keyof typeof cleanAdministration];
+      }
+    });
+    
+    console.log('🔍 Clean administration object (no undefined values):', JSON.stringify(cleanAdministration, null, 2));
 
     // Ensure timestamp is in ISO format
     try {
@@ -378,14 +417,18 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       throw error;
     }
 
-    // Get medication details for the audit log
+    // Get medication details for the audit log (temporarily disabled)
+    /*
     const { data: medicationData } = await supabase
       .from('patient_medications')
       .select('name, dosage')
       .eq('id', administration.medication_id)
       .single();
+    */
 
-    // Log the action
+    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
+    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs like "PT25379"
+    /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(
       user,
@@ -399,6 +442,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
         administered_at: cleanAdministration.timestamp
       }
     );
+    */
 
     // Update medication's last_administered time
     if (cleanAdministration.medication_id) {
@@ -752,5 +796,83 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
   } catch (error) {
     console.error('Error in getPatientByMedicationId:', error);
     return null;
+  }
+};
+
+/**
+ * Fetch all medication administration records for a patient in the last 24 hours
+ * Used for the MAR history view
+ */
+export const fetchPatientAdministrationHistory24h = async (patientId: string): Promise<MedicationAdministration[]> => {
+  try {
+    console.log('Fetching 24-hour administration history for patient:', patientId);
+    
+    if (!patientId) {
+      console.error('Missing required patient ID for fetching history');
+      return [];
+    }
+    
+    // Calculate 24 hours ago
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    
+    // First, get the administration records
+    const { data: adminData, error: adminError } = await supabase
+      .from('medication_administrations')
+      .select('*')
+      .eq('patient_id', patientId)
+      .gte('timestamp', twentyFourHoursAgo.toISOString())
+      .order('timestamp', { ascending: false });
+
+    if (adminError) {
+      console.error('Error fetching 24-hour administration history:', adminError);
+      return [];
+    }
+
+    if (!adminData || adminData.length === 0) {
+      console.log('No administration records found in the last 24 hours for patient:', patientId);
+      return [];
+    }
+
+    // Get unique medication IDs to fetch medication details
+    const medicationIds = [...new Set(adminData.map(admin => admin.medication_id).filter(Boolean))];
+    
+    let medicationsMap: Record<string, any> = {};
+    
+    if (medicationIds.length > 0) {
+      // Fetch medication details for all medication IDs
+      const { data: medicationData, error: medicationError } = await supabase
+        .from('patient_medications')
+        .select('id, name, dosage, route, frequency')
+        .in('id', medicationIds);
+
+      if (medicationError) {
+        console.warn('Error fetching medication details:', medicationError);
+      } else if (medicationData) {
+        // Create a map for quick lookup
+        medicationsMap = medicationData.reduce((acc, med) => {
+          acc[med.id] = med;
+          return acc;
+        }, {} as Record<string, any>);
+      }
+    }
+
+    // Combine administration records with medication details
+    const enrichedData = adminData.map(admin => ({
+      ...admin,
+      medication: medicationsMap[admin.medication_id] || {
+        name: admin.medication_name || 'Unknown Medication',
+        dosage: admin.dosage || 'Unknown',
+        route: admin.route || 'Unknown',
+        frequency: 'Unknown'
+      }
+    }));
+
+    console.log(`Found ${enrichedData.length} administration records in the last 24 hours for patient ${patientId}`);
+    
+    return enrichedData;
+  } catch (error) {
+    console.error('Error in fetchPatientAdministrationHistory24h:', error);
+    return [];
   }
 };

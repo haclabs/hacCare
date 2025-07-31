@@ -17,11 +17,12 @@ import { schemaEngine } from '../../lib/schemaEngine';
 import { medicationAdministrationSchema, medicationReconciliationSchema } from '../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../types';
 import { ValidationResult, FormGenerationContext } from '../../types/schema';
-import { createMedication } from '../../lib/medicationService';
+import { createMedication, recordMedicationAdministration } from '../../lib/medicationService';
 import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
 import DiabeticRecordModule from '../../components/DiabeticRecordModule';
+import { MedicationHistoryView } from './components/MedicationHistoryView';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -148,9 +149,24 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
     setIsLoading(true);
     try {
-      // Create medication administration record
+      // Save administration record to database
+      const administrationData = {
+        medication_id: data.medicationId,
+        patient_id: patient.id,
+        administered_by: currentUser?.name || data.administeredBy,
+        administered_by_id: currentUser?.id,
+        timestamp: data.administrationTime,
+        notes: data.notes,
+        status: 'completed' as const
+      };
+
+      console.log('Recording manual medication administration:', administrationData);
+      const savedRecord = await recordMedicationAdministration(administrationData);
+      console.log('Manual administration record saved to database:', savedRecord);
+
+      // Create local administration record for state update
       const administrationRecord = {
-        id: `admin-${Date.now()}`,
+        id: savedRecord?.id || `admin-${Date.now()}`,
         medication_id: data.medicationId,
         patient_id: patient.id,
         administered_by: currentUser?.name || data.administeredBy,
@@ -174,11 +190,11 @@ export const MARModule: React.FC<MARModuleProps> = ({
       onMedicationUpdate(updatedMedications);
 
       // Check for clinical alerts
-      // Check for clinical alerts
       if (validation.clinicalAlerts && validation.clinicalAlerts.length > 0) {
         console.log('Clinical alerts detected:', validation.clinicalAlerts);
       }
       console.log('Medication administration recorded successfully');
+      setSuccessMessage(`${medications.find(m => m.id === data.medicationId)?.name} administered successfully`);
     } catch (error) {
       console.error('Error recording medication administration:', error);
     } finally {
@@ -741,16 +757,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
       )}
 
       {activeView === 'history' && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-6">Administration History</h3>
-          <div className="text-center py-12">
-            <Clock className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">Administration history would be displayed here</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Historical medication administration records and patterns
-            </p>
-          </div>
-        </div>
+        <MedicationHistoryView 
+          patientId={patient.patient_id}
+          patientName={`${patient.first_name} ${patient.last_name}`}
+        />
       )}
 
       {activeView === 'diabetic-record' && (

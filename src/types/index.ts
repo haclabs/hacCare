@@ -61,6 +61,16 @@ export interface MedicationAdministration {
   administered_by_id?: string;
   timestamp: string;
   notes?: string;
+  dosage?: string;
+  route?: string;
+  status?: 'completed' | 'missed' | 'late' | 'partial';
+  medication?: {
+    name: string;
+    dosage: string;
+    route: string;
+    frequency: string;
+  };
+  medication_name?: string; // Fallback field
 }
 
 export interface PatientNote {

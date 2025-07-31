@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, Zap, CheckCircle, XCircle, AlertTriangle, RefreshCw, Globe, Server, HardDrive, Cpu, MemoryStick, Table as Tabs } from 'lucide-react';
+import { Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw, MemoryStick } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { isSupabaseConfigured, checkDatabaseHealth, testSupabaseConnection } from '../../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 import { SecuritySettings } from './SecuritySettings';
 
@@ -47,7 +47,6 @@ export const Settings: React.FC = () => {
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   /**
    * Ping database and measure response time
@@ -218,7 +217,9 @@ export const Settings: React.FC = () => {
       setDarkMode(systemDark);
       localStorage.setItem('haccare-theme', 'system');
     } else {
-      setDarkMode(theme === 'dark');
+      const isDark = theme === 'dark';
+      setDarkMode(isDark);
+      localStorage.setItem('haccare-theme', theme);
     }
   };
 

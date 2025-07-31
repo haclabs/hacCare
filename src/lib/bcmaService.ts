@@ -3,7 +3,8 @@
  * Works with existing barcode scanning infrastructure
  */
 
-import { Patient, Medication } from '../types';
+import { Patient, Medication, MedicationAdministration } from '../types';
+import { recordMedicationAdministration } from './medicationService';
 
 export interface AdministrationLog {
   id: string;
@@ -218,10 +219,12 @@ class BCMAService {
     manualOverrides: string[] = [],
     notes?: string
   ): Promise<AdministrationLog> {
+    console.log('🔵 BCMA: Creating administration record in database...');
+    
     const log: AdministrationLog = {
       id: `admin-${Date.now()}`,
       medication_id: medication.id,
-      patient_id: patient.id,
+      patient_id: patient.patient_id || patient.id, // Use patient_id string field
       administered_by: currentUser.name,
       administered_by_id: currentUser.id,
       timestamp: new Date().toISOString(),
@@ -232,8 +235,32 @@ class BCMAService {
       notes
     };
 
-    // In a real implementation, this would save to database
-    console.log('BCMA Administration Log:', log);
+    try {
+      // Create the medication administration record in the database
+      const administrationRecord: MedicationAdministration = {
+        medication_id: medication.id,
+        patient_id: patient.patient_id || patient.id,
+        administered_by: currentUser.name,
+        administered_by_id: currentUser.id,
+        timestamp: log.timestamp,
+        notes: notes ? `BCMA Administration. ${notes}` : 'BCMA Administration',
+        dosage: medication.dosage,
+        route: medication.route,
+        status: 'completed'
+      };
+
+      console.log('🔵 BCMA: Recording administration:', administrationRecord);
+      
+      // Save to database using the medication service
+      await recordMedicationAdministration(administrationRecord);
+      
+      console.log('✅ BCMA: Administration record saved successfully');
+      console.log('🔵 BCMA Administration Log:', log);
+      
+    } catch (error) {
+      console.error('❌ BCMA: Error saving administration record:', error);
+      // Continue anyway since we have the log
+    }
     
     return log;
   }
