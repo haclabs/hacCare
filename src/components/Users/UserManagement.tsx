@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Shield, Search } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { UserForm } from './UserForm';
@@ -36,8 +36,8 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to deactivate this user?')) return;
+  const handleDeactivateUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to deactivate this user? They will be disabled but their data will remain.')) return;
 
     try {
       const { error } = await supabase.rpc('deactivate_user', { 
@@ -54,6 +54,54 @@ export const UserManagement: React.FC = () => {
     } catch (error) {
       console.error('Error deactivating user:', error);
       alert('Error deactivating user');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const confirmMessage = 'Are you sure you want to PERMANENTLY DELETE this user?\n\n⚠️ WARNING: This will:\n- Delete the user completely\n- Remove all their data\n- Cannot be undone\n\nType "DELETE" to confirm:';
+    const userInput = prompt(confirmMessage);
+    
+    if (userInput !== 'DELETE') {
+      alert('User deletion cancelled');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('delete_user_permanently', { 
+        target_user_id: userId 
+      });
+      
+      if (error) {
+        console.error('Error deleting user permanently:', error);
+        alert('Error deleting user: ' + error.message);
+      } else {
+        alert('User permanently deleted');
+        await fetchUsers();
+      }
+    } catch (error) {
+      console.error('Error deleting user permanently:', error);
+      alert('Error deleting user');
+    }
+  };
+
+  const handleReactivateUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to reactivate this user?')) return;
+
+    try {
+      const { error } = await supabase.rpc('reactivate_user', { 
+        target_user_id: userId 
+      });
+      
+      if (error) {
+        console.error('Error reactivating user:', error);
+        alert('Error reactivating user: ' + error.message);
+      } else {
+        alert('User reactivated successfully');
+        await fetchUsers();
+      }
+    } catch (error) {
+      console.error('Error reactivating user:', error);
+      alert('Error reactivating user');
     }
   };
 
@@ -244,21 +292,30 @@ export const UserManagement: React.FC = () => {
                             setShowForm(true);
                           }}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                          title="Edit User"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+                        
+                        {/* Deactivate/Reactivate Toggle */}
                         <button
-                          onClick={() => handleToggleActive(user)}
+                          onClick={() => user.is_active ? handleDeactivateUser(user.id) : handleReactivateUser(user.id)}
                           className={`p-1 rounded ${
-                            user.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+                            user.is_active 
+                              ? 'text-orange-600 hover:text-orange-900' 
+                              : 'text-green-600 hover:text-green-900'
                           }`}
+                          title={user.is_active ? 'Deactivate User' : 'Reactivate User'}
                         >
-                          <Shield className="h-4 w-4" />
+                          {user.is_active ? <UserX className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
                         </button>
+                        
+                        {/* Permanent Delete - Only for Super Admins */}
                         {hasRole('super_admin') && (
                           <button
                             onClick={() => handleDeleteUser(user.id)}
                             className="text-red-600 hover:text-red-900 p-1 rounded"
+                            title="Permanently Delete User"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
