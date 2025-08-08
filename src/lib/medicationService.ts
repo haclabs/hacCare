@@ -400,21 +400,41 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       .single();
 
     if (error) {
-      console.error('Error recording medication administration:', error);
+      console.error('❌ BCMA: Error saving administration record:', error);
+      console.error('❌ BCMA: Administration data that failed:', cleanAdministration);
       
       // Provide detailed error information for debugging
       if (error.message.includes('permission denied')) {
-        console.error('Permission denied error details:', {
+        console.error('🔒 Permission denied error details:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
-          code: error.code
+          code: error.code,
+          table: 'medication_administrations'
         });
-        console.error('This is likely due to a permission issue with the RLS policies or foreign key constraints.');
-        console.error('A database migration is needed to fix this issue.');
+        console.error('🔧 Fix: Run the fix-medication-administration-permissions.sql script');
+        throw new Error(`Permission denied: Cannot save medication administration. Please contact your administrator to run the database permission fix.`);
       }
       
-      throw error;
+      if (error.message.includes('foreign key')) {
+        console.error('🔗 Foreign key constraint error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw new Error(`Database constraint error: ${error.message}. Please check that the patient and medication exist.`);
+      }
+      
+      if (error.message.includes('null value')) {
+        console.error('❌ Required field missing:', {
+          message: error.message,
+          administration: cleanAdministration
+        });
+        throw new Error(`Missing required field: ${error.message}`);
+      }
+      
+      // Generic error with helpful context
+      throw new Error(`Failed to save medication administration: ${error.message}`);
     }
 
     // Get medication details for the audit log (temporarily disabled)

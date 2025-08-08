@@ -125,11 +125,11 @@ export function AlertProvider({ children }: AlertProviderProps) {
         filteredAlerts = filterByTenant(fetchedAlerts, currentTenant.id);
         console.log(`Filtered ${fetchedAlerts.length} alerts to ${filteredAlerts.length} for tenant`);
       } else {
-        // User has no tenant - for testing/development, show all alerts
-        console.log('⚠️ User has no tenant - showing all alerts for development/testing');
-        console.log('   In production, users should be assigned to tenants for proper data isolation');
-        filteredAlerts = fetchedAlerts; // Show all alerts instead of empty array
-        setError('Note: You are not assigned to any organization. In production, please contact your administrator to assign you to a tenant.');
+        // User has no tenant - SECURITY: Show NO alerts for production safety
+        console.log('🚨 SECURITY: User has no tenant assignment - showing no alerts for security');
+        console.log('   Users must be properly assigned to tenants for data access');
+        filteredAlerts = []; // Security first: show no data without proper tenant assignment
+        setError('Access denied: You are not assigned to any organization. Please contact your administrator for proper tenant assignment.');
       }
       
       // Deduplicate alerts based on patient, type, and similar messages

@@ -259,7 +259,23 @@ class BCMAService {
       
     } catch (error) {
       console.error('❌ BCMA: Error saving administration record:', error);
-      // Continue anyway since we have the log
+      
+      // Provide more specific error handling
+      if (error instanceof Error) {
+        if (error.message.includes('Permission denied')) {
+          console.error('🔒 BCMA: Database permission error - need to run fix-medication-administration-permissions.sql');
+          throw new Error('Database permission error: Please contact your administrator to fix medication administration permissions.');
+        } else if (error.message.includes('constraint')) {
+          console.error('🔗 BCMA: Database constraint error:', error.message);
+          throw new Error(`Database error: ${error.message}`);
+        } else {
+          console.error('💥 BCMA: Unexpected error:', error.message);
+          throw new Error(`Failed to save administration: ${error.message}`);
+        }
+      } else {
+        console.error('💥 BCMA: Unknown error type:', error);
+        throw new Error('Unknown error occurred while saving administration record');
+      }
     }
     
     return log;
