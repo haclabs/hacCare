@@ -105,22 +105,6 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const handleToggleActive = async (user: UserProfile) => {
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ is_active: !user.is_active })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating user status:', error);
-      } else {
-        await fetchUsers();
-      }
-    } catch (error) {
-      console.error('Error updating user status:', error);
-    }
-  };
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
