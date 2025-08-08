@@ -118,12 +118,17 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       } else {
         // Regular user - load their assigned tenant
+        console.log('🏢 TENANT CONTEXT: Loading tenant for regular user:', user.id);
         const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
         
+        console.log('🏢 TENANT CONTEXT: getCurrentUserTenant result:', { tenant, tenantError });
+        
         if (tenantError) {
+          console.error('🏢 TENANT CONTEXT: Error loading tenant:', tenantError);
           throw new Error(tenantError.message);
         }
 
+        console.log('🏢 TENANT CONTEXT: Setting current tenant:', tenant);
         setCurrentTenant(tenant);
         setSelectedTenantId(tenant?.id || null);
       }

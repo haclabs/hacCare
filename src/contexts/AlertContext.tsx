@@ -79,6 +79,30 @@ export function AlertProvider({ children }: AlertProviderProps) {
       return;
     }
     setLastRefreshTime(now);
+    
+    // Enhanced debugging for tenant context issue
+    console.log('🔍 ALERT CONTEXT DEBUGGING:');
+    console.log('   User:', user?.id);
+    console.log('   Current Tenant:', currentTenant);
+    console.log('   Is Multi-tenant Admin:', isMultiTenantAdmin);
+    console.log('   Selected Tenant ID:', selectedTenantId);
+    
+    // Additional debugging for the tenant loading issue
+    if (user && !currentTenant && !isMultiTenantAdmin) {
+      console.log('🚨 TENANT LOADING ISSUE DETECTED:');
+      console.log('   User exists but currentTenant is null for non-super-admin');
+      console.log('   This suggests TenantContext failed to load tenant');
+      
+      // Test the tenant service directly
+      try {
+        const { getCurrentUserTenant } = await import('../lib/tenantService');
+        const result = await getCurrentUserTenant(user.id);
+        console.log('   Direct tenant service test:', result);
+      } catch (error) {
+        console.log('   Direct tenant service error:', error);
+      }
+    }
+    
     try {
       // Check if Supabase is configured before attempting to fetch
       if (!isSupabaseConfigured) {
