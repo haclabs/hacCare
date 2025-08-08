@@ -67,7 +67,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const [isRunningChecks, setIsRunningChecks] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const { user } = useAuth();
-  const { currentTenant, isMultiTenantAdmin, selectedTenantId } = useTenant();
+  const { currentTenant, isMultiTenantAdmin, selectedTenantId, loading: tenantLoading } = useTenant();
 
   const unreadCount = alerts.filter(alert => !alert.acknowledged).length;
 
@@ -86,6 +86,13 @@ export function AlertProvider({ children }: AlertProviderProps) {
     console.log('   Current Tenant:', currentTenant);
     console.log('   Is Multi-tenant Admin:', isMultiTenantAdmin);
     console.log('   Selected Tenant ID:', selectedTenantId);
+    console.log('   Tenant Loading:', tenantLoading);
+    
+    // CRITICAL: Don't process alerts while tenant is still loading
+    if (tenantLoading) {
+      console.log('⏳ Tenant still loading, skipping alert refresh to prevent race condition');
+      return;
+    }
     
     // Additional debugging for the tenant loading issue
     if (user && !currentTenant && !isMultiTenantAdmin) {
