@@ -6,4 +6,3 @@
   NODE_ENV = "production"
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
-  conditions = {Role = ["visitor"]}
