@@ -151,6 +151,22 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         }
 
         if (authData.user) {
+          // For admin-created users, immediately confirm their email so they can login
+          try {
+            const { error: confirmError } = await supabase
+              .rpc('confirm_user_email', {
+                target_user_id: authData.user.id
+              });
+
+            if (confirmError) {
+              console.error('Error confirming user email:', confirmError);
+              // Don't fail the creation, just warn
+              console.warn('User created but email not confirmed. They may need to confirm via email.');
+            }
+          } catch (confirmError: any) {
+            console.error('Error in email confirmation:', confirmError);
+            // Continue with user creation even if confirmation fails
+          }
           // Update the profile with additional information
           const { error: profileError } = await supabase
             .from('user_profiles')

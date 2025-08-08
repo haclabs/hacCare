@@ -7,10 +7,19 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
 
+# Handle subdomain routing for multi-tenant application
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = true
+
+# Support for custom domains and subdomains
+[[redirects]]
+  from = "https://*.haccare.app/*"
+  to = "/index.html"
+  status = 200
+  force = true
 
 [[headers]]
   for = "/*"
