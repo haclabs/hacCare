@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, Info, Wifi, WifiOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Wifi, WifiOff, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
@@ -69,51 +69,6 @@ export const LoginForm: React.FC = () => {
           error.message?.includes('timeout')) {
           setConnectionStatus('disconnected');
       } 
-    }
-    // Removed finally block - let AuthContext manage loading state on success
-  };
-
-  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError('');
-    setLoading(true);
-
-    try {
-      console.log('🔐 Attempting demo login...');
-      const { error } = await signIn(demoEmail, demoPassword);
-      
-      if (error) {
-        console.error('❌ Demo login error:', error);
-        // Special case for demo accounts
-        if (error.message?.includes('Invalid login credentials')) {
-          setError('Demo account not found. Please ensure the demo accounts have been set up in your Supabase project.');
-        } else {
-          setError(parseAuthError(error));
-        }
-        setLoading(false); // Only set loading to false on error
-        
-        // Update connection status for network-related errors
-        if (error.message?.includes('Network error') || 
-            error.message?.includes('Failed to fetch') ||
-            error.message?.includes('timeout')) {
-            setConnectionStatus('disconnected');
-        }
-      } else {
-        console.log('✅ Demo login successful, waiting for auth state change...');
-        // Don't set loading to false - let AuthContext handle the loading state
-      }
-    } catch (error: any) {
-      console.error('Demo login error:', error);
-      setError(parseAuthError(error));
-      setLoading(false); // Only set loading to false on error
-      
-      // Update connection status for network-related errors
-      if (error.message?.includes('Failed to fetch') || 
-          error.message?.includes('NetworkError') ||
-          error.message?.includes('timeout')) {
-          setConnectionStatus('disconnected');
-      }
     }
     // Removed finally block - let AuthContext manage loading state on success
   };
@@ -272,61 +227,6 @@ export const LoginForm: React.FC = () => {
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
-
-        {isSupabaseConfigured && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <Info className="h-4 w-4 text-blue-600" />
-                <h3 className="text-sm font-medium text-blue-900">Demo Accounts</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="text-xs text-blue-700">
-                  <p className="mb-1"><strong>Super Admin:</strong> admin@haccare.com</p>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('admin@haccare.com', 'admin123')}
-                    disabled={loading}
-                    className="text-blue-600 hover:text-blue-800 underline text-xs disabled:opacity-50"
-                  >
-                    Click to login as Admin
-                  </button>
-                </div>
-                <div className="text-xs text-blue-700">
-                  <p className="mb-1"><strong>Nurse:</strong> nurse@haccare.com</p>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('nurse@haccare.com', 'nurse123')}
-                    disabled={loading}
-                    className="text-blue-600 hover:text-blue-800 underline text-xs disabled:opacity-50"
-                  >
-                    Click to login as Nurse
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-blue-200">
-                <p className="text-xs text-blue-600">
-                  <strong>Testing:</strong> Use these demo accounts to explore the system.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {connectionStatus === 'disconnected' && (
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Demo Mode Active</h3>
-            <p className="text-xs text-gray-600 mb-3">
-              You can still explore the application with sample data. All features are available except data persistence.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-gray-700 transition-colors"
-            >
-              Retry Connection
-            </button>
-          </div>
-        )}
 
         {/* Security Notice */}
         <div className="mt-6 bg-gray-50 rounded-lg p-4">
