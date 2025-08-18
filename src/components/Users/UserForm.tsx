@@ -47,9 +47,9 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             .from('tenant_users')
             .select('tenant_id')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
           
-          if (data && !error) {
+          if (data && !error && data.tenant_id) {
             setSelectedTenantId(data.tenant_id);
           }
         } catch (error) {
