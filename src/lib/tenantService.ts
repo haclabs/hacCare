@@ -555,33 +555,53 @@ export async function getAvailableAdminUsers(): Promise<{ data: { id: string; em
  */
 export async function getCurrentUserTenant(userId: string): Promise<{ data: Tenant | null; error: any }> {
   try {
+    console.log('🔍 getCurrentUserTenant: Starting for user:', userId);
+    
     // Use the RPC function to avoid RLS conflicts
     const { data: tenantData, error: tenantError } = await supabase
       .rpc('get_user_current_tenant', { target_user_id: userId });
 
+    console.log('🔍 getCurrentUserTenant: RPC result:', { tenantData, tenantError });
+
     if (tenantError) {
+      console.error('🔍 getCurrentUserTenant: RPC error:', tenantError);
       return { data: null, error: tenantError };
     }
 
-    if (!tenantData || tenantData.length === 0) {
+    // Handle empty result gracefully
+    if (!tenantData || !Array.isArray(tenantData) || tenantData.length === 0) {
+      console.log('🔍 getCurrentUserTenant: No tenant found for user');
       return { data: null, error: new Error(`User ${userId} is not associated with any active tenant`) };
     }
+
+    const tenantId = tenantData[0]?.tenant_id;
+    if (!tenantId) {
+      console.error('🔍 getCurrentUserTenant: No tenant_id in result:', tenantData[0]);
+      return { data: null, error: new Error(`Invalid tenant data returned for user ${userId}`) };
+    }
+
+    console.log('🔍 getCurrentUserTenant: Found tenant_id:', tenantId);
 
     // Get the full tenant details using the tenant_id
     const { data: tenant, error: fullTenantError } = await supabase
       .from('tenants')
       .select('*')
-      .eq('id', tenantData[0].tenant_id)
+      .eq('id', tenantId)
       .maybeSingle();
 
+    console.log('🔍 getCurrentUserTenant: Tenant details result:', { tenant, fullTenantError });
+
     if (fullTenantError) {
+      console.error('🔍 getCurrentUserTenant: Error fetching tenant details:', fullTenantError);
       return { data: null, error: fullTenantError };
     }
 
     if (!tenant) {
-      return { data: null, error: new Error(`Tenant with ID ${tenantData[0].tenant_id} not found`) };
+      console.error('🔍 getCurrentUserTenant: Tenant not found for ID:', tenantId);
+      return { data: null, error: new Error(`Tenant with ID ${tenantId} not found`) };
     }
 
+    console.log('🔍 getCurrentUserTenant: Success, returning tenant:', tenant.name);
     return { data: tenant, error: null };
   } catch (error) {
     console.error('Error fetching current user tenant:', error);
