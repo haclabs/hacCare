@@ -572,10 +572,14 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
       .from('tenants')
       .select('*')
       .eq('id', tenantData[0].tenant_id)
-      .single();
+      .maybeSingle();
 
     if (fullTenantError) {
       return { data: null, error: fullTenantError };
+    }
+
+    if (!tenant) {
+      return { data: null, error: new Error(`Tenant with ID ${tenantData[0].tenant_id} not found`) };
     }
 
     return { data: tenant, error: null };
