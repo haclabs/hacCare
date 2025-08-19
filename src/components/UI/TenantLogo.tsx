@@ -85,48 +85,29 @@ export const TenantLogo: React.FC<TenantLogoProps> = ({
 
   return (
     <div className={`text-center ${config.container} ${className}`}>
+      {/* Tenant Logo */}
       <div className="flex justify-center items-center mb-4">
-        <div className={`flex items-center ${config.spacing}`}>
-          {/* Tenant Logo */}
-          <div className="flex-shrink-0">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={`${tenantName} logo`}
-                className={`${config.logo} object-contain rounded-lg`}
-                onError={(e) => {
-                  // Fallback to icon if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            
-            {/* Fallback icon (hidden if image loads successfully) */}
-            <div 
-              className={`${config.logo} rounded-lg flex items-center justify-center text-white ${logoUrl ? 'hidden' : 'flex'}`}
-              style={{ backgroundColor: primaryColor }}
-            >
-              <Building2 className="h-2/3 w-2/3" />
-            </div>
-          </div>
-
-          {/* Tenant Name */}
-          <div className="text-left">
-            <h1 
-              className={`${config.title} font-bold leading-none`}
-              style={{ color: primaryColor }}
-            >
-              {tenantName}
-            </h1>
-            {showSubtitle && (
-              <p className={`${config.subtitle} text-gray-500 font-medium mt-1`}>
-                Healthcare Management Portal
-              </p>
-            )}
-          </div>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Organization logo"
+            className={`${config.logo} object-contain rounded-lg`}
+            onError={(e) => {
+              // Fallback to icon if image fails to load
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        
+        {/* Fallback icon (only shown if no logo or image fails to load) */}
+        <div 
+          className={`${config.logo} rounded-lg flex items-center justify-center text-white ${logoUrl ? 'hidden' : 'flex'}`}
+          style={{ backgroundColor: primaryColor }}
+        >
+          <Building2 className="h-2/3 w-2/3" />
         </div>
       </div>
 
