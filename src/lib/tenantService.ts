@@ -736,14 +736,19 @@ export async function getTenantBySubdomain(subdomain: string): Promise<{ data: T
       .from('tenants')
       .select('*')
       .eq('subdomain', subdomain)
-      .eq('status', 'active')
-      .single();
+      .eq('status', 'active');
 
     if (error) {
       return { data: null, error };
     }
 
-    return { data: data as Tenant, error: null };
+    // Handle case where no tenant is found (empty array)
+    if (!data || data.length === 0) {
+      return { data: null, error: null };
+    }
+
+    // Return the first tenant found
+    return { data: data[0] as Tenant, error: null };
   } catch (error) {
     console.error('Error fetching tenant by subdomain:', error);
     return { data: null, error };

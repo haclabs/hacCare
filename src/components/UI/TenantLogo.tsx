@@ -79,7 +79,8 @@ export const TenantLogo: React.FC<TenantLogoProps> = ({
   }
 
   // Tenant-specific branding
-  const primaryColor = tenant.primary_color || '#3B82F6';
+  const logoUrl = tenant.settings?.logo_url;
+  const primaryColor = tenant.settings?.primary_color || tenant.primary_color || '#3B82F6';
   const tenantName = tenant.name || 'Healthcare Organization';
 
   return (
@@ -88,9 +89,9 @@ export const TenantLogo: React.FC<TenantLogoProps> = ({
         <div className={`flex items-center ${config.spacing}`}>
           {/* Tenant Logo */}
           <div className="flex-shrink-0">
-            {tenant.logo_url ? (
+            {logoUrl ? (
               <img
-                src={tenant.logo_url}
+                src={logoUrl}
                 alt={`${tenantName} logo`}
                 className={`${config.logo} object-contain rounded-lg`}
                 onError={(e) => {
@@ -105,7 +106,7 @@ export const TenantLogo: React.FC<TenantLogoProps> = ({
             
             {/* Fallback icon (hidden if image loads successfully) */}
             <div 
-              className={`${config.logo} rounded-lg flex items-center justify-center text-white ${tenant.logo_url ? 'hidden' : 'flex'}`}
+              className={`${config.logo} rounded-lg flex items-center justify-center text-white ${logoUrl ? 'hidden' : 'flex'}`}
               style={{ backgroundColor: primaryColor }}
             >
               <Building2 className="h-2/3 w-2/3" />
