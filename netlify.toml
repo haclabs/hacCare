@@ -7,13 +7,13 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
 
-# SPA redirects for main domain and subdomains
+# SPA redirects - catch all routes and serve index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Ensure subdomain routing works properly
+# Security headers
 [[headers]]
   for = "/*"
   [headers.values]
