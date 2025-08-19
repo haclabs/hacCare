@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3 } from 'lucide-react';
+import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3, Settings } from 'lucide-react';
 import { Tenant, ManagementDashboardStats, TenantUser } from '../../types';
 import { supabase } from '../../lib/supabase';
 import {
@@ -13,8 +13,10 @@ import {
 } from '../../lib/tenantService';
 import { getTenantPatientStats } from '../../lib/multiTenantPatientService';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { TenantSettings } from './TenantSettings';
 
 export const ManagementDashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [stats, setStats] = useState<ManagementDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -175,7 +177,42 @@ export const ManagementDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-4 w-4" />
+              <span>Tenant Overview</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'settings'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Tenant Settings</span>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' ? (
+        <>
+          {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -448,6 +485,11 @@ export const ManagementDashboard: React.FC = () => {
             loadDashboardData();
           }}
         />
+      )}
+        </>
+      ) : (
+        /* Tenant Settings Tab */
+        <TenantSettings />
       )}
     </div>
   );
