@@ -12,8 +12,17 @@ import { Tenant } from '../types';
  * Extract subdomain from current URL
  */
 export function getCurrentSubdomain(): string | null {
+  // Debug logging for production troubleshooting
+  console.log('🌐 Subdomain Detection Debug:', {
+    isDev: import.meta.env.DEV,
+    hostname: window.location.hostname,
+    env: import.meta.env.MODE,
+    href: window.location.href
+  });
+
   // In development, return null (no subdomain routing)
   if (import.meta.env.DEV) {
+    console.log('🚫 Development mode detected - subdomain routing disabled');
     return null;
   }
 
@@ -21,20 +30,27 @@ export function getCurrentSubdomain(): string | null {
   
   // Handle localhost and development environments
   if (hostname === 'localhost' || hostname.includes('127.0.0.1') || hostname.includes('.local')) {
+    console.log('🚫 Localhost detected - subdomain routing disabled');
     return null;
   }
 
   // Split hostname into parts
   const parts = hostname.split('.');
   
+  console.log('🔍 Hostname parts:', parts);
+  
   // Need at least 3 parts for subdomain (subdomain.domain.com)
   if (parts.length < 3) {
+    console.log('🚫 Not enough hostname parts for subdomain');
     return null;
   }
 
   // Return the first part as subdomain (unless it's 'www')
   const subdomain = parts[0];
-  return subdomain === 'www' ? null : subdomain;
+  const result = subdomain === 'www' ? null : subdomain;
+  
+  console.log('✅ Subdomain detected:', result);
+  return result;
 }
 
 /**
