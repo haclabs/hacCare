@@ -34,21 +34,21 @@ export const TenantLogo: React.FC<TenantLogoProps> = ({
       container: 'mb-4',
       title: 'text-2xl',
       subtitle: 'text-xs',
-      logo: 'h-8 w-8',
+      logo: 'h-16 w-auto max-w-48',
       spacing: 'space-x-2'
     },
     medium: {
       container: 'mb-6',
       title: 'text-4xl',
       subtitle: 'text-sm',
-      logo: 'h-12 w-12',
+      logo: 'h-20 w-auto max-w-64',
       spacing: 'space-x-3'
     },
     large: {
       container: 'mb-8',
       title: 'text-5xl',
       subtitle: 'text-base',
-      logo: 'h-16 w-16',
+      logo: 'h-40 w-auto max-w-80',
       spacing: 'space-x-4'
     }
   };
