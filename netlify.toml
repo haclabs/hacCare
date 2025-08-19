@@ -6,3 +6,19 @@
   NODE_ENV = "production"
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
+
+# SPA redirects for main domain and subdomains
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Ensure subdomain routing works properly
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "same-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
