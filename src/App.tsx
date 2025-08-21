@@ -467,6 +467,49 @@ function App() {
           </div>
         );
 
+      case 'wound-care':
+        return (
+          <div className="space-y-6">
+            {/* Wound Care Overview */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center">
+                <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Wound Care Management
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Access wound care management through individual patient records. Select a patient to view and manage their wound assessments.
+              </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-300 mb-2">Assessment Forms</h3>
+                    <p className="text-orange-700 dark:text-orange-400 text-sm">Comprehensive wound assessment documentation with measurements and photos</p>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-2">Treatment Tracking</h3>
+                    <p className="text-blue-700 dark:text-blue-400 text-sm">Monitor treatment progress and healing outcomes over time</p>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-green-900 dark:text-green-300 mb-2">Progress Reports</h3>
+                    <p className="text-green-700 dark:text-green-400 text-sm">Visual progress tracking with measurements and photo documentation</p>
+                  </div>
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => setActiveTab('patients')}
+                    className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                  >
+                    View Patients
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'user-management':
         return (
           <Suspense fallback={<LoadingSpinner />}>

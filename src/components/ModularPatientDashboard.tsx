@@ -30,11 +30,13 @@ import {
   BedDouble,
   Badge,
   FileCheck,
-  ArrowRight
+  ArrowRight,
+  Camera
 } from 'lucide-react';
 import { VitalsModule } from '../modules/vitals/VitalsModule';
 import { MARModule } from '../modules/mar/MARModule';
 import { FormsModule } from '../modules/forms/FormsModule';
+import { WoundCareModule } from '../modules/wound-care/WoundCareModule';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
@@ -51,7 +53,7 @@ interface ModularPatientDashboardProps {
   };
 }
 
-type ActiveModule = 'vitals' | 'medications' | 'forms' | 'overview';
+type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview';
 
 interface ModuleConfig {
   id: ActiveModule;
@@ -807,6 +809,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       badge: patient.medications?.length?.toString() || '0'
     },
     {
+      id: 'wound-care',
+      title: 'Wound Care',
+      description: 'Comprehensive wound assessment and treatment tracking',
+      icon: Camera,
+      color: 'orange',
+      badge: patient.wound_assessments?.length?.toString() || '0'
+    },
+    {
       id: 'forms',
       title: 'Assessments',
       description: 'Clinical assessment forms and comprehensive documentation',
@@ -854,6 +864,15 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         badge: 'bg-green-500 text-white',
         accent: 'bg-green-500',
         gradient: 'from-green-500 to-green-600'
+      },
+      orange: {
+        bg: isActive ? 'bg-gradient-to-br from-orange-50 to-orange-100' : 'bg-white',
+        border: isActive ? 'border-orange-400 shadow-orange-100' : 'border-gray-200',
+        text: isActive ? 'text-orange-900' : 'text-gray-900',
+        icon: isActive ? 'text-orange-600' : 'text-gray-500',
+        badge: 'bg-orange-500 text-white',
+        accent: 'bg-orange-500',
+        gradient: 'from-orange-500 to-orange-600'
       },
       purple: {
         bg: isActive ? 'bg-gradient-to-br from-purple-50 to-purple-100' : 'bg-white',
@@ -1074,6 +1093,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   medications={patient.medications || []}
                   onMedicationUpdate={handleMedicationUpdate}
                   currentUser={currentUser}
+                />
+              )}
+
+              {activeModule === 'wound-care' && (
+                <WoundCareModule
+                  patient={patient}
+                  onPatientUpdate={handlePatientUpdate}
                 />
               )}
 

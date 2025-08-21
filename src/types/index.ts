@@ -20,6 +20,7 @@ export interface Patient {
   vitals: VitalSigns[];
   medications?: Medication[]; // Optional since medications are loaded separately
   notes: PatientNote[];
+  wound_assessments?: WoundAssessment[]; // Optional wound care data
 }
 
 export interface VitalSigns {
@@ -178,4 +179,47 @@ export interface ManagementDashboardStats {
   monthly_revenue: number;
   growth_rate: number;
   system_health: 'healthy' | 'warning' | 'critical';
+}
+
+// Wound Care Types
+export interface WoundAssessment {
+  id: string;
+  patient_id: string;
+  assessment_date: string;
+  wound_location: string;
+  wound_type: 'surgical' | 'pressure' | 'venous' | 'arterial' | 'diabetic' | 'traumatic' | 'other';
+  stage?: string;
+  length_cm: number;
+  width_cm: number;
+  depth_cm: number;
+  wound_bed: 'red' | 'yellow' | 'black' | 'mixed';
+  exudate_amount: 'none' | 'minimal' | 'moderate' | 'heavy';
+  exudate_type: 'serous' | 'sanguineous' | 'serosanguineous' | 'purulent' | 'other';
+  periwound_condition: string;
+  pain_level: number; // 0-10 scale
+  odor: boolean;
+  signs_of_infection: boolean;
+  assessment_notes: string;
+  photos?: string[]; // URLs to wound photos
+  assessor_id: string;
+  assessor_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WoundTreatment {
+  id: string;
+  patient_id: string;
+  wound_assessment_id?: string;
+  treatment_date: string;
+  treatment_type: string;
+  products_used: string;
+  procedure_notes: string;
+  administered_by: string;
+  administered_by_id: string;
+  administered_at: string;
+  next_treatment_due?: string;
+  photos_after?: string[]; // URLs to photos after treatment
+  created_at: string;
+  updated_at: string;
 }
