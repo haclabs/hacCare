@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle } from 'lucide-react';
 import { backupService, BackupOptions, BackupMetadata } from '../../services/backupService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 // Local formatter functions to avoid import issues
 const formatBytes = (bytes: number, decimals: number = 2): string => {
@@ -491,4 +491,4 @@ export const BackupManagement: React.FC = () => {
   );
 };
 
-export default BackupManagement;;
+export default BackupManagement;
