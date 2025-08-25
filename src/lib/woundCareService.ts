@@ -218,7 +218,7 @@ export class WoundCareService {
       const fileExt = file.name.split('.').pop();
       const fileName = `${patientId}/${assessmentId}/${Date.now()}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('wound-photos')
         .upload(fileName, file);
 

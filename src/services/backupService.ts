@@ -6,7 +6,9 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { Patient, PatientAssessment, User, UserProfile } from '../types';
+import { Patient } from '../types';
+import { PatientAssessment } from '../lib/assessmentService';
+import { UserProfile } from '../lib/supabase';
 
 export interface BackupOptions {
   includePatients: boolean;
@@ -171,9 +173,9 @@ class BackupService {
       });
 
       return metadata;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Backup creation failed:', error);
-      throw new Error(`Failed to create backup: ${error.message}`);
+      throw new Error(`Failed to create backup: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -223,9 +225,9 @@ class BackupService {
           last_downloaded: new Date().toISOString()
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Backup download failed:', error);
-      throw new Error(`Failed to download backup: ${error.message}`);
+      throw new Error(`Failed to download backup: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -249,9 +251,9 @@ class BackupService {
       );
 
       return activeBackups;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to list backups:', error);
-      throw new Error(`Failed to list backups: ${error.message}`);
+      throw new Error(`Failed to list backups: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -275,9 +277,9 @@ class BackupService {
 
       // Log deletion
       await this.logBackupActivity(userId, 'backup_deleted', backupId, {});
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete backup:', error);
-      throw new Error(`Failed to delete backup: ${error.message}`);
+      throw new Error(`Failed to delete backup: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -317,18 +319,23 @@ class BackupService {
   /**
    * Restore data from backup (careful operation)
    */
-  async restoreFromBackup(backupId: string, restoreOptions: {
-    restorePatients: boolean;
-    restoreUsers: boolean;
-    restoreSettings: boolean;
-    targetTenantId?: string;
-    dryRun: boolean;
-  }, userId: string): Promise<{ success: boolean; report: any }> {
+  async restoreFromBackup(
+    backupId: string, 
+    restoreOptions: {
+      restorePatients: boolean;
+      restoreUsers: boolean;
+      restoreSettings: boolean;
+      targetTenantId?: string;
+      dryRun: boolean;
+    }, 
+    userId: string
+  ): Promise<{ success: boolean; report: any }> {
     try {
       await this.verifySuperAdminAccess(userId);
 
       // This is a dangerous operation - require additional confirmation
       console.warn('⚠️ Restore operation initiated - this will modify production data');
+      console.log(`Restore request for backup: ${backupId} by user: ${userId}`);
 
       if (!restoreOptions.dryRun) {
         throw new Error('Restore operations must be implemented with extreme caution and additional safeguards');
@@ -534,11 +541,20 @@ class BackupService {
     return data.file_data;
   }
 
-  private async updateDownloadTracking(backupId: string, userId: string): Promise<void> {
+  private async updateDownloadTracking(backupId: string, _userId: string): Promise<void> {
+    // Get current download count first
+    const { data: currentData, error: fetchError } = await supabase
+      .from('backup_metadata')
+      .select('download_count')
+      .eq('id', backupId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
     const { error } = await supabase
       .from('backup_metadata')
       .update({
-        download_count: supabase.raw('download_count + 1'),
+        download_count: (currentData?.download_count || 0) + 1,
         last_downloaded: new Date().toISOString()
       })
       .eq('id', backupId);

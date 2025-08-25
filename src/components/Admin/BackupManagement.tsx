@@ -12,7 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { formatBytes, formatDate } from '../../utils/formatters';
 
 export const BackupManagement: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, loading: authLoading } = useAuth();
   const [backups, setBackups] = useState<BackupMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -38,6 +38,18 @@ export const BackupManagement: React.FC = () => {
     startDate: '',
     endDate: ''
   });
+
+  // Security check - wait for auth to load before checking roles
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Security check
   if (!hasRole(['super_admin'])) {
@@ -85,8 +97,8 @@ export const BackupManagement: React.FC = () => {
       const metadata = await backupService.createBackup(options, user!.id);
       setSuccess(`Backup created successfully: ${metadata.id}`);
       await loadBackups();
-    } catch (err) {
-      setError(`Failed to create backup: ${err.message}`);
+    } catch (err: any) {
+      setError(`Failed to create backup: ${err.message || 'Unknown error'}`);
     } finally {
       setCreating(false);
     }
@@ -97,7 +109,7 @@ export const BackupManagement: React.FC = () => {
       setDownloading(backupId);
       setError(null);
 
-      const { data, metadata } = await backupService.downloadBackup(backupId, user!.id);
+      const { data } = await backupService.downloadBackup(backupId, user!.id);
       
       // Create and trigger download
       const blob = new Blob([data], { type: 'application/json' });
@@ -112,8 +124,8 @@ export const BackupManagement: React.FC = () => {
 
       setSuccess('Backup downloaded successfully');
       await loadBackups();
-    } catch (err) {
-      setError(`Failed to download backup: ${err.message}`);
+    } catch (err: any) {
+      setError(`Failed to download backup: ${err.message || 'Unknown error'}`);
     } finally {
       setDownloading(null);
     }
@@ -128,8 +140,8 @@ export const BackupManagement: React.FC = () => {
       await backupService.deleteBackup(backupId, user!.id);
       setSuccess('Backup deleted successfully');
       await loadBackups();
-    } catch (err) {
-      setError(`Failed to delete backup: ${err.message}`);
+    } catch (err: any) {
+      setError(`Failed to delete backup: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -459,3 +471,5 @@ export const BackupManagement: React.FC = () => {
     </div>
   );
 };
+
+export default BackupManagement;;
