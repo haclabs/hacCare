@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, Sparkles } from 'lucide-react';
+import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Heart, Sparkles } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../lib/patientService';
 import { fetchPatientMedications } from '../../../lib/medicationService';
@@ -117,7 +117,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     { id: 'assessments', label: 'Assessments', icon: Stethoscope, subTabs: [
       { id: 'vitals', label: 'Vital Signs', icon: Activity },
       { id: 'notes', label: 'Notes', icon: FileText },
-      { id: 'wounds', label: 'Wound Care', icon: Bandage }
+      { id: 'wounds', label: 'Wound Care', icon: Heart }
     ]},
     { id: 'admission', label: 'Admission', icon: Clipboard },
     { id: 'directives', label: 'Directives', icon: Shield },

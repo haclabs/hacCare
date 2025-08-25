@@ -333,6 +333,12 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
   return (
     <>
       <div className="space-y-6">
+        {/* Debug message to confirm component is rendering */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p className="text-blue-800 font-medium">🩹 Wound Assessment Component Loaded</p>
+          <p className="text-blue-600 text-sm">Patient ID: {patientId} | Wounds: {wounds.length}</p>
+        </div>
+        
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Wound Assessment</h3>
         <div className="flex space-x-2">
