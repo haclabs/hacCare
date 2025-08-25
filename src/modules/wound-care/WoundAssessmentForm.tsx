@@ -32,18 +32,24 @@ export const WoundAssessmentForm: React.FC<WoundAssessmentFormProps> = ({
   onCancel
 }) => {
   const { user } = useAuth();
+  
+  // Body diagram state
+  const [selectedView, setSelectedView] = useState<'anterior' | 'posterior'>('anterior');
+  const [showBodyDiagram, setShowBodyDiagram] = useState(false);
+  const [clickedCoords, setClickedCoords] = useState<{ x: number; y: number } | null>(null);
+  
   const [formData, setFormData] = useState({
     patient_id: patient.id,
     assessment_date: new Date().toISOString().split('T')[0],
     wound_location: '',
-    wound_type: 'pressure' as const,
+    wound_type: 'pressure' as 'pressure' | 'surgical' | 'venous' | 'arterial' | 'diabetic' | 'traumatic' | 'other',
     stage: '',
     length_cm: 0,
     width_cm: 0,
     depth_cm: 0,
-    wound_bed: 'red' as const,
-    exudate_amount: 'minimal' as const,
-    exudate_type: 'serous' as const,
+    wound_bed: 'red' as 'red' | 'yellow' | 'black' | 'mixed',
+    exudate_amount: 'minimal' as 'none' | 'minimal' | 'moderate' | 'heavy',
+    exudate_type: 'serous' as 'serous' | 'sanguineous' | 'serosanguineous' | 'purulent' | 'other',
     periwound_condition: '',
     pain_level: 0,
     odor: false,
@@ -123,6 +129,162 @@ export const WoundAssessmentForm: React.FC<WoundAssessmentFormProps> = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Body diagram functionality
+  const handleBodyClick = (event: React.MouseEvent<SVGElement>) => {
+    const svg = event.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    
+    setClickedCoords({ x, y });
+    // Auto-populate wound location based on click coordinates
+    const locationText = getLocationFromCoordinates(x, y, selectedView);
+    handleInputChange('wound_location', locationText);
+  };
+
+  const getLocationFromCoordinates = (x: number, y: number, view: 'anterior' | 'posterior'): string => {
+    // Simple location mapping based on coordinates
+    if (y < 20) return view === 'anterior' ? 'Face/Head' : 'Back of Head';
+    if (y < 40) return 'Neck';
+    if (y < 60) {
+      if (x < 40) return view === 'anterior' ? 'Left Arm/Shoulder' : 'Left Shoulder Blade';
+      if (x > 60) return view === 'anterior' ? 'Right Arm/Shoulder' : 'Right Shoulder Blade';
+      return view === 'anterior' ? 'Chest' : 'Upper Back';
+    }
+    if (y < 80) {
+      if (x < 40) return view === 'anterior' ? 'Left Arm/Elbow' : 'Left Side';
+      if (x > 60) return view === 'anterior' ? 'Right Arm/Elbow' : 'Right Side';
+      return view === 'anterior' ? 'Abdomen' : 'Lower Back';
+    }
+    if (y < 90) {
+      if (x < 45) return 'Left Hip/Thigh';
+      if (x > 55) return 'Right Hip/Thigh';
+      return view === 'anterior' ? 'Pelvis' : 'Sacrum/Coccyx';
+    }
+    if (y < 95) {
+      if (x < 45) return 'Left Knee';
+      if (x > 55) return 'Right Knee';
+      return 'Lower Leg';
+    }
+    // Feet area
+    if (x < 45) return 'Left Foot/Ankle';
+    if (x > 55) return 'Right Foot/Ankle';
+    return 'Feet';
+  };
+
+  // SVG Body Diagrams
+  const AnteriorBodySVG = () => (
+    <svg
+      viewBox="0 0 200 400"
+      className="w-full h-full cursor-crosshair"
+      onClick={handleBodyClick}
+    >
+      {/* Head */}
+      <ellipse cx="100" cy="40" rx="25" ry="30" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Neck */}
+      <rect x="90" y="65" width="20" height="15" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Torso */}
+      <ellipse cx="100" cy="140" rx="45" ry="60" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Arms */}
+      <ellipse cx="60" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="140" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Forearms */}
+      <ellipse cx="50" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="150" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Hands */}
+      <ellipse cx="45" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="155" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Pelvis */}
+      <ellipse cx="100" cy="220" rx="35" ry="25" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Thighs */}
+      <ellipse cx="85" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Lower legs */}
+      <ellipse cx="85" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Feet */}
+      <ellipse cx="85" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Click indicator */}
+      {clickedCoords && selectedView === 'anterior' && (
+        <circle 
+          cx={clickedCoords.x * 2} 
+          cy={clickedCoords.y * 4} 
+          r="5" 
+          fill="red" 
+          stroke="darkred" 
+          strokeWidth="2"
+        />
+      )}
+    </svg>
+  );
+
+  const PosteriorBodySVG = () => (
+    <svg
+      viewBox="0 0 200 400"
+      className="w-full h-full cursor-crosshair"
+      onClick={handleBodyClick}
+    >
+      {/* Head (back) */}
+      <ellipse cx="100" cy="40" rx="25" ry="30" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Neck */}
+      <rect x="90" y="65" width="20" height="15" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Back/Torso */}
+      <ellipse cx="100" cy="140" rx="45" ry="60" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Arms (back) */}
+      <ellipse cx="60" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="140" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Forearms (back) */}
+      <ellipse cx="50" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="150" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Hands (back) */}
+      <ellipse cx="45" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="155" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Lower back/Pelvis */}
+      <ellipse cx="100" cy="220" rx="35" ry="25" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Thighs (back) */}
+      <ellipse cx="85" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Lower legs (back) */}
+      <ellipse cx="85" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Feet (back) */}
+      <ellipse cx="85" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Click indicator */}
+      {clickedCoords && selectedView === 'posterior' && (
+        <circle 
+          cx={clickedCoords.x * 2} 
+          cy={clickedCoords.y * 4} 
+          r="5" 
+          fill="red" 
+          stroke="darkred" 
+          strokeWidth="2"
+        />
+      )}
+    </svg>
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,8 +372,71 @@ export const WoundAssessmentForm: React.FC<WoundAssessmentFormProps> = ({
             {errors.wound_location && (
               <p className="text-red-500 text-sm mt-1">{errors.wound_location}</p>
             )}
+            
+            {/* Interactive Body Diagram Button */}
+            <button
+              type="button"
+              onClick={() => setShowBodyDiagram(!showBodyDiagram)}
+              className="mt-2 px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              📍 Use Body Diagram to Select Location
+            </button>
           </div>
         </div>
+
+        {/* Interactive Body Diagram Section */}
+        {showBodyDiagram && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="mb-4">
+              <h4 className="text-lg font-medium text-gray-900 mb-2">Select Wound Location</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                Choose the body view and click on the diagram to automatically set the wound location.
+              </p>
+              
+              {/* View Selector */}
+              <div className="flex space-x-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedView('anterior')}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    selectedView === 'anterior'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-blue-600 border border-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  Front View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedView('posterior')}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    selectedView === 'posterior'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-blue-600 border border-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  Back View
+                </button>
+              </div>
+            </div>
+
+            {/* Body Diagram */}
+            <div className="bg-white rounded-lg p-4 flex justify-center">
+              <div className="w-64 h-96">
+                {selectedView === 'anterior' ? <AnteriorBodySVG /> : <PosteriorBodySVG />}
+              </div>
+            </div>
+            
+            {clickedCoords && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-800 text-sm">
+                  ✅ Location selected! The wound location field has been updated.
+                  You can continue filling out the rest of the form.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Wound Type and Stage */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
