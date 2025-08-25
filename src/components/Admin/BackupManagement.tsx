@@ -6,10 +6,30 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Download, Upload, Trash2, Shield, Clock, Database, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle } from 'lucide-react';
 import { backupService, BackupOptions, BackupMetadata } from '../../services/backupService';
 import { useAuth } from '../../contexts/AuthContext';
-import { formatBytes, formatDate } from '../../utils/formatters';
+
+// Local formatter functions to avoid import issues
+const formatBytes = (bytes: number, decimals: number = 2): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
+const formatDate = (dateString: string | Date): string => {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
 export const BackupManagement: React.FC = () => {
   const { user, hasRole, loading: authLoading } = useAuth();
@@ -32,7 +52,6 @@ export const BackupManagement: React.FC = () => {
     encryptData: true
   });
 
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [dateRange, setDateRange] = useState({
     enabled: false,
     startDate: '',
