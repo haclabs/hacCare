@@ -20,6 +20,7 @@ const HospitalBracelet = lazy(() => import('./components/Patients/visuals/Hospit
 const UserManagement = lazy(() => import('./components/Users/UserManagement'));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement'));
 const ManagementDashboard = lazy(() => import('./components/Management/ManagementDashboard'));
+const BackupManagement = lazy(() => import('./components/Admin/BackupManagement'));
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./components/Settings/Settings'));
@@ -528,6 +529,13 @@ function App() {
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <PatientManagement />
+          </Suspense>
+        );
+
+      case 'backup-management':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <BackupManagement />
           </Suspense>
         );
 

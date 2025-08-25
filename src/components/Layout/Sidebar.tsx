@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Camera } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Camera, Database } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 /**
@@ -46,6 +46,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     // User Management - For Admins and Super Admins
     ...(hasRole(['admin', 'super_admin']) ? [
       { id: 'user-management', label: 'User Management', icon: UserCheck, color: 'text-indigo-600' }
+    ] : []),
+    // Backup Management - Only for Super Admins
+    ...(hasRole('super_admin') ? [
+      { id: 'backup-management', label: 'Backup Management', icon: Database, color: 'text-emerald-600' }
     ] : []),
     { id: 'documentation', label: 'Documentation', icon: BookOpen, color: 'text-orange-600' },
     { id: 'changelog', label: 'Changelog', icon: FileText, color: 'text-teal-600' },
