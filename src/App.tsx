@@ -14,13 +14,13 @@ import LoadingSpinner from './components/UI/LoadingSpinner';
 import { initializeModularPatientSystem } from './modular-patient-system';
 import { Patient } from './types';
 import { useAuth } from './hooks/useAuth';
+import BackupManagement from './components/Admin/BackupManagement';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
 const UserManagement = lazy(() => import('./components/Users/UserManagement'));
 const PatientManagement = lazy(() => import('./components/Patients/PatientManagement'));
 const ManagementDashboard = lazy(() => import('./components/Management/ManagementDashboard'));
-const BackupManagement = lazy(() => import('./components/Admin/BackupManagement'));
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./components/Settings/Settings'));
