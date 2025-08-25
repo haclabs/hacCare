@@ -404,7 +404,10 @@ class BackupService {
   }
 
   private async exportAssessments(options: BackupOptions): Promise<PatientAssessment[]> {
-    let query = supabase.from('patient_assessments').select('*');
+    // Assessments are stored in patient_notes table with type 'Assessment'
+    let query = supabase.from('patient_notes')
+      .select('*')
+      .eq('type', 'Assessment');
 
     if (options.dateRange) {
       query = query
@@ -414,7 +417,33 @@ class BackupService {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    
+    // Convert patient_notes back to PatientAssessment format
+    const assessments: PatientAssessment[] = (data || []).map(note => {
+      // Parse assessment type from content
+      let assessmentType: 'physical' | 'pain' | 'neurological' = 'physical';
+      if (note.content.includes('Assessment Type: Pain')) {
+        assessmentType = 'pain';
+      } else if (note.content.includes('Assessment Type: Neurological')) {
+        assessmentType = 'neurological';
+      }
+
+      return {
+        id: note.id,
+        patient_id: note.patient_id,
+        nurse_id: note.nurse_id || '',
+        nurse_name: note.nurse_name || 'Unknown',
+        assessment_type: assessmentType,
+        assessment_date: note.created_at,
+        assessment_notes: note.content,
+        recommendations: '',
+        follow_up_required: note.content.includes('Follow-up Required: Yes'),
+        priority_level: note.priority || 'routine',
+        created_at: note.created_at
+      };
+    });
+
+    return assessments;
   }
 
   private async exportUsers(options: BackupOptions): Promise<UserProfile[]> {
@@ -464,18 +493,34 @@ class BackupService {
         .lte('created_at', options.dateRange.endDate);
     }
 
+    if (options.tenantIds?.length) {
+      // Join with patients table to filter by tenant
+      query = supabase
+        .from('patient_medications')
+        .select('*, patients!inner(tenant_id)')
+        .in('patients.tenant_id', options.tenantIds);
+    }
+
     const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }
 
   private async exportWoundCare(options: BackupOptions): Promise<any[]> {
-    let query = supabase.from('wound_assessments').select('*');
+    let query = supabase.from('patient_wounds').select('*');
 
     if (options.dateRange) {
       query = query
         .gte('created_at', options.dateRange.startDate)
         .lte('created_at', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      // Join with patients table to filter by tenant
+      query = supabase
+        .from('patient_wounds')
+        .select('*, patients!inner(tenant_id)')
+        .in('patients.tenant_id', options.tenantIds);
     }
 
     const { data, error } = await query;
