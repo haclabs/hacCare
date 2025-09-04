@@ -24,6 +24,35 @@ export interface BackupOptions {
   };
   tenantIds?: string[];
   encryptData: boolean;
+  password?: string; // For encryption/decryption
+}
+
+export interface RestoreOptions {
+  overwriteExisting: boolean;
+  createNewIds: boolean;
+  tenantMapping?: Record<string, string>; // Map old tenant IDs to new ones
+  userMapping?: Record<string, string>; // Map old user IDs to new ones
+  validateData: boolean;
+  dryRun: boolean; // Preview what would be restored without actually doing it
+}
+
+export interface RestoreResult {
+  success: boolean;
+  recordsProcessed: number;
+  recordsCreated: number;
+  recordsUpdated: number;
+  recordsSkipped: number;
+  errors: string[];
+  warnings: string[];
+  summary: {
+    patients: number;
+    assessments: number;
+    users: number;
+    tenants: number;
+    alerts: number;
+    medications: number;
+    wound_care: number;
+  };
 }
 
 export interface BackupMetadata {
@@ -135,7 +164,10 @@ class BackupService {
       // Encrypt if requested
       let finalData = JSON.stringify(backupData);
       if (options.encryptData) {
-        finalData = await this.encryptData(finalData);
+        if (!options.password) {
+          throw new Error('Password is required when encryption is enabled');
+        }
+        finalData = await this.encryptData(finalData, options.password);
       }
 
       // Calculate file size
@@ -536,10 +568,115 @@ class BackupService {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  private async encryptData(data: string): Promise<string> {
-    // In production, implement proper encryption using Web Crypto API
-    // For now, return base64 encoded data as placeholder
-    return btoa(data);
+  private async encryptData(data: string, password?: string): Promise<string> {
+    if (!password) {
+      throw new Error('Password is required for encryption');
+    }
+
+    try {
+      // Convert password to encryption key using PBKDF2
+      const encoder = new TextEncoder();
+      const passwordBuffer = encoder.encode(password);
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        passwordBuffer,
+        'PBKDF2',
+        false,
+        ['deriveKey']
+      );
+
+      const key = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 100000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt']
+      );
+
+      // Encrypt the data
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const dataBuffer = encoder.encode(data);
+      
+      const encryptedBuffer = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        dataBuffer
+      );
+
+      // Combine salt + iv + encrypted data and convert to base64
+      const combined = new Uint8Array(salt.length + iv.length + encryptedBuffer.byteLength);
+      combined.set(salt, 0);
+      combined.set(iv, salt.length);
+      combined.set(new Uint8Array(encryptedBuffer), salt.length + iv.length);
+
+      return btoa(String.fromCharCode(...combined));
+    } catch (error) {
+      console.error('Encryption failed:', error);
+      throw new Error('Failed to encrypt backup data');
+    }
+  }
+
+  private async decryptData(encryptedData: string, password?: string): Promise<string> {
+    if (!password) {
+      throw new Error('Password is required for decryption');
+    }
+
+    try {
+      // Convert base64 back to binary
+      const combined = new Uint8Array(
+        atob(encryptedData).split('').map(char => char.charCodeAt(0))
+      );
+
+      // Extract salt, iv, and encrypted data
+      const salt = combined.slice(0, 16);
+      const iv = combined.slice(16, 28);
+      const encryptedBuffer = combined.slice(28);
+
+      // Derive the same key using the salt
+      const encoder = new TextEncoder();
+      const passwordBuffer = encoder.encode(password);
+      
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        passwordBuffer,
+        'PBKDF2',
+        false,
+        ['deriveKey']
+      );
+
+      const key = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: 100000,
+          hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['decrypt']
+      );
+
+      // Decrypt the data
+      const decryptedBuffer = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        encryptedBuffer
+      );
+
+      const decoder = new TextDecoder();
+      return decoder.decode(decryptedBuffer);
+    } catch (error) {
+      console.error('Decryption failed:', error);
+      throw new Error('Failed to decrypt backup data - please check your password');
+    }
   }
 
   private async saveBackupMetadata(metadata: BackupMetadata): Promise<void> {
@@ -614,6 +751,473 @@ class BackupService {
       .eq('backup_id', backupId);
 
     if (error) throw error;
+  }
+
+  /**
+   * Restore data from a backup file
+   */
+  async restoreBackup(
+    backupData: string | File, 
+    options: RestoreOptions, 
+    userId: string,
+    password?: string
+  ): Promise<RestoreResult> {
+    try {
+      // Verify super admin permissions
+      await this.verifySuperAdminAccess(userId);
+
+      let backupContent: string;
+      
+      // Handle File or string input
+      if (backupData instanceof File) {
+        backupContent = await this.readFileContent(backupData);
+      } else {
+        backupContent = backupData;
+      }
+
+      // Parse and decrypt backup data
+      let parsedData: BackupData;
+      try {
+        // Try to parse as JSON first (unencrypted)
+        parsedData = JSON.parse(backupContent);
+      } catch {
+        // If parsing fails, assume it's encrypted
+        if (!password) {
+          throw new Error('This backup appears to be encrypted. Please provide the password.');
+        }
+        const decryptedContent = await this.decryptData(backupContent, password);
+        parsedData = JSON.parse(decryptedContent);
+      }
+
+      // Validate backup data structure
+      this.validateBackupData(parsedData);
+
+      const result: RestoreResult = {
+        success: false,
+        recordsProcessed: 0,
+        recordsCreated: 0,
+        recordsUpdated: 0,
+        recordsSkipped: 0,
+        errors: [],
+        warnings: [],
+        summary: {
+          patients: 0,
+          assessments: 0,
+          users: 0,
+          tenants: 0,
+          alerts: 0,
+          medications: 0,
+          wound_care: 0
+        }
+      };
+
+      // Log restore attempt
+      await this.logBackupActivity(userId, 'restore_started', 'restore_operation', {
+        backup_version: parsedData.metadata.version,
+        options: options,
+        dry_run: options.dryRun
+      });
+
+      // Restore each data type
+      if (parsedData.data.patients) {
+        const patientResult = await this.restorePatients(parsedData.data.patients, options);
+        this.mergeRestoreResults(result, patientResult, 'patients');
+      }
+
+      if (parsedData.data.assessments) {
+        const assessmentResult = await this.restoreAssessments(parsedData.data.assessments, options);
+        this.mergeRestoreResults(result, assessmentResult, 'assessments');
+      }
+
+      if (parsedData.data.users) {
+        const userResult = await this.restoreUsers(parsedData.data.users, options);
+        this.mergeRestoreResults(result, userResult, 'users');
+      }
+
+      if (parsedData.data.tenants) {
+        const tenantResult = await this.restoreTenants(parsedData.data.tenants, options);
+        this.mergeRestoreResults(result, tenantResult, 'tenants');
+      }
+
+      if (parsedData.data.alerts) {
+        const alertResult = await this.restoreAlerts(parsedData.data.alerts, options);
+        this.mergeRestoreResults(result, alertResult, 'alerts');
+      }
+
+      if (parsedData.data.medications) {
+        const medicationResult = await this.restoreMedications(parsedData.data.medications, options);
+        this.mergeRestoreResults(result, medicationResult, 'medications');
+      }
+
+      if (parsedData.data.wound_care) {
+        const woundCareResult = await this.restoreWoundCare(parsedData.data.wound_care, options);
+        this.mergeRestoreResults(result, woundCareResult, 'wound_care');
+      }
+
+      // Mark as successful if no critical errors
+      result.success = result.errors.length === 0;
+
+      // Log completion
+      await this.logBackupActivity(userId, 'restore_completed', 'restore_operation', {
+        success: result.success,
+        records_created: result.recordsCreated,
+        records_updated: result.recordsUpdated,
+        errors: result.errors.length,
+        dry_run: options.dryRun
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Restore failed:', error);
+      
+      await this.logBackupActivity(userId, 'restore_failed', 'restore_operation', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+
+      throw error;
+    }
+  }
+
+  private async readFileContent(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    });
+  }
+
+  private validateBackupData(data: BackupData): void {
+    if (!data.metadata || !data.data) {
+      throw new Error('Invalid backup format: Missing metadata or data');
+    }
+
+    if (!data.metadata.version) {
+      throw new Error('Invalid backup format: Missing version information');
+    }
+
+    // Add version compatibility checks
+    const backupVersion = data.metadata.version;
+    if (backupVersion !== this.BACKUP_VERSION) {
+      console.warn(`Backup version ${backupVersion} may not be fully compatible with current version ${this.BACKUP_VERSION}`);
+    }
+  }
+
+  private async restorePatients(patients: Patient[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    const result: Partial<RestoreResult> = {
+      recordsProcessed: 0,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: 0,
+      errors: [],
+      warnings: []
+    };
+
+    for (const patient of patients) {
+      try {
+        result.recordsProcessed!++;
+
+        if (options.dryRun) {
+          console.log(`[DRY RUN] Would restore patient: ${patient.first_name} ${patient.last_name}`);
+          continue;
+        }
+
+        // Check if patient exists
+        const { data: existingPatient } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('patient_id', patient.patient_id)
+          .single();
+
+        if (existingPatient) {
+          if (options.overwriteExisting) {
+            // Update existing patient
+            const { error } = await supabase
+              .from('patients')
+              .update({
+                ...patient,
+                id: existingPatient.id, // Keep existing ID
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingPatient.id);
+
+            if (error) throw error;
+            result.recordsUpdated!++;
+          } else {
+            result.recordsSkipped!++;
+            result.warnings!.push(`Patient ${patient.patient_id} already exists and overwrite is disabled`);
+          }
+        } else {
+          // Create new patient
+          const patientData = { ...patient };
+          if (options.createNewIds) {
+            delete patientData.id; // Let database generate new ID
+          }
+
+          const { error } = await supabase
+            .from('patients')
+            .insert(patientData);
+
+          if (error) throw error;
+          result.recordsCreated!++;
+        }
+      } catch (error) {
+        result.errors!.push(`Failed to restore patient ${patient.patient_id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async restoreAssessments(assessments: PatientAssessment[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    const result: Partial<RestoreResult> = {
+      recordsProcessed: 0,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: 0,
+      errors: [],
+      warnings: []
+    };
+
+    for (const assessment of assessments) {
+      try {
+        result.recordsProcessed!++;
+
+        if (options.dryRun) {
+          console.log(`[DRY RUN] Would restore assessment for patient: ${assessment.patient_id}`);
+          continue;
+        }
+
+        // Map patient ID if needed
+        let patientId = assessment.patient_id;
+        if (options.userMapping && options.userMapping[assessment.patient_id]) {
+          patientId = options.userMapping[assessment.patient_id];
+        }
+
+        // Check if assessment exists
+        const { data: existingAssessment } = await supabase
+          .from('patient_notes')
+          .select('id')
+          .eq('patient_id', patientId)
+          .eq('created_at', assessment.created_at)
+          .single();
+
+        if (existingAssessment) {
+          if (options.overwriteExisting) {
+            const { error } = await supabase
+              .from('patient_notes')
+              .update({
+                ...assessment,
+                patient_id: patientId,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingAssessment.id);
+
+            if (error) throw error;
+            result.recordsUpdated!++;
+          } else {
+            result.recordsSkipped!++;
+          }
+        } else {
+          const assessmentData = { 
+            ...assessment, 
+            patient_id: patientId 
+          };
+          
+          if (options.createNewIds) {
+            delete assessmentData.id;
+          }
+
+          const { error } = await supabase
+            .from('patient_notes')
+            .insert(assessmentData);
+
+          if (error) throw error;
+          result.recordsCreated!++;
+        }
+      } catch (error) {
+        result.errors!.push(`Failed to restore assessment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async restoreUsers(users: UserProfile[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    const result: Partial<RestoreResult> = {
+      recordsProcessed: 0,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: 0,
+      errors: [],
+      warnings: []
+    };
+
+    for (const user of users) {
+      try {
+        result.recordsProcessed!++;
+
+        if (options.dryRun) {
+          console.log(`[DRY RUN] Would restore user: ${user.email}`);
+          continue;
+        }
+
+        // Check if user exists
+        const { data: existingUser } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('email', user.email)
+          .single();
+
+        if (existingUser) {
+          if (options.overwriteExisting) {
+            const { error } = await supabase
+              .from('user_profiles')
+              .update({
+                ...user,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingUser.id);
+
+            if (error) throw error;
+            result.recordsUpdated!++;
+          } else {
+            result.recordsSkipped!++;
+            result.warnings!.push(`User ${user.email} already exists and overwrite is disabled`);
+          }
+        } else {
+          const userData = { ...user };
+          if (options.createNewIds) {
+            delete userData.id;
+          }
+
+          const { error } = await supabase
+            .from('user_profiles')
+            .insert(userData);
+
+          if (error) throw error;
+          result.recordsCreated!++;
+        }
+      } catch (error) {
+        result.errors!.push(`Failed to restore user ${user.email}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async restoreTenants(tenants: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    // Implementation for tenant restoration
+    return {
+      recordsProcessed: tenants.length,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: tenants.length,
+      errors: [],
+      warnings: ['Tenant restoration not yet implemented']
+    };
+  }
+
+  private async restoreAlerts(alerts: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    // Implementation for alert restoration
+    return {
+      recordsProcessed: alerts.length,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: alerts.length,
+      errors: [],
+      warnings: ['Alert restoration not yet implemented']
+    };
+  }
+
+  private async restoreMedications(medications: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    const result: Partial<RestoreResult> = {
+      recordsProcessed: 0,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: 0,
+      errors: [],
+      warnings: []
+    };
+
+    for (const medication of medications) {
+      try {
+        result.recordsProcessed!++;
+
+        if (options.dryRun) {
+          console.log(`[DRY RUN] Would restore medication for patient: ${medication.patient_id}`);
+          continue;
+        }
+
+        const medicationData = { ...medication };
+        if (options.createNewIds) {
+          delete medicationData.id;
+        }
+
+        const { error } = await supabase
+          .from('patient_medications')
+          .insert(medicationData);
+
+        if (error) throw error;
+        result.recordsCreated!++;
+      } catch (error) {
+        result.errors!.push(`Failed to restore medication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async restoreWoundCare(woundCare: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+    const result: Partial<RestoreResult> = {
+      recordsProcessed: 0,
+      recordsCreated: 0,
+      recordsUpdated: 0,
+      recordsSkipped: 0,
+      errors: [],
+      warnings: []
+    };
+
+    for (const wound of woundCare) {
+      try {
+        result.recordsProcessed!++;
+
+        if (options.dryRun) {
+          console.log(`[DRY RUN] Would restore wound assessment for patient: ${wound.patient_id}`);
+          continue;
+        }
+
+        const woundData = { ...wound };
+        if (options.createNewIds) {
+          delete woundData.id;
+        }
+
+        const { error } = await supabase
+          .from('patient_wounds')
+          .insert(woundData);
+
+        if (error) throw error;
+        result.recordsCreated!++;
+      } catch (error) {
+        result.errors!.push(`Failed to restore wound care: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return result;
+  }
+
+  private mergeRestoreResults(
+    mainResult: RestoreResult, 
+    partialResult: Partial<RestoreResult>, 
+    dataType: keyof RestoreResult['summary']
+  ): void {
+    mainResult.recordsProcessed += partialResult.recordsProcessed || 0;
+    mainResult.recordsCreated += partialResult.recordsCreated || 0;
+    mainResult.recordsUpdated += partialResult.recordsUpdated || 0;
+    mainResult.recordsSkipped += partialResult.recordsSkipped || 0;
+    mainResult.errors.push(...(partialResult.errors || []));
+    mainResult.warnings.push(...(partialResult.warnings || []));
+    mainResult.summary[dataType] = partialResult.recordsCreated || 0;
   }
 
   private async logBackupActivity(userId: string, action: string, backupId: string, details: any): Promise<void> {

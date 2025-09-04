@@ -6,8 +6,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle } from 'lucide-react';
-import { backupService, BackupOptions, BackupMetadata } from '../../services/backupService';
+import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle, FileUp } from 'lucide-react';
+import { backupService, BackupOptions, BackupMetadata, RestoreOptions, RestoreResult } from '../../services/backupService';
 import { useAuth } from '../../hooks/useAuth';
 
 // Local formatter functions to avoid import issues
@@ -49,7 +49,8 @@ export const BackupManagement: React.FC = () => {
     includeAlerts: true,
     includeMedications: true,
     includeWoundCare: true,
-    encryptData: true
+    encryptData: true,
+    password: ''
   });
 
   const [dateRange, setDateRange] = useState({
@@ -57,6 +58,9 @@ export const BackupManagement: React.FC = () => {
     startDate: '',
     endDate: ''
   });
+
+  // Restore state
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
 
   // Security check - wait for auth to load before checking roles
   if (authLoading) {
@@ -284,6 +288,26 @@ export const BackupManagement: React.FC = () => {
                 </span>
               </label>
 
+              {backupOptions.encryptData && (
+                <div className="ml-7">
+                  <label className="block text-xs text-gray-500 mb-1">Encryption Password</label>
+                  <input
+                    type="password"
+                    value={backupOptions.password || ''}
+                    onChange={(e) => setBackupOptions(prev => ({
+                      ...prev,
+                      password: e.target.value
+                    }))}
+                    placeholder="Enter a strong password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This password will be required to restore the backup
+                  </p>
+                </div>
+              )}
+
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -331,7 +355,15 @@ export const BackupManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end space-x-3">
+          <button
+            onClick={() => setShowRestoreDialog(true)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <FileUp className="h-4 w-4 mr-2" />
+            Restore Backup
+          </button>
+          
           <button
             onClick={handleCreateBackup}
             disabled={creating}
@@ -487,6 +519,124 @@ export const BackupManagement: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Restore Dialog */}
+      {showRestoreDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Restore Backup
+                </h3>
+                <button
+                  onClick={() => setShowRestoreDialog(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  ✕
+                </button>
+              </div>
+
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-4">
+                <strong>⚠️ Warning:</strong> Restoring a backup will modify your database. 
+                Please ensure you have a current backup before proceeding.
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Backup File
+                  </label>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        console.log('Selected file:', file.name);
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Decryption Password (if backup is encrypted)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter backup password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-900">Restore Options</h4>
+                  
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Overwrite existing records
+                    </span>
+                  </label>
+
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Generate new IDs for records
+                    </span>
+                  </label>
+
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Validate data before import
+                    </span>
+                  </label>
+
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Dry run (preview only, don't actually restore)
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowRestoreDialog(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  Restore Backup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
