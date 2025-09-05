@@ -1,23 +1,22 @@
 /**
  * Modular MAR (Medication Administration Record) Module
  * 
- * This module provides a self-contained medication administration  // Handle medication reconciliation form submission
-  const handleMedicationReconciliation = async (data: any, validation: ValidationResult) => {ystem with:
+ * This module provides a self-contained medication administration system with:
  * - Dynamic form generation for medication administration
  * - Safety checks and allergy validation
  * - Drug interaction checking
- * - Medication reconciliation
  * - Integration with existing medication data
  */
 
 import React, { useState, useEffect } from 'react';
-import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, Shield, QrCode, Droplets } from 'lucide-react';
+import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, QrCode, Droplets } from 'lucide-react';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
-import { medicationAdministrationSchema, medicationReconciliationSchema } from '../../schemas/medicationSchemas';
+import { medicationAdministrationSchema } from '../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../types';
 import { ValidationResult, FormGenerationContext } from '../../types/schema';
 import { createMedication, recordMedicationAdministration } from '../../lib/medicationService';
+import { formatLocalTime } from '../../utils/time';
 import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
@@ -37,7 +36,7 @@ interface MARModuleProps {
   };
 }
 
-type MARView = 'administration' | 'reconciliation' | 'history' | 'diabetic-record' | 'add-medication';
+type MARView = 'administration' | 'history' | 'diabetic-record' | 'add-medication';
 
 export const MARModule: React.FC<MARModuleProps> = ({
   patient,
@@ -60,7 +59,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
   // Register schemas on component mount
   useEffect(() => {
     schemaEngine.registerSchema(medicationAdministrationSchema);
-    schemaEngine.registerSchema(medicationReconciliationSchema);
   }, []);
 
   // Generate form context with patient and medication data
@@ -78,7 +76,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
         id: currentUser.id,
         role: currentUser.role,
         department: 'nursing',
-        permissions: ['medication_administration', 'medication_reconciliation']
+        permissions: ['medication_administration']
       } : undefined,
       clinical: {
         currentVitals: patient.vitals[0] || null,
@@ -202,21 +200,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
     }
   };
 
-  // Handle medication reconciliation
-  const handleMedicationReconciliation = async (data: any, validation: ValidationResult) => {
-    if (!validation.valid) return;
-
-    setIsLoading(true);
-    try {
-      // Process reconciliation data
-      console.log('Processing medication reconciliation:', data);
-      // Implementation would handle reconciliation logic
-    } catch (error) {
-      console.error('Error processing reconciliation:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Handle adding new medication
   const handleAddMedication = async (data: any, validation: ValidationResult) => {
@@ -239,8 +222,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
         prescribed_by: data.prescribed_by,
         start_date: data.start_date,
         end_date: data.end_date || undefined,
-        next_due: data.category === 'prn' ? new Date().toISOString() : calculateNextDue(data.frequency),
-        last_administered: undefined
+        next_due: data.category === 'prn' ? new Date().toISOString() : calculateNextDue(data.frequency, data.start_date, data.admin_time),
+        last_administered: undefined,
+        admin_time: data.admin_time
       };
 
       console.log('Creating medication in database:', medicationData);
@@ -281,22 +265,136 @@ export const MARModule: React.FC<MARModuleProps> = ({
     }
   };
 
-  // Calculate next due time based on frequency
-  const calculateNextDue = (frequency: string): string => {
+  // Calculate next due time based on frequency and admin time
+  const calculateNextDue = (frequency: string, startDate: string, adminTime: string): string => {
+    if (!adminTime) {
+      return new Date().toISOString(); // Fallback if no admin time
+    }
+
+    console.log('MAR - Calculating next due time:');
+    console.log('- Frequency:', frequency);
+    console.log('- Start date:', startDate);
+    console.log('- Admin time:', adminTime);
+
     const now = new Date();
-    const frequencyMap: { [key: string]: number } = {
-      'Once daily': 24 * 60 * 60 * 1000,
-      'Twice daily': 12 * 60 * 60 * 1000,
-      'Three times daily': 8 * 60 * 60 * 1000,
-      'Four times daily': 6 * 60 * 60 * 1000,
-      'Every 4 hours': 4 * 60 * 60 * 1000,
-      'Every 6 hours': 6 * 60 * 60 * 1000,
-      'Every 8 hours': 8 * 60 * 60 * 1000,
-      'Every 12 hours': 12 * 60 * 60 * 1000
-    };
-    
-    const interval = frequencyMap[frequency] || 24 * 60 * 60 * 1000; // Default to daily
-    return new Date(now.getTime() + interval).toISOString();
+    const [hours, minutes] = adminTime.split(':').map(Number);
+
+    console.log('- Parsed admin time: hours =', hours, ', minutes =', minutes);
+
+    // For different frequencies, calculate next appropriate time
+    switch (frequency) {
+      case 'Once daily':
+        const today = new Date(now);
+        const todayAdmin = new Date(today);
+        todayAdmin.setHours(hours, minutes, 0, 0);
+        
+        console.log('- Today admin time:', todayAdmin.toISOString());
+        console.log('- Current time vs today admin:', now < todayAdmin ? 'before' : 'after');
+        
+        // If today's admin time hasn't passed, use it; otherwise, use tomorrow
+        if (todayAdmin > now) {
+          console.log('- Using today admin time');
+          return todayAdmin.toISOString();
+        } else {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          tomorrow.setHours(hours, minutes, 0, 0);
+          console.log('- Using tomorrow admin time:', tomorrow.toISOString());
+          return tomorrow.toISOString();
+        }
+
+      case 'Twice daily':
+        // 8 AM and 8 PM typically, but use admin time as base
+        const firstDose = new Date(now);
+        firstDose.setHours(hours, minutes, 0, 0);
+        const secondDose = new Date(firstDose);
+        secondDose.setHours(hours + 12, minutes, 0, 0);
+        
+        // If second dose time is past midnight, adjust
+        if (secondDose.getDate() !== firstDose.getDate()) {
+          secondDose.setDate(secondDose.getDate() - 1);
+          secondDose.setHours(secondDose.getHours() - 12);
+        }
+
+        if (now < firstDose) {
+          return firstDose.toISOString();
+        } else if (now < secondDose) {
+          return secondDose.toISOString();
+        } else {
+          // Next day first dose
+          const nextFirstDose = new Date(firstDose);
+          nextFirstDose.setDate(nextFirstDose.getDate() + 1);
+          return nextFirstDose.toISOString();
+        }
+
+      case 'Three times daily':
+        // Every 8 hours starting from admin time
+        const times = [];
+        for (let i = 0; i < 3; i++) {
+          const time = new Date(now);
+          time.setHours(hours + (i * 8), minutes, 0, 0);
+          if (time.getDate() !== now.getDate() && i > 0) {
+            time.setDate(time.getDate() - 1);
+            time.setHours(time.getHours() - 24);
+          }
+          times.push(time);
+        }
+        
+        // Find next dose
+        const nextTime = times.find(time => time > now);
+        if (nextTime) {
+          return nextTime.toISOString();
+        } else {
+          // Next day first dose
+          const nextDay = new Date(times[0]);
+          nextDay.setDate(nextDay.getDate() + 1);
+          return nextDay.toISOString();
+        }
+
+      case 'Four times daily':
+        // Every 6 hours starting from admin time
+        const fourTimes = [];
+        for (let i = 0; i < 4; i++) {
+          const time = new Date(now);
+          time.setHours(hours + (i * 6), minutes, 0, 0);
+          if (time.getDate() !== now.getDate() && i > 0) {
+            time.setDate(time.getDate() - 1);
+            time.setHours(time.getHours() - 24);
+          }
+          fourTimes.push(time);
+        }
+        
+        const nextFourTime = fourTimes.find(time => time > now);
+        if (nextFourTime) {
+          return nextFourTime.toISOString();
+        } else {
+          const nextDay = new Date(fourTimes[0]);
+          nextDay.setDate(nextDay.getDate() + 1);
+          return nextDay.toISOString();
+        }
+
+      case 'Every 4 hours':
+      case 'Every 6 hours':
+      case 'Every 8 hours':
+      case 'Every 12 hours':
+        const intervalHours = parseInt(frequency.match(/\d+/)?.[0] || '24');
+        const nextDose = new Date(now);
+        nextDose.setHours(hours, minutes, 0, 0);
+        
+        // If the time for today has passed, start from next interval
+        if (nextDose <= now) {
+          nextDose.setTime(nextDose.getTime() + (intervalHours * 60 * 60 * 1000));
+        }
+        
+        return nextDose.toISOString();
+
+      default:
+        // Default to next day at admin time
+        const nextDefault = new Date(now);
+        nextDefault.setDate(nextDefault.getDate() + 1);
+        nextDefault.setHours(hours, minutes, 0, 0);
+        return nextDefault.toISOString();
+    }
   };
 
   // Calculate age from birth date
@@ -540,7 +638,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
             </p>
             {medication.next_due && category !== 'prn' && (
               <p className="text-sm text-gray-500 mt-1">
-                Next due: {new Date(medication.next_due).toLocaleString()}
+                Next due: {formatLocalTime(new Date(medication.next_due), 'dd MMM yyyy - HH:mm')}
               </p>
             )}
           </div>
@@ -614,17 +712,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
           >
             <Pill className="h-4 w-4 inline mr-2" />
             Administration
-          </button>
-          <button
-            onClick={() => setActiveView('reconciliation')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'reconciliation'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Shield className="h-4 w-4 inline mr-2" />
-            Reconciliation
           </button>
           <button
             onClick={() => setActiveView('history')}
@@ -736,23 +823,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
               />
             </div>
           )}
-        </div>
-      )}
-
-      {activeView === 'reconciliation' && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-6">Medication Reconciliation</h3>
-          <DynamicForm
-            schemaId="medication-reconciliation-v1"
-            initialData={{
-              patientId: patient.patient_id
-            }}
-            context={generateFormContext()}
-            onSubmit={(data, validation) => {
-              handleMedicationReconciliation(data, validation);
-            }}
-            className="max-w-none"
-          />
         </div>
       )}
 
@@ -875,6 +945,22 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     <option value="As needed">As needed (PRN)</option>
                     <option value="Continuous">Continuous infusion</option>
                   </select>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-blue-700 mb-1">
+                    ⏰ Administration Time *
+                  </label>
+                  <input
+                    type="time"
+                    name="admin_time"
+                    defaultValue="08:00"
+                    required
+                    className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-blue-600 mt-1">
+                    🔔 Time for scheduled administration and BCMA validation
+                  </p>
                 </div>
 
                 <div>

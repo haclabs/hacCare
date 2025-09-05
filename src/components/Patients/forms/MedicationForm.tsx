@@ -49,9 +49,11 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     console.log('- Frequency:', frequency);
     console.log('- Start date:', startDate);
     console.log('- Admin time:', adminTime);
+    console.log('- Current time:', now.toISOString());
     
     // Parse admin time (HH:MM format)
     const [hours, minutes] = adminTime.split(':').map(Number);
+    console.log('- Parsed hours:', hours, 'minutes:', minutes);
     
     // If start date is in the future, use start date with admin time
     if (start > now) {
@@ -64,71 +66,131 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const today = new Date(now);
         const todayAdmin = setHours(setMinutes(today, minutes), hours);
         
+        console.log('- Today admin time:', todayAdmin.toISOString());
+        console.log('- Current time vs today admin:', now < todayAdmin ? 'before' : 'after');
+        
         // If today's admin time hasn't passed, use it; otherwise, use tomorrow
         if (todayAdmin > now) {
+          console.log('- Using today admin time');
           return todayAdmin.toISOString();
         } else {
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
-          return setHours(setMinutes(tomorrow, minutes), hours).toISOString();
+          const tomorrowAdmin = setHours(setMinutes(tomorrow, minutes), hours);
+          console.log('- Using tomorrow admin time:', tomorrowAdmin.toISOString());
+          return tomorrowAdmin.toISOString();
         }
+        
       case 'Twice daily':
-        const currentHour = now.getHours();
-        if (currentHour < 8) {
-          return setHours(setMinutes(now, 0), 8).toISOString(); // 8:00 AM
-        } else if (currentHour < 20) {
-          return setHours(setMinutes(now, 0), 20).toISOString(); // 8:00 PM
+        // Use user's admin time and 12 hours later
+        const firstTime = setHours(setMinutes(new Date(now), minutes), hours);
+        const secondTime = setHours(setMinutes(new Date(now), minutes), (hours + 12) % 24);
+        
+        // Find next upcoming time
+        if (now < firstTime) {
+          return firstTime.toISOString();
+        } else if (now < secondTime) {
+          return secondTime.toISOString();
         } else {
-          const tomorrow = new Date(now);
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          return setHours(setMinutes(tomorrow, 0), 8).toISOString(); // 8:00 AM tomorrow
+          // Next day's first time
+          const nextDay = new Date(now);
+          nextDay.setDate(nextDay.getDate() + 1);
+          return setHours(setMinutes(nextDay, minutes), hours).toISOString();
         }
+        
       case 'Three times daily':
-        const threeTimes = [8, 14, 20]; // 8 AM, 2 PM, 8 PM
-        for (const hour of threeTimes) {
-          if (now.getHours() < hour) {
-            return setHours(setMinutes(now, 0), hour).toISOString();
+        // Use user's admin time, +8 hours, +16 hours
+        const times = [
+          setHours(setMinutes(new Date(now), minutes), hours),
+          setHours(setMinutes(new Date(now), minutes), (hours + 8) % 24),
+          setHours(setMinutes(new Date(now), minutes), (hours + 16) % 24)
+        ];
+        
+        for (const time of times) {
+          if (now < time) {
+            return time.toISOString();
           }
         }
-        const nextDay = new Date(now);
-        nextDay.setDate(nextDay.getDate() + 1);
-        return setHours(setMinutes(nextDay, 0), 8).toISOString();
+        
+        // Next day's first time
+        const nextDay3 = new Date(now);
+        nextDay3.setDate(nextDay3.getDate() + 1);
+        return setHours(setMinutes(nextDay3, minutes), hours).toISOString();
+        
       case 'Every 4 hours':
         return addHours(now, 4).toISOString();
+        
       case 'Every 6 hours':
-        const sixHourTimes = [6, 12, 18, 24]; // 6 AM, 12 PM, 6 PM, 12 AM
-        for (const hour of sixHourTimes) {
-          if (now.getHours() < hour) {
-            return setHours(setMinutes(now, 0), hour).toISOString();
+        // Calculate from user's admin time in 6-hour intervals
+        const userTime = setHours(setMinutes(new Date(now), minutes), hours);
+        const intervals = [];
+        for (let i = 0; i < 4; i++) {
+          const intervalTime = new Date(userTime);
+          intervalTime.setHours((hours + (i * 6)) % 24);
+          intervals.push(intervalTime);
+        }
+        
+        for (const time of intervals) {
+          if (now < time) {
+            return time.toISOString();
           }
         }
+        
+        // Next day's first time
         const nextDay6 = new Date(now);
         nextDay6.setDate(nextDay6.getDate() + 1);
-        return setHours(setMinutes(nextDay6, 0), 6).toISOString();
+        return setHours(setMinutes(nextDay6, minutes), hours).toISOString();
+        
       case 'Every 8 hours':
-        const eightHourTimes = [8, 16, 24]; // 8 AM, 4 PM, 12 AM
-        for (const hour of eightHourTimes) {
-          if (now.getHours() < hour) {
-            return setHours(setMinutes(now, 0), hour).toISOString();
+        // Calculate from user's admin time in 8-hour intervals
+        const intervals8 = [];
+        for (let i = 0; i < 3; i++) {
+          const intervalTime = new Date(now);
+          intervalTime.setHours((hours + (i * 8)) % 24);
+          intervalTime.setMinutes(minutes);
+          intervals8.push(intervalTime);
+        }
+        
+        for (const time of intervals8) {
+          if (now < time) {
+            return time.toISOString();
           }
         }
+        
+        // Next day's first time
         const nextDay8 = new Date(now);
         nextDay8.setDate(nextDay8.getDate() + 1);
-        return setHours(setMinutes(nextDay8, 0), 8).toISOString();
+        return setHours(setMinutes(nextDay8, minutes), hours).toISOString();
+        
       case 'Every 12 hours':
-        const twelveHourTimes = [8, 20]; // 8 AM, 8 PM
-        for (const hour of twelveHourTimes) {
-          if (now.getHours() < hour) {
-            return setHours(setMinutes(now, 0), hour).toISOString();
-          }
+        // Use user's admin time and 12 hours later
+        const first12 = setHours(setMinutes(new Date(now), minutes), hours);
+        const second12 = setHours(setMinutes(new Date(now), minutes), (hours + 12) % 24);
+        
+        if (now < first12) {
+          return first12.toISOString();
+        } else if (now < second12) {
+          return second12.toISOString();
+        } else {
+          // Next day's first time
+          const nextDay12 = new Date(now);
+          nextDay12.setDate(nextDay12.getDate() + 1);
+          return setHours(setMinutes(nextDay12, minutes), hours).toISOString();
         }
-        const nextDay12 = new Date(now);
-        nextDay12.setDate(nextDay12.getDate() + 1);
-        return setHours(setMinutes(nextDay12, 0), 8).toISOString();
+        
       case 'As needed (PRN)':
         return now.toISOString(); // Immediate availability
+        
       default:
-        return setHours(setMinutes(now, 0), 8).toISOString(); // Default to 8 AM
+        // Default to user's admin time
+        const defaultTime = setHours(setMinutes(new Date(now), minutes), hours);
+        if (now < defaultTime) {
+          return defaultTime.toISOString();
+        } else {
+          const nextDayDefault = new Date(now);
+          nextDayDefault.setDate(nextDayDefault.getDate() + 1);
+          return setHours(setMinutes(nextDayDefault, minutes), hours).toISOString();
+        }
     }
   };
 
@@ -154,6 +216,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     if (!formData.dosage.trim()) newErrors.dosage = 'Dosage is required';
     if (!formData.prescribedBy.trim()) newErrors.prescribedBy = 'Prescribing physician is required';
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
+    if (!formData.adminTime) newErrors.adminTime = 'Administration time is required for BCMA scheduling';
 
     // Validate end date if provided
     if (formData.endDate && formData.startDate) {
@@ -409,18 +472,24 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Administration Time
+              <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
+                  ⏰ Administration Time *
                 </label>
                 <input
                   type="time"
                   value={formData.adminTime}
                   onChange={(e) => updateField('adminTime', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                    errors.adminTime ? 'border-red-300 dark:border-red-600' : 'border-blue-300 dark:border-blue-600'
+                  }`}
+                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Time when medication should be administered (for scheduled medications)
+                {errors.adminTime && (
+                  <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.adminTime}</p>
+                )}
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                  🔔 Scheduled alerts and BCMA will use this time for administration checks
                 </p>
               </div>
 
@@ -503,14 +572,16 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Next Due
+              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-700">
+                <label className="block text-sm font-medium text-green-700 dark:text-green-300 mb-1">
+                  📅 Next Scheduled Administration
                 </label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600">
-                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime)), 'MMM dd, yyyy HH:mm')}
+                <div className="px-3 py-2 bg-white dark:bg-gray-800 border border-green-300 dark:border-green-600 rounded-lg text-sm font-medium text-green-800 dark:text-green-200">
+                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime)), 'dd MMM yyyy - HH:mm')}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Calculated based on frequency and admin time</p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  🔔 Alert will trigger 15 minutes before • BCMA window: ±30 minutes • 24-hour format
+                </p>
               </div>
             </div>
           </div>
@@ -527,6 +598,27 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., Take with food, Monitor blood pressure, Hold if systolic BP < 100"
             />
+          </div>
+
+          {/* BCMA Integration Notice */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Pill className="h-4 w-4 text-blue-600" />
+              <p className="text-blue-800 dark:text-blue-300 font-medium text-sm">BCMA - Barcode Medication Administration</p>
+            </div>
+            <div className="text-blue-700 dark:text-blue-400 text-xs space-y-1">
+              <p className="font-medium">When administering this medication, the BCMA system will:</p>
+              <ul className="list-disc list-inside ml-2 space-y-1">
+                <li>🔍 Require scanning of patient wristband barcode</li>
+                <li>💊 Require scanning of medication package barcode</li>
+                <li>⏰ Verify administration time matches scheduled time (±30 minutes)</li>
+                <li>✅ Validate the "Five Rights" before allowing administration</li>
+                <li>📝 Automatically log administration with timestamp and user</li>
+              </ul>
+              <p className="mt-2 text-xs italic">
+                Administration time set above ({formData.adminTime}) will be used for timing validation.
+              </p>
+            </div>
           </div>
 
           {/* Safety Notice */}

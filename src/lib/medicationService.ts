@@ -74,7 +74,8 @@ import { Medication, MedicationAdministration } from '../types';
         prescribed_by: dbMed.prescribed_by || '',
         last_administered: dbMed.last_administered,
         next_due: dbMed.next_due || new Date().toISOString(),
-        status: dbMed.status || 'Active'
+        status: dbMed.status || 'Active',
+        admin_time: dbMed.admin_time || '08:00'
       } as Medication;
     });
 
@@ -124,6 +125,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       next_due: medication.next_due || new Date().toISOString(), // Provide default if null
       status: medication.status || 'Active',
       category: medication.category || 'scheduled',
+      admin_time: medication.admin_time || '08:00', // Default to 8:00 AM if not provided
       tenant_id: patientData?.tenant_id // Explicitly set tenant_id from patient
     };
     
@@ -205,6 +207,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.next_due !== undefined) dbUpdates.next_due = updates.next_due;
     if (updates.last_administered !== undefined) dbUpdates.last_administered = updates.last_administered;
+    if (updates.admin_time !== undefined) dbUpdates.admin_time = updates.admin_time;
     
     console.log('Database updates:', dbUpdates);
     
@@ -234,7 +237,8 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       prescribed_by: data.prescribed_by || '',
       last_administered: data.last_administered,
       next_due: data.next_due || '',
-      status: data.is_active ? 'Active' : 'Discontinued'
+      status: data.is_active ? 'Active' : 'Discontinued',
+      admin_time: data.admin_time || '08:00'
     };
 
     // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)

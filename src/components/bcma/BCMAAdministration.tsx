@@ -33,10 +33,12 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const [scannedPatientId, setScannedPatientId] = useState<string>('');
   const [scannedMedicationId, setScannedMedicationId] = useState<string>('');
   const [validationResult, setValidationResult] = useState<BCMAValidationResult | null>(null);
-  const [manualOverrides, setManualOverrides] = useState<string[]>([]);
   const [notes, setNotes] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<'scan-patient' | 'scan-medication' | 'verify' | 'complete'>('scan-patient');
   const [showBarcodes, setShowBarcodes] = useState(false);
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [overrideReason, setOverrideReason] = useState<string>('');
+  const [overriddenChecks, setOverriddenChecks] = useState<string[]>([]);
 
   // Set BCMA as active when component mounts
   useEffect(() => {
@@ -108,29 +110,10 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     }
   };
 
-  const handleManualOverride = (checkType: string) => {
-    const newOverrides = [...manualOverrides, checkType];
-    setManualOverrides(newOverrides);
-    
-    if (validationResult) {
-      const updatedChecks = {
-        ...validationResult.checks,
-        [checkType]: true
-      };
-      
-      setValidationResult({
-        ...validationResult,
-        checks: updatedChecks,
-        isValid: Object.values(updatedChecks).every(check => check)
-      });
-    }
-  };
-
-  const handleAdministration = async () => {
+    const handleAdministration = async () => {
     if (!validationResult || !validationResult.isValid) return;
 
     try {
-      // Create administration log
       const log = await bcmaService.createAdministrationLog(
         medication,
         patient,
@@ -138,7 +121,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         scannedPatientId,
         scannedMedicationId,
         validationResult,
-        manualOverrides,
+        overriddenChecks,
         notes
       );
 
@@ -147,18 +130,70 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       // Call parent completion handler
       onAdministrationComplete(true, log);
     } catch (error) {
-      console.error('Error during administration:', error);
+      console.error('BCMA administration error:', error);
       onAdministrationComplete(false);
     }
+  };
+
+  const handleOverride = () => {
+    if (!overrideReason.trim()) {
+      alert('Please provide a reason for the override.');
+      return;
+    }
+
+    if (validationResult) {
+      // Get failed checks
+      const failedChecks = Object.entries(validationResult.checks)
+        .filter(([, passed]) => !passed)
+        .map(([check]) => check);
+
+      // Update validation result to mark all checks as passed
+      const updatedChecks = { ...validationResult.checks };
+      failedChecks.forEach(check => {
+        (updatedChecks as any)[check] = true;
+      });
+
+      setValidationResult({
+        ...validationResult,
+        checks: updatedChecks,
+        isValid: true,
+        errors: [], // Clear errors since we're overriding
+        warnings: [...validationResult.warnings, `Manual override applied: ${overrideReason}`]
+      });
+
+      setOverriddenChecks([...overriddenChecks, ...failedChecks]);
+      setShowOverrideModal(false);
+      setOverrideReason('');
+    }
+  };
+
+  const getFailedChecks = () => {
+    if (!validationResult) return [];
+    return Object.entries(validationResult.checks)
+      .filter(([, passed]) => !passed)
+      .map(([check]) => check);
+  };
+
+  const getCheckDescription = (check: string) => {
+    const descriptions: { [key: string]: string } = {
+      patient: 'Patient barcode verification failed - the scanned patient barcode does not match the expected patient',
+      medication: 'Medication barcode verification failed - the scanned medication barcode does not match the expected medication',
+      dose: 'Dose verification failed - there may be a dosage discrepancy',
+      route: 'Route verification failed - the administration route may not match the prescribed route',
+      time: 'Timing verification failed - the medication may not be due at this time or was recently administered'
+    };
+    return descriptions[check] || `${check} verification failed`;
   };
 
   const resetProcess = () => {
     setScannedPatientId('');
     setScannedMedicationId('');
     setValidationResult(null);
-    setManualOverrides([]);
     setNotes('');
     setCurrentStep('scan-patient');
+    setOverrideReason('');
+    setOverriddenChecks([]);
+    setShowOverrideModal(false);
   };
 
   const getStepIcon = (step: string) => {
@@ -188,11 +223,34 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                BCMA - Barcode Medication Administration
+                {patient.first_name} {patient.last_name}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {medication.name} for {patient.first_name} {patient.last_name}
+                DOB: {new Date(patient.date_of_birth).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
               </p>
+              
+              {/* Medication Details */}
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 className="text-lg font-medium text-blue-900 mb-2">{medication.name}</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-blue-700">Dose:</span>
+                    <span className="ml-2 text-blue-900">{medication.dosage}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-blue-700">Route:</span>
+                    <span className="ml-2 text-blue-900">{medication.route}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="font-medium text-blue-700">Administration Time:</span>
+                    <span className="ml-2 text-blue-900">{medication.admin_time || 'Not specified'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               <button
@@ -380,59 +438,51 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 </div>
               </div>
 
-              {/* Five Rights Checks */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-medium text-gray-900">Five Rights Verification</h3>
+              {/* Simplified Verification Status */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Medication Verification</h3>
                 
-                {Object.entries(validationResult.checks).map(([check, passed]) => (
-                  <div key={check} className={`flex items-center justify-between p-3 rounded-lg border ${
-                    passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                <div className={`p-6 rounded-lg border-2 text-center ${
+                  validationResult.isValid 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+                    validationResult.isValid ? 'bg-green-100' : 'bg-red-100'
                   }`}>
-                    <div className="flex items-center space-x-3">
-                      {passed ? (
-                        <Check className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <X className="h-5 w-5 text-red-600" />
-                      )}
-                      <span className="font-medium capitalize">
-                        Right {check}
-                      </span>
-                    </div>
-                    
-                    {!passed && (
-                      <button
-                        onClick={() => handleManualOverride(check)}
-                        className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 rounded"
-                      >
-                        Override
-                      </button>
+                    {validationResult.isValid ? (
+                      <Check className="h-8 w-8 text-green-600" />
+                    ) : (
+                      <X className="h-8 w-8 text-red-600" />
                     )}
                   </div>
-                ))}
+                  
+                  <h4 className={`text-xl font-medium mb-2 ${
+                    validationResult.isValid ? 'text-green-900' : 'text-red-900'
+                  }`}>
+                    {validationResult.isValid ? 'Verification Complete' : 'Problem with Verification'}
+                  </h4>
+                  
+                  <p className={`text-sm mb-4 ${
+                    validationResult.isValid ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                    {validationResult.isValid 
+                      ? 'All safety checks have passed. You may proceed with administration.'
+                      : 'Please resolve verification issues before proceeding.'
+                    }
+                  </p>
+
+                  {/* Override Button */}
+                  {!validationResult.isValid && (
+                    <button
+                      onClick={() => setShowOverrideModal(true)}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                    >
+                      Override Verification
+                    </button>
+                  )}
+                </div>
               </div>
-
-              {/* Errors and Warnings */}
-              {validationResult.errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h4 className="font-medium text-red-800 mb-2">Errors:</h4>
-                  <ul className="list-disc list-inside text-sm text-red-700">
-                    {validationResult.errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {validationResult.warnings.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="font-medium text-yellow-800 mb-2">Warnings:</h4>
-                  <ul className="list-disc list-inside text-sm text-yellow-700">
-                    {validationResult.warnings.map((warning, index) => (
-                      <li key={index}>{warning}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
 
               {/* Notes */}
               <div>
@@ -507,6 +557,73 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Override Modal */}
+      {showOverrideModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Override Verification</h3>
+                <button
+                  onClick={() => setShowOverrideModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="font-medium text-red-800 mb-2">Failed Verification Checks:</h4>
+                <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                  {getFailedChecks().map((check) => (
+                    <li key={check}>
+                      <span className="font-medium capitalize">Right {check}:</span> {getCheckDescription(check)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Override <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  rows={4}
+                  placeholder="Explain why this verification is being overridden..."
+                  required
+                />
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Warning:</strong> Overriding verification checks should only be done when absolutely necessary and with proper clinical justification. This action will be logged for audit purposes.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 p-6 pt-0">
+              <button
+                onClick={() => setShowOverrideModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleOverride}
+                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+              >
+                Apply Override
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
