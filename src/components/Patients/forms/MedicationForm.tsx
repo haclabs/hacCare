@@ -33,30 +33,45 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     endDate: medication?.end_date || '',
     prescribedBy: medication?.prescribed_by || '',
     instructions: '',
-    status: medication?.status || 'Active' as 'Active' | 'Completed' | 'Discontinued'
+    status: medication?.status || 'Active' as 'Active' | 'Completed' | 'Discontinued',
+    adminTime: medication?.admin_time || '08:00' // Default to 8:00 AM
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Calculate next due time based on frequency
-  const calculateNextDue = (frequency: string, startDate: string): string => {
+  // Calculate next due time based on frequency and admin time
+  const calculateNextDue = (frequency: string, startDate: string, adminTime: string): string => {
     const start = new Date(startDate);
     const now = new Date();
     
     console.log('Calculating next due time:');
     console.log('- Frequency:', frequency);
     console.log('- Start date:', startDate);
+    console.log('- Admin time:', adminTime);
     
-    // If start date is in the future, use start date
+    // Parse admin time (HH:MM format)
+    const [hours, minutes] = adminTime.split(':').map(Number);
+    
+    // If start date is in the future, use start date with admin time
     if (start > now) {
-      return setHours(setMinutes(start, 0), 8).toISOString(); // 8:00 AM
+      return setHours(setMinutes(start, minutes), hours).toISOString();
     }
 
     // Calculate next administration time based on frequency
     switch (frequency) {
       case 'Once daily':
-        return setHours(setMinutes(now, 0), 8).toISOString(); // 8:00 AM
+        const today = new Date(now);
+        const todayAdmin = setHours(setMinutes(today, minutes), hours);
+        
+        // If today's admin time hasn't passed, use it; otherwise, use tomorrow
+        if (todayAdmin > now) {
+          return todayAdmin.toISOString();
+        } else {
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return setHours(setMinutes(tomorrow, minutes), hours).toISOString();
+        }
       case 'Twice daily':
         const currentHour = now.getHours();
         if (currentHour < 8) {
@@ -175,8 +190,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           start_date: formData.startDate,
           end_date: formData.endDate || undefined,
           prescribed_by: formData.prescribedBy,
-          next_due: calculateNextDue(formData.frequency, formData.startDate),
-          status: formData.status
+          next_due: calculateNextDue(formData.frequency, formData.startDate, formData.adminTime),
+          status: formData.status,
+          admin_time: formData.adminTime
         };
         
         console.log('Updating existing medication:', medicationData);
@@ -195,8 +211,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           start_date: formData.startDate,
           end_date: formData.endDate || undefined,
           prescribed_by: formData.prescribedBy,
-          next_due: calculateNextDue(formData.frequency, formData.startDate),
-          status: formData.status
+          next_due: calculateNextDue(formData.frequency, formData.startDate, formData.adminTime),
+          status: formData.status,
+          admin_time: formData.adminTime
         };
         
         console.log('Creating new medication:', medicationData);
@@ -394,6 +411,21 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Administration Time
+                </label>
+                <input
+                  type="time"
+                  value={formData.adminTime}
+                  onChange={(e) => updateField('adminTime', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Time when medication should be administered (for scheduled medications)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Status
                 </label>
                 <select
@@ -476,9 +508,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   Next Due
                 </label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600">
-                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate)), 'MMM dd, yyyy HH:mm')}
+                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime)), 'MMM dd, yyyy HH:mm')}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Calculated based on frequency</p>
+                <p className="text-xs text-gray-500 mt-1">Calculated based on frequency and admin time</p>
               </div>
             </div>
           </div>

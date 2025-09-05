@@ -48,6 +48,7 @@ export interface Medication {
   start_date: string;
   end_date?: string;
   prescribed_by: string;
+  admin_time?: string; // Time of day medication should be administered (HH:MM format)
   last_administered?: string;
   next_due: string;
   status: 'Active' | 'Completed' | 'Discontinued';
