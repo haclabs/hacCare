@@ -22,7 +22,7 @@ import { Camera, Plus, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { WoundAssessment, WoundTreatment, Patient } from '../../types';
 import { WoundCareService } from '../../lib/woundCareService';
 import { WoundAssessmentForm } from './WoundAssessmentForm';
-import { WoundCareDashboard } from './WoundCareDashboard';
+import { EnhancedWoundCareDashboard } from '../../components/Patients/wound-care/EnhancedWoundCareDashboard';
 
 interface WoundCareModuleProps {
   patient: Patient;
@@ -104,25 +104,6 @@ export const WoundCareModule: React.FC<WoundCareModuleProps> = ({
     } catch (err) {
       console.error('Error updating assessment:', err);
       setError(err instanceof Error ? err.message : 'Failed to update assessment');
-    }
-  };
-
-  const handleEditAssessment = (assessment: WoundAssessment) => {
-    setSelectedAssessment(assessment);
-    setActiveView('edit-assessment');
-  };
-
-  const handleTreatmentAdd = async (treatment: Omit<WoundTreatment, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const savedTreatment = await WoundCareService.createTreatment({
-        ...treatment,
-        patient_id: patient.id
-      });
-      
-      setTreatments(prev => [savedTreatment, ...prev]);
-    } catch (err) {
-      console.error('Error saving treatment:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save treatment');
     }
   };
 
@@ -237,12 +218,14 @@ export const WoundCareModule: React.FC<WoundCareModuleProps> = ({
       {/* Content Area */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         {activeView === 'dashboard' && (
-          <WoundCareDashboard
-            patient={patient}
-            assessments={assessments}
-            treatments={treatments}
-            onEditAssessment={handleEditAssessment}
-            onAddTreatment={handleTreatmentAdd}
+          <EnhancedWoundCareDashboard
+            patientId={patient.id}
+            patientName={`${patient.first_name} ${patient.last_name}`}
+            onAddWound={() => setActiveView('new-assessment')}
+            onViewWound={(wound) => {
+              // Handle viewing specific wound details
+              console.log('Viewing wound:', wound);
+            }}
           />
         )}
 
@@ -298,7 +281,7 @@ export const WoundCareModule: React.FC<WoundCareModuleProps> = ({
                       </span>
                     </div>
                     <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      {treatment.notes}
+                      {treatment.procedure_notes}
                     </p>
                     {treatment.products_used && (
                       <div className="mt-2">
