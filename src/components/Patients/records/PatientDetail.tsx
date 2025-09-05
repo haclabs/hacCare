@@ -12,6 +12,7 @@ import { AdmissionRecordsForm } from '../forms/AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from '../forms/AdvancedDirectivesForm';
 import { VitalsContent } from '../vitals/VitalsContent';
 import { NotesContent } from './NotesContent';
+import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { ModernPatientManagement } from '../../ModernPatientManagement';
 
 interface PatientDetailProps {
@@ -33,7 +34,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   );
   const [showActivity, setShowActivity] = useState(false);
   // State for active sub-tab
-  const [activeSubTab, setActiveSubTab] = useState<string>('vitals');
+  const [activeSubTab, setActiveSubTab] = useState<string>('overview');
   
   // Helper functions for styling (matching PatientCard)
   const getConditionColor = (condition: Patient['condition']) => {
@@ -115,6 +116,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'medications', label: 'MAR', icon: Pill, count: totalMedications > 0 ? totalMedications : undefined },
     { id: 'assessments', label: 'Assessments', icon: Stethoscope, subTabs: [
+      { id: 'overview', label: 'Overview', icon: Stethoscope },
       { id: 'vitals', label: 'Vital Signs', icon: Activity },
       { id: 'notes', label: 'Notes', icon: FileText },
       { id: 'wounds', label: 'Wound Care', icon: Heart }
@@ -311,6 +313,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             </div>
 
             {/* Render content based on active sub-tab */}
+            {activeSubTab === 'overview' && (
+              <PatientAssessmentsTab
+                patientId={id!}
+                patientName={`${patient.first_name} ${patient.last_name}`}
+              />
+            )}
             {activeSubTab === 'vitals' && (
               <VitalsContent 
                 patientId={id!} 

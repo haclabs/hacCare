@@ -365,3 +365,121 @@ export const admissionAssessmentSchema: AssessmentSchema = {
     assessmentType: 'admission'
   }
 };
+
+export const bowelAssessmentSchema: AssessmentSchema = {
+  id: 'bowel-assessment-v1',
+  title: 'Bowel Movement Record',
+  description: 'Comprehensive bowel movement assessment and continence tracking',
+  version: '1.0.0',
+  type: 'object',
+  properties: {
+    patientId: {
+      type: 'string',
+      title: 'Patient ID',
+      required: true,
+      validation: {
+        pattern: '^PT\\d{5}$'
+      }
+    },
+    recordedAt: {
+      type: 'datetime',
+      title: 'Recording Date & Time',
+      required: true,
+      default: 'now',
+      description: 'Date and time when the bowel movement was observed/recorded'
+    },
+    nurseName: {
+      type: 'string',
+      title: 'Recording Nurse',
+      required: true
+    },
+    bowelIncontinence: {
+      type: 'select',
+      title: 'Bowel Incontinence',
+      required: true,
+      options: {
+        enum: ['Continent', 'Incontinent', 'Partial'],
+        enumNames: ['Continent', 'Incontinent', 'Partial']
+      },
+      description: 'Patient continence status'
+    },
+    stoolAppearance: {
+      type: 'select',
+      title: 'Stool Appearance',
+      required: true,
+      options: {
+        enum: ['Normal', 'Abnormal', 'Blood present', 'Mucus present'],
+        enumNames: ['Normal', 'Abnormal', 'Blood Present', 'Mucus Present']
+      },
+      description: 'Visual appearance of stool'
+    },
+    stoolConsistency: {
+      type: 'select',
+      title: 'Stool Consistency',
+      required: true,
+      options: {
+        enum: ['Formed', 'Loose', 'Watery', 'Hard', 'Soft'],
+        enumNames: ['Formed', 'Loose', 'Watery', 'Hard', 'Soft']
+      },
+      description: 'Consistency and texture of stool'
+    },
+    stoolColour: {
+      type: 'select',
+      title: 'Stool Colour',
+      required: true,
+      options: {
+        enum: ['Brown', 'Green', 'Yellow', 'Black', 'Red', 'Clay colored'],
+        enumNames: ['Brown', 'Green', 'Yellow', 'Black', 'Red', 'Clay Colored']
+      },
+      description: 'Color of stool'
+    },
+    stoolAmount: {
+      type: 'select',
+      title: 'Stool Amount',
+      required: true,
+      options: {
+        enum: ['None', 'Small', 'Moderate', 'Large'],
+        enumNames: ['None', 'Small', 'Moderate', 'Large']
+      },
+      description: 'Amount/quantity of stool'
+    },
+    notes: {
+      type: 'textarea',
+      title: 'Additional Notes',
+      required: true,
+      description: 'Any additional observations or notes about the bowel movement'
+    }
+  },
+  layout: {
+    type: 'accordion',
+    sections: [
+      {
+        id: 'basic-info',
+        title: 'Basic Information',
+        fields: ['patientId', 'recordedAt', 'nurseName']
+      },
+      {
+        id: 'bowel-assessment',
+        title: 'Bowel Assessment',
+        fields: ['bowelIncontinence', 'stoolAppearance', 'stoolConsistency', 'stoolColour', 'stoolAmount']
+      },
+      {
+        id: 'additional-notes',
+        title: 'Additional Information',
+        fields: ['notes']
+      }
+    ]
+  },
+  validation: {
+    onSubmit: ['validateBowelRecord']
+  },
+  metadata: {
+    author: 'hacCare Development Team',
+    created: '2025-09-05',
+    modified: '2025-09-05',
+    tags: ['bowel', 'assessment', 'continence', 'stool'],
+    clinicalSpecialty: 'nursing',
+    complianceLevel: 'hipaa',
+    assessmentType: 'nursing'
+  }
+};

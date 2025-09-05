@@ -31,13 +31,15 @@ import {
   Badge,
   FileCheck,
   ArrowRight,
-  Camera
+  Camera,
+  MessageSquare
 } from 'lucide-react';
 import { VitalsModule } from '../modules/vitals/VitalsModule';
 import { MARModule } from '../modules/mar/MARModule';
 import { FormsModule } from '../modules/forms/FormsModule';
 import { WoundCareModule } from '../modules/wound-care/WoundCareModule';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
+import { HandoverNotes } from './Patients/handover/HandoverNotes';
 import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
 import { fetchPatientMedications } from '../lib/medicationService';
@@ -53,7 +55,7 @@ interface ModularPatientDashboardProps {
   };
 }
 
-type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview';
+type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover';
 
 interface ModuleConfig {
   id: ActiveModule;
@@ -633,6 +635,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   // Action Cards Configuration
   const actionCards = [
     {
+      id: 'handover-notes',
+      title: 'Handover Notes',
+      description: 'Create SBAR communication notes for care transitions',
+      icon: MessageSquare,
+      action: () => setActiveModule('handover'),
+      color: 'blue'
+    },
+    {
       id: 'patient-record',
       title: 'View Patient Record',
       description: 'Generate comprehensive medical record',
@@ -822,6 +832,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Clinical assessment forms and comprehensive documentation',
       icon: FileText,
       color: 'purple'
+    },
+    {
+      id: 'handover',
+      title: 'Handover Notes',
+      description: 'SBAR communication framework for care transitions',
+      icon: MessageSquare,
+      color: 'indigo'
     }
   ];
 
@@ -1108,6 +1125,18 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   patient={patient}
                   onAssessmentSave={handleAssessmentSave}
                   currentUser={currentUser}
+                />
+              )}
+
+              {activeModule === 'handover' && (
+                <HandoverNotes
+                  patientId={patient.id}
+                  patientName={`${patient.first_name} ${patient.last_name}`}
+                  currentUser={currentUser || {
+                    id: 'unknown',
+                    name: 'Unknown User',
+                    role: 'nurse'
+                  }}
                 />
               )}
             </div>

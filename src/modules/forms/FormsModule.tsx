@@ -12,7 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Clipboard, Stethoscope, User, Save } from 'lucide-react';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
-import { nursingAssessmentSchema, admissionAssessmentSchema } from '../../schemas/formsSchemas';
+import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../schemas/formsSchemas';
 import { Patient } from '../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 
@@ -26,7 +26,7 @@ interface FormsModuleProps {
   };
 }
 
-type FormsView = 'nursing-assessment' | 'admission-assessment' | 'custom-forms' | 'history';
+type FormsView = 'nursing-assessment' | 'admission-assessment' | 'bowel-assessment' | 'custom-forms' | 'history';
 
 export const FormsModule: React.FC<FormsModuleProps> = ({
   patient,
@@ -45,6 +45,7 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
       try {
         schemaEngine.registerSchema(nursingAssessmentSchema);
         schemaEngine.registerSchema(admissionAssessmentSchema);
+        schemaEngine.registerSchema(bowelAssessmentSchema);
         setSchemasRegistered(true);
         console.log('✅ Forms schemas registered successfully');
       } catch (error) {
@@ -164,6 +165,13 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
       description: 'Initial patient assessment upon hospital admission',
       icon: User,
       schemaId: 'admission-assessment-v1'
+    },
+    {
+      id: 'bowel-assessment',
+      title: 'Bowel Record',
+      description: 'Bowel movement assessment and continence tracking',
+      icon: FileText,
+      schemaId: 'bowel-assessment-v1'
     }
   ];
 
@@ -385,6 +393,35 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                       <p className="text-gray-600">Loading assessment form...</p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeView === 'bowel-assessment' && (
+              <>
+                <h3 className="text-lg font-medium text-gray-900 mb-6">Bowel Movement Record</h3>
+                {schemasRegistered ? (
+                  <DynamicForm
+                    schemaId="bowel-assessment-v1"
+                    initialData={{
+                      patientId: patient.patient_id,
+                      nurseName: currentUser?.name || '',
+                      recordedAt: new Date().toISOString().slice(0, 16)
+                    }}
+                    context={generateFormContext()}
+                    onSubmit={handleAssessmentSubmission}
+                    onChange={handleFormAutoSave}
+                    autoSave={true}
+                    autoSaveInterval={60000}
+                    className="max-w-none"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading bowel record form...</p>
                     </div>
                   </div>
                 )}

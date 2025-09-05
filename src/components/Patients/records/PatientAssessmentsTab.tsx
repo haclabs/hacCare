@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPatientAssessments, PatientAssessment } from '../../lib/assessmentService';
-import { AssessmentDetail } from './AssessmentDetail';
-import { AssessmentForm } from './AssessmentForm';
-import { Brain, Heart, Stethoscope, Plus, RefreshCw, Clock, User } from 'lucide-react';
+import { fetchPatientAssessments, PatientAssessment } from '../../../lib/assessmentService';
+import { AssessmentDetail } from '../AssessmentDetail';
+import { AssessmentForm } from '../forms/AssessmentForm';
+import { BowelRecordForm } from '../forms/BowelRecordForm';
+import { BowelRecordsList } from '../bowel/BowelRecordsList';
+import { Brain, Heart, Stethoscope, Plus, RefreshCw, FileText } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 
 interface PatientAssessmentsTabProps {
@@ -17,6 +19,7 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
   const [assessments, setAssessments] = useState<PatientAssessment[]>([]);
   const [selectedAssessment, setSelectedAssessment] = useState<PatientAssessment | null>(null);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [showBowelForm, setShowBowelForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,9 +41,14 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
     }
   };
 
-  const handleAssessmentSaved = (assessment: PatientAssessment) => {
+  const handleAssessmentSaved = () => {
     setShowAssessmentForm(false);
     loadAssessments();
+  };
+
+  const handleBowelRecordSaved = () => {
+    setShowBowelForm(false);
+    // No need to reload assessments since bowel records are separate
   };
 
   const getAssessmentIcon = (type: string) => {
@@ -49,15 +57,6 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
       case 'pain': return Heart;
       case 'neurological': return Brain;
       default: return Stethoscope;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'urgent': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'routine': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -71,113 +70,141 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">Patient Assessments</h3>
-        <div className="flex space-x-3">
-          <button
-            onClick={loadAssessments}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
-          <button
-            onClick={() => setShowAssessmentForm(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span>New Assessment</span>
-          </button>
-        </div>
+        <button
+          onClick={loadAssessments}
+          className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+        >
+          <RefreshCw className="h-4 w-4" />
+          <span>Refresh</span>
+        </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <RefreshCw className="h-8 w-8 text-gray-400 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-500">Loading assessments...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-700 mb-2">{error}</p>
-          <button
-            onClick={loadAssessments}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      ) : assessments.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Assessments Recorded</h3>
-          <p className="text-gray-600 mb-6">Start recording patient assessments to track their condition.</p>
-          <button
-            onClick={() => setShowAssessmentForm(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Record First Assessment
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {assessments.map((assessment) => {
-            const Icon = getAssessmentIcon(assessment.assessment_type);
-            return (
-              <div 
-                key={assessment.id} 
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedAssessment(assessment)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      assessment.assessment_type === 'physical' ? 'bg-blue-100' :
-                      assessment.assessment_type === 'pain' ? 'bg-red-100' :
-                      'bg-purple-100'
-                    }`}>
-                      <Icon className={`h-5 w-5 ${
-                        assessment.assessment_type === 'physical' ? 'text-blue-600' :
-                        assessment.assessment_type === 'pain' ? 'text-red-600' :
-                        'text-purple-600'
-                      }`} />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        {assessment.assessment_type.charAt(0).toUpperCase() + assessment.assessment_type.slice(1)} Assessment
-                      </h4>
-                      <div className="flex items-center text-xs text-gray-500 space-x-2">
-                        <span>{formatDate(assessment.assessment_date)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(assessment.priority_level)}`}>
-                    {assessment.priority_level.charAt(0).toUpperCase() + assessment.priority_level.slice(1)}
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-                  <User className="h-4 w-4" />
-                  <span>{assessment.nurse_name}</span>
-                </div>
-                
-                <p className="text-sm text-gray-700 line-clamp-2">
-                  {assessment.assessment_notes.substring(0, 120)}
-                  {assessment.assessment_notes.length > 120 ? '...' : ''}
-                </p>
-                
-                {assessment.follow_up_required && (
-                  <div className="mt-2 flex items-center space-x-1 text-xs text-amber-600">
-                    <Clock className="h-3 w-3" />
-                    <span>Follow-up required</span>
-                  </div>
-                )}
+      {/* Assessment Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Clinical Assessments Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Stethoscope className="h-6 w-6 text-blue-600" />
               </div>
-            );
-          })}
+              <h4 className="text-lg font-semibold text-gray-900">Assessments</h4>
+            </div>
+            <button
+              onClick={() => setShowAssessmentForm(true)}
+              className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New</span>
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-6">
+              <RefreshCw className="h-6 w-6 text-gray-400 mx-auto mb-2 animate-spin" />
+              <p className="text-sm text-gray-500">Loading...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-red-600 mb-2">{error}</p>
+              <button
+                onClick={loadAssessments}
+                className="text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Retry
+              </button>
+            </div>
+          ) : assessments.length === 0 ? (
+            <div className="text-center py-6">
+              <Stethoscope className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">No assessments recorded</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {assessments.slice(0, 5).map((assessment) => {
+                const Icon = getAssessmentIcon(assessment.assessment_type);
+                return (
+                  <div 
+                    key={assessment.id} 
+                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedAssessment(assessment)}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-2">
+                        <Icon className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {assessment.assessment_type.charAt(0).toUpperCase() + assessment.assessment_type.slice(1)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(assessment.assessment_date)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600">{assessment.nurse_name}</p>
+                  </div>
+                );
+              })}
+              {assessments.length > 5 && (
+                <p className="text-xs text-gray-500 text-center">
+                  +{assessments.length - 5} more assessments
+                </p>
+              )}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Vitals Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <Heart className="h-6 w-6 text-red-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900">Vitals</h4>
+            </div>
+            <button
+              onClick={() => {/* Open vitals form */}}
+              className="flex items-center space-x-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New</span>
+            </button>
+          </div>
+          
+          <div className="text-center py-6">
+            <Heart className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Vitals handled separately</p>
+            <p className="text-xs text-gray-400 mt-1">See Patient Overview for vitals</p>
+          </div>
+        </div>
+
+        {/* Bowel Record Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <FileText className="h-6 w-6 text-green-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900">Bowel Record</h4>
+            </div>
+            <button
+              onClick={() => setShowBowelForm(true)}
+              className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New</span>
+            </button>
+          </div>
+
+          {/* Bowel Records List */}
+          <BowelRecordsList patientId={patientId} />
+        </div>
+      </div>
 
       {/* Assessment Form Modal */}
       {showAssessmentForm && (
@@ -186,6 +213,16 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
           patientName={patientName}
           onClose={() => setShowAssessmentForm(false)}
           onSave={handleAssessmentSaved}
+        />
+      )}
+
+      {/* Bowel Record Form Modal */}
+      {showBowelForm && (
+        <BowelRecordForm
+          patientId={patientId}
+          patientName={patientName}
+          onClose={() => setShowBowelForm(false)}
+          onSave={handleBowelRecordSaved}
         />
       )}
 
