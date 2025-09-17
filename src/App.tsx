@@ -24,6 +24,7 @@ const ManagementDashboard = lazy(() => import('./components/Management/Managemen
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./components/Settings/Settings'));
+const SimulationDashboard = lazy(() => import('./components/simulations/SimulationDashboard'));
 
 /**
  * Main Application Component
@@ -516,6 +517,13 @@ function App() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Schedule Management</h2>
             <p className="text-gray-600 dark:text-gray-400">Shift scheduling and task management system coming soon...</p>
           </div>
+        );
+      
+      case 'simulations':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <SimulationDashboard />
+          </Suspense>
         );
       
       case 'settings':

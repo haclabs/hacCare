@@ -1,5 +1,16 @@
 import React from 'react';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database } from 'lucide-react';
+import { 
+  Users, 
+  Calendar, 
+  Settings, 
+  BookOpen, 
+  FileText, 
+  Database, 
+  Play, 
+  Building2, 
+  UserPlus, 
+  UserCheck 
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 /**
@@ -34,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const menuItems = [
     { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
+    { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-indigo-600' },
     // Management Dashboard - Only for Super Admins
     ...(hasRole('super_admin') ? [
       { id: 'management', label: 'Management', icon: Building2, color: 'text-red-600' }
