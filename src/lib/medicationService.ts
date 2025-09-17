@@ -36,11 +36,51 @@ import { Medication, MedicationAdministration } from '../types';
         timestamp: cleanAdministration.timestamp
       }
     );
-    */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
+    */export const fetchPatientMedications = async (patientId: string, simulationId?: string): Promise<Medication[]> => {
   try {
     console.log('🔍 DEBUGGING: Fetching medications for patient:', patientId);
+    console.log('🔍 DEBUGGING: Simulation ID:', simulationId);
     console.log('🔍 DEBUGGING: Current timestamp:', new Date().toISOString());
     
+    // If simulation mode, fetch from simulation_patient_medications
+    if (simulationId) {
+      console.log('🔍 DEBUGGING: Fetching simulation patient medications');
+      
+      const { data, error } = await supabase
+        .from('simulation_patient_medications')
+        .select('*')
+        .eq('simulation_patient_id', patientId)
+        .order('created_at', { ascending: false });
+
+      console.log('🔍 DEBUGGING: Simulation medications query response:', { data, error });
+      
+      if (error) {
+        console.error('❌ DEBUGGING: Simulation medications database error:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('⚠️ DEBUGGING: No simulation medications found for patient:', patientId);
+        return [];
+      }
+      
+      // Convert simulation medications to regular medication format
+      return data.map(simMed => ({
+        id: simMed.id,
+        name: simMed.name,
+        dosage: simMed.dosage,
+        frequency: simMed.frequency,
+        route: simMed.route,
+        start_date: simMed.start_date,
+        end_date: simMed.end_date,
+        prescribed_by: simMed.prescribed_by,
+        next_due: simMed.admin_time,
+        status: simMed.status,
+        instructions: simMed.special_instructions
+      }));
+    }
+    
+    // Regular patient medications
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')

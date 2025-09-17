@@ -4,7 +4,6 @@ import { format } from 'date-fns';
 import { fetchPatientWounds, createWound, deleteWound, WoundUI } from '../../../lib/woundService';
 import { useAuth } from '../../../hooks/useAuth';
 import { ImageAnnotation } from '../visuals/ImageAnnotation';
-import { BodyDiagram } from '../diagrams/BodyDiagram';
 
 export interface WoundAssessmentProps {
   patientId: string;
@@ -27,7 +26,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
   const [newWound, setNewWound] = useState<Partial<WoundUI>>({
     type: 'Pressure Ulcer',
     stage: 'Stage 1',
-    size: { length: 0, width: 0, depth: 0 },
+    size: { length: 0, width: 0 },
     description: '',
     treatment: '',
     healingProgress: 'New'
@@ -55,15 +54,15 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
     }
   };
 
-  const handleBodyClick = (coordinates: { x: number; y: number }, anatomicalRegion: string) => {
+  const handleBodyClick = (event: React.MouseEvent<SVGElement>) => {
     if (!showAddWound) return;
     
-    setNewWoundCoords(coordinates);
-    // Update the location field with the anatomical region
-    setNewWound(prev => ({ 
-      ...prev, 
-      location: prev.location || anatomicalRegion.replace(/([A-Z])/g, ' $1').trim() 
-    }));
+    const svg = event.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    
+    setNewWoundCoords({ x, y });
   };
 
   const handleSaveWound = async () => {
@@ -77,22 +76,13 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
         y: newWoundCoords.y
       },
       view: selectedView,
-      type: newWound.type || 'other',
-      stage: newWound.stage || '',
+      type: newWound.type || 'Pressure Ulcer',
+      stage: newWound.stage || 'Stage 1',
       size: {
         length: newWound.size?.length || 0,
         width: newWound.size?.width || 0,
-        depth: newWound.size?.depth || 0
+        depth: newWound.size?.depth
       },
-      woundBed: 'red', // Default value
-      exudate: {
-        amount: 'minimal',
-        type: 'serous'
-      },
-      periwoundCondition: 'Normal',
-      painLevel: 0,
-      odor: false,
-      signsOfInfection: false,
       description: newWound.description || '',
       treatment: newWound.treatment || '', 
       assessedBy: `${profile.first_name} ${profile.last_name}`,
@@ -102,8 +92,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
     
     try {
       setLoading(true);
-      const assessorId = profile?.id || '';
-      const savedWound = await createWound(wound, patientId, assessorId);
+      const savedWound = await createWound(wound, patientId);
       setWounds(prev => [...prev, savedWound]);
       setError(null);
     } catch (err) {
@@ -118,7 +107,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
       location: '',
       type: 'Pressure Ulcer',
       stage: 'Stage 1',
-      size: { length: 0, width: 0, depth: 0 },
+      size: { length: 0, width: 0 },
       description: '',
       treatment: '',
       healingProgress: 'New'
@@ -167,6 +156,179 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // SVG body diagrams
+  const AnteriorBodySVG = () => (
+    <svg
+      viewBox="0 0 200 400"
+      className="w-full h-full cursor-crosshair"
+      onClick={handleBodyClick}
+    >
+      {/* Head */}
+      <ellipse cx="100" cy="40" rx="25" ry="30" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Neck */}
+      <rect x="90" y="65" width="20" height="15" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Torso */}
+      <ellipse cx="100" cy="140" rx="45" ry="60" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Arms */}
+      <ellipse cx="60" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="140" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Forearms */}
+      <ellipse cx="50" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="150" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Hands */}
+      <ellipse cx="45" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="155" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Pelvis */}
+      <ellipse cx="100" cy="220" rx="35" ry="25" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Thighs */}
+      <ellipse cx="85" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Lower legs */}
+      <ellipse cx="85" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Feet */}
+      <ellipse cx="85" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Render wounds for anterior view */}
+      {wounds
+        .filter(wound => wound.view === 'anterior')
+        .map(wound => (
+          <g key={wound.id}>
+            <circle
+              cx={wound.coordinates.x * 2}
+              cy={wound.coordinates.y * 4}
+              r="6"
+              fill={getWoundColor(wound)}
+              stroke="white"
+              strokeWidth="2"
+              className="cursor-pointer hover:opacity-80"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedWound(wound);
+              }}
+            />
+            <text
+              x={wound.coordinates.x * 2}
+              y={wound.coordinates.y * 4 + 2}
+              textAnchor="middle"
+              className="text-xs font-bold fill-white pointer-events-none"
+            >
+              {wounds.filter(w => w.view === 'anterior').indexOf(wound) + 1}
+            </text>
+          </g>
+        ))}
+      
+      {/* Show new wound placement */}
+      {showAddWound && newWoundCoords && selectedView === 'anterior' && (
+        <circle
+          cx={newWoundCoords.x * 2}
+          cy={newWoundCoords.y * 4}
+          r="6"
+          fill="#f59e0b"
+          stroke="white"
+          strokeWidth="2"
+          className="animate-pulse"
+        />
+      )}
+    </svg>
+  );
+
+  const PosteriorBodySVG = () => (
+    <svg
+      viewBox="0 0 200 400"
+      className="w-full h-full cursor-crosshair"
+      onClick={handleBodyClick}
+    >
+      {/* Head (back) */}
+      <ellipse cx="100" cy="40" rx="25" ry="30" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Neck */}
+      <rect x="90" y="65" width="20" height="15" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Back/Torso */}
+      <ellipse cx="100" cy="140" rx="45" ry="60" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Arms (back) */}
+      <ellipse cx="60" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="140" cy="120" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Forearms (back) */}
+      <ellipse cx="50" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="150" cy="180" rx="10" ry="35" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Hands (back) */}
+      <ellipse cx="45" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="155" cy="220" rx="8" ry="12" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Buttocks */}
+      <ellipse cx="100" cy="220" rx="35" ry="25" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Thighs (back) */}
+      <ellipse cx="85" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="280" rx="15" ry="45" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Calves */}
+      <ellipse cx="85" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="350" rx="12" ry="40" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Heels */}
+      <ellipse cx="85" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      <ellipse cx="115" cy="390" rx="8" ry="10" fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+      
+      {/* Render wounds for posterior view */}
+      {wounds
+        .filter(wound => wound.view === 'posterior')
+        .map(wound => (
+          <g key={wound.id}>
+            <circle
+              cx={wound.coordinates.x * 2}
+              cy={wound.coordinates.y * 4}
+              r="6"
+              fill={getWoundColor(wound)}
+              stroke="white"
+              strokeWidth="2"
+              className="cursor-pointer hover:opacity-80"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedWound(wound);
+              }}
+            />
+            <text
+              x={wound.coordinates.x * 2}
+              y={wound.coordinates.y * 4 + 2}
+              textAnchor="middle"
+              className="text-xs font-bold fill-white pointer-events-none"
+            >
+              {wounds.filter(w => w.view === 'posterior').indexOf(wound) + 1}
+            </text>
+          </g>
+        ))}
+      
+      {/* Show new wound placement */}
+      {showAddWound && newWoundCoords && selectedView === 'posterior' && (
+        <circle
+          cx={newWoundCoords.x * 2}
+          cy={newWoundCoords.y * 4}
+          r="6"
+          fill="#f59e0b"
+          stroke="white"
+          strokeWidth="2"
+          className="animate-pulse"
+        />
+      )}
+    </svg>
+  );
 
   return (
     <>
@@ -263,14 +425,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4 h-96 flex items-center justify-center"> 
-            <BodyDiagram
-              view={selectedView}
-              wounds={wounds}
-              onBodyClick={handleBodyClick}
-              onWoundClick={setSelectedWound}
-              interactive={showAddWound}
-              showWoundNumbers={true}
-            />
+            {selectedView === 'anterior' ? <AnteriorBodySVG /> : <PosteriorBodySVG />}
           </div>
 
           {/* Legend */}
@@ -370,7 +525,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                       const value = parseFloat(e.target.value) || 0;
                       setNewWound(prev => ({
                         ...prev,
-                        size: { ...(prev.size || { width: 0, depth: 0 }), length: value }
+                        size: { ...(prev.size || { width: 0 }), length: value }
                       })); 
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -388,7 +543,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                       const value = parseFloat(e.target.value) || 0;
                       setNewWound(prev => ({
                         ...prev,
-                        size: { ...(prev.size || { length: 0, depth: 0 }), width: value }
+                        size: { ...(prev.size || { length: 0 }), width: value }
                       })); 
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -406,7 +561,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                       const value = e.target.value ? parseFloat(e.target.value) : undefined;
                       setNewWound(prev => ({
                         ...prev,
-                        size: { ...(prev.size || { length: 0, width: 0 }), depth: value || 0 }
+                        size: { ...(prev.size || { length: 0, width: 0 }), depth: value }
                       })); 
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -491,7 +646,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(wound.stage || '')}`}> 
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(wound.stage)}`}> 
                           {wound.stage}
                         </span>
                         <button
@@ -578,7 +733,7 @@ export const WoundAssessment: React.FC<WoundAssessmentProps> = ({ patientId, onC
                     <p><strong>Location:</strong> {selectedWound.location}</p>
                     <p><strong>View:</strong> {selectedWound.view}</p>
                     <p><strong>Type:</strong> {selectedWound.type}</p>
-                    <p><strong>Stage:</strong> <span className={`px-2 py-1 rounded-full text-xs ${getStageColor(selectedWound.stage || '')}`}>{selectedWound.stage || 'Not specified'}</span></p>
+                    <p><strong>Stage:</strong> <span className={`px-2 py-1 rounded-full text-xs ${getStageColor(selectedWound.stage)}`}>{selectedWound.stage}</span></p>
                   </div>
                 </div>
                  

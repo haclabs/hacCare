@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
@@ -13,10 +13,12 @@ interface AuthContextType {
   profile: UserProfile | null;                         // User profile data from our database
   loading: boolean;                                     // Loading state for auth operations
   isOffline: boolean;                                   // Offline state indicator
+  isAnonymous: boolean;                                 // Anonymous simulation user indicator
   signIn: (email: string, password: string) => Promise<{ error: any }>; // Sign in function
   signOut: () => Promise<void>;                        // Sign out function
   hasRole: (roles: string | string[]) => boolean;     // Role-based access control helper
   createProfile: () => Promise<void>;                 // Create user profile function
+  setAnonymousSimulationUser: (simulationName: string) => void; // Set anonymous user for simulations
 }
 
 /**
@@ -63,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);                 // Overall loading state
   const [profileLoading, setProfileLoading] = useState(false);  // Profile-specific loading state
   const [isOffline, setIsOffline] = useState(false);            // Offline state indicator
+  const [isAnonymous, setIsAnonymous] = useState(false);        // Anonymous simulation user indicator
 
   /**
    * Initialize authentication on component mount
@@ -572,16 +575,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return roleArray.includes(profile.role);
   };
 
+  /**
+   * Set anonymous simulation user with nurse privileges
+   * Used for simulation access without login
+   * 
+   * @param {string} simulationName - Name of the simulation for logging
+   */
+  const setAnonymousSimulationUser = useCallback((simulationName: string) => {
+    setIsAnonymous(true);
+    setProfile({
+      id: 'anonymous-sim-user',
+      email: 'simulation@haccare.local',
+      first_name: 'Nurse Simulation',
+      last_name: simulationName,
+      role: 'nurse',
+      department: 'Simulation',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    console.log(`🎭 Anonymous simulation user set: Nurse Simulation ${simulationName}`);
+  }, []);
+
   // Context value object
   const value = {
     user,
     profile,
     loading: loading || profileLoading, // Include profile loading in overall loading state
     isOffline,
+    isAnonymous,
     signIn,
     signOut,
     hasRole,
     createProfile,
+    setAnonymousSimulationUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

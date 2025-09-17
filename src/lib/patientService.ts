@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Patient, VitalSigns, PatientNote } from '../types';
+import { Patient, VitalSigns, PatientNote, SimulationPatient } from '../types';
 import { logAction } from './auditService';
 import { runAlertChecks } from './alertService';
 
@@ -131,10 +131,77 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
 };
 
 /**
- * Fetch all patients from database
+ * Convert simulation patient to app patient format for compatibility
  */
-export const fetchPatients = async (): Promise<Patient[]> => {
+const convertSimulationPatient = (simulationPatient: SimulationPatient): Patient => {
+  // Split patient_name into first and last names
+  const nameParts = simulationPatient.patient_name.split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  return {
+    id: simulationPatient.id,
+    patient_id: simulationPatient.patient_id,
+    tenant_id: '', // Simulation patients don't have tenant_id in the interface
+    first_name: firstName,
+    last_name: lastName,
+    date_of_birth: simulationPatient.date_of_birth,
+    gender: simulationPatient.gender as 'Male' | 'Female' | 'Other' || 'Other',
+    room_number: simulationPatient.room_number || '',
+    bed_number: simulationPatient.bed_number || '',
+    admission_date: simulationPatient.admission_date || '',
+    condition: simulationPatient.condition as 'Critical' | 'Stable' | 'Improving' | 'Discharged' || 'Stable',
+    diagnosis: simulationPatient.diagnosis || '',
+    allergies: simulationPatient.allergies || [],
+    blood_type: simulationPatient.blood_type || '',
+    emergency_contact_name: simulationPatient.emergency_contact_name || '',
+    emergency_contact_relationship: simulationPatient.emergency_contact_relationship || '',
+    emergency_contact_phone: simulationPatient.emergency_contact_phone || '',
+    assigned_nurse: simulationPatient.assigned_nurse || '',
+    vitals: [], // Will be populated from simulation_patient_vitals
+    medications: [], // Will be populated from simulation_patient_medications  
+    notes: [] // Will be populated from simulation_patient_notes
+  };
+};
+
+/**
+ * Fetch all patients from database or simulation
+ */
+export const fetchPatients = async (simulationId?: string): Promise<Patient[]> => {
   try {
+    // If simulation mode, fetch simulation patients
+    if (simulationId) {
+      console.log('Fetching simulation patients for simulation:', simulationId);
+      
+      const { data: simulationPatients, error: simError } = await supabase
+        .from('simulation_patients')
+        .select(`
+          *,
+          vitals:simulation_patient_vitals(*),
+          medications:simulation_patient_medications(*),
+          notes:simulation_patient_notes(*)
+        `)
+        .eq('active_simulation_id', simulationId)
+        .eq('is_template', false)
+        .order('created_at', { ascending: false });
+
+      if (simError) {
+        throw simError;
+      }
+
+      if (!simulationPatients || simulationPatients.length === 0) {
+        console.log('No simulation patients found');
+        return [];
+      }
+
+      console.log(`Found ${simulationPatients.length} simulation patients`);
+      
+      // Convert simulation patients to Patient format
+      const convertedPatients = simulationPatients.map(convertSimulationPatient);
+      console.log('Simulation patients converted successfully');
+      return convertedPatients;
+    }
+    
     console.log('Fetching patients from database...');
     
     // Fetch patients
@@ -190,9 +257,43 @@ export const fetchPatients = async (): Promise<Patient[]> => {
 /**
  * Fetch a single patient by ID from database
  */
-export const fetchPatientById = async (patientId: string): Promise<Patient | null> => {
+export const fetchPatientById = async (patientId: string, simulationId?: string): Promise<Patient | null> => {
   try {
     console.log('Fetching patient by ID:', patientId);
+    
+    // If simulation mode, fetch simulation patient
+    if (simulationId) {
+      console.log('Fetching simulation patient for simulation:', simulationId);
+      
+      const { data: simulationPatient, error: simError } = await supabase
+        .from('simulation_patients')
+        .select(`
+          *,
+          vitals:simulation_patient_vitals(*),
+          medications:simulation_patient_medications(*),
+          notes:simulation_patient_notes(*)
+        `)
+        .eq('id', patientId)
+        .eq('active_simulation_id', simulationId)
+        .eq('is_template', false)
+        .single();
+
+      if (simError) {
+        if (simError.code === 'PGRST116') {
+          console.log('Simulation patient not found:', patientId);
+          return null;
+        }
+        throw simError;
+      }
+
+      if (!simulationPatient) {
+        console.log('Simulation patient not found:', patientId);
+        return null;
+      }
+
+      console.log('Found simulation patient:', simulationPatient.patient_name);
+      return convertSimulationPatient(simulationPatient);
+    }
     
     // Fetch patient
     const { data: patient, error: patientError } = await supabase

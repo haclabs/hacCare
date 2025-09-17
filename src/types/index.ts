@@ -224,3 +224,190 @@ export interface WoundTreatment {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================================================
+// SIMULATION SYSTEM TYPES
+// ============================================================================
+
+export interface ScenarioTemplate {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  learning_objectives?: string[];
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  estimated_duration_minutes?: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  tags?: string[];
+}
+
+export interface ActiveSimulation {
+  id: string;
+  scenario_template_id: string;
+  tenant_id: string;
+  session_name: string;
+  instructor_id: string;
+  start_time: string;
+  end_time?: string;
+  status: 'running' | 'paused' | 'completed' | 'reset';
+  student_ids: string[];
+  simulation_notes?: string;
+  sim_access_key: string;
+  allow_anonymous_access: boolean;
+  created_at: string;
+  scenario_template?: ScenarioTemplate;
+}
+
+export interface SimulationPatient {
+  id: string;
+  scenario_template_id?: string;
+  active_simulation_id?: string;
+  patient_name: string;
+  patient_id: string; // PT001, PT002, etc.
+  date_of_birth: string;
+  gender?: string;
+  room_number?: string;
+  bed_number?: string;
+  admission_date?: string;
+  condition?: string;
+  diagnosis?: string;
+  medical_history?: string;
+  allergies?: string[];
+  blood_type?: string;
+  emergency_contact_name?: string;
+  emergency_contact_relationship?: string;
+  emergency_contact_phone?: string;
+  assigned_nurse?: string;
+  chief_complaint?: string;
+  patient_scenario?: string;
+  is_template: boolean;
+  created_at: string;
+  vitals?: SimulationPatientVital[];
+  medications?: SimulationPatientMedication[];
+  notes?: SimulationPatientNote[];
+}
+
+export interface SimulationPatientVital {
+  id: string;
+  simulation_patient_id: string;
+  temperature?: number;
+  blood_pressure_systolic?: number;
+  blood_pressure_diastolic?: number;
+  heart_rate?: number;
+  respiratory_rate?: number;
+  oxygen_saturation?: number;
+  recorded_at: string;
+  recorded_by?: string;
+  notes?: string;
+  is_baseline: boolean;
+  created_at: string;
+}
+
+export interface SimulationPatientMedication {
+  id: string;
+  simulation_patient_id: string;
+  name: string;
+  category?: string;
+  dosage: string;
+  route: string;
+  frequency: string;
+  admin_time: string;
+  start_date: string;
+  end_date?: string;
+  prescribed_by: string;
+  status: string;
+  special_instructions?: string;
+  is_template: boolean;
+  created_at: string;
+}
+
+export interface SimulationMedicationAdministration {
+  id: string;
+  simulation_patient_id: string;
+  medication_id?: string;
+  medication_name: string;
+  dosage?: string;
+  route?: string;
+  administered_by: string;
+  administered_by_name?: string;
+  administered_at: string;
+  notes?: string;
+  status: 'completed' | 'missed' | 'late' | 'partial';
+  instructor_verified: boolean;
+  verification_notes?: string;
+}
+
+export interface SimulationPatientNote {
+  id: string;
+  simulation_patient_id: string;
+  created_by: string;
+  created_by_name?: string;
+  type: 'Assessment' | 'Medication' | 'Vital Signs' | 'General' | 'Incident';
+  content: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  is_template: boolean;
+  created_at: string;
+}
+
+export interface SimulationEvent {
+  id: string;
+  active_simulation_id: string;
+  event_type: string;
+  event_data: any;
+  student_id?: string;
+  student_name?: string;
+  patient_id?: string;
+  patient_name?: string;
+  timestamp: string;
+  notes?: string;
+  instructor_feedback?: string;
+  score?: number;
+}
+
+export interface SimulationAssessment {
+  id: string;
+  active_simulation_id: string;
+  student_id: string;
+  student_name?: string;
+  assessment_type: string;
+  criteria: string;
+  score: number;
+  feedback?: string;
+  assessed_by: string;
+  assessed_by_name?: string;
+  assessed_at: string;
+}
+
+// Request/Response types for API calls
+export interface CreateScenarioTemplateRequest {
+  name: string;
+  description?: string;
+  learning_objectives?: string[];
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  estimated_duration_minutes?: number;
+  tags?: string[];
+}
+
+export interface CreateSimulationRequest {
+  scenario_template_id: string;
+  session_name: string;
+  student_ids: string[];
+  simulation_notes?: string;
+}
+
+export interface CreateSimulationPatientRequest {
+  patient_name: string;
+  patient_id: string;
+  date_of_birth: string;
+  gender?: string;
+  room_number?: string;
+  bed_number?: string;
+  diagnosis?: string;
+  medical_history?: string;
+  allergies?: string[];
+  chief_complaint?: string;
+  patient_scenario?: string;
+}
