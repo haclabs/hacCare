@@ -9,10 +9,17 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
 import { useAlerts } from './hooks/useAlerts';
+import { useSimulation } from './contexts/SimulationContext';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { initializeModularPatientSystem } from './modular-patient-system';
 import { Patient } from './types';
+import SimulationModeIndicator from './components/simulations/SimulationModeIndicator';
+import SimulationRouter from './components/Simulation/SimulationRouter';
+import { useSimulationAwareAuth } from './contexts/auth/SimulationAwareAuthProvider';
+import SimulationSubTenantManager from './components/Simulation/SimulationSubTenantManager';
+import { useTenant } from './contexts/TenantContext';
+
 import { useAuth } from './hooks/useAuth';
 import BackupManagement from './components/Admin/BackupManagement';
 
@@ -24,7 +31,6 @@ const ManagementDashboard = lazy(() => import('./components/Management/Managemen
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./components/Settings/Settings'));
-const SimulationDashboard = lazy(() => import('./components/simulations/SimulationDashboard'));
 
 /**
  * Main Application Component
@@ -48,8 +54,10 @@ function App() {
     initializeModularPatientSystem();
   }, []);
 
-  // Authentication
+  // Authentication and simulation detection
   const { user, profile } = useAuth();
+  const { isSimulationUser } = useSimulationAwareAuth();
+  const { currentTenant } = useTenant();
 
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
@@ -59,7 +67,35 @@ function App() {
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
-  const { patients = [], error: dbError } = useMultiTenantPatients();
+  const { patients: livePatients = [], error: dbError } = useMultiTenantPatients();
+  
+  // Get simulation context
+  const { isSimulationMode, simulationPatients } = useSimulation();
+  
+  // Use simulation patients when in simulation mode, otherwise use live patients
+  const patients = isSimulationMode ? simulationPatients.map(sp => ({
+    id: sp.id,
+    patient_id: sp.patient_id,
+    tenant_id: '', // Simulation patients don't have tenant_id
+    first_name: sp.patient_name.split(' ')[0] || '',
+    last_name: sp.patient_name.split(' ').slice(1).join(' ') || '',
+    date_of_birth: sp.date_of_birth,
+    gender: sp.gender as 'Male' | 'Female' | 'Other' || 'Other',
+    room_number: sp.room_number || '',
+    bed_number: sp.bed_number || '',
+    admission_date: sp.admission_date || '',
+    condition: sp.condition as 'Critical' | 'Stable' | 'Improving' | 'Discharged' || 'Stable',
+    diagnosis: sp.diagnosis || '',
+    allergies: sp.allergies || [],
+    blood_type: sp.blood_type || '',
+    emergency_contact_name: sp.emergency_contact_name || '',
+    emergency_contact_relationship: sp.emergency_contact_relationship || '',
+    emergency_contact_phone: sp.emergency_contact_phone || '',
+    assigned_nurse: sp.assigned_nurse || '',
+    vitals: [],
+    medications: [],
+    notes: []
+  } as Patient)) : livePatients;
   
   // Get alerts from AlertContext (avoid React Query conflicts)
   const { alerts } = useAlerts();
@@ -469,6 +505,13 @@ function App() {
           </div>
         );
 
+      case 'simulations':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <SimulationSubTenantManager currentTenantId={currentTenant?.id || ''} />
+          </Suspense>
+        );
+
       case 'user-management':
         return (
           <Suspense fallback={<LoadingSpinner />}>
@@ -519,13 +562,6 @@ function App() {
           </div>
         );
       
-      case 'simulations':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <SimulationDashboard />
-          </Suspense>
-        );
-      
       case 'settings':
         return (
           <Suspense fallback={<LoadingSpinner />}>
@@ -540,6 +576,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
+      {/* Simulation Mode Indicator */}
+      <SimulationModeIndicator />
+      
       {/* Application Header */}
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
@@ -547,34 +586,38 @@ function App() {
         dbError={dbError?.message || null} 
       />
       
-      {/* Main Layout */}
-      <div className="flex">
-        {/* Sidebar Navigation - Always visible */}
-        <Sidebar 
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-        
-        {/* Main Content Area */}
-        <main className="flex-1 p-8">
-          <Routes>
-            <Route path="/patient/:id" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <ModularPatientDashboard 
-                  onShowBracelet={setBraceletPatient}
-                  currentUser={currentUser}
-                />
-              </Suspense>
-            } />
-            <Route path="/patient/:id/modular" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <ModularPatientSystemDemo />
-              </Suspense>
-            } />
-            <Route path="*" element={renderContent()} />
-          </Routes>
-        </main>
-      </div>
+      {/* Main Layout with Simulation-Aware Routing */}
+      <SimulationRouter>
+        <div className="flex">
+          {/* Sidebar Navigation - Hidden for simulation users in lobby */}
+          {!isSimulationUser && (
+            <Sidebar 
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          )}
+          
+          {/* Main Content Area */}
+          <main className={`flex-1 p-8 ${isSimulationUser ? 'w-full' : ''}`}>
+            <Routes>
+              <Route path="/patient/:id" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ModularPatientDashboard 
+                    onShowBracelet={setBraceletPatient}
+                    currentUser={currentUser}
+                  />
+                </Suspense>
+              } />
+              <Route path="/patient/:id/modular" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ModularPatientSystemDemo />
+                </Suspense>
+              } />
+              <Route path="*" element={renderContent()} />
+            </Routes>
+          </main>
+        </div>
+      </SimulationRouter>
 
       {/* Alert Panel Overlay */}
       <AlertPanel

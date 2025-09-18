@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Play, Pause, Square, RotateCcw, Users, Clock, Target, Edit, Trash2, Link, Copy } from 'lucide-react';
-import {
-  ScenarioTemplate,
-  ActiveSimulation,
-  CreateScenarioTemplateRequest,
-  CreateSimulationRequest
-} from '../../types';
-import {
-  getScenarioTemplates,
-  getActiveSimulations,
-  createScenarioTemplate,
-  createActiveSimulation,
-  updateSimulationStatus,
-  deleteActiveSimulation,
-  copyTemplateToActiveSimulation
-} from '../../lib/simulationService';
+import { Plus, Play, Pause, Square, RotateCcw, Users, Clock, Target, Edit, Trash2, Link, Copy, Settings } from 'lucide-react';
+import { SimulationSubTenantService, SimulationSubTenant, CreateSimulationRequest } from '../../lib/simulationSubTenantService';
+import { useTenant } from '../../contexts/TenantContext';
 import SimulationEditor from './SimulationEditor';
+
+interface SimulationDashboardProps {
+  className?: string;
+}
 
 interface SimulationDashboardProps {
   className?: string;

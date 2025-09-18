@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Save, Activity, TrendingUp, AlertTriangle } from 'lucide-react';
 
-import { useAuth } from '../contexts/auth/AuthContext';
+import { useAuth } from '../contexts/auth/SimulationAwareAuthProvider';
 import { 
   DiabeticRecord, 
   DiabeticRecordFormData,

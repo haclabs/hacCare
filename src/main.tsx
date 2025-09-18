@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { AuthProvider } from './contexts/auth/AuthContext';
+import { SimulationAwareAuthProvider } from './contexts/auth/SimulationAwareAuthProvider';
 import { PatientProvider } from './contexts/PatientContext';
 import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -48,7 +48,7 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AuthProvider>
+          <SimulationAwareAuthProvider>
             <TenantProvider>
               <SimulationProvider>
                 <AlertProvider>
@@ -60,7 +60,7 @@ createRoot(document.getElementById('root')!).render(
                 </AlertProvider>
               </SimulationProvider>
             </TenantProvider>
-          </AuthProvider>
+          </SimulationAwareAuthProvider>
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

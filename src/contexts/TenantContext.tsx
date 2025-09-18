@@ -9,7 +9,7 @@ import {
   getTenantBySubdomain
 } from '../lib/tenantService';
 import { getCurrentSubdomain } from '../lib/subdomainService';
-import { useAuth } from './auth/AuthContext';
+import { useAuth } from './auth/SimulationAwareAuthProvider';
 
 /**
  * Tenant Context Interface
