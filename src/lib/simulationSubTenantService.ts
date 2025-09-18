@@ -298,6 +298,8 @@ export class SimulationSubTenantService {
    */
   static async getSimulationUsers(simulationTenantId: string): Promise<SimulationUser[]> {
     try {
+      console.log('Getting simulation users for tenant:', simulationTenantId);
+      
       const { data, error } = await supabase
         .from('simulation_users')
         .select(`
@@ -309,6 +311,8 @@ export class SimulationSubTenantService {
           role
         `)
         .eq('simulation_tenant_id', simulationTenantId);
+
+      console.log('Simulation users query result:', { data, error });
 
       if (error) {
         throw new Error(`Failed to fetch simulation users: ${error.message}`);
@@ -823,16 +827,37 @@ export class SimulationSubTenantService {
    */
   static async getSimulationPatients(simulationTenantId: string): Promise<any[]> {
     try {
+      console.log('Getting simulation patients for tenant:', simulationTenantId);
+      
       // First, get the actual simulation ID from the tenant
       const { data: tenant, error: tenantError } = await supabase
         .from('tenants')
-        .select('simulation_id')
-        .eq('id', simulationTenantId)
-        .single();
+        .select('simulation_id, subdomain')
+        .eq('id', simulationTenantId);
 
-      if (tenantError || !tenant) {
-        throw new Error(`Failed to find simulation tenant: ${tenantError?.message}`);
+      console.log('Tenant query result:', { data: tenant, error: tenantError });
+
+      if (tenantError) {
+        throw new Error(`Failed to query simulation tenant: ${tenantError.message}`);
       }
+
+      if (!tenant || tenant.length === 0) {
+        console.log('No tenant found with ID:', simulationTenantId);
+        return []; // No tenant found, return empty array
+      }
+
+      if (tenant.length > 1) {
+        console.warn('Multiple tenants found with same ID, using first one');
+      }
+
+      const tenantRecord = tenant[0];
+      
+      if (!tenantRecord.simulation_id) {
+        console.log('Tenant has no simulation_id, returning empty patients array');
+        return []; // No simulation linked to this tenant
+      }
+
+      console.log('Found simulation ID:', tenantRecord.simulation_id);
 
       // Now get patients using the actual simulation ID
       const { data: patients, error } = await supabase
@@ -873,7 +898,9 @@ export class SimulationSubTenantService {
             created_at
           )
         `)
-        .eq('active_simulation_id', tenant.simulation_id);
+        .eq('active_simulation_id', tenantRecord.simulation_id);
+
+      console.log('Patients query result:', { data: patients, error });
 
       if (error) {
         throw new Error(`Failed to get simulation patients: ${error.message}`);
@@ -935,6 +962,131 @@ export class SimulationSubTenantService {
     } catch (error) {
       console.error('Error getting patient templates:', error);
       logError('Failed to get patient templates');
+      throw error;
+    }
+  }
+
+  /**
+   * Get available scenario templates for a tenant
+   */
+  static async getScenarioTemplates(tenantId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('scenario_templates')
+        .select(`
+          id,
+          name,
+          description,
+          difficulty_level,
+          estimated_duration_minutes,
+          learning_objectives,
+          tags
+        `)
+        .eq('tenant_id', tenantId)
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        throw new Error(`Failed to get scenario templates: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting scenario templates:', error);
+      logError('Failed to get scenario templates');
+      throw error;
+    }
+  }
+
+  /**
+   * Instantiate template patients for a simulation
+   */
+  static async instantiateTemplatePatients(simulationTenantId: string, scenarioTemplateId: string): Promise<any> {
+    try {
+      console.log('Instantiating template patients for simulation:', simulationTenantId, 'template:', scenarioTemplateId);
+      
+      // First get the simulation ID from the tenant
+      const { data: tenant, error: tenantError } = await supabase
+        .from('tenants')
+        .select('simulation_id')
+        .eq('id', simulationTenantId);
+
+      if (tenantError || !tenant || tenant.length === 0) {
+        throw new Error(`Failed to find simulation tenant: ${tenantError?.message || 'Tenant not found'}`);
+      }
+
+      const tenantRecord = tenant[0];
+      
+      if (!tenantRecord.simulation_id) {
+        throw new Error('Tenant has no simulation_id linked');
+      }
+
+      // Call the RPC function to instantiate patients
+      const { data, error } = await supabase.rpc('instantiate_simulation_patients', {
+        p_simulation_id: tenantRecord.simulation_id,
+        p_scenario_template_id: scenarioTemplateId
+      });
+
+      if (error) {
+        throw new Error(`Failed to instantiate template patients: ${error.message}`);
+      }
+
+      console.log('Template patients instantiated successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error instantiating template patients:', error);
+      logError('Failed to instantiate template patients');
+      throw error;
+    }
+  }
+
+  /**
+   * Reset simulation patients (clear and regenerate from template)
+   */
+  static async resetSimulationPatients(simulationTenantId: string): Promise<any> {
+    try {
+      console.log('Resetting simulation patients for:', simulationTenantId);
+      
+      // First get the simulation ID and scenario template ID from the tenant
+      const { data: tenant, error: tenantError } = await supabase
+        .from('tenants')
+        .select(`
+          simulation_id,
+          active_simulations!tenants_simulation_id_fkey (
+            scenario_template_id
+          )
+        `)
+        .eq('id', simulationTenantId);
+
+      if (tenantError || !tenant || tenant.length === 0) {
+        throw new Error(`Failed to find simulation tenant: ${tenantError?.message || 'Tenant not found'}`);
+      }
+
+      const tenantRecord = tenant[0];
+      
+      if (!tenantRecord.simulation_id) {
+        throw new Error('Tenant has no simulation_id linked');
+      }
+
+      const activeSimulation = tenantRecord.active_simulations as any;
+      if (!activeSimulation?.scenario_template_id) {
+        throw new Error('Simulation has no scenario template linked');
+      }
+
+      // Call the RPC function to reset and regenerate patients
+      const { data, error } = await supabase.rpc('reset_simulation_to_template', {
+        p_simulation_id: tenantRecord.simulation_id
+      });
+
+      if (error) {
+        throw new Error(`Failed to reset simulation patients: ${error.message}`);
+      }
+
+      console.log('Simulation patients reset successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error resetting simulation patients:', error);
+      logError('Failed to reset simulation patients');
       throw error;
     }
   }

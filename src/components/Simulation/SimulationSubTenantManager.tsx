@@ -14,6 +14,11 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'patients'>('users');
+  
+  // Template management state
+  const [scenarioTemplates, setScenarioTemplates] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [templatesLoading, setTemplatesLoading] = useState(false);
 
   // Form state for creating new simulation
   const [newSimulation, setNewSimulation] = useState<CreateSimulationRequest>({
@@ -30,6 +35,7 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
 
   useEffect(() => {
     loadSimulations();
+    loadScenarioTemplates();
   }, [currentTenantId]);
 
   useEffect(() => {
@@ -191,6 +197,63 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
         { username: '', email: '', role: 'student' }
       ]
     });
+  };
+
+  // Template management handlers
+  const loadScenarioTemplates = async () => {
+    if (!currentTenantId) return;
+    
+    try {
+      setTemplatesLoading(true);
+      const templates = await SimulationSubTenantService.getScenarioTemplates(currentTenantId);
+      setScenarioTemplates(templates);
+    } catch (error) {
+      console.error('Failed to load scenario templates:', error);
+      alert('Failed to load scenario templates');
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
+
+  const handleInstantiateTemplate = async () => {
+    if (!selectedSimulation || !selectedTemplate) {
+      alert('Please select a template');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await SimulationSubTenantService.instantiateTemplatePatients(selectedSimulation, selectedTemplate);
+      alert('Template patients added successfully!');
+      // Refresh the patients view
+      // The SimulationPatients component should automatically refresh
+    } catch (error) {
+      console.error('Failed to instantiate template patients:', error);
+      alert('Failed to add template patients: ' + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPatients = async () => {
+    if (!selectedSimulation) return;
+
+    if (!confirm('Are you sure you want to reset all patients? This will remove all current patients and regenerate them from the template.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await SimulationSubTenantService.resetSimulationPatients(selectedSimulation);
+      alert('Patients reset successfully!');
+      // Refresh the patients view
+      // The SimulationPatients component should automatically refresh
+    } catch (error) {
+      console.error('Failed to reset patients:', error);
+      alert('Failed to reset patients: ' + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const removeUserRow = (index: number) => {
@@ -386,15 +449,57 @@ ${credentials.users.map(user =>
                     </div>
                   )
                 ) : (
-                  <div className="h-96 overflow-y-auto">
-                    <SimulationPatients 
-                      simulationId={selectedSimulation}
-                      simulationStatus="running"
-                      onPatientDataChange={() => {
-                        // Refresh data if needed
-                        console.log('Patient data changed');
-                      }}
-                    />
+                  <div className="space-y-4">
+                    {/* Template Management Controls */}
+                    <div className="border-b pb-4">
+                      <h4 className="font-medium text-gray-900 mb-3">Patient Template Management</h4>
+                      <div className="flex flex-wrap gap-3">
+                        <div className="flex-1 min-w-0">
+                          <select
+                            value={selectedTemplate}
+                            onChange={(e) => setSelectedTemplate(e.target.value)}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            disabled={templatesLoading}
+                          >
+                            <option value="">Select a scenario template...</option>
+                            {scenarioTemplates.map(template => (
+                              <option key={template.id} value={template.id}>
+                                {template.name} ({template.difficulty_level})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button
+                          onClick={handleInstantiateTemplate}
+                          disabled={!selectedTemplate || loading}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 text-sm"
+                        >
+                          Add Template Patients
+                        </button>
+                        <button
+                          onClick={handleResetPatients}
+                          disabled={loading}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 text-sm"
+                        >
+                          Reset Patients
+                        </button>
+                      </div>
+                      {templatesLoading && (
+                        <p className="text-sm text-gray-500 mt-2">Loading templates...</p>
+                      )}
+                    </div>
+
+                    {/* Patients Display */}
+                    <div className="h-96 overflow-y-auto">
+                      <SimulationPatients 
+                        simulationId={selectedSimulation}
+                        simulationStatus="running"
+                        onPatientDataChange={() => {
+                          // Refresh data if needed
+                          console.log('Patient data changed');
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
