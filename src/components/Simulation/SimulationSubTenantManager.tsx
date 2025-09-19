@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, StopCircle, Link, Trash2, Users, RotateCcw, UserCheck } from 'lucide-react';
+import { Plus, StopCircle, Link, Trash2, Users, RotateCcw, UserCheck, FileText } from 'lucide-react';
 import { SimulationSubTenantService, CreateSimulationRequest, SimulationSubTenant, SimulationUser } from '../../lib/simulationSubTenantService';
 import SimulationPatients from '../simulations/SimulationPatients';
+import ScenarioTemplateManager from '../simulations/ScenarioTemplateManager';
+import EnhancedSimulationCreationModal from '../simulations/EnhancedSimulationCreationModal';
 
 interface Props {
   currentTenantId: string;
@@ -12,8 +14,10 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
   const [selectedSimulation, setSelectedSimulation] = useState<string | null>(null);
   const [simulationUsers, setSimulationUsers] = useState<SimulationUser[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEnhancedCreateModal, setShowEnhancedCreateModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'patients'>('users');
+  const [mainView, setMainView] = useState<'simulations' | 'templates'>('simulations');
   
   // Template management state
   const [scenarioTemplates, setScenarioTemplates] = useState<any[]>([]);
@@ -47,7 +51,19 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
   const loadSimulations = async () => {
     try {
       setLoading(true);
+      console.log('Loading simulations for tenant:', currentTenantId);
       const data = await SimulationSubTenantService.getSimulationSubTenants(currentTenantId);
+      console.log('Loaded simulations:', data);
+      
+      // Log each simulation's structure for debugging
+      data.forEach((sim, index) => {
+        console.log(`Simulation ${index}:`, {
+          id: sim.id,
+          name: sim.name,
+          simulation_id: sim.simulation_id
+        });
+      });
+      
       setSimulations(data);
     } catch (error) {
       console.error('Failed to load simulations:', error);
@@ -58,7 +74,9 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
 
   const loadSimulationUsers = async (simulationTenantId: string) => {
     try {
+      console.log('Loading users for simulation tenant:', simulationTenantId);
       const users = await SimulationSubTenantService.getSimulationUsers(simulationTenantId);
+      console.log('Loaded simulation users:', users);
       setSimulationUsers(users);
     } catch (error) {
       console.error('Failed to load simulation users:', error);
@@ -87,7 +105,9 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
         session_name: newSimulation.session_name.trim(),
       };
 
-      await SimulationSubTenantService.createSimulationEnvironment(simulationRequest);
+      console.log('Creating simulation with request:', simulationRequest);
+      const result = await SimulationSubTenantService.createSimulationEnvironment(simulationRequest);
+      console.log('Simulation creation result:', result);
       
       // Reset form
       setNewSimulation({
@@ -103,7 +123,18 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
       });
       
       setShowCreateForm(false);
+      console.log('Reloading simulations after creation...');
       await loadSimulations();
+      console.log('Simulations reloaded');
+      
+      // Auto-select the newly created simulation AFTER simulations are loaded
+      if (result?.tenant_id) {
+        console.log('Auto-selecting newly created simulation:', result.tenant_id);
+        // Add a small delay to ensure state is updated
+        setTimeout(() => {
+          setSelectedSimulation(result.tenant_id);
+        }, 100);
+      }
     } catch (error) {
       console.error('Failed to create simulation:', error);
       alert(`Failed to create simulation: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -267,13 +298,27 @@ export default function SimulationSubTenantManager({ currentTenantId }: Props) {
       
       // Create a downloadable text file with credentials
       const credentialsText = `
+=== SIMULATION LOGIN CREDENTIALS ===
 Simulation: ${credentials.simulation_name}
 Login URL: ${credentials.login_url}
 
-User Credentials:
+=== USER ACCOUNTS ===
 ${credentials.users.map(user => 
-  `Username: ${user.username} | Email: ${user.email} | Role: ${user.role} | Password: ${user.temporary_password || 'user-set'}`
+  `
+Username: ${user.username}
+Email: ${user.email || 'Not provided'}
+Role: ${user.role}
+Temporary Password: ${user.temporary_password}
+`
 ).join('\n')}
+
+=== IMPORTANT NOTES ===
+- These are temporary passwords for simulation purposes only
+- Passwords expire after 24 hours
+- Users should change their password after first login
+- If password shows "Contact instructor for password", please generate new credentials
+
+Generated on: ${new Date().toLocaleString()}
       `;
       
       const blob = new Blob([credentialsText], { type: 'text/plain' });
@@ -293,18 +338,63 @@ ${credentials.users.map(user =>
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Simulation Management</h2>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          disabled={loading}
-        >
-          <Plus className="w-4 h-4" />
-          Create Simulation
-        </button>
+        <div className="flex items-center gap-3">
+          {mainView === 'simulations' && (
+            <>
+              <button
+                onClick={() => setShowEnhancedCreateModal(true)}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                disabled={loading}
+              >
+                <Plus className="w-4 h-4" />
+                Create Simulation
+              </button>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+                disabled={loading}
+              >
+                <Plus className="w-4 h-4" />
+                Quick Create
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Simulations List */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Navigation Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setMainView('simulations')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+              mainView === 'simulations'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            Active Simulations
+          </button>
+          <button
+            onClick={() => setMainView('templates')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+              mainView === 'templates'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            Template Manager
+          </button>
+        </nav>
+      </div>
+
+      {/* Content Area */}
+      {mainView === 'simulations' ? (
+        <>
+          {/* Simulations List */}
+          <div className="grid md:grid-cols-2 gap-6">
         {/* Left Panel: Simulations */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-4 border-b border-gray-200">
@@ -613,6 +703,21 @@ ${credentials.users.map(user =>
           </div>
         </div>
       )}
+        </>
+      ) : (
+        <ScenarioTemplateManager currentTenantId={currentTenantId} />
+      )}
+
+      {/* Enhanced Simulation Creation Modal */}
+      <EnhancedSimulationCreationModal
+        currentTenantId={currentTenantId}
+        isOpen={showEnhancedCreateModal}
+        onClose={() => setShowEnhancedCreateModal(false)}
+        onSuccess={() => {
+          setShowEnhancedCreateModal(false);
+          loadSimulations();
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { PasswordGenerator } from './passwordGenerator';
 
 export interface SimulationSubTenant {
   id: string;
@@ -40,6 +41,30 @@ const logError = (message: string) => {
 };
 
 export class SimulationSubTenantService {
+  // Temporary storage for generated passwords (in production, use secure storage)
+  private static temporaryPasswords: Map<string, { password: string; expires: number }> = new Map();
+  
+  /**
+   * Store a temporary password for a user
+   */
+  private static storeTemporaryPassword(userId: string, password: string): void {
+    // Store password with 24-hour expiration
+    const expires = Date.now() + (24 * 60 * 60 * 1000);
+    this.temporaryPasswords.set(userId, { password, expires });
+  }
+  
+  /**
+   * Retrieve a temporary password for a user
+   */
+  private static getTemporaryPassword(userId: string): string | null {
+    const stored = this.temporaryPasswords.get(userId);
+    if (!stored || stored.expires < Date.now()) {
+      this.temporaryPasswords.delete(userId);
+      return null;
+    }
+    return stored.password;
+  }
+
   /**
    * Creates a complete simulation environment with sub-tenant and users
    */
@@ -142,6 +167,9 @@ export class SimulationSubTenantService {
       const users: SimulationUser[] = [];
         for (const userRequest of request.users) {
         try {
+          // Generate a temporary password if none provided
+          const temporaryPassword = userRequest.password || PasswordGenerator.generateTemporaryPassword();
+          
           const { data: userId, error: userError } = await supabase.rpc(
             'add_simulation_user',
             {
@@ -149,7 +177,7 @@ export class SimulationSubTenantService {
               p_email: userRequest.email,
               p_username: userRequest.username,
               p_role: userRequest.role,
-              p_password: userRequest.password || null,
+              p_password: temporaryPassword,
             }
           );
 
@@ -157,6 +185,9 @@ export class SimulationSubTenantService {
             console.warn(`Failed to add user ${userRequest.username}:`, userError);
             // Continue with other users instead of failing completely
           } else {
+            // Store the temporary password for later retrieval
+            this.storeTemporaryPassword(userId, temporaryPassword);
+            
             users.push({
               id: userId,
               simulation_tenant_id: subTenant,
@@ -436,116 +467,105 @@ export class SimulationSubTenantService {
   }
 
   /**
-   * Delete a simulation and all its data
+   * Delete a simulation and all associated data
+   * @param simulationTenantId - The tenant ID (not the simulation ID)
    */
-  static async deleteSimulation(simulationId: string): Promise<void> {
+  static async deleteSimulation(simulationTenantId: string): Promise<void> {
     try {
-      // First, find the tenant(s) associated with this simulation
-      const { data: tenants, error: tenantError } = await supabase
+      console.log('Deleting simulation for tenant ID:', simulationTenantId);
+      
+      // First, get the tenant information and the linked simulation ID
+      const { data: tenant, error: tenantError } = await supabase
         .from('tenants')
-        .select('id, simulation_id, name')
-        .eq('simulation_id', simulationId)
-        .eq('tenant_type', 'simulation');
+        .select('id, simulation_id, name, tenant_type')
+        .eq('id', simulationTenantId)
+        .single();
 
       if (tenantError) {
-        throw new Error(`Failed to query simulation tenants: ${tenantError.message}`);
+        throw new Error(`Failed to query simulation tenant: ${tenantError.message}`);
       }
 
-      // Handle different scenarios
-      if (!tenants || tenants.length === 0) {
-        console.warn('No simulation tenant found - deleting simulation directly');
-        // Just delete the active simulation directly
-        const { error: simError } = await supabase
-          .from('active_simulations')
-          .delete()
-          .eq('id', simulationId);
-
-        if (simError) {
-          throw new Error(`Failed to delete orphaned simulation: ${simError.message}`);
-        }
-
-        // Verify deletion worked
-        const { data: checkData, error: checkError } = await supabase
-          .from('active_simulations')
-          .select('id')
-          .eq('id', simulationId);
-
-        if (checkError) {
-          console.warn('Could not verify deletion:', checkError);
-        } else if (checkData && checkData.length > 0) {
-          throw new Error('Simulation deletion failed - record still exists');
-        }
-
-        logSuccess('Orphaned simulation deleted successfully');
-        return;
+      if (!tenant) {
+        throw new Error('Simulation tenant not found');
       }
 
-      if (tenants.length > 1) {
-        console.warn('Multiple tenants found for simulation - deleting all');
+      if (tenant.tenant_type !== 'simulation') {
+        throw new Error('This is not a simulation tenant');
       }
 
-      // Delete all tenants and their associated data
-      for (const tenant of tenants) {
-        const simulationTenantId = tenant.id;
-        console.log(`Processing tenant ${simulationTenantId} for simulation ${simulationId}`);
+      console.log('Found simulation tenant:', tenant);
 
-        // First, check what simulation_users exist for this tenant
-        const { data: existingUsers, error: checkError } = await supabase
-          .from('simulation_users')
-          .select('id, username, simulation_tenant_id')
-          .eq('simulation_tenant_id', simulationTenantId);
-
-        if (checkError) {
-          console.warn('Warning: Could not check existing users:', checkError);
-        } else {
-          console.log(`Found ${existingUsers?.length || 0} users for tenant ${simulationTenantId}:`, existingUsers);
-        }
-
-        // Use the safe deletion RPC function that bypasses RLS
-        console.log(`Attempting to safely delete tenant ${simulationTenantId} with all related data`);
+      const actualSimulationId = tenant.simulation_id;
+      
+      if (!actualSimulationId) {
+        console.warn('Tenant has no linked simulation - deleting tenant only');
+        // Use safe deletion for tenant without simulation
         const { error: safeDeleteError } = await supabase.rpc('delete_simulation_tenant_safe', {
           p_tenant_id: simulationTenantId
         });
 
         if (safeDeleteError) {
-          console.error('Safe deletion failed:', safeDeleteError);
-          throw new Error(`Failed to delete simulation tenant ${simulationTenantId}: ${safeDeleteError.message}`);
+          throw new Error(`Failed to delete simulation tenant: ${safeDeleteError.message}`);
         }
 
-        console.log(`✅ Successfully deleted tenant ${simulationTenantId} and all related data`);
+        logSuccess('Simulation tenant deleted successfully');
+        return;
       }
 
-      // Delete patients and related data (vitals, medications, notes will cascade)
-      const { error: patientsError } = await supabase
-        .from('simulation_patients')
-        .delete()
-        .eq('active_simulation_id', simulationId);
+      console.log('Deleting simulation with ID:', actualSimulationId);
 
-      if (patientsError) {
-        console.warn('Warning: Failed to delete simulation patients:', patientsError);
+      // Check if there are other tenants linked to this same simulation
+      const { data: otherTenants, error: otherTenantsError } = await supabase
+        .from('tenants')
+        .select('id, name')
+        .eq('simulation_id', actualSimulationId)
+        .neq('id', simulationTenantId);
+
+      if (otherTenantsError) {
+        console.warn('Could not check for other tenants:', otherTenantsError);
       }
 
-      // Now delete the active simulation (no more foreign key constraints)
-      const { error: simError } = await supabase
-        .from('active_simulations')
-        .delete()
-        .eq('id', simulationId);
+      // Use the safe deletion RPC function that bypasses RLS
+      console.log(`Attempting to safely delete tenant ${simulationTenantId} with all related data`);
+      const { error: safeDeleteError } = await supabase.rpc('delete_simulation_tenant_safe', {
+        p_tenant_id: simulationTenantId
+      });
 
-      if (simError) {
-        console.warn('Warning: Failed to delete active simulation:', simError);
-        // Don't throw here since the main cleanup is done
+      if (safeDeleteError) {
+        console.error('Safe deletion failed:', safeDeleteError);
+        throw new Error(`Failed to delete simulation tenant: ${safeDeleteError.message}`);
       }
 
-      // Verify deletion worked
-      const { data: checkData, error: checkError } = await supabase
-        .from('active_simulations')
-        .select('id')
-        .eq('id', simulationId);
+      console.log(`✅ Successfully deleted tenant ${simulationTenantId} and all related data`);
 
-      if (checkError) {
-        console.warn('Could not verify deletion:', checkError);
-      } else if (checkData && checkData.length > 0) {
-        throw new Error('Simulation deletion failed - record still exists');
+      // If there are no other tenants linked to this simulation, delete the simulation data too
+      if (!otherTenants || otherTenants.length === 0) {
+        console.log('No other tenants found - deleting simulation data');
+        
+        // Delete patients and related data (vitals, medications, notes will cascade)
+        const { error: patientsError } = await supabase
+          .from('simulation_patients')
+          .delete()
+          .eq('active_simulation_id', actualSimulationId);
+
+        if (patientsError) {
+          console.warn('Warning: Failed to delete simulation patients:', patientsError);
+        }
+
+        // Now delete the active simulation (no more foreign key constraints)
+        const { error: simError } = await supabase
+          .from('active_simulations')
+          .delete()
+          .eq('id', actualSimulationId);
+
+        if (simError) {
+          console.warn('Warning: Failed to delete active simulation:', simError);
+          // Don't throw here since the main cleanup is done
+        }
+
+        console.log('✅ Deleted simulation data for ID:', actualSimulationId);
+      } else {
+        console.log(`Found ${otherTenants.length} other tenants linked to this simulation - keeping simulation data`);
       }
 
       logSuccess('Simulation deleted successfully');
@@ -600,13 +620,16 @@ export class SimulationSubTenantService {
 
       return {
         simulation_name: simulation.session_name,
-        login_url: `${window.location.origin}/login?simulation=${simulationTenantId}`,
-        users: users.map(user => ({
-          username: user.username,
-          email: user.email || '',
-          role: user.role,
-          temporary_password: '***generated***', // In real implementation, store/generate these
-        })),
+        login_url: `${window.location.origin}/simulation-login?simulation=${simulationTenantId}&name=${encodeURIComponent(simulation.session_name)}`,
+        users: users.map(user => {
+          const temporaryPassword = this.getTemporaryPassword(user.user_id);
+          return {
+            username: user.username,
+            email: user.email || '',
+            role: user.role,
+            temporary_password: temporaryPassword || 'Contact instructor for password',
+          };
+        }),
       };
     } catch (error) {
       console.error('Error getting simulation credentials:', error);
@@ -873,30 +896,7 @@ export class SimulationSubTenantService {
           room_number,
           bed_number,
           template_id,
-          simulation_patient_vitals (
-            vital_type,
-            value_systolic,
-            value_diastolic,
-            value_numeric,
-            value_text,
-            unit,
-            recorded_at
-          ),
-          simulation_patient_medications (
-            medication_name,
-            dosage,
-            route,
-            frequency,
-            indication,
-            is_prn,
-            is_active
-          ),
-          simulation_patient_notes (
-            note_type,
-            note_content,
-            created_by_name,
-            created_at
-          )
+          created_at
         `)
         .eq('active_simulation_id', tenantRecord.simulation_id);
 
@@ -931,21 +931,21 @@ export class SimulationSubTenantService {
           condition,
           allergies,
           blood_type,
-          simulation_vitals_templates (
+          patient_vitals_templates (
             vital_type,
             value_systolic,
             value_diastolic,
             value_numeric,
             unit
           ),
-          simulation_medications_templates (
+          patient_medications_templates (
             medication_name,
             dosage,
             route,
             frequency,
             indication
           ),
-          simulation_notes_templates (
+          patient_notes_templates (
             note_type,
             note_content,
             created_by_role
@@ -967,10 +967,72 @@ export class SimulationSubTenantService {
   }
 
   /**
+   * Authenticate a simulation user using username/password
+   */
+  static async authenticateSimulationUser(
+    username: string, 
+    password: string, 
+    simulationTenantId?: string
+  ): Promise<{
+    success: boolean;
+    user?: {
+      user_id: string;
+      username: string;
+      email: string;
+      role: string;
+      tenant_id: string;
+      tenant_name: string;
+      simulation_id: string;
+    };
+    error?: string;
+  }> {
+    try {
+      console.log('Authenticating simulation user:', username, 'in tenant:', simulationTenantId);
+      
+      const { data, error } = await supabase.rpc('authenticate_simulation_user', {
+        p_username: username,
+        p_password: password,
+        p_simulation_tenant_id: simulationTenantId || null
+      });
+
+      if (error) {
+        console.error('Authentication error:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (!data || data.length === 0) {
+        console.log('No matching user found');
+        return { success: false, error: 'Invalid username or password' };
+      }
+
+      const user = data[0];
+      console.log('Authentication successful for user:', user.username);
+      
+      return { 
+        success: true, 
+        user: {
+          user_id: user.user_id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          tenant_id: user.tenant_id,
+          tenant_name: user.tenant_name,
+          simulation_id: user.simulation_id
+        }
+      };
+    } catch (error) {
+      console.error('Failed to authenticate simulation user:', error);
+      return { success: false, error: 'Authentication failed' };
+    }
+  }
+
+  /**
    * Get available scenario templates for a tenant
    */
   static async getScenarioTemplates(tenantId: string): Promise<any[]> {
     try {
+      console.log('Getting scenario templates for tenant:', tenantId);
+      
       const { data, error } = await supabase
         .from('scenario_templates')
         .select(`
@@ -985,6 +1047,8 @@ export class SimulationSubTenantService {
         .eq('tenant_id', tenantId)
         .eq('is_active', true)
         .order('name');
+
+      console.log('Scenario templates query result:', { data, error, tenantId });
 
       if (error) {
         throw new Error(`Failed to get scenario templates: ${error.message}`);
@@ -1087,6 +1151,462 @@ export class SimulationSubTenantService {
     } catch (error) {
       console.error('Error resetting simulation patients:', error);
       logError('Failed to reset simulation patients');
+      throw error;
+    }
+  }
+
+  // Additional Template Management Methods
+  static async createScenarioTemplate(tenantId: string, template: any): Promise<any> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('scenario_templates')
+        .insert({
+          tenant_id: tenantId,
+          name: template.name,
+          description: template.description,
+          learning_objectives: template.learning_objectives || [],
+          difficulty_level: template.difficulty_level || 'beginner',
+          estimated_duration_minutes: template.estimated_duration_minutes || 30,
+          tags: template.tags || [],
+          is_active: template.is_active ?? true,
+          created_by: user.id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating scenario template:', error);
+        throw error;
+      }
+
+      logSuccess('Scenario template created successfully');
+      return data;
+    } catch (error) {
+      console.error('Failed to create scenario template:', error);
+      logError('Failed to create scenario template');
+      throw error;
+    }
+  }
+
+  static async createPatientTemplate(scenarioTemplateId: string, template: any): Promise<any> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated');
+      }
+
+      // Debug logging
+      console.log('Creating patient template with data:', {
+        scenarioTemplateId,
+        template_name: template.template_name,
+        patient_name: template.patient_name,
+        template: template
+      });
+
+      const { data, error } = await supabase
+        .from('simulation_patient_templates')
+        .insert({
+          scenario_template_id: scenarioTemplateId,
+          template_name: template.template_name || template.patient_name || 'Untitled Template',
+          patient_name: template.patient_name,
+          age: template.age,
+          gender: template.gender,
+          date_of_birth: template.date_of_birth,
+          room_number: template.room_number,
+          bed_number: template.bed_number,
+          diagnosis: template.diagnosis,
+          condition: template.condition || 'Stable',
+          allergies: template.allergies || [],
+          blood_type: template.blood_type,
+          emergency_contact_name: template.emergency_contact_name,
+          emergency_contact_relationship: template.emergency_contact_relationship,
+          emergency_contact_phone: template.emergency_contact_phone,
+          assigned_nurse: template.assigned_nurse,
+          is_active: template.is_active ?? true
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating patient template:', error);
+        throw error;
+      }
+
+      logSuccess('Patient template created successfully');
+      return data;
+    } catch (error) {
+      console.error('Failed to create patient template:', error);
+      logError('Failed to create patient template');
+      throw error;
+    }
+  }
+
+  /**
+   * Update an existing patient template
+   */
+  static async updatePatientTemplate(templateId: string, template: any): Promise<any> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated');
+      }
+
+      // Debug logging
+      console.log('Updating patient template with data:', {
+        templateId,
+        template_name: template.template_name,
+        patient_name: template.patient_name,
+        template: template
+      });
+
+      const { data, error } = await supabase
+        .from('simulation_patient_templates')
+        .update({
+          template_name: template.template_name || template.patient_name || 'Untitled Template',
+          patient_name: template.patient_name,
+          age: template.age,
+          gender: template.gender,
+          date_of_birth: template.date_of_birth,
+          room_number: template.room_number,
+          bed_number: template.bed_number,
+          diagnosis: template.diagnosis,
+          condition: template.condition || 'Stable',
+          allergies: template.allergies || [],
+          blood_type: template.blood_type,
+          emergency_contact_name: template.emergency_contact_name,
+          emergency_contact_relationship: template.emergency_contact_relationship,
+          emergency_contact_phone: template.emergency_contact_phone,
+          assigned_nurse: template.assigned_nurse,
+          is_active: template.is_active ?? true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', templateId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating patient template:', error);
+        throw error;
+      }
+
+      logSuccess('Patient template updated successfully');
+      return data;
+    } catch (error) {
+      console.error('Failed to update patient template:', error);
+      logError('Failed to update patient template');
+      throw error;
+    }
+  }
+
+  /**
+   * Save or update patient template (create if new, update if existing)
+   */
+  static async savePatientTemplate(scenarioTemplateId: string, template: any): Promise<any> {
+    if (template.id) {
+      // Update existing template
+      return this.updatePatientTemplate(template.id, template);
+    } else {
+      // Create new template
+      return this.createPatientTemplate(scenarioTemplateId, template);
+    }
+  }
+
+  // User Management Methods for Enhanced Simulation Creation
+  static async getExistingTenantUsers(tenantId: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('user_tenant_associations')
+        .select(`
+          user_id,
+          role,
+          users!inner (
+            id,
+            email,
+            username,
+            full_name,
+            last_sign_in_at,
+            user_metadata
+          )
+        `)
+        .eq('tenant_id', tenantId)
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Error fetching tenant users:', error);
+        throw error;
+      }
+
+      // Transform the data to match the expected format
+      const users = (data || []).map((association: any) => ({
+        id: association.users.id,
+        email: association.users.email,
+        username: association.users.username || association.users.email?.split('@')[0],
+        full_name: association.users.full_name,
+        role: association.role,
+        last_sign_in_at: association.users.last_sign_in_at,
+        is_simulation_user: association.users.user_metadata?.is_simulation_user || false
+      }));
+
+      return users;
+    } catch (error) {
+      console.error('Failed to fetch tenant users:', error);
+      // Return empty array if there's an error rather than throwing
+      return [];
+    }
+  }
+
+  /**
+   * Save patient vitals templates
+   */
+  static async savePatientVitalsTemplates(patientTemplateId: string, vitalsTemplates: any[]): Promise<any> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated');
+      }
+
+      // First, delete existing vitals templates for this patient
+      await supabase
+        .from('patient_vitals_templates')
+        .delete()
+        .eq('patient_template_id', patientTemplateId);
+
+      // Insert new vitals templates
+      const vitalsToInsert = vitalsTemplates.map(vital => ({
+        patient_template_id: patientTemplateId,
+        vital_type: vital.vital_type,
+        value_systolic: vital.value_systolic,
+        value_diastolic: vital.value_diastolic,
+        value_numeric: vital.value_numeric,
+        unit: vital.unit,
+        normal_range_min: vital.normal_range_min,
+        normal_range_max: vital.normal_range_max,
+        notes: vital.notes || '',
+        frequency_minutes: vital.frequency_minutes || 60,
+        is_critical: vital.is_critical || false,
+        display_order: vital.display_order || 0,
+        created_by: user.id
+      }));
+
+      if (vitalsToInsert.length > 0) {
+        const { data, error } = await supabase
+          .from('patient_vitals_templates')
+          .insert(vitalsToInsert)
+          .select();
+
+        if (error) {
+          throw error;
+        }
+
+        logSuccess(`Saved ${vitalsToInsert.length} vitals templates`);
+        return data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Failed to save vitals templates:', error);
+      logError('Failed to save vitals templates');
+      throw error;
+    }
+  }
+
+  /**
+   * Save patient medications templates
+   */
+  static async savePatientMedicationsTemplates(patientTemplateId: string, medicationsTemplates: any[]): Promise<any> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated');
+      }
+
+      // First, delete existing medication templates for this patient
+      await supabase
+        .from('patient_medications_templates')
+        .delete()
+        .eq('patient_template_id', patientTemplateId);
+
+      // Insert new medication templates
+      const medicationsToInsert = medicationsTemplates.map(med => ({
+        patient_template_id: patientTemplateId,
+        medication_name: med.medication_name,
+        generic_name: med.generic_name,
+        dosage: med.dosage,
+        route: med.route,
+        frequency: med.frequency,
+        indication: med.indication,
+        contraindications: med.contraindications,
+        side_effects: med.side_effects || [],
+        is_prn: med.is_prn || false,
+        prn_parameters: med.prn_parameters,
+        start_date: med.start_date,
+        end_date: med.end_date,
+        max_dose_per_day: med.max_dose_per_day,
+        notes: med.notes || '',
+        barcode: med.barcode,
+        display_order: med.display_order || 0,
+        is_active: med.is_active ?? true,
+        created_by: user.id
+      }));
+
+      if (medicationsToInsert.length > 0) {
+        const { data, error } = await supabase
+          .from('patient_medications_templates')
+          .insert(medicationsToInsert)
+          .select();
+
+        if (error) {
+          throw error;
+        }
+
+        logSuccess(`Saved ${medicationsToInsert.length} medication templates`);
+        return data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Failed to save medication templates:', error);
+      logError('Failed to save medication templates');
+      throw error;
+    }
+  }
+
+  /**
+   * Save patient notes templates
+   */
+  static async savePatientNotesTemplates(patientTemplateId: string, notesTemplates: any[]): Promise<any> {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User must be authenticated');
+      }
+
+      // First, delete existing notes templates for this patient
+      await supabase
+        .from('patient_notes_templates')
+        .delete()
+        .eq('patient_template_id', patientTemplateId);
+
+      // Insert new notes templates
+      const notesToInsert = notesTemplates.map(note => ({
+        patient_template_id: patientTemplateId,
+        note_type: note.note_type,
+        note_title: note.note_title,
+        note_content: note.note_content,
+        created_by_role: note.created_by_role,
+        timestamp_offset_hours: note.timestamp_offset_hours || 0,
+        is_locked: note.is_locked || false,
+        requires_signature: note.requires_signature || false,
+        tags: note.tags || [],
+        display_order: note.display_order || 0,
+        created_by: user.id
+      }));
+
+      if (notesToInsert.length > 0) {
+        const { data, error } = await supabase
+          .from('patient_notes_templates')
+          .insert(notesToInsert)
+          .select();
+
+        if (error) {
+          throw error;
+        }
+
+        logSuccess(`Saved ${notesToInsert.length} note templates`);
+        return data;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Failed to save note templates:', error);
+      logError('Failed to save note templates');
+      throw error;
+    }
+  }
+
+  /**
+   * Save complete patient template with all related data
+   */
+  static async saveCompletePatientTemplate(
+    scenarioTemplateId: string, 
+    patientInfo: any, 
+    vitals: any[], 
+    medications: any[], 
+    notes: any[]
+  ): Promise<any> {
+    try {
+      // Save or update the patient template
+      const patientTemplate = await this.savePatientTemplate(scenarioTemplateId, patientInfo);
+      
+      // Then save all the related templates
+      await Promise.all([
+        this.savePatientVitalsTemplates(patientTemplate.id, vitals),
+        this.savePatientMedicationsTemplates(patientTemplate.id, medications),
+        this.savePatientNotesTemplates(patientTemplate.id, notes)
+      ]);
+
+      logSuccess('Complete patient template saved successfully');
+      return patientTemplate;
+    } catch (error) {
+      console.error('Failed to save complete patient template:', error);
+      logError('Failed to save complete patient template');
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a scenario template and all related data
+   */
+  static async deleteScenarioTemplate(scenarioTemplateId: string): Promise<boolean> {
+    try {
+      console.log('Deleting scenario template:', scenarioTemplateId);
+      
+      const { data, error } = await supabase.rpc('delete_scenario_template', {
+        p_scenario_template_id: scenarioTemplateId
+      });
+
+      if (error) {
+        console.error('Failed to delete scenario template:', error);
+        logError('Failed to delete scenario template');
+        throw error;
+      }
+
+      logSuccess('Scenario template deleted successfully');
+      return data || true;
+    } catch (error) {
+      console.error('Failed to delete scenario template:', error);
+      logError('Failed to delete scenario template');
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a patient template and all related data
+   */
+  static async deletePatientTemplate(patientTemplateId: string): Promise<boolean> {
+    try {
+      console.log('Deleting patient template:', patientTemplateId);
+      
+      const { data, error } = await supabase.rpc('delete_patient_template', {
+        p_patient_template_id: patientTemplateId
+      });
+
+      if (error) {
+        console.error('Failed to delete patient template:', error);
+        logError('Failed to delete patient template');
+        throw error;
+      }
+
+      logSuccess('Patient template deleted successfully');
+      return data || true;
+    } catch (error) {
+      console.error('Failed to delete patient template:', error);
+      logError('Failed to delete patient template');
       throw error;
     }
   }

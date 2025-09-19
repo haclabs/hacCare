@@ -72,16 +72,24 @@ const PatientTemplateEditor: React.FC<PatientTemplateEditorProps> = ({
   const [saving, setSaving] = useState(false);
 
   // Patient Info State
-  const [patientInfo, setPatientInfo] = useState<PatientTemplate>({
-    scenario_template_id: scenarioId,
-    template_name: '',
-    patient_name: '',
-    age: 30,
-    gender: 'Male',
-    diagnosis: '',
-    condition: 'Stable',
-    allergies: [],
-    ...editingTemplate
+  const [patientInfo, setPatientInfo] = useState<PatientTemplate>(() => {
+    const defaultInfo = {
+      scenario_template_id: scenarioId,
+      template_name: '',
+      patient_name: '',
+      age: 30,
+      gender: 'Male' as const,
+      diagnosis: '',
+      condition: 'Stable' as const,
+      allergies: []
+    };
+    
+    // If editing an existing template, merge with defaults
+    if (editingTemplate) {
+      return { ...defaultInfo, ...editingTemplate };
+    }
+    
+    return defaultInfo;
   });
 
   // Vitals State
@@ -102,6 +110,67 @@ const PatientTemplateEditor: React.FC<PatientTemplateEditorProps> = ({
   ]);
 
   const [newAllergy, setNewAllergy] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load existing template data when editing
+  useEffect(() => {
+    const loadTemplateData = async () => {
+      if (editingTemplate?.id) {
+        console.log('Loading template data for editing:', editingTemplate.id);
+        try {
+          setLoading(true);
+          setError(null);
+          
+          // Import supabase directly
+          const { supabase } = await import('../../lib/supabase');
+          
+          // Load related vitals templates
+          const vitalsData = await supabase
+            .from('patient_vitals_templates')
+            .select('*')
+            .eq('patient_template_id', editingTemplate.id);
+          
+          if (vitalsData.data) {
+            setVitals(vitalsData.data);
+          }
+
+          // Load related medications templates
+          const medicationsData = await supabase
+            .from('patient_medications_templates')
+            .select('*')
+            .eq('patient_template_id', editingTemplate.id);
+          
+          if (medicationsData.data) {
+            setMedications(medicationsData.data);
+          }
+
+          // Load related notes templates
+          const notesData = await supabase
+            .from('patient_notes_templates')
+            .select('*')
+            .eq('patient_template_id', editingTemplate.id);
+          
+          if (notesData.data) {
+            setNotes(notesData.data);
+          }
+
+          console.log('Loaded template data:', { 
+            vitals: vitalsData.data, 
+            medications: medicationsData.data, 
+            notes: notesData.data 
+          });
+        } catch (error) {
+          console.error('Error loading template data:', error);
+          setError('Failed to load template data');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadTemplateData();
+  }, [editingTemplate?.id]);
 
   const handleAddAllergy = () => {
     if (newAllergy.trim() && !patientInfo.allergies?.includes(newAllergy.trim())) {
@@ -183,13 +252,17 @@ const PatientTemplateEditor: React.FC<PatientTemplateEditorProps> = ({
       setSaving(true);
 
       // Validate required fields
-      if (!patientInfo.template_name.trim() || !patientInfo.patient_name.trim() || !patientInfo.diagnosis.trim()) {
+      console.log('Validating template data:', {
+        template_name: patientInfo.template_name,
+        patient_name: patientInfo.patient_name,
+        diagnosis: patientInfo.diagnosis
+      });
+
+      if (!patientInfo.template_name?.trim() || !patientInfo.patient_name?.trim() || !patientInfo.diagnosis?.trim()) {
         alert('Please fill in all required fields (Template Name, Patient Name, Diagnosis)');
         return;
       }
 
-      // In a real implementation, you would save to the database here
-      // For now, we'll just simulate the save operation
       console.log('Saving patient template:', {
         patientInfo,
         vitals,
@@ -197,15 +270,21 @@ const PatientTemplateEditor: React.FC<PatientTemplateEditorProps> = ({
         notes
       });
 
-      // You would call SimulationSubTenantService methods here:
-      // await SimulationSubTenantService.savePatientTemplate(patientInfo, vitals, medications, notes);
+      // Save the complete patient template
+      await SimulationSubTenantService.saveCompletePatientTemplate(
+        scenarioId,
+        patientInfo,
+        vitals,
+        medications,
+        notes
+      );
 
       alert('Patient template saved successfully!');
       onSave();
       onClose();
     } catch (error) {
       console.error('Error saving patient template:', error);
-      alert('Failed to save patient template. Please try again.');
+      alert(`Failed to save patient template: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -223,6 +302,28 @@ const PatientTemplateEditor: React.FC<PatientTemplateEditorProps> = ({
             <X className="h-6 w-6" />
           </button>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="mx-6 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <p className="ml-3 text-sm text-blue-800">Loading template data...</p>
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
