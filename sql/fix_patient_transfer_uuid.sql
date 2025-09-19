@@ -1,8 +1,12 @@
--- SQL functions to support patient transfer operations
+-- Fix patient transfer function to use correct UUID fields for vitals and medications
+
+DROP FUNCTION IF EXISTS duplicate_patient_to_tenant(TEXT, UUID, TEXT, BOOLEAN, BOOLEAN, BOOLEAN, BOOLEAN);
+DROP FUNCTION IF EXISTS move_patient_to_tenant(TEXT, UUID);
+DROP FUNCTION IF EXISTS get_available_tenants_for_transfer(TEXT);
 
 -- Function to safely duplicate patient with all related data
 CREATE OR REPLACE FUNCTION duplicate_patient_to_tenant(
-    p_source_patient_id TEXT,  -- Use TEXT for patient_id
+    p_source_patient_id TEXT,  -- Use TEXT for patient_id lookup
     p_target_tenant_id UUID,
     p_new_patient_id TEXT DEFAULT NULL,
     p_include_vitals BOOLEAN DEFAULT true,
@@ -11,7 +15,7 @@ CREATE OR REPLACE FUNCTION duplicate_patient_to_tenant(
     p_include_assessments BOOLEAN DEFAULT true
 ) RETURNS TABLE (
     new_patient_id UUID,
-    new_patient_identifier VARCHAR(255),  -- Match the actual column type
+    new_patient_identifier VARCHAR(255),
     records_created JSONB
 ) AS $$
 DECLARE
@@ -102,10 +106,10 @@ BEGIN
         NOW()
     ) RETURNING id INTO v_new_patient_id;
     
-    -- Copy vitals if requested
+    -- Copy vitals if requested (using UUID patient_id fields)
     IF p_include_vitals THEN
         INSERT INTO patient_vitals (
-            patient_id,
+            patient_id,          -- UUID field
             temperature,
             blood_pressure_systolic,
             blood_pressure_diastolic,
@@ -113,10 +117,10 @@ BEGIN
             respiratory_rate,
             oxygen_saturation,
             recorded_at,
-            created_at
+            tenant_id
         )
         SELECT 
-            v_new_patient_id,
+            v_new_patient_id,    -- New patient's UUID
             temperature,
             blood_pressure_systolic,
             blood_pressure_diastolic,
@@ -124,95 +128,52 @@ BEGIN
             respiratory_rate,
             oxygen_saturation,
             recorded_at,
-            NOW()
+            p_target_tenant_id
         FROM patient_vitals
-        WHERE patient_id = v_source_patient_uuid;  -- Use UUID for vitals lookup
+        WHERE patient_id = v_source_patient_uuid;  -- Source patient's UUID
         
         GET DIAGNOSTICS v_vitals_count = ROW_COUNT;
     END IF;
     
-    -- Copy medications if requested
+    -- Copy medications if requested (using UUID patient_id fields)
     IF p_include_medications THEN
         INSERT INTO patient_medications (
-            patient_id,
-            medication_name,
+            patient_id,          -- UUID field
+            name,
             dosage,
             route,
             frequency,
             start_date,
             end_date,
             prescribed_by,
-            notes,
-            is_active,
-            created_at
+            status,
+            category,
+            admin_time,
+            tenant_id,
+            created_at,
+            last_administered,
+            next_due
         )
         SELECT 
-            v_new_patient_id,
-            medication_name,
+            v_new_patient_id,    -- New patient's UUID
+            name,
             dosage,
             route,
             frequency,
             start_date,
             end_date,
             prescribed_by,
-            notes,
-            is_active,
-            NOW()
+            status,
+            category,
+            admin_time,
+            p_target_tenant_id,
+            NOW(),
+            last_administered,
+            COALESCE(next_due, NOW())  -- Use existing next_due or default to NOW()
         FROM patient_medications
-        WHERE patient_id = v_source_patient_uuid;  -- Use UUID for medications lookup
+        WHERE patient_id = v_source_patient_uuid;  -- Source patient's UUID
         
         GET DIAGNOSTICS v_medications_count = ROW_COUNT;
-    END IF;
-    
-    -- Copy notes if requested
-    IF p_include_notes THEN
-        INSERT INTO patient_notes (
-            patient_id,
-            note_type,
-            note_content,
-            created_by,
-            is_locked,
-            created_at
-        )
-        SELECT 
-            v_new_patient_id,
-            note_type,
-            note_content,
-            created_by,
-            is_locked,
-            NOW()
-        FROM patient_notes
-        WHERE patient_id = v_source_patient_uuid;  -- Use UUID for notes lookup
-        
-        GET DIAGNOSTICS v_notes_count = ROW_COUNT;
-    END IF;
-    
-    -- Copy assessments if requested (if table exists)
-    IF p_include_assessments THEN
-        BEGIN
-            INSERT INTO patient_assessments (
-                patient_id,
-                assessment_type,
-                assessment_data,
-                performed_by,
-                performed_at,
-                created_at
-            )
-            SELECT 
-                v_new_patient_id,
-                assessment_type,
-                assessment_data,
-                performed_by,
-                performed_at,
-                NOW()
-            FROM patient_assessments
-            WHERE patient_id = v_source_patient_uuid;  -- Use UUID for assessments lookup
-            
-            GET DIAGNOSTICS v_assessments_count = ROW_COUNT;
-        EXCEPTION WHEN undefined_table THEN
-            -- Table doesn't exist, skip
-            v_assessments_count := 0;
-        END;
     END IF;
     
     -- Return results
@@ -220,79 +181,103 @@ BEGIN
         v_new_patient_id,
         v_new_patient_identifier,
         jsonb_build_object(
-            'vitals', v_vitals_count,
-            'medications', v_medications_count,
-            'notes', v_notes_count,
-            'assessments', v_assessments_count
+            'vitals_copied', v_vitals_count,
+            'medications_copied', v_medications_count,
+            'notes_copied', v_notes_count,
+            'assessments_copied', v_assessments_count
         );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to move patient between tenants
+-- Function to move patient between tenants (preserves patient_id string but updates tenant)
 CREATE OR REPLACE FUNCTION move_patient_to_tenant(
-    p_patient_id UUID,
+    p_source_patient_id TEXT,
     p_target_tenant_id UUID
-) RETURNS BOOLEAN AS $$
+) RETURNS TABLE (
+    patient_id UUID,
+    patient_identifier VARCHAR(255),
+    records_updated JSONB
+) AS $$
+DECLARE
+    v_patient_uuid UUID;
+    v_patient_identifier VARCHAR(255);
+    v_vitals_count INTEGER := 0;
+    v_medications_count INTEGER := 0;
 BEGIN
+    -- Get patient UUID and identifier
+    SELECT id, patients.patient_id INTO v_patient_uuid, v_patient_identifier
+    FROM patients 
+    WHERE patients.patient_id = p_source_patient_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Patient not found with patient_id: %', p_source_patient_id;
+    END IF;
+    
     -- Update patient tenant
     UPDATE patients 
     SET tenant_id = p_target_tenant_id,
         updated_at = NOW()
-    WHERE id = p_patient_id;
+    WHERE id = v_patient_uuid;
     
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Patient not found';
-    END IF;
+    -- Update vitals tenant
+    UPDATE patient_vitals 
+    SET tenant_id = p_target_tenant_id
+    WHERE patient_id = v_patient_uuid;
     
-    -- Update related records that have tenant_id (if they exist)
-    BEGIN
-        UPDATE patient_medications 
-        SET tenant_id = p_target_tenant_id 
-        WHERE patient_id = p_patient_id;
-    EXCEPTION WHEN undefined_column THEN
-        -- Column doesn't exist, skip
-        NULL;
-    END;
+    GET DIAGNOSTICS v_vitals_count = ROW_COUNT;
     
-    BEGIN
-        UPDATE patient_notes 
-        SET tenant_id = p_target_tenant_id 
-        WHERE patient_id = p_patient_id;
-    EXCEPTION WHEN undefined_column THEN
-        -- Column doesn't exist, skip
-        NULL;
-    END;
+    -- Update medications tenant
+    UPDATE patient_medications 
+    SET tenant_id = p_target_tenant_id
+    WHERE patient_id = v_patient_uuid;
     
-    RETURN TRUE;
+    GET DIAGNOSTICS v_medications_count = ROW_COUNT;
+    
+    -- Return results
+    RETURN QUERY SELECT 
+        v_patient_uuid,
+        v_patient_identifier,
+        jsonb_build_object(
+            'vitals_updated', v_vitals_count,
+            'medications_updated', v_medications_count
+        );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to get available tenants for transfer (excluding source)
-CREATE OR REPLACE FUNCTION get_available_tenants_for_transfer(p_source_patient_id TEXT)  -- Changed to TEXT
-RETURNS TABLE (
+-- Function to get available tenants for transfer
+CREATE OR REPLACE FUNCTION get_available_tenants_for_transfer(
+    p_source_patient_id TEXT
+) RETURNS TABLE (
     tenant_id UUID,
-    tenant_name VARCHAR(255),  -- Match actual column type
-    subdomain VARCHAR(255)     -- Match actual column type
+    tenant_name VARCHAR(255),
+    subdomain VARCHAR(100)
 ) AS $$
+DECLARE
+    v_source_tenant_id UUID;
 BEGIN
-    RETURN QUERY
+    -- Get source patient's tenant
+    SELECT patients.tenant_id INTO v_source_tenant_id
+    FROM patients 
+    WHERE patient_id = p_source_patient_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Patient not found with patient_id: %', p_source_patient_id;
+    END IF;
+    
+    -- Return all tenants except the source tenant
+    RETURN QUERY 
     SELECT 
         t.id,
         t.name,
         t.subdomain
     FROM tenants t
-    WHERE t.id != (
-        SELECT p.tenant_id 
-        FROM patients p 
-        WHERE p.patient_id = p_source_patient_id  -- Use patient_id instead of id
-    )
-    -- Remove tenant_type restriction to show all available tenants
-    -- AND t.tenant_type = 'institution'
+    WHERE t.id != v_source_tenant_id
+    AND t.status = 'active'
     ORDER BY t.name;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Grant permissions
 GRANT EXECUTE ON FUNCTION duplicate_patient_to_tenant(TEXT, UUID, TEXT, BOOLEAN, BOOLEAN, BOOLEAN, BOOLEAN) TO authenticated;
-GRANT EXECUTE ON FUNCTION move_patient_to_tenant(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION move_patient_to_tenant(TEXT, UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_available_tenants_for_transfer(TEXT) TO authenticated;

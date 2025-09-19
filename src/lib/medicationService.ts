@@ -81,10 +81,44 @@ import { Medication, MedicationAdministration } from '../types';
     }
     
     // Regular patient medications
+    let patientUUID: string;
+    
+    // Check if patientId is already a UUID (36 chars with hyphens) or a patient_id string
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(patientId);
+    
+    if (isUUID) {
+      // patientId is already a UUID, use it directly
+      patientUUID = patientId;
+      console.log('🔍 DEBUGGING: Using provided UUID directly:', patientUUID);
+    } else {
+      // patientId is a patient_id string, need to resolve to UUID
+      console.log('🔍 DEBUGGING: Resolving patient_id string to UUID:', patientId);
+      
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('patient_id', patientId)
+        .single();
+
+      if (patientError) {
+        console.error('❌ DEBUGGING: Error finding patient UUID:', patientError);
+        throw new Error(`Patient not found: ${patientId}`);
+      }
+
+      if (!patientData) {
+        console.log('⚠️ DEBUGGING: Patient not found with patient_id:', patientId);
+        return [];
+      }
+
+      patientUUID = patientData.id;
+      console.log('🔍 DEBUGGING: Patient UUID for', patientId, 'is:', patientUUID);
+    }
+
+    // Now query medications using the patient's UUID
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')
-      .eq('patient_id', patientId)
+      .eq('patient_id', patientUUID)
       .order('created_at', { ascending: false });
 
     console.log('🔍 DEBUGGING: Supabase query response:', { data, error });
