@@ -3,8 +3,8 @@ import { Patient } from '../types';
 import { logAction } from './auditService';
 
 /**
- * Patient Transfer Service
- * Handles moving and duplicating patients between tenants
+ * Patient Transfer Service - Updated to use SQL functions
+ * Handles moving and duplicating patients between tenants using database functions
  */
 
 export interface PatientTransferOptions {
@@ -23,10 +23,11 @@ export interface PatientTransferResult {
   newPatientId?: string;
   message: string;
   error?: string;
+  recordsCopied?: any;
 }
 
 /**
- * Move or duplicate a patient to another tenant
+ * Move or duplicate a patient to another tenant using SQL functions
  */
 export const transferPatient = async (options: PatientTransferOptions): Promise<PatientTransferResult> => {
   const {
@@ -41,323 +42,149 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
   } = options;
 
   try {
-    console.log(`${preserveOriginal ? 'Duplicating' : 'Moving'} patient ${sourcePatientId} to tenant ${targetTenantId}`);
-
-    // 1. Get the source patient with all data
-    const { data: sourcePatient, error: patientError } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('id', sourcePatientId)
-      .single();
-
-    if (patientError || !sourcePatient) {
-      return {
-        success: false,
-        message: 'Source patient not found',
-        error: patientError?.message
-      };
-    }
-
-    // 2. Verify target tenant exists
-    const { data: targetTenant, error: tenantError } = await supabase
-      .from('tenants')
-      .select('id, name')
-      .eq('id', targetTenantId)
-      .single();
-
-    if (tenantError || !targetTenant) {
-      return {
-        success: false,
-        message: 'Target tenant not found',
-        error: tenantError?.message
-      };
-    }
-
-    // 3. Generate new patient ID if duplicating
-    const finalPatientId = preserveOriginal 
-      ? (newPatientId || await generateUniquePatientId(targetTenantId))
-      : sourcePatient.patient_id;
-
-    // 4. Create/update patient record
-    const patientData = {
-      ...sourcePatient,
-      tenant_id: targetTenantId,
-      patient_id: finalPatientId,
-      created_at: preserveOriginal ? new Date().toISOString() : sourcePatient.created_at,
-      updated_at: new Date().toISOString()
-    };
-
-    let resultPatientId: string;
+    console.log(`🔄 ${preserveOriginal ? 'Duplicating' : 'Moving'} patient ${sourcePatientId} to tenant ${targetTenantId}`);
+    console.log(`📋 Transfer options:`, { transferVitals, transferMedications, transferNotes, transferAssessments });
 
     if (preserveOriginal) {
-      // Create new patient record (duplicate)
-      delete patientData.id; // Remove ID so a new one is generated
+      // Use SQL function for duplication - more reliable
+      console.log('🔧 Calling duplicate_patient_to_tenant SQL function...');
       
-      const { data: newPatient, error: createError } = await supabase
-        .from('patients')
-        .insert(patientData)
-        .select()
-        .single();
+      const { data, error } = await supabase
+        .rpc('duplicate_patient_to_tenant', {
+          p_source_patient_id: sourcePatientId,
+          p_target_tenant_id: targetTenantId,
+          p_new_patient_id: newPatientId || null,
+          p_include_vitals: transferVitals,
+          p_include_medications: transferMedications,
+          p_include_notes: transferNotes,
+          p_include_assessments: transferAssessments
+        });
 
-      if (createError) {
+      if (error) {
+        console.error('❌ SQL function error:', error);
         return {
           success: false,
-          message: 'Failed to create duplicate patient',
-          error: createError.message
+          message: 'Failed to duplicate patient',
+          error: error.message
         };
       }
 
-      resultPatientId = newPatient.id;
-    } else {
-      // Move existing patient (update tenant_id)
-      const { error: updateError } = await supabase
-        .from('patients')
-        .update({ 
-          tenant_id: targetTenantId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', sourcePatientId);
+      console.log('✅ SQL function response:', data);
+      
+      if (!data || data.length === 0) {
+        return {
+          success: false,
+          message: 'No data returned from duplication function',
+          error: 'Empty response from database function'
+        };
+      }
 
-      if (updateError) {
+      const result = data[0];
+      console.log('📊 Duplication result:', result);
+
+      // Log the action
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await logAction(
+          user,
+          'duplicate_patient',
+          result.new_patient_id,
+          'patient',
+          {
+            sourcePatientId,
+            targetTenantId,
+            newPatientId: result.new_patient_id,
+            recordsCopied: result.records_created
+          }
+        );
+      } catch (logError) {
+        console.warn('⚠️ Failed to log action:', logError);
+      }
+
+      return {
+        success: true,
+        newPatientId: result.new_patient_id,
+        message: `Patient duplicated successfully! New ID: ${result.new_patient_identifier}`,
+        recordsCopied: result.records_created
+      };
+    } else {
+      // Use SQL function for moving
+      console.log('🔧 Calling move_patient_to_tenant SQL function...');
+      
+      const { data, error } = await supabase
+        .rpc('move_patient_to_tenant', {
+          p_patient_id: sourcePatientId,
+          p_target_tenant_id: targetTenantId
+        });
+
+      if (error) {
+        console.error('❌ SQL function error:', error);
         return {
           success: false,
           message: 'Failed to move patient',
-          error: updateError.message
+          error: error.message
         };
       }
 
-      resultPatientId = sourcePatientId;
-    }
+      console.log('✅ Move result:', data);
 
-    // 5. Transfer related data if requested
-    const transferPromises: Promise<any>[] = [];
-
-    if (transferVitals) {
-      transferPromises.push(transferPatientVitals(sourcePatientId, resultPatientId, preserveOriginal));
-    }
-
-    if (transferMedications) {
-      transferPromises.push(transferPatientMedications(sourcePatientId, resultPatientId, preserveOriginal));
-    }
-
-    if (transferNotes) {
-      transferPromises.push(transferPatientNotes(sourcePatientId, resultPatientId, preserveOriginal));
-    }
-
-    if (transferAssessments) {
-      transferPromises.push(transferPatientAssessments(sourcePatientId, resultPatientId, preserveOriginal));
-    }
-
-    // Wait for all transfers to complete
-    await Promise.all(transferPromises);
-
-    // 6. Log the action
-    const { data: { user } } = await supabase.auth.getUser();
-    const action = preserveOriginal ? 'duplicated_patient' : 'moved_patient';
-    const details = {
-      source_patient_id: sourcePatientId,
-      target_tenant_id: targetTenantId,
-      new_patient_id: resultPatientId,
-      transferred_data: {
-        vitals: transferVitals,
-        medications: transferMedications,
-        notes: transferNotes,
-        assessments: transferAssessments
+      // Log the action
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        await logAction(
+          user,
+          'move_patient',
+          sourcePatientId,
+          'patient',
+          {
+            sourcePatientId,
+            targetTenantId
+          }
+        );
+      } catch (logError) {
+        console.warn('⚠️ Failed to log action:', logError);
       }
-    };
 
-    await logAction(user, action, resultPatientId, 'patient', details);
-
-    return {
-      success: true,
-      newPatientId: resultPatientId,
-      message: preserveOriginal 
-        ? `Patient duplicated successfully to ${targetTenant.name}`
-        : `Patient moved successfully to ${targetTenant.name}`
-    };
-
+      return {
+        success: true,
+        newPatientId: sourcePatientId, // Same ID when moving
+        message: 'Patient moved successfully'
+      };
+    }
   } catch (error) {
-    console.error('Patient transfer error:', error);
+    console.error('💥 Transfer error:', error);
     return {
       success: false,
       message: 'Transfer failed due to unexpected error',
-      error: (error as Error).message
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
 
 /**
- * Generate a unique patient ID for a tenant
- */
-const generateUniquePatientId = async (tenantId: string): Promise<string> => {
-  // Get the tenant's subdomain for prefix
-  const { data: tenant } = await supabase
-    .from('tenants')
-    .select('subdomain')
-    .eq('id', tenantId)
-    .single();
-
-  const prefix = tenant?.subdomain?.substring(0, 3).toUpperCase() || 'PT';
-  
-  // Find the next available number
-  const { data: existingPatients } = await supabase
-    .from('patients')
-    .select('patient_id')
-    .eq('tenant_id', tenantId)
-    .like('patient_id', `${prefix}%`);
-
-  const existingNumbers = existingPatients
-    ?.map(p => parseInt(p.patient_id.replace(prefix, '')))
-    .filter(n => !isNaN(n))
-    .sort((a, b) => b - a) || [];
-
-  const nextNumber = existingNumbers.length > 0 ? existingNumbers[0] + 1 : 1;
-  return `${prefix}${nextNumber.toString().padStart(3, '0')}`;
-};
-
-/**
- * Transfer patient vitals
- */
-const transferPatientVitals = async (sourcePatientId: string, targetPatientId: string, duplicate: boolean) => {
-  const { data: vitals } = await supabase
-    .from('patient_vitals')
-    .select('*')
-    .eq('patient_id', sourcePatientId);
-
-  if (!vitals || vitals.length === 0) return;
-
-  if (duplicate) {
-    // Create new vitals records
-    const newVitals = vitals.map(vital => ({
-      ...vital,
-      patient_id: targetPatientId,
-      id: undefined, // Let the database generate new IDs
-      created_at: new Date().toISOString()
-    }));
-
-    await supabase.from('patient_vitals').insert(newVitals);
-  } else {
-    // Update existing vitals to point to moved patient
-    await supabase
-      .from('patient_vitals')
-      .update({ patient_id: targetPatientId })
-      .eq('patient_id', sourcePatientId);
-  }
-};
-
-/**
- * Transfer patient medications
- */
-const transferPatientMedications = async (sourcePatientId: string, targetPatientId: string, duplicate: boolean) => {
-  const { data: medications } = await supabase
-    .from('patient_medications')
-    .select('*')
-    .eq('patient_id', sourcePatientId);
-
-  if (!medications || medications.length === 0) return;
-
-  if (duplicate) {
-    const newMedications = medications.map(med => ({
-      ...med,
-      patient_id: targetPatientId,
-      id: undefined,
-      created_at: new Date().toISOString()
-    }));
-
-    await supabase.from('patient_medications').insert(newMedications);
-  } else {
-    await supabase
-      .from('patient_medications')
-      .update({ patient_id: targetPatientId })
-      .eq('patient_id', sourcePatientId);
-  }
-};
-
-/**
- * Transfer patient notes
- */
-const transferPatientNotes = async (sourcePatientId: string, targetPatientId: string, duplicate: boolean) => {
-  const { data: notes } = await supabase
-    .from('patient_notes')
-    .select('*')
-    .eq('patient_id', sourcePatientId);
-
-  if (!notes || notes.length === 0) return;
-
-  if (duplicate) {
-    const newNotes = notes.map(note => ({
-      ...note,
-      patient_id: targetPatientId,
-      id: undefined,
-      created_at: new Date().toISOString()
-    }));
-
-    await supabase.from('patient_notes').insert(newNotes);
-  } else {
-    await supabase
-      .from('patient_notes')
-      .update({ patient_id: targetPatientId })
-      .eq('patient_id', sourcePatientId);
-  }
-};
-
-/**
- * Transfer patient assessments
- */
-const transferPatientAssessments = async (sourcePatientId: string, targetPatientId: string, duplicate: boolean) => {
-  const { data: assessments } = await supabase
-    .from('patient_assessments')
-    .select('*')
-    .eq('patient_id', sourcePatientId);
-
-  if (!assessments || assessments.length === 0) return;
-
-  if (duplicate) {
-    const newAssessments = assessments.map(assessment => ({
-      ...assessment,
-      patient_id: targetPatientId,
-      id: undefined,
-      created_at: new Date().toISOString()
-    }));
-
-    await supabase.from('patient_assessments').insert(newAssessments);
-  } else {
-    await supabase
-      .from('patient_assessments')
-      .update({ patient_id: targetPatientId })
-      .eq('patient_id', sourcePatientId);
-  }
-};
-
-/**
- * Get available tenants for transfer (excluding source tenant)
+ * Get available tenants for transfer (excluding source patient's tenant)
  */
 export const getAvailableTenantsForTransfer = async (sourcePatientId: string) => {
-  // Get source patient's tenant
-  const { data: sourcePatient } = await supabase
-    .from('patients')
-    .select('tenant_id')
-    .eq('id', sourcePatientId)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .rpc('get_available_tenants_for_transfer', {
+        p_source_patient_id: sourcePatientId
+      });
 
-  // Get all tenants except the source tenant
-  const { data: tenants, error } = await supabase
-    .from('tenants')
-    .select('id, name, subdomain')
-    .neq('id', sourcePatient?.tenant_id || '')
-    .eq('tenant_type', 'institution') // Only regular tenants, not simulations
-    .order('name');
+    if (error) {
+      console.error('Error getting available tenants:', error);
+      return [];
+    }
 
-  if (error) {
-    console.error('Error fetching tenants:', error);
+    return data || [];
+  } catch (error) {
+    console.error('Unexpected error getting tenants:', error);
     return [];
   }
-
-  return tenants || [];
 };
 
 /**
- * Check if patient can be transferred (permissions, etc.)
+ * Check if a patient can be transferred
  */
 export const canTransferPatient = async (patientId: string): Promise<{ canTransfer: boolean; reason?: string }> => {
   try {
@@ -369,20 +196,55 @@ export const canTransferPatient = async (patientId: string): Promise<{ canTransf
       .single();
 
     if (error || !patient) {
-      return { canTransfer: false, reason: 'Patient not found' };
+      return {
+        canTransfer: false,
+        reason: 'Patient not found'
+      };
     }
 
-    // Check user permissions (basic check - extend as needed)
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { canTransfer: false, reason: 'User not authenticated' };
+    // Check if there are available target tenants
+    const availableTenants = await getAvailableTenantsForTransfer(patientId);
+    
+    if (availableTenants.length === 0) {
+      return {
+        canTransfer: false,
+        reason: 'No available target tenants'
+      };
     }
 
-    // Add additional permission checks here as needed
-    // For example, check if user has admin role, or belongs to source tenant, etc.
-
-    return { canTransfer: true };
+    return {
+      canTransfer: true
+    };
   } catch (error) {
-    return { canTransfer: false, reason: 'Permission check failed' };
+    return {
+      canTransfer: false,
+      reason: 'Error checking transfer eligibility'
+    };
+  }
+};
+
+/**
+ * Test the SQL functions are working
+ */
+export const testSQLFunctions = async () => {
+  try {
+    console.log('🧪 Testing SQL functions...');
+    
+    // Test get_available_tenants_for_transfer
+    const { data: testTenants, error: tenantError } = await supabase
+      .rpc('get_available_tenants_for_transfer', {
+        p_source_patient_id: '00000000-0000-0000-0000-000000000000' // Dummy ID
+      });
+    
+    if (tenantError) {
+      console.error('❌ get_available_tenants_for_transfer failed:', tenantError);
+      return false;
+    }
+    
+    console.log('✅ get_available_tenants_for_transfer works, returned:', testTenants?.length || 0, 'tenants');
+    return true;
+  } catch (error) {
+    console.error('❌ SQL function test failed:', error);
+    return false;
   }
 };
