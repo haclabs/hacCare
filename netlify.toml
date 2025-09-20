@@ -6,19 +6,3 @@
   NODE_ENV = "production"
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
-
-# SPA redirects - catch all routes and serve index.html
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-# Security headers
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
-    Referrer-Policy = "same-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

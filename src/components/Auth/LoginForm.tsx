@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, Info, Wifi, WifiOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Wifi, WifiOff, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useTenantBranding } from '../../hooks/useTenantBranding';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
-import { TenantLogo } from '../UI/TenantLogo';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +12,6 @@ export const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected' | null>(null);
   const { signIn } = useAuth();
-  const { tenant } = useTenantBranding();
 
   // Check database connection on component mount
   React.useEffect(() => {
@@ -117,12 +114,20 @@ export const LoginForm: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-6">
-          {/* Tenant-specific logo with fallback to default HacCare branding */}
-          <TenantLogo 
-            tenant={tenant}
-            size="large"
-            showSubtitle={true}
-          />
+          {/* Custom HacCare Logo with Heart */}
+          <div className="flex justify-center items-center mb-1">
+            <div className="flex items-center">
+              {/* HacCare Text */}
+              <div className="text-left">
+                <h1 className="text-4xl font-bold text-gray-800 leading-none">
+                  haccare
+                </h1>
+                <p className="text-sm text-gray-500 font-medium mt-1">
+                  patient record system
+                </p>
+              </div>
+            </div>
+          </div>
           <p className="text-gray-500 text-sm mt-2">Secure Portal Access</p>
         </div>
 

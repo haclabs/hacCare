@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Plus, Edit, Trash2, Search, Eye, 
-  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw, ArrowRightLeft 
+  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw, ArrowRightLeft, Printer 
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { usePatients } from '../../hooks/usePatients';
@@ -10,6 +10,7 @@ import { useSimulation } from '../../contexts/SimulationContext';
 import { PatientForm } from './forms/PatientForm';
 import SimulationPatientForm from './forms/SimulationPatientForm';
 import PatientTransferModal from './PatientTransferModal';
+import BulkLabelPrint from '../Admin/BulkLabelPrint';
 
 /**
  * Patient Management Component
@@ -43,6 +44,7 @@ export const PatientManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [patientToTransfer, setPatientToTransfer] = useState<Patient | null>(null);
+  const [showBulkPrint, setShowBulkPrint] = useState(false);
   const [filterCondition, setFilterCondition] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'room' | 'admission' | 'condition'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -253,6 +255,14 @@ export const PatientManagement: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowBulkPrint(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+            title="Print all patient and medication labels"
+          >
+            <Printer className="h-4 w-4" />
+            <span>Bulk Print Labels</span>
+          </button>
           <button
             onClick={refreshPatients}
             disabled={loading}
@@ -594,6 +604,27 @@ export const PatientManagement: React.FC = () => {
           }}
           onTransferComplete={handleTransferComplete}
         />
+      )}
+
+      {/* Bulk Label Print Modal */}
+      {showBulkPrint && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Bulk Label Printing
+              </h3>
+              <button
+                onClick={() => setShowBulkPrint(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Close</span>
+                ✕
+              </button>
+            </div>
+            <BulkLabelPrint />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -51,11 +51,7 @@ class BCMAService {
 
   // Generate patient barcode ID - also shortened
   generatePatientBarcode(patient: Patient): string {
-    // If patient_id already starts with PT, return it as is
-    if (patient.patient_id.startsWith('PT')) {
-      return patient.patient_id.toUpperCase();
-    }
-    // Otherwise, use last 8 characters of patient_id and add PT prefix
+    // Use last 8 characters of patient_id for shorter barcode
     const shortId = patient.patient_id.slice(-8).toUpperCase();
     return `PT${shortId}`;
   }
