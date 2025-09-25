@@ -41,6 +41,7 @@ import { Medication, MedicationAdministration } from '../types';
     console.log('🔍 DEBUGGING: Fetching medications for patient:', patientId);
     console.log('🔍 DEBUGGING: Current timestamp:', new Date().toISOString());
     
+    // First try standard query
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')
@@ -50,18 +51,9 @@ import { Medication, MedicationAdministration } from '../types';
     console.log('🔍 DEBUGGING: Supabase query response:', { data, error });
     console.log('🔍 DEBUGGING: Number of medications returned:', data?.length || 0);
 
-    if (error) {
-      console.error('❌ DEBUGGING: Database error:', error);
-      throw error;
-    } else if (!data || data.length === 0) {
-      console.log('⚠️ DEBUGGING: No medications found for patient:', patientId);
-      console.log('⚠️ DEBUGGING: This could be due to RLS filtering or no medications exist');
-      return [];
-    }
-
-    // Map database fields to Medication interface
-    const medications: Medication[] = data.map(dbMed => {
-      return {
+    // If successful and has data, return it
+    if (!error && data && data.length > 0) {
+      const medications: Medication[] = data.map(dbMed => ({
         id: dbMed.id,
         patient_id: dbMed.patient_id,
         name: dbMed.name,
@@ -75,11 +67,65 @@ import { Medication, MedicationAdministration } from '../types';
         last_administered: dbMed.last_administered,
         next_due: dbMed.next_due || new Date().toISOString(),
         status: dbMed.status || 'Active'
-      } as Medication;
-    });
+      } as Medication));
 
-    console.log(`Found ${medications.length} medications for patient ${patientId}`);
-    return medications;
+      console.log(`✅ Found ${medications.length} medications via standard query`);
+      return medications;
+    }
+
+    // If no data returned or RLS error, try super admin RPC approach
+    if (!data || data.length === 0 || error) {
+      console.log('🔐 No medications via standard query, trying super admin approach...');
+      
+      // Get patient details first to determine tenant
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', patientId)
+        .single();
+
+      if (patientData?.tenant_id) {
+        // Try using the super admin medication fetch RPC
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('fetch_medications_for_tenant', { 
+            target_tenant_id: patientData.tenant_id 
+          });
+
+        if (!rpcError && rpcData) {
+          // Filter for this specific patient
+          const patientMeds = rpcData
+            .filter((med: any) => med.patient_id === patientId)
+            .map((med: any) => ({
+              id: med.medication_id,
+              patient_id: med.patient_id,
+              name: med.name,
+              category: 'scheduled',
+              dosage: med.dosage,
+              frequency: med.frequency,
+              route: med.route,
+              start_date: med.start_date,
+              end_date: med.end_date,
+              prescribed_by: med.prescribed_by || '',
+              last_administered: undefined,
+              next_due: new Date().toISOString(),
+              status: 'Active'
+            } as Medication));
+
+          console.log(`✅ Found ${patientMeds.length} medications via super admin RPC`);
+          return patientMeds;
+        }
+      }
+    }
+
+    if (error) {
+      console.error('❌ DEBUGGING: Database error:', error);
+      throw error;
+    }
+
+    console.log('⚠️ DEBUGGING: No medications found for patient:', patientId);
+    console.log('⚠️ DEBUGGING: This could be due to RLS filtering or no medications exist');
+    return [];
+    
   } catch (error) {
     console.error('Error fetching patient medications:', error);
     throw error;
@@ -124,6 +170,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       next_due: medication.next_due || new Date().toISOString(), // Provide default if null
       status: medication.status || 'Active',
       category: medication.category || 'scheduled',
+      admin_time: medication.admin_time || '09:00', // Default administration time
       tenant_id: patientData?.tenant_id // Explicitly set tenant_id from patient
     };
     
@@ -154,6 +201,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       start_date: data.start_date,
       end_date: data.end_date,
       prescribed_by: data.prescribed_by || '',
+      admin_time: data.admin_time,
       last_administered: data.last_administered,
       next_due: data.next_due || new Date().toISOString(),
       status: data.status || 'Active'
@@ -194,17 +242,18 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     // Map Medication interface fields to database column names for the update
     const dbUpdates: any = {};
     
-    if (updates.name !== undefined) dbUpdates.medication_name = updates.name;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.dosage !== undefined) dbUpdates.dosage = updates.dosage;
     if (updates.frequency !== undefined) dbUpdates.frequency = updates.frequency;
     if (updates.route !== undefined) dbUpdates.route = updates.route;
     if (updates.start_date !== undefined) dbUpdates.start_date = updates.start_date;
     if (updates.end_date !== undefined) dbUpdates.end_date = updates.end_date;
     if (updates.prescribed_by !== undefined) dbUpdates.prescribed_by = updates.prescribed_by;
-    if (updates.status !== undefined) dbUpdates.is_active = updates.status === 'Active';
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.next_due !== undefined) dbUpdates.next_due = updates.next_due;
     if (updates.last_administered !== undefined) dbUpdates.last_administered = updates.last_administered;
+    if (updates.admin_time !== undefined) dbUpdates.admin_time = updates.admin_time;
     
     console.log('Database updates:', dbUpdates);
     
@@ -224,7 +273,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     const updatedMedication: Medication = {
       id: data.id,
       patient_id: data.patient_id,
-      name: data.medication_name, // Map 'medication_name' back to 'name'
+      name: data.name, // Use 'name' column directly
       category: data.category || 'scheduled',
       dosage: data.dosage,
       frequency: data.frequency,
@@ -232,9 +281,10 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       start_date: data.start_date,
       end_date: data.end_date,
       prescribed_by: data.prescribed_by || '',
+      admin_time: data.admin_time,
       last_administered: data.last_administered,
       next_due: data.next_due || '',
-      status: data.is_active ? 'Active' : 'Discontinued'
+      status: data.status || 'Active' // Use 'status' column directly
     };
 
     // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)

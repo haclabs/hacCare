@@ -9,13 +9,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, QrCode, Droplets } from 'lucide-react';
+import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, QrCode, Droplets, Edit3, Trash2 } from 'lucide-react';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/schemaEngine';
 import { medicationAdministrationSchema } from '../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../types';
 import { ValidationResult, FormGenerationContext } from '../../types/schema';
-import { createMedication, recordMedicationAdministration } from '../../lib/medicationService';
+import { createMedication, recordMedicationAdministration, updateMedication, deleteMedication } from '../../lib/medicationService';
 import { formatLocalTime } from '../../utils/time';
 import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
@@ -52,6 +52,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showBarcodeLabels, setShowBarcodeLabels] = useState(false);
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   // BCMA Integration
   const bcma = useBCMA();
@@ -200,6 +202,91 @@ export const MARModule: React.FC<MARModuleProps> = ({
     }
   };
 
+  // Handle deleting medication
+  const handleDeleteMedication = async (medicationId: string) => {
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'super_admin')) {
+      alert('You do not have permission to delete medications');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this medication?')) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await deleteMedication(medicationId);
+      
+      // Update local state by filtering out the deleted medication
+      const updatedMedications = medications.filter(med => med.id !== medicationId);
+      onMedicationUpdate(updatedMedications);
+      
+      setSuccessMessage('Medication deleted successfully');
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      alert('Failed to delete medication. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle editing medication
+  const handleEditMedication = (medication: Medication) => {
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'super_admin')) {
+      alert('You do not have permission to edit medications');
+      return;
+    }
+
+    setEditingMedication(medication);
+    setShowEditForm(true);
+  };
+
+  // Handle updating medication
+  const handleUpdateMedication = async (data: any, validation: ValidationResult) => {
+    if (!validation.valid) {
+      console.error('Form validation failed:', validation.errors);
+      return;
+    }
+
+    if (!editingMedication) return;
+
+    setIsLoading(true);
+    try {
+      const updates: Partial<Medication> = {
+        name: data.name,
+        dosage: data.dosage,
+        route: data.route,
+        frequency: data.frequency,
+        category: data.category as MedicationCategory,
+        prescribed_by: data.prescribed_by,
+        start_date: data.start_date,
+        end_date: data.end_date || undefined,
+        admin_time: data.admin_time
+      };
+
+      const updatedMedication = await updateMedication(editingMedication.id, updates);
+      
+      // Update local state
+      const updatedMedications = medications.map(med => 
+        med.id === editingMedication.id ? updatedMedication : med
+      );
+      onMedicationUpdate(updatedMedications);
+      
+      setSuccessMessage(`Medication "${data.name}" updated successfully`);
+      setShowSuccessMessage(true);
+      setShowEditForm(false);
+      setEditingMedication(null);
+      
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error('Error updating medication:', error);
+      alert('Failed to update medication. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle adding new medication
   const handleAddMedication = async (data: any, validation: ValidationResult) => {
@@ -679,6 +766,35 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 <QrCode className="h-4 w-4" />
                 <span>{category === 'prn' ? 'Give PRN' : 'Administer'}</span>
               </button>
+              
+              {/* Edit and Delete buttons - Only for admin/super_admin users */}
+              {currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditMedication(medication);
+                    }}
+                    className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-1"
+                    title="Edit Medication"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Edit</span>
+                  </button>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteMedication(medication.id);
+                    }}
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-1"
+                    title="Delete Medication"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Delete</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1014,6 +1130,198 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   >
                     Add Medication
                   </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Medication Modal */}
+      {showEditForm && editingMedication && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Edit Medication</h3>
+                <button
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingMedication(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const data = Object.fromEntries(formData.entries());
+                handleUpdateMedication(data as any, { valid: true, errors: [], warnings: [] });
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Medication Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      defaultValue={editingMedication.name}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Dosage *
+                    </label>
+                    <input
+                      type="text"
+                      name="dosage"
+                      required
+                      defaultValue={editingMedication.dosage}
+                      placeholder="e.g., 10mg, 2 tablets"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Route *
+                    </label>
+                    <select
+                      name="route"
+                      required
+                      defaultValue={editingMedication.route}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select route...</option>
+                      <option value="PO">PO (Oral)</option>
+                      <option value="IV">IV (Intravenous)</option>
+                      <option value="IM">IM (Intramuscular)</option>
+                      <option value="SC">SC (Subcutaneous)</option>
+                      <option value="SL">SL (Sublingual)</option>
+                      <option value="TOP">Topical</option>
+                      <option value="INH">Inhaled</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Frequency *
+                    </label>
+                    <select
+                      name="frequency"
+                      required
+                      defaultValue={editingMedication.frequency}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select frequency...</option>
+                      <option value="Once daily">Once daily</option>
+                      <option value="BID">BID (Twice daily)</option>
+                      <option value="TID">TID (Three times daily)</option>
+                      <option value="QID">QID (Four times daily)</option>
+                      <option value="Q4H">Q4H (Every 4 hours)</option>
+                      <option value="Q6H">Q6H (Every 6 hours)</option>
+                      <option value="Q8H">Q8H (Every 8 hours)</option>
+                      <option value="Q12H">Q12H (Every 12 hours)</option>
+                      <option value="PRN">PRN (As needed)</option>
+                      <option value="Continuous">Continuous</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category *
+                    </label>
+                    <select
+                      name="category"
+                      required
+                      defaultValue={editingMedication.category}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select category...</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="prn">PRN (As Needed)</option>
+                      <option value="continuous">Continuous</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Prescribed By *
+                    </label>
+                    <input
+                      type="text"
+                      name="prescribed_by"
+                      required
+                      defaultValue={editingMedication.prescribed_by}
+                      placeholder="Dr. Prescriber Name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Administration Time
+                    </label>
+                    <input
+                      type="time"
+                      name="admin_time"
+                      defaultValue={editingMedication.admin_time || '09:00'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date *
+                    </label>
+                    <input
+                      type="date"
+                      name="start_date"
+                      required
+                      defaultValue={editingMedication.start_date.split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      name="end_date"
+                      defaultValue={editingMedication.end_date ? editingMedication.end_date.split('T')[0] : ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditForm(false);
+                        setEditingMedication(null);
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Update Medication
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>

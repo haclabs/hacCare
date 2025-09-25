@@ -36,31 +36,41 @@ async function getCurrentTenantId(): Promise<string> {
     throw new Error('User not authenticated');
   }
 
-  console.log('Getting tenant for user:', user.id);
+  console.log('🔍 Getting tenant for user:', user.id);
 
   const { data: tenantData, error } = await supabase
     .rpc('get_user_current_tenant', { target_user_id: user.id });
 
   if (error) {
-    console.error('Error fetching user tenant:', error);
+    console.error('❌ Error fetching user tenant:', error);
     console.error('RPC error details:', { code: error.code, message: error.message, details: error.details });
     throw new Error(`Could not determine user tenant: ${error.message}`);
   }
 
-  console.log('Tenant RPC result:', tenantData);
+  console.log('🏢 Tenant RPC result:', tenantData);
 
   if (!tenantData || !Array.isArray(tenantData) || tenantData.length === 0) {
-    console.error('No tenant data returned for user');
+    console.error('❌ No tenant data returned for user');
     throw new Error('User has no associated tenant');
   }
 
   const tenantId = tenantData[0]?.tenant_id;
   if (!tenantId) {
-    console.error('Invalid tenant data structure:', tenantData[0]);
+    console.error('❌ Invalid tenant data structure:', tenantData[0]);
     throw new Error('Invalid tenant data returned for user');
   }
 
-  console.log('Current tenant ID:', tenantId);
+  console.log('✅ Current tenant ID resolved:', tenantId);
+  
+  // Let's also check what tenant this corresponds to
+  const { data: tenantInfo } = await supabase
+    .from('tenants')
+    .select('name, subdomain')
+    .eq('id', tenantId)
+    .single();
+  
+  console.log('🏥 Tenant info:', tenantInfo);
+  
   return tenantId;
 }
 
@@ -105,7 +115,82 @@ export async function fetchPatientLabels(providedTenantId?: string): Promise<Pat
 export async function fetchMedicationLabels(providedTenantId?: string): Promise<MedicationLabelData[]> {
   try {
     const tenantId = providedTenantId || await getCurrentTenantId();
-    console.log('Fetching medication labels for tenant:', tenantId);
+    console.log('🏥 Fetching medication labels for tenant:', tenantId);
+
+    // First try using the super admin RPC function for cross-tenant access
+    console.log('🔧 Trying super admin RPC function for cross-tenant medication access...');
+    
+    const { data: rpcMedications, error: rpcError } = await supabase
+      .rpc('fetch_medications_for_tenant', { target_tenant_id: tenantId });
+    
+    if (!rpcError && rpcMedications) {
+      console.log('✅ Super admin RPC succeeded:', rpcMedications.length, 'medications');
+      console.log('🧾 RPC medication details:', rpcMedications.map((m: any) => ({
+        id: m.medication_id,
+        name: m.name,
+        patient: `${m.patient_first_name} ${m.patient_last_name}`,
+        med_tenant: m.tenant_id
+      })));
+      
+      const medicationLabels: MedicationLabelData[] = rpcMedications.map((med: any) => ({
+        id: med.medication_id,
+        patient_id: med.patient_id,
+        patient_name: `${med.patient_first_name || ''} ${med.patient_last_name || ''}`.trim(),
+        medication_name: med.name,
+        dosage: med.dosage,
+        frequency: med.frequency,
+        route: med.route,
+        prescriber: med.prescribed_by,
+        date_prescribed: med.start_date
+      }));
+      
+      console.log('🎯 Transformed RPC medication labels:', medicationLabels.length, 'records');
+      
+      // Also do a comparison query to see what patient-based query would return
+      console.log('🔍 Doing comparison query by patient tenant...');
+      const { data: comparisonMeds } = await supabase
+        .from('patient_medications')
+        .select(`
+          id, name, status,
+          patients!inner (first_name, last_name, tenant_id)
+        `)
+        .eq('patients.tenant_id', tenantId)
+        .eq('status', 'Active');
+      
+      console.log('📊 Comparison query (by patient tenant):', comparisonMeds?.length || 0, 'medications');
+      console.log('📋 Comparison medications:', comparisonMeds?.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        patient: Array.isArray(m.patients) ? m.patients[0] : m.patients
+      })));
+      
+      return medicationLabels;
+    }
+    
+    console.log('⚠️ Super admin RPC failed, falling back to regular query:', rpcError?.message);
+
+    // Fallback to regular query if RPC fails
+    // First, let's see what medications exist with their tenant_ids
+    const { data: allMedications } = await supabase
+      .from('patient_medications')
+      .select('id, name, tenant_id, status, patient_id')
+      .eq('status', 'Active');
+    
+    console.log('🔍 ALL active medications in database:', allMedications?.length || 0, 'medications');
+    console.log('🎯 Looking for tenant_id:', tenantId);
+    
+    // Show medication distribution by tenant
+    const tenantCounts: Record<string, number> = {};
+    allMedications?.forEach(med => {
+      const tid = med.tenant_id;
+      tenantCounts[tid] = (tenantCounts[tid] || 0) + 1;
+    });
+    console.log('📊 Medication distribution by tenant:', tenantCounts);
+    
+    // Show medications for our specific tenant
+    const ourMedications = allMedications?.filter(med => med.tenant_id === tenantId) || [];
+    console.log('🎯 Medications for our tenant', tenantId, ':', ourMedications.length);
+    console.log('📋 Our tenant medications:', ourMedications.map(m => ({id: m.id, name: m.name})));
 
     const { data: medications, error } = await supabase
       .from('patient_medications')
@@ -118,13 +203,15 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         route,
         prescribed_by,
         start_date,
+        tenant_id,
         patients (
           first_name,
-          last_name
+          last_name,
+          tenant_id
         )
       `)
       .eq('tenant_id', tenantId)
-      .eq('status', 'active')
+      .eq('status', 'Active')
       .order('name', { ascending: true });
 
     if (error) {
@@ -133,12 +220,30 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
       throw new Error(`Failed to fetch medication data for labels: ${error.message}`);
     }
 
-    console.log('Raw medication data:', medications);
-    console.log('Successfully fetched medication records:', medications?.length || 0);
+    console.log('📋 Raw medication data for tenant', tenantId, ':', medications);
+    console.log('✅ Successfully fetched medication records:', medications?.length || 0);
+
+    // Check for patient/medication tenant mismatches
+    medications?.forEach(med => {
+      const patient = Array.isArray(med.patients) ? med.patients[0] : med.patients;
+      if (patient && (patient as any).tenant_id && (patient as any).tenant_id !== med.tenant_id) {
+        console.warn('⚠️ Tenant mismatch:', {
+          medication: med.name,
+          med_tenant: med.tenant_id,
+          patient_tenant: (patient as any).tenant_id,
+          patient: `${patient.first_name} ${patient.last_name}`
+        });
+      }
+    });
 
     // Transform the data to include patient names
     const medicationLabels: MedicationLabelData[] = (medications || []).map(med => {
-      console.log('Processing medication:', med.id, 'Patient data:', med.patients);
+      console.log('🧬 Processing medication:', {
+        id: med.id, 
+        name: med.name,
+        tenant_id: (med as any).tenant_id,
+        patient_data: med.patients
+      });
       const patient = Array.isArray(med.patients) ? med.patients[0] : med.patients;
       return {
         id: med.id,
@@ -176,7 +281,7 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
           start_date
         `)
         .eq('tenant_id', tenantId)
-        .eq('status', 'active')
+        .eq('status', 'Active')
         .order('name', { ascending: true });
 
       if (fallbackError) {

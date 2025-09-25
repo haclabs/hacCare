@@ -1,26 +1,154 @@
 import React, { useState } from 'react';
 import { Printer, Download, Users, Pill, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData } from '../../lib/bulkLabelService';
+import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../lib/bulkLabelService';
 import { BarcodeGenerator } from '../bcma/BarcodeGenerator';
-import { PatientBracelet } from '../Patients/visuals/PatientBracelet';
 import { Tenant } from '../../types';
 
-interface MedicationLabelsModalProps {
-  medications: MedicationLabelData[];
+interface PatientBraceletsModalProps {
+  patients: PatientLabelData[];
   onClose: () => void;
 }
 
-const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, onClose }) => {
+const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, onClose }) => {
   const handlePrint = () => {
-    window.print();
+    // Create a new window with only the labels for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Patient Labels - Avery 5160</title>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+          <style>
+            @page { 
+              size: 8.5in 11in; 
+              margin: 0.5in 0.1875in; 
+            }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 0; 
+              font-size: 8px;
+            }
+            .labels-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 2.625in);
+              grid-template-rows: repeat(10, 1in);
+              gap: 0;
+              width: 7.875in;
+              height: 10in;
+              margin: 0 auto;
+            }
+            .label {
+              width: 2.625in;
+              height: 1in;
+              border: 1px dashed #ccc;
+              padding: 2px;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              text-align: center;
+              overflow: hidden;
+            }
+            .patient-name {
+              font-size: 9px;
+              font-weight: bold;
+              margin-bottom: 1px;
+              line-height: 1;
+            }
+            .patient-info {
+              font-size: 6px;
+              line-height: 1;
+              margin-bottom: 2px;
+            }
+            .barcode-area {
+              margin: 1px 0;
+            }
+            .barcode-canvas {
+              max-width: 2.4in;
+              max-height: 0.4in;
+            }
+            @media print {
+              .label {
+                border: none !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="labels-grid">
+            ${patients.map((patient, index) => `
+              <div class="label">
+                <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
+                <div class="patient-info">ID: ${patient.patient_id}</div>
+                <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                <div class="barcode-area">
+                  <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
+                </div>
+              </div>
+            `).join('')}
+            ${Array(30 - patients.length).fill(0).map(() => `
+              <div class="label"></div>
+            `).join('')}
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Generate barcodes after content loads
+    printWindow.onload = () => {
+      // Wait for JsBarcode to be available
+      const checkJsBarcode = () => {
+        const windowWithBarcode = printWindow as any;
+        if (windowWithBarcode.JsBarcode) {
+          // Generate patient barcodes
+          patients.forEach((patient, index) => {
+            const canvas = printWindow.document.getElementById(`patient-barcode-${index}`);
+            if (canvas) {
+              const barcodeValue = `PT${patient.patient_id.slice(-8).toUpperCase()}`;
+              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
+                format: "CODE128",
+                width: 1,
+                height: 25,
+                displayValue: true,
+                fontSize: 8,
+                margin: 1,
+                background: "#ffffff",
+                lineColor: "#000000"
+              });
+            }
+          });
+          
+          // Print after barcodes are generated
+          setTimeout(() => {
+            printWindow.print();
+          }, 100);
+        } else {
+          // Retry if JsBarcode not ready
+          setTimeout(checkJsBarcode, 50);
+        }
+      };
+      checkJsBarcode();
+    };
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">Medication Labels</h2>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Patient Bracelets</h2>
+            <p className="text-sm text-gray-600 mt-1">All patient identification labels with barcodes and names</p>
+          </div>
           <div className="flex space-x-2">
             <button
               onClick={handlePrint}
@@ -40,29 +168,241 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         </div>
         
         <div className="p-6 overflow-y-auto max-h-[70vh]">
-          <div className="grid grid-cols-3 gap-4 print:gap-2">
-            {medications.map((medication) => (
-              <div key={medication.id} className="border border-gray-300 p-2 bg-white">
-                <div className="text-xs font-bold text-center border-b border-gray-200 pb-1 mb-2">
-                  MEDICATION LABEL
-                </div>
-                <div className="text-sm font-bold mb-1">{medication.medication_name}</div>
-                <div className="text-xs space-y-1">
-                  <div>Patient: {medication.patient_name}</div>
-                  <div>Dosage: {medication.dosage}</div>
-                  <div>Frequency: {medication.frequency}</div>
-                  <div>Route: {medication.route}</div>
-                  <div>Prescriber: {medication.prescriber}</div>
-                </div>
-                <div className="mt-2 flex justify-center">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+            <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
+            <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
+          </div>
+          <div className="grid grid-cols-5 gap-2" style={{gridTemplateColumns: 'repeat(5, 2.625in)'}}>
+            {patients.slice(0, 15).map((patient) => (
+              <div key={patient.id} className="border border-gray-300 p-1 bg-white text-center" style={{width: '2.625in', height: '1in', fontSize: '8px'}}>
+                <div className="font-bold text-xs mb-1">{patient.first_name} {patient.last_name}</div>
+                <div className="text-xs mb-1">ID: {patient.patient_id}</div>
+                <div className="text-xs mb-1">DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                <div className="flex justify-center">
                   <BarcodeGenerator
-                    data={`MED${medication.id.slice(-6).toUpperCase()}`}
+                    data={`PT${patient.patient_id.slice(-8).toUpperCase()}`}
+                    type="patient"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          {patients.length > 15 && (
+            <div className="mt-4 text-center text-gray-500 text-sm">
+              Preview showing first 15 labels. Print will include all {patients.length} patient labels.
+            </div>
+          )}
+        </div>
+        
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @media print {
+              .fixed { position: relative !important; }
+              .bg-black { background: white !important; }
+              .shadow-xl { box-shadow: none !important; }
+              .rounded-lg { border-radius: 0 !important; }
+              .border-b { display: none !important; }
+              .overflow-hidden { overflow: visible !important; }
+              .p-6 { padding: 0 !important; }
+              .max-h-\\[90vh\\] { max-height: none !important; }
+              .overflow-y-auto { overflow: visible !important; }
+              .max-h-\\[70vh\\] { max-height: none !important; }
+            }
+          `
+        }} />
+      </div>
+    </div>
+  );
+};
+
+interface MedicationLabelsModalProps {
+  medications: MedicationLabelData[];
+  onClose: () => void;
+}
+
+const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, onClose }) => {
+  const handlePrint = () => {
+    // Create a new window with only the labels for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Medication Labels - Avery 5160</title>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+          <style>
+            @page { 
+              size: 8.5in 11in; 
+              margin: 0.5in 0.1875in; 
+            }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 0; 
+              font-size: 7px;
+            }
+            .labels-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 2.625in);
+              grid-template-rows: repeat(10, 1in);
+              gap: 0;
+              width: 7.875in;
+              height: 10in;
+              margin: 0 auto;
+            }
+            .label {
+              width: 2.625in;
+              height: 1in;
+              border: 1px dashed #ccc;
+              padding: 2px;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              text-align: center;
+              overflow: hidden;
+            }
+            .medication-name {
+              font-size: 9px;
+              font-weight: bold;
+              margin-bottom: 2px;
+              line-height: 1;
+            }
+            .patient-name {
+              font-size: 8px;
+              color: #0066cc;
+              margin-bottom: 4px;
+              line-height: 1;
+            }
+            .barcode-area {
+              margin: 2px 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .barcode-canvas {
+              max-width: 2.4in;
+              max-height: 0.4in;
+            }
+            @media print {
+              .label {
+                border: none !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="labels-grid">
+            ${medications.map((medication, index) => `
+              <div class="label">
+                <div class="medication-name">${medication.medication_name}</div>
+                <div class="patient-name">${medication.patient_name}</div>
+                <div class="barcode-area">
+                  <canvas id="medication-barcode-${index}" class="barcode-canvas"></canvas>
+                </div>
+              </div>
+            `).join('')}
+            ${Array(30 - (medications.length % 30)).fill(0).map(() => `
+              <div class="label"></div>
+            `).join('')}
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Generate barcodes after content loads
+    printWindow.onload = () => {
+      // Wait for JsBarcode to be available
+      const checkJsBarcode = () => {
+        const windowWithBarcode = printWindow as any;
+        if (windowWithBarcode.JsBarcode) {
+          // Generate medication barcodes
+          medications.forEach((medication, index) => {
+            const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
+            if (canvas) {
+              const barcodeValue = `MED${medication.id.slice(-8).toUpperCase()}`;
+              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
+                format: "CODE128",
+                width: 1,
+                height: 20,
+                displayValue: true,
+                fontSize: 7,
+                margin: 1,
+                background: "#ffffff",
+                lineColor: "#000000"
+              });
+            }
+          });
+          
+          // Print after barcodes are generated
+          setTimeout(() => {
+            printWindow.print();
+          }, 100);
+        } else {
+          // Retry if JsBarcode not ready
+          setTimeout(checkJsBarcode, 50);
+        }
+      };
+      checkJsBarcode();
+    };
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Medication Labels</h2>
+            <p className="text-sm text-gray-600 mt-1">All active medications with patient names and barcodes</p>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={handlePrint}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </button>
+            <button
+              onClick={onClose}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Close
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-[70vh]">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+            <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
+            <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
+          </div>
+          <div className="grid grid-cols-5 gap-2" style={{gridTemplateColumns: 'repeat(5, 2.625in)'}}>
+            {medications.slice(0, 15).map((medication) => (
+              <div key={medication.id} className="border border-gray-300 p-1 bg-white text-center" style={{width: '2.625in', height: '1in', fontSize: '7px'}}>
+                <div className="font-bold text-xs mb-1">{medication.medication_name}</div>
+                <div className="text-xs text-blue-600 mb-2">{medication.patient_name}</div>
+                <div className="flex justify-center">
+                  <BarcodeGenerator
+                    data={`MED${medication.id.slice(-8).toUpperCase()}`}
                     type="medication"
                   />
                 </div>
               </div>
             ))}
           </div>
+          {medications.length > 15 && (
+            <div className="mt-4 text-center text-gray-500 text-sm">
+              Preview showing first 15 labels. Print will include all {medications.length} medication labels.
+            </div>
+          )}
         </div>
         
         <style dangerouslySetInnerHTML={{
@@ -112,9 +452,20 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching bulk labels for tenant:', selectedTenant.id, selectedTenant.name);
+      
+      console.log('🚨 TENANT DEBUG INFO:');
+      console.log('📍 Selected Tenant:', selectedTenant);
+      console.log('🆔 Using Tenant ID:', selectedTenant.id);
+      console.log('🏷️ Tenant Name:', selectedTenant.name);
+      console.log('🌐 Tenant Subdomain:', selectedTenant.subdomain);
+      console.log('🔍 Fetching bulk labels for tenant:', selectedTenant.id, selectedTenant.name);
       
       const labelsData = await fetchAllLabelsForPrinting(selectedTenant.id);
+      console.log('📊 Raw labels data:', {
+        patients: labelsData.patients,
+        medications: labelsData.medications,
+        tenantUsed: selectedTenant.id
+      });
       setLabels(labelsData);
       
       console.log('✅ Successfully loaded bulk labels:', {
@@ -296,8 +647,8 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
       
       {/* Patient Bracelets Modal */}
       {showPatientBracelets && labels && labels.patients.length > 0 && (
-        <PatientBracelet
-          patient={labels.patients[0]} // Use first patient as template
+        <PatientBraceletsModal
+          patients={labels.patients}
           onClose={() => setShowPatientBracelets(false)}
         />
       )}

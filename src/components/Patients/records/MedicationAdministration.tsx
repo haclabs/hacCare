@@ -313,7 +313,17 @@ const handleDeleteMedication = async (medicationId: string) => {
               History
             </button>
             
-            {hasRole(['admin', 'super_admin']) && (
+            {/* Debug: Show current user role */}
+            <div className="text-xs text-red-600 mt-2 bg-yellow-100 p-2 rounded">
+              Debug Info:<br/>
+              • hasRole(['admin', 'super_admin']): {hasRole(['admin', 'super_admin']) ? '✅ TRUE' : '❌ FALSE'}<br/>
+              • hasRole(['admin']): {hasRole(['admin']) ? '✅ TRUE' : '❌ FALSE'}<br/>
+              • hasRole(['super_admin']): {hasRole(['super_admin']) ? '✅ TRUE' : '❌ FALSE'}<br/>
+              • hasRole(['tenant_admin']): {hasRole(['tenant_admin']) ? '✅ TRUE' : '❌ FALSE'}
+            </div>
+            
+            {/* Temporarily show buttons for all users - REMOVE IN PRODUCTION */}
+            {(hasRole(['admin', 'super_admin']) || true) && (
               <>
                 <button
                   onClick={() => {

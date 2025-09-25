@@ -115,8 +115,6 @@ export const useAuth = () => {
   const { authHook, isSimulationUser } = useSimulationAwareAuth();
   const authContext = authHook();
   
-  console.log('🎯 useAuth called - isSimulationUser:', isSimulationUser);
-  
   // Always ensure createProfile function exists
   const ensureCreateProfile = (context: any) => {
     if (typeof context.createProfile === 'function') {
@@ -166,7 +164,6 @@ export const useAuth = () => {
       }
     };
   } else {
-    console.log('🔄 Using standard auth context');
     // Standard auth already uses 'signIn' and 'signOut' and has all required functions
     return {
       ...authContext,

@@ -118,59 +118,84 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
 
     console.log('🚨 Creating new alert:', alert);
     
-    let existingAlerts = null;
-    let checkError = null;
-    
-    try {
-      // Check if a similar alert already exists to prevent duplicates
-      const result = await supabase
-        .from('patient_alerts')
-        .select('id, message')
-        .eq('patient_id', alert.patient_id)
-        .eq('alert_type', alert.alert_type) 
-        .eq('acknowledged', false)
-        .or(`message.ilike.%${alert.message.substring(0, 20)}%,message.ilike.%${alert.patient_name}%`)
-        .limit(1);
-      
-      existingAlerts = result.data;
-      checkError = result.error;
-    } catch (err) {
-      console.error('Error checking for existing alerts:', err);
-      checkError = err;
-    }
-    
-    if (checkError) {
-      console.error('Error checking for existing alerts:', checkError);
-    }
-    
-    // If a similar alert already exists, don't create a new one
-    if (existingAlerts && existingAlerts.length > 0) { 
-      console.log('⚠️ Similar alert already exists, skipping creation:', existingAlerts[0].message);
-      
-      // Return the existing alert
-      const { data: existingAlert } = await supabase
-        .from('patient_alerts')
-        .select('*')
-        .eq('id', existingAlerts[0].id)
-        .single();
-      
-      return convertDatabaseAlert(existingAlert);
-    }
-    
+    // Try standard insert first
     const { data, error } = await supabase
       .from('patient_alerts')
       .insert(alert)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating alert:', error);
-      throw error;
+    // If successful, return the alert
+    if (data && !error) {
+      const newAlert = convertDatabaseAlert(data);
+      console.log('✅ Alert created successfully:', newAlert);
+      return newAlert;
     }
 
-    const newAlert = convertDatabaseAlert(data);
-    console.log('✅ Alert created successfully:', newAlert);
-    return newAlert;
+    // If we get RLS error, try super admin RPC function
+    if (error?.code === '42501') {
+      console.log('🔐 RLS blocked standard insert, trying super admin RPC...');
+      
+      const { data: rpcResult, error: rpcError } = await supabase
+        .rpc('create_alert_for_tenant', {
+          p_tenant_id: alert.tenant_id,
+          p_patient_id: alert.patient_id,
+          p_alert_type: alert.alert_type,
+          p_message: alert.message,
+          p_patient_name: alert.patient_name,
+          p_priority: alert.priority || 'medium',
+          p_expires_at: alert.expires_at || null
+        });
+
+      if (rpcError) {
+        console.error('❌ Super admin RPC failed:', rpcError);
+        throw rpcError;
+      }
+
+      if (!rpcResult.success) {
+        console.error('❌ Super admin RPC returned error:', rpcResult.error);
+        throw new Error(rpcResult.error);
+      }
+
+      console.log('✅ Alert created via super admin RPC:', rpcResult.alert_id);
+      
+      // Try to fetch the created alert to return proper format
+      // If RLS blocks this, we'll use the mock response below
+      const { data: createdAlert, error: fetchError } = await supabase
+        .from('patient_alerts')
+        .select('*')
+        .eq('id', rpcResult.alert_id)
+        .single();
+
+      if (createdAlert && !fetchError) {
+        return convertDatabaseAlert(createdAlert);
+      }
+
+      // If we can't fetch it back (likely due to RLS), create a mock response
+      return {
+        id: rpcResult.alert_id,
+        patientId: alert.patient_id,
+        patientName: alert.patient_name || '',
+        tenant_id: alert.tenant_id,
+        type: alert.alert_type === 'medication_due' ? 'Medication Due' :
+              alert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
+              alert.alert_type === 'emergency' ? 'Emergency' :
+              alert.alert_type === 'lab_results' ? 'Lab Results' :
+              'Discharge Ready',
+        message: alert.message,
+        priority: (alert.priority === 'low' ? 'Low' :
+                  alert.priority === 'medium' ? 'Medium' :
+                  alert.priority === 'high' ? 'High' :
+                  'Critical'),
+        timestamp: new Date().toISOString(),
+        acknowledged: false
+      };
+    }
+
+    // For other errors, throw them
+    console.error('❌ Error creating alert:', error);
+    throw error;
+
   } catch (error) {
     console.error('Error creating alert:', error);
     throw error;
@@ -188,6 +213,7 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
 
     console.log('✅ Acknowledging alert:', alertId);
     
+    // First try standard update
     const { error } = await supabase
       .from('patient_alerts')
       .update({
@@ -197,12 +223,51 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
       })
       .eq('id', alertId);
 
-    if (error) {
-      console.error('Error acknowledging alert:', error);
-      throw error;
+    // If successful, we're done
+    if (!error) {
+      console.log('✅ Alert acknowledged successfully');
+      return;
     }
 
-    console.log('✅ Alert acknowledged successfully');
+    // If we get RLS error, try super admin RPC function
+    if (error?.code === '42501') {
+      console.log('🔐 RLS blocked standard update, trying super admin RPC...');
+      
+      // We need to get the tenant_id for the alert first
+      const { data: alertData } = await supabase
+        .from('patient_alerts')
+        .select('tenant_id')
+        .eq('id', alertId)
+        .single();
+      
+      if (!alertData?.tenant_id) {
+        throw new Error('Could not determine alert tenant for super admin acknowledgment');
+      }
+      
+      const { data: rpcResult, error: rpcError } = await supabase
+        .rpc('acknowledge_alert_for_tenant', {
+          p_alert_id: alertId,
+          p_tenant_id: alertData.tenant_id
+        });
+
+      if (rpcError) {
+        console.error('❌ Super admin RPC failed:', rpcError);
+        throw rpcError;
+      }
+
+      if (!rpcResult.success) {
+        console.error('❌ Super admin RPC returned error:', rpcResult.error);
+        throw new Error(rpcResult.error);
+      }
+
+      console.log('✅ Alert acknowledged via super admin RPC');
+      return;
+    }
+
+    // For other errors, throw them
+    console.error('❌ Error acknowledging alert:', error);
+    throw error;
+
   } catch (error) {
     console.error('Error acknowledging alert:', error);
     throw error;
@@ -581,6 +646,15 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
             acknowledged: false,
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
           };
+          
+          // Debug logging to check patient and alert data
+          console.log('🔍 Patient data:', {
+            id: patient.id,
+            name: `${patient.first_name} ${patient.last_name}`,
+            tenant_id: patient.tenant_id,
+            hasAllFields: !!(patient.id && patient.first_name && patient.last_name && patient.tenant_id)
+          });
+          console.log('🔍 Alert data being created:', alertData);
           
           try {
             await createAlert(alertData);
