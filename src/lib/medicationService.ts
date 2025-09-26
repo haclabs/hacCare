@@ -233,11 +233,62 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
 };
 
 /**
+ * Debug function to check medication existence and permissions
+ */
+export const debugMedication = async (medicationId: string): Promise<void> => {
+  try {
+    console.log('🔍 DEBUGGING: Checking medication:', medicationId);
+    
+    // Check if medication exists
+    const { data: med, error: selectError, count } = await supabase
+      .from('patient_medications')
+      .select('*', { count: 'exact' })
+      .eq('id', medicationId);
+    
+    console.log('🔍 DEBUGGING: Select result:', { data: med, error: selectError, count });
+    
+    // Try to get user info
+    const { data: user, error: userError } = await supabase.auth.getUser();
+    console.log('🔍 DEBUGGING: Current user:', { user: user?.user?.id, error: userError });
+    
+    // Check RLS policies by attempting a simple select
+    const { data: rlsTest, error: rlsError } = await supabase
+      .from('patient_medications')
+      .select('id')
+      .eq('id', medicationId)
+      .limit(1);
+    
+    console.log('🔍 DEBUGGING: RLS test:', { data: rlsTest, error: rlsError });
+    
+  } catch (error) {
+    console.error('🔍 DEBUGGING: Error in debug function:', error);
+  }
+};
+
+/**
  * Update an existing medication
  */
 export const updateMedication = async (medicationId: string, updates: Partial<Medication>): Promise<Medication> => {
   try {
     console.log('Updating medication:', medicationId, updates);
+    
+    // First check if the medication exists
+    const { data: existingMed, error: checkError } = await supabase
+      .from('patient_medications')
+      .select('id, patient_id, name')
+      .eq('id', medicationId)
+      .single();
+    
+    if (checkError) {
+      console.error('Error checking medication existence:', checkError);
+      throw new Error(`Medication with ID ${medicationId} not found or access denied`);
+    }
+    
+    if (!existingMed) {
+      throw new Error(`Medication with ID ${medicationId} does not exist`);
+    }
+    
+    console.log('Found existing medication:', existingMed);
     
     // Map Medication interface fields to database column names for the update
     const dbUpdates: any = {};
@@ -267,6 +318,10 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (error) {
       console.error('Error updating medication:', error);
       throw error;
+    }
+
+    if (!data) {
+      throw new Error('Update operation returned no data - possible permissions issue');
     }
 
     // Map database response back to Medication interface

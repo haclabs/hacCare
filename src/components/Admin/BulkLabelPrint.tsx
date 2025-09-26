@@ -256,35 +256,50 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               width: 2.625in;
               height: 1in;
               border: 1px dashed #ccc;
-              padding: 2px;
+              padding: 3px;
               box-sizing: border-box;
+              display: flex;
+              flex-direction: row;
+              align-items: stretch;
+              text-align: left;
+              overflow: hidden;
+            }
+            .label-content {
+              flex: 1;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              text-align: center;
-              overflow: hidden;
+              padding-right: 5px;
+              min-width: 1.6in;
             }
             .medication-name {
-              font-size: 9px;
+              font-size: 12px;
               font-weight: bold;
-              margin-bottom: 2px;
-              line-height: 1;
+              margin-bottom: 3px;
+              line-height: 1.2;
+              color: #000;
+              word-wrap: break-word;
             }
             .patient-name {
-              font-size: 8px;
+              font-size: 12px;
+              font-weight: bold;
               color: #0066cc;
-              margin-bottom: 4px;
-              line-height: 1;
+              margin-bottom: 3px;
+              line-height: 1.2;
+              word-wrap: break-word;
             }
             .barcode-area {
-              margin: 2px 0;
               display: flex;
               justify-content: center;
               align-items: center;
+              width: 0.9in;
+              height: 0.9in;
+              transform: rotate(90deg);
+              transform-origin: center;
             }
             .barcode-canvas {
-              max-width: 2.4in;
-              max-height: 0.4in;
+              width: 0.8in;
+              height: 0.9in;
             }
             @media print {
               .label {
@@ -297,8 +312,10 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
           <div class="labels-grid">
             ${medications.map((medication, index) => `
               <div class="label">
-                <div class="medication-name">${medication.medication_name}</div>
-                <div class="patient-name">${medication.patient_name}</div>
+                <div class="label-content">
+                  <div class="medication-name">${medication.medication_name}</div>
+                  <div class="patient-name">${medication.patient_name}</div>
+                </div>
                 <div class="barcode-area">
                   <canvas id="medication-barcode-${index}" class="barcode-canvas"></canvas>
                 </div>
@@ -326,16 +343,18 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
           medications.forEach((medication, index) => {
             const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
             if (canvas) {
-              const barcodeValue = `MED${medication.id.slice(-8).toUpperCase()}`;
+              const barcodeValue = medication.id.toUpperCase();
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
-                width: 1,
-                height: 20,
+                width: 2.5,
+                height: 80,
                 displayValue: true,
-                fontSize: 7,
+                fontSize: 10,
                 margin: 1,
                 background: "#ffffff",
-                lineColor: "#000000"
+                lineColor: "#000000",
+                textAlign: "center",
+                textPosition: "bottom"
               });
             }
           });
@@ -359,7 +378,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-xl font-bold text-gray-900">Medication Labels</h2>
-            <p className="text-sm text-gray-600 mt-1">All active medications with patient names and barcodes</p>
+            <p className="text-sm text-gray-600 mt-1">All active medications with patient names and vertical barcodes for round containers</p>
           </div>
           <div className="flex space-x-2">
             <button
@@ -381,19 +400,27 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         
         <div className="p-6 overflow-y-auto max-h-[70vh]">
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-            <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
+            <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format - Optimized for Round Containers</h3>
             <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
+            <p className="text-xs text-blue-600 mt-1">• Moderately wide vertical barcodes for reliable scanning on round containers</p>
+            <p className="text-xs text-blue-600">• Equal-sized medication and patient names for consistent readability</p>
+            <p className="text-xs text-blue-600">• Balanced barcode width for optimal scan success and label space usage</p>
           </div>
           <div className="grid grid-cols-5 gap-2" style={{gridTemplateColumns: 'repeat(5, 2.625in)'}}>
             {medications.slice(0, 15).map((medication) => (
-              <div key={medication.id} className="border border-gray-300 p-1 bg-white text-center" style={{width: '2.625in', height: '1in', fontSize: '7px'}}>
-                <div className="font-bold text-xs mb-1">{medication.medication_name}</div>
-                <div className="text-xs text-blue-600 mb-2">{medication.patient_name}</div>
-                <div className="flex justify-center">
-                  <BarcodeGenerator
-                    data={`MED${medication.id.slice(-8).toUpperCase()}`}
-                    type="medication"
-                  />
+              <div key={medication.id} className="border border-gray-300 p-1 bg-white flex items-stretch" style={{width: '2.625in', height: '1in'}}>
+                <div className="flex-1 flex flex-col justify-center pr-1" style={{minWidth: '1.6in'}}>
+                  <div className="font-bold text-base mb-1 leading-tight">{medication.medication_name}</div>
+                  <div className="text-base font-bold text-blue-600 leading-tight">{medication.patient_name}</div>
+                </div>
+                <div className="w-20 h-full flex justify-center items-center">
+                  <div className="transform rotate-90 origin-center">
+                    <BarcodeGenerator
+                      data={medication.id.toUpperCase()}
+                      type="medication"
+                      vertical={true}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -592,7 +619,7 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
                 Medication Labels
               </h4>
               <p className="text-green-800">Count: {labels.medications.length}</p>
-              <p className="text-green-700 text-xs mt-1">MAR-compatible medication labels with barcodes for administration</p>
+              <p className="text-green-700 text-xs mt-1">MAR-compatible medication labels with vertical barcodes for round containers</p>
               {labels.medications.length === 0 && (
                 <p className="text-green-600 text-xs mt-2 italic">No active medications found in this tenant</p>
               )}
@@ -631,7 +658,7 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
           </p>
           <ul className="text-sm text-gray-500 space-y-1 max-w-md mx-auto">
             <li>• Patient bracelets with identification barcodes</li>
-            <li>• MAR medication labels with administration barcodes</li>
+            <li>• MAR medication labels with vertical administration barcodes</li>
             <li>• Optimized for professional medical printing</li>
           </ul>
         </div>

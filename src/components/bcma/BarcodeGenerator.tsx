@@ -12,13 +12,15 @@ interface BarcodeGeneratorProps {
   type: 'medication' | 'patient';
   label?: string;
   onPrint?: () => void;
+  vertical?: boolean;
 }
 
 export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
   data,
   type,
   label,
-  onPrint
+  onPrint,
+  vertical = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -31,8 +33,26 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
     if (!canvas || !data) return;
 
     try {
-      // Generate proper Code 128 barcode using JsBarcode
-      JsBarcode(canvas, data, {
+      // Configure barcode based on orientation
+      const barcodeConfig = vertical ? {
+        format: "CODE128",
+        width: 2.5,
+        height: 70,
+        displayValue: true,
+        font: "monospace",
+        fontSize: 10,
+        textAlign: "center",
+        textPosition: "bottom",
+        textMargin: 2,
+        fontOptions: "",
+        background: "#ffffff",
+        lineColor: "#000000",
+        margin: 1,
+        marginTop: 1,
+        marginBottom: 15,
+        marginLeft: 1,
+        marginRight: 1
+      } : {
         format: "CODE128",
         width: 2,
         height: 60,
@@ -50,14 +70,17 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
         marginBottom: 20,
         marginLeft: 10,
         marginRight: 10
-      });
+      };
+
+      // Generate proper Code 128 barcode using JsBarcode
+      JsBarcode(canvas, data, barcodeConfig);
 
       // Add additional label if provided
       if (label) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.fillStyle = 'black';
-          ctx.font = '10px sans-serif';
+          ctx.font = vertical ? '8px sans-serif' : '10px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(label, canvas.width / 2, canvas.height - 5);
         }
@@ -68,14 +91,14 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       // Fallback: Draw error message
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        canvas.width = 300;
-        canvas.height = 100;
+        canvas.width = vertical ? 120 : 300;
+        canvas.height = vertical ? 180 : 100;
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'red';
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Error generating barcode', canvas.width / 2, 40);
+        ctx.fillText('Error generating barcode', canvas.width / 2, canvas.height / 2);
         ctx.fillText(`Data: ${data}`, canvas.width / 2, 60);
       }
     }
