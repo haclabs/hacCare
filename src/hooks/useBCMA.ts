@@ -5,6 +5,7 @@
 import { useState, useCallback } from 'react';
 import { Patient, Medication } from '../types';
 import { bcmaService, BCMAValidationResult } from '../lib/bcmaService';
+import { isBCMACurrentlyActive } from '../lib/bcmaState';
 
 export interface BCMAState {
   isActive: boolean;
@@ -54,15 +55,22 @@ export const useBCMA = () => {
   const handleBarcodeScanned = useCallback((barcode: string) => {
     console.log('🔵 useBCMA: Barcode received:', barcode);
     console.log('🔵 useBCMA: Current state:', state);
+    console.log('🔵 useBCMA: Global BCMA active:', isBCMACurrentlyActive());
+    
+    // Don't process if BCMAAdministration component is active
+    if (isBCMACurrentlyActive() && !state.isActive) {
+      console.log('🔵 useBCMA: BCMAAdministration is active, skipping useBCMA processing');
+      return;
+    }
     
     if (!state.isActive || !state.currentPatient || !state.currentMedication) {
       console.log('🔵 useBCMA: Not active or missing patient/medication');
       return;
     }
 
-    // Updated patterns for new shorter barcode format
-    const isPatientBarcode = barcode.startsWith('PT') || barcode === state.currentPatient.patient_id;
-    const isMedicationBarcode = !barcode.startsWith('PT') && barcode.length >= 6 && barcode.length <= 10;
+    // Updated patterns for MED prefix format
+    const isPatientBarcode = barcode.startsWith('PT') || barcode.startsWith('PAT-') || barcode === state.currentPatient.patient_id;
+    const isMedicationBarcode = barcode.startsWith('MED');
 
     console.log('🔵 useBCMA: Is patient barcode:', isPatientBarcode);
     console.log('🔵 useBCMA: Is medication barcode:', isMedicationBarcode);

@@ -3,7 +3,7 @@
  * Integrates with existing barcode scanning to handle medication administration
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { QrCode, Check, X, AlertTriangle, Clock, User, Pill, CheckCircle } from 'lucide-react';
 import { Patient, Medication } from '../../types';
 import { bcmaService, BCMAValidationResult } from '../../lib/bcmaService';
@@ -51,16 +51,67 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     };
   }, []);
 
+  // Define barcode handler with proper dependencies
+  const handleBarcodeScanned = useCallback((barcode: string) => {
+    console.log('🔵 BCMA: Barcode scanned:', barcode);
+    console.log('🔵 BCMA: Current step:', currentStep);
+    console.log('🔵 BCMA: Scanned patient ID:', scannedPatientId);
+    
+    // Detect barcode type
+    const isPatientBarcode = barcode.startsWith('PT') || barcode.startsWith('PAT-');
+    const isMedicationBarcode = barcode.startsWith('MED');
+    
+    console.log('🔵 BCMA: Is patient barcode:', isPatientBarcode);
+    console.log('🔵 BCMA: Is medication barcode:', isMedicationBarcode);
+    
+    if (currentStep === 'scan-patient') {
+      if (isPatientBarcode) {
+        console.log('🔵 BCMA: Valid patient barcode, proceeding');
+        setScannedPatientId(barcode);
+        setCurrentStep('scan-medication');
+      } else if (isMedicationBarcode) {
+        console.log('❌ BCMA: Medication barcode scanned during patient step - rejecting');
+        alert(`❌ Wrong barcode type!\n\nExpected: Patient barcode (starts with PT)\nScanned: Medication barcode (${barcode})\n\nPlease scan the patient's wristband barcode.`);
+      } else {
+        console.log('❌ BCMA: Unknown barcode format during patient step');
+        alert(`❌ Unknown barcode format: ${barcode}\n\nExpected: Patient barcode starting with PT`);
+      }
+    } else if (currentStep === 'scan-medication') {
+      if (isMedicationBarcode) {
+        console.log('🔵 BCMA: Valid medication barcode, proceeding');
+        setScannedMedicationId(barcode);
+        
+        // Validate both barcodes
+        const validation = bcmaService.validateBarcodes(
+          scannedPatientId,
+          barcode,
+          patient,
+          medication
+        );
+        
+        console.log('🔵 BCMA: Validation result:', validation);
+        setValidationResult(validation);
+        setCurrentStep('verify');
+      } else if (isPatientBarcode) {
+        console.log('❌ BCMA: Patient barcode scanned during medication step - rejecting');
+        alert(`❌ Wrong barcode type!\n\nExpected: Medication barcode\nScanned: Patient barcode (${barcode})\n\nPlease scan the medication package barcode.`);
+      } else {
+        console.log('❌ BCMA: Unknown barcode format during medication step');
+        alert(`❌ Unknown barcode format: ${barcode}\n\nExpected: Medication barcode starting with MED`);
+      }
+    }
+  }, [currentStep, scannedPatientId, patient, medication]);
+
   // Listen for barcode scans from global barcode dispatcher
   useEffect(() => {
-    console.log('🔵 BCMA: Setting up barcode listener for step:', currentStep);
+    console.log('🔵 BCMA: Setting up barcode listener');
     console.log('🔵 BCMA: Component mounted and listening for barcodescanned events');
     
     const handleBarcodeInput = (event: CustomEvent) => {
       console.log('🔵 BCMA: Received barcode event:', event.detail.barcode);
       console.log('🔵 BCMA: Event type:', event.type);
-      console.log('🔵 BCMA: Current step when received:', currentStep);
       const barcode = event.detail.barcode;
+      
       handleBarcodeScanned(barcode);
     };
 
@@ -81,34 +132,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       document.removeEventListener('barcodescanned', handleBarcodeInput as EventListener);
       delete (window as any).bcmaTestScan;
     };
-  }, [currentStep]);
+  }, [handleBarcodeScanned]); // Depend on the memoized function
 
-  const handleBarcodeScanned = (barcode: string) => {
-    console.log('🔵 BCMA: Barcode scanned:', barcode);
-    console.log('🔵 BCMA: Current step:', currentStep);
-    console.log('🔵 BCMA: Scanned patient ID:', scannedPatientId);
-    
-    if (currentStep === 'scan-patient') {
-      console.log('🔵 BCMA: Setting patient barcode:', barcode);
-      setScannedPatientId(barcode);
-      setCurrentStep('scan-medication');
-    } else if (currentStep === 'scan-medication') {
-      console.log('🔵 BCMA: Setting medication barcode:', barcode);
-      setScannedMedicationId(barcode);
-      
-      // Validate both barcodes
-      const validation = bcmaService.validateBarcodes(
-        scannedPatientId,
-        barcode,
-        patient,
-        medication
-      );
-      
-      console.log('🔵 BCMA: Validation result:', validation);
-      setValidationResult(validation);
-      setCurrentStep('verify');
-    }
-  };
+
 
     const handleAdministration = async () => {
     if (!validationResult || !validationResult.isValid) return;
@@ -336,7 +362,12 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 <p className="text-sm text-blue-700 mb-2">🧪 Test Barcode Scanning:</p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => simulateBarcodeScan(bcmaService.generatePatientBarcode(patient))}
+                    onClick={() => {
+                      const patientBarcode = bcmaService.generatePatientBarcode(patient);
+                      console.log('🧪 Test Patient Scan clicked - Generated barcode:', patientBarcode);
+                      console.log('🧪 Patient object:', patient);
+                      simulateBarcodeScan(patientBarcode);
+                    }}
                     className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                   >
                     Test Patient Scan

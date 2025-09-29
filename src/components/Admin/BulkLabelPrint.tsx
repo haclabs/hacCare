@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../lib/bulkLabelService';
 import { BarcodeGenerator } from '../bcma/BarcodeGenerator';
 import { Tenant } from '../../types';
+import { bcmaService } from '../../lib/bcmaService';
 
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
@@ -70,12 +71,28 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               margin: 1px 0;
             }
             .barcode-canvas {
-              max-width: 2.4in;
-              max-height: 0.4in;
+              max-width: 2.2in;
+              max-height: 0.6in;
             }
             @media print {
               .label {
                 border: none !important;
+              }
+              .labels-grid {
+                grid-template-rows: repeat(10, 1in) !important;
+                height: 10in !important;
+              }
+              .barcode-canvas {
+                max-width: 2.2in !important;
+                max-height: 0.6in !important;
+                width: auto !important;
+                height: auto !important;
+              }
+              .barcode-area {
+                flex: 1 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
               }
             }
           </style>
@@ -118,10 +135,10 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
                 width: 1,
-                height: 25,
+                height: 40,
                 displayValue: true,
                 fontSize: 8,
-                margin: 1,
+                margin: 3,
                 background: "#ffffff",
                 lineColor: "#000000"
               });
@@ -299,11 +316,25 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             }
             .barcode-canvas {
               width: 0.8in;
-              height: 0.9in;
+              height: 0.8in;
             }
             @media print {
               .label {
                 border: none !important;
+              }
+              .labels-grid {
+                grid-template-rows: repeat(10, 1in) !important;
+                height: 10in !important;
+              }
+              .barcode-canvas {
+                width: 0.8in !important;
+                height: 0.8in !important;
+              }
+              .barcode-area {
+                width: 0.9in !important;
+                height: 0.9in !important;
+                transform: rotate(90deg) !important;
+                transform-origin: center !important;
               }
             }
           </style>
@@ -321,7 +352,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 </div>
               </div>
             `).join('')}
-            ${Array(30 - (medications.length % 30)).fill(0).map(() => `
+            ${Array(Math.max(0, 30 - medications.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
           </div>
@@ -343,14 +374,18 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
           medications.forEach((medication, index) => {
             const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
             if (canvas) {
-              const barcodeValue = medication.id.toUpperCase();
+              // Generate short, scannable barcode using BCMA service
+              const barcodeValue = bcmaService.generateMedicationBarcode({
+                id: medication.id,
+                name: medication.medication_name || 'Unknown'
+              } as any);
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
-                width: 2.5,
-                height: 80,
+                width: 1,
+                height: 60,
                 displayValue: true,
-                fontSize: 10,
-                margin: 1,
+                fontSize: 8,
+                margin: 3,
                 background: "#ffffff",
                 lineColor: "#000000",
                 textAlign: "center",
@@ -416,7 +451,10 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 <div className="w-20 h-full flex justify-center items-center">
                   <div className="transform rotate-90 origin-center">
                     <BarcodeGenerator
-                      data={medication.id.toUpperCase()}
+                      data={bcmaService.generateMedicationBarcode({
+                        id: medication.id,
+                        name: medication.medication_name || 'Unknown'
+                      } as any)}
                       type="medication"
                       vertical={true}
                     />

@@ -42,11 +42,37 @@ export interface BCMAValidationResult {
 class BCMAService {
   // Generate medication barcode ID - shortened for scanner compatibility
   generateMedicationBarcode(medication: Medication): string {
-    // Create a shorter, more readable medication code
-    // Use first 3 letters of name + last 6 chars of ID for uniqueness
-    const namePrefix = medication.name.replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
-    const idSuffix = medication.id.slice(-6).toUpperCase();
-    return `${namePrefix}${idSuffix}`;
+    // Create a shorter medication code with MED prefix
+    // Format: MED + 2 chars + 4 chars = 9 total characters (shorter for better scanning)
+    
+    // Get clean medication name - only letters and numbers
+    const cleanName = medication.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    
+    // Generate 2-character prefix (shortened from 3)
+    let namePrefix = '';
+    if (cleanName.length >= 2) {
+      namePrefix = cleanName.substring(0, 2);
+    } else if (cleanName.length > 0) {
+      // Pad short names with numbers from the ID
+      const idChars = medication.id.replace(/[^A-Z0-9]/g, '').substring(0, 2);
+      namePrefix = (cleanName + idChars + 'AB').substring(0, 2);
+    } else {
+      // Fallback for names with no valid characters
+      namePrefix = medication.id.replace(/[^A-Z0-9]/g, '').substring(0, 2) || 'MD';
+    }
+    
+    // Get last 4 characters from ID (shortened from 6)
+    const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+    const idSuffix = cleanId.length >= 4 ? cleanId.slice(-4) : (cleanId + 'ABCD').substring(0, 4);
+    
+    const barcode = `MED${namePrefix}${idSuffix}`;
+    
+    console.log('🔵 Generated SHORT barcode for', medication.name, ':', barcode);
+    console.log('🔵 Original name:', medication.name, 'Clean name:', cleanName);
+    console.log('🔵 Name prefix (2 chars):', namePrefix, 'ID suffix (4 chars):', idSuffix);
+    console.log('🔵 Final barcode length:', barcode.length);
+    
+    return barcode;
   }
 
   // Generate patient barcode ID - also shortened
@@ -124,7 +150,7 @@ class BCMAService {
     const generatedBarcode = this.generateMedicationBarcode(medication);
     const validIds = [
       medication.id,                // Direct medication ID
-      generatedBarcode,             // New format (ASP123456)
+      generatedBarcode,             // New format (MEDASPF646A3)
       `MED-${medication.id}`,       // Legacy format
       `RX-${medication.id}`         // Alternative legacy format
     ];
@@ -133,8 +159,13 @@ class BCMAService {
     console.log('🔵 Valid medication IDs:', validIds);
     console.log('🔵 Medication ID:', medication.id);
     console.log('🔵 Generated barcode:', generatedBarcode);
+    console.log('🔵 Medication name:', medication.name);
+    console.log('🔵 Does scanned match generated?', scannedId === generatedBarcode);
     
-    return validIds.includes(scannedId);
+    const isValid = validIds.includes(scannedId);
+    console.log('🔵 Is barcode valid?', isValid);
+    
+    return isValid;
   }
 
   // Validate timing for medication administration

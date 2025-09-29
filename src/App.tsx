@@ -13,7 +13,7 @@ import { useSimulation } from './contexts/SimulationContext';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { initializeModularPatientSystem } from './modular-patient-system';
-import { Patient } from './types';
+import { Patient, Medication } from './types';
 import SimulationModeIndicator from './components/simulations/SimulationModeIndicator';
 import SimulationRouter from './components/Simulation/SimulationRouter';
 import { useSimulationAwareAuth } from './contexts/auth/SimulationAwareAuthProvider';
@@ -194,6 +194,52 @@ function App() {
               console.log('❌ No patient found with any matching method');
             }
           }
+        }
+      } else if (/^(?!MED|PT)[A-Z]{3}[A-Z0-9]{6}$/i.test(barcode)) {
+        // BCMA short medication barcode - format: 3 letters + 6 alphanumeric chars (e.g., DOC866FA8)
+        // Excludes existing MED and PT prefixes to avoid conflicts
+        console.log('💊 BCMA short medication barcode detected:', barcode);
+        
+        // First try to find the medication directly in our loaded medications by searching for the barcode
+        let foundMedication: Medication | undefined;
+        let patientWithMedication: Patient | undefined;
+        
+        for (const patient of patients) {
+          if (patient.medications) {
+            // Look for medications where the BCMA barcode would match this scanned code
+            const matchingMed = patient.medications.find(med => {
+              // Generate what the BCMA barcode should be for this medication
+              const namePrefix = med.name.replace(/[^A-Za-z]/g, '').substring(0, 3).toUpperCase();
+              const idSuffix = med.id.slice(-6).toUpperCase();
+              const expectedBarcode = `${namePrefix}${idSuffix}`;
+              
+              console.log(`🔍 Checking medication "${med.name}" (ID: ${med.id}): Expected barcode "${expectedBarcode}" vs Scanned "${barcode}"`);
+              
+              return expectedBarcode === barcode.toUpperCase();
+            });
+            
+            if (matchingMed) {
+              console.log('✅ Found medication with BCMA barcode match:', matchingMed);
+              console.log('✅ Patient:', patient.first_name, patient.last_name);
+              foundMedication = matchingMed;
+              patientWithMedication = patient;
+              break;
+            }
+          }
+        }
+        
+        // If found in local data, navigate directly
+        if (patientWithMedication && foundMedication) {
+          console.log('✅ Navigating to patient MAR with medication category:', foundMedication.category);
+          navigate(`/patient/${patientWithMedication.id}`, { 
+            state: { 
+              activeTab: 'medications',
+              medicationCategory: foundMedication.category || 'scheduled'
+            } 
+          });
+        } else {
+          console.log('❌ No medication found with BCMA barcode:', barcode);
+          console.warn(`⚠️ Unknown BCMA medication barcode: ${barcode}`);
         }
       } else if (/^\d+$/.test(barcode)) {
         // This is a numeric-only barcode, likely a patient ID without the PT prefix

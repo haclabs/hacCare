@@ -65,6 +65,19 @@ export const useBarcodeScanner = (
       event.target instanceof HTMLInputElement && 
       (event.target as HTMLInputElement).classList.contains('barcode-scanner-input');
     
+    // Check if browser console is active (common source of execution errors)
+    const isConsoleActive = 
+      event.target === document.body || 
+      event.target === document.documentElement ||
+      (event.target as any)?.tagName === 'IFRAME';
+    
+    // Always prevent default if console might be active during scanning
+    if (isConsoleActive && (isScanning || buffer.length > 0)) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+    
     // Allow normal input behavior for barcode-scanner-input class
     if (isInputField && !isBarcodeInput) {
       if (isDebugMode) console.log('Ignoring keydown in standard input element');
@@ -111,9 +124,11 @@ export const useBarcodeScanner = (
 
     // For non-barcode inputs, prevent default for all keys during scanning
     // For barcode inputs, only prevent default for Enter key
-    if (!isBarcodeInput || (isBarcodeInput && event.key === 'Enter')) {
+    // IMPORTANT: Always prevent default during scanning to avoid console execution
+    if (isScanning || !isBarcodeInput || (isBarcodeInput && event.key === 'Enter')) {
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
     }
 
     // Process the key

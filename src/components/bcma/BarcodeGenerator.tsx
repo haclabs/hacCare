@@ -1,6 +1,24 @@
 /**
  * Barcode Generator Component
- * Generates and displays proper Code 128 barcodes for medications and patient wristbands
+ * Generates and di      } : {
+        format: "CODE128",
+        width: 2,
+        height: 50,
+        displayValue: true,
+        font: "monospace",
+        fontSize: 10,
+        textAlign: "center",
+        textPosition: "bottom",
+        textMargin: 2,
+        fontOptions: "",
+        background: "#ffffff",
+        lineColor: "#000000",
+        margin: 8,
+        marginTop: 8,
+        marginBottom: 15,
+        marginLeft: 8,
+        marginRight: 8
+      };128 barcodes for medications and patient wristbands
  */
 
 import React, { useRef, useEffect } from 'react';
@@ -36,8 +54,26 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       // Configure barcode based on orientation
       const barcodeConfig = vertical ? {
         format: "CODE128",
-        width: 2.5,
-        height: 70,
+        width: 1,            // Back to standard width - thick bars can cause scan issues
+        height: 60,
+        displayValue: true,
+        font: "monospace",
+        fontSize: 8,
+        textAlign: "center",
+        textPosition: "bottom",
+        textMargin: 2,
+        fontOptions: "",
+        background: "#ffffff",
+        lineColor: "#000000",
+        margin: 0,           
+        marginTop: 0,        
+        marginBottom: 8,     // Keep bottom margin for text spacing
+        marginLeft: 0,       
+        marginRight: 0       
+      } : {
+        format: "CODE128",
+        width: 1,
+        height: 40,
         displayValue: true,
         font: "monospace",
         fontSize: 10,
@@ -47,29 +83,11 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
         fontOptions: "",
         background: "#ffffff",
         lineColor: "#000000",
-        margin: 1,
-        marginTop: 1,
-        marginBottom: 15,
-        marginLeft: 1,
-        marginRight: 1
-      } : {
-        format: "CODE128",
-        width: 2,
-        height: 60,
-        displayValue: true,
-        font: "monospace",
-        fontSize: 12,
-        textAlign: "center",
-        textPosition: "bottom",
-        textMargin: 2,
-        fontOptions: "",
-        background: "#ffffff",
-        lineColor: "#000000",
-        margin: 10,
-        marginTop: 10,
-        marginBottom: 20,
-        marginLeft: 10,
-        marginRight: 10
+        margin: 5,
+        marginTop: 5,
+        marginBottom: 10,
+        marginLeft: 5,
+        marginRight: 5
       };
 
       // Generate proper Code 128 barcode using JsBarcode
@@ -91,7 +109,7 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       // Fallback: Draw error message
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        canvas.width = vertical ? 120 : 300;
+        canvas.width = vertical ? 160 : 300;  // Increased from 140 to 160 for even wider vertical barcodes
         canvas.height = vertical ? 180 : 100;
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);

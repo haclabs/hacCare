@@ -1,6 +1,10 @@
 /**
  * Barcode Scanner Component
  * Handles barcode scanning for medications and patient wristbands
+ * 
+ * Supported Barcode Formats:
+ * - Medication: CODE128 format, alphanumeric IDs (e.g., ACE3D4DD4)
+ * - Patient: CODE128 format, PT prefix + patient ID (e.g., PT12345678)
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -106,12 +110,19 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     // Determine barcode type based on prefix or format
     let detectedType: 'medication' | 'patient';
     
-    if (barcode.startsWith('MED-') || barcode.startsWith('RX-')) {
-      detectedType = 'medication';
-    } else if (barcode.startsWith('PT-') || barcode.startsWith('PAT-')) {
+    // Updated logic for new barcode formats:
+    // - Patient barcodes start with 'PT' (e.g., PT12345678)
+    // - Medication barcodes are alphanumeric without prefix (e.g., ACE3D4DD4)
+    if (barcode.startsWith('PT') || barcode.startsWith('PAT-')) {
       detectedType = 'patient';
+    } else if (barcode.startsWith('MED-') || barcode.startsWith('RX-')) {
+      // Legacy medication prefixes (for backward compatibility)
+      detectedType = 'medication';
+    } else if (/^[A-Z0-9]{6,12}$/i.test(barcode)) {
+      // Alphanumeric medication IDs (new format)
+      detectedType = 'medication';
     } else {
-      // Fallback logic - numbers could be either
+      // Fallback to expected type
       detectedType = expectedType;
     }
 
@@ -185,8 +196,14 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
                 {expectedType === 'medication' 
-                  ? 'Position the medication barcode within the red frame'
-                  : 'Position the patient wristband barcode within the red frame'
+                  ? 'Position the medication barcode (CODE128 format) within the red frame'
+                  : 'Position the patient wristband barcode (PT prefix) within the red frame'
+                }
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                {expectedType === 'medication' 
+                  ? 'Expected format: alphanumeric ID (e.g., ACE3D4DD4)'
+                  : 'Expected format: PT + patient ID (e.g., PT12345678)'
                 }
               </p>
             </div>
