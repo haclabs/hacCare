@@ -288,18 +288,31 @@ export const initializeSessionTracking = async (tenantId?: string) => {
       tenantId 
     });
     
-    const sessionId = await createUserSession(ipAddress, userAgent, tenantId);
+    // Add timeout and better error handling for production
+    const sessionPromise = createUserSession(ipAddress, userAgent, tenantId);
+    const timeoutPromise = new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('Session tracking timeout - continuing without session')), 8000)
+    );
     
-    if (sessionId) {
-      console.log('✅ Session tracking initialized successfully:', sessionId);
-    } else {
-      console.warn('⚠️ Session creation returned null - check RLS policies and database');
+    try {
+      const sessionId = await Promise.race([sessionPromise, timeoutPromise]);
+      
+      if (sessionId) {
+        console.log('✅ Session tracking initialized successfully:', sessionId);
+      } else {
+        console.warn('⚠️ Session creation returned null - check RLS policies and database');
+      }
+      
+      return sessionId;
+    } catch (timeoutError) {
+      console.warn('⚠️ Session tracking timed out - this is not critical in production');
+      console.warn('User can continue using the application without session tracking');
+      return null;
     }
     
-    return sessionId;
   } catch (error) {
     console.error('❌ Failed to initialize session tracking:', error);
-    console.error('Error details:', error);
+    console.warn('⚠️ Continuing without session tracking - user login will not be blocked');
     return null;
   }
 };
