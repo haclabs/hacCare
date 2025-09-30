@@ -316,42 +316,36 @@ export const initializeSessionTracking = async (tenantId?: string) => {
 
     console.log('👤 Creating session for user:', user.email, 'ID:', user.id);
 
-    const ipAddress = await getClientIpAddress();
+    // Start IP detection in background - don't wait for it
+    const ipPromise = getClientIpAddress();
     const userAgent = navigator.userAgent;
     
-    console.log('🔐 Initializing session tracking...', { 
-      userId: user.id, 
-      email: user.email, 
-      ipAddress, 
-      userAgent, 
-      tenantId 
+    console.log('🔐 Initializing session tracking (async)...');
+    
+    // Create session in background without blocking login
+    ipPromise.then(async (ipAddress) => {
+      try {
+        console.log('🌐 Got IP address:', ipAddress, 'creating session...');
+        const sessionId = await createUserSession(ipAddress, userAgent, tenantId);
+        
+        if (sessionId) {
+          console.log('✅ Session tracking completed successfully:', sessionId);
+        } else {
+          console.warn('⚠️ Session creation returned null');
+        }
+      } catch (error) {
+        console.warn('⚠️ Background session creation failed:', error);
+      }
+    }).catch(error => {
+      console.warn('⚠️ Background session tracking failed:', error);
     });
     
-    // Add timeout and better error handling for production
-    const sessionPromise = createUserSession(ipAddress, userAgent, tenantId);
-    const timeoutPromise = new Promise<null>((_, reject) => 
-      setTimeout(() => reject(new Error('Session tracking timeout - continuing without session')), 8000)
-    );
-    
-    try {
-      const sessionId = await Promise.race([sessionPromise, timeoutPromise]);
-      
-      if (sessionId) {
-        console.log('✅ Session tracking initialized successfully:', sessionId);
-      } else {
-        console.warn('⚠️ Session creation returned null - check RLS policies and database');
-      }
-      
-      return sessionId;
-    } catch (timeoutError) {
-      console.warn('⚠️ Session tracking timed out - this is not critical in production');
-      console.warn('User can continue using the application without session tracking');
-      return null;
-    }
+    // Return immediately - don't block login
+    console.log('🚀 Login proceeding while session creates in background');
+    return null; // We don't wait for the session ID
     
   } catch (error) {
     console.error('❌ Failed to initialize session tracking:', error);
-    console.warn('⚠️ Continuing without session tracking - user login will not be blocked');
     return null;
   }
 };
