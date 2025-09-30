@@ -88,7 +88,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
           console.log('🔓 Alert acknowledgment cooldown ended for:', alertId);
           return newSet;
         });
-      }, 5000); // Increased to 5 second cooldown
+      }, 30 * 60 * 1000); // 30 minute cooldown
     }
   };
 

@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../lib/alertService';
+import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks, ALERT_CONFIG } from '../lib/alertService';
 import { useAuth } from '../hooks/useAuth';
 import { useTenant } from './TenantContext';
 import { Alert } from '../types'; 
@@ -329,11 +329,12 @@ export function AlertProvider({ children }: AlertProviderProps) {
       runChecks();
     }, 10000); // Increased initial delay to 10 seconds
     
-    // Set up interval to run checks every 15 minutes (reduced frequency)
+    // Set up interval to run checks every 15 minutes
+    // This includes cleanup of alerts older than 24 hours
     let checkInterval = setInterval(() => {
-      console.log('Running scheduled alert checks');
+      console.log(`Running scheduled alert checks (every ${ALERT_CONFIG.CHECK_INTERVAL_MS / 60000} minutes)`);
       runChecks();
-    }, 15 * 60 * 1000); // Run checks every 15 minutes instead of 10
+    }, ALERT_CONFIG.CHECK_INTERVAL_MS);
     
     return () => {
       // if (refreshTimeout) {

@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
+import { initializeSessionTracking, endUserSession } from '../lib/adminService';
 
 interface AuthContextType {
   user: User | null;
@@ -222,11 +223,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               fetchUserProfile(session.user.id).catch(err => 
                 console.error('Profile fetch failed:', err)
               );
+              
+              // Initialize session tracking for admin dashboard
+              initializeSessionTracking().catch(err =>
+                console.error('Session tracking failed:', err)
+              );
             }
             break;
             
           case 'SIGNED_OUT':
             console.log('👋 User signed out');
+            
+            // End session tracking
+            endUserSession().catch(err =>
+              console.error('Failed to end session:', err)
+            );
+            
             setUser(null);
             setProfile(null);
             setIsOffline(false);

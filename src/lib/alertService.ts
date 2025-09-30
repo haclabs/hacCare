@@ -1,11 +1,66 @@
-import { supabase } from './supabase';
-import { isSupabaseConfigured, checkDatabaseHealth } from './supabase';
+import { supabase, isSupabaseConfigured, checkDatabaseHealth } from './supabase';
 import { Alert } from '../types';
+import { superAdminTenantService } from './superAdminTenantService';
+
+/**
+ * Alert Service Configuration
+ */
+export const ALERT_CONFIG = {
+  // How often to check for new alerts (15 minutes)
+  CHECK_INTERVAL_MS: 15 * 60 * 1000,
+  
+  // How long to keep alerts before auto-deletion (24 hours) 
+  ALERT_RETENTION_HOURS: 24,
+  
+  // Polling interval for UI updates (15 minutes to match check interval)
+  POLLING_INTERVAL_MS: 15 * 60 * 1000,
+  
+  // Batch size for bulk operations
+  BATCH_SIZE: 50,
+  
+  // Safety limit for processing alerts
+  MAX_ALERTS_TO_PROCESS: 10000
+};
 
 /**
  * Alert Service
- * Handles real-time alert generation and management using Supabase
+ * Handles creation, retrieval, and management of patient alerts
+ * 
+ * Features:
+ * - Automatic alert generation based on patient conditions
+ * - 15-minute check intervals for optimal performance
+ * - Automatic cleanup of alerts older than 24 hours
+ * - Batch processing for safe bulk operations
+ * - Tenant-aware checking for super admin users
  */
+
+/**
+ * Get the current tenant ID filter for alert checking
+ * Returns null for all tenants, or specific tenant ID when super admin has selected one
+ */
+const getCurrentTenantFilter = async (): Promise<string | null> => {
+  try {
+    const currentAccess = superAdminTenantService.getCurrentAccess();
+    
+    // If super admin has selected a specific tenant, use that filter
+    if (currentAccess.hasAccess && currentAccess.tenantId) {
+      console.log(`🎯 Alert checks filtering for tenant: ${currentAccess.tenantId} (${currentAccess.tenantName})`);
+      return currentAccess.tenantId;
+    }
+    
+    // If super admin is in "all tenants" mode or regular user, no filter
+    if (currentAccess.hasAccess && !currentAccess.tenantId) {
+      console.log('🌐 Alert checks running for ALL tenants (super admin mode)');
+    } else {
+      console.log('👤 Alert checks running for user\'s assigned tenant(s)');
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting tenant filter for alerts:', error);
+    return null;
+  }
+};
 
 export interface DatabaseAlert {
   id: string;
@@ -281,22 +336,30 @@ export const checkMedicationAlerts = async (): Promise<void> => {
   try {
     console.log('💊 Checking for medication due alerts...');
     console.log('Current time for medication check:', new Date().toISOString());
-    console.log('Current time for medication check:', new Date().toISOString());
-    console.log('Current time for check:', new Date().toISOString());
+    
+    // Get current tenant filter (null = all tenants, specific ID = that tenant only)
+    const tenantFilter = await getCurrentTenantFilter();
     
     // Get current time
     const now = new Date();
-    // Get all active medications that are due now or overdue
-    // This includes both medications due within the next hour AND overdue medications
-    const { data: dueMedications, error } = await supabase
+    
+    // Build query with optional tenant filtering
+    let query = supabase
       .from('patient_medications')
       .select(`
         *,
         patients!inner(id, first_name, last_name, patient_id, tenant_id)
       `)
       .eq('status', 'Active')
-      .lte('next_due', new Date(now.getTime() + 60 * 60 * 1000).toISOString())
-      .order('next_due', { ascending: true });    console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
+      .lte('next_due', new Date(now.getTime() + 60 * 60 * 1000).toISOString());
+    
+    // Apply tenant filter if super admin has selected specific tenant
+    if (tenantFilter) {
+      query = query.eq('patients.tenant_id', tenantFilter);
+      console.log(`🎯 Filtering medications for tenant: ${tenantFilter}`);
+    }
+    
+    const { data: dueMedications, error } = await query.order('next_due', { ascending: true });    console.log(`Raw query result: ${dueMedications?.length || 0} medications due or overdue`);
 
     if (error) {
       console.error('Error checking medications:', error);
@@ -436,17 +499,29 @@ export const checkVitalSignsAlerts = async (): Promise<void> => {
   try {
     console.log('🫀 Checking for vital signs alerts...');
     
+    // Get current tenant filter
+    const tenantFilter = await getCurrentTenantFilter();
+    
     // Get recent vital signs (last 4 hours)
     const fourHoursAgo = new Date();
     fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
     
-    const { data: recentVitals, error } = await supabase
+    // Build query with optional tenant filtering
+    let query = supabase
       .from('patient_vitals')
       .select(`
         *,
         patients!inner(id, first_name, last_name, patient_id, tenant_id)
       `)
       .gte('recorded_at', fourHoursAgo.toISOString());
+    
+    // Apply tenant filter if super admin has selected specific tenant
+    if (tenantFilter) {
+      query = query.eq('patients.tenant_id', tenantFilter);
+      console.log(`🎯 Filtering vital signs for tenant: ${tenantFilter}`);
+    }
+    
+    const { data: recentVitals, error } = await query;
 
     if (error) {
       console.error('Error checking vital signs:', error);
@@ -570,12 +645,23 @@ export const checkMissingVitalsAlerts = async (): Promise<void> => {
 
     console.log('📊 Checking for missing vitals alerts...');
 
-    // Get all active patients
-    const { data: patients, error: patientsError } = await supabase
+    // Get current tenant filter
+    const tenantFilter = await getCurrentTenantFilter();
+
+    // Build query with optional tenant filtering
+    let query = supabase
       .from('patients')
       .select('id, first_name, last_name, patient_id, tenant_id')
       .neq('condition', 'Discharged')
       .order('created_at', { ascending: false });
+    
+    // Apply tenant filter if super admin has selected specific tenant
+    if (tenantFilter) {
+      query = query.eq('tenant_id', tenantFilter);
+      console.log(`🎯 Filtering missing vitals check for tenant: ${tenantFilter}`);
+    }
+
+    const { data: patients, error: patientsError } = await query;
 
     if (patientsError) {
       console.error('Error fetching patients:', patientsError);
@@ -711,6 +797,8 @@ const isPatientConditionCritical = async (patientId: string): Promise<boolean> =
  * Clean up duplicate alerts for the same patient and alert type
  */
 export const cleanupDuplicateAlerts = async (): Promise<void> => {
+  const MAX_ALERTS_TO_PROCESS = 10000; // Safety limit to prevent overwhelming operations
+  
   try {
     console.log('🧹 Cleaning up duplicate alerts...');
     
@@ -725,6 +813,19 @@ export const cleanupDuplicateAlerts = async (): Promise<void> => {
       console.error('Error fetching alerts for cleanup:', error);
       return;
     }
+
+    if (!alerts || alerts.length === 0) {
+      console.log('✅ No unacknowledged alerts found to clean up');
+      return;
+    }
+
+    if (alerts.length > MAX_ALERTS_TO_PROCESS) {
+      console.warn(`⚠️ Found ${alerts.length} alerts, which exceeds safety limit of ${MAX_ALERTS_TO_PROCESS}`);
+      console.log('Consider running cleanup in smaller chunks or contact system administrator');
+      return;
+    }
+
+    console.log(`🔍 Found ${alerts.length} unacknowledged alerts, checking for duplicates...`);
 
     // Group alerts by patient and type
     const alertGroups = new Map<string, any[]>();
@@ -769,17 +870,26 @@ export const cleanupDuplicateAlerts = async (): Promise<void> => {
       }
     }
 
-    // Delete duplicate alerts
+    // Delete duplicate alerts using batch operations
     if (alertsToDelete.length > 0) {
-      const { error: deleteError } = await supabase
-        .from('patient_alerts')
-        .delete()
-        .in('id', alertsToDelete);
+      // Import batch operations utility
+      const { batchDelete } = await import('./batchOperations');
+      
+      const { totalDeleted, errors } = await batchDelete(
+        supabase,
+        'patient_alerts',
+        alertsToDelete,
+        {
+          batchSize: 50,
+          delayBetweenBatches: 100,
+          logProgress: true
+        }
+      );
 
-      if (deleteError) {
-        console.error('Error deleting duplicate alerts:', deleteError);
+      if (errors === 0) {
+        console.log(`✅ Successfully cleaned up ${totalDeleted} duplicate alerts`);
       } else {
-        console.log(`✅ Deleted ${alertsToDelete.length} duplicate alerts`);
+        console.log(`⚠️ Cleaned up ${totalDeleted} duplicate alerts with ${errors} batch errors`);
       }
     } else {
       console.log('✅ No duplicate alerts found');
@@ -809,7 +919,10 @@ export const runAlertChecks = async (): Promise<void> => {
 
     console.log('🔄 Running comprehensive alert checks...');
     
-    // Clean up duplicates first
+    // Clean up old alerts first (older than 24 hours)
+    await cleanupOldAlerts();
+    
+    // Clean up duplicates
     await cleanupDuplicateAlerts();
     
     console.log('⏱️ Starting medication checks at:', new Date().toISOString());
@@ -858,7 +971,7 @@ export const subscribeToAlerts = (callback: (alerts: Alert[]) => void) => {
 };
 
 /**
- * Clean up expired alerts
+ * Clean up expired alerts (using expires_at field)
  */
 export const cleanupExpiredAlerts = async (): Promise<void> => {
   try {
@@ -876,5 +989,62 @@ export const cleanupExpiredAlerts = async (): Promise<void> => {
     }
   } catch (error) {
     console.error('Error cleaning up expired alerts:', error);
+  }
+};
+
+/**
+ * Clean up alerts older than 24 hours
+ * Automatically deletes alerts created more than 24 hours ago
+ */
+export const cleanupOldAlerts = async (): Promise<void> => {
+  try {
+    console.log('🧹 Cleaning up alerts older than 24 hours...');
+    
+    // Calculate 24 hours ago
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    
+    console.log(`🕒 Deleting alerts created before: ${twentyFourHoursAgo.toISOString()}`);
+    
+    // Get alerts older than 24 hours to delete them in batches
+    const { data: oldAlerts, error: fetchError } = await supabase
+      .from('patient_alerts')
+      .select('id')
+      .lt('created_at', twentyFourHoursAgo.toISOString());
+
+    if (fetchError) {
+      console.error('Error fetching old alerts:', fetchError);
+      return;
+    }
+
+    if (!oldAlerts || oldAlerts.length === 0) {
+      console.log('✅ No alerts older than 24 hours found');
+      return;
+    }
+
+    console.log(`📊 Found ${oldAlerts.length} alerts older than 24 hours`);
+    
+    // Use batch operations to safely delete old alerts
+    const { batchDelete } = await import('./batchOperations');
+    
+    const alertIds = oldAlerts.map(alert => alert.id);
+    const { totalDeleted, errors } = await batchDelete(
+      supabase,
+      'patient_alerts',
+      alertIds,
+      {
+        batchSize: 50,
+        delayBetweenBatches: 100,
+        logProgress: true
+      }
+    );
+
+    if (errors === 0) {
+      console.log(`✅ Successfully deleted ${totalDeleted} old alerts`);
+    } else {
+      console.log(`⚠️ Deleted ${totalDeleted} old alerts with ${errors} batch errors`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up old alerts:', error);
   }
 };

@@ -3,11 +3,14 @@ import { Tenant } from '../types';
 import { 
   getCurrentUserTenant, 
   getTenantById,
-  getSuperAdminSelectedTenant,
-  switchTenantContext,
-  clearSuperAdminTenantSelection,
   getTenantBySubdomain
 } from '../lib/tenantService';
+import { 
+  superAdminTenantService,
+  initializeSuperAdminAccess,
+  switchSuperAdminToTenant,
+  clearSuperAdminTenantContext
+} from '../lib/superAdminTenantService';
 import { getCurrentSubdomain } from '../lib/subdomainService';
 import { useAuth } from './auth/SimulationAwareAuthProvider';
 
@@ -101,13 +104,21 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (isMultiTenantAdmin) {
-        // For super admin, check if they have a selected tenant
-        const savedSelectedTenant = getSuperAdminSelectedTenant();
-        setSelectedTenantId(savedSelectedTenant);
+        // Super admin user - initialize enhanced access and load context
+        console.log('🔐 SUPER ADMIN: Initializing enhanced tenant access');
         
-        if (savedSelectedTenant) {
+        const hasAccess = await initializeSuperAdminAccess();
+        if (!hasAccess) {
+          throw new Error('Failed to initialize super admin access');
+        }
+
+        // Get current access state from super admin service
+        const currentAccess = superAdminTenantService.getCurrentAccess();
+        setSelectedTenantId(currentAccess.tenantId);
+        
+        if (currentAccess.tenantId) {
           // Load the selected tenant
-          const { data: tenant, error: tenantError } = await getTenantById(savedSelectedTenant);
+          const { data: tenant, error: tenantError } = await getTenantById(currentAccess.tenantId);
           if (tenantError) {
             throw new Error(tenantError.message);
           }
@@ -153,14 +164,20 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
-      // Fetch the tenant data
+      // Use enhanced super admin service for tenant switching
+      const result = await switchSuperAdminToTenant(tenantId);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to switch tenant');
+      }
+
+      // Fetch the tenant data for UI
       const { data: tenant, error: tenantError } = await getTenantById(tenantId);
       if (tenantError) {
         throw new Error(tenantError.message);
       }
 
-      // Save selection and update state
-      switchTenantContext(tenantId);
+      // Update state
       setSelectedTenantId(tenantId);
       setCurrentTenant(tenant);
     } catch (err) {
@@ -174,14 +191,19 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   /**
    * Clear tenant selection to view all tenants (super admin only)
    */
-  const viewAllTenants = () => {
+  const viewAllTenants = async () => {
     if (!isMultiTenantAdmin) {
       throw new Error('Only super admins can view all tenants');
     }
 
-    clearSuperAdminTenantSelection();
-    setSelectedTenantId(null);
-    setCurrentTenant(null);
+    try {
+      await clearSuperAdminTenantContext();
+      setSelectedTenantId(null);
+      setCurrentTenant(null);
+    } catch (error) {
+      console.error('Error clearing tenant context:', error);
+      setError('Failed to clear tenant context');
+    }
   };
 
   /**

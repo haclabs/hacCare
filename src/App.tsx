@@ -22,6 +22,7 @@ import { useTenant } from './contexts/TenantContext';
 
 import { useAuth } from './hooks/useAuth';
 import BackupManagement from './components/Admin/BackupManagement';
+import AdminDashboard from './components/Admin/AdminDashboard';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
@@ -583,6 +584,13 @@ function App() {
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <BackupManagement />
+          </Suspense>
+        );
+
+      case 'admin':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminDashboard />
           </Suspense>
         );
 

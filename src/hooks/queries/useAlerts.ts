@@ -249,8 +249,9 @@ export function useDismissAlert() {
 /**
  * Alert polling hook for real-time updates
  * Can be enabled/disabled based on component visibility
+ * Default interval set to 15 minutes (900000ms) to reduce server load
  */
-export function useAlertPolling(enabled = true, interval = 30000) {
+export function useAlertPolling(enabled = true, interval = 900000) {
   const { refetch } = useActiveAlerts();
   
   return useQuery({

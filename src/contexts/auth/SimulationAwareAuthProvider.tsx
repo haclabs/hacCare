@@ -3,6 +3,7 @@ import { AuthProvider as StandardAuthProvider, useAuth as useStandardAuth } from
 import { AuthProvider as SimulationAuthProvider, useAuth as useSimulationAuth } from './AuthContext-simulation';
 import { SimulationSubTenantService } from '../../lib/simulationSubTenantService';
 import { supabase } from '../../lib/supabase';
+import { initializeSessionTracking, endUserSession } from '../../lib/adminService';
 
 interface SimulationAwareContextType {
   isSimulationUser: boolean;
@@ -73,10 +74,40 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
 
     detectUserType();
     
-    // Listen for auth state changes to re-detect context
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+    // Listen for auth state changes to re-detect context and handle session tracking
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed in SimulationAwareAuthProvider:', event);
+      
+      if (event === 'SIGNED_IN') {
         detectUserType();
+        
+        // Initialize session tracking for all logins
+        if (session?.user) {
+          console.log('👤 User signed in, initializing session tracking for:', session.user.email);
+          
+          // Use a timeout to prevent hanging
+          const sessionTrackingPromise = initializeSessionTracking();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Session tracking timeout')), 5000)
+          );
+          
+          try {
+            await Promise.race([sessionTrackingPromise, timeoutPromise]);
+            console.log('✅ Session tracking completed successfully');
+          } catch (error) {
+            console.error('❌ Failed to initialize session tracking:', error);
+            // Don't block the login process if session tracking fails
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        detectUserType();
+        
+        // End session tracking on logout
+        try {
+          await endUserSession();
+        } catch (error) {
+          console.error('Failed to end session tracking:', error);
+        }
       }
     });
 
