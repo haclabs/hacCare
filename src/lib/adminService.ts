@@ -255,12 +255,51 @@ export const cleanupOldSessions = async () => {
 };
 
 /**
- * Get client IP address (best effort)
+ * Get client IP address using external service
  */
-export const getClientIpAddress = (): string => {
-  // In a real application, this would need to be handled server-side
-  // For now, return a placeholder
-  return '192.168.1.100'; // Placeholder - real IP would come from server
+export const getClientIpAddress = async (): Promise<string> => {
+  try {
+    // Try multiple IP detection services for reliability
+    const ipServices = [
+      'https://api.ipify.org?format=json',
+      'https://ipapi.co/json/',
+      'https://api64.ipify.org?format=json'
+    ];
+    
+    for (const service of ipServices) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const response = await fetch(service, { 
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Handle different response formats
+          const ip = data.ip || data.query || 'unknown';
+          if (ip && ip !== 'unknown' && ip.length > 6) {
+            console.log(`🌐 Detected IP address: ${ip} (via ${service})`);
+            return ip;
+          }
+        }
+      } catch (serviceError) {
+        console.log(`IP service ${service} failed:`, serviceError);
+        continue;
+      }
+    }
+    
+    console.warn('⚠️ Could not detect IP address, using fallback');
+    return 'unknown';
+  } catch (error) {
+    console.error('❌ IP detection failed:', error);
+    return 'unknown';
+  }
 };
 
 /**
@@ -277,7 +316,7 @@ export const initializeSessionTracking = async (tenantId?: string) => {
 
     console.log('👤 Creating session for user:', user.email, 'ID:', user.id);
 
-    const ipAddress = getClientIpAddress();
+    const ipAddress = await getClientIpAddress();
     const userAgent = navigator.userAgent;
     
     console.log('🔐 Initializing session tracking...', { 
