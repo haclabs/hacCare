@@ -3,6 +3,7 @@ import { Shield, Users, Clock, Monitor, Globe, User, RefreshCw } from 'lucide-re
 import { useAuth } from '../../hooks/useAuth';
 import { 
   getActiveSessions, 
+  getRecentLoginHistory,
   getSystemStats,
   UserSession
 } from '../../lib/adminService';
@@ -21,6 +22,8 @@ import {
 export const AdminDashboard: React.FC = () => {
   const { hasRole } = useAuth();
   const [activeSessions, setActiveSessions] = useState<UserSession[]>([]);
+  const [loginHistory, setLoginHistory] = useState<UserSession[]>([]);
+  const [activeTab, setActiveTab] = useState<'sessions' | 'history'>('sessions');
   const [systemStats, setSystemStats] = useState({ activeSessionCount: 0, systemStatus: 'online' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,19 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  /**
+   * Fetch login history from the database
+   */
+  const fetchLoginHistory = async () => {
+    try {
+      const history = await getRecentLoginHistory();
+      setLoginHistory(history);
+    } catch (err) {
+      console.error('Failed to fetch login history:', err);
+      setError('Failed to load login history');
+    }
+  };
+
 
 
   /**
@@ -51,7 +67,10 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await fetchActiveSessions();
+      await Promise.all([
+        fetchActiveSessions(),
+        fetchLoginHistory()
+      ]);
       const stats = await getSystemStats();
       setSystemStats(stats);
       setLastUpdate(new Date());
@@ -161,13 +180,37 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Active Sessions */}
+      {/* Sessions and History */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-            <Users className="h-5 w-5 mr-2" />
-            Login Sessions & IP Addresses
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Login Sessions & IP Addresses
+            </h2>
+            <div className="flex space-x-1">
+              <button
+                onClick={() => setActiveTab('sessions')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                  activeTab === 'sessions'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Active Sessions ({activeSessions.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                  activeTab === 'history'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Recent Logins (20)
+              </button>
+            </div>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -186,12 +229,12 @@ export const AdminDashboard: React.FC = () => {
                   Login Time
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Status
+                  {activeTab === 'sessions' ? 'Status' : 'Session End'}
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {activeSessions.map((session) => (
+              {(activeTab === 'sessions' ? activeSessions : loginHistory).map((session) => (
                 <tr key={session.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -226,13 +269,24 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      session.status === 'active' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                    }`}>
-                      {session.status}
-                    </span>
+                    {activeTab === 'sessions' ? (
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        session.status === 'active' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                      }`}>
+                        {session.status}
+                      </span>
+                    ) : (
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {session.logout_time 
+                          ? new Date(session.logout_time).toLocaleString()
+                          : session.status === 'active' 
+                            ? 'Still active' 
+                            : 'Unknown'
+                        }
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

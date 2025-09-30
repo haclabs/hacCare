@@ -210,6 +210,49 @@ export const endUserSession = async (): Promise<boolean> => {
 
 
 /**
+ * Get recent login history (last 20 logins)
+ */
+export const getRecentLoginHistory = async (): Promise<UserSession[]> => {
+  try {
+    console.log('📜 Fetching recent login history...');
+    
+    const { data, error } = await supabase
+      .from('recent_login_history')
+      .select('*')
+      .lte('login_rank', 20)
+      .order('login_time', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching login history:', error);
+      throw error;
+    }
+
+    const loginHistory: UserSession[] = (data || []).map(record => ({
+      id: record.id,
+      user_id: record.user_id,
+      ip_address: record.ip_address,
+      user_agent: record.user_agent,
+      tenant_id: record.tenant_id,
+      login_time: record.login_time,
+      last_activity: record.login_time, // For history, this is the same as login_time
+      logout_time: record.logout_time,
+      status: record.status as 'active' | 'idle' | 'logged_out',
+      user_email: record.email || 'Unknown',
+      user_name: record.first_name && record.last_name 
+        ? `${record.first_name} ${record.last_name}`.trim() 
+        : 'Unknown User',
+      tenant_name: record.tenant_name || 'Unknown Tenant'
+    }));
+
+    console.log(`📜 Retrieved ${loginHistory.length} login history records`);
+    return loginHistory;
+  } catch (error) {
+    console.error('Failed to fetch login history:', error);
+    return [];
+  }
+};
+
+/**
  * Get system statistics for admin dashboard
  */
 export const getSystemStats = async () => {

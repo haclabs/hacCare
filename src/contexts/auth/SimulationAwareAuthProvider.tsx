@@ -81,23 +81,18 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
       if (event === 'SIGNED_IN') {
         detectUserType();
         
-        // Initialize session tracking for all logins
+        // Initialize session tracking for all logins (non-blocking)
         if (session?.user) {
           console.log('👤 User signed in, initializing session tracking for:', session.user.email);
           
-          // Use a timeout to prevent hanging
-          const sessionTrackingPromise = initializeSessionTracking();
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Session tracking timeout')), 5000)
-          );
-          
-          try {
-            await Promise.race([sessionTrackingPromise, timeoutPromise]);
-            console.log('✅ Session tracking completed successfully');
-          } catch (error) {
-            console.error('❌ Failed to initialize session tracking:', error);
-            // Don't block the login process if session tracking fails
-          }
+          // Start session tracking in background without blocking auth
+          initializeSessionTracking()
+            .then(() => {
+              console.log('✅ Background session tracking completed');
+            })
+            .catch(error => {
+              console.warn('⚠️ Background session tracking failed (non-critical):', error);
+            });
         }
       } else if (event === 'SIGNED_OUT') {
         detectUserType();
