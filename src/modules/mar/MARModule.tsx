@@ -45,7 +45,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   currentUser
 }) => {
   const [activeView, setActiveView] = useState<MARView>('administration');
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState<MedicationCategory | 'All'>('All');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [showAddMedication, setShowAddMedication] = useState(false);
@@ -54,6 +54,34 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [showBarcodeLabels, setShowBarcodeLabels] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
+
+  // Form state for adding medications
+  const [newMedicationForm, setNewMedicationForm] = useState({
+    name: '',
+    category: '',
+    dosage: '',
+    route: '',
+    frequency: '1 time daily',
+    admin_time: '08:00',
+    admin_times: ['08:00'],
+    prescribed_by: '',
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: ''
+  });
+
+  // Form state for editing medications
+  const [editMedicationForm, setEditMedicationForm] = useState({
+    name: '',
+    category: '',
+    dosage: '',
+    route: '',
+    frequency: '',
+    admin_time: '08:00',
+    admin_times: ['08:00'],
+    prescribed_by: '',
+    start_date: '',
+    end_date: ''
+  });
 
   // BCMA Integration
   const bcma = useBCMA();
@@ -239,6 +267,40 @@ export const MARModule: React.FC<MARModuleProps> = ({
       return;
     }
 
+    // Initialize edit form with existing medication data
+    let adminTimes = medication.admin_times || [medication.admin_time || '08:00'];
+    
+    // If admin_times is missing or incorrect for the frequency, generate proper times
+    const expectedTimesCount = medication.frequency.includes('Four times') || medication.frequency.includes('QID') ? 4 :
+                              medication.frequency.includes('Three times') || medication.frequency.includes('TID') ? 3 :
+                              medication.frequency.includes('Twice') || medication.frequency.includes('BID') ? 2 : 1;
+    
+    if (!medication.admin_times || adminTimes.length !== expectedTimesCount) {
+      const defaultTimes = ['08:00', '14:00', '20:00', '02:00'];
+      
+      // Generate times based on frequency
+      if (expectedTimesCount > 1) {
+        adminTimes = defaultTimes.slice(0, expectedTimesCount);
+        // Use the existing admin_time as the first time if it exists
+        if (medication.admin_time) {
+          adminTimes[0] = medication.admin_time;
+        }
+      }
+    }
+    
+    setEditMedicationForm({
+      name: medication.name,
+      category: medication.category || 'scheduled',
+      dosage: medication.dosage,
+      route: medication.route,
+      frequency: medication.frequency,
+      admin_time: medication.admin_time || '08:00',
+      admin_times: adminTimes,
+      prescribed_by: medication.prescribed_by,
+      start_date: medication.start_date.split('T')[0],
+      end_date: medication.end_date ? medication.end_date.split('T')[0] : ''
+    });
+
     setEditingMedication(medication);
     setShowEditForm(true);
   };
@@ -263,7 +325,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
         prescribed_by: data.prescribed_by,
         start_date: data.start_date,
         end_date: data.end_date || undefined,
-        admin_time: data.admin_time
+        admin_time: data.admin_time,
+        admin_times: data.admin_times
       };
 
       const updatedMedication = await updateMedication(editingMedication.id, updates);
@@ -288,10 +351,98 @@ export const MARModule: React.FC<MARModuleProps> = ({
     }
   };
 
+  // Helper function to update admin times based on frequency
+  const updateAdminTimesFromFrequency = (frequency: string) => {
+    let timesNeeded = 1;
+    
+    if (frequency.includes('time daily') || frequency.includes('times daily')) {
+      const match = frequency.match(/(\d+) times?/);
+      timesNeeded = match ? parseInt(match[1]) : 1;
+    }
+    
+    const defaultTimes = ['08:00', '14:00', '20:00', '02:00'];
+    const newTimes = defaultTimes.slice(0, timesNeeded);
+    
+    setNewMedicationForm(prev => ({
+      ...prev,
+      frequency,
+      admin_times: newTimes,
+      admin_time: newTimes[0]
+    }));
+  };
+
+  // Helper function to update form field
+  const updateFormField = (field: string, value: string) => {
+    if (field === 'frequency') {
+      updateAdminTimesFromFrequency(value);
+    } else {
+      setNewMedicationForm(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  // Helper function for edit form to update admin times based on frequency
+  const updateEditAdminTimesFromFrequency = (frequency: string) => {
+    let timesNeeded = 1;
+    
+    if (frequency.includes('time daily') || frequency.includes('times daily')) {
+      const match = frequency.match(/(\d+) times?/);
+      timesNeeded = match ? parseInt(match[1]) : 1;
+    }
+    
+    const defaultTimes = ['08:00', '14:00', '20:00', '02:00'];
+    const newTimes = defaultTimes.slice(0, timesNeeded);
+    
+    setEditMedicationForm(prev => ({
+      ...prev,
+      frequency,
+      admin_times: newTimes,
+      admin_time: newTimes[0]
+    }));
+  };
+
+  // Helper function to update edit form field
+  const updateEditFormField = (field: string, value: string) => {
+    if (field === 'frequency') {
+      updateEditAdminTimesFromFrequency(value);
+    } else {
+      setEditMedicationForm(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  // Helper function to update specific edit admin time
+  const updateEditAdminTime = (index: number, time: string) => {
+    const newTimes = [...editMedicationForm.admin_times];
+    newTimes[index] = time;
+    setEditMedicationForm(prev => ({
+      ...prev,
+      admin_times: newTimes,
+      admin_time: newTimes[0]
+    }));
+  };
+
+  // Helper function to update specific admin time
+  const updateAdminTime = (index: number, time: string) => {
+    const newTimes = [...newMedicationForm.admin_times];
+    newTimes[index] = time;
+    setNewMedicationForm(prev => ({
+      ...prev,
+      admin_times: newTimes,
+      admin_time: newTimes[0] // Keep first time for compatibility
+    }));
+  };
+
   // Handle adding new medication
-  const handleAddMedication = async (data: any, validation: ValidationResult) => {
-    if (!validation.valid) {
-      console.error('Form validation failed:', validation.errors);
+  const handleAddMedication = async () => {
+    // Validation
+    if (!newMedicationForm.name || !newMedicationForm.category || !newMedicationForm.dosage || 
+        !newMedicationForm.route || !newMedicationForm.prescribed_by || !newMedicationForm.start_date) {
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -300,18 +451,19 @@ export const MARModule: React.FC<MARModuleProps> = ({
       // Create medication data object for database
       const medicationData: Omit<Medication, 'id'> = {
         patient_id: patient.id,
-        name: data.name,
-        dosage: data.dosage,
-        route: data.route,
-        frequency: data.frequency,
-        category: data.category as MedicationCategory,
+        name: newMedicationForm.name,
+        dosage: newMedicationForm.dosage,
+        route: newMedicationForm.route,
+        frequency: newMedicationForm.frequency,
+        category: newMedicationForm.category as any,
         status: 'Active',
-        prescribed_by: data.prescribed_by,
-        start_date: data.start_date,
-        end_date: data.end_date || undefined,
-        next_due: data.category === 'prn' ? new Date().toISOString() : calculateNextDue(data.frequency, data.start_date, data.admin_time),
+        prescribed_by: newMedicationForm.prescribed_by,
+        start_date: newMedicationForm.start_date,
+        end_date: newMedicationForm.end_date || undefined,
+        next_due: newMedicationForm.category === 'prn' ? new Date().toISOString() : calculateNextDue(newMedicationForm.frequency, newMedicationForm.start_date, newMedicationForm.admin_time, newMedicationForm.admin_times),
         last_administered: undefined,
-        admin_time: data.admin_time
+        admin_time: newMedicationForm.admin_time,
+        admin_times: newMedicationForm.admin_times.length > 1 ? newMedicationForm.admin_times : null
       };
 
       console.log('Creating medication in database:', medicationData);
@@ -326,9 +478,23 @@ export const MARModule: React.FC<MARModuleProps> = ({
       onMedicationUpdate(updatedMedications);
 
       // Show success message
-      setSuccessMessage(`${data.category} medication "${data.name}" added successfully`);
+      setSuccessMessage(`${newMedicationForm.category} medication "${newMedicationForm.name}" added successfully`);
       setShowSuccessMessage(true);
       setShowAddMedication(false);
+
+      // Reset form
+      setNewMedicationForm({
+        name: '',
+        category: '',
+        dosage: '',
+        route: '',
+        frequency: '1 time daily',
+        admin_time: '08:00',
+        admin_times: ['08:00'],
+        prescribed_by: '',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: ''
+      });
       
       // Hide success message after 5 seconds
       setTimeout(() => {
@@ -353,7 +519,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   };
 
   // Calculate next due time based on frequency and admin time
-  const calculateNextDue = (frequency: string, startDate: string, adminTime: string): string => {
+  const calculateNextDue = (frequency: string, startDate: string, adminTime: string, adminTimes?: string[]): string => {
     if (!adminTime) {
       return new Date().toISOString(); // Fallback if no admin time
     }
@@ -362,8 +528,35 @@ export const MARModule: React.FC<MARModuleProps> = ({
     console.log('- Frequency:', frequency);
     console.log('- Start date:', startDate);
     console.log('- Admin time:', adminTime);
+    console.log('- Admin times:', adminTimes);
 
     const now = new Date();
+
+    // Handle multiple admin times for "X times daily" frequencies
+    if ((frequency.includes('time daily') || frequency.includes('times daily')) && !frequency.includes('PRN') && adminTimes && adminTimes.length > 0) {
+      const today = new Date(now);
+      const todayTimes = adminTimes.map(time => {
+        const [h, m] = time.split(':').map(Number);
+        const timeToday = new Date(today);
+        timeToday.setHours(h, m, 0, 0);
+        return timeToday;
+      }).sort((a, b) => a.getTime() - b.getTime());
+
+      // Find next upcoming time today
+      for (const time of todayTimes) {
+        if (time > now) {
+          return time.toISOString();
+        }
+      }
+
+      // All times today have passed, use first time tomorrow
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const [firstHours, firstMinutes] = adminTimes[0].split(':').map(Number);
+      tomorrow.setHours(firstHours, firstMinutes, 0, 0);
+      return tomorrow.toISOString();
+    }
+
     const [hours, minutes] = adminTime.split(':').map(Number);
 
     console.log('- Parsed admin time: hours =', hours, ', minutes =', minutes);
@@ -505,6 +698,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
     // Filter by category
     const filteredMedications = activeCategoryFilter === 'All' 
       ? activeMedications
+      : activeCategoryFilter === 'scheduled_diabetic'
+      ? activeMedications.filter(med => med.category === 'diabetic')
       : activeMedications.filter(med => med.category === activeCategoryFilter);
 
     if (medications.length === 0) {
@@ -528,6 +723,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
     const groupedMedications = {
       prn: filteredMedications.filter(med => med.category === 'prn'),
       scheduled: filteredMedications.filter(med => med.category === 'scheduled'),
+      diabetic: filteredMedications.filter(med => med.category === 'diabetic'),
       continuous: filteredMedications.filter(med => med.category === 'continuous')
     };
 
@@ -536,10 +732,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
         {/* Category Filter Tabs */}
         <div className="flex flex-wrap items-center justify-between">
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {(['All', 'prn', 'scheduled', 'continuous'] as const).map((category) => (
+            {(['All', 'prn', 'scheduled', 'scheduled_diabetic', 'continuous'] as const).map((category) => (
               <button
                 key={category}
-                onClick={() => setActiveCategoryFilter(category)}
+                onClick={() => setActiveCategoryFilter(category as any)}
                 className={`px-4 py-2 rounded-md font-medium text-sm transition-colors flex items-center space-x-2 ${
                   activeCategoryFilter === category
                     ? 'bg-white text-blue-600 shadow-sm'
@@ -548,15 +744,19 @@ export const MARModule: React.FC<MARModuleProps> = ({
               >
                 {category === 'prn' && <Clock className="h-4 w-4" />}
                 {category === 'scheduled' && <Calendar className="h-4 w-4" />}
+                {category === 'scheduled_diabetic' && <span className="text-orange-500">💉</span>}
                 {category === 'continuous' && <Syringe className="h-4 w-4" />}
                 <span>
                   {category === 'All' ? 'All' : 
                    category === 'prn' ? 'PRN (As Needed)' :
                    category === 'scheduled' ? 'Scheduled' :
+                   category === 'scheduled_diabetic' ? 'Diabetic' :
                    'IV/Continuous'}
                 </span>
                 <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs">
-                  {category === 'All' ? activeMedications.length : groupedMedications[category as keyof typeof groupedMedications]?.length || 0}
+                  {category === 'All' ? activeMedications.length : 
+                   category === 'scheduled_diabetic' ? (groupedMedications.diabetic?.length || 0) :
+                   groupedMedications[category as keyof typeof groupedMedications]?.length || 0}
                 </span>
               </button>
             ))}
@@ -621,6 +821,14 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   description: 'Critical alerts enabled',
                   bgColor: 'bg-red-50',
                   borderColor: 'border-red-200'
+                },
+                diabetic: { 
+                  title: 'Diabetic Medications', 
+                  icon: Syringe, 
+                  color: 'orange',
+                  description: 'Blood glucose management - time-based alerts enabled',
+                  bgColor: 'bg-orange-50',
+                  borderColor: 'border-orange-200'
                 }
               };
               
@@ -644,7 +852,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     </div>
                   </div>
                   <div className="divide-y divide-gray-200">
-                    {categoryMeds.map((medication) => renderMedicationItem(medication, categoryKey as MedicationCategory))}
+                    {categoryMeds.map((medication) => renderMedicationItem(medication, medication.category || 'scheduled'))}
                   </div>
                 </div>
               );
@@ -657,7 +865,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
               <h3 className="text-lg font-medium text-gray-900">
                 {activeCategoryFilter === 'prn' ? 'PRN (As Needed)' :
                  activeCategoryFilter === 'scheduled' ? 'Scheduled Medications' :
-                 'IV/Continuous Medications'}
+                 activeCategoryFilter === 'scheduled_diabetic' ? 'Diabetic Medications' :
+                 activeCategoryFilter === 'continuous' ? 'IV/Continuous Medications' :
+                 'All Medications'}
               </h3>
             </div>
             <div className="divide-y divide-gray-200">
@@ -666,7 +876,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   <p className="text-gray-500">No medications in this category</p>
                 </div>
               ) : (
-                filteredMedications.map((medication) => renderMedicationItem(medication, activeCategoryFilter as MedicationCategory))
+                filteredMedications.map((medication) => renderMedicationItem(medication, medication.category || 'scheduled'))
               )}
             </div>
           </div>
@@ -676,12 +886,12 @@ export const MARModule: React.FC<MARModuleProps> = ({
   };
 
   // Render individual medication item
-  const renderMedicationItem = (medication: Medication, category: MedicationCategory) => {
+  const renderMedicationItem = (medication: Medication, category: string) => {
     const isDue = medication.next_due && new Date(medication.next_due) <= new Date();
     const isOverdue = medication.next_due && new Date(medication.next_due) < new Date(Date.now() - 30 * 60 * 1000); // 30 min overdue
     
     // Determine alert level based on category
-    const shouldAlert = category === 'scheduled' || category === 'continuous';
+    const shouldAlert = category === 'scheduled' || category === 'continuous' || category === 'diabetic';
     const alertLevel = category === 'continuous' ? 'critical' : 'standard';
     
     return (
@@ -701,11 +911,15 @@ export const MARModule: React.FC<MARModuleProps> = ({
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 category === 'prn' ? 'bg-blue-100 text-blue-800' :
                 category === 'scheduled' ? 'bg-green-100 text-green-800' :
-                'bg-red-100 text-red-800'
+                medication.category === 'diabetic' ? 'bg-orange-100 text-orange-800' :
+                category === 'continuous' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
               }`}>
                 {category === 'prn' ? 'PRN' : 
                  category === 'scheduled' ? 'Scheduled' : 
-                 'IV/Continuous'}
+                 medication.category === 'diabetic' ? '💉 Diabetic' :
+                 category === 'continuous' ? 'IV/Continuous' :
+                 category}
               </span>
               {shouldAlert && isDue && (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
@@ -747,6 +961,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('🔵 BCMA Button clicked for medication:', medication.name);
+                  console.log('🔵 Medication category:', medication.category);
+                  console.log('🔵 Full medication object:', medication);
                   console.log('🔵 Current user:', currentUser);
                   console.log('🔵 BCMA state before:', bcma.state);
                   bcma.startBCMAProcess(patient, medication);
@@ -975,9 +1191,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const data = Object.fromEntries(formData.entries());
-                handleAddMedication(data as any, { valid: true, errors: [], warnings: [] });
+                handleAddMedication();
               }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -985,7 +1199,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   </label>
                   <input
                     type="text"
-                    name="name"
+                    value={newMedicationForm.name}
+                    onChange={(e) => updateFormField('name', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter medication name"
@@ -997,7 +1212,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     Category *
                   </label>
                   <select
-                    name="category"
+                    value={newMedicationForm.category}
+                    onChange={(e) => updateFormField('category', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
@@ -1005,6 +1221,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     <option value="prn">PRN (As Needed) - No alerts</option>
                     <option value="scheduled">Scheduled - Time-based alerts</option>
                     <option value="continuous">IV/Continuous - Critical alerts</option>
+                    <option value="diabetic" className="text-orange-600">🩸 Diabetic - Glucose monitoring</option>
                   </select>
                 </div>
 
@@ -1014,7 +1231,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   </label>
                   <input
                     type="text"
-                    name="dosage"
+                    value={newMedicationForm.dosage}
+                    onChange={(e) => updateFormField('dosage', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., 10mg, 5ml"
@@ -1026,7 +1244,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     Route *
                   </label>
                   <select
-                    name="route"
+                    value={newMedicationForm.route}
+                    onChange={(e) => updateFormField('route', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
@@ -1046,38 +1265,177 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     Frequency *
                   </label>
                   <select
-                    name="frequency"
+                    value={newMedicationForm.frequency}
+                    onChange={(e) => updateFormField('frequency', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select frequency</option>
-                    <option value="Once daily">Once daily</option>
-                    <option value="Twice daily">Twice daily</option>
-                    <option value="Three times daily">Three times daily</option>
-                    <option value="Four times daily">Four times daily</option>
-                    <option value="Every 6 hours">Every 6 hours</option>
-                    <option value="Every 8 hours">Every 8 hours</option>
-                    <option value="Every 12 hours">Every 12 hours</option>
-                    <option value="As needed">As needed (PRN)</option>
+                    <option value="1 time daily">1 time daily</option>
+                    <option value="2 times daily">2 times daily</option>
+                    <option value="3 times daily">3 times daily</option>
+                    <option value="4 times daily">4 times daily</option>
+                    <option value="Every 4 hours">Every 4 hours</option>
+                    <option value="As needed (PRN)">As needed (PRN)</option>
                     <option value="Continuous">Continuous infusion</option>
                   </select>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <label className="block text-sm font-medium text-blue-700 mb-1">
-                    ⏰ Administration Time *
-                  </label>
-                  <input
-                    type="time"
-                    name="admin_time"
-                    defaultValue="08:00"
-                    required
-                    className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <p className="text-xs text-blue-600 mt-1">
-                    🔔 Time for scheduled administration and BCMA validation
-                  </p>
-                </div>
+                {/* Administration Times - Dynamic based on frequency */}
+                {((newMedicationForm.frequency.includes('time daily') || newMedicationForm.frequency.includes('times daily')) && !newMedicationForm.frequency.includes('PRN')) ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-blue-700 mb-3">
+                      ⏰ Administration Times *
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {newMedicationForm.admin_times.map((time, index) => (
+                        <div key={index} className="flex flex-col space-y-2">
+                          <label className="text-xs text-blue-600 font-medium">
+                            Time {index + 1} <span className="text-gray-500">(24h)</span>
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={time}
+                              onChange={(e) => {
+                                let value = e.target.value.replace(/[^\d:]/g, '');
+                                
+                                // Auto-format as user types
+                                if (value.length === 2 && !value.includes(':')) {
+                                  value = value + ':';
+                                }
+                                
+                                // Validate and constrain values
+                                const parts = value.split(':');
+                                if (parts[0] && parseInt(parts[0]) > 23) {
+                                  parts[0] = '23';
+                                }
+                                if (parts[1] && parseInt(parts[1]) > 59) {
+                                  parts[1] = '59';
+                                }
+                                
+                                const finalValue = parts.join(':');
+                                updateAdminTime(index, finalValue);
+                              }}
+                              onBlur={(e) => {
+                                // Ensure proper format on blur
+                                const value = e.target.value;
+                                const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+                                if (match) {
+                                  const hours = match[1].padStart(2, '0');
+                                  const minutes = (match[2] || '00').padStart(2, '0');
+                                  const formatted = `${Math.min(parseInt(hours), 23).toString().padStart(2, '0')}:${Math.min(parseInt(minutes), 59).toString().padStart(2, '0')}`;
+                                  updateAdminTime(index, formatted);
+                                }
+                              }}
+                              placeholder="HH:MM"
+                              maxLength={5}
+                              required
+                              className="w-full px-3 py-2.5 pr-8 text-sm border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-mono"
+                            />
+                            <select
+                              value={time}
+                              onChange={(e) => updateAdminTime(index, e.target.value)}
+                              className="absolute right-0 top-0 h-full w-8 opacity-0 cursor-pointer"
+                            >
+                              <option value="">Select</option>
+                              {Array.from({ length: 24 }, (_, hour) => 
+                                ['00', '15', '30', '45'].map(minute => {
+                                  const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                                  return (
+                                    <option key={timeValue} value={timeValue}>
+                                      {timeValue}
+                                    </option>
+                                  );
+                                })
+                              ).flat()}
+                            </select>
+                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-blue-600 mt-3 font-medium">
+                      🔔 Enter times in 24-hour format (e.g., 08:00, 14:30) • Used for alerts and BCMA validation
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-blue-700 mb-3">
+                      ⏰ Administration Time * <span className="text-gray-500 font-normal">(24-hour format)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={newMedicationForm.admin_time}
+                        onChange={(e) => {
+                          let value = e.target.value.replace(/[^\d:]/g, '');
+                          
+                          // Auto-format as user types
+                          if (value.length === 2 && !value.includes(':')) {
+                            value = value + ':';
+                          }
+                          
+                          // Validate and constrain values
+                          const parts = value.split(':');
+                          if (parts[0] && parseInt(parts[0]) > 23) {
+                            parts[0] = '23';
+                          }
+                          if (parts[1] && parseInt(parts[1]) > 59) {
+                            parts[1] = '59';
+                          }
+                          
+                          const finalValue = parts.join(':');
+                          updateFormField('admin_time', finalValue);
+                        }}
+                        onBlur={(e) => {
+                          // Ensure proper format on blur
+                          const value = e.target.value;
+                          const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+                          if (match) {
+                            const hours = match[1].padStart(2, '0');
+                            const minutes = (match[2] || '00').padStart(2, '0');
+                            const formatted = `${Math.min(parseInt(hours), 23).toString().padStart(2, '0')}:${Math.min(parseInt(minutes), 59).toString().padStart(2, '0')}`;
+                            updateFormField('admin_time', formatted);
+                          }
+                        }}
+                        placeholder="HH:MM (24-hour format)"
+                        maxLength={5}
+                        required
+                        className="w-full px-3 py-2.5 pr-8 text-sm border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-mono"
+                      />
+                      <select
+                        value={newMedicationForm.admin_time}
+                        onChange={(e) => updateFormField('admin_time', e.target.value)}
+                        className="absolute right-0 top-0 h-full w-8 opacity-0 cursor-pointer"
+                      >
+                        <option value="">Select</option>
+                        {Array.from({ length: 24 }, (_, hour) => 
+                          ['00', '15', '30', '45'].map(minute => {
+                            const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                            return (
+                              <option key={timeValue} value={timeValue}>
+                                {timeValue}
+                              </option>
+                            );
+                          })
+                        ).flat()}
+                      </select>
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-3 font-medium">
+                      🔔 Enter time in 24-hour format (e.g., 08:00, 14:30) • Used for alerts and BCMA validation
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1085,7 +1443,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   </label>
                   <input
                     type="text"
-                    name="prescribed_by"
+                    value={newMedicationForm.prescribed_by}
+                    onChange={(e) => updateFormField('prescribed_by', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Dr. Smith"
@@ -1098,9 +1457,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   </label>
                   <input
                     type="date"
-                    name="start_date"
+                    value={newMedicationForm.start_date}
+                    onChange={(e) => updateFormField('start_date', e.target.value)}
                     required
-                    defaultValue={new Date().toISOString().split('T')[0]}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -1111,7 +1470,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   </label>
                   <input
                     type="date"
-                    name="end_date"
+                    value={newMedicationForm.end_date}
+                    onChange={(e) => updateFormField('end_date', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -1159,9 +1519,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const data = Object.fromEntries(formData.entries());
-                handleUpdateMedication(data as any, { valid: true, errors: [], warnings: [] });
+                handleUpdateMedication(editMedicationForm, { valid: true, errors: [], warnings: [] });
               }}>
                 <div className="space-y-4">
                   <div>
@@ -1170,9 +1528,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     </label>
                     <input
                       type="text"
-                      name="name"
+                      value={editMedicationForm.name}
+                      onChange={(e) => updateEditFormField('name', e.target.value)}
                       required
-                      defaultValue={editingMedication.name}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -1183,9 +1541,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     </label>
                     <input
                       type="text"
-                      name="dosage"
+                      value={editMedicationForm.dosage}
+                      onChange={(e) => updateEditFormField('dosage', e.target.value)}
                       required
-                      defaultValue={editingMedication.dosage}
                       placeholder="e.g., 10mg, 2 tablets"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -1196,9 +1554,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
                       Route *
                     </label>
                     <select
-                      name="route"
+                      value={editMedicationForm.route}
+                      onChange={(e) => updateEditFormField('route', e.target.value)}
                       required
-                      defaultValue={editingMedication.route}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select route...</option>
@@ -1214,41 +1572,38 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Frequency *
+                      💊 Frequency *
                     </label>
                     <select
-                      name="frequency"
+                      value={editMedicationForm.frequency}
+                      onChange={(e) => updateEditFormField('frequency', e.target.value)}
                       required
-                      defaultValue={editingMedication.frequency}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select frequency...</option>
                       <option value="Once daily">Once daily</option>
-                      <option value="BID">BID (Twice daily)</option>
-                      <option value="TID">TID (Three times daily)</option>
-                      <option value="QID">QID (Four times daily)</option>
-                      <option value="Q4H">Q4H (Every 4 hours)</option>
-                      <option value="Q6H">Q6H (Every 6 hours)</option>
-                      <option value="Q8H">Q8H (Every 8 hours)</option>
-                      <option value="Q12H">Q12H (Every 12 hours)</option>
-                      <option value="PRN">PRN (As needed)</option>
+                      <option value="BID (Twice daily)">BID (Twice daily)</option>
+                      <option value="TID (Three times daily)">TID (Three times daily)</option>
+                      <option value="QID (Four times daily)">QID (Four times daily)</option>
+                      <option value="PRN (As needed)">PRN (As needed)</option>
                       <option value="Continuous">Continuous</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Category *
+                      🏷️ Category *
                     </label>
                     <select
-                      name="category"
+                      value={editMedicationForm.category}
+                      onChange={(e) => updateEditFormField('category', e.target.value)}
                       required
-                      defaultValue={editingMedication.category}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select category...</option>
                       <option value="scheduled">Scheduled</option>
                       <option value="prn">PRN (As Needed)</option>
+                      <option value="diabetic">💉 Diabetic</option>
                       <option value="continuous">Continuous</option>
                     </select>
                   </div>
@@ -1259,25 +1614,172 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     </label>
                     <input
                       type="text"
-                      name="prescribed_by"
+                      value={editMedicationForm.prescribed_by}
+                      onChange={(e) => updateEditFormField('prescribed_by', e.target.value)}
                       required
-                      defaultValue={editingMedication.prescribed_by}
                       placeholder="Dr. Prescriber Name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Administration Time
-                    </label>
-                    <input
-                      type="time"
-                      name="admin_time"
-                      defaultValue={editingMedication.admin_time || '09:00'}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                  {/* Multiple Administration Times for daily frequencies */}
+                  {(editMedicationForm.frequency.includes('time') || editMedicationForm.frequency.includes('daily')) && !editMedicationForm.frequency.includes('PRN') && !editMedicationForm.frequency.includes('Once daily') && !editMedicationForm.frequency.includes('Continuous') && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                        ⏰ Administration Times *
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {editMedicationForm.admin_times.map((time, index) => (
+                          <div key={index} className="space-y-1">
+                            <label className="block text-xs font-medium text-blue-600 dark:text-blue-400">
+                              Time {index + 1}
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={time}
+                                onChange={(e) => {
+                                  let value = e.target.value.replace(/[^\d:]/g, '');
+                                  
+                                  // Auto-format as user types
+                                  if (value.length === 2 && !value.includes(':')) {
+                                    value = value + ':';
+                                  }
+                                  
+                                  // Validate and constrain values
+                                  const parts = value.split(':');
+                                  if (parts[0] && parseInt(parts[0]) > 23) {
+                                    parts[0] = '23';
+                                  }
+                                  if (parts[1] && parseInt(parts[1]) > 59) {
+                                    parts[1] = '59';
+                                  }
+                                  
+                                  const finalValue = parts.join(':');
+                                  updateEditAdminTime(index, finalValue);
+                                }}
+                                onBlur={(e) => {
+                                  // Ensure proper format on blur
+                                  const value = e.target.value;
+                                  const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+                                  if (match) {
+                                    const hours = match[1].padStart(2, '0');
+                                    const minutes = (match[2] || '00').padStart(2, '0');
+                                    const formatted = `${Math.min(parseInt(hours), 23).toString().padStart(2, '0')}:${Math.min(parseInt(minutes), 59).toString().padStart(2, '0')}`;
+                                    updateEditAdminTime(index, formatted);
+                                  }
+                                }}
+                                placeholder="HH:MM"
+                                maxLength={5}
+                                className="px-3 py-2 pr-8 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-blue-300 dark:border-blue-600 font-mono"
+                                required
+                              />
+                              <select
+                                value={time}
+                                onChange={(e) => updateEditAdminTime(index, e.target.value)}
+                                className="absolute right-0 top-0 h-full w-8 opacity-0 cursor-pointer"
+                              >
+                                <option value="">Select</option>
+                                {Array.from({ length: 24 }, (_, hour) => 
+                                  ['00', '15', '30', '45'].map(minute => {
+                                    const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                                    return (
+                                      <option key={timeValue} value={timeValue}>
+                                        {timeValue}
+                                      </option>
+                                    );
+                                  })
+                                ).flat()}
+                              </select>
+                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                        🔔 Scheduled alerts and BCMA will use these times for administration checks
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Single Administration Time for other frequencies */}
+                  {((!editMedicationForm.frequency.includes('time') && !editMedicationForm.frequency.includes('daily')) || editMedicationForm.frequency.includes('PRN') || editMedicationForm.frequency.includes('Once daily') || editMedicationForm.frequency.includes('Continuous')) && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
+                        ⏰ Administration Time *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={editMedicationForm.admin_time}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/[^\d:]/g, '');
+                            
+                            // Auto-format as user types
+                            if (value.length === 2 && !value.includes(':')) {
+                              value = value + ':';
+                            }
+                            
+                            // Validate and constrain values
+                            const parts = value.split(':');
+                            if (parts[0] && parseInt(parts[0]) > 23) {
+                              parts[0] = '23';
+                            }
+                            if (parts[1] && parseInt(parts[1]) > 59) {
+                              parts[1] = '59';
+                            }
+                            
+                            const finalValue = parts.join(':');
+                            updateEditFormField('admin_time', finalValue);
+                          }}
+                          onBlur={(e) => {
+                            // Ensure proper format on blur
+                            const value = e.target.value;
+                            const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+                            if (match) {
+                              const hours = match[1].padStart(2, '0');
+                              const minutes = (match[2] || '00').padStart(2, '0');
+                              const formatted = `${Math.min(parseInt(hours), 23).toString().padStart(2, '0')}:${Math.min(parseInt(minutes), 59).toString().padStart(2, '0')}`;
+                              updateEditFormField('admin_time', formatted);
+                            }
+                          }}
+                          placeholder="HH:MM (24-hour)"
+                          maxLength={5}
+                          className="w-full px-3 py-2 pr-8 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono border-blue-300 dark:border-blue-600"
+                          required
+                        />
+                        <select
+                          value={editMedicationForm.admin_time}
+                          onChange={(e) => updateEditFormField('admin_time', e.target.value)}
+                          className="absolute right-0 top-0 h-full w-8 opacity-0 cursor-pointer"
+                        >
+                          <option value="">Select</option>
+                          {Array.from({ length: 24 }, (_, hour) => 
+                            ['00', '15', '30', '45'].map(minute => {
+                              const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                              return (
+                                <option key={timeValue} value={timeValue}>
+                                  {timeValue}
+                                </option>
+                              );
+                            })
+                          ).flat()}
+                        </select>
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                        🔔 Scheduled alerts and BCMA will use this time for administration checks
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1285,9 +1787,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     </label>
                     <input
                       type="date"
-                      name="start_date"
+                      value={editMedicationForm.start_date}
+                      onChange={(e) => updateEditFormField('start_date', e.target.value)}
                       required
-                      defaultValue={editingMedication.start_date.split('T')[0]}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -1298,8 +1800,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     </label>
                     <input
                       type="date"
-                      name="end_date"
-                      defaultValue={editingMedication.end_date ? editingMedication.end_date.split('T')[0] : ''}
+                      value={editMedicationForm.end_date}
+                      onChange={(e) => updateEditFormField('end_date', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>

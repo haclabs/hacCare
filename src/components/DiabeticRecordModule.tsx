@@ -218,7 +218,10 @@ const DiabeticRecordModule: React.FC<DiabeticRecordModuleProps> = ({ patientId, 
               type="time"
               value={formData.timeCbgTaken}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('timeCbgTaken', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              step="60"
+              pattern="[0-9]{2}:[0-9]{2}"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 time-24h"
+              style={{ colorScheme: 'light' }}
             />
           </div>
           <div>

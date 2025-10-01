@@ -27,21 +27,23 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     name: medication?.name || '',
     dosage: medication?.dosage || '',
     category: medication?.category || 'scheduled',
-    frequency: medication?.frequency || 'Once daily',
+    frequency: medication?.frequency || '1 time daily',
     route: medication?.route || 'Oral',
     startDate: medication?.start_date || format(new Date(), 'yyyy-MM-dd'),
     endDate: medication?.end_date || '',
     prescribedBy: medication?.prescribed_by || '',
     instructions: '',
     status: medication?.status || 'Active' as 'Active' | 'Completed' | 'Discontinued',
+    adminTimes: medication?.admin_times || ['08:00'], // Array of administration times
+    // Keep backward compatibility
     adminTime: medication?.admin_time || '08:00' // Default to 8:00 AM
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Calculate next due time based on frequency and admin time
-  const calculateNextDue = (frequency: string, startDate: string, adminTime: string): string => {
+  // Calculate next due time based on frequency and admin time(s)
+  const calculateNextDue = (frequency: string, startDate: string, adminTime: string, adminTimes?: string[]): string => {
     const start = new Date(startDate);
     const now = new Date();
     
@@ -58,6 +60,28 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     // If start date is in the future, use start date with admin time
     if (start > now) {
       return setHours(setMinutes(start, minutes), hours).toISOString();
+    }
+
+    // Handle multiple admin times for "X times daily" frequencies
+    if (frequency.includes('time') && !frequency.includes('PRN') && adminTimes && adminTimes.length > 0) {
+      const today = new Date(now);
+      const todayTimes = adminTimes.map(time => {
+        const [h, m] = time.split(':').map(Number);
+        return setHours(setMinutes(new Date(today), m), h);
+      }).sort((a, b) => a.getTime() - b.getTime());
+
+      // Find next upcoming time today
+      for (const time of todayTimes) {
+        if (time > now) {
+          return time.toISOString();
+        }
+      }
+
+      // All times today have passed, use first time tomorrow
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const [firstHours, firstMinutes] = adminTimes[0].split(':').map(Number);
+      return setHours(setMinutes(tomorrow, firstMinutes), firstHours).toISOString();
     }
 
     // Calculate next administration time based on frequency
@@ -216,7 +240,17 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     if (!formData.dosage.trim()) newErrors.dosage = 'Dosage is required';
     if (!formData.prescribedBy.trim()) newErrors.prescribedBy = 'Prescribing physician is required';
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
-    if (!formData.adminTime) newErrors.adminTime = 'Administration time is required for BCMA scheduling';
+    
+    // Validate administration times based on frequency type
+    if (formData.frequency.includes('time') && !formData.frequency.includes('PRN')) {
+      // For "X times daily" frequencies, validate adminTimes array
+      if (formData.adminTimes.length === 0 || formData.adminTimes.some(time => !time)) {
+        newErrors.adminTime = 'All administration times are required';
+      }
+    } else {
+      // For other frequencies, validate single adminTime
+      if (!formData.adminTime) newErrors.adminTime = 'Administration time is required for BCMA scheduling';
+    }
 
     // Validate end date if provided
     if (formData.endDate && formData.startDate) {
@@ -246,16 +280,17 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const medicationData = {
           patient_id: patientId,
           name: formData.name,
-          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
+          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic',
           dosage: formData.dosage,
           frequency: formData.frequency,
           route: formData.route,
           start_date: formData.startDate,
           end_date: formData.endDate || undefined,
           prescribed_by: formData.prescribedBy,
-          next_due: calculateNextDue(formData.frequency, formData.startDate, formData.adminTime),
+          next_due: calculateNextDue(formData.frequency, formData.startDate, formData.adminTime, formData.adminTimes),
           status: formData.status,
-          admin_time: formData.adminTime
+          admin_time: formData.adminTime,
+          admin_times: formData.adminTimes.length > 0 ? formData.adminTimes : null
         };
         
         console.log('Updating existing medication:', medicationData);
@@ -267,16 +302,17 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const medicationData: Omit<Medication, 'id'> = {
           patient_id: patientId,
           name: formData.name,
-          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous',
+          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic',
           dosage: formData.dosage,
           frequency: formData.frequency,
           route: formData.route,
           start_date: formData.startDate,
           end_date: formData.endDate || undefined,
           prescribed_by: formData.prescribedBy,
-          next_due: calculateNextDue(formData.frequency, formData.startDate, formData.adminTime),
+          next_due: calculateNextDue(formData.frequency, formData.startDate, formData.adminTime, formData.adminTimes),
           status: formData.status,
-          admin_time: formData.adminTime
+          admin_time: formData.adminTime,
+          admin_times: formData.adminTimes.length > 0 ? formData.adminTimes : null
         };
         
         console.log('Creating new medication:', medicationData);
@@ -404,6 +440,21 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                     </div>
                     <p className="text-xs text-gray-500">IV drips and continuous infusions</p>
                   </div>
+
+                  <div
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      formData.category === 'diabetic' 
+                        ? 'border-orange-500 bg-orange-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => updateField('category', 'diabetic')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">Diabetic</span>
+                      {formData.category === 'diabetic' && <CheckCircle className="h-4 w-4 text-orange-500" />}
+                    </div>
+                    <p className="text-xs text-gray-500">Requires blood glucose readings before administration</p>
+                  </div>
                 </div>
               </div>
 
@@ -453,17 +504,29 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                 </label>
                 <select
                   value={formData.frequency}
-                  onChange={(e) => updateField('frequency', e.target.value)}
+                  onChange={(e) => {
+                    const newFreq = e.target.value;
+                    updateField('frequency', newFreq);
+                    
+                    // Update admin times based on frequency
+                    let newAdminTimes: string[] = ['08:00']; // Default
+                    if (newFreq === '2 times daily') {
+                      newAdminTimes = ['08:00', '20:00']; // 8 AM, 8 PM
+                    } else if (newFreq === '3 times daily') {
+                      newAdminTimes = ['08:00', '14:00', '20:00']; // 8 AM, 2 PM, 8 PM
+                    } else if (newFreq === '4 times daily') {
+                      newAdminTimes = ['08:00', '12:00', '16:00', '20:00']; // 8 AM, 12 PM, 4 PM, 8 PM
+                    }
+                    
+                    setFormData(prev => ({ ...prev, adminTimes: newAdminTimes }));
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="Once daily">Once daily</option>
-                  <option value="Twice daily">Twice daily (BID)</option>
-                  <option value="Three times daily">Three times daily (TID)</option>
-                  <option value="Four times daily">Four times daily (QID)</option>
+                  <option value="1 time daily">1 time daily</option>
+                  <option value="2 times daily">2 times daily</option>
+                  <option value="3 times daily">3 times daily</option>
+                  <option value="4 times daily">4 times daily</option>
                   <option value="Every 4 hours">Every 4 hours</option>
-                  <option value="Every 6 hours">Every 6 hours</option>
-                  <option value="Every 8 hours">Every 8 hours</option>
-                  <option value="Every 12 hours">Every 12 hours</option>
                   <option value="As needed (PRN)">As needed (PRN)</option>
                   <option value="Once weekly">Once weekly</option>
                   <option value="At bedtime">At bedtime (HS)</option>
@@ -472,26 +535,189 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                 </select>
               </div>
 
-              <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
-                  ⏰ Administration Time *
-                </label>
-                <input
-                  type="time"
-                  value={formData.adminTime}
-                  onChange={(e) => updateField('adminTime', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    errors.adminTime ? 'border-red-300 dark:border-red-600' : 'border-blue-300 dark:border-blue-600'
-                  }`}
-                  required
-                />
-                {errors.adminTime && (
-                  <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.adminTime}</p>
-                )}
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
-                  🔔 Scheduled alerts and BCMA will use this time for administration checks
-                </p>
-              </div>
+              {/* Administration Times */}
+              {(formData.frequency.includes('time') && !formData.frequency.includes('PRN')) && (
+                <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    ⏰ Administration Times *
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {formData.adminTimes.map((time, index) => (
+                      <div key={index} className="flex flex-col">
+                        <label className="text-xs text-blue-600 dark:text-blue-400 mb-1 font-medium">
+                          Time {index + 1}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={time}
+                            onChange={(e) => {
+                              let value = e.target.value.replace(/[^\d:]/g, '');
+                              
+                              // Auto-format as user types
+                              if (value.length === 2 && !value.includes(':')) {
+                                value = value + ':';
+                              }
+                              
+                              // Validate and constrain values
+                              const parts = value.split(':');
+                              if (parts[0] && parseInt(parts[0]) > 23) {
+                                parts[0] = '23';
+                              }
+                              if (parts[1] && parseInt(parts[1]) > 59) {
+                                parts[1] = '59';
+                              }
+                              
+                              const finalValue = parts.join(':');
+                              const newTimes = [...formData.adminTimes];
+                              newTimes[index] = finalValue;
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                adminTimes: newTimes,
+                                adminTime: newTimes[0] // Keep first time for backward compatibility
+                              }));
+                            }}
+                            onBlur={(e) => {
+                              // Ensure proper format on blur
+                              const value = e.target.value;
+                              const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+                              if (match) {
+                                const hours = match[1].padStart(2, '0');
+                                const minutes = (match[2] || '00').padStart(2, '0');
+                                const formatted = `${Math.min(parseInt(hours), 23).toString().padStart(2, '0')}:${Math.min(parseInt(minutes), 59).toString().padStart(2, '0')}`;
+                                const newTimes = [...formData.adminTimes];
+                                newTimes[index] = formatted;
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  adminTimes: newTimes,
+                                  adminTime: newTimes[0]
+                                }));
+                              }
+                            }}
+                            placeholder="HH:MM"
+                            maxLength={5}
+                            className="px-3 py-2 pr-8 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-blue-300 dark:border-blue-600 font-mono"
+                            required
+                          />
+                          <select
+                            value={time}
+                            onChange={(e) => {
+                              const newTimes = [...formData.adminTimes];
+                              newTimes[index] = e.target.value;
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                adminTimes: newTimes,
+                                adminTime: newTimes[0]
+                              }));
+                            }}
+                            className="absolute right-0 top-0 h-full w-8 opacity-0 cursor-pointer"
+                          >
+                            <option value="">Select</option>
+                            {Array.from({ length: 24 }, (_, hour) => 
+                              ['00', '15', '30', '45'].map(minute => {
+                                const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                                return (
+                                  <option key={timeValue} value={timeValue}>
+                                    {timeValue}
+                                  </option>
+                                );
+                              })
+                            ).flat()}
+                          </select>
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                    🔔 Scheduled alerts and BCMA will use these times for administration checks
+                  </p>
+                </div>
+              )}
+
+              {/* Single Administration Time for other frequencies */}
+              {(!formData.frequency.includes('time') || formData.frequency.includes('PRN')) && (
+                <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
+                    ⏰ Administration Time *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.adminTime}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/[^\d:]/g, '');
+                        
+                        // Auto-format as user types
+                        if (value.length === 2 && !value.includes(':')) {
+                          value = value + ':';
+                        }
+                        
+                        // Validate and constrain values
+                        const parts = value.split(':');
+                        if (parts[0] && parseInt(parts[0]) > 23) {
+                          parts[0] = '23';
+                        }
+                        if (parts[1] && parseInt(parts[1]) > 59) {
+                          parts[1] = '59';
+                        }
+                        
+                        const finalValue = parts.join(':');
+                        updateField('adminTime', finalValue);
+                      }}
+                      onBlur={(e) => {
+                        // Ensure proper format on blur
+                        const value = e.target.value;
+                        const match = value.match(/^(\d{1,2}):?(\d{0,2})$/);
+                        if (match) {
+                          const hours = match[1].padStart(2, '0');
+                          const minutes = (match[2] || '00').padStart(2, '0');
+                          const formatted = `${Math.min(parseInt(hours), 23).toString().padStart(2, '0')}:${Math.min(parseInt(minutes), 59).toString().padStart(2, '0')}`;
+                          updateField('adminTime', formatted);
+                        }
+                      }}
+                      placeholder="HH:MM (24-hour)"
+                      maxLength={5}
+                      className={`w-full px-3 py-2 pr-8 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono ${
+                        errors.adminTime ? 'border-red-300 dark:border-red-600' : 'border-blue-300 dark:border-blue-600'
+                      }`}
+                      required
+                    />
+                    <select
+                      value={formData.adminTime}
+                      onChange={(e) => updateField('adminTime', e.target.value)}
+                      className="absolute right-0 top-0 h-full w-8 opacity-0 cursor-pointer"
+                    >
+                      <option value="">Select</option>
+                      {Array.from({ length: 24 }, (_, hour) => 
+                        ['00', '15', '30', '45'].map(minute => {
+                          const timeValue = `${hour.toString().padStart(2, '0')}:${minute}`;
+                          return (
+                            <option key={timeValue} value={timeValue}>
+                              {timeValue}
+                            </option>
+                          );
+                        })
+                      ).flat()}
+                    </select>
+                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  {errors.adminTime && (
+                    <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.adminTime}</p>
+                  )}
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                    🔔 Scheduled alerts and BCMA will use this time for administration checks
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -577,7 +803,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   📅 Next Scheduled Administration
                 </label>
                 <div className="px-3 py-2 bg-white dark:bg-gray-800 border border-green-300 dark:border-green-600 rounded-lg text-sm font-medium text-green-800 dark:text-green-200">
-                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime)), 'dd MMM yyyy - HH:mm')}
+                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime, formData.adminTimes)), 'dd MMM yyyy - HH:mm')}
                 </div>
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                   🔔 Alert will trigger 15 minutes before • BCMA window: ±30 minutes • 24-hour format

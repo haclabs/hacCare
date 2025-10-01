@@ -77,7 +77,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
       </div>
 
       {vitals.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -119,7 +119,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
               </div>
             </div>
             <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.oxygenSaturation}%</p>
-            <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
+            <p className="text-xs text-gray-500 mt-1">{vitals[0]?.oxygenDelivery || 'Room Air'}</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -130,6 +130,17 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
               </div>
             </div>
             <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.respiratoryRate}/min</p>
+            <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Droplets className="h-5 w-5 text-cyan-500 mr-2" />
+                <span className="text-sm font-medium text-gray-600">Oxygen Delivery</span>
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900 mt-2">{vitals[0]?.oxygenDelivery || 'Room Air'}</p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
           </div>
         </div>

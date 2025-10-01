@@ -21,6 +21,7 @@ const defaultVitals: VitalSigns = {
   },
   respiratoryRate: 16,
   oxygenSaturation: 98,
+  oxygenDelivery: 'Room Air',
   lastUpdated: new Date().toISOString()
 };
 
@@ -201,6 +202,27 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                 className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 required
               />
+            </div>
+
+            {/* Oxygen Delivery */}
+            <div className="bg-cyan-50 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <Droplets className="h-5 w-5 text-cyan-600" />
+                <label className="text-sm font-medium text-cyan-900">Oxygen Delivery</label>
+              </div>
+              <select
+                value={editedVitals.oxygenDelivery || 'Room Air'}
+                onChange={(e) => updateVital('oxygenDelivery', e.target.value)}
+                className="w-full px-3 py-2 border border-cyan-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white"
+                required
+              >
+                <option value="Room Air">Room Air (RA)</option>
+                {Array.from({ length: 15 }, (_, i) => i + 1).map(flow => (
+                  <option key={flow} value={`O2 ${flow} L/min`}>
+                    O2 {flow} L/min
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Respiratory Rate */}

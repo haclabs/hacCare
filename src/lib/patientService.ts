@@ -43,7 +43,8 @@ export interface DatabaseVitals {
   blood_pressure_diastolic: number;
   heart_rate: number; 
   respiratory_rate: number; 
-  oxygen_saturation: number; 
+  oxygen_saturation: number;
+  oxygen_delivery?: string;
   recorded_at: string;
 }
 
@@ -72,6 +73,7 @@ const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
     heartRate: vital.heart_rate,
     respiratoryRate: vital.respiratory_rate,
     oxygenSaturation: vital.oxygen_saturation,
+    oxygenDelivery: vital.oxygen_delivery || 'Room Air',
     recorded_at: vital.recorded_at,
     lastUpdated: vital.recorded_at
   }));
@@ -648,6 +650,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
         heart_rate: vitals.heartRate,
         respiratory_rate: vitals.respiratoryRate,
         oxygen_saturation: vitals.oxygenSaturation,
+        oxygen_delivery: vitals.oxygenDelivery || 'Room Air', // Add oxygen delivery field
         recorded_at: new Date().toISOString() // Add the recorded_at timestamp
       });
 

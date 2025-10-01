@@ -38,6 +38,7 @@ interface VitalSignsData {
   };
   respiratoryRate?: number;
   oxygenSaturation?: number;
+  oxygenDelivery?: string;
   painScale?: number;
 }
 
@@ -205,6 +206,32 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           />
           {focusedField === 'oxygenSaturation' && (
             <p className="text-xs text-gray-600">Normal: 95-100%</p>
+          )}
+        </div>
+
+        {/* Oxygen Delivery */}
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Droplets className="h-4 w-4 text-cyan-500" />
+            <label className="text-sm font-medium text-gray-700">Oxygen Delivery</label>
+          </div>
+          <select
+            value={value.oxygenDelivery || 'Room Air'}
+            onChange={(e) => handleVitalChange('oxygenDelivery', e.target.value)}
+            onFocus={() => setFocusedField('oxygenDelivery')}
+            onBlur={() => setFocusedField(null)}
+            disabled={disabled}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="Room Air">Room Air (RA)</option>
+            {Array.from({ length: 15 }, (_, i) => i + 1).map(flow => (
+              <option key={flow} value={`O2 ${flow} L/min`}>
+                O2 {flow} L/min
+              </option>
+            ))}
+          </select>
+          {focusedField === 'oxygenDelivery' && (
+            <p className="text-xs text-gray-600">Select oxygen delivery method</p>
           )}
         </div>
       </div>

@@ -40,6 +40,7 @@ import { FormsModule } from '../modules/forms/FormsModule';
 import { WoundCareModule } from '../modules/wound-care/WoundCareModule';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from './Patients/handover/HandoverNotes';
+import { DoctorsOrders } from './Patients/DoctorsOrders';
 import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
 import { fetchPatientMedications } from '../lib/medicationService';
@@ -78,6 +79,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [showDoctorsOrders, setShowDoctorsOrders] = useState(false);
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
 
   // Generate comprehensive hospital-style patient record
@@ -665,6 +667,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       icon: ArrowRight,
       action: () => alert('Transfer Request feature coming soon!'),
       color: 'purple'
+    },
+    {
+      id: 'doctors-orders',
+      title: 'Doctors Orders',
+      description: 'View and manage physician orders',
+      icon: FileText,
+      action: () => setShowDoctorsOrders(true),
+      color: 'blue'
     }
   ];
 
@@ -1143,6 +1153,19 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           </div>
         )}
       </div>
+
+      {/* Doctors Orders Modal */}
+      {showDoctorsOrders && patient && (
+        <DoctorsOrders
+          patientId={patient.id}
+          currentUser={{
+            id: currentUser?.id || 'unknown',
+            name: currentUser?.name || 'Unknown User',
+            role: (currentUser?.role as 'nurse' | 'admin' | 'super_admin') || 'nurse'
+          }}
+          onClose={() => setShowDoctorsOrders(false)}
+        />
+      )}
 
       {/* Schema Template Editor */}
       <SchemaTemplateEditor

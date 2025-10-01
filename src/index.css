@@ -17,6 +17,46 @@
   input, select, textarea {
     @apply dark:bg-gray-600 dark:text-white dark:border-gray-500;
   }
+  
+  /* Force 24-hour time format for all time inputs */
+  input[type="time"] {
+    -webkit-appearance: textfield;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  
+  /* Comprehensive AM/PM hiding for all browsers */
+  input[type="time"]::-webkit-datetime-edit-ampm-field,
+  input[type="time"]::-webkit-datetime-edit-meridiem-field {
+    display: none !important;
+    width: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+  
+  /* Custom 24-hour time input styling */
+  .time-24h {
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .time-24h::-webkit-datetime-edit-ampm-field,
+  .time-24h::-webkit-datetime-edit-meridiem-field {
+    display: none !important;
+    width: 0 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+  
+  .time-24h::-webkit-datetime-edit {
+    color: inherit;
+  }
+  
+  /* Additional browser-specific rules */
+  .time-24h::-webkit-calendar-picker-indicator {
+    filter: none;
+  }
 }
 
 /* Add custom component styles */

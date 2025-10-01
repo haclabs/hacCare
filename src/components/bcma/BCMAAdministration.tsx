@@ -35,6 +35,12 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const [validationResult, setValidationResult] = useState<BCMAValidationResult | null>(null);
   const [notes, setNotes] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<'scan-patient' | 'scan-medication' | 'verify' | 'complete'>('scan-patient');
+  
+  // Glucose reading states for diabetic medications
+  const [requiresGlucoseReading, setRequiresGlucoseReading] = useState<boolean>(false);
+  const [glucoseReading, setGlucoseReading] = useState<string>('');
+  const [glucoseTimestamp, setGlucoseTimestamp] = useState<string>('');
+  const [showGlucoseModal, setShowGlucoseModal] = useState<boolean>(false);
   const [showBarcodes, setShowBarcodes] = useState(false);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [overrideReason, setOverrideReason] = useState<string>('');
@@ -132,16 +138,45 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       document.removeEventListener('barcodescanned', handleBarcodeInput as EventListener);
       delete (window as any).bcmaTestScan;
     };
-  }, [handleBarcodeScanned]); // Depend on the memoized function
+    }, [handleBarcodeScanned]); // Depend on the memoized function
+
+  // Check if medication requires glucose reading (diabetic category)
+  useEffect(() => {
+    console.log('🩸 BCMA: Checking medication category:', {
+      medication: medication.name,
+      category: medication.category,
+      fullMedication: medication
+    });
+    
+    const isDiabeticMedication = medication.category === 'diabetic';
+    setRequiresGlucoseReading(isDiabeticMedication);
+    
+    if (isDiabeticMedication) {
+      console.log('🩸 BCMA: Diabetic medication detected - glucose reading will be required');
+    } else {
+      console.log('🩸 BCMA: Non-diabetic medication - no glucose reading required');
+    }
+  }, [medication.category]);
 
 
-
-    const handleAdministration = async () => {
+  const handleAdministration = async () => {
     if (!validationResult || !validationResult.isValid) return;
 
+    // Check if glucose reading is required and provided
+    if (requiresGlucoseReading && !glucoseReading) {
+      setShowGlucoseModal(true);
+      return;
+    }
+
     try {
+      const administrationData = {
+        ...medication,
+        glucoseReading: requiresGlucoseReading ? glucoseReading : null,
+        glucoseTimestamp: requiresGlucoseReading ? glucoseTimestamp : null
+      };
+
       const log = await bcmaService.createAdministrationLog(
-        medication,
+        administrationData,
         patient,
         currentUser,
         scannedPatientId,
@@ -515,6 +550,79 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 </div>
               </div>
 
+              {/* Glucose Reading Requirement for Diabetic Medications */}
+              {requiresGlucoseReading && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900">Glucose Reading Required</h3>
+                  
+                  <div className={`p-4 rounded-lg border-2 ${
+                    glucoseReading 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-orange-50 border-orange-200'
+                  }`}>
+                    <div className="flex items-center space-x-3 mb-3">
+                      {glucoseReading ? (
+                        <Check className="h-6 w-6 text-green-600" />
+                      ) : (
+                        <AlertTriangle className="h-6 w-6 text-orange-600" />
+                      )}
+                      <div>
+                        <p className={`font-medium ${
+                          glucoseReading ? 'text-green-800' : 'text-orange-800'
+                        }`}>
+                          {glucoseReading 
+                            ? `Current Glucose: ${glucoseReading} mmol/L` 
+                            : 'Glucose reading required for diabetic medication'
+                          }
+                        </p>
+                        {glucoseTimestamp && (
+                          <p className="text-sm text-gray-600">
+                            Recorded: {new Date(glucoseTimestamp).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {!glucoseReading && (
+                      <button
+                        onClick={() => setShowGlucoseModal(true)}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                      >
+                        Enter Glucose Reading
+                      </button>
+                    )}
+
+                    {glucoseReading && (
+                      <div className="mt-3">
+                        {/* Glucose Reading Recorded */}
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <div className="flex items-center space-x-2">
+                            <Check className="h-5 w-5 text-blue-600" />
+                            <p className="text-sm font-medium text-blue-800">
+                              Glucose reading recorded: {glucoseReading} mmol/L
+                            </p>
+                          </div>
+                          <p className="text-sm text-blue-700 mt-1">
+                            Reading will be documented with medication administration.
+                          </p>
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            setGlucoseReading('');
+                            setGlucoseTimestamp('');
+                            setShowGlucoseModal(true);
+                          }}
+                          className="mt-2 px-3 py-1 text-sm text-orange-600 border border-orange-300 rounded hover:bg-orange-50"
+                        >
+                          Update Reading
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -566,14 +674,17 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             {currentStep === 'verify' && (
               <button
                 onClick={handleAdministration}
-                disabled={!validationResult?.isValid}
+                disabled={!validationResult?.isValid || (requiresGlucoseReading && !glucoseReading)}
                 className={`flex-1 px-4 py-2 rounded-lg font-medium ${
-                  validationResult?.isValid
+                  (validationResult?.isValid && (!requiresGlucoseReading || glucoseReading))
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                Administer Medication
+                {requiresGlucoseReading && !glucoseReading 
+                  ? 'Glucose Reading Required' 
+                  : 'Administer Medication'
+                }
               </button>
             )}
             
@@ -650,6 +761,81 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium"
               >
                 Apply Override
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Glucose Reading Modal */}
+      {showGlucoseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Enter Glucose Reading</h3>
+                <button
+                  onClick={() => setShowGlucoseModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Blood Glucose Level (mmol/L)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="35"
+                  step="0.1"
+                  value={glucoseReading}
+                  onChange={(e) => setGlucoseReading(e.target.value)}
+                  placeholder="Enter glucose reading..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter glucose reading in mmol/L (e.g., 5.5)
+                </p>
+              </div>
+
+              {/* Glucose Reading Preview */}
+              {glucoseReading && (
+                <div className="p-3 rounded-md border bg-blue-50">
+                  <div className="text-blue-600">
+                    <p className="font-medium">Reading Recorded</p>
+                    <p className="text-sm">Glucose level: {glucoseReading} mmol/L will be documented with medication administration</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex space-x-3">
+              <button
+                onClick={() => setShowGlucoseModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (glucoseReading && parseFloat(glucoseReading) >= 1 && parseFloat(glucoseReading) <= 35) {
+                    setGlucoseTimestamp(new Date().toISOString());
+                    setShowGlucoseModal(false);
+                  }
+                }}
+                disabled={!glucoseReading || parseFloat(glucoseReading) < 1 || parseFloat(glucoseReading) > 35}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium ${
+                  glucoseReading && parseFloat(glucoseReading) >= 1 && parseFloat(glucoseReading) <= 35
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Save Reading
               </button>
             </div>
           </div>

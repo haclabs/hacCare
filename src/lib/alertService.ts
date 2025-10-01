@@ -19,7 +19,10 @@ export const ALERT_CONFIG = {
   BATCH_SIZE: 50,
   
   // Safety limit for processing alerts
-  MAX_ALERTS_TO_PROCESS: 10000
+  MAX_ALERTS_TO_PROCESS: 10000,
+  
+  // Auto-cleanup interval (run every 2 hours)
+  CLEANUP_INTERVAL_MS: 2 * 60 * 60 * 1000
 };
 
 /**
@@ -1047,4 +1050,34 @@ export const cleanupOldAlerts = async (): Promise<void> => {
   } catch (error) {
     console.error('Error cleaning up old alerts:', error);
   }
+};
+
+/**
+ * Start automatic alert cleanup service
+ * Runs cleanup every 2 hours in the background
+ */
+export const startAlertCleanupService = (): NodeJS.Timeout => {
+  console.log('🗑️ Starting automatic alert cleanup service (runs every 2 hours)');
+  
+  // Run initial cleanup
+  cleanupOldAlerts().catch(error => 
+    console.error('Initial alert cleanup failed:', error)
+  );
+  
+  // Schedule recurring cleanup
+  const cleanupInterval = setInterval(() => {
+    cleanupOldAlerts().catch(error => 
+      console.error('Scheduled alert cleanup failed:', error)
+    );
+  }, ALERT_CONFIG.CLEANUP_INTERVAL_MS);
+  
+  return cleanupInterval;
+};
+
+/**
+ * Stop automatic alert cleanup service
+ */
+export const stopAlertCleanupService = (interval: NodeJS.Timeout): void => {
+  console.log('🛑 Stopping automatic alert cleanup service');
+  clearInterval(interval);
 };

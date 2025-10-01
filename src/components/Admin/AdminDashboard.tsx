@@ -186,28 +186,34 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
               <Users className="h-5 w-5 mr-2" />
-              Login Sessions & IP Addresses
+              Login Sessions & IP Addresses - Current Tab: {activeTab}
             </h2>
-            <div className="flex space-x-1">
+            <div className="flex space-x-2 bg-gray-50 dark:bg-gray-700 p-1 rounded-lg">
               <button
-                onClick={() => setActiveTab('sessions')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                onClick={() => {
+                  console.log('Switching to sessions tab');
+                  setActiveTab('sessions');
+                }}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'sessions'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'
                 }`}
               >
                 Active Sessions ({activeSessions.length})
               </button>
               <button
-                onClick={() => setActiveTab('history')}
-                className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                onClick={() => {
+                  console.log('Switching to history tab');
+                  setActiveTab('history');
+                }}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'history'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600'
                 }`}
               >
-                Recent Logins (20)
+                Recent Logins ({loginHistory.length})
               </button>
             </div>
           </div>

@@ -33,6 +33,7 @@ export interface VitalSigns {
   heartRate: number;
   respiratoryRate: number;
   oxygenSaturation: number;
+  oxygenDelivery?: string; // Room Air, O2 1 L/min, O2 2 L/min, etc.
   lastUpdated?: string;
   recorded_at?: string;
 }
@@ -41,7 +42,7 @@ export interface Medication {
   id: string;
   patient_id?: string;
   name: string;
-  category?: 'scheduled' | 'unscheduled' | 'prn' | 'continuous';
+  category?: 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic';
   dosage: string;
   frequency: string;
   route: string;
@@ -49,6 +50,7 @@ export interface Medication {
   end_date?: string;
   prescribed_by: string;
   admin_time?: string; // Time of day medication should be administered (HH:MM format)
+  admin_times?: string[] | null; // Multiple administration times for "X times daily" frequencies
   last_administered?: string;
   next_due: string;
   status: 'Active' | 'Completed' | 'Discontinued';
@@ -85,6 +87,27 @@ export interface PatientNote {
   content: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   patient_id?: string;
+}
+
+export interface DoctorsOrder {
+  id: string;
+  patient_id: string;
+  tenant_id: string;
+  order_date: string; // ISO date string (YYYY-MM-DD)
+  order_time: string; // 24-hour time format (HH:MM)
+  order_text: string;
+  ordering_doctor: string;
+  notes?: string;
+  order_type: 'Direct' | 'Phone Order' | 'Verbal Order';
+  is_acknowledged: boolean;
+  acknowledged_by?: string; // user ID
+  acknowledged_by_name?: string; // user name for display
+  acknowledged_at?: string; // ISO timestamp
+  created_by: string; // user ID
+  created_by_name?: string; // user name for display
+  created_at: string; // ISO timestamp
+  updated_by?: string; // user ID
+  updated_at?: string; // ISO timestamp
 }
 
 export interface Nurse {

@@ -305,6 +305,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.next_due !== undefined) dbUpdates.next_due = updates.next_due;
     if (updates.last_administered !== undefined) dbUpdates.last_administered = updates.last_administered;
     if (updates.admin_time !== undefined) dbUpdates.admin_time = updates.admin_time;
+    if (updates.admin_times !== undefined) dbUpdates.admin_times = updates.admin_times;
     
     console.log('Database updates:', dbUpdates);
     
@@ -324,6 +325,26 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       throw new Error('Update operation returned no data - possible permissions issue');
     }
 
+    // If frequency or admin_times were updated, recalculate next due time
+    let nextDueTime = data.next_due;
+    if (updates.frequency !== undefined || updates.admin_times !== undefined || updates.admin_time !== undefined) {
+      console.log('Frequency or admin times updated, recalculating next due time...');
+      nextDueTime = await calculateNextDueTime(medicationId);
+      
+      // Update the next_due in the database
+      const { error: nextDueError } = await supabase
+        .from('patient_medications')
+        .update({ next_due: nextDueTime })
+        .eq('id', medicationId);
+        
+      if (nextDueError) {
+        console.error('Error updating next_due time:', nextDueError);
+        // Don't throw here, just log the error since the main update succeeded
+      } else {
+        console.log('Next due time updated to:', nextDueTime);
+      }
+    }
+
     // Map database response back to Medication interface
     const updatedMedication: Medication = {
       id: data.id,
@@ -337,8 +358,9 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       end_date: data.end_date,
       prescribed_by: data.prescribed_by || '',
       admin_time: data.admin_time,
+      admin_times: data.admin_times,
       last_administered: data.last_administered,
-      next_due: data.next_due || '',
+      next_due: nextDueTime || data.next_due || '',
       status: data.status || 'Active' // Use 'status' column directly
     };
 
@@ -609,10 +631,10 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
 const calculateNextDueTime = async (medicationId: string): Promise<string> => {
   try {
     console.log('Calculating next due time for medication:', medicationId);
-    // Get the medication to check its frequency
+    // Get the medication to check its frequency and admin_times
     const { data: medication, error } = await supabase 
       .from('patient_medications')
-      .select('frequency')
+      .select('frequency, admin_time, admin_times')
       .eq('id', medicationId)
       .single();
     
@@ -625,95 +647,57 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     }
     
     console.log('Medication frequency:', medication.frequency);
+    console.log('Admin times:', medication.admin_times);
     
-    // Create a new Date object for the next due time
     const currentTime = new Date();
-    let nextDue = new Date(currentTime);
     
-    // Calculate next due time based on frequency
-    switch (medication.frequency) {
-      case 'Once daily':
-        // If current time is before 8 AM, due at 8 AM today, otherwise 8 AM tomorrow 
-        if (currentTime.getHours() < 8) {
-          nextDue.setHours(8, 0, 0, 0); // 8:00 AM today
-        } else {
-          nextDue.setDate(nextDue.getDate() + 1);
-          nextDue.setHours(8, 0, 0, 0); // 8:00 AM tomorrow
-        }
-        break;
-      case 'Twice daily':
-        // If before 8 PM, next dose at 8 PM, otherwise next day at 8 AM 
-        if (currentTime.getHours() < 20) {
-          nextDue.setHours(20, 0, 0, 0); // 8:00 PM today
-        } else {
-          nextDue.setDate(nextDue.getDate() + 1);
-          nextDue.setHours(8, 0, 0, 0);  // 8:00 AM tomorrow
-        }
-        break;
-      case 'Three times daily':
-        const threeTimes = [8, 14, 20]; // 8 AM, 2 PM, 8 PM
-        for (const hour of threeTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
-        break;
-      case 'Every 4 hours':
-        nextDue = new Date(currentTime.getTime() + 4 * 60 * 60 * 1000);
-        break;
-      case 'Every 6 hours':
-        const sixHourTimes = [6, 12, 18, 24]; // 6 AM, 12 PM, 6 PM, 12 AM
-        for (const hour of sixHourTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(6, 0, 0, 0);
-        break;
-      case 'Every 8 hours':
-        const eightHourTimes = [8, 16, 24]; // 8 AM, 4 PM, 12 AM
-        for (const hour of eightHourTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
-        break;
-      case 'Every 12 hours':
-        const twelveHourTimes = [8, 20]; // 8 AM, 8 PM
-        for (const hour of twelveHourTimes) {
-          if (currentTime.getHours() < hour) {
-            nextDue.setHours(hour, 0, 0, 0);
-            return nextDue.toISOString();
-          }
-        }
-        // If we're past all times today, set for tomorrow morning
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
-        break;
-      case 'As needed (PRN)':
-        return currentTime.toISOString(); // Immediate availability
-      default:
-        // Default to 8 AM tomorrow
-        nextDue.setDate(nextDue.getDate() + 1);
-        nextDue.setHours(8, 0, 0, 0);
+    // Get admin times - prefer admin_times array, fallback to admin_time, default to ['08:00']
+    let adminTimes: string[] = [];
+    
+    if (medication.admin_times && Array.isArray(medication.admin_times)) {
+      adminTimes = medication.admin_times;
+    } else if (medication.admin_time) {
+      adminTimes = [medication.admin_time];
+    } else {
+      adminTimes = ['08:00']; // Default fallback
     }
     
-    const result = nextDue.toISOString();
-    console.log(`Calculated next due time for ${medication?.frequency || 'unknown frequency'}:`, result);
-    console.log(`Current time:`, currentTime.toISOString());
-    console.log(`Time difference:`, nextDue.getTime() - currentTime.getTime(), 'ms');
-    return result;
+    console.log('Using admin times:', adminTimes);
+    
+    // Handle PRN medications
+    if (medication.frequency.includes('PRN') || medication.frequency.includes('As needed')) {
+      // PRN medications don't have scheduled times, return current time + 1 hour
+      return new Date(currentTime.getTime() + 60 * 60 * 1000).toISOString();
+    }
+    
+    // Handle Continuous medications
+    if (medication.frequency.includes('Continuous')) {
+      // Continuous medications are always due now
+      return currentTime.toISOString();
+    }
+    
+    // Convert admin times to today's dates and sort them
+    const todayAdminTimes = adminTimes.map(timeStr => {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const adminDate = new Date(currentTime);
+      adminDate.setHours(hours, minutes, 0, 0);
+      return adminDate;
+    }).sort((a, b) => a.getTime() - b.getTime());
+    
+    // Find the next administration time
+    for (const adminTime of todayAdminTimes) {
+      if (currentTime < adminTime) {
+        console.log(`Next due time today: ${adminTime.toISOString()}`);
+        return adminTime.toISOString();
+      }
+    }
+    
+    // If all times for today have passed, use the first time tomorrow
+    const tomorrowFirstTime = new Date(todayAdminTimes[0]);
+    tomorrowFirstTime.setDate(tomorrowFirstTime.getDate() + 1);
+    
+    console.log(`Next due time tomorrow: ${tomorrowFirstTime.toISOString()}`);
+    return tomorrowFirstTime.toISOString();
   } catch (error) {
     console.error('Error calculating next due time:', error);
     // Return 24 hours from now as fallback
