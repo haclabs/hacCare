@@ -22,6 +22,7 @@ CREATE TABLE "public"."doctors_orders" (
     "acknowledged_at" TIMESTAMPTZ,
     
     -- Audit fields
+    "doctor_name" TEXT, -- Doctor who created the order (for admin/super admin entries)
     "created_by" UUID NOT NULL REFERENCES "public"."user_profiles"("id"),
     "created_at" TIMESTAMPTZ DEFAULT NOW(),
     "updated_by" UUID REFERENCES "public"."user_profiles"("id"),
@@ -79,3 +80,4 @@ COMMENT ON TABLE "public"."doctors_orders" IS 'Stores physician orders with ackn
 COMMENT ON COLUMN "public"."doctors_orders"."order_type" IS 'Type of order: Direct (admin/super admin), Phone Order, or Verbal Order (nurses)';
 COMMENT ON COLUMN "public"."doctors_orders"."is_acknowledged" IS 'Whether the order has been acknowledged by nursing staff';
 COMMENT ON COLUMN "public"."doctors_orders"."order_text" IS 'The actual physician order content';
+COMMENT ON COLUMN "public"."doctors_orders"."doctor_name" IS 'Name of the doctor who created the order (for admin/super admin entries)';

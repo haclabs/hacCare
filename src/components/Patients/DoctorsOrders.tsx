@@ -34,6 +34,7 @@ interface OrderFormData {
   ordering_doctor: string;
   notes: string;
   order_type: 'Direct' | 'Phone Order' | 'Verbal Order';
+  doctor_name: string; // Doctor who created the order (for admin/super admin)
 }
 
 export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
@@ -51,7 +52,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
     order_text: '',
     ordering_doctor: '',
     notes: '',
-    order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct'
+    order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
+    doctor_name: ''
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -107,7 +109,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
         order_text: '',
         ordering_doctor: '',
         notes: '',
-        order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct'
+        order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
+        doctor_name: ''
       });
     } catch (error) {
       console.error('Error saving doctors order:', error);
@@ -125,7 +128,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       order_text: order.order_text,
       ordering_doctor: order.ordering_doctor,
       notes: order.notes || '',
-      order_type: order.order_type
+      order_type: order.order_type,
+      doctor_name: order.doctor_name || ''
     });
     setShowAddForm(true);
   };
@@ -163,7 +167,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       order_text: '',
       ordering_doctor: '',
       notes: '',
-      order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct'
+      order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
+      doctor_name: ''
     });
     setError('');
   };
@@ -310,6 +315,25 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                   />
                 </div>
 
+                {/* Doctor/Provider Name - Only show for admin/super admin */}
+                {isAdmin && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Doctor/Provider Name (Order Created By)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.doctor_name}
+                      onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Dr. Johnson (who is entering this order)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Optional: Name of the doctor/provider who is creating this order entry
+                    </p>
+                  </div>
+                )}
+
                 {/* Order Text */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -435,7 +459,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                       {/* Footer info */}
                       <div className="text-xs text-gray-500 space-y-1">
                         <div>
-                          Created by {order.created_by_name} on {new Date(order.created_at).toLocaleString()}
+                          Created by {order.doctor_name ? `${order.doctor_name} (via ${order.created_by_name})` : order.created_by_name} on {new Date(order.created_at).toLocaleString()}
                         </div>
                         {order.is_acknowledged && order.acknowledged_by_name && (
                           <div>

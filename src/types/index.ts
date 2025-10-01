@@ -103,6 +103,7 @@ export interface DoctorsOrder {
   acknowledged_by?: string; // user ID
   acknowledged_by_name?: string; // user name for display
   acknowledged_at?: string; // ISO timestamp
+  doctor_name?: string; // Doctor who created the order (for admin/super admin entries)
   created_by: string; // user ID
   created_by_name?: string; // user name for display
   created_at: string; // ISO timestamp
