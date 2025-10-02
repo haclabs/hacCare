@@ -12,6 +12,8 @@ interface PatientBraceletsModalProps {
 }
 
 const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, onClose }) => {
+  const [debugMode, setDebugMode] = useState(false);
+  
   const handlePrint = () => {
     // Create a new window with only the labels for printing
     const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -26,7 +28,7 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
           <style>
             @page { 
               size: 8.5in 11in; 
-              margin: 0.5in 0.1875in; 
+              margin: 0; 
             }
             body { 
               font-family: Arial, sans-serif; 
@@ -35,20 +37,20 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               font-size: 8px;
             }
             .labels-grid {
-              display: grid;
-              grid-template-columns: repeat(3, 2.625in);
-              grid-template-rows: repeat(10, 1in);
-              gap: 0;
-              width: 7.875in;
-              height: 10in;
-              margin: 0 auto;
+              position: relative;
+              width: 8.5in;
+              height: 11in;
+              margin: 0;
+              padding: 0;
             }
             .label {
+              position: absolute;
               width: 2.625in;
               height: 1in;
-              border: 1px dashed #ccc;
+              border: ${debugMode ? '2px solid #ff0000' : '1px dashed #ccc'};
               padding: 2px;
               box-sizing: border-box;
+              ${debugMode ? 'background-color: rgba(255, 0, 0, 0.1);' : ''}
               display: flex;
               flex-direction: column;
               justify-content: center;
@@ -56,6 +58,20 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               text-align: center;
               overflow: hidden;
             }
+            /* Avery 5160 perfect positioning - restored */
+            .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
+            .label:nth-child(3n+2) { left: 3.0375in; } /* Column 2 */
+            .label:nth-child(3n+3) { left: 5.7875in; } /* Column 3 */
+            .label:nth-child(-n+3) { top: 0.5in; }
+            .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
+            .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }
+            .label:nth-child(n+10):nth-child(-n+12) { top: 3.5in; }
+            .label:nth-child(n+13):nth-child(-n+15) { top: 4.5in; }
+            .label:nth-child(n+16):nth-child(-n+18) { top: 5.5in; }
+            .label:nth-child(n+19):nth-child(-n+21) { top: 6.5in; }
+            .label:nth-child(n+22):nth-child(-n+24) { top: 7.5in; }
+            .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
+            .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
             .patient-name {
               font-size: 9px;
               font-weight: bold;
@@ -79,8 +95,8 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
                 border: none !important;
               }
               .labels-grid {
-                grid-template-rows: repeat(10, 1in) !important;
-                height: 10in !important;
+                width: 8.5in !important;
+                height: 11in !important;
               }
               .barcode-canvas {
                 max-width: 2.2in !important;
@@ -166,13 +182,22 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             <h2 className="text-xl font-bold text-gray-900">Patient Bracelets</h2>
             <p className="text-sm text-gray-600 mt-1">All patient identification labels with barcodes and names</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-2">
+            <label className="flex items-center text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+                className="mr-2"
+              />
+              Debug Mode
+            </label>
             <button
               onClick={handlePrint}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
             >
               <Printer className="h-4 w-4 mr-2" />
-              Print
+              {debugMode ? 'Print Test' : 'Print'}
             </button>
             <button
               onClick={onClose}
@@ -189,7 +214,7 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
             <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
           </div>
-          <div className="grid grid-cols-5 gap-2" style={{gridTemplateColumns: 'repeat(5, 2.625in)'}}>
+          <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
             {patients.slice(0, 15).map((patient) => (
               <div key={patient.id} className="border border-gray-300 p-1 bg-white text-center" style={{width: '2.625in', height: '1in', fontSize: '8px'}}>
                 <div className="font-bold text-xs mb-1">{patient.first_name} {patient.last_name}</div>
@@ -252,7 +277,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
           <style>
             @page { 
               size: 8.5in 11in; 
-              margin: 0.5in 0.1875in; 
+              margin: 0; 
             }
             body { 
               font-family: Arial, sans-serif; 
@@ -261,19 +286,18 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               font-size: 7px;
             }
             .labels-grid {
-              display: grid;
-              grid-template-columns: repeat(3, 2.625in);
-              grid-template-rows: repeat(10, 1in);
-              gap: 0;
-              width: 7.875in;
-              height: 10in;
-              margin: 0 auto;
+              position: relative;
+              width: 8.5in;
+              height: 11in;
+              margin: 0;
+              padding: 0;
             }
             .label {
+              position: absolute;
               width: 2.625in;
               height: 1in;
               border: 1px dashed #ccc;
-              padding: 3px;
+              padding: 2px;
               box-sizing: border-box;
               display: flex;
               flex-direction: row;
@@ -281,6 +305,20 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               text-align: left;
               overflow: hidden;
             }
+            /* Avery 5160 perfect positioning - restored */
+            .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
+            .label:nth-child(3n+2) { left: 3.0375in; } /* Column 2 */
+            .label:nth-child(3n+3) { left: 5.7875in; } /* Column 3 */
+            .label:nth-child(-n+3) { top: 0.5in; }
+            .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
+            .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }
+            .label:nth-child(n+10):nth-child(-n+12) { top: 3.5in; }
+            .label:nth-child(n+13):nth-child(-n+15) { top: 4.5in; }
+            .label:nth-child(n+16):nth-child(-n+18) { top: 5.5in; }
+            .label:nth-child(n+19):nth-child(-n+21) { top: 6.5in; }
+            .label:nth-child(n+22):nth-child(-n+24) { top: 7.5in; }
+            .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
+            .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
             .label-content {
               flex: 1;
               display: flex;
@@ -323,8 +361,8 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 border: none !important;
               }
               .labels-grid {
-                grid-template-rows: repeat(10, 1in) !important;
-                height: 10in !important;
+                width: 8.5in !important;
+                height: 11in !important;
               }
               .barcode-canvas {
                 width: 0.8in !important;
@@ -441,7 +479,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             <p className="text-xs text-blue-600">• Equal-sized medication and patient names for consistent readability</p>
             <p className="text-xs text-blue-600">• Balanced barcode width for optimal scan success and label space usage</p>
           </div>
-          <div className="grid grid-cols-5 gap-2" style={{gridTemplateColumns: 'repeat(5, 2.625in)'}}>
+          <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
             {medications.slice(0, 15).map((medication) => (
               <div key={medication.id} className="border border-gray-300 p-1 bg-white flex items-stretch" style={{width: '2.625in', height: '1in'}}>
                 <div className="flex-1 flex flex-col justify-center pr-1" style={{minWidth: '1.6in'}}>
