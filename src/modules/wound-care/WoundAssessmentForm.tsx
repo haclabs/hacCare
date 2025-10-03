@@ -144,32 +144,56 @@ export const WoundAssessmentForm: React.FC<WoundAssessmentFormProps> = ({
   };
 
   const getLocationFromCoordinates = (x: number, y: number, view: 'anterior' | 'posterior'): string => {
-    // Simple location mapping based on coordinates
-    if (y < 20) return view === 'anterior' ? 'Face/Head' : 'Back of Head';
-    if (y < 40) return 'Neck';
-    if (y < 60) {
-      if (x < 40) return view === 'anterior' ? 'Left Arm/Shoulder' : 'Left Shoulder Blade';
-      if (x > 60) return view === 'anterior' ? 'Right Arm/Shoulder' : 'Right Shoulder Blade';
+    // Coordinate mapping based on SVG viewBox="0 0 200 400" and actual body part positions
+    // Convert percentage coordinates back to SVG coordinates for accurate mapping
+    const svgX = (x / 100) * 200;
+    const svgY = (y / 100) * 400;
+    
+
+    
+    // Head area (y: 10-70)
+    if (svgY < 70) return view === 'anterior' ? 'Face/Head' : 'Back of Head';
+    
+    // Neck area (y: 65-80)
+    if (svgY < 80) return 'Neck';
+    
+    // Upper torso/chest area (y: 80-180)
+    if (svgY < 180) {
+      // Left arm area
+      if (svgX < 75 && svgX > 40) return view === 'anterior' ? 'Left Arm/Shoulder' : 'Left Shoulder Blade';
+      // Right arm area  
+      if (svgX > 125 && svgX < 160) return view === 'anterior' ? 'Right Arm/Shoulder' : 'Right Shoulder Blade';
+      // Center torso
       return view === 'anterior' ? 'Chest' : 'Upper Back';
     }
-    if (y < 80) {
-      if (x < 40) return view === 'anterior' ? 'Left Arm/Elbow' : 'Left Side';
-      if (x > 60) return view === 'anterior' ? 'Right Arm/Elbow' : 'Right Side';
+    
+    // Lower torso/abdomen area (y: 180-245)
+    if (svgY < 245) {
+      // Left forearm/side
+      if (svgX < 70) return view === 'anterior' ? 'Left Arm/Elbow' : 'Left Side';
+      // Right forearm/side
+      if (svgX > 130) return view === 'anterior' ? 'Right Arm/Elbow' : 'Right Side';  
+      // Center abdomen
       return view === 'anterior' ? 'Abdomen' : 'Lower Back';
     }
-    if (y < 90) {
-      if (x < 45) return 'Left Hip/Thigh';
-      if (x > 55) return 'Right Hip/Thigh';
+    
+    // Pelvis/hip area (y: 245-325)
+    if (svgY < 325) {
+      if (svgX < 85) return 'Left Hip/Thigh';
+      if (svgX > 115) return 'Right Hip/Thigh';
       return view === 'anterior' ? 'Pelvis' : 'Sacrum/Coccyx';
     }
-    if (y < 95) {
-      if (x < 45) return 'Left Knee';
-      if (x > 55) return 'Right Knee';
+    
+    // Lower leg area (y: 325-385)
+    if (svgY < 385) {
+      if (svgX < 100) return 'Left Knee/Lower Leg';
+      if (svgX > 100) return 'Right Knee/Lower Leg';
       return 'Lower Leg';
     }
-    // Feet area
-    if (x < 45) return 'Left Foot/Ankle';
-    if (x > 55) return 'Right Foot/Ankle';
+    
+    // Feet area (y: 385+)
+    if (svgX < 100) return 'Left Foot/Ankle';
+    if (svgX > 100) return 'Right Foot/Ankle';
     return 'Feet';
   };
 

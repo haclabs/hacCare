@@ -2,74 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add custom base styles */
 @layer base {
   body {
     @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    transition: all 0.3s ease;
   }
   
-  /* Improve form label visibility in dark mode */
-  label {
-    @apply dark:text-gray-200;
+  .terminal body {
+    font-family: 'Courier New', monospace !important;
+    background: #000000 !important;
+    color: #00ff00 !important;
   }
   
-  /* Ensure form inputs have consistent styling in dark mode */
-  input, select, textarea {
-    @apply dark:bg-gray-600 dark:text-white dark:border-gray-500;
+  .terminal * {
+    font-family: 'Courier New', monospace !important;
   }
   
-  /* Force 24-hour time format for all time inputs */
-  input[type="time"] {
-    -webkit-appearance: textfield;
-    -moz-appearance: textfield;
-    appearance: textfield;
+  .terminal h1, .terminal h2, .terminal h3 {
+    color: #00ff88 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
   }
   
-  /* Comprehensive AM/PM hiding for all browsers */
-  input[type="time"]::-webkit-datetime-edit-ampm-field,
-  input[type="time"]::-webkit-datetime-edit-meridiem-field {
-    display: none !important;
-    width: 0 !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
+  .terminal .bg-white {
+    background: #001100 !important;
+    border-color: #004400 !important;
   }
   
-  /* Custom 24-hour time input styling */
-  .time-24h {
-    font-variant-numeric: tabular-nums;
+  .terminal .bg-gray-50 {
+    background: #000000 !important;
   }
   
-  .time-24h::-webkit-datetime-edit-ampm-field,
-  .time-24h::-webkit-datetime-edit-meridiem-field {
-    display: none !important;
-    width: 0 !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    position: absolute !important;
-    left: -9999px !important;
+  .terminal .text-gray-900 {
+    color: #00ff88 !important;
   }
   
-  .time-24h::-webkit-datetime-edit {
-    color: inherit;
+  .terminal .text-gray-600 {
+    color: #008800 !important;
   }
   
-  /* Additional browser-specific rules */
-  .time-24h::-webkit-calendar-picker-indicator {
-    filter: none;
+  .terminal header {
+    background: #001100 !important;
+    border-color: #004400 !important;
+  }
+  
+  .terminal aside {
+    background: #001100 !important;
+    border-color: #004400 !important;
   }
 }
 
-/* Add custom component styles */
 @layer components {
   .btn {
     @apply px-4 py-2 rounded-lg transition-colors;
-  }
-  
-  .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
-  }
-  
-  .btn-secondary {
-    @apply bg-gray-600 text-white hover:bg-gray-700;
   }
 }

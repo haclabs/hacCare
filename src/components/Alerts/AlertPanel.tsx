@@ -325,7 +325,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
             <p>• Medication due times</p>
             <p>• Abnormal vital signs</p>
             <p>• Missing vital signs (8+ hours)</p>
-            <p>• System checks every 5 minutes</p>
+            <p>• System checks every 60 minutes</p>
           </div>
         </div>
       </div>

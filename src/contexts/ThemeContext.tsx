@@ -2,10 +2,15 @@ import React, { createContext, useState, useEffect } from 'react';
 
 /**
  * Theme Context Interface
- * Manages dark/light mode state throughout the application
+ * Manages theme state throughout the application (light/dark/terminal)
  */
+type Theme = 'light' | 'dark' | 'terminal';
+
 interface ThemeContextType {
+  theme: Theme;
   isDarkMode: boolean;
+  isTerminalMode: boolean;
+  setTheme: (theme: Theme) => void;
   toggleDarkMode: () => void;
   setDarkMode: (isDark: boolean) => void;
 }
@@ -28,85 +33,76 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
  */
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize theme state from localStorage or system preference
-  const [isDarkMode, setIsDarkMode] = useState(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first
-    const savedTheme = localStorage.getItem('haccare-theme');
-    if (savedTheme === 'dark') {
-      return true;
-    } else if (savedTheme === 'light') {
-      return false;
-    } else if (savedTheme === 'system') {
-      // Use system preference for 'system' setting
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem('haccare-theme') as Theme;
+    if (savedTheme && ['light', 'dark', 'terminal'].includes(savedTheme)) {
+      return savedTheme;
     }
     
     // Fall back to system preference for new users
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
+
+  const isDarkMode = theme === 'dark';
+  const isTerminalMode = theme === 'terminal';
 
   /**
    * Apply theme classes to document
-   * Updates the document class to enable dark mode styles
+   * Updates the document class to enable theme styles
    */
   useEffect(() => {
     const root = document.documentElement;
     
-    if (isDarkMode) {
+    // Remove all theme classes first
+    root.classList.remove('dark', 'terminal');
+    
+    // Apply the current theme class
+    if (theme === 'dark') {
       root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    } else if (theme === 'terminal') {
+      root.classList.add('terminal');
     }
     
-    // Only save to localStorage if it's not a system preference
-    // System preference changes should not override the 'system' setting
-    const savedTheme = localStorage.getItem('haccare-theme');
-    if (savedTheme !== 'system') {
-      localStorage.setItem('haccare-theme', isDarkMode ? 'dark' : 'light');
-    }
-  }, [isDarkMode]);
+    // Save to localStorage
+    localStorage.setItem('haccare-theme', theme);
+  }, [theme]);
 
   /**
-   * Listen for system theme changes when 'system' is selected
+   * Set specific theme
+   * @param {Theme} newTheme - The theme to set
    */
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('haccare-theme');
-    if (savedTheme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
-      const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-        setIsDarkMode(e.matches);
-      };
-      
-      mediaQuery.addEventListener('change', handleSystemThemeChange);
-      
-      return () => {
-        mediaQuery.removeEventListener('change', handleSystemThemeChange);
-      };
-    }
-  }, []);
-
-  /**
-   * Toggle between dark and light mode
-   * When toggling, we switch away from system preference to manual preference
-   */
-  const toggleDarkMode = () => {
-    setIsDarkMode(prev => {
-      const newValue = !prev;
-      localStorage.setItem('haccare-theme', newValue ? 'dark' : 'light');
-      return newValue;
-    });
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
   };
 
   /**
-   * Set specific dark mode state
+   * Toggle between dark and light mode (legacy support)
+   */
+  const toggleDarkMode = () => {
+    if (theme === 'light') {
+      setTheme('dark');
+    } else if (theme === 'dark') {
+      setTheme('light');
+    } else {
+      // If terminal mode, cycle to light
+      setTheme('light');
+    }
+  };
+
+  /**
+   * Set specific dark mode state (legacy support)
    * @param {boolean} isDark - Whether to enable dark mode
    */
   const setDarkMode = (isDark: boolean) => {
-    setIsDarkMode(isDark);
+    setTheme(isDark ? 'dark' : 'light');
   };
 
   const value = {
+    theme,
     isDarkMode,
+    isTerminalMode,
+    setTheme,
     toggleDarkMode,
     setDarkMode
   };

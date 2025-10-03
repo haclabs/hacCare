@@ -22,7 +22,6 @@ import { Camera, Plus, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { WoundAssessment, WoundTreatment, Patient } from '../../types';
 import { WoundCareService } from '../../lib/woundCareService';
 import { WoundAssessmentForm } from './WoundAssessmentForm';
-import { EnhancedWoundCareDashboard } from '../../components/Patients/wound-care/EnhancedWoundCareDashboard';
 
 interface WoundCareModuleProps {
   patient: Patient;
@@ -218,15 +217,75 @@ export const WoundCareModule: React.FC<WoundCareModuleProps> = ({
       {/* Content Area */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         {activeView === 'dashboard' && (
-          <EnhancedWoundCareDashboard
-            patientId={patient.id}
-            patientName={`${patient.first_name} ${patient.last_name}`}
-            onAddWound={() => setActiveView('new-assessment')}
-            onViewWound={(wound) => {
-              // Handle viewing specific wound details
-              console.log('Viewing wound:', wound);
-            }}
-          />
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Wound Care Dashboard
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {patient.first_name} {patient.last_name} - Active Assessments: {assessments.length}
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveView('new-assessment')}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>New Assessment</span>
+              </button>
+            </div>
+            
+            {/* Assessment List */}
+            {assessments.length === 0 ? (
+              <div className="text-center py-12">
+                <Camera className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">No wound assessments found</p>
+                <button
+                  onClick={() => setActiveView('new-assessment')}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Create First Assessment</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {assessments.map((assessment) => (
+                  <div key={assessment.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                          {assessment.wound_location} - {assessment.wound_type}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {assessment.length_cm} x {assessment.width_cm} x {assessment.depth_cm} cm
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          {assessment.assessment_notes}
+                        </p>
+                        <div className="flex items-center space-x-4 mt-3 text-xs text-gray-500">
+                          <span>Assessed: {new Date(assessment.assessment_date).toLocaleDateString()}</span>
+                          <span>By: {assessment.assessor_name}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedAssessment(assessment);
+                            setActiveView('edit-assessment');
+                          }}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {activeView === 'new-assessment' && (

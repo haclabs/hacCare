@@ -25,6 +25,7 @@ interface DoctorsOrdersProps {
     role: 'nurse' | 'admin' | 'super_admin';
   };
   onClose: () => void;
+  onOrdersChange?: () => void; // Callback to notify parent of order changes
 }
 
 interface OrderFormData {
@@ -40,7 +41,8 @@ interface OrderFormData {
 export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   patientId,
   currentUser,
-  onClose
+  onClose,
+  onOrdersChange
 }) => {
   const [orders, setOrders] = useState<DoctorsOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +114,9 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
         order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
         doctor_name: ''
       });
+      
+      // Notify parent component of the change
+      onOrdersChange?.();
     } catch (error) {
       console.error('Error saving doctors order:', error);
       setError('Failed to save doctors order');
@@ -150,11 +155,26 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
 
   const handleAcknowledge = async (orderId: string) => {
     try {
-      const updatedOrder = await acknowledgeDoctorsOrder(orderId);
-      setOrders(orders.map(order => order.id === orderId ? updatedOrder : order));
+      await acknowledgeDoctorsOrder(orderId);
+      
+      // Update the order in the local state
+      setOrders(orders.map(order => 
+        order.id === orderId 
+          ? { 
+              ...order, 
+              is_acknowledged: true, 
+              acknowledged_by: currentUser.id,
+              acknowledged_by_name: currentUser.name,
+              acknowledged_at: new Date().toISOString()
+            }
+          : order
+      ));
+      
+      // Notify parent component of the change
+      onOrdersChange?.();
     } catch (error) {
-      console.error('Error acknowledging doctors order:', error);
-      setError('Failed to acknowledge doctors order');
+      console.error('Error acknowledging order:', error);
+      setError('Failed to acknowledge order');
     }
   };
 
@@ -429,10 +449,14 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                           <span>{order.order_type}</span>
                         </div>
 
-                        {order.is_acknowledged && (
+                        {!order.is_acknowledged ? (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 border-red-200 text-xs font-bold space-x-1 animate-pulse">
+                            <span>NEW</span>
+                          </div>
+                        ) : (
                           <div className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 border-green-200 text-xs font-medium space-x-1">
                             <Check className="h-3 w-3" />
-                            <span>Acknowledged</span>
+                            <span>ACKNOWLEDGED</span>
                           </div>
                         )}
                       </div>

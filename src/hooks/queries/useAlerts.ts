@@ -42,9 +42,9 @@ export function useActiveAlerts() {
       console.log(`✅ Fetched ${fetchedAlerts.length} active alerts`);
       return fetchedAlerts;
     },
-    staleTime: 30 * 1000, // 30 seconds - alerts need frequent updates
-    gcTime: 2 * 60 * 1000, // 2 minutes in cache
-    refetchInterval: 60 * 1000, // Auto-refresh every minute for critical alerts
+    staleTime: 5 * 60 * 1000, // 5 minutes - alerts don't need frequent updates
+    gcTime: 10 * 60 * 1000, // 10 minutes in cache
+    refetchInterval: 60 * 60 * 1000, // Auto-refresh every 60 minutes for critical alerts
     retry: (failureCount, error) => {
       // Don't retry configuration errors
       if (error?.message?.includes('Supabase configuration')) return false;
@@ -249,9 +249,9 @@ export function useDismissAlert() {
 /**
  * Alert polling hook for real-time updates
  * Can be enabled/disabled based on component visibility
- * Default interval set to 15 minutes (900000ms) to reduce server load
+ * Default interval set to 60 minutes (3600000ms) to reduce server load
  */
-export function useAlertPolling(enabled = true, interval = 900000) {
+export function useAlertPolling(enabled = true, interval = 3600000) {
   const { refetch } = useActiveAlerts();
   
   return useQuery({

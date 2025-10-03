@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   ];
 
   return (
-    <aside className="bg-gray-50 dark:bg-dark-sidebar border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen transition-colors">
+    <aside className="bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen transition-colors">
       <nav className="p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
@@ -78,7 +78,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : item.color + ' dark:text-gray-400'}`} />
+                  <Icon className={`h-5 w-5 ${
+                    isActive 
+                      ? 'text-blue-600 dark:text-blue-400' 
+                      : item.color + ' dark:text-gray-400'
+                  }`} />
                   <span className="font-medium">{item.label}</span>
                 </button>
               </li>

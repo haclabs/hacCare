@@ -224,10 +224,10 @@ const handleDeleteMedication = async (medicationId: string) => {
                   {medication.name}
                 </h3>
                 {(isDue || isOverdue) && (
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                    isOverdue ? 'bg-red-500 text-white shadow-sm' : 'bg-yellow-500 text-white shadow-sm'
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                    isOverdue ? 'bg-red-600 text-white shadow-lg font-bold border border-red-700' : 'bg-yellow-500 text-white shadow-sm'
                   }`}>
-                    {isOverdue ? '🚨 OVERDUE' : '⏰ DUE NOW'}
+                    <span className={isOverdue ? 'font-extrabold' : ''}>{isOverdue ? '🚨 OVERDUE' : '⏰ DUE NOW'}</span>
                   </span>
                 )}
               </div>

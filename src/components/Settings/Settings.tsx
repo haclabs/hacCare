@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Moon, Sun, Monitor, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw, MemoryStick } from 'lucide-react';
+import { Settings as SettingsIcon, Moon, Sun, Monitor, Terminal, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw, MemoryStick } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
@@ -22,7 +22,7 @@ import { SecuritySettings } from './SecuritySettings';
  * - Performance metrics
  */
 export const Settings: React.FC = () => {
-  const { isDarkMode, toggleDarkMode, setDarkMode } = useTheme();
+  const { theme, isDarkMode, setTheme, toggleDarkMode, setDarkMode } = useTheme();
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<'general' | 'security' | 'connection'>('general');
 
@@ -211,15 +211,17 @@ export const Settings: React.FC = () => {
   /**
    * Handle theme selection
    */
-  const handleThemeChange = (theme: string) => {
-    if (theme === 'system') {
+  const handleThemeChange = (newTheme: string) => {
+    if (newTheme === 'system') {
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setDarkMode(systemDark);
       localStorage.setItem('haccare-theme', 'system');
+    } else if (['light', 'dark', 'terminal'].includes(newTheme)) {
+      setTheme(newTheme as 'light' | 'dark' | 'terminal');
     } else {
-      const isDark = theme === 'dark';
+      const isDark = newTheme === 'dark';
       setDarkMode(isDark);
-      localStorage.setItem('haccare-theme', theme);
+      localStorage.setItem('haccare-theme', newTheme);
     }
   };
 
@@ -228,7 +230,7 @@ export const Settings: React.FC = () => {
    */
   const getCurrentTheme = () => {
     const savedTheme = localStorage.getItem('haccare-theme');
-    return savedTheme || 'system';
+    return savedTheme || theme;
   };
 
   /**
@@ -329,7 +331,7 @@ export const Settings: React.FC = () => {
                       Theme Preference
                     </label>
                     
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       {/* Light Mode */}
                       <button
                         onClick={() => handleThemeChange('light')}
@@ -354,6 +356,19 @@ export const Settings: React.FC = () => {
                       >
                         <Moon className="h-6 w-6 mx-auto mb-2 text-blue-500" />
                         <div className="text-sm font-medium text-gray-900 dark:text-white">Dark</div>
+                      </button>
+
+                      {/* Terminal Mode */}
+                      <button
+                        onClick={() => handleThemeChange('terminal')}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          getCurrentTheme() === 'terminal'
+                            ? 'border-green-500 bg-black text-green-500'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                        }`}
+                      >
+                        <Terminal className="h-6 w-6 mx-auto mb-2 text-green-500" />
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">Terminal</div>
                       </button>
 
                       {/* System Mode */}

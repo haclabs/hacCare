@@ -10,12 +10,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, QrCode, Droplets, Edit3, Trash2 } from 'lucide-react';
-import { DynamicForm } from '../../components/forms/DynamicForm';
+
 import { schemaEngine } from '../../lib/schemaEngine';
 import { medicationAdministrationSchema } from '../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../types';
-import { ValidationResult, FormGenerationContext } from '../../types/schema';
-import { createMedication, recordMedicationAdministration, updateMedication, deleteMedication } from '../../lib/medicationService';
+import { ValidationResult } from '../../types/schema';
+import { createMedication, updateMedication, deleteMedication } from '../../lib/medicationService';
 import { formatLocalTime } from '../../utils/time';
 import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
@@ -47,7 +47,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [activeView, setActiveView] = useState<MARView>('administration');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -91,65 +91,26 @@ export const MARModule: React.FC<MARModuleProps> = ({
     schemaEngine.registerSchema(medicationAdministrationSchema);
   }, []);
 
-  // Generate form context with patient and medication data
-  const generateFormContext = (): FormGenerationContext => {
-    return {
-      patient: {
-        id: patient.id,
-        age: calculateAge(patient.date_of_birth),
-        gender: patient.gender,
-        allergies: patient.allergies,
-        currentMedications: medications.map(m => m.name),
-        condition: patient.condition
-      },
-      user: currentUser ? {
-        id: currentUser.id,
-        role: currentUser.role,
-        department: 'nursing',
-        permissions: ['medication_administration']
-      } : undefined,
-      clinical: {
-        currentVitals: patient.vitals[0] || null,
-        recentAssessments: [],
-        activeMedications: medications.filter(m => m.status === 'Active')
-      },
-      form: {
-        mode: 'create',
-        autoSave: false
-      }
-    };
-  };
+
 
   // Handle BCMA administration completion
   const handleBCMAComplete = async (success: boolean, log?: any) => {
-    if (success && log && selectedMedication) {
-      // Update medication with new administration record
-      const updatedMedications = medications.map(med => {
-        if (med.id === selectedMedication.id) {
-          return {
-            ...med,
-            last_administered: log.timestamp,
-            next_due: log.next_due || med.next_due,
-            administrations: [...(med.administrations || []), log]
-          };
-        }
-        return med;
-      });
-
-      onMedicationUpdate(updatedMedications);
-      setSelectedMedication(null);
-      bcma.cancelBCMAProcess();
-
+    if (success && log) {
       // Show success message
-      setSuccessMessage(`${selectedMedication.name} administered successfully via BCMA`);
+      setSuccessMessage(`Medication administered successfully via BCMA`);
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 5000);
 
       console.log('BCMA administration completed:', log);
-    } else {
-      bcma.cancelBCMAProcess();
-      setSelectedMedication(null);
+      
+      // Refresh medications to reflect changes
+      if (typeof onMedicationUpdate === 'function') {
+        console.log('Triggering medication refresh after BCMA completion');
+      }
     }
+    
+    // Always cancel BCMA process when done
+    bcma.cancelBCMAProcess();
   };
 
   // Handle barcode scanning integration
@@ -169,66 +130,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   }, [bcma]);
 
   // Handle medication administration form submission
-  const handleMedicationAdministration = async (data: any, validation: ValidationResult) => {
-    if (!validation.valid) {
-      console.error('Form validation failed:', validation.errors);
-      return;
-    }
 
-    setIsLoading(true);
-    try {
-      // Save administration record to database
-      const administrationData = {
-        medication_id: data.medicationId,
-        patient_id: patient.id,
-        administered_by: currentUser?.name || data.administeredBy,
-        administered_by_id: currentUser?.id,
-        timestamp: data.administrationTime,
-        notes: data.notes,
-        status: 'completed' as const
-      };
-
-      console.log('Recording manual medication administration:', administrationData);
-      const savedRecord = await recordMedicationAdministration(administrationData);
-      console.log('Manual administration record saved to database:', savedRecord);
-
-      // Create local administration record for state update
-      const administrationRecord = {
-        id: savedRecord?.id || `admin-${Date.now()}`,
-        medication_id: data.medicationId,
-        patient_id: patient.id,
-        administered_by: currentUser?.name || data.administeredBy,
-        administered_by_id: currentUser?.id,
-        timestamp: data.administrationTime,
-        notes: data.notes
-      };
-
-      // Update medication with administration record
-      const updatedMedications = medications.map(med => {
-        if (med.id === data.medicationId) {
-          return {
-            ...med,
-            last_administered: data.administrationTime,
-            administrations: [...(med.administrations || []), administrationRecord]
-          };
-        }
-        return med;
-      });
-
-      onMedicationUpdate(updatedMedications);
-
-      // Check for clinical alerts
-      if (validation.clinicalAlerts && validation.clinicalAlerts.length > 0) {
-        console.log('Clinical alerts detected:', validation.clinicalAlerts);
-      }
-      console.log('Medication administration recorded successfully');
-      setSuccessMessage(`${medications.find(m => m.id === data.medicationId)?.name} administered successfully`);
-    } catch (error) {
-      console.error('Error recording medication administration:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Handle deleting medication
   const handleDeleteMedication = async (medicationId: string) => {
@@ -677,19 +579,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
     }
   };
 
-  // Calculate age from birth date
-  const calculateAge = (birthDate: string): number => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    
-    return age;
-  };
+
 
   // Render medication list with category filtering
   const renderMedicationList = () => {
@@ -897,10 +787,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
     return (
       <div
         key={medication.id}
-        className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
-          selectedMedication?.id === medication.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-        }`}
-        onClick={() => setSelectedMedication(medication)}
+        className="p-6 hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -922,15 +809,15 @@ export const MARModule: React.FC<MARModuleProps> = ({
                  category}
               </span>
               {shouldAlert && isDue && (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
+                <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1 ${
                   isOverdue && alertLevel === 'critical' 
-                    ? 'bg-red-100 text-red-800' 
+                    ? 'bg-red-100 text-red-700 font-bold' 
                     : isOverdue 
-                    ? 'bg-orange-100 text-orange-800'
+                    ? 'bg-red-100 text-red-700 font-bold'
                     : 'bg-yellow-100 text-yellow-800'
                 }`}>
-                  <AlertTriangle className="h-3 w-3" />
-                  <span>{isOverdue ? 'OVERDUE' : 'DUE'}</span>
+                  <AlertTriangle className={`h-3 w-3 ${isOverdue ? 'text-red-700' : ''}`} />
+                  <span className={isOverdue ? 'text-red-700 font-bold' : ''}>{isOverdue ? 'OVERDUE' : 'DUE'}</span>
                 </span>
               )}
             </div>
@@ -1131,30 +1018,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
         <div className="space-y-6">
           {renderMedicationList()}
           
-          {selectedMedication && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">
-                Administer: {selectedMedication.name}
-              </h3>
-              <DynamicForm
-                schemaId="medication-administration-v1"
-                initialData={{
-                  patientId: patient.patient_id,
-                  medicationId: selectedMedication.id,
-                  dosage: selectedMedication.dosage,
-                  route: selectedMedication.route,
-                  administeredBy: currentUser?.name || '',
-                  administrationTime: new Date().toISOString().slice(0, 16)
-                }}
-                context={generateFormContext()}
-                onSubmit={(data, validation) => {
-                  handleMedicationAdministration(data, validation);
-                }}
-                autoSave={false}
-                className="max-w-none"
-              />
-            </div>
-          )}
+
         </div>
       )}
 

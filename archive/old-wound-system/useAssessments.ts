@@ -6,13 +6,8 @@ import {
   deleteAssessment,
   PatientAssessment 
 } from '../../lib/assessmentService';
-import { 
-  fetchPatientWounds,
-  createWound,
-  updateWound,
-  deleteWound,
-  WoundUI 
-} from '../../lib/woundService';
+import { WoundCareService } from '../../lib/woundCareService';
+import { WoundAssessment } from '../../types';
 import { queryKeys } from '../../lib/queryClient';
 
 // ========================================

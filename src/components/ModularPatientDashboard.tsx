@@ -44,7 +44,9 @@ import { DoctorsOrders } from './Patients/DoctorsOrders';
 import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
 import { fetchPatientMedications } from '../lib/medicationService';
+import { WoundCareService } from '../lib/woundCareService';
 import { useTenant } from '../contexts/TenantContext';
+import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 
 interface ModularPatientDashboardProps {
   onShowBracelet?: (patient: Patient) => void;
@@ -81,6 +83,17 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showDoctorsOrders, setShowDoctorsOrders] = useState(false);
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
+  
+  const handleOrdersChange = () => {
+    // Trigger a refresh of the orders count
+    setOrdersRefreshTrigger(prev => prev + 1);
+  };
+  
+  // Track unacknowledged doctors orders
+  const [ordersRefreshTrigger, setOrdersRefreshTrigger] = useState(0);
+  const { unacknowledgedCount } = useDoctorsOrdersAlert(patient?.id || '', ordersRefreshTrigger);
+  
+
 
   // Generate comprehensive hospital-style patient record
   const handlePrintRecord = async () => {
@@ -674,7 +687,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'View and manage physician orders',
       icon: FileText,
       action: () => setShowDoctorsOrders(true),
-      color: 'blue'
+      color: 'blue',
+      badge: unacknowledgedCount > 0 ? 'New Order' : undefined
     }
   ];
 
@@ -712,9 +726,16 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     }`} />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                      {card.title}
-                    </h4>
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {card.title}
+                      </h4>
+                      {card.badge && (
+                        <div className="px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-200 animate-pulse">
+                          {card.badge}
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {card.description}
                     </p>
@@ -745,23 +766,28 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         setLoading(true);
         setError(null);
         
-        // Fetch patient data and medications simultaneously
-        const [patientData, medicationsData] = await Promise.all([
+        // Fetch patient data, medications, and wound assessments simultaneously
+        const [patientData, medicationsData, woundAssessmentsData] = await Promise.all([
           fetchPatientById(id),
           fetchPatientMedications(id).catch(err => {
             console.warn('Failed to fetch medications:', err);
             return []; // Return empty array if medications fail to load
+          }),
+          WoundCareService.getAssessmentsByPatient(id).catch(err => {
+            console.warn('Failed to fetch wound assessments:', err);
+            return []; // Return empty array if wound assessments fail to load
           })
         ]);
         
         if (patientData) {
-          // Include medications in patient data
-          const patientWithMedications = {
+          // Include medications and wound assessments in patient data
+          const patientWithData = {
             ...patientData,
-            medications: medicationsData
+            medications: medicationsData,
+            wound_assessments: woundAssessmentsData
           };
-          setPatient(patientWithMedications);
-          console.log(`✅ Patient loaded with ${medicationsData.length} medications`);
+          setPatient(patientWithData);
+          console.log(`✅ Patient loaded with ${medicationsData.length} medications and ${woundAssessmentsData.length} wound assessments`);
         }
         
         setLastUpdated(new Date());
@@ -1164,6 +1190,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
             role: (currentUser?.role as 'nurse' | 'admin' | 'super_admin') || 'nurse'
           }}
           onClose={() => setShowDoctorsOrders(false)}
+          onOrdersChange={handleOrdersChange}
         />
       )}
 
