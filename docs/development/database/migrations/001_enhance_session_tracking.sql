@@ -54,7 +54,9 @@ END;
 $$;
 
 -- Create a view for recent login history (last 20 logins per user)
-CREATE OR REPLACE VIEW public.recent_login_history AS
+-- Using SECURITY INVOKER to avoid security definer warnings
+CREATE OR REPLACE VIEW public.recent_login_history 
+WITH (security_invoker = true) AS
 SELECT 
   us.id,
   us.user_id,
@@ -71,6 +73,18 @@ SELECT
 FROM user_sessions us
 LEFT JOIN user_profiles up ON us.user_id = up.id
 LEFT JOIN tenants t ON us.tenant_id = t.id
+WHERE 
+  -- Apply RLS-style filtering for security
+  (
+    -- Super admin can see all sessions across all tenants
+    (SELECT auth.jwt() -> 'user_metadata' ->> 'role') = 'super_admin'
+    OR 
+    -- Regular users can only see sessions from their tenant (handle NULL properly)
+    (
+      (SELECT public.get_user_tenant_id()) IS NOT NULL 
+      AND us.tenant_id = (SELECT public.get_user_tenant_id())
+    )
+  )
 ORDER BY us.user_id, us.login_time DESC;
 
 -- Test the new functionality

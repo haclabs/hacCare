@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useEffect } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -12,14 +12,11 @@ import { useAlerts } from './hooks/useAlerts';
 import { useSimulation } from './contexts/SimulationContext';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
-import { initializeModularPatientSystem } from './modular-patient-system';
 import { Patient, Medication } from './types';
 import SimulationModeIndicator from './components/simulations/SimulationModeIndicator';
 import SimulationRouter from './components/Simulation/SimulationRouter';
-import { useSimulationAwareAuth } from './contexts/auth/SimulationAwareAuthProvider';
 import SimulationSubTenantManager from './components/Simulation/SimulationSubTenantManager';
 import { useTenant } from './contexts/TenantContext';
-
 import { useAuth } from './hooks/useAuth';
 import BackupManagement from './components/Admin/BackupManagement';
 import AdminDashboard from './components/Admin/AdminDashboard';
@@ -50,14 +47,8 @@ const Settings = lazy(() => import('./components/Settings/Settings'));
  * @returns {JSX.Element} The main application component
  */
 function App() {
-  // Initialize modular patient system on app start
-  useEffect(() => {
-    initializeModularPatientSystem();
-  }, []);
-
   // Authentication and simulation detection
   const { user, profile } = useAuth();
-  const { isSimulationUser } = useSimulationAwareAuth();
   const { currentTenant } = useTenant();
 
   // Application state management
@@ -644,7 +635,7 @@ function App() {
       <SimulationRouter>
         <div className="flex">
           {/* Sidebar Navigation - Hidden for simulation users in lobby */}
-          {!isSimulationUser && (
+          {!isSimulationMode && (
             <Sidebar 
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -652,7 +643,7 @@ function App() {
           )}
           
           {/* Main Content Area */}
-          <main className={`flex-1 p-8 ${isSimulationUser ? 'w-full' : ''}`}>
+          <main className={`flex-1 p-8 ${isSimulationMode ? 'w-full' : ''}`}>
             <Routes>
               <Route path="/patient/:id" element={
                 <Suspense fallback={<LoadingSpinner />}>
