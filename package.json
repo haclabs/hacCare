@@ -1,7 +1,7 @@
 {
   "name": "haccare",
   "private": true,
-  "version": "3.0.0",
+  "version": "5.0.0-rc.1",
   "type": "module",
   "description": "Advanced Healthcare Management System with BCMA barcode medication administration, diabetic care, security diagnostics, and comprehensive patient management",
   "keywords": [
