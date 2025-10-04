@@ -19,5 +19,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  // Exclude development files from being processed
+  optimizeDeps: {
+    exclude: ['docs/**/*']
   }
 })

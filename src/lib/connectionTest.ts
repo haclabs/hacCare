@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../../../../src/lib/supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 /**
  * Connection Test Utility

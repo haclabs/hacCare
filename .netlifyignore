@@ -1,0 +1,4 @@
+# Netlify ignore file - exclude development files from build
+docs/
+*.md
+!README.md
