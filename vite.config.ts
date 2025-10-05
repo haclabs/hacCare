@@ -22,6 +22,6 @@ export default defineConfig({
   },
   // Exclude development files from being processed
   optimizeDeps: {
-    exclude: ['docs/**/*']
+    exclude: []
   }
 })
