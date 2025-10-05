@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AuthProvider as StandardAuthProvider, useAuth as useStandardAuth } from './AuthContext';
-import { AuthProvider as SimulationAuthProvider, useAuth as useSimulationAuth } from './AuthContext-simulation';
-import { SimulationSubTenantService } from '../../lib/simulationSubTenantService';
 import { supabase } from '../../lib/supabase';
 import { initializeSessionTracking, endUserSession } from '../../lib/adminService';
 
@@ -35,41 +33,11 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
 
   useEffect(() => {
     const detectUserType = async () => {
-      try {
-        // Only check simulation context if user is already authenticated
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          // No user logged in, default to standard auth
-          console.log('🔍 No user logged in, using standard auth');
-          setIsSimulationUser(false);
-          setSimulationContext({});
-          return;
-        }
-
-        console.log('🔍 Checking simulation context for user:', user.email);
-
-        // Check if current user is in a simulation context
-        const context = await SimulationSubTenantService.getCurrentUserSimulationContext();
-        
-        console.log('🔍 Simulation context result:', context);
-
-        if (context && context.isInSimulation) {
-          console.log('✅ User is in simulation context, using simulation auth');
-          setIsSimulationUser(true);
-          setSimulationContext({
-            simulationId: context.simulationId,
-            simulationTenantId: context.simulationTenantId
-          });
-        } else {
-          console.log('✅ User is NOT in simulation context, using standard auth');
-          setIsSimulationUser(false);
-          setSimulationContext({});
-        }
-      } catch (error) {
-        console.log('⚠️ Error checking simulation context, defaulting to standard auth:', error);
-        setIsSimulationUser(false);
-        setSimulationContext({});
-      }
+      // With new simulation system, all users use standard auth
+      // Simulation users are just regular users assigned to simulation tenants
+      console.log('🔍 Using standard auth for all users');
+      setIsSimulationUser(false);
+      setSimulationContext({});
     };
 
     detectUserType();
@@ -113,27 +81,17 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
     isSimulationUser,
     simulationId: simulationContext.simulationId,
     simulationTenantId: simulationContext.simulationTenantId,
-    authHook: isSimulationUser ? useSimulationAuth : useStandardAuth
+    authHook: useStandardAuth // Always use standard auth with new system
   };
 
-  // Provide the appropriate auth context based on user type
-  if (isSimulationUser) {
-    return (
-      <SimulationAuthProvider>
-        <SimulationAwareContext.Provider value={contextValue}>
-          {children}
-        </SimulationAwareContext.Provider>
-      </SimulationAuthProvider>
-    );
-  } else {
-    return (
-      <StandardAuthProvider>
-        <SimulationAwareContext.Provider value={contextValue}>
-          {children}
-        </SimulationAwareContext.Provider>
-      </StandardAuthProvider>
-    );
-  }
+  // With new simulation system, all users use standard auth
+  return (
+    <StandardAuthProvider>
+      <SimulationAwareContext.Provider value={contextValue}>
+        {children}
+      </SimulationAwareContext.Provider>
+    </StandardAuthProvider>
+  );
 };
 
 // Enhanced useAuth hook that automatically uses the right auth context

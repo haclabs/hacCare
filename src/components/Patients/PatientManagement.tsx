@@ -6,9 +6,7 @@ import {
 } from 'lucide-react';
 import { Patient } from '../../types';
 import { usePatients } from '../../hooks/usePatients';
-import { useSimulation } from '../../contexts/SimulationContext';
 import { PatientForm } from './forms/PatientForm';
-import SimulationPatientForm from './forms/SimulationPatientForm';
 import PatientTransferModal from './PatientTransferModal';
 import BulkLabelPrint from '../Admin/BulkLabelPrint';
 
@@ -32,9 +30,6 @@ import BulkLabelPrint from '../Admin/BulkLabelPrint';
 export const PatientManagement: React.FC = () => {
   // Get patient data and functions from context
   const { patients, addPatient, updatePatient, deletePatient, loading, error, refreshPatients } = usePatients();
-  
-  // Get simulation context to detect simulation mode
-  const { isSimulationMode } = useSimulation();
   
   const navigate = useNavigate();
   
@@ -180,15 +175,6 @@ export const PatientManagement: React.FC = () => {
   };
 
   /**
-   * Handle simulation patient creation completion
-   */
-  const handleSimulationPatientSaved = () => {
-    setShowForm(false);
-    setSelectedPatient(null);
-    // Note: SimulationPatientForm handles its own refresh via simulation context
-  };
-
-  /**
    * Get condition color styling
    * @param {string} condition - Patient condition
    * @returns {string} CSS classes for condition styling
@@ -240,17 +226,9 @@ export const PatientManagement: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Patient Management
-              {isSimulationMode && (
-                <span className="ml-3 px-3 py-1 text-sm bg-purple-100 text-purple-800 rounded-full">
-                  Simulation Mode
-                </span>
-              )}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {isSimulationMode 
-                ? 'Managing patients in simulation environment'
-                : 'Manage all patient records and information'
-              }
+              Manage all patient records and information
             </p>
           </div>
         </div>
@@ -280,7 +258,7 @@ export const PatientManagement: React.FC = () => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
-            <span>{isSimulationMode ? 'Add Simulation Patient' : 'Add Patient'}</span>
+            <span>Add Patient</span>
           </button>
         </div>
       </div>
@@ -571,7 +549,7 @@ export const PatientManagement: React.FC = () => {
       </div>
 
       {/* Patient Form Modal */}
-      {showForm && !isSimulationMode && (
+      {showForm && (
         <PatientForm
           patient={selectedPatient}
           onClose={() => {
@@ -579,17 +557,6 @@ export const PatientManagement: React.FC = () => {
             setSelectedPatient(null);
           }}
           onSave={handleSavePatient}
-        />
-      )}
-
-      {/* Simulation Patient Form Modal */}
-      {showForm && isSimulationMode && !selectedPatient && (
-        <SimulationPatientForm
-          onClose={() => {
-            setShowForm(false);
-            setSelectedPatient(null);
-          }}
-          onSave={handleSimulationPatientSaved}
         />
       )}
 

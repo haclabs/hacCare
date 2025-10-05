@@ -33,8 +33,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
    */
   const menuItems = [
     { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
-    { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
+    // Simulations - Only for Admins and Super Admins
+    ...(hasRole(['admin', 'super_admin']) ? [
+      { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600' }
+    ] : []),
     // Management Dashboard - Only for Super Admins
     ...(hasRole('super_admin') ? [
       { id: 'management', label: 'Management', icon: Building2, color: 'text-red-600' }

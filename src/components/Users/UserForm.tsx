@@ -30,6 +30,23 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Update form data when user prop changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        email: user.email || '',
+        password: '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        role: user.role || 'nurse' as UserRole,
+        department: user.department || '',
+        license_number: user.license_number || '',
+        phone: user.phone || '',
+        is_active: user.is_active ?? true,
+      });
+    }
+  }, [user]);
+
   // Load tenants for super admin
   useEffect(() => {
     if (hasRole('super_admin')) {
@@ -171,6 +188,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           const { error: profileError } = await supabase
             .from('user_profiles')
             .update({
+              first_name: formData.first_name,
+              last_name: formData.last_name,
               role: formData.role,
               department: formData.department,
               license_number: formData.license_number,

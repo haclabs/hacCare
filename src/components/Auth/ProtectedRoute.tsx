@@ -4,7 +4,6 @@ import { LoginForm } from './LoginForm';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { getActiveSimulationByToken } from '../../lib/simulationService';
 import { User, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -20,64 +19,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, profile, loading, hasRole, createProfile, signOut } = useAuth();
   const [creatingProfile, setCreatingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
-  const [isAnonymousSimulation, setIsAnonymousSimulation] = useState(false);
-  const [checkingSimulation, setCheckingSimulation] = useState(true);
-
-  useEffect(() => {
-    // Check if this is an anonymous simulation access
-    const checkForAnonymousSimulation = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      let simToken = urlParams.get('sim');
-      
-      console.log('🔍 ProtectedRoute: Checking for simulation token');
-      console.log('🔍 URL params:', urlParams.toString());
-      console.log('🔍 Simulation token from URL:', simToken);
-      
-      // If no token in URL, check session storage for persistence
-      if (!simToken) {
-        simToken = sessionStorage.getItem('simulation_token');
-        console.log('🔍 Simulation token from session storage:', simToken);
-      }
-      
-      if (simToken) {
-        try {
-          console.log('🔍 Looking up simulation by token:', simToken);
-          const simulation = await getActiveSimulationByToken(simToken);
-          console.log('🔍 Simulation lookup result:', simulation);
-          
-          if (simulation && simulation.allow_anonymous_access && simulation.status === 'running') {
-            console.log('🎭 Anonymous simulation access detected');
-            console.log('🎭 Simulation details:', {
-              id: simulation.id,
-              session_name: simulation.session_name,
-              allow_anonymous_access: simulation.allow_anonymous_access,
-              status: simulation.status
-            });
-            setIsAnonymousSimulation(true);
-            
-            // Store token in session for persistence across refreshes
-            sessionStorage.setItem('simulation_token', simToken);
-          } else {
-            console.log('🚫 Simulation not valid for anonymous access:', {
-              exists: !!simulation,
-              allow_anonymous_access: simulation?.allow_anonymous_access,
-              status: simulation?.status
-            });
-            // Clear invalid token
-            sessionStorage.removeItem('simulation_token');
-          }
-        } catch (error) {
-          console.error('❌ Error checking simulation:', error);
-          sessionStorage.removeItem('simulation_token');
-        }
-      } else {
-        console.log('🔍 No simulation token found');
-      }
-      setCheckingSimulation(false);
-    };
-
-    checkForAnonymousSimulation();
-  }, []);
 
   useEffect(() => {
     // Security: Log auth state for debugging (development only)
@@ -88,30 +29,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         userRole: profile?.role,
         requiredRoles,
         isSupabaseConfigured,
-        loading,
-        isAnonymousSimulation
+        loading
       });
     }
-  }, [user, profile, requiredRoles, loading, isAnonymousSimulation]);
+  }, [user, profile, requiredRoles, loading]);
 
   // Security: Show loading only briefly during initialization
-  if (loading || checkingSimulation) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner />
           <p className="text-gray-600 mt-4">
-            {checkingSimulation ? 'Checking simulation access...' : 'Initializing secure session...'}
+            Initializing secure session...
           </p>
         </div>
       </div>
     );
-  }
-
-  // Allow anonymous access for simulations
-  if (isAnonymousSimulation) {
-    console.log('🎭 Allowing anonymous simulation access');
-    return <>{children}</>;
   }
 
   // Security: If Supabase is not configured, show login with warning

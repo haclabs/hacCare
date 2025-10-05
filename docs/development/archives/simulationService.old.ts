@@ -1,52 +1,55 @@
+/**
+ * ===========================================================================
+ * SIMULATION SYSTEM V2.0 - SERVICE LAYER
+ * ===========================================================================
+ * Service functions for managing simulations, templates, and history
+ * ===========================================================================
+ */
+
 import { supabase } from './supabase';
-import {
-  ScenarioTemplate,
-  ActiveSimulation,
-  SimulationPatient,
-  SimulationPatientVital,
-  SimulationPatientMedication,
-  SimulationMedicationAdministration,
-  SimulationPatientNote,
-  SimulationEvent,
-  SimulationAssessment,
-  CreateScenarioTemplateRequest,
-  CreateSimulationRequest,
-  CreateSimulationPatientRequest
-} from '../types';
+import type {
+  SimulationTemplate,
+  SimulationTemplateWithDetails,
+  SimulationActive,
+  SimulationActiveWithDetails,
+  SimulationHistory,
+  SimulationHistoryWithDetails,
+  SimulationParticipant,
+  SimulationActivityLog,
+  CreateTemplateParams,
+  LaunchSimulationParams,
+  SaveDebriefParams,
+  SimulationFunctionResult,
+  ActivityLogEntry,
+  SimulationTemplateFilters,
+  SimulationActiveFilters,
+  SimulationHistoryFilters,
+} from '../types/simulation';
 
-// Helper function to get current tenant ID
-async function getCurrentTenantId(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
+// ============================================================================
+// TEMPLATE MANAGEMENT
+// ============================================================================
 
-  // Use the same RPC function as tenantService to get tenant_id
-  const { data: tenantData, error } = await supabase
-    .rpc('get_user_current_tenant', { target_user_id: user.id });
+/**
+ * Create a new simulation template
+ */
+export async function createSimulationTemplate(
+  params: CreateTemplateParams
+): Promise<SimulationFunctionResult> {
+  try {
+    const { data, error } = await supabase.rpc('create_simulation_template', {
+      p_name: params.name,
+      p_description: params.description || null,
+      p_default_duration_minutes: params.default_duration_minutes || 120,
+    });
 
-  if (error) {
-    console.error('Error fetching user tenant:', error);
-    throw new Error('Could not determine user tenant');
+    if (error) throw error;
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    console.error('Error creating simulation template:', error);
+    throw error;
   }
-
-  if (!tenantData || !Array.isArray(tenantData) || tenantData.length === 0) {
-    throw new Error('User has no associated tenant');
-  }
-
-  const tenantId = tenantData[0]?.tenant_id;
-  if (!tenantId) {
-    throw new Error('Invalid tenant data returned for user');
-  }
-
-  return tenantId;
 }
-
-// ============================================================================
-// SCENARIO TEMPLATE MANAGEMENT
-// ============================================================================
-
-export async function createScenarioTemplate(data: CreateScenarioTemplateRequest): Promise<ScenarioTemplate> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
 
   const tenantId = await getCurrentTenantId();
 

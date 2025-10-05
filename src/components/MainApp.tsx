@@ -6,19 +6,18 @@ import { UserManagement } from './Users/UserManagement';
 import { Documentation } from './Documentation/Documentation';
 import { Changelog } from './Changelog/Changelog';
 import { Settings } from './Settings/Settings';
-import SimulationSubTenantManager from './Simulation/SimulationSubTenantManager';
-import { useTenant } from '../contexts/TenantContext';
+import SimulationManager from './Simulation/SimulationManager';
+import SimulationBanner from './Simulation/SimulationBanner';
 
 export const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState('patients');
-  const { currentTenant } = useTenant();
 
   const renderTab = () => {
     switch (activeTab) {
       case 'patients':
         return <PatientManagement />;
       case 'simulations':
-        return <SimulationSubTenantManager currentTenantId={currentTenant?.id || ''} />;
+        return <SimulationManager />;
       case 'users':
         return <UserManagement />;
       case 'docs':
@@ -39,6 +38,7 @@ export const MainApp: React.FC = () => {
         onTabChange={setActiveTab} 
       />
       <div className="flex flex-col flex-1">
+        <SimulationBanner />
         <Header onAlertsClick={() => {}} />
         <main className="p-4 overflow-y-auto">{renderTab()}</main>
       </div>

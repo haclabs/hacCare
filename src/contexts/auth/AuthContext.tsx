@@ -465,66 +465,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     
     try {
-      // First, check if this might be a simulation user (username format without @domain)
-      const urlParams = new URLSearchParams(window.location.search);
-      const simulationParam = urlParams.get('simulation');
-      
-      // If there's a simulation parameter or the email looks like a username, try simulation auth first
-      if (simulationParam || !email.includes('@') || email.includes('@simulation.') || email.includes('@haccare.')) {
-        console.log('🎯 Attempting simulation authentication for:', email);
-        
-        const { SimulationSubTenantService } = await import('../../lib/simulationSubTenantService');
-        const result = await SimulationSubTenantService.authenticateSimulationUser(
-          email.split('@')[0], // Use username part before @
-          password,
-          simulationParam || undefined
-        );
-        
-        if (result.success && result.user) {
-          console.log('✅ Simulation authentication successful');
-          // Create a mock auth user for simulation context
-          const simulationUser = {
-            id: result.user.user_id,
-            email: result.user.email,
-            aud: 'authenticated',
-            role: 'authenticated',
-            email_confirmed_at: new Date().toISOString(),
-            phone: '',
-            confirmed_at: new Date().toISOString(),
-            last_sign_in_at: new Date().toISOString(),
-            app_metadata: {},
-            user_metadata: {
-              username: result.user.username,
-              role: result.user.role,
-              simulation_tenant_id: result.user.tenant_id,
-              simulation_id: result.user.simulation_id,
-              is_simulation_user: true
-            },
-            identities: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          
-          // Set the user and profile manually for simulation users
-          setUser(simulationUser as any);
-          setProfile({
-            id: result.user.user_id,
-            email: result.user.email,
-            first_name: result.user.username,
-            last_name: '',
-            role: result.user.role as any,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-          
-          setLoading(false);
-          return { error: undefined }; // Success
-        }
-        
-        console.log('❌ Simulation authentication failed, trying regular auth...');
-      }
-      
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout

@@ -9,17 +9,14 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
 import { useAlerts } from './hooks/useAlerts';
-import { useSimulation } from './contexts/SimulationContext';
 import { getPatientByMedicationId } from './lib/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
-import SimulationModeIndicator from './components/simulations/SimulationModeIndicator';
-import SimulationRouter from './components/Simulation/SimulationRouter';
-import SimulationSubTenantManager from './components/Simulation/SimulationSubTenantManager';
-import { useTenant } from './contexts/TenantContext';
 import { useAuth } from './hooks/useAuth';
 import BackupManagement from './components/Admin/BackupManagement';
 import AdminDashboard from './components/Admin/AdminDashboard';
+import SimulationManager from './components/Simulation/SimulationManager';
+import SimulationBanner from './components/Simulation/SimulationBanner';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
@@ -49,7 +46,6 @@ const Settings = lazy(() => import('./components/Settings/Settings'));
 function App() {
   // Authentication and simulation detection
   const { user, profile } = useAuth();
-  const { currentTenant } = useTenant();
 
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
@@ -59,35 +55,7 @@ function App() {
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
-  const { patients: livePatients = [], error: dbError } = useMultiTenantPatients();
-  
-  // Get simulation context
-  const { isSimulationMode, simulationPatients } = useSimulation();
-  
-  // Use simulation patients when in simulation mode, otherwise use live patients
-  const patients = isSimulationMode ? simulationPatients.map(sp => ({
-    id: sp.id,
-    patient_id: sp.patient_id,
-    tenant_id: '', // Simulation patients don't have tenant_id
-    first_name: sp.patient_name.split(' ')[0] || '',
-    last_name: sp.patient_name.split(' ').slice(1).join(' ') || '',
-    date_of_birth: sp.date_of_birth,
-    gender: sp.gender as 'Male' | 'Female' | 'Other' || 'Other',
-    room_number: sp.room_number || '',
-    bed_number: sp.bed_number || '',
-    admission_date: sp.admission_date || '',
-    condition: sp.condition as 'Critical' | 'Stable' | 'Improving' | 'Discharged' || 'Stable',
-    diagnosis: sp.diagnosis || '',
-    allergies: sp.allergies || [],
-    blood_type: sp.blood_type || '',
-    emergency_contact_name: sp.emergency_contact_name || '',
-    emergency_contact_relationship: sp.emergency_contact_relationship || '',
-    emergency_contact_phone: sp.emergency_contact_phone || '',
-    assigned_nurse: sp.assigned_nurse || '',
-    vitals: [],
-    medications: [],
-    notes: []
-  } as Patient)) : livePatients;
+  const { patients = [], error: dbError } = useMultiTenantPatients();
   
   // Get alerts from AlertContext (avoid React Query conflicts)
   const { alerts } = useAlerts();
@@ -546,7 +514,7 @@ function App() {
       case 'simulations':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <SimulationSubTenantManager currentTenantId={currentTenant?.id || ''} />
+            <SimulationManager />
           </Suspense>
         );
 
@@ -621,8 +589,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
-      {/* Simulation Mode Indicator */}
-      <SimulationModeIndicator />
+      {/* Simulation Mode Banner */}
+      <SimulationBanner />
       
       {/* Application Header */}
       <Header 
@@ -631,19 +599,16 @@ function App() {
         dbError={dbError?.message || null} 
       />
       
-      {/* Main Layout with Simulation-Aware Routing */}
-      <SimulationRouter>
-        <div className="flex">
-          {/* Sidebar Navigation - Hidden for simulation users in lobby */}
-          {!isSimulationMode && (
-            <Sidebar 
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-            />
-          )}
-          
-          {/* Main Content Area */}
-          <main className={`flex-1 p-8 ${isSimulationMode ? 'w-full' : ''}`}>
+      {/* Main Layout */}
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <Sidebar 
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+        
+        {/* Main Content Area */}
+        <main className="flex-1 p-8">
             <Routes>
               <Route path="/patient/:id" element={
                 <Suspense fallback={<LoadingSpinner />}>
@@ -662,7 +627,6 @@ function App() {
             </Routes>
           </main>
         </div>
-      </SimulationRouter>
 
       {/* Alert Panel Overlay */}
       <AlertPanel

@@ -4,7 +4,6 @@ import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileT
 import { Patient, VitalSigns, Medication, PatientNote } from '../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../lib/patientService';
 import { fetchPatientMedications } from '../../../lib/medicationService';
-import { useSimulation } from '../../../contexts/SimulationContext';
 import { RecentActivity } from './RecentActivity';
 import { MARModule } from '../../../modules/mar/MARModule';
 import { WoundAssessment } from '../forms/WoundAssessment';
@@ -24,9 +23,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get simulation context
-  const { isSimulationMode, currentSimulation } = useSimulation();
   
   const [patient, setPatient] = useState<Patient | null>(null); 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
@@ -81,16 +77,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       try {
         setLoading(true);
         console.log('Loading patient data for ID:', id);
-        console.log('Simulation mode:', isSimulationMode);
-        console.log('Current simulation:', currentSimulation?.id);
-        
-        // Pass simulation ID when in simulation mode
-        const simulationId = isSimulationMode && currentSimulation ? currentSimulation.id : undefined;
         
         const [patientData, vitalsData, medicationsData, notesData] = await Promise.all([
-          fetchPatientById(id, simulationId),
+          fetchPatientById(id),
           fetchPatientVitals(id),
-          fetchPatientMedications(id, simulationId),
+          fetchPatientMedications(id),
           fetchPatientNotes(id)
         ]);
         
@@ -107,7 +98,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     };
 
     loadPatientData();
-  }, [id, isSimulationMode, currentSimulation]);
+  }, [id]);
 
   if (loading) { 
     return (

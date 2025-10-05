@@ -8,13 +8,10 @@ import { PatientProvider } from './contexts/PatientContext';
 import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TenantProvider } from './contexts/TenantContext';
-import { SimulationProvider } from './contexts/SimulationContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { queryClient } from './lib/queryClient';
 import { initializeBarcodeScanner } from './lib/barcodeScanner';
 import App from './App.tsx';
-import SimulationLogin from './components/Auth/SimulationLogin';
-import SimulationDashboard from './components/Simulation/SimulationDashboard';
 import './index.css';
 import { testSupabaseConnection } from './lib/supabase';
 import { getCurrentSubdomain } from './lib/subdomainService';
@@ -51,23 +48,17 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <Routes>
-            {/* Simulation-specific routes that don't need authentication */}
-            <Route path="/simulation-login" element={<SimulationLogin />} />
-            <Route path="/simulation-dashboard" element={<SimulationDashboard />} />
-            
             {/* Main application routes */}
             <Route path="/*" element={
               <SimulationAwareAuthProvider>
                 <TenantProvider>
-                  <SimulationProvider>
-                    <AlertProvider>
-                      <PatientProvider>
-                        <ProtectedRoute>
-                          <App />
-                        </ProtectedRoute>
-                      </PatientProvider>
-                    </AlertProvider>
-                  </SimulationProvider>
+                  <AlertProvider>
+                    <PatientProvider>
+                      <ProtectedRoute>
+                        <App />
+                      </ProtectedRoute>
+                    </PatientProvider>
+                  </AlertProvider>
                 </TenantProvider>
               </SimulationAwareAuthProvider>
             } />
