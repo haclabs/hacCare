@@ -6,3 +6,22 @@
   NODE_ENV = "production"
   NODE_VERSION = "20"
   NPM_FLAGS = "--include=dev"
+
+# ============================================================================
+# SIMULATION SUBDOMAIN CONFIGURATION
+# ============================================================================
+# Handles simulation.haccare.app subdomain routing
+# All requests to the simulation subdomain serve the main app
+# The app handles subdomain detection and routing internally
+
+[[redirects]]
+  from = "https://simulation.haccare.app/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# Main SPA fallback - must come after specific redirects
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -151,6 +151,13 @@ export interface Tenant {
   subscription_plan: 'basic' | 'premium' | 'enterprise';
   max_users: number;
   max_patients: number;
+  // Simulation fields
+  tenant_type?: 'production' | 'institution' | 'hospital' | 'clinic' | 'simulation_template' | 'simulation_active';
+  is_simulation?: boolean;
+  parent_tenant_id?: string;
+  simulation_config?: Record<string, any>;
+  auto_cleanup_at?: string;
+  simulation_id?: string;
 }
 
 export interface TenantSettings {

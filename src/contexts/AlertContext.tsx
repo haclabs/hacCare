@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks, ALERT_CONFIG } from '../lib/alertService';
+import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks, ALERT_CONFIG, setSimulationMode } from '../lib/alertService';
 import { useAuth } from '../hooks/useAuth';
 import { useTenant } from './TenantContext';
 import { Alert } from '../types'; 
@@ -111,13 +111,32 @@ export function AlertProvider({ children }: AlertProviderProps) {
     }
     
     try {
-      // Check if Supabase is configured before attempting to fetch
-      if (!isSupabaseConfigured) {
-        console.warn('⚠️ Supabase not configured, skipping alert refresh');
-        setAlerts([]);
-        setError('Database connection not configured. Please check your environment variables.');
-        setLoading(false);
-        return;
+      // Detect simulation mode
+      const isSimulation = currentTenant?.is_simulation === true || 
+                          currentTenant?.tenant_type === 'simulation_active';
+      
+      // Enable/disable simulation mode in alert service
+      setSimulationMode(isSimulation);
+
+      // For simulations, skip database checks
+      if (!isSimulation) {
+        // Check if Supabase is configured before attempting to fetch
+        if (!isSupabaseConfigured) {
+          console.warn('⚠️ Supabase not configured, skipping alert refresh');
+          setAlerts([]);
+          setError('Database connection not configured. Please check your environment variables.');
+          setLoading(false);
+          return;
+        }
+
+        // Check database health first
+        const isHealthy = await checkDatabaseHealth();
+        if (!isHealthy) {
+          console.warn('⚠️ Database unavailable - cannot fetch alerts');
+          setAlerts([]);
+          setError('Database connection failed. Please check your Supabase configuration.');
+          return;
+        }
       }
 
       setLoading(true);
@@ -125,16 +144,8 @@ export function AlertProvider({ children }: AlertProviderProps) {
       console.log('Refreshing alerts at:', refreshTime);
       setError(null);
       
-      // Check database health first
-      const isHealthy = await checkDatabaseHealth();
-      if (!isHealthy) {
-        console.warn('⚠️ Database unavailable - cannot fetch alerts');
-        setAlerts([]);
-        setError('Database connection failed. Please check your Supabase configuration.');
-        return;
-      }
-      
-      const fetchedAlerts = await fetchActiveAlerts();
+      // Fetch alerts (from database or memory based on simulation mode)
+      const fetchedAlerts = await fetchActiveAlerts(currentTenant?.id);
       
       // Filter alerts by tenant
       let filteredAlerts = fetchedAlerts;
@@ -237,25 +248,35 @@ export function AlertProvider({ children }: AlertProviderProps) {
     try {
       setIsRunningChecks(true);
       
-      // Check if Supabase is configured before running checks
-      if (!isSupabaseConfigured) { 
-        console.warn('⚠️ Supabase not configured, skipping alert checks');
-        setError('Database connection not configured. Please check your environment variables.');
-        return;
+      // Detect simulation mode
+      const isSimulation = currentTenant?.is_simulation === true || 
+                          currentTenant?.tenant_type === 'simulation_active';
+      
+      // Enable/disable simulation mode in alert service
+      setSimulationMode(isSimulation);
+
+      // For simulations, skip database checks
+      if (!isSimulation) {
+        // Check if Supabase is configured before running checks
+        if (!isSupabaseConfigured) { 
+          console.warn('⚠️ Supabase not configured, skipping alert checks');
+          setError('Database connection not configured. Please check your environment variables.');
+          return;
+        }
+
+        // Check database health first
+        const isHealthy = await checkDatabaseHealth();
+        if (!isHealthy) {
+          console.warn('⚠️ Database unavailable - cannot run alert checks');
+          setError('Database connection failed. Please check your Supabase configuration.');
+          return;
+        }
       }
 
       setLoading(true);
       const checkTime = new Date().toISOString();
       console.log('Running alert checks at:', checkTime);
       setError(null);
-      
-      // Check database health first
-      const isHealthy = await checkDatabaseHealth();
-      if (!isHealthy) {
-        console.warn('⚠️ Database unavailable - cannot run alert checks');
-        setError('Database connection failed. Please check your Supabase configuration.');
-        return;
-      }
       
       await runAlertChecks();
       

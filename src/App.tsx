@@ -17,6 +17,7 @@ import BackupManagement from './components/Admin/BackupManagement';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import SimulationManager from './components/Simulation/SimulationManager';
 import SimulationBanner from './components/Simulation/SimulationBanner';
+import SimulationRouter from './components/Simulation/SimulationRouter';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
@@ -610,6 +611,11 @@ function App() {
         {/* Main Content Area */}
         <main className="flex-1 p-8">
             <Routes>
+              <Route path="/simulation-portal" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <SimulationRouter />
+                </Suspense>
+              } />
               <Route path="/patient/:id" element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <ModularPatientDashboard 

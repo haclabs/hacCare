@@ -507,6 +507,42 @@ export async function updateParticipantAccess(simulationId: string): Promise<voi
   }
 }
 
+/**
+ * Get user's simulation assignments with full simulation details
+ * Used by simulation portal to show active simulations for a user
+ */
+export async function getUserSimulationAssignments(
+  userId: string
+): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('simulation_participants')
+      .select(`
+        id,
+        simulation_id,
+        role,
+        granted_at,
+        simulation:simulation_active!inner(
+          id,
+          name,
+          status,
+          starts_at,
+          tenant_id,
+          template:simulation_templates(name, description)
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('simulation.status', 'running')
+      .order('granted_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error('Error getting user simulation assignments:', error);
+    throw error;
+  }
+}
+
 // ============================================================================
 // SIMULATION HISTORY
 // ============================================================================

@@ -105,8 +105,18 @@ const convertDatabaseAlert = (dbAlert: DatabaseAlert): Alert => ({
 /**
  * Fetch all active alerts
  */
-export const fetchActiveAlerts = async (): Promise<Alert[]> => {
+export const fetchActiveAlerts = async (tenantId?: string): Promise<Alert[]> => {
   try {
+    // In simulation mode, return alerts from memory
+    if (isSimulationMode) {
+      const { simulationAlertStore } = await import('./simulationAlertStore');
+      const alerts = tenantId 
+        ? simulationAlertStore.getAlertsByTenant(tenantId)
+        : simulationAlertStore.getAllAlerts();
+      console.log(`🎮 Fetched ${alerts.length} simulation alerts from memory`);
+      return alerts;
+    }
+
     // Check if Supabase is properly configured
     if (!isSupabaseConfigured) {
       console.warn('⚠️ Supabase not configured, returning empty alerts array - check your .env file');
@@ -126,7 +136,7 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
       return []
     }
     
-    console.log('🔔 Fetching active alerts...');
+    console.log('🔔 Fetching active alerts from database...');
     const now = new Date();
     console.log('Current time for alert fetch:', now.toISOString());
     
@@ -162,19 +172,51 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
 
 /**
  * Create a new alert
+ * For simulation tenants, stores alerts in memory only (no database persistence)
  */
-export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'>): Promise<Alert> => {
+export const createAlert = async (
+  alert: Omit<DatabaseAlert, 'id' | 'created_at'>
+): Promise<Alert> => {
   try {
-    if (!supabase) {
-      throw new Error('Cannot create alert - Supabase not configured')
-    }
-
     // Validate that tenant_id is provided
     if (!alert.tenant_id) {
       throw new Error('Cannot create alert - tenant_id is required for multi-tenant support');
     }
 
     console.log('🚨 Creating new alert:', alert);
+
+    // For simulation mode, use in-memory storage
+    if (isSimulationMode) {
+      const { simulationAlertStore } = await import('./simulationAlertStore');
+      const simulationAlert: Alert = {
+        id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        patientId: alert.patient_id,
+        patientName: alert.patient_name,
+        tenant_id: alert.tenant_id,
+        type: alert.alert_type === 'medication_due' ? 'Medication Due' :
+              alert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
+              alert.alert_type === 'emergency' ? 'Emergency' :
+              alert.alert_type === 'lab_results' ? 'Lab Results' :
+              'Discharge Ready',
+        message: alert.message,
+        priority: alert.priority === 'low' ? 'Low' :
+                 alert.priority === 'medium' ? 'Medium' :
+                 alert.priority === 'high' ? 'High' :
+                 'Critical',
+        timestamp: new Date().toISOString(),
+        acknowledged: false
+      };
+      
+      simulationAlertStore.addAlert(simulationAlert);
+      console.log('✅ Simulation alert created in memory:', simulationAlert.id);
+      return simulationAlert;
+    }
+
+    if (!supabase) {
+      throw new Error('Cannot create alert - Supabase not configured')
+    }
+
+    console.log('�️ Creating database alert for production tenant');
     
     // Try standard insert first
     const { data, error } = await supabase
@@ -265,11 +307,19 @@ export const createAlert = async (alert: Omit<DatabaseAlert, 'id' | 'created_at'
  */
 export const acknowledgeAlert = async (alertId: string, userId: string): Promise<void> => {
   try {
+    // In simulation mode, acknowledge in memory
+    if (isSimulationMode) {
+      const { simulationAlertStore } = await import('./simulationAlertStore');
+      simulationAlertStore.acknowledgeAlert(alertId);
+      console.log('✅ Simulation alert acknowledged in memory:', alertId);
+      return;
+    }
+
     if (!supabase) {
       throw new Error('Cannot acknowledge alert - Supabase not configured')
     }
 
-    console.log('✅ Acknowledging alert:', alertId);
+    console.log('✅ Acknowledging alert in database:', alertId);
     
     // First try standard update
     const { error } = await supabase
@@ -1076,19 +1126,35 @@ export const cleanupDuplicateAlerts = async (): Promise<void> => {
 /**
  * Run all alert checks
  */
+// Global flag to indicate simulation mode (for memory-only alerts)
+let isSimulationMode = false;
+
+export const setSimulationMode = (enabled: boolean) => {
+  isSimulationMode = enabled;
+  console.log(enabled ? '🎮 Alert service: Simulation mode ENABLED (memory-only)' : '🗄️ Alert service: Database mode ENABLED');
+};
+
+export const getSimulationMode = () => isSimulationMode;
+
 export const runAlertChecks = async (): Promise<void> => {
   try {
-    // Check if Supabase is properly configured
-    if (!isSupabaseConfigured) {
-      console.warn('⚠️ Supabase not configured, skipping alert checks');
-      return;
-    }
+    // In simulation mode, skip database connection checks
+    if (isSimulationMode) {
+      console.log('🎮 Running simulation alert checks (memory-only mode)...');
+      // Run checks normally - createAlert will handle simulation storage
+    } else {
+      // Check if Supabase is properly configured
+      if (!isSupabaseConfigured) {
+        console.warn('⚠️ Supabase not configured, skipping alert checks');
+        return;
+      }
 
-    // Test database connection before attempting checks
-    const isHealthy = await checkDatabaseHealth();
-    if (!isHealthy) {
-      console.error('❌ Database connection failed, skipping alert checks');
-      return;
+      // Test database connection before attempting checks
+      const isHealthy = await checkDatabaseHealth();
+      if (!isHealthy) {
+        console.error('❌ Database connection failed, skipping alert checks');
+        return;
+      }
     }
 
     console.log('🔄 Running comprehensive alert checks...');

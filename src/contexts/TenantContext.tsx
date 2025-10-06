@@ -28,6 +28,9 @@ interface TenantContextType {
   selectedTenantId: string | null;
   switchToTenant: (tenantId: string) => Promise<void>;
   viewAllTenants: () => void;
+  // Simulation tenant switching (available to all users)
+  enterSimulationTenant: (tenantId: string) => Promise<void>;
+  exitSimulationTenant: () => Promise<void>;
 }
 
 /**
@@ -90,6 +93,31 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       setLoading(true);
       setError(null);
+
+      // Check if user was in a simulation (survives refresh)
+      const simulationTenantId = localStorage.getItem('current_simulation_tenant');
+      if (simulationTenantId) {
+        console.log('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
+        const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
+        if (simulationTenant && !simError) {
+          // Verify it's still a simulation tenant
+          if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
+            setCurrentTenant(simulationTenant);
+            setSelectedTenantId(simulationTenantId);
+            setLoading(false);
+            console.log('✅ Simulation tenant restored:', simulationTenant.name);
+            return;
+          } else {
+            // Not a simulation anymore, clear localStorage
+            console.log('⚠️ Stored tenant is no longer a simulation, clearing');
+            localStorage.removeItem('current_simulation_tenant');
+          }
+        } else {
+          // Tenant no longer exists, clear localStorage
+          console.log('⚠️ Simulation tenant not found, clearing localStorage');
+          localStorage.removeItem('current_simulation_tenant');
+        }
+      }
 
       // In production, try to detect tenant from subdomain first
       const currentSubdomain = getCurrentSubdomain();
@@ -189,6 +217,78 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   /**
+   * Enter a simulation tenant (available to all users with simulation access)
+   * This allows users to switch to simulation tenants they're assigned to
+   */
+  const enterSimulationTenant = async (tenantId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('🎮 Entering simulation tenant:', tenantId);
+
+      // Fetch the tenant data
+      const { data: tenant, error: tenantError } = await getTenantById(tenantId);
+      if (tenantError) {
+        throw new Error(tenantError.message);
+      }
+
+      if (!tenant) {
+        throw new Error('Simulation tenant not found');
+      }
+
+      // Update state to simulation tenant
+      setSelectedTenantId(tenantId);
+      setCurrentTenant(tenant);
+      
+      // Persist simulation tenant to localStorage (survives refresh)
+      localStorage.setItem('current_simulation_tenant', tenantId);
+      console.log('💾 Simulation tenant saved to localStorage');
+      
+      console.log('✅ Successfully entered simulation tenant:', tenant.name);
+    } catch (err) {
+      console.error('Error entering simulation tenant:', err);
+      setError(err instanceof Error ? err.message : 'Failed to enter simulation');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Exit simulation and return to user's home tenant
+   */
+  const exitSimulationTenant = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('🚪 Exiting simulation tenant...');
+      
+      // Clear simulation tenant from localStorage
+      localStorage.removeItem('current_simulation_tenant');
+      console.log('🧹 Cleared simulation tenant from localStorage');
+
+      // Reload user's home tenant
+      if (user) {
+        const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
+        if (tenantError) {
+          throw new Error(tenantError.message);
+        }
+        setCurrentTenant(tenant);
+        setSelectedTenantId(tenant?.id || null);
+        console.log('✅ Returned to home tenant:', tenant?.name);
+      }
+    } catch (err) {
+      console.error('Error exiting simulation:', err);
+      setError(err instanceof Error ? err.message : 'Failed to exit simulation');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
    * Clear tenant selection to view all tenants (super admin only)
    */
   const viewAllTenants = async () => {
@@ -231,7 +331,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     isMultiTenantAdmin,
     selectedTenantId,
     switchToTenant,
-    viewAllTenants
+    viewAllTenants,
+    enterSimulationTenant,
+    exitSimulationTenant
   };
 
   return (

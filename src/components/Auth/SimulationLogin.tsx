@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, AlertCircle, Users, Monitor } from 'lucide-react';
-import { SimulationSubTenantService } from '../../lib/simulationSubTenantService';
+import { useAuth } from '../../hooks/useAuth';
 
 const SimulationLogin: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const simulationId = searchParams.get('simulation');
   const simulationName = searchParams.get('name') || 'Simulation Environment';
@@ -17,8 +18,8 @@ const SimulationLogin: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username.trim() || !password.trim()) {
-      setError('Please enter both username and password');
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter both email and password');
       return;
     }
 
@@ -26,38 +27,19 @@ const SimulationLogin: React.FC = () => {
     setError('');
 
     try {
-      console.log('🎯 Attempting simulation login for:', username);
+      console.log('🎯 Attempting simulation login for:', email);
       console.log('🔍 Simulation ID from URL:', simulationId);
       console.log('🔍 Simulation name from URL:', simulationName);
       
-      const result = await SimulationSubTenantService.authenticateSimulationUser(
-        username.trim(),
-        password.trim(),
-        simulationId || undefined
-      );
+      const { error: signInError } = await signIn(email.trim(), password.trim());
 
-      if (result.success && result.user) {
-        console.log('✅ Simulation login successful');
-        
-        // Store simulation session data
-        sessionStorage.setItem('simulation_user', JSON.stringify({
-          user_id: result.user.user_id,
-          username: result.user.username,
-          email: result.user.email,
-          role: result.user.role,
-          tenant_id: result.user.tenant_id,
-          tenant_name: result.user.tenant_name,
-          simulation_id: result.user.simulation_id,
-          is_simulation_user: true,
-          login_time: new Date().toISOString()
-        }));
-
-        // Redirect to simulation dashboard
-        navigate('/simulation-dashboard');
+      if (signInError) {
+        setError(signInError.message || 'Invalid email or password');
       } else {
-        setError(result.error || 'Invalid username or password');
+        console.log('✅ Simulation login successful');
+        // Navigation handled by SimulationRouter after successful login
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Simulation login error:', error);
       setError('Login failed. Please try again.');
     } finally {
@@ -97,18 +79,18 @@ const SimulationLogin: React.FC = () => {
             )}
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
               </label>
               <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your username"
+                placeholder="Enter your email"
                 disabled={loading}
-                autoComplete="username"
+                autoComplete="email"
               />
             </div>
 

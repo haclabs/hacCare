@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { SimulationIndicator } from '../Simulation/SimulationIndicator';
 
 /**
  * Sidebar Navigation Component
@@ -62,9 +63,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'changelog', label: 'Changelog', icon: FileText, color: 'text-teal-600' },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
   ];
-
   return (
     <aside className="bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen transition-colors">
+      {/* Simulation Indicator - Shows when in active simulation */}
+      <div className="pt-4">
+        <SimulationIndicator />
+      </div>
+
       <nav className="p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
