@@ -86,11 +86,11 @@ const SimulationPortal: React.FC = () => {
       await enterSimulationTenant(tenantId);
       console.log('✅ Entered simulation:', simulationName);
       // Navigate to dashboard which will now show simulation patients
-      navigate('/dashboard');
+      // Force a full page reload to ensure all contexts refresh with new tenant
+      window.location.href = '/dashboard';
     } catch (err: any) {
       console.error('Error entering simulation:', err);
       setError(err.message || 'Failed to enter simulation');
-    } finally {
       setEnteringSimulation(false);
     }
   };

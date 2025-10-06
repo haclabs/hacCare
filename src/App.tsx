@@ -60,12 +60,17 @@ function App() {
   useEffect(() => {
     const hostname = window.location.hostname;
     const isSimulationSubdomain = hostname.startsWith('simulation.');
+    const currentPath = location.pathname;
     
-    if (isSimulationSubdomain && !location.pathname.startsWith('/simulation-portal')) {
+    // If on simulation subdomain and NOT already on simulation-portal or dashboard, redirect
+    if (isSimulationSubdomain && 
+        !currentPath.startsWith('/simulation-portal') && 
+        !currentPath.startsWith('/dashboard') &&
+        !currentPath.startsWith('/patient')) {
       console.log('🎮 Simulation subdomain detected, redirecting to portal...');
       navigate('/simulation-portal', { replace: true });
     }
-  }, [location, navigate]);
+  }, [location.pathname, navigate]);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
   const { patients = [], error: dbError } = useMultiTenantPatients();

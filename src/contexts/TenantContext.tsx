@@ -120,10 +120,13 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // In production, try to detect tenant from subdomain first
+      // EXCEPT for simulation subdomain (which hosts multiple simulations)
       const currentSubdomain = getCurrentSubdomain();
-      if (currentSubdomain && process.env.NODE_ENV === 'production') {
+      if (currentSubdomain && currentSubdomain !== 'simulation' && process.env.NODE_ENV === 'production') {
+        console.log('🔍 Checking subdomain tenant:', currentSubdomain);
         const { data: subdomainTenant, error: subdomainError } = await getTenantBySubdomain(currentSubdomain);
         if (subdomainTenant && !subdomainError) {
+          console.log('✅ Tenant loaded from subdomain:', subdomainTenant.name);
           setCurrentTenant(subdomainTenant);
           setSelectedTenantId(subdomainTenant.id);
           setLoading(false);
