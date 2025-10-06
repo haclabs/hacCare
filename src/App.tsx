@@ -1,5 +1,5 @@
-import { useState, lazy, Suspense } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useState, lazy, Suspense, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import PatientCard from './components/Patients/records/PatientCard';
@@ -52,8 +52,20 @@ function App() {
   const [activeTab, setActiveTab] = useState('patients');
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const [showAlerts, setShowAlerts] = useState(false);
   // const [isScanning, setIsScanning] = useState<boolean>(false);
+
+  // Detect simulation subdomain and redirect to simulation portal
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const isSimulationSubdomain = hostname.startsWith('simulation.');
+    
+    if (isSimulationSubdomain && !location.pathname.startsWith('/simulation-portal')) {
+      console.log('🎮 Simulation subdomain detected, redirecting to portal...');
+      navigate('/simulation-portal', { replace: true });
+    }
+  }, [location, navigate]);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
   const { patients = [], error: dbError } = useMultiTenantPatients();
