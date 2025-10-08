@@ -9,6 +9,12 @@ export interface PatientTransferOptions {
   transferVitals?: boolean;
   transferMedications?: boolean;
   transferAssessments?: boolean;
+  transferHandoverNotes?: boolean;
+  transferAlerts?: boolean;
+  transferDiabeticRecords?: boolean;
+  transferBowelRecords?: boolean;
+  transferWoundCare?: boolean;
+  transferDoctorsOrders?: boolean;
   newPatientId?: string;
 }
 
@@ -27,8 +33,13 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
     preserveOriginal = false,
     transferVitals = true,
     transferMedications = true,
-    transferNotes = true,
     transferAssessments = true,
+    transferHandoverNotes = true,
+    transferAlerts = true,
+    transferDiabeticRecords = true,
+    transferBowelRecords = true,
+    transferWoundCare = true,
+    transferDoctorsOrders = true,
     newPatientId
   } = options;
 
@@ -74,8 +85,13 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         p_new_patient_id: newPatientId || null,
         p_include_vitals: transferVitals,
         p_include_medications: transferMedications,
-        p_include_notes: transferNotes,
-        p_include_assessments: transferAssessments
+        p_include_assessments: transferAssessments,
+        p_include_handover_notes: transferHandoverNotes,
+        p_include_alerts: transferAlerts,
+        p_include_diabetic_records: transferDiabeticRecords,
+        p_include_bowel_records: transferBowelRecords,
+        p_include_wound_care: transferWoundCare,
+        p_include_doctors_orders: transferDoctorsOrders
       });
 
       const { data, error } = await supabase
@@ -85,8 +101,13 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
           p_new_patient_id: newPatientId || null,
           p_include_vitals: transferVitals,
           p_include_medications: transferMedications,
-          p_include_notes: transferNotes,
-          p_include_assessments: transferAssessments
+          p_include_assessments: transferAssessments,
+          p_include_handover_notes: transferHandoverNotes,
+          p_include_alerts: transferAlerts,
+          p_include_diabetic_records: transferDiabeticRecords,
+          p_include_bowel_records: transferBowelRecords,
+          p_include_wound_care: transferWoundCare,
+          p_include_doctors_orders: transferDoctorsOrders
         });
 
       if (error) {

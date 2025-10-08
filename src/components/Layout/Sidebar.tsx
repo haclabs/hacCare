@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { SimulationIndicator } from '../Simulation/SimulationIndicator';
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { hasRole } = useAuth();
+  const navigate = useNavigate();
 
   /**
    * Menu items configuration with colored icons
@@ -35,6 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const menuItems = [
     { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
+    // Enter Sim - Available to all users
+    { id: 'enter-sim', label: 'Enter Sim', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
     // Simulations - Only for Admins and Super Admins
     ...(hasRole(['admin', 'super_admin']) ? [
       { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600' }
@@ -79,7 +83,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
             return (
               <li key={item.id}>
                 <button
-                  onClick={() => onTabChange(item.id)}
+                  onClick={() => {
+                    if ('route' in item && item.route) {
+                      navigate(item.route);
+                    } else {
+                      onTabChange(item.id);
+                    }
+                  }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                     isActive
                       ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800'

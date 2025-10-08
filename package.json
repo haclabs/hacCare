@@ -29,6 +29,7 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
+    "test:tenant-isolation": "vite-node test-tenant-isolation.ts",
     "clean": "rm -rf dist node_modules/.vite",
     "deps:update": "ncu -u && npm install",
     "deps:check": "ncu",

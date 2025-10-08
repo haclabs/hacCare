@@ -216,19 +216,41 @@ export const createAlert = async (
       throw new Error('Cannot create alert - Supabase not configured')
     }
 
-    console.log('�️ Creating database alert for production tenant');
+    console.log('🏥 Creating database alert using RPC function V3 (dynamic SQL bypasses ALL cache)');
     
-    // Try standard insert first
-    const { data, error } = await supabase
-      .from('patient_alerts')
-      .insert(alert)
-      .select()
-      .single();
+    // Use RPC function V3 with dynamic SQL to bypass PostgREST cache issues
+    const { data: alertId, error } = await supabase
+      .rpc('create_patient_alert_v3', {
+        p_patient_id: alert.patient_id,
+        p_tenant_id: alert.tenant_id,
+        p_alert_type: alert.alert_type,
+        p_message: alert.message,
+        p_patient_name: alert.patient_name,
+        p_priority: alert.priority || 'medium',
+        p_expires_at: alert.expires_at || null
+      });
 
-    // If successful, return the alert
-    if (data && !error) {
-      const newAlert = convertDatabaseAlert(data);
-      console.log('✅ Alert created successfully:', newAlert);
+    // If successful, return a constructed alert object
+    if (alertId && !error) {
+      const newAlert: Alert = {
+        id: alertId,
+        patientId: alert.patient_id,
+        patientName: alert.patient_name || '',
+        tenant_id: alert.tenant_id,
+        type: alert.alert_type === 'medication_due' ? 'Medication Due' :
+              alert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
+              alert.alert_type === 'emergency' ? 'Emergency' :
+              alert.alert_type === 'lab_results' ? 'Lab Results' :
+              'Discharge Ready',
+        message: alert.message,
+        priority: (alert.priority === 'low' ? 'Low' :
+                  alert.priority === 'medium' ? 'Medium' :
+                  alert.priority === 'high' ? 'High' :
+                  'Critical'),
+        timestamp: new Date().toISOString(),
+        acknowledged: false
+      };
+      console.log('✅ Alert created successfully via RPC:', newAlert.id);
       return newAlert;
     }
 

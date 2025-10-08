@@ -28,10 +28,15 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
   const [availableTenants, setAvailableTenants] = useState<TenantOption[]>([]);
   const [newPatientId, setNewPatientId] = useState('');
   const [transferOptions, setTransferOptions] = useState({
-    transferNotes: true,
     transferVitals: true,
     transferMedications: true,
     transferAssessments: true,
+    transferHandoverNotes: true,
+    transferAlerts: true,
+    transferDiabeticRecords: true,
+    transferBowelRecords: true,
+    transferWoundCare: true,
+    transferDoctorsOrders: true,
   });
   const [loading, setLoading] = useState(false);
   const [canTransfer, setCanTransfer] = useState(false);
@@ -109,10 +114,15 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
     setTargetTenantId('');
     setNewPatientId('');
     setTransferOptions({
-      transferNotes: true,
       transferVitals: true,
       transferMedications: true,
       transferAssessments: true,
+      transferHandoverNotes: true,
+      transferAlerts: true,
+      transferDiabeticRecords: true,
+      transferBowelRecords: true,
+      transferWoundCare: true,
+      transferDoctorsOrders: true,
     });
     setError('');
   };
@@ -244,8 +254,13 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
                   {[
                     { key: 'transferVitals', label: 'Vital Signs', icon: '💓' },
                     { key: 'transferMedications', label: 'Medications', icon: '💊' },
-                    { key: 'transferNotes', label: 'Notes', icon: '📝' },
                     { key: 'transferAssessments', label: 'Assessments', icon: '📋' },
+                    { key: 'transferHandoverNotes', label: 'Handover Notes (SBAR)', icon: '🔄' },
+                    { key: 'transferDoctorsOrders', label: 'Doctors Orders', icon: '🩺' },
+                    { key: 'transferWoundCare', label: 'Wound Care', icon: '🏥' },
+                    { key: 'transferAlerts', label: 'Patient Alerts', icon: '🚨' },
+                    { key: 'transferDiabeticRecords', label: 'Diabetic Records', icon: '🩸' },
+                    { key: 'transferBowelRecords', label: 'Bowel Records', icon: '📊' },
                   ].map(({ key, label, icon }) => (
                     <label key={key} className="flex items-center">
                       <input
