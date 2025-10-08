@@ -1,6 +1,15 @@
 /**
  * Admin Service
- * Handles session tracking and audit logging for admin dashboard
+ * Handles session track    // Now get active sessions (within last 24 hours)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    const { data: sessionsData, error: sessionsError } = await supabase
+      .from('user_sessions')
+      .select('*')
+      .eq('status', 'active')
+      .is('logout_time', null)
+      .gte('last_activity', twentyFourHoursAgo)  // Only sessions active in last 24 hours
+      .order('last_activity', { ascending: false }); audit logging for admin dashboard
  */
 
 import { supabase } from './supabase';

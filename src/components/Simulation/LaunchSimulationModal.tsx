@@ -32,7 +32,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
   onSuccess,
 }) => {
   const [formData, setFormData] = useState({
-    name: `${template.name} - ${new Date().toLocaleDateString()}`,
+    name: '',  // Start with empty field so user can customize
     duration_minutes: template.default_duration_minutes,
     participant_user_ids: [] as string[],
     participant_roles: [] as ('instructor' | 'student')[],
@@ -208,8 +208,12 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-slate-700 dark:text-white"
+              placeholder={`e.g., Room 201 - ${template.name}, Class A Morning Session, ${new Date().toLocaleDateString()}`}
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-slate-700 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Give this simulation a unique name (e.g., room number, class section, or date)
+            </p>
           </div>
 
           {/* Duration */}
