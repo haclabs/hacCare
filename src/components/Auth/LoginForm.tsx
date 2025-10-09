@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, Wifi, WifiOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -10,22 +10,7 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected' | null>(null);
   const { signIn } = useAuth();
-
-  // Check database connection on component mount
-  React.useEffect(() => {
-    if (isSupabaseConfigured) {
-      setConnectionStatus('checking');
-      checkDatabaseHealth()
-        .then(isHealthy => {
-          setConnectionStatus(isHealthy ? 'connected' : 'disconnected');
-        })
-        .catch(() => {
-          setConnectionStatus('disconnected');
-        });
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,13 +31,6 @@ export const LoginForm: React.FC = () => {
         console.error('❌ Sign in error:', error);
         setError(parseAuthError(error));
         setLoading(false); // Only set loading to false on error
-        
-        // Update connection status for network-related errors
-        if (error.message?.includes('Network error') || 
-            error.message?.includes('Failed to fetch') ||
-            error.message?.includes('timeout')) {
-          setConnectionStatus('disconnected');
-        } 
       } else {
         console.log('✅ Sign in successful, waiting for auth state change...');
         // Don't set loading to false - let AuthContext handle the loading state
@@ -62,52 +40,8 @@ export const LoginForm: React.FC = () => {
       console.error('Login error:', error);
       setError(parseAuthError(error));
       setLoading(false); // Only set loading to false on error
-      
-      // Update connection status for network-related errors
-      if (error.message?.includes('Failed to fetch') || 
-          error.message?.includes('NetworkError') ||
-          error.message?.includes('timeout')) {
-          setConnectionStatus('disconnected');
-      } 
     }
     // Removed finally block - let AuthContext manage loading state on success
-  };
-
-  const getConnectionStatusIcon = () => {
-    switch (connectionStatus) {
-      case 'checking':
-        return <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>;
-      case 'connected':
-        return <Wifi className="h-4 w-4 text-green-600" />;
-      case 'disconnected':
-        return <WifiOff className="h-4 w-4 text-red-600" />;
-      default:
-        return null;
-    }
-  };
-
-  const getConnectionStatusText = () => {
-    switch (connectionStatus) {
-      case 'checking':
-        return 'Checking connection...';
-      case 'connected':
-        return 'Database connected';
-      case 'disconnected':
-        return 'Database disconnected - using demo mode';
-      default:
-        return '';
-    }
-  };
-
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected':
-        return 'text-green-600';
-      case 'disconnected':
-        return 'text-red-600';
-      default:
-        return 'text-blue-600';
-    }
   };
 
   return (
@@ -131,16 +65,6 @@ export const LoginForm: React.FC = () => {
           <p className="text-gray-500 text-sm mt-2">Secure Portal Access</p>
         </div>
 
-        {/* Connection Status */}
-        {isSupabaseConfigured && connectionStatus && (
-          <div className="mb-4 flex items-center justify-center space-x-2">
-            {getConnectionStatusIcon()}
-            <span className={`text-xs ${getConnectionStatusColor()}`}>
-              {getConnectionStatusText()}
-            </span>
-          </div>
-        )}
-
         {!isSupabaseConfigured && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div className="flex items-center space-x-2">
@@ -149,20 +73,6 @@ export const LoginForm: React.FC = () => {
                 <p className="text-yellow-800 text-sm font-medium">Database Not Connected</p>
                 <p className="text-yellow-700 text-xs mt-1">
                   Please click "Connect to Supabase" in the top right to set up the database connection.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {connectionStatus === 'disconnected' && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <WifiOff className="h-5 w-5 text-orange-600 flex-shrink-0" />
-              <div>
-                <p className="text-orange-800 text-sm font-medium">Connection Issue</p>
-                <p className="text-orange-700 text-xs mt-1">
-                  Cannot reach database. Running in demo mode with sample data.
                 </p>
               </div>
             </div>

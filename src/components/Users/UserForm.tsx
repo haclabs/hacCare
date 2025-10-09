@@ -151,6 +151,13 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           return;
         }
 
+        // Log what we're about to send
+        console.log('Creating user with data:', {
+          email: formData.email,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+        });
+
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -184,23 +191,37 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             console.error('Error in email confirmation:', confirmError);
             // Continue with user creation even if confirmation fails
           }
-          // Update the profile with additional information
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .update({
-              first_name: formData.first_name,
-              last_name: formData.last_name,
-              role: formData.role,
-              department: formData.department,
-              license_number: formData.license_number,
-              phone: formData.phone,
-              is_active: formData.is_active,
-            })
-            .eq('id', authData.user.id);
 
-          if (profileError) {
-            setError(parseAuthError(profileError));
-            return;
+          // Wait for the trigger to create the profile
+          await new Promise(resolve => setTimeout(resolve, 800));
+
+          // Use RPC function to update profile (bypasses RLS)
+          console.log('Updating user profile via RPC:', {
+            id: authData.user.id,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+          });
+
+          const { data: rpcResult, error: rpcError } = await supabase
+            .rpc('update_user_profile_admin', {
+              p_user_id: authData.user.id,
+              p_first_name: formData.first_name || null,
+              p_last_name: formData.last_name || null,
+              p_role: formData.role,
+              p_department: formData.department || null,
+              p_license_number: formData.license_number || null,
+              p_phone: formData.phone || null,
+              p_is_active: formData.is_active
+            });
+
+          console.log('RPC update result:', { data: rpcResult, error: rpcError });
+
+          if (rpcError) {
+            console.error('❌ Profile update error:', rpcError);
+            setError('User created but profile update failed: ' + parseAuthError(rpcError));
+            // Don't return - continue with tenant assignment
+          } else {
+            console.log('✅ Profile updated successfully via RPC');
           }
 
           // Assign user to tenant (for super admin or default tenant)
