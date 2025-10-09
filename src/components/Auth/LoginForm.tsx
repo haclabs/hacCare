@@ -3,6 +3,7 @@ import { Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import logo from '../../images/logo.png';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -48,21 +49,16 @@ export const LoginForm: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-6">
-          {/* Custom HacCare Logo with Heart */}
-          <div className="flex justify-center items-center mb-1">
-            <div className="flex items-center">
-              {/* HacCare Text */}
-              <div className="text-left">
-                <h1 className="text-4xl font-bold text-gray-800 leading-none">
-                  haccare
-                </h1>
-                <p className="text-sm text-gray-500 font-medium mt-1">
-                  patient record system
-                </p>
-              </div>
-            </div>
+          {/* HacCare Logo */}
+          <div className="flex justify-center mb-4">
+            <img 
+              src={logo} 
+              alt="HacCare Logo" 
+              className="h-25 w-auto"
+              style={{ height: '100px' }}
+            />
           </div>
-          <p className="text-gray-500 text-sm mt-2">Secure Portal Access</p>
+          <p className="text-gray-500 text-sm">Secure Portal Access</p>
         </div>
 
         {!isSupabaseConfigured && (
@@ -132,7 +128,10 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !isSupabaseConfigured}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full text-white py-3 px-4 rounded-lg font-medium focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#19ADF2' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>

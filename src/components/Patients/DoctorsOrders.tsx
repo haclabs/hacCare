@@ -362,9 +362,9 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                   <textarea
                     value={formData.order_text}
                     onChange={(e) => setFormData({ ...formData, order_text: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows={3}
-                    placeholder="Enter the physician's order..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 whitespace-pre-wrap"
+                    rows={6}
+                    placeholder="Enter the physician's order (use Enter for new lines)..."
                     required
                   />
                 </div>
@@ -468,7 +468,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
 
                       {/* Order text */}
                       <div className="mb-3">
-                        <p className="text-gray-900 leading-relaxed">{order.order_text}</p>
+                        <p className="text-gray-900 leading-relaxed whitespace-pre-line">{order.order_text}</p>
                       </div>
 
                       {/* Notes */}
