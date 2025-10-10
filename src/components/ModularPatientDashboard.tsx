@@ -32,7 +32,8 @@ import {
   FileCheck,
   ArrowRight,
   Camera,
-  MessageSquare
+  MessageSquare,
+  FlaskConical
 } from 'lucide-react';
 import { VitalsModule } from '../modules/vitals/VitalsModule';
 import { MARModule } from '../modules/mar/MARModule';
@@ -41,10 +42,12 @@ import { WoundCareModule } from '../modules/wound-care/WoundCareModule';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from './Patients/handover/HandoverNotes';
 import { DoctorsOrders } from './Patients/DoctorsOrders';
+import { Labs } from './Patients/Labs';
 import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
 import { fetchPatientMedications } from '../lib/medicationService';
 import { WoundCareService } from '../lib/woundCareService';
+import { hasUnacknowledgedLabs } from '../lib/labService';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 
@@ -75,13 +78,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isMultiTenantAdmin } = useTenant();
+  const { isMultiTenantAdmin, currentTenant } = useTenant();
   const [activeModule, setActiveModule] = useState<ActiveModule>('overview');
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showDoctorsOrders, setShowDoctorsOrders] = useState(false);
+  const [showLabs, setShowLabs] = useState(false);
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
   
   const handleOrdersChange = () => {
@@ -89,9 +93,18 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     setOrdersRefreshTrigger(prev => prev + 1);
   };
   
+  const handleLabsChange = () => {
+    // Trigger a refresh of the labs count
+    setLabsRefreshTrigger(prev => prev + 1);
+  };
+  
   // Track unacknowledged doctors orders
   const [ordersRefreshTrigger, setOrdersRefreshTrigger] = useState(0);
   const { unacknowledgedCount } = useDoctorsOrdersAlert(patient?.id || '', ordersRefreshTrigger);
+  
+  // Track unacknowledged labs
+  const [labsRefreshTrigger, setLabsRefreshTrigger] = useState(0);
+  const [unacknowledgedLabsCount, setUnacknowledgedLabsCount] = useState(0);
   
 
 
@@ -689,6 +702,15 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       action: () => setShowDoctorsOrders(true),
       color: 'blue',
       badge: unacknowledgedCount > 0 ? 'New Order' : undefined
+    },
+    {
+      id: 'labs',
+      title: 'Labs',
+      description: 'View and manage laboratory results',
+      icon: FlaskConical,
+      action: () => setShowLabs(true),
+      color: 'purple',
+      badge: unacknowledgedLabsCount > 0 ? 'New Labs' : undefined
     }
   ];
 
@@ -801,6 +823,18 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
     loadPatient();
   }, [id]);
+
+  // Check for unacknowledged labs
+  useEffect(() => {
+    const checkUnacknowledgedLabs = async () => {
+      if (patient?.id && currentTenant?.id) {
+        const { hasUnacked } = await hasUnacknowledgedLabs(patient.id, currentTenant.id);
+        setUnacknowledgedLabsCount(hasUnacked ? 1 : 0);
+      }
+    };
+    
+    checkUnacknowledgedLabs();
+  }, [patient?.id, currentTenant?.id, labsRefreshTrigger]);
 
   // Show loading state
   if (loading) {
@@ -1192,6 +1226,32 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           onClose={() => setShowDoctorsOrders(false)}
           onOrdersChange={handleOrdersChange}
         />
+      )}
+
+      {/* Labs Modal */}
+      {showLabs && patient && currentTenant && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Laboratory Results</h2>
+              <button
+                onClick={() => setShowLabs(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <Labs
+                patientId={patient.id}
+                onLabsChange={handleLabsChange}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Schema Template Editor */}
