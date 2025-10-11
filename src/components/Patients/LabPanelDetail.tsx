@@ -35,6 +35,8 @@ import { LabAcknowledgeModal } from './LabAcknowledgeModal';
 interface LabPanelDetailProps {
   panel: LabPanel;
   patientId: string;
+  patientNumber?: string;
+  patientName?: string;
   onBack: () => void;
   onUpdate: () => void;
 }
@@ -42,6 +44,8 @@ interface LabPanelDetailProps {
 export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   panel,
   patientId,
+  patientNumber,
+  patientName,
   onBack,
   onUpdate,
 }) => {
@@ -147,33 +151,48 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   const abnormalResults = results.filter(r => r.flag !== 'normal');
 
   return (
-    <div className="space-y-4">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             onClick={onBack}
             className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Lab Panel - {new Date(panel.panel_time).toLocaleString()}
-            </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className={`px-2 py-0.5 text-xs font-medium rounded ${getStatusColorClass(
-                  panel.status
-                )}`}
-              >
-                {getStatusLabel(panel.status)}
-              </span>
-              {panel.entered_by_name && (
-                <span className="text-xs text-gray-500">
-                  by {panel.entered_by_name}
+          <div className="flex items-center gap-3">
+            <FlaskConical className="w-8 h-8 text-blue-600" />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Laboratory Results
+              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm text-gray-500">
+                  Patient: {patientNumber || patientId}
+                  {patientName && ` - ${patientName}`}
                 </span>
-              )}
+                <span className="text-sm text-gray-400">•</span>
+                <span className="text-sm text-gray-500">
+                  {new Date(panel.panel_time).toLocaleString()}
+                </span>
+                {panel.entered_by_name && (
+                  <>
+                    <span className="text-sm text-gray-400">•</span>
+                    <span className="text-sm text-gray-500">
+                      Ordered by {panel.entered_by_name}
+                    </span>
+                  </>
+                )}
+                <span className="text-sm text-gray-400">•</span>
+                <span
+                  className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColorClass(
+                    panel.status
+                  )}`}
+                >
+                  {getStatusLabel(panel.status)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -212,20 +231,20 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
 
       {/* Panel notes */}
       {panel.notes && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-900">{panel.notes}</p>
         </div>
       )}
 
       {/* Abnormal warning */}
       {abnormalResults.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-yellow-900">
               {abnormalResults.length} abnormal or critical value{abnormalResults.length !== 1 ? 's' : ''}
             </p>
-            <p className="text-xs text-yellow-700 mt-0.5">
+            <p className="text-xs text-yellow-700 mt-1">
               Review carefully before acknowledging
             </p>
           </div>
@@ -233,8 +252,8 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
       )}
 
       {/* Category tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-1">
+      <div>
+        <nav className="flex space-x-2">
           {LAB_CATEGORY_TABS.map((tab) => {
             const count = tab.id === 'all' 
               ? results.length 
@@ -245,11 +264,11 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  px-4 py-2 text-sm font-medium border-b-2 transition-colors
+                  px-4 py-2 text-sm font-medium rounded-lg transition-colors
                   ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }
                 `}
               >

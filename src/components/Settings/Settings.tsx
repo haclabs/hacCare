@@ -216,8 +216,8 @@ export const Settings: React.FC = () => {
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setDarkMode(systemDark);
       localStorage.setItem('haccare-theme', 'system');
-    } else if (['light', 'dark', 'terminal'].includes(newTheme)) {
-      setTheme(newTheme as 'light' | 'dark' | 'terminal');
+    } else if (['light', 'dark', 'terminal', 'retro'].includes(newTheme)) {
+      setTheme(newTheme as 'light' | 'dark' | 'terminal' | 'retro');
     } else {
       const isDark = newTheme === 'dark';
       setDarkMode(isDark);
@@ -369,6 +369,25 @@ export const Settings: React.FC = () => {
                       >
                         <Terminal className="h-6 w-6 mx-auto mb-2 text-green-500" />
                         <div className="text-sm font-medium text-gray-900 dark:text-white">Terminal</div>
+                      </button>
+
+                      {/* Retro Mode 🎮 */}
+                      <button
+                        onClick={() => handleThemeChange('retro')}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          getCurrentTheme() === 'retro'
+                            ? 'border-pink-500 bg-purple-900 text-pink-500'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                        }`}
+                        style={getCurrentTheme() === 'retro' ? {
+                          background: 'linear-gradient(135deg, #1a0033 0%, #0d001a 100%)',
+                          boxShadow: '0 0 15px rgba(255, 0, 255, 0.5)'
+                        } : {}}
+                      >
+                        <Terminal className="h-6 w-6 mx-auto mb-2 text-pink-500" style={getCurrentTheme() === 'retro' ? { textShadow: '0 0 10px #ff00ff' } : {}} />
+                        <div className="text-sm font-medium text-gray-900 dark:text-white" style={getCurrentTheme() === 'retro' ? { color: '#00ffff', textShadow: '0 0 5px #00ffff' } : {}}>
+                          Retro 80's 🎮
+                        </div>
                       </button>
 
                       {/* System Mode */}

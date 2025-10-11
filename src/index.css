@@ -50,6 +50,218 @@
     background: #001100 !important;
     border-color: #004400 !important;
   }
+  
+  /* 🎮 RETRO 80's SYNTHWAVE THEME - ULTRA NEON 🌆 */
+  .retro body {
+    font-family: 'Courier New', 'Consolas', monospace !important;
+    background: #0a0e27 !important;
+    color: #00ffff !important;
+    animation: scanlines 8s linear infinite;
+  }
+  
+  .retro * {
+    font-family: 'Courier New', 'Consolas', monospace !important;
+  }
+  
+  /* Intense Neon Text */
+  .retro h1, .retro h2, .retro h3, .retro h4 {
+    color: #ff00ff !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.2em !important;
+    text-shadow: 
+      0 0 5px #ff00ff,
+      0 0 10px #ff00ff,
+      0 0 20px #ff00ff,
+      0 0 40px #ff00ff,
+      0 0 80px #ff00ff !important;
+    animation: neon-glow 1.5s ease-in-out infinite alternate;
+  }
+  
+  /* Ultra Glowing Cards */
+  .retro .bg-white {
+    background: rgba(10, 14, 39, 0.8) !important;
+    border: 3px solid #00ffff !important;
+    box-shadow: 
+      0 0 10px #00ffff,
+      0 0 20px #00ffff,
+      0 0 40px rgba(0, 255, 255, 0.5),
+      inset 0 0 20px rgba(0, 255, 255, 0.1) !important;
+  }
+  
+  .retro .bg-gray-50 {
+    background: rgba(10, 14, 39, 0.5) !important;
+    border: 2px solid rgba(0, 255, 255, 0.3) !important;
+  }
+  
+  .retro .bg-gray-100 {
+    background: rgba(10, 14, 39, 0.6) !important;
+  }
+  
+  /* Cyan Neon Text */
+  .retro .text-gray-900 {
+    color: #00ffff !important;
+    text-shadow: 
+      0 0 5px #00ffff,
+      0 0 10px #00ffff,
+      0 0 20px #00ffff !important;
+  }
+  
+  /* Pink Neon Text */
+  .retro .text-gray-600, .retro .text-gray-500 {
+    color: #ff00ff !important;
+    text-shadow: 0 0 10px #ff00ff !important;
+  }
+  
+  .retro .text-blue-600 {
+    color: #00ffff !important;
+    text-shadow: 
+      0 0 5px #00ffff,
+      0 0 10px #00ffff,
+      0 0 20px #00ffff !important;
+  }
+  
+  /* Glowing Buttons - Pink/Magenta */
+  .retro .bg-blue-600, .retro button {
+    background: rgba(255, 0, 255, 0.2) !important;
+    color: #ff00ff !important;
+    font-weight: bold !important;
+    text-shadow: 
+      0 0 5px #ff00ff,
+      0 0 10px #ff00ff !important;
+    border: 3px solid #ff00ff !important;
+    box-shadow: 
+      0 0 10px #ff00ff,
+      0 0 20px #ff00ff,
+      0 0 40px rgba(255, 0, 255, 0.5),
+      inset 0 0 10px rgba(255, 0, 255, 0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .retro button:hover {
+    transform: scale(1.05) !important;
+    background: rgba(255, 0, 255, 0.3) !important;
+    box-shadow: 
+      0 0 15px #ff00ff,
+      0 0 30px #ff00ff,
+      0 0 60px rgba(255, 0, 255, 0.8),
+      inset 0 0 20px rgba(255, 0, 255, 0.3) !important;
+  }
+  
+  /* Glowing Header */
+  .retro header {
+    background: rgba(10, 14, 39, 0.95) !important;
+    border-bottom: 3px solid #00ffff !important;
+    box-shadow: 
+      0 0 10px #00ffff,
+      0 0 20px #00ffff,
+      0 5px 40px rgba(0, 255, 255, 0.5) !important;
+  }
+  
+  /* Glowing Sidebar */
+  .retro aside {
+    background: rgba(10, 14, 39, 0.95) !important;
+    border-right: 3px solid #ff00ff !important;
+    box-shadow: 
+      0 0 10px #ff00ff,
+      0 0 20px #ff00ff,
+      5px 0 40px rgba(255, 0, 255, 0.4) !important;
+  }
+  
+  /* Neon Input Fields */
+  .retro input, .retro select, .retro textarea {
+    background: rgba(10, 14, 39, 0.8) !important;
+    border: 2px solid #00ffff !important;
+    color: #00ffff !important;
+    box-shadow: 
+      0 0 5px #00ffff,
+      0 0 10px rgba(0, 255, 255, 0.5),
+      inset 0 0 10px rgba(0, 255, 255, 0.1) !important;
+  }
+  
+  .retro input:focus, .retro select:focus, .retro textarea:focus {
+    border-color: #ff00ff !important;
+    box-shadow: 
+      0 0 10px #ff00ff,
+      0 0 20px rgba(255, 0, 255, 0.6),
+      inset 0 0 15px rgba(255, 0, 255, 0.2) !important;
+  }
+  
+  /* Neon Borders */
+  .retro .border-gray-200, .retro .border-gray-300, .retro .border {
+    border-color: #00ffff !important;
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5) !important;
+  }
+  
+  /* Rounded Elements Glow */
+  .retro .rounded-lg, .retro .rounded-xl, .retro .rounded-2xl {
+    box-shadow: 
+      0 0 10px rgba(0, 255, 255, 0.3),
+      inset 0 0 10px rgba(255, 0, 255, 0.1) !important;
+  }
+  
+  /* Badges and Pills */
+  .retro .rounded-full {
+    background: rgba(255, 0, 255, 0.3) !important;
+    border: 2px solid #ff00ff !important;
+    box-shadow: 
+      0 0 10px #ff00ff,
+      0 0 20px rgba(255, 0, 255, 0.5) !important;
+  }
+  
+  /* Active/Selected States */
+  .retro .bg-blue-50, .retro .bg-blue-100 {
+    background: rgba(0, 255, 255, 0.1) !important;
+    border: 2px solid #00ffff !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3) !important;
+  }
+  
+  /* Neon glow pulse animation */
+  @keyframes neon-glow {
+    from {
+      text-shadow: 
+        0 0 5px #ff00ff,
+        0 0 10px #ff00ff,
+        0 0 20px #ff00ff,
+        0 0 40px #ff00ff;
+    }
+    to {
+      text-shadow: 
+        0 0 10px #ff00ff,
+        0 0 20px #ff00ff,
+        0 0 40px #ff00ff,
+        0 0 80px #ff00ff,
+        0 0 120px #ff00ff;
+    }
+  }
+  
+  /* CRT scanlines effect */
+  @keyframes scanlines {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 0 100%;
+    }
+  }
+  
+  /* Scanline overlay */
+  .retro::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 255, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(255, 0, 255, 0.03) 3px
+    );
+    z-index: 9999;
+  }
 }
 
 @layer components {

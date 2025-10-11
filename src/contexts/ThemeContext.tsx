@@ -2,14 +2,15 @@ import React, { createContext, useState, useEffect } from 'react';
 
 /**
  * Theme Context Interface
- * Manages theme state throughout the application (light/dark/terminal)
+ * Manages theme state throughout the application (light/dark/terminal/retro)
  */
-type Theme = 'light' | 'dark' | 'terminal';
+type Theme = 'light' | 'dark' | 'terminal' | 'retro';
 
 interface ThemeContextType {
   theme: Theme;
   isDarkMode: boolean;
   isTerminalMode: boolean;
+  isRetroMode: boolean;
   setTheme: (theme: Theme) => void;
   toggleDarkMode: () => void;
   setDarkMode: (isDark: boolean) => void;
@@ -36,7 +37,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first
     const savedTheme = localStorage.getItem('haccare-theme') as Theme;
-    if (savedTheme && ['light', 'dark', 'terminal'].includes(savedTheme)) {
+    if (savedTheme && ['light', 'dark', 'terminal', 'retro'].includes(savedTheme)) {
       return savedTheme;
     }
     
@@ -46,6 +47,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isDarkMode = theme === 'dark';
   const isTerminalMode = theme === 'terminal';
+  const isRetroMode = theme === 'retro';
 
   /**
    * Apply theme classes to document
@@ -55,13 +57,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = document.documentElement;
     
     // Remove all theme classes first
-    root.classList.remove('dark', 'terminal');
+    root.classList.remove('dark', 'terminal', 'retro');
     
     // Apply the current theme class
     if (theme === 'dark') {
       root.classList.add('dark');
     } else if (theme === 'terminal') {
       root.classList.add('terminal');
+    } else if (theme === 'retro') {
+      root.classList.add('retro');
     }
     
     // Save to localStorage
@@ -102,6 +106,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     theme,
     isDarkMode,
     isTerminalMode,
+    isRetroMode,
     setTheme,
     toggleDarkMode,
     setDarkMode

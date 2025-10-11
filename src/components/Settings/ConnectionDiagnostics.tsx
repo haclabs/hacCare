@@ -4,7 +4,7 @@ import {
   AlertTriangle, CheckCircle, XCircle, RefreshCw, 
   Database, Key, Globe, Lock, FileText, Shield
 } from 'lucide-react';
-import { SecurityConnectionDiagnostics } from './SecurityConnectionDiagnostics';
+import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
 
 /**
  * Connection Diagnostics Component
@@ -234,7 +234,7 @@ export const ConnectionDiagnostics: React.FC = () => {
 
       {/* Advanced Security Diagnostics */}
       {activeTab === 'security' && (
-        <SecurityConnectionDiagnostics />
+        <NetlifySecurityDiagnostics />
       )}
     </div>
   );

@@ -10,17 +10,19 @@ import {
   getLabResults,
   hasUnacknowledgedLabs,
 } from '../../lib/labService';
-import type { LabPanel, LabResult, LabCategory } from '../../types/labs';
+import type { LabPanel, LabCategory } from '../../types/labs';
 import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../../types/labs';
 import { LabPanelDetail } from './LabPanelDetail';
 import { CreateLabPanelModal } from './CreateLabPanelModal';
 
 interface LabsProps {
   patientId: string;
+  patientNumber?: string;
+  patientName?: string;
   onLabsChange?: () => void;
 }
 
-export const Labs: React.FC<LabsProps> = ({ patientId, onLabsChange }) => {
+export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientName, onLabsChange }) => {
   const { hasRole } = useAuth();
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState<LabCategory | 'all'>('all');
@@ -87,7 +89,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, onLabsChange }) => {
     }
   };
 
-  const filteredPanels = panels.filter(panel => {
+  const filteredPanels = panels.filter(() => {
     if (activeTab === 'all') return true;
     // We'll need to check if panel has results in this category
     // For now, show all panels in all tabs
@@ -99,6 +101,8 @@ export const Labs: React.FC<LabsProps> = ({ patientId, onLabsChange }) => {
       <LabPanelDetail
         panel={selectedPanel}
         patientId={patientId}
+        patientNumber={patientNumber}
+        patientName={patientName}
         onBack={() => {
           setSelectedPanel(null);
           handlePanelUpdated();
@@ -122,7 +126,10 @@ export const Labs: React.FC<LabsProps> = ({ patientId, onLabsChange }) => {
               </span>
             )}
           </div>
-          <p className="text-gray-600 mt-1">Patient: {patientId}</p>
+          <p className="text-gray-600 mt-1">
+            Patient: {patientNumber || patientId}
+            {patientName && ` - ${patientName}`}
+          </p>
         </div>
 
         {isAdmin && (

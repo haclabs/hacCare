@@ -1247,6 +1247,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
               <Labs
                 patientId={patient.id}
+                patientNumber={patient.patient_id}
+                patientName={`${patient.first_name} ${patient.last_name}`}
                 onLabsChange={handleLabsChange}
               />
             </div>

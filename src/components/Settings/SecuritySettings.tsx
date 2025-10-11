@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone, Shield } from 'lucide
 import { supabase } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { useAuth } from '../../hooks/useAuth';
+import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
 
 /**
  * Security Settings Component
@@ -324,6 +325,11 @@ export const SecuritySettings: React.FC = () => {
             <span className="text-xs text-gray-500 dark:text-gray-400">Available Soon</span>
           </div>
         </div>
+      </div>
+
+      {/* Security Diagnostics */}
+      <div className="mt-8">
+        <NetlifySecurityDiagnostics />
       </div>
     </div>
   );
