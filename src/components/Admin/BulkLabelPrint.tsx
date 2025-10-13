@@ -419,11 +419,11 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               } as any);
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
-                width: 1,
+                width: 2, // INCREASED from 1 to 2 for thicker bars (better for heavy labels)
                 height: 60,
                 displayValue: true,
                 fontSize: 8,
-                margin: 3,
+                margin: 2, // REDUCED margin to fit wider bars
                 background: "#ffffff",
                 lineColor: "#000000",
                 textAlign: "center",

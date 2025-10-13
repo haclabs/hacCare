@@ -40,37 +40,33 @@ export interface BCMAValidationResult {
 }
 
 class BCMAService {
-  // Generate medication barcode ID - shortened for scanner compatibility
+  // Generate medication barcode ID - ULTRA-SHORT for heavy label scanning
   generateMedicationBarcode(medication: Medication): string {
-    // Create a shorter medication code with MED prefix
-    // Format: MED + 2 chars + 4 chars = 9 total characters (shorter for better scanning)
+    // Create ultra-short medication code for maximum bar width
+    // Format: M + 1 char + 5 digits = 7 total characters (optimal for scanning)
     
     // Get clean medication name - only letters and numbers
     const cleanName = medication.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     
-    // Generate 2-character prefix (shortened from 3)
-    let namePrefix = '';
-    if (cleanName.length >= 2) {
-      namePrefix = cleanName.substring(0, 2);
-    } else if (cleanName.length > 0) {
-      // Pad short names with numbers from the ID
-      const idChars = medication.id.replace(/[^A-Z0-9]/g, '').substring(0, 2);
-      namePrefix = (cleanName + idChars + 'AB').substring(0, 2);
-    } else {
-      // Fallback for names with no valid characters
-      namePrefix = medication.id.replace(/[^A-Z0-9]/g, '').substring(0, 2) || 'MD';
-    }
+    // Generate 1-character prefix from medication name
+    const namePrefix = cleanName.charAt(0) || 'X';
     
-    // Get last 4 characters from ID (shortened from 6)
+    // Get numeric hash from ID for 5-digit code
     const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
-    const idSuffix = cleanId.length >= 4 ? cleanId.slice(-4) : (cleanId + 'ABCD').substring(0, 4);
+    // Create a simple hash to convert ID to numbers
+    let numericCode = 0;
+    for (let i = 0; i < cleanId.length; i++) {
+      numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+    }
+    // Ensure it's always 5 digits
+    const idSuffix = numericCode.toString().padStart(5, '0');
     
-    const barcode = `MED${namePrefix}${idSuffix}`;
+    const barcode = `M${namePrefix}${idSuffix}`;
     
-    console.log('🔵 Generated SHORT barcode for', medication.name, ':', barcode);
+    console.log('🔵 Generated ULTRA-SHORT barcode for', medication.name, ':', barcode);
     console.log('🔵 Original name:', medication.name, 'Clean name:', cleanName);
-    console.log('🔵 Name prefix (2 chars):', namePrefix, 'ID suffix (4 chars):', idSuffix);
-    console.log('🔵 Final barcode length:', barcode.length);
+    console.log('🔵 Name prefix (1 char):', namePrefix, 'ID suffix (5 digits):', idSuffix);
+    console.log('🔵 Final barcode length:', barcode.length, '- Wider bars for heavy labels!');
     
     return barcode;
   }
