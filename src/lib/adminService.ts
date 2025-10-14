@@ -168,7 +168,7 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
  * Create or update user session
  */
 export const createUserSession = async (
-  ipAddress: string,
+  ipAddress: string | null,
   userAgent?: string,
   tenantId?: string
 ): Promise<string | null> => {
@@ -309,7 +309,7 @@ export const cleanupOldSessions = async () => {
 /**
  * Get client IP address using external service
  */
-export const getClientIpAddress = async (): Promise<string> => {
+export const getClientIpAddress = async (): Promise<string | null> => {
   try {
     // Try multiple IP detection services for reliability
     const ipServices = [
@@ -346,11 +346,11 @@ export const getClientIpAddress = async (): Promise<string> => {
       }
     }
     
-    console.warn('⚠️ Could not detect IP address, using fallback');
-    return 'unknown';
+    console.warn('⚠️ Could not detect IP address, using NULL');
+    return null; // Return null for database compatibility
   } catch (error) {
     console.error('❌ IP detection failed:', error);
-    return 'unknown';
+    return null; // Return null for database compatibility
   }
 };
 

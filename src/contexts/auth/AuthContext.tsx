@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profileLoading, setProfileLoading] = useState(false);  // Profile-specific loading state
   const [isOffline, setIsOffline] = useState(false);            // Offline state indicator
   const [isAnonymous, setIsAnonymous] = useState(false);        // Anonymous simulation user indicator
+  const fetchingProfile = useRef(false);                       // Prevent duplicate profile fetches (Chrome race condition fix)
 
   /**
    * Initialize authentication on component mount
@@ -307,7 +308,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
+    // Prevent duplicate fetches (Chrome race condition fix)
+    if (fetchingProfile.current) {
+      console.log('🔄 Profile fetch already in progress, skipping duplicate');
+      return;
+    }
+
     try {
+      fetchingProfile.current = true;
       if (process.env.NODE_ENV === 'development') {
         console.log('Fetching profile for user:', userId);
       }
