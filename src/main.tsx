@@ -9,6 +9,8 @@ import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
+import { LoginForm } from './components/Auth/LoginForm';
+import { LandingPage } from './components/LandingPage/LandingPage';
 import { queryClient } from './lib/queryClient';
 import { initializeBarcodeScanner } from './lib/barcodeScanner';
 import App from './App.tsx';
@@ -47,10 +49,14 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <Routes>
-            {/* Main application routes */}
-            <Route path="/*" element={
-              <SimulationAwareAuthProvider>
+          <SimulationAwareAuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginForm />} />
+              
+              {/* Protected application routes */}
+              <Route path="/app/*" element={
                 <TenantProvider>
                   <AlertProvider>
                     <PatientProvider>
@@ -60,9 +66,9 @@ createRoot(document.getElementById('root')!).render(
                     </PatientProvider>
                   </AlertProvider>
                 </TenantProvider>
-              </SimulationAwareAuthProvider>
-            } />
-          </Routes>
+              } />
+            </Routes>
+          </SimulationAwareAuthProvider>
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

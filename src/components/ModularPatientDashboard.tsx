@@ -860,7 +860,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Unable to Load Patient</h2>
           <p className="text-red-600 mb-6">{error || 'Patient not found'}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
           >
             Back to Dashboard

@@ -37,8 +37,8 @@ const SimulationRouter: React.FC = () => {
   useEffect(() => {
     // If we're on the simulation subdomain and logged in, ensure we're on portal
     if (!loading && user && isSimulationSubdomain()) {
-      if (location.pathname === '/login' || location.pathname === '/') {
-        navigate('/simulation-portal', { replace: true });
+      if (location.pathname === '/login' || location.pathname === '/' || location.pathname === '/app') {
+        navigate('simulation-portal', { replace: true });
       }
     }
   }, [user, loading, location, navigate]);

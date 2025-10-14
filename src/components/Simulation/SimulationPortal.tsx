@@ -87,7 +87,7 @@ const SimulationPortal: React.FC = () => {
       console.log('✅ Entered simulation:', simulationName);
       // Navigate to dashboard which will now show simulation patients
       // Force a full page reload to ensure all contexts refresh with new tenant
-      window.location.href = '/dashboard';
+      window.location.href = '/app';
     } catch (err: any) {
       console.error('Error entering simulation:', err);
       setError(err.message || 'Failed to enter simulation');
@@ -100,12 +100,14 @@ const SimulationPortal: React.FC = () => {
   };
 
   const handleManageSimulations = () => {
-    navigate('/simulations');
+    // Stay within /app context - renderContent will handle showing simulations tab
+    navigate('/app');
+    // Note: Consider passing state to set activeTab to 'simulations'
   };
 
   if (authLoading || loading || enteringSimulation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full flex items-center justify-center py-12">
         <div className="text-center">
           <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">
@@ -120,7 +122,7 @@ const SimulationPortal: React.FC = () => {
   if (assignments.length === 1) {
     const assignment = assignments[0];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full flex items-center justify-center py-12">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-blue-600 rounded-full animate-pulse">
@@ -142,7 +144,7 @@ const SimulationPortal: React.FC = () => {
   const isInstructor = profile?.role === 'admin' || profile?.role === 'instructor';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">

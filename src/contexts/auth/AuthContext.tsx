@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
+import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { initializeSessionPersistence, checkSessionWithRetry } from '../../lib/authPersistence';
 
@@ -217,17 +217,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Handle auth state changes
         if (session?.user) {
           setUser(session.user);
-          // Fetch profile for auth state changes (non-blocking)
-          fetchUserProfile(session.user.id).catch(error => {
-            console.error('Profile fetch failed on auth change:', error);
+          
+          // Fetch profile for auth state changes
+          const handleProfileFetch = async () => {
+            try {
+              await fetchUserProfile(session.user.id);
+              
+              // After fetching, if no profile found and user signed in via OAuth, auto-create
+              // Check using a fresh query since state may not be updated yet
+              const { data: existingProfile } = await supabase
+                .from('user_profiles')
+                .select('id')
+                .eq('id', session.user.id)
+                .maybeSingle();
+              
+              if (!existingProfile && event === 'SIGNED_IN' && session.user.app_metadata?.provider === 'azure') {
+                console.log('🔧 OAuth user without profile detected, creating profile...');
+                try {
+                  // Create profile with OAuth user metadata
+                  const { data: newProfile, error: createError } = await supabase
+                    .from('user_profiles')
+                    .upsert({
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      first_name: session.user.user_metadata?.given_name || session.user.user_metadata?.first_name || 'User',
+                      last_name: session.user.user_metadata?.family_name || session.user.user_metadata?.last_name || '',
+                      role: 'nurse', // Default role for OAuth users
+                      is_active: true
+                    }, {
+                      onConflict: 'id'
+                    })
+                    .select()
+                    .single();
+                  
+                  if (createError) {
+                    console.error('❌ Failed to auto-create profile:', createError);
+                  } else {
+                    console.log('✅ Profile auto-created for OAuth user:', newProfile);
+                    setProfile(newProfile);
+                  }
+                } catch (createError) {
+                  console.error('❌ Exception creating profile:', createError);
+                }
+              }
+            } catch (error) {
+              console.error('Profile fetch failed on auth change:', error);
+            }
+          };
+          
+          // Wait for profile fetch to complete before clearing loading state
+          handleProfileFetch().finally(() => {
+            setLoading(false);
           });
         } else {
           setUser(null);
           setProfile(null);
+          setLoading(false);
         }
-        
-        // Always stop loading for auth state changes
-        setLoading(false);
       }
     );
 
@@ -267,13 +313,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setProfileLoading(true);
       
-      // Check database health first
-      const isHealthy = await checkDatabaseHealth();
-      if (!isHealthy) {
-        console.warn('📱 Database unavailable - cannot fetch user profile');
-        setIsOffline(true);
-        return;
-      }
+      // Skip health check - it's blocking and causing hangs
+      // If the database is down, the query will fail and we'll handle it
       
       // Create abort controller for timeout
       const controller = new AbortController();

@@ -33,7 +33,7 @@ export const SimulationIndicator: React.FC = () => {
       try {
         setIsExiting(true);
         await exitSimulationTenant();
-        navigate('/dashboard');
+        navigate('/app');
       } catch (error) {
         console.error('Error exiting simulation:', error);
         alert('Failed to exit simulation. Please try again.');

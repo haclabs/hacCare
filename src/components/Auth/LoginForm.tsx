@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import logo from '../../images/logo.png';
 
 export const LoginForm: React.FC = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [oauthLoading, setOauthLoading] = useState(false);
+  const { signIn, user } = useAuth();
+
+  // Redirect to app if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/app');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +47,44 @@ export const LoginForm: React.FC = () => {
         // Don't set loading to false - let AuthContext handle the loading state
         // The auth state change will trigger and AuthContext will manage loading
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       setError(parseAuthError(error));
       setLoading(false); // Only set loading to false on error
     }
     // Removed finally block - let AuthContext manage loading state on success
+  };
+
+  const handleMicrosoftSignIn = async () => {
+    if (!isSupabaseConfigured) {
+      setError('Database connection not configured. Please set up Supabase.');
+      return;
+    }
+
+    setError('');
+    setOauthLoading(true);
+
+    try {
+      console.log('🔐 Initiating Microsoft OAuth sign in...');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          scopes: 'email profile openid',
+          redirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        console.error('❌ Microsoft OAuth error:', error);
+        setError(parseAuthError(error));
+        setOauthLoading(false);
+      }
+      // If successful, user will be redirected to Microsoft login
+    } catch (error: unknown) {
+      console.error('Microsoft OAuth error:', error);
+      setError(parseAuthError(error));
+      setOauthLoading(false);
+    }
   };
 
   return (
@@ -127,7 +169,7 @@ export const LoginForm: React.FC = () => {
 
           <button
             type="submit"
-            disabled={loading || !isSupabaseConfigured}
+            disabled={loading || oauthLoading || !isSupabaseConfigured}
             className="w-full text-white py-3 px-4 rounded-lg font-medium focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#19ADF2' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
@@ -136,6 +178,28 @@ export const LoginForm: React.FC = () => {
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="mt-6 mb-6 flex items-center">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">or</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        {/* Microsoft Sign In Button */}
+        <button
+          onClick={handleMicrosoftSignIn}
+          disabled={loading || oauthLoading || !isSupabaseConfigured}
+          className="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+          <span>{oauthLoading ? 'Redirecting...' : 'Sign in with Microsoft'}</span>
+        </button>
 
         {/* Security Notice */}
         <div className="mt-6 bg-gray-50 rounded-lg p-4">

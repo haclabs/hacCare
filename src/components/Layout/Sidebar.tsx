@@ -85,9 +85,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 <button
                   onClick={() => {
                     if ('route' in item && item.route) {
-                      navigate(item.route);
+                      // Navigate to /app/[route] - ensures we always go to the right place
+                      // regardless of current nested route
+                      const appRoute = item.route.startsWith('/') 
+                        ? `/app${item.route}` 
+                        : `/app/${item.route}`;
+                      navigate(appRoute);
                     } else {
+                      // For items without explicit routes, navigate to /app root
+                      // The onTabChange will update the state to show the correct content
                       onTabChange(item.id);
+                      navigate('/app', { replace: false });
                     }
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${

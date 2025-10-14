@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LoginForm } from './LoginForm';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
@@ -48,17 +48,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Security: If Supabase is not configured, show login with warning
+  // Security: If Supabase is not configured, redirect to login
   if (!isSupabaseConfigured) {
-    return <LoginForm />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Security: If no user, show login
+  // Security: If no user, redirect to login
   if (!user) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ ProtectedRoute - No user found, showing login');
+      console.log('🛡️ ProtectedRoute - No user found, redirecting to login');
     }
-    return <LoginForm />;
+    return <Navigate to="/login" replace />;
   }
 
   // Security: If user exists but no profile, show secure profile creation
@@ -73,7 +73,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       
       try {
         await createProfile();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Failed to create profile:', error);
         setProfileError(parseAuthError(error));
       } finally {

@@ -18,6 +18,7 @@ import AdminDashboard from './components/Admin/AdminDashboard';
 import SimulationManager from './components/Simulation/SimulationManager';
 import SimulationBanner from './components/Simulation/SimulationBanner';
 import SimulationRouter from './components/Simulation/SimulationRouter';
+import { AuthCallback } from './components/Auth/AuthCallback';
 
 // Lazy-loaded components
 const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
@@ -63,12 +64,13 @@ function App() {
     const currentPath = location.pathname;
     
     // If on simulation subdomain and NOT already on simulation-portal or dashboard, redirect
+    // Note: location.pathname includes /app prefix now
     if (isSimulationSubdomain && 
-        !currentPath.startsWith('/simulation-portal') && 
-        !currentPath.startsWith('/dashboard') &&
-        !currentPath.startsWith('/patient')) {
+        !currentPath.includes('simulation-portal') && 
+        !currentPath.includes('dashboard') &&
+        !currentPath.includes('patient')) {
       console.log('🎮 Simulation subdomain detected, redirecting to portal...');
-      navigate('/simulation-portal', { replace: true });
+      navigate('simulation-portal', { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -95,8 +97,8 @@ function App() {
    */
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    // Clear selected patient when navigating to a different tab
-    navigate('/');
+    // Stay within the /app route - just change the active tab state
+    // The route will be handled by the renderContent function
   };
 
   /**
@@ -104,7 +106,7 @@ function App() {
    * @param {Patient} patient - The selected patient
    */
   const handlePatientSelect = (patient: Patient) => {
-    navigate(`/patient/${patient.id}`);
+    navigate(`patient/${patient.id}`);
   };
 
   /**
@@ -137,7 +139,7 @@ function App() {
         const patient = patients.find(p => p.patient_id === patientId);
         if (patient) {
           console.log('✅ Patient found:', patient);
-          navigate(`/patient/${patient.id}`);
+          navigate(`patient/${patient.id}`);
         } else {
           console.warn(`⚠️ Patient with ID ${patientId} not found`);
           
@@ -151,7 +153,7 @@ function App() {
           if (flexibleMatch) {
             console.log('✅ Found patient with flexible matching:', flexibleMatch);
             console.log(`✅ Match found: "${flexibleMatch.patient_id}" contains or is contained in "${patientId}"`);
-            navigate(`/patient/${flexibleMatch.id}`);
+            navigate(`patient/${flexibleMatch.id}`);
             return;
           } else {
             console.log('🔍 No patient found with flexible matching, trying numeric-only matching...');
@@ -166,7 +168,7 @@ function App() {
             if (numericMatch) {
               console.log('✅ Found patient with numeric-only matching:', numericMatch);
               console.log(`✅ Match found: numeric part of "${numericMatch.patient_id}" matches "${patientId}"`);
-              navigate(`/patient/${numericMatch.id}`);
+              navigate(`patient/${numericMatch.id}`);
               return;
             } else {
               console.log('❌ No patient found with any matching method');
@@ -614,7 +616,6 @@ function App() {
       <Header 
         onAlertsClick={() => setShowAlerts(true)}
         onBarcodeScan={handleBarcodeScan}
-        dbError={dbError?.message || null} 
       />
       
       {/* Main Layout */}
@@ -628,12 +629,14 @@ function App() {
         {/* Main Content Area */}
         <main className="flex-1 p-8">
             <Routes>
-              <Route path="/simulation-portal" element={
+              <Route index element={renderContent()} />
+              <Route path="auth/callback" element={<AuthCallback />} />
+              <Route path="simulation-portal" element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <SimulationRouter />
                 </Suspense>
               } />
-              <Route path="/patient/:id" element={
+              <Route path="patient/:id" element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <ModularPatientDashboard 
                     onShowBracelet={setBraceletPatient}
@@ -641,7 +644,7 @@ function App() {
                   />
                 </Suspense>
               } />
-              <Route path="/patient/:id/modular" element={
+              <Route path="patient/:id/modular" element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <ModularPatientSystemDemo />
                 </Suspense>
