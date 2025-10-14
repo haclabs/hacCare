@@ -47,16 +47,18 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               position: absolute;
               width: 2.625in;
               height: 1in;
-              border: ${debugMode ? '2px solid #ff0000' : '1px dashed #ccc'};
-              padding: 2px;
+              border: ${debugMode ? '2px solid #ff0000' : '1px solid #dee2e6'};
+              padding: 8px;
               box-sizing: border-box;
-              ${debugMode ? 'background-color: rgba(255, 0, 0, 0.1);' : ''}
+              ${debugMode ? 'background-color: rgba(255, 0, 0, 0.1);' : 'background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);'}
               display: flex;
               flex-direction: column;
               justify-content: center;
-              align-items: center;
-              text-align: center;
+              align-items: flex-start;
+              text-align: left;
               overflow: hidden;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+              border-radius: 3px;
             }
             /* Avery 5160 perfect positioning - restored */
             .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
@@ -73,26 +75,53 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
             .patient-name {
-              font-size: 9px;
-              font-weight: bold;
-              margin-bottom: 1px;
-              line-height: 1;
+              font-size: 11px;
+              font-weight: 800;
+              margin-bottom: 2px;
+              line-height: 1.2;
+              color: #1a1a1a;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              padding: 3px 6px;
+              background: linear-gradient(90deg, #e8f5e9 0%, transparent 100%);
+              border-left: 3px solid #4caf50;
+              border-radius: 2px;
+              width: 100%;
+              box-sizing: border-box;
             }
             .patient-info {
-              font-size: 6px;
-              line-height: 1;
+              font-size: 8px;
+              line-height: 1.2;
               margin-bottom: 2px;
+              padding: 2px 6px;
+              color: #555;
+              font-weight: 600;
+              background: rgba(76, 175, 80, 0.05);
+              border-left: 2px solid #81c784;
+              border-radius: 2px;
+              width: 100%;
+              box-sizing: border-box;
             }
             .barcode-area {
-              margin: 1px 0;
+              margin: 3px 0 0 0;
+              width: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              background: #ffffff;
+              padding: 2px;
+              border-radius: 2px;
+              border: 1px solid #e0e0e0;
             }
             .barcode-canvas {
               max-width: 2.2in;
-              max-height: 0.6in;
+              max-height: 0.45in;
             }
             @media print {
               .label {
-                border: none !important;
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
               }
               .labels-grid {
                 width: 8.5in !important;
@@ -100,15 +129,25 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               }
               .barcode-canvas {
                 max-width: 2.2in !important;
-                max-height: 0.6in !important;
+                max-height: 0.45in !important;
                 width: auto !important;
                 height: auto !important;
               }
               .barcode-area {
-                flex: 1 !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                background: #ffffff !important;
+              }
+              .patient-name {
+                background: #f1f8f4 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .patient-info {
+                background: #f8fbf9 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             }
           </style>
@@ -118,7 +157,6 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             ${patients.map((patient, index) => `
               <div class="label">
                 <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                <div class="patient-info">ID: ${patient.patient_id}</div>
                 <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 <div class="barcode-area">
                   <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
@@ -216,11 +254,10 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
           </div>
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
             {patients.slice(0, 15).map((patient) => (
-              <div key={patient.id} className="border border-gray-300 p-1 bg-white text-center" style={{width: '2.625in', height: '1in', fontSize: '8px'}}>
-                <div className="font-bold text-xs mb-1">{patient.first_name} {patient.last_name}</div>
-                <div className="text-xs mb-1">ID: {patient.patient_id}</div>
-                <div className="text-xs mb-1">DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
-                <div className="flex justify-center">
+              <div key={patient.id} className="border border-gray-300 p-2 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex flex-col items-start" style={{width: '2.625in', height: '1in'}}>
+                <div className="font-extrabold text-sm mb-2 uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-green-50 to-transparent border-l-3 border-green-500 rounded w-full" style={{borderLeftWidth: '3px', letterSpacing: '0.5px'}}>{patient.first_name} {patient.last_name}</div>
+                <div className="text-xs font-semibold mb-2 px-2 py-1 bg-green-50 bg-opacity-50 border-l-2 border-green-400 rounded w-full text-gray-700" style={{borderLeftWidth: '2px'}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                <div className="flex justify-center w-full bg-white p-1 rounded border border-gray-200">
                   <BarcodeGenerator
                     data={`PT${patient.patient_id.slice(-8).toUpperCase()}`}
                     type="patient"
@@ -296,14 +333,17 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               position: absolute;
               width: 2.625in;
               height: 1in;
-              border: 1px dashed #ccc;
-              padding: 2px;
+              border: 1px solid #dee2e6;
+              padding: 3px;
               box-sizing: border-box;
               display: flex;
               flex-direction: row;
               align-items: stretch;
               text-align: left;
               overflow: hidden;
+              background: #ffffff;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+              border-radius: 3px;
             }
             /* Avery 5160 perfect positioning - restored */
             .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
@@ -324,24 +364,37 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding-right: 5px;
+              padding-left: 8px;
+              padding-right: 8px;
               min-width: 1.6in;
+              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+              border-right: 2px solid #e9ecef;
             }
             .medication-name {
-              font-size: 12px;
-              font-weight: bold;
-              margin-bottom: 3px;
-              line-height: 1.2;
-              color: #000;
+              font-size: 13px;
+              font-weight: 800;
+              margin-bottom: 4px;
+              line-height: 1.3;
+              color: #1a1a1a;
               word-wrap: break-word;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              padding: 4px 6px;
+              background: linear-gradient(90deg, #e3f2fd 0%, transparent 100%);
+              border-left: 3px solid #2196f3;
+              border-radius: 2px;
             }
             .patient-name {
-              font-size: 12px;
-              font-weight: bold;
+              font-size: 11px;
+              font-weight: 600;
               color: #0066cc;
-              margin-bottom: 3px;
-              line-height: 1.2;
+              margin-top: 2px;
+              line-height: 1.3;
               word-wrap: break-word;
+              padding: 3px 6px;
+              background: rgba(0, 102, 204, 0.05);
+              border-left: 2px solid #0066cc;
+              border-radius: 2px;
             }
             .barcode-area {
               display: flex;
@@ -351,14 +404,19 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               height: 0.9in;
               transform: rotate(90deg);
               transform-origin: center;
+              background: #ffffff;
+              border-radius: 4px;
+              padding: 2px;
             }
             .barcode-canvas {
               width: 0.8in;
               height: 0.8in;
+              background: #ffffff;
             }
             @media print {
               .label {
-                border: none !important;
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
               }
               .labels-grid {
                 width: 8.5in !important;
@@ -373,6 +431,19 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 height: 0.9in !important;
                 transform: rotate(90deg) !important;
                 transform-origin: center !important;
+              }
+              .label-content {
+                background: #ffffff !important;
+              }
+              .medication-name {
+                background: #f0f8ff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .patient-name {
+                background: #f0f7ff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             }
           </style>
@@ -481,10 +552,10 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
           </div>
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
             {medications.slice(0, 15).map((medication) => (
-              <div key={medication.id} className="border border-gray-300 p-1 bg-white flex items-stretch" style={{width: '2.625in', height: '1in'}}>
-                <div className="flex-1 flex flex-col justify-center pr-1" style={{minWidth: '1.6in'}}>
-                  <div className="font-bold text-base mb-1 leading-tight">{medication.medication_name}</div>
-                  <div className="text-base font-bold text-blue-600 leading-tight">{medication.patient_name}</div>
+              <div key={medication.id} className="border border-gray-300 p-1 bg-white flex items-stretch rounded shadow-sm" style={{width: '2.625in', height: '1in'}}>
+                <div className="flex-1 flex flex-col justify-center px-2 bg-gradient-to-br from-gray-50 to-white border-r-2 border-gray-200" style={{minWidth: '1.6in'}}>
+                  <div className="font-extrabold text-sm mb-1 leading-tight uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-blue-50 to-transparent border-l-3 border-blue-500 rounded" style={{borderLeftWidth: '3px'}}>{medication.medication_name}</div>
+                  <div className="text-xs font-semibold text-blue-600 leading-tight mt-1 px-2 py-1 bg-blue-50 bg-opacity-50 border-l-2 border-blue-600 rounded" style={{borderLeftWidth: '2px'}}>{medication.patient_name}</div>
                 </div>
                 <div className="w-20 h-full flex justify-center items-center">
                   <div className="transform rotate-90 origin-center">

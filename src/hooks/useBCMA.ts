@@ -68,9 +68,10 @@ export const useBCMA = () => {
       return;
     }
 
-    // Updated patterns for MED prefix format
+    // Updated patterns for MED prefix format and new ultra-short format
     const isPatientBarcode = barcode.startsWith('PT') || barcode.startsWith('PAT-') || barcode === state.currentPatient.patient_id;
-    const isMedicationBarcode = barcode.startsWith('MED');
+    // New format: M + letter + 5 digits (e.g., MA26325) OR legacy MED format
+    const isMedicationBarcode = barcode.startsWith('MED') || /^M[A-Z]\d{5}$/.test(barcode);
 
     console.log('🔵 useBCMA: Is patient barcode:', isPatientBarcode);
     console.log('🔵 useBCMA: Is medication barcode:', isMedicationBarcode);
