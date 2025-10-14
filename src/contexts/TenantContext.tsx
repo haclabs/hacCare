@@ -161,7 +161,23 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else {
         // Regular user - load their assigned tenant
         console.log('🏢 TENANT CONTEXT: Loading tenant for regular user:', user.id);
-        const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
+        const startTime = Date.now();
+        
+        // Add timeout to tenant fetch (15 seconds)
+        const tenantResult = await Promise.race([
+          getCurrentUserTenant(user.id),
+          new Promise<{ data: null; error: Error }>((_, reject) => 
+            setTimeout(() => reject(new Error('Tenant fetch timeout after 15 seconds')), 15000)
+          )
+        ]).catch((error) => {
+          console.error('🏢 TENANT CONTEXT: Timeout or error fetching tenant:', error);
+          return { data: null, error };
+        });
+        
+        const elapsed = Date.now() - startTime;
+        console.log(`🏢 TENANT CONTEXT: Tenant fetch took ${elapsed}ms`);
+        
+        const { data: tenant, error: tenantError } = tenantResult;
         
         console.log('🏢 TENANT CONTEXT: getCurrentUserTenant result:', { tenant, tenantError });
         

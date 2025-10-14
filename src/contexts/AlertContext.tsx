@@ -375,11 +375,15 @@ export function AlertProvider({ children }: AlertProviderProps) {
   }, [isSupabaseConfigured]);
 
   // Refresh alerts when tenant selection changes
+  // CRITICAL: Only refresh when tenant is fully loaded to prevent login slowdown
   useEffect(() => {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && !tenantLoading) {
+      console.log('🔄 Tenant changed and loaded, refreshing alerts');
       refreshAlerts();
+    } else if (tenantLoading) {
+      console.log('⏳ Tenant still loading, deferring alert refresh');
     }
-  }, [currentTenant, selectedTenantId, isMultiTenantAdmin]);
+  }, [currentTenant, selectedTenantId, isMultiTenantAdmin, tenantLoading]);
 
   const value: AlertContextType = {
     alerts,
