@@ -43,9 +43,12 @@ export const LoginForm: React.FC = () => {
         setError(parseAuthError(error));
         setLoading(false); // Only set loading to false on error
       } else {
-        console.log('✅ Sign in successful, waiting for auth state change...');
-        // Don't set loading to false - let AuthContext handle the loading state
-        // The auth state change will trigger and AuthContext will manage loading
+        console.log('✅ Sign in successful, refreshing page for full state sync...');
+        // TEMPORARY FIX FOR DEMO: Refresh page after login to ensure all state is synced
+        // TODO: Fix the direct fetch state propagation issue
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 500);
       }
     } catch (error: unknown) {
       console.error('Login error:', error);
