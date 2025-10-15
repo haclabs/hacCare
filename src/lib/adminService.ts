@@ -175,8 +175,11 @@ export const createUserSession = async (
   try {
     console.log('🔐 Creating/updating user session...');
     
+    // Use a default IP address if detection failed (database requires non-null)
+    const finalIpAddress = ipAddress || '0.0.0.0';
+    
     const { data, error } = await supabase.rpc('create_user_session', {
-      p_ip_address: ipAddress,
+      p_ip_address: finalIpAddress,
       p_user_agent: userAgent,
       p_tenant_id: tenantId
     });
