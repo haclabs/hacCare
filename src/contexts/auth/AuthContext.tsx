@@ -582,33 +582,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             if (profiles && profiles.length > 0) {
               console.log('✅ Profile found:', profiles[0]);
-              setProfile(profiles[0]);
+              console.log('👤 Profile role:', profiles[0].role, 'Is super_admin?', profiles[0].role === 'super_admin');
+              
+              // Store access token BEFORE setting state to ensure it's available for dependent contexts
+              sessionStorage.setItem('supabase_access_token', data.session.access_token);
+              
+              // Use React 18's automatic batching - all state updates in same function are batched
               setUser(data.session.user);
+              setProfile(profiles[0]);
+              
+              // Small delay to ensure state propagates to all consumers before clearing loading
+              setTimeout(() => {
+                setLoading(false);
+                console.log('🏁 Loading cleared after state propagation');
+              }, 50);
+              
+              console.log('🏁 User and profile state updated');
             } else {
               console.warn('⚠️ No profile found for user');
-              setProfile(null);
+              sessionStorage.setItem('supabase_access_token', data.session.access_token);
               setUser(data.session.user);
+              setProfile(null);
+              setLoading(false);
             }
           } else {
             const errorText = await response.text();
             console.error('❌ Direct fetch failed:', response.status, errorText);
-            setProfile(null);
+            sessionStorage.setItem('supabase_access_token', data.session.access_token);
             setUser(data.session.user);
+            setProfile(null);
+            setLoading(false);
           }
         } catch (fetchError) {
           console.error('💥 Exception during direct fetch:', fetchError);
           // Set user anyway so they can create profile
-          setProfile(null);
+          sessionStorage.setItem('supabase_access_token', data.session.access_token);
           setUser(data.session.user);
+          setProfile(null);
+          setLoading(false);
         }
-        
-        console.log('🏁 Setting loading false in signIn()');
-        
-        // Store access token temporarily for other services that need it
-        // This fixes the hanging Supabase client issue for tenant/patient fetches
-        sessionStorage.setItem('supabase_access_token', data.session.access_token);
-        
-        setLoading(false);
       } else {
         console.warn('⚠️ signInWithPassword returned no session data');
         setLoading(false);
