@@ -30,31 +30,6 @@ class SuperAdminTenantService {
   }
 
   /**
-   * Get current access token from Supabase session or sessionStorage
-   */
-  private async getAccessToken(): Promise<string | null> {
-    // First try sessionStorage (set during login)
-    const storedToken = sessionStorage.getItem('supabase_access_token');
-    if (storedToken) {
-      return storedToken;
-    }
-
-    // Fallback: get from current Supabase session
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        // Store it for future use
-        sessionStorage.setItem('supabase_access_token', session.access_token);
-        return session.access_token;
-      }
-    } catch (error) {
-      console.warn('⚠️ Failed to get access token from session:', error);
-    }
-
-    return null;
-  }
-
-  /**
    * Initialize super admin access and verify permissions
    */
   async initializeSuperAdminAccess(): Promise<boolean> {
@@ -97,7 +72,7 @@ class SuperAdminTenantService {
       }
 
       // Get access token for direct fetch (bypasses hanging Supabase client)
-      const accessToken = await this.getAccessToken();
+      const accessToken = sessionStorage.getItem('supabase_access_token');
       let tenant: any = null;
 
       if (accessToken) {
@@ -207,7 +182,7 @@ class SuperAdminTenantService {
       }
 
       // Clear database context using direct fetch if possible
-      const accessToken = await this.getAccessToken();
+      const accessToken = sessionStorage.getItem('supabase_access_token');
       let cleared = false;
 
       if (accessToken) {
