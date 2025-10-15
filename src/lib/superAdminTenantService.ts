@@ -71,23 +71,85 @@ class SuperAdminTenantService {
         throw new Error('Super admin access not initialized');
       }
 
-      // Validate tenant exists and is active
-      const { data: tenant, error: tenantError } = await supabase
-        .from('tenants')
-        .select('id, name, status')
-        .eq('id', tenantId)
-        .eq('status', 'active')
-        .single();
+      // Get access token for direct fetch (bypasses hanging Supabase client)
+      const accessToken = sessionStorage.getItem('supabase_access_token');
+      let tenant: any = null;
 
-      if (tenantError || !tenant) {
-        throw new Error('Invalid or inactive tenant');
+      if (accessToken) {
+        try {
+          console.log('🔑 Using direct fetch to validate tenant');
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const response = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${tenantId}&status=eq.active&select=id,name,status`, {
+            method: 'GET',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const tenants = await response.json();
+            if (tenants && tenants.length > 0) {
+              tenant = tenants[0];
+              console.log('✅ Tenant validated via direct fetch:', tenant.name);
+            }
+          }
+        } catch (fetchError) {
+          console.warn('⚠️ Direct fetch failed, falling back to Supabase client:', fetchError);
+        }
       }
 
-      // Set database context for this session
-      const { error: contextError } = await supabase
-        .rpc('set_super_admin_tenant_context', { target_tenant_id: tenantId });
+      // Fallback to Supabase client if direct fetch didn't work
+      if (!tenant) {
+        const { data: tenantData, error: tenantError } = await supabase
+          .from('tenants')
+          .select('id, name, status')
+          .eq('id', tenantId)
+          .eq('status', 'active')
+          .single();
 
-      if (contextError) {
+        if (tenantError || !tenantData) {
+          throw new Error('Invalid or inactive tenant');
+        }
+        tenant = tenantData;
+      }
+
+      // Set database context for this session using direct fetch
+      let contextError = null;
+      if (accessToken) {
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/set_super_admin_tenant_context`, {
+            method: 'POST',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ target_tenant_id: tenantId })
+          });
+          
+          if (!rpcResponse.ok) {
+            contextError = new Error(`RPC failed: ${rpcResponse.status}`);
+          } else {
+            console.log('✅ Tenant context set via direct fetch');
+          }
+        } catch (fetchError) {
+          console.warn('⚠️ Direct RPC fetch failed, falling back to Supabase client:', fetchError);
+          contextError = fetchError;
+        }
+      }
+
+      // Fallback to Supabase client for RPC if needed
+      if (contextError && !accessToken) {
+        const { error } = await supabase
+          .rpc('set_super_admin_tenant_context', { target_tenant_id: tenantId });
+
+        if (error) {
+          throw new Error(`Failed to set tenant context: ${error.message}`);
+        }
+      } else if (contextError) {
         throw new Error(`Failed to set tenant context: ${contextError.message}`);
       }
 
@@ -119,12 +181,40 @@ class SuperAdminTenantService {
         throw new Error('Super admin access not initialized');
       }
 
-      // Clear database context
-      const { error } = await supabase
-        .rpc('set_super_admin_tenant_context', { target_tenant_id: null });
+      // Clear database context using direct fetch if possible
+      const accessToken = sessionStorage.getItem('supabase_access_token');
+      let cleared = false;
 
-      if (error) {
-        console.warn('Warning: Could not clear database context:', error);
+      if (accessToken) {
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const response = await fetch(`${supabaseUrl}/rest/v1/rpc/set_super_admin_tenant_context`, {
+            method: 'POST',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ target_tenant_id: null })
+          });
+          
+          if (response.ok) {
+            cleared = true;
+            console.log('✅ Tenant context cleared via direct fetch');
+          }
+        } catch (fetchError) {
+          console.warn('⚠️ Direct fetch failed for clearing context:', fetchError);
+        }
+      }
+
+      // Fallback to Supabase client
+      if (!cleared) {
+        const { error } = await supabase
+          .rpc('set_super_admin_tenant_context', { target_tenant_id: null });
+
+        if (error) {
+          console.warn('Warning: Could not clear database context:', error);
+        }
       }
 
       // Clear local state

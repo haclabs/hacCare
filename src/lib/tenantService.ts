@@ -557,7 +557,78 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
   try {
     console.log('🔍 getCurrentUserTenant: Starting for user:', userId);
     
-    // Use the RPC function to avoid RLS conflicts
+    // Try to get access token from sessionStorage (set during login to bypass hanging Supabase client)
+    const accessToken = sessionStorage.getItem('supabase_access_token');
+    
+    if (accessToken) {
+      console.log('🔑 Using direct HTTP fetch with stored access token');
+      
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_user_current_tenant`, {
+          method: 'POST',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ target_user_id: userId })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`RPC fetch failed: ${response.status}`);
+        }
+        
+        const tenantData = await response.json();
+        console.log('🔍 getCurrentUserTenant: Direct RPC result:', tenantData);
+        
+        if (!tenantData || !Array.isArray(tenantData) || tenantData.length === 0) {
+          console.log('🔍 getCurrentUserTenant: No tenant found for user');
+          return { data: null, error: new Error(`User ${userId} is not associated with any active tenant`) };
+        }
+        
+        const tenantId = tenantData[0]?.tenant_id;
+        if (!tenantId) {
+          console.error('🔍 getCurrentUserTenant: No tenant_id in result:', tenantData[0]);
+          return { data: null, error: new Error(`Invalid tenant data returned for user ${userId}`) };
+        }
+        
+        console.log('🔍 getCurrentUserTenant: Found tenant_id:', tenantId);
+        
+        // Get tenant details with direct fetch
+        const tenantResponse = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${tenantId}&select=*`, {
+          method: 'GET',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          }
+        });
+        
+        if (!tenantResponse.ok) {
+          throw new Error(`Tenant fetch failed: ${tenantResponse.status}`);
+        }
+        
+        const tenants = await tenantResponse.json();
+        console.log('🔍 getCurrentUserTenant: Direct tenant fetch result:', tenants);
+        
+        if (!tenants || tenants.length === 0) {
+          console.error('🔍 getCurrentUserTenant: Tenant not found for ID:', tenantId);
+          return { data: null, error: new Error(`Tenant with ID ${tenantId} not found`) };
+        }
+        
+        const tenant = tenants[0];
+        console.log('🔍 getCurrentUserTenant: Success via direct fetch, returning tenant:', tenant.name);
+        return { data: tenant, error: null };
+        
+      } catch (fetchError) {
+        console.warn('⚠️ Direct fetch failed, falling back to Supabase client:', fetchError);
+        // Fall through to original Supabase client method
+      }
+    }
+    
+    // Fallback: Use the Supabase client (may hang)
     const { data: tenantData, error: tenantError } = await supabase
       .rpc('get_user_current_tenant', { target_user_id: userId });
 

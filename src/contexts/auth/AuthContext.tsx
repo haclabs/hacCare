@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+// @refresh reset
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
@@ -26,21 +27,6 @@ interface AuthContextType {
  * React context for managing authentication state throughout the application
  */
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-/**
- * Custom hook to access authentication context
- * Throws an error if used outside of AuthProvider
- * 
- * @returns {AuthContextType} Authentication context value
- * @throws {Error} If used outside AuthProvider
- */
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 /**
  * Authentication Provider Component
@@ -219,57 +205,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           setUser(session.user);
           
-          // Fetch profile for auth state changes
-          const handleProfileFetch = async () => {
-            try {
-              await fetchUserProfile(session.user.id);
-              
-              // After fetching, if no profile found and user signed in via OAuth, auto-create
-              // Check using a fresh query since state may not be updated yet
-              const { data: existingProfile } = await supabase
-                .from('user_profiles')
-                .select('id')
-                .eq('id', session.user.id)
-                .maybeSingle();
-              
-              if (!existingProfile && event === 'SIGNED_IN' && session.user.app_metadata?.provider === 'azure') {
-                console.log('🔧 OAuth user without profile detected, creating profile...');
-                try {
-                  // Create profile with OAuth user metadata
-                  const { data: newProfile, error: createError } = await supabase
-                    .from('user_profiles')
-                    .upsert({
-                      id: session.user.id,
-                      email: session.user.email || '',
-                      first_name: session.user.user_metadata?.given_name || session.user.user_metadata?.first_name || 'User',
-                      last_name: session.user.user_metadata?.family_name || session.user.user_metadata?.last_name || '',
-                      role: 'nurse', // Default role for OAuth users
-                      is_active: true
-                    }, {
-                      onConflict: 'id'
-                    })
-                    .select()
-                    .single();
-                  
-                  if (createError) {
-                    console.error('❌ Failed to auto-create profile:', createError);
-                  } else {
-                    console.log('✅ Profile auto-created for OAuth user:', newProfile);
-                    setProfile(newProfile);
+          // Only fetch profile on INITIAL_SESSION (page load/refresh)
+          // SIGNED_IN is handled manually in signIn() function with longer delay
+          if (event === 'INITIAL_SESSION') {
+            console.log(`✅ ${event} - Session ready, fetching profile...`);
+            
+            const handleProfileFetch = async () => {
+              try {
+                await fetchUserProfile(session.user.id);
+                
+                // After fetching, if no profile found and user signed in via OAuth, auto-create
+                // Check using a fresh query since state may not be updated yet
+                const { data: existingProfile } = await supabase
+                  .from('user_profiles')
+                  .select('id')
+                  .eq('id', session.user.id)
+                  .maybeSingle();
+                
+                if (!existingProfile && session.user.app_metadata?.provider === 'azure') {
+                  console.log('🔧 OAuth user without profile detected, creating profile...');
+                  try {
+                    // Create profile with OAuth user metadata
+                    const { data: newProfile, error: createError } = await supabase
+                      .from('user_profiles')
+                      .upsert({
+                        id: session.user.id,
+                        email: session.user.email || '',
+                        first_name: session.user.user_metadata?.given_name || session.user.user_metadata?.first_name || 'User',
+                        last_name: session.user.user_metadata?.family_name || session.user.user_metadata?.last_name || '',
+                        role: 'nurse', // Default role for OAuth users
+                        is_active: true
+                      }, {
+                        onConflict: 'id'
+                      })
+                      .select()
+                      .single();
+                    
+                    if (createError) {
+                      console.error('❌ Failed to auto-create profile:', createError);
+                    } else {
+                      console.log('✅ Profile auto-created for OAuth user:', newProfile);
+                      setProfile(newProfile);
+                    }
+                  } catch (createError) {
+                    console.error('❌ Exception creating profile:', createError);
                   }
-                } catch (createError) {
-                  console.error('❌ Exception creating profile:', createError);
                 }
+              } catch (error) {
+                console.error('Profile fetch failed on auth change:', error);
               }
-            } catch (error) {
-              console.error('Profile fetch failed on auth change:', error);
-            }
-          };
-          
-          // Wait for profile fetch to complete before clearing loading state
-          handleProfileFetch().finally(() => {
-            setLoading(false);
-          });
+            };
+            
+            // Wait for profile fetch to complete before clearing loading state
+            handleProfileFetch().finally(() => {
+              setLoading(false);
+            });
+          } else {
+            // SIGNED_IN or other events - just update user, don't fetch profile here
+            // Keep loading true - signIn() will handle profile fetch and set loading false
+            console.log(`⏳ ${event} event - skipping profile fetch (handled by signIn() function)`);
+          }
         } else {
           setUser(null);
           setProfile(null);
@@ -301,6 +296,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @returns {Promise<void>}
    */
   const fetchUserProfile = async (userId: string): Promise<void> => {
+    console.log('🎯 fetchUserProfile called for:', userId, 'Guard flag:', fetchingProfile.current);
+    
     // Skip if Supabase not configured
     if (!isSupabaseConfigured) {
       console.log('⚠️ Supabase not configured, skipping profile fetch');
@@ -316,9 +313,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       fetchingProfile.current = true;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Fetching profile for user:', userId);
-      }
+      console.log('📥 Starting profile fetch for user:', userId);
       setProfileLoading(true);
       
       // Skip health check - it's blocking and causing hangs
@@ -328,9 +323,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
       
+      const startTime = performance.now();
+      
       try {
         // Fetch profile with timeout protection (8 seconds)
         // Uses Supabase database query - no localStorage involved
+        console.log('🔍 Querying user_profiles table...');
         const result = await Promise.race([
           supabase
             .from('user_profiles')
@@ -341,6 +339,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setTimeout(() => reject(new Error('Profile fetch timeout')), 8000)
           )
         ]);
+        
+        const elapsed = performance.now() - startTime;
+        console.log(`✅ Profile query completed in ${elapsed.toFixed(0)}ms`);
 
         clearTimeout(timeoutId);
         const { data, error } = result;
@@ -379,13 +380,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
+        const elapsed = performance.now() - startTime;
         
         if (fetchError.name === 'AbortError') {
-          console.error('❌ Profile fetch timeout');
+          console.error(`❌ Profile fetch aborted after ${elapsed.toFixed(0)}ms`);
+        } else if (fetchError.message?.includes('Profile fetch timeout')) {
+          console.error(`⏱️ Profile fetch timeout after ${elapsed.toFixed(0)}ms`);
         } else if (fetchError.message?.includes('Supabase not configured')) {
           console.error('❌ Supabase not configured properly');
         } else {
-          console.error('❌ Profile fetch error:', fetchError.message);
+          console.error(`❌ Profile fetch error after ${elapsed.toFixed(0)}ms:`, fetchError.message);
         }
         
         setProfile(null);
@@ -407,6 +411,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Don't throw error - just set profile to null and continue
     } finally {
       setProfileLoading(false);
+      fetchingProfile.current = false; // ✅ ALWAYS reset the guard flag
     }
   };
 
@@ -531,7 +536,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
       
       clearTimeout(timeoutId);
-      const { error } = result;
+      const { data, error } = result;
       
       // Handle sign in errors
       if (error) {
@@ -548,6 +553,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { error: { message: 'Network error - check your internet connection and Supabase configuration' } };
         }
         
+        setLoading(false);
+      } else if (data?.session?.user) {
+        // Sign in successful - use the session data returned directly
+        console.log('✅ Sign in successful, session data available immediately');
+        console.log('👤 User ID from signIn:', data.session.user.id);
+        console.log('🔑 Access Token:', data.session.access_token?.substring(0, 20) + '...');
+        
+        // Bypass hanging Supabase client - use direct HTTP fetch with the access token
+        console.log('📋 Using direct HTTP fetch to bypass Supabase client...');
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const response = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${data.session.user.id}&select=*`, {
+            method: 'GET',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${data.session.access_token}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            }
+          });
+          
+          console.log('📡 Direct fetch response status:', response.status);
+          
+          if (response.ok) {
+            const profiles = await response.json();
+            console.log('✅ Direct fetch successful, profiles:', profiles);
+            
+            if (profiles && profiles.length > 0) {
+              console.log('✅ Profile found:', profiles[0]);
+              setProfile(profiles[0]);
+              setUser(data.session.user);
+            } else {
+              console.warn('⚠️ No profile found for user');
+              setProfile(null);
+              setUser(data.session.user);
+            }
+          } else {
+            const errorText = await response.text();
+            console.error('❌ Direct fetch failed:', response.status, errorText);
+            setProfile(null);
+            setUser(data.session.user);
+          }
+        } catch (fetchError) {
+          console.error('💥 Exception during direct fetch:', fetchError);
+          // Set user anyway so they can create profile
+          setProfile(null);
+          setUser(data.session.user);
+        }
+        
+        console.log('🏁 Setting loading false in signIn()');
+        
+        // Store access token temporarily for other services that need it
+        // This fixes the hanging Supabase client issue for tenant/patient fetches
+        sessionStorage.setItem('supabase_access_token', data.session.access_token);
+        
+        setLoading(false);
+      } else {
+        console.warn('⚠️ signInWithPassword returned no session data');
         setLoading(false);
       }
       
@@ -580,6 +643,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🚪 Signing out');
     
     try {
+      // Reset the profile fetch guard on logout
+      fetchingProfile.current = false; // ✅ Reset guard flag on logout
+      
       // Attempt Supabase sign out if configured
       // This clears all session data managed by Supabase
       if (isSupabaseConfigured) {
@@ -602,6 +668,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('🗑️ Removed localStorage key:', key);
           }
         }
+        
+        // Clear the stored access token used for direct fetches
+        sessionStorage.removeItem('supabase_access_token');
+        console.log('🗑️ Removed stored access token');
+      
       } catch (error) {
         console.error('❌ Error clearing localStorage:', error);
       }
@@ -659,6 +730,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createProfile,
     setAnonymousSimulationUser,
   };
+
+  // Debug loading state
+  if (process.env.NODE_ENV === 'development' && user && !profile) {
+    console.log('🔄 AuthContext state:', { loading, profileLoading, combinedLoading: loading || profileLoading, hasUser: !!user, hasProfile: !!profile });
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

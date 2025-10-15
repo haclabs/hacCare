@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/auth/AuthContext';
+import { useAuth } from '../contexts/auth/useAuth';
 import { forceSessionCheck } from '../lib/directAuthFix';
 
 export const useEnhancedAuth = () => {

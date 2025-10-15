@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AuthProvider as StandardAuthProvider, useAuth as useStandardAuth } from './AuthContext';
+import { AuthProvider as StandardAuthProvider } from './AuthContext';
+import { useAuth as useStandardAuth } from './useAuth';
 import { supabase } from '../../lib/supabase';
 import { initializeSessionTracking, endUserSession } from '../../lib/adminService';
 

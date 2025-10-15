@@ -29,8 +29,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         userRole: profile?.role,
         requiredRoles,
         isSupabaseConfigured,
-        loading
+        loading,
+        LOADING: loading  // Duplicate to ensure it shows
       });
+      console.log('🛡️ Loading check - if (loading):', loading, 'will', loading ? 'SHOW SPINNER' : 'PROCEED');
     }
   }, [user, profile, requiredRoles, loading]);
 
