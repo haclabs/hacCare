@@ -16,10 +16,10 @@ export const vitalsEntrySchema: VitalsSchema = {
     patientId: {
       type: 'string',
       title: 'Patient ID',
-      description: 'Enter patient ID (PT12345)',
+      description: 'Enter patient ID (PT12345 or P94558)',
       required: true,
       validation: {
-        pattern: '^PT\\d{5}$',
+        pattern: '^P(T)?\\d{4,5}$',
         custom: 'patient_id'
       },
       layout: {

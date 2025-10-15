@@ -246,8 +246,9 @@ export class SchemaEngine {
     });
 
     this.validators.set('patient_id', (value: string) => {
-      // Patient ID format validation (PT12345)
-      const patientIdRegex = /^PT\d{5}$/;
+      // Patient ID format validation
+      // Accepts both PT12345 (production) and P94558 (simulation) formats
+      const patientIdRegex = /^P(T)?\d{4,5}$/;
       return patientIdRegex.test(value);
     });
   }
