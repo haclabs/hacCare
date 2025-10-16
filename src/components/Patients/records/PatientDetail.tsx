@@ -4,6 +4,9 @@ import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileT
 import { Patient, VitalSigns, Medication, PatientNote } from '../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../lib/patientService';
 import { fetchPatientMedications } from '../../../lib/medicationService';
+import { fetchAdmissionRecord, fetchAdvancedDirective, type AdmissionRecord, type AdvancedDirective } from '../../../lib/admissionService';
+import { fetchDoctorsOrders } from '../../../lib/doctorsOrdersService';
+import { DoctorsOrder } from '../../../types';
 import { RecentActivity } from './RecentActivity';
 import { MARModule } from '../../../modules/mar/MARModule';
 import { WoundAssessment } from '../forms/WoundAssessment';
@@ -28,6 +31,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
+  const [admissionRecord, setAdmissionRecord] = useState<AdmissionRecord | null>(null);
+  const [advancedDirective, setAdvancedDirective] = useState<AdvancedDirective | null>(null);
+  const [doctorsOrders, setDoctorsOrders] = useState<DoctorsOrder[]>([]);
   const [loading, setLoading] = useState(true);
   // Check if we have an initial tab from location state (e.g., from barcode scan)
   const [activeTab, setActiveTab] = useState(
@@ -78,11 +84,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         setLoading(true);
         console.log('Loading patient data for ID:', id);
         
-        const [patientData, vitalsData, medicationsData, notesData] = await Promise.all([
+        const [patientData, vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
           fetchPatientById(id),
           fetchPatientVitals(id),
           fetchPatientMedications(id),
-          fetchPatientNotes(id)
+          fetchPatientNotes(id),
+          fetchAdmissionRecord(id),
+          fetchAdvancedDirective(id),
+          fetchDoctorsOrders(id)
         ]);
         
         console.log('Patient data loaded:', patientData);
@@ -90,6 +99,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         setVitals(vitalsData);
         setMedications(medicationsData);
         setNotes(notesData);
+        setAdmissionRecord(admissionData);
+        setAdvancedDirective(directiveData);
+        setDoctorsOrders(ordersData || []);
       } catch (error) {
         console.error('Error loading patient data:', error);
       } finally {
@@ -417,10 +429,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const handlePrintRecord = async () => {
     try {
       // Get all patient data for comprehensive record
-      const [vitalsData, medicationsData, notesData] = await Promise.all([
+      const [vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
         fetchPatientVitals(id!),
         fetchPatientMedications(id!),
-        fetchPatientNotes(id!)
+        fetchPatientNotes(id!),
+        fetchAdmissionRecord(id!),
+        fetchAdvancedDirective(id!),
+        fetchDoctorsOrders(id!)
       ]);
 
       // Create a new window for the hospital record
@@ -467,6 +482,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 margin-bottom: 20px;
               }
               
+              .logo-img {
+                max-width: 200px;
+                height: auto;
+                margin: 0 auto 10px auto;
+                display: block;
+              }
+              
               .hospital-logo {
                 font-size: 24px;
                 font-weight: bold;
@@ -484,10 +506,22 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
               .record-type {
                 font-size: 16px;
                 font-weight: bold;
-                color: #000;
+                color: #d63384;
                 text-transform: uppercase;
                 letter-spacing: 2px;
                 margin-top: 8px;
+              }
+              
+              .simulation-disclaimer {
+                background: #fff3cd;
+                border: 2px solid #856404;
+                padding: 8px 12px;
+                margin: 15px 0;
+                font-size: 9px;
+                text-align: center;
+                color: #856404;
+                font-weight: bold;
+                border-radius: 4px;
               }
               
               .patient-id-bar {
@@ -731,12 +765,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             
             <div class="record-container">
               <div class="hospital-header">
+                <img src="/src/images/logo.png" alt="HacCare Logo" class="logo-img" />
                 <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
                 <div class="hospital-address">
                   1234 Healthcare Drive • Medical City, MC 12345<br>
                   Phone: (555) 123-4567 • Fax: (555) 123-4568
                 </div>
-                <div class="record-type">Official Medical Record</div>
+                <div class="record-type">Simulation Hospital Record</div>
+              </div>
+
+              <div class="simulation-disclaimer">
+                ⚠️ SIMULATED PATIENT RECORD FOR EDUCATIONAL PURPOSES ONLY - NOT A REAL MEDICAL RECORD ⚠️
               </div>
 
               <div class="patient-id-bar">
@@ -915,6 +954,130 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 </div>
               </div>
 
+              <div class="form-section">
+                <div class="section-header">Admission Information</div>
+                <div class="section-content">
+                  ${admissionData ? `
+                    <div class="info-grid">
+                      <div>
+                        <div class="info-row">
+                          <span class="info-label">Admission Type:</span>
+                          <span class="info-value">${admissionData.admission_type || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Attending Physician:</span>
+                          <span class="info-value">${admissionData.attending_physician || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Chief Complaint:</span>
+                          <span class="info-value">${admissionData.chief_complaint || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Height:</span>
+                          <span class="info-value">${admissionData.height || 'Not recorded'}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="info-row">
+                          <span class="info-label">Weight:</span>
+                          <span class="info-value">${admissionData.weight || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">BMI:</span>
+                          <span class="info-value">${admissionData.bmi || 'Not calculated'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Insurance Provider:</span>
+                          <span class="info-value">${admissionData.insurance_provider || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Policy Number:</span>
+                          <span class="info-value">${admissionData.insurance_policy || 'Not recorded'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ` : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No admission record available</p>'}
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">⚕️ Advanced Directives & Code Status</div>
+                <div class="section-content">
+                  ${directiveData ? `
+                    <div class="info-grid">
+                      <div>
+                        <div class="info-row">
+                          <span class="info-label">DNR Status:</span>
+                          <span class="info-value" style="font-weight: bold; color: ${directiveData.dnr_status?.toLowerCase().includes('yes') || directiveData.dnr_status?.toLowerCase().includes('dnr') ? '#dc2626' : '#059669'};">
+                            ${directiveData.dnr_status || 'Not specified'}
+                          </span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Living Will Status:</span>
+                          <span class="info-value">${directiveData.living_will_status || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Healthcare Proxy:</span>
+                          <span class="info-value">${directiveData.healthcare_proxy_name || 'Not specified'}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="info-row">
+                          <span class="info-label">Proxy Phone:</span>
+                          <span class="info-value">${directiveData.healthcare_proxy_phone || 'Not recorded'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Organ Donation:</span>
+                          <span class="info-value">${directiveData.organ_donation_status || 'Not specified'}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Religious Preference:</span>
+                          <span class="info-value">${directiveData.religious_preference || 'Not specified'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    ${directiveData.special_instructions ? `
+                      <div style="margin-top: 15px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b;">
+                        <strong>Special Instructions:</strong><br>
+                        ${directiveData.special_instructions}
+                      </div>
+                    ` : ''}
+                  ` : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No advanced directives on file</p>'}
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-header">📋 Active Doctors Orders</div>
+                <div class="section-content">
+                  ${ordersData && ordersData.length > 0 ? `
+                    <table class="medication-table">
+                      <thead>
+                        <tr>
+                          <th>Order Date</th>
+                          <th>Order Time</th>
+                          <th>Order Details</th>
+                          <th>Type</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${ordersData.map(order => `
+                          <tr>
+                            <td>${order.order_date}</td>
+                            <td>${order.order_time}</td>
+                            <td>${order.order_text || 'Not specified'}</td>
+                            <td>${order.order_type || 'Direct'}</td>
+                            <td><span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; ${
+                              order.is_acknowledged ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #dc2626;'
+                            }">${order.is_acknowledged ? 'Acknowledged' : 'Pending'}</span></td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  ` : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No active doctors orders</p>'}
+                </div>
+              </div>
+
               <div class="signature-section">
                 <div class="signature-line">
                   <div class="sig-field">
@@ -941,6 +1104,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
               <div class="record-footer">
                 <div><strong>Record Generated:</strong> ${new Date().toLocaleString()}</div>
                 <div><strong>Generated By:</strong> hacCare Medical Records System</div>
+                
+                <div class="simulation-disclaimer" style="margin-top: 15px;">
+                  ⚠️ SIMULATION RECORD DISCLAIMER: This document is a simulated patient record created for healthcare education and training purposes only. It does not represent actual patient data, real medical diagnoses, or genuine clinical encounters. This record should not be used for any actual clinical decision-making, billing, legal purposes, or patient care. All information contained herein is fictional and for instructional use only.
+                </div>
                 
                 <div class="confidentiality-notice">
                   <strong>CONFIDENTIALITY NOTICE:</strong> This medical record contains confidential patient health information protected by federal and state privacy laws including HIPAA. This information is intended solely for the use of authorized healthcare providers and personnel involved in the patient's care. Any unauthorized review, disclosure, copying, distribution, or use of this information is strictly prohibited and may be subject to legal penalties. If you have received this record in error, please notify the sender immediately and destroy all copies.

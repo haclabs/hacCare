@@ -43,9 +43,11 @@ import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from './Patients/handover/HandoverNotes';
 import { DoctorsOrders } from './Patients/DoctorsOrders';
 import { Labs } from './Patients/Labs';
-import { Patient } from '../types';
+import { Patient, DoctorsOrder } from '../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
 import { fetchPatientMedications } from '../lib/medicationService';
+import { fetchAdmissionRecord, fetchAdvancedDirective, AdmissionRecord, AdvancedDirective } from '../lib/admissionService';
+import { fetchDoctorsOrders } from '../lib/doctorsOrdersService';
 import { WoundCareService } from '../lib/woundCareService';
 import { hasUnacknowledgedLabs } from '../lib/labService';
 import { useTenant } from '../contexts/TenantContext';
@@ -117,10 +119,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
     try {
       // Get all patient data for comprehensive record
-      const [vitalsData, medicationsData, notesData] = await Promise.all([
+      const [vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
         fetchPatientVitals(patient.id),
         fetchPatientMedications(patient.id),
-        fetchPatientNotes(patient.id)
+        fetchPatientNotes(patient.id),
+        fetchAdmissionRecord(patient.id),
+        fetchAdvancedDirective(patient.id),
+        fetchDoctorsOrders(patient.id)
       ]);
 
       // Create a new window for the hospital record
@@ -167,6 +172,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 margin-bottom: 20px;
               }
               
+              .logo-img {
+                max-width: 200px;
+                height: auto;
+                margin: 0 auto 10px auto;
+                display: block;
+              }
+              
               .hospital-logo {
                 font-size: 24px;
                 font-weight: bold;
@@ -184,10 +196,22 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               .record-type {
                 font-size: 16px;
                 font-weight: bold;
-                color: #000;
+                color: #d63384;
                 text-transform: uppercase;
                 letter-spacing: 2px;
                 margin-top: 8px;
+              }
+              
+              .simulation-disclaimer {
+                background: #fff3cd;
+                border: 2px solid #856404;
+                padding: 8px 12px;
+                margin: 15px 0;
+                font-size: 9px;
+                text-align: center;
+                color: #856404;
+                font-weight: bold;
+                border-radius: 4px;
               }
               
               .patient-id-bar {
@@ -431,12 +455,17 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
             
             <div class="record-container">
               <div class="hospital-header">
+                <img src="/src/images/logo.png" alt="HacCare Logo" class="logo-img" />
                 <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
                 <div class="hospital-address">
                   1234 Healthcare Drive • Medical City, MC 12345<br>
                   Phone: (555) 123-4567 • Fax: (555) 123-4568
                 </div>
-                <div class="record-type">Official Medical Record</div>
+                <div class="record-type">Simulation Hospital Record</div>
+              </div>
+
+              <div class="simulation-disclaimer">
+                ⚠️ SIMULATED PATIENT RECORD FOR EDUCATIONAL PURPOSES ONLY - NOT A REAL MEDICAL RECORD ⚠️
               </div>
 
               <div class="patient-id-bar">
@@ -615,6 +644,120 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 </div>
               </div>
 
+              ${admissionData ? `
+              <div class="form-section">
+                <div class="section-header">Admission Information</div>
+                <div class="section-content">
+                  <div class="info-grid">
+                    <div class="info-field">
+                      <div class="field-label">Admission Type:</div>
+                      <div class="field-value">${admissionData.admission_type || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Attending Physician:</div>
+                      <div class="field-value">${admissionData.attending_physician || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Chief Complaint:</div>
+                      <div class="field-value">${admissionData.chief_complaint || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Height:</div>
+                      <div class="field-value">${admissionData.height || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Weight:</div>
+                      <div class="field-value">${admissionData.weight || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">BMI:</div>
+                      <div class="field-value">${admissionData.bmi || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Insurance Provider:</div>
+                      <div class="field-value">${admissionData.insurance_provider || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Policy Number:</div>
+                      <div class="field-value">${admissionData.insurance_policy || 'N/A'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              ` : ''}
+
+              ${directiveData ? `
+              <div class="form-section">
+                <div class="section-header">Advanced Directives</div>
+                <div class="section-content">
+                  <div class="info-grid">
+                    <div class="info-field" style="grid-column: 1 / -1;">
+                      <div class="field-label">DNR Status:</div>
+                      <div class="field-value" style="font-weight: bold; color: ${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'}; font-size: 14px;">
+                        ${directiveData.dnr_status || 'Not Specified'}
+                      </div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Healthcare Proxy:</div>
+                      <div class="field-value">${directiveData.healthcare_proxy_name || 'None designated'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Proxy Contact:</div>
+                      <div class="field-value">${directiveData.healthcare_proxy_phone || 'N/A'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Organ Donation:</div>
+                      <div class="field-value">${directiveData.organ_donation_status || 'Not specified'}</div>
+                    </div>
+                    <div class="info-field">
+                      <div class="field-label">Religious Preference:</div>
+                      <div class="field-value">${directiveData.religious_preference || 'Not specified'}</div>
+                    </div>
+                    ${directiveData.special_instructions ? `
+                    <div class="info-field" style="grid-column: 1 / -1;">
+                      <div class="field-label">Special Instructions:</div>
+                      <div class="field-value">${directiveData.special_instructions}</div>
+                    </div>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+              ` : ''}
+
+              ${ordersData && ordersData.length > 0 ? `
+              <div class="form-section">
+                <div class="section-header">Active Doctors Orders</div>
+                <div class="section-content">
+                  <table class="data-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                      <tr style="background: #f3f4f6; border-bottom: 2px solid #000;">
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Date</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Time</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Order Text</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Type</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${ordersData.slice(0, 10).map(order => `
+                        <tr style="border-bottom: 1px solid #ddd;">
+                          <td style="padding: 8px; border: 1px solid #ddd;">${order.order_date}</td>
+                          <td style="padding: 8px; border: 1px solid #ddd;">${order.order_time}</td>
+                          <td style="padding: 8px; border: 1px solid #ddd;">${order.order_text}</td>
+                          <td style="padding: 8px; border: 1px solid #ddd;">${order.order_type}</td>
+                          <td style="padding: 8px; border: 1px solid #ddd;">
+                            <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: ${order.is_acknowledged ? '#d1fae5' : '#fee2e2'}; color: ${order.is_acknowledged ? '#065f46' : '#dc2626'};">
+                              ${order.is_acknowledged ? 'Acknowledged' : 'Pending'}
+                            </span>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              ` : ''}
+
               <div class="signature-section">
                 <div class="signature-line">
                   <div class="sig-field">
@@ -641,6 +784,10 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               <div class="record-footer">
                 <div><strong>Record Generated:</strong> ${new Date().toLocaleString()}</div>
                 <div><strong>Generated By:</strong> hacCare Medical Records System</div>
+                
+                <div class="simulation-disclaimer" style="margin-top: 15px;">
+                  ⚠️ SIMULATION RECORD DISCLAIMER: This document is a simulated patient record created for healthcare education and training purposes only. It does not represent actual patient data, real medical diagnoses, or genuine clinical encounters. This record should not be used for any actual clinical decision-making, billing, legal purposes, or patient care. All information contained herein is fictional and for instructional use only.
+                </div>
                 
                 <div class="confidentiality-notice">
                   <strong>CONFIDENTIALITY NOTICE:</strong> This medical record contains confidential patient health information protected by federal and state privacy laws including HIPAA. This information is intended solely for the use of authorized healthcare providers and personnel involved in the patient's care. Any unauthorized review, disclosure, copying, distribution, or use of this information is strictly prohibited and may be subject to legal penalties. If you have received this record in error, please notify the sender immediately and destroy all copies.

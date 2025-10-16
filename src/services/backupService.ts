@@ -18,6 +18,17 @@ export interface BackupOptions {
   includeAlerts: boolean;
   includeMedications: boolean;
   includeWoundCare: boolean;
+  includeVitals: boolean;
+  includeNotes: boolean;
+  includeDiabeticRecords: boolean;
+  includeAdmissionRecords: boolean;
+  includeAdvancedDirectives: boolean;
+  includeBowelRecords: boolean;
+  includeWoundAssessments: boolean;
+  includeHandoverNotes: boolean;
+  includeDoctorsOrders: boolean;
+  includePatientImages: boolean;
+  includeSimulations: boolean;  // NEW: Simulation templates and active simulations
   dateRange?: {
     startDate: string;
     endDate: string;
@@ -84,10 +95,38 @@ export interface BackupData {
     patients?: Patient[];
     assessments?: PatientAssessment[];
     users?: UserProfile[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tenants?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     alerts?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     medications?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     wound_care?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vitals?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    notes?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    diabetic_records?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    admission_records?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    advanced_directives?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    bowel_records?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    wound_assessments?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    handover_notes?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    doctors_orders?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    patient_images?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    simulation_templates?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    simulation_active?: any[];
   };
 }
 
@@ -157,17 +196,89 @@ class BackupService {
         backupData.metadata.record_counts.wound_care = backupData.data.wound_care.length;
       }
 
+      if (options.includeVitals) {
+        backupData.data.vitals = await this.exportVitals(options);
+        backupData.metadata.record_counts.vitals = backupData.data.vitals.length;
+      }
+
+      if (options.includeNotes) {
+        backupData.data.notes = await this.exportNotes(options);
+        backupData.metadata.record_counts.notes = backupData.data.notes.length;
+      }
+
+      if (options.includeDiabeticRecords) {
+        backupData.data.diabetic_records = await this.exportDiabeticRecords(options);
+        backupData.metadata.record_counts.diabetic_records = backupData.data.diabetic_records.length;
+      }
+
+      if (options.includeAdmissionRecords) {
+        backupData.data.admission_records = await this.exportAdmissionRecords(options);
+        backupData.metadata.record_counts.admission_records = backupData.data.admission_records.length;
+      }
+
+      if (options.includeAdvancedDirectives) {
+        backupData.data.advanced_directives = await this.exportAdvancedDirectives(options);
+        backupData.metadata.record_counts.advanced_directives = backupData.data.advanced_directives.length;
+      }
+
+      if (options.includeBowelRecords) {
+        backupData.data.bowel_records = await this.exportBowelRecords(options);
+        backupData.metadata.record_counts.bowel_records = backupData.data.bowel_records.length;
+      }
+
+      if (options.includeWoundAssessments) {
+        backupData.data.wound_assessments = await this.exportWoundAssessments(options);
+        backupData.metadata.record_counts.wound_assessments = backupData.data.wound_assessments.length;
+      }
+
+      if (options.includeHandoverNotes) {
+        backupData.data.handover_notes = await this.exportHandoverNotes(options);
+        backupData.metadata.record_counts.handover_notes = backupData.data.handover_notes.length;
+      }
+
+      if (options.includeDoctorsOrders) {
+        backupData.data.doctors_orders = await this.exportDoctorsOrders(options);
+        backupData.metadata.record_counts.doctors_orders = backupData.data.doctors_orders.length;
+      }
+
+      if (options.includePatientImages) {
+        backupData.data.patient_images = await this.exportPatientImages(options);
+        backupData.metadata.record_counts.patient_images = backupData.data.patient_images.length;
+      }
+
+      if (options.includeSimulations) {
+        backupData.data.simulation_templates = await this.exportSimulationTemplates(options);
+        backupData.data.simulation_active = await this.exportActiveSimulations(options);
+        backupData.metadata.record_counts.simulation_templates = backupData.data.simulation_templates.length;
+        backupData.metadata.record_counts.simulation_active = backupData.data.simulation_active.length;
+      }
+
       // Generate checksum
       const dataString = JSON.stringify(backupData.data);
       backupData.metadata.checksum = await this.generateChecksum(dataString);
 
       // Encrypt if requested
       let finalData = JSON.stringify(backupData);
+      const unencryptedSize = new Blob([finalData]).size;
+      
+      console.log(`Backup size: ${(unencryptedSize / 1024 / 1024).toFixed(2)} MB`);
+      
       if (options.encryptData) {
         if (!options.password) {
           throw new Error('Password is required when encryption is enabled');
         }
-        finalData = await this.encryptData(finalData, options.password);
+        
+        // Warn if data is very large (>50MB)
+        if (unencryptedSize > 50 * 1024 * 1024) {
+          console.warn('Large backup detected. Encryption may take some time...');
+        }
+        
+        try {
+          finalData = await this.encryptData(finalData, options.password);
+        } catch (error) {
+          console.error('Encryption failed:', error);
+          throw new Error(`Failed to encrypt backup: ${error instanceof Error ? error.message : 'Unknown error'}. Try creating a backup without encryption or with fewer data types.`);
+        }
       }
 
       // Calculate file size
@@ -205,9 +316,9 @@ class BackupService {
       });
 
       return metadata;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Backup creation failed:', error);
-      throw new Error(`Failed to create backup: ${error.message || 'Unknown error'}`);
+      throw new Error(`Failed to create backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -257,9 +368,9 @@ class BackupService {
           last_downloaded: new Date().toISOString()
         }
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('Backup download failed:', error);
-      throw new Error(`Failed to download backup: ${error.message || 'Unknown error'}`);
+      throw new Error(`Failed to download backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -283,9 +394,9 @@ class BackupService {
       );
 
       return activeBackups;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to list backups:', error);
-      throw new Error(`Failed to list backups: ${error.message || 'Unknown error'}`);
+      throw new Error(`Failed to list backups: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -309,9 +420,9 @@ class BackupService {
 
       // Log deletion
       await this.logBackupActivity(userId, 'backup_deleted', backupId, {});
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to delete backup:', error);
-      throw new Error(`Failed to delete backup: ${error.message || 'Unknown error'}`);
+      throw new Error(`Failed to delete backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -361,6 +472,7 @@ class BackupService {
       dryRun: boolean;
     }, 
     userId: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ success: boolean; report: any }> {
     try {
       await this.verifySuperAdminAccess(userId);
@@ -410,7 +522,18 @@ class BackupService {
       options.includeTenants,
       options.includeAlerts,
       options.includeMedications,
-      options.includeWoundCare
+      options.includeWoundCare,
+      options.includeVitals,
+      options.includeNotes,
+      options.includeDiabeticRecords,
+      options.includeAdmissionRecords,
+      options.includeAdvancedDirectives,
+      options.includeBowelRecords,
+      options.includeWoundAssessments,
+      options.includeHandoverNotes,
+      options.includeDoctorsOrders,
+      options.includePatientImages,
+      options.includeSimulations
     ];
 
     const enabledCount = allOptions.filter(Boolean).length;
@@ -490,6 +613,7 @@ class BackupService {
     return data || [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async exportTenants(options: BackupOptions): Promise<any[]> {
     let query = supabase.from('tenants').select('*');
 
@@ -502,6 +626,7 @@ class BackupService {
     return data || [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async exportAlerts(options: BackupOptions): Promise<any[]> {
     let query = supabase.from('patient_alerts').select('*');
 
@@ -516,6 +641,7 @@ class BackupService {
     return data || [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async exportMedications(options: BackupOptions): Promise<any[]> {
     let query = supabase.from('patient_medications').select('*');
 
@@ -538,6 +664,7 @@ class BackupService {
     return data || [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async exportWoundCare(options: BackupOptions): Promise<any[]> {
     let query = supabase.from('patient_wounds').select('*');
 
@@ -553,6 +680,200 @@ class BackupService {
         .from('patient_wounds')
         .select('*, patients!inner(tenant_id)')
         .in('patients.tenant_id', options.tenantIds);
+    }
+
+    const { data, error} = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportVitals(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('patient_vitals').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('recorded_at', options.dateRange.startDate)
+        .lte('recorded_at', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportNotes(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('patient_notes').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('created_at', options.dateRange.startDate)
+        .lte('created_at', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportDiabeticRecords(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('diabetic_records').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('recorded_at', options.dateRange.startDate)
+        .lte('recorded_at', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportAdmissionRecords(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('patient_admission_records').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('admission_date', options.dateRange.startDate)
+        .lte('admission_date', options.dateRange.endDate);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportAdvancedDirectives(_options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('patient_advanced_directives').select('*');
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportBowelRecords(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('bowel_records').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('bowel_movement_date', options.dateRange.startDate)
+        .lte('bowel_movement_date', options.dateRange.endDate);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportWoundAssessments(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('wound_assessments').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('assessment_date', options.dateRange.startDate)
+        .lte('assessment_date', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportHandoverNotes(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('handover_notes').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('created_at', options.dateRange.startDate)
+        .lte('created_at', options.dateRange.endDate);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportDoctorsOrders(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('doctors_orders').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('ordered_at', options.dateRange.startDate)
+        .lte('ordered_at', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportPatientImages(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('patient_images').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('uploaded_at', options.dateRange.startDate)
+        .lte('uploaded_at', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportSimulationTemplates(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('simulation_templates').select('*');
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportActiveSimulations(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('simulation_active').select('*');
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
     }
 
     const { data, error } = await query;
@@ -616,7 +937,15 @@ class BackupService {
       combined.set(iv, salt.length);
       combined.set(new Uint8Array(encryptedBuffer), salt.length + iv.length);
 
-      return btoa(String.fromCharCode(...combined));
+      // Convert to base64 in chunks to avoid "Maximum call stack size exceeded" error
+      let binaryString = '';
+      const chunkSize = 0x8000; // 32KB chunks
+      for (let i = 0; i < combined.length; i += chunkSize) {
+        const chunk = combined.subarray(i, Math.min(i + chunkSize, combined.length));
+        binaryString += String.fromCharCode(...chunk);
+      }
+      
+      return btoa(binaryString);
     } catch (error) {
       console.error('Encryption failed:', error);
       throw new Error('Failed to encrypt backup data');
@@ -629,10 +958,12 @@ class BackupService {
     }
 
     try {
-      // Convert base64 back to binary
-      const combined = new Uint8Array(
-        atob(encryptedData).split('').map(char => char.charCodeAt(0))
-      );
+      // Convert base64 back to binary (handle large data)
+      const binaryString = atob(encryptedData);
+      const combined = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        combined[i] = binaryString.charCodeAt(i);
+      }
 
       // Extract salt, iv, and encrypted data
       const salt = combined.slice(0, 16);
@@ -951,7 +1282,8 @@ class BackupService {
           // Create new patient
           const patientData = { ...patient };
           if (options.createNewIds) {
-            delete patientData.id; // Let database generate new ID
+            // @ts-expect-error - Deleting ID to let database generate new one
+            delete patientData.id;
           }
 
           const { error } = await supabase
@@ -1088,6 +1420,7 @@ class BackupService {
         } else {
           const userData = { ...user };
           if (options.createNewIds) {
+            // @ts-expect-error - Deleting ID to let database generate new one
             delete userData.id;
           }
 
@@ -1106,7 +1439,8 @@ class BackupService {
     return result;
   }
 
-  private async restoreTenants(tenants: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async restoreTenants(tenants: any[], _options: RestoreOptions): Promise<Partial<RestoreResult>> {
     // Implementation for tenant restoration
     return {
       recordsProcessed: tenants.length,
@@ -1118,7 +1452,8 @@ class BackupService {
     };
   }
 
-  private async restoreAlerts(alerts: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async restoreAlerts(alerts: any[], _options: RestoreOptions): Promise<Partial<RestoreResult>> {
     // Implementation for alert restoration
     return {
       recordsProcessed: alerts.length,
@@ -1130,6 +1465,7 @@ class BackupService {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async restoreMedications(medications: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
     const result: Partial<RestoreResult> = {
       recordsProcessed: 0,
@@ -1168,6 +1504,7 @@ class BackupService {
     return result;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async restoreWoundCare(woundCare: any[], options: RestoreOptions): Promise<Partial<RestoreResult>> {
     const result: Partial<RestoreResult> = {
       recordsProcessed: 0,
@@ -1220,6 +1557,7 @@ class BackupService {
     mainResult.summary[dataType] = partialResult.recordsCreated || 0;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async logBackupActivity(userId: string, action: string, backupId: string, details: any): Promise<void> {
     const { error } = await supabase
       .from('backup_audit_log')
@@ -1233,6 +1571,56 @@ class BackupService {
 
     if (error) {
       console.error('Failed to log backup activity:', error);
+    }
+  }
+
+  /**
+   * Get activity log for a specific backup
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getBackupActivityLog(backupId: string, userId: string): Promise<any[]> {
+    try {
+      await this.verifySuperAdminAccess(userId);
+
+      // First get the audit log entries
+      const { data: logData, error: logError } = await supabase
+        .from('backup_audit_log')
+        .select('*')
+        .eq('backup_id', backupId)
+        .order('created_at', { ascending: false });
+
+      if (logError) throw logError;
+      if (!logData || logData.length === 0) return [];
+
+      // Get unique user IDs
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userIds = [...new Set(logData.map((log: any) => log.user_id).filter(Boolean))];
+
+      // Fetch user profiles separately
+      const { data: profiles, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, email, first_name, last_name')
+        .in('id', userIds);
+
+      if (profileError) {
+        console.warn('Could not fetch user profiles:', profileError);
+        // Return logs without user info if profile fetch fails
+        return logData;
+      }
+
+      // Map profiles by ID for quick lookup
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const profileMap = new Map(profiles?.map((p: any) => [p.id, p]) || []);
+
+      // Merge log data with user profiles
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return logData.map((log: any) => ({
+        ...log,
+        user_profiles: log.user_id ? profileMap.get(log.user_id) : null
+      }));
+    } catch (error) {
+      console.error('Failed to fetch backup activity log:', error);
+      return [];
     }
   }
 }

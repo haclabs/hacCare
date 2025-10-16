@@ -8,23 +8,41 @@
 
 import { supabase } from './supabase';
 import type {
-  SimulationTemplate,
-  SimulationTemplateWithDetails,
-  SimulationActive,
-  SimulationActiveWithDetails,
-  SimulationHistory,
-  SimulationHistoryWithDetails,
-  SimulationParticipant,
-  SimulationActivityLog,
   CreateTemplateParams,
-  LaunchSimulationParams,
-  SaveDebriefParams,
   SimulationFunctionResult,
-  ActivityLogEntry,
-  SimulationTemplateFilters,
-  SimulationActiveFilters,
-  SimulationHistoryFilters,
 } from '../types/simulation';
+
+// Type aliases for deprecated/legacy functions (used only in archived files)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ScenarioTemplate = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CreateScenarioTemplateRequest = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CreateSimulationRequest = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ActiveSimulation = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CreateSimulationPatientRequest = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationPatient = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationPatientVital = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationPatientMedication = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationPatientNote = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationMedicationAdministration = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationEvent = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SimulationAssessment = any;
+
+// Helper function stub for legacy code
+const getCurrentTenantId = async (): Promise<string> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user?.user_metadata?.tenant_id || '';
+};
 
 // ============================================================================
 // TEMPLATE MANAGEMENT
@@ -45,27 +63,10 @@ export async function createSimulationTemplate(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating simulation template:', error);
     throw error;
   }
-}
-
-  const tenantId = await getCurrentTenantId();
-
-  const { data: result, error } = await supabase
-    .from('scenario_templates')
-    .insert({
-      ...data,
-      tenant_id: tenantId,
-      created_by: user.id,
-      is_active: true
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return result;
 }
 
 export async function getScenarioTemplates(): Promise<ScenarioTemplate[]> {
@@ -274,11 +275,17 @@ export async function deleteActiveSimulation(simulationId: string): Promise<void
 }
 
 export async function resetSimulation(simulationId: string): Promise<void> {
-  // Reset simulation status and clear any live data
-  await updateSimulationStatus(simulationId, 'reset');
-  
-  // This would typically involve restoring vitals, medications, etc.
-  // Implementation depends on your reset requirements
+  // Call the database function that preserves session IDs
+  const { data, error } = await supabase.rpc('reset_simulation', {
+    p_simulation_id: simulationId
+  });
+
+  if (error) {
+    console.error('Error calling reset_simulation RPC:', error);
+    throw error;
+  }
+
+  console.log('Simulation reset successfully:', data);
 }
 
 // ============================================================================
@@ -671,7 +678,7 @@ export async function copyTemplateToActiveSimulation(scenarioTemplateId: string,
   for (const templatePatient of templatePatients) {
     if (templatePatient.is_template) {
       // Create a new patient for the active simulation (exclude id and timestamps to let DB generate new ones)
-      const { id, vitals, medications, notes, created_at, ...patientData } = templatePatient;
+      const { id: _id, vitals, medications, notes, created_at: _created_at, ...patientData } = templatePatient;
       
       const { data: newPatient, error: patientError } = await supabase
         .from('simulation_patients')
@@ -688,8 +695,9 @@ export async function copyTemplateToActiveSimulation(scenarioTemplateId: string,
 
       // Copy baseline vitals
       if (vitals && vitals.length > 0) {
-        for (const vital of vitals.filter(v => v.is_baseline)) {
-          const { id: vitalId, simulation_patient_id, created_at: vitalCreatedAt, ...vitalData } = vital;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const vital of vitals.filter((v: any) => v.is_baseline)) {
+          const { id: _vitalId, simulation_patient_id: _simulation_patient_id, created_at: _vitalCreatedAt, ...vitalData } = vital;
           await supabase
             .from('simulation_patient_vitals')
             .insert({
@@ -702,7 +710,7 @@ export async function copyTemplateToActiveSimulation(scenarioTemplateId: string,
       // Copy medications
       if (medications && medications.length > 0) {
         for (const medication of medications) {
-          const { id: medId, simulation_patient_id, created_at: medCreatedAt, ...medData } = medication;
+          const { id: _medId, simulation_patient_id: _med_simulation_patient_id, created_at: _medCreatedAt, ...medData } = medication;
           await supabase
             .from('simulation_patient_medications')
             .insert({
@@ -715,7 +723,7 @@ export async function copyTemplateToActiveSimulation(scenarioTemplateId: string,
       // Copy notes
       if (notes && notes.length > 0) {
         for (const note of notes) {
-          const { id: noteId, simulation_patient_id, created_at: noteCreatedAt, ...noteData } = note;
+          const { id: _noteId, simulation_patient_id: _note_simulation_patient_id, created_at: _noteCreatedAt, ...noteData } = note;
           await supabase
             .from('simulation_patient_notes')
             .insert({

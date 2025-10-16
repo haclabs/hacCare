@@ -71,8 +71,10 @@ class SuperAdminTenantService {
         throw new Error('Super admin access not initialized');
       }
 
-      // Get access token for direct fetch (bypasses hanging Supabase client)
-      const accessToken = sessionStorage.getItem('supabase_access_token');
+      // Get fresh access token from current session
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let tenant: any = null;
 
       if (accessToken) {
@@ -150,7 +152,7 @@ class SuperAdminTenantService {
           throw new Error(`Failed to set tenant context: ${error.message}`);
         }
       } else if (contextError) {
-        throw new Error(`Failed to set tenant context: ${contextError.message}`);
+        throw new Error(`Failed to set tenant context: ${(contextError as Error).message || 'Unknown error'}`);
       }
 
       // Update local state
@@ -181,8 +183,9 @@ class SuperAdminTenantService {
         throw new Error('Super admin access not initialized');
       }
 
-      // Clear database context using direct fetch if possible
-      const accessToken = sessionStorage.getItem('supabase_access_token');
+      // Get fresh access token from current session
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
       let cleared = false;
 
       if (accessToken) {
@@ -233,7 +236,7 @@ class SuperAdminTenantService {
   /**
    * Get available tenants for super admin
    */
-  async getAvailableTenants(): Promise<{ data: Tenant[] | null; error: any }> {
+  async getAvailableTenants(): Promise<{ data: Tenant[] | null; error: Error | null }> {
     try {
       if (!this.currentTenantAccess.hasAccess) {
         return { data: null, error: new Error('Super admin access required') };
@@ -245,9 +248,9 @@ class SuperAdminTenantService {
         .eq('status', 'active')
         .order('name');
 
-      return { data, error };
+      return { data, error: error ? new Error(error.message) : null };
     } catch (error) {
-      return { data: null, error };
+      return { data: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 

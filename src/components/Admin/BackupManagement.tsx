@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle, FileUp } from 'lucide-react';
+import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle, FileUp, FileText, X } from 'lucide-react';
 import { backupService, BackupOptions, BackupMetadata, RestoreOptions, RestoreResult } from '../../services/backupService';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -39,6 +39,12 @@ export const BackupManagement: React.FC = () => {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Activity log state
+  const [showActivityLog, setShowActivityLog] = useState(false);
+  const [selectedBackupId, setSelectedBackupId] = useState<string | null>(null);
+  const [activityLog, setActivityLog] = useState<any[]>([]);
+  const [loadingLog, setLoadingLog] = useState(false);
 
   // Backup creation form state
   const [backupOptions, setBackupOptions] = useState<BackupOptions>({
@@ -49,6 +55,17 @@ export const BackupManagement: React.FC = () => {
     includeAlerts: true,
     includeMedications: true,
     includeWoundCare: true,
+    includeVitals: true,
+    includeNotes: true,
+    includeDiabeticRecords: true,
+    includeAdmissionRecords: true,
+    includeAdvancedDirectives: true,
+    includeBowelRecords: true,
+    includeWoundAssessments: true,
+    includeHandoverNotes: true,
+    includeDoctorsOrders: true,
+    includePatientImages: true,
+    includeSimulations: true,
     encryptData: true,
     password: ''
   });
@@ -108,6 +125,14 @@ export const BackupManagement: React.FC = () => {
     try {
       setCreating(true);
       setError(null);
+      setSuccess(null);
+
+      // Validate encryption password
+      if (backupOptions.encryptData && !backupOptions.password) {
+        setError('Encryption password is required when encryption is enabled');
+        setCreating(false);
+        return;
+      }
 
       const options: BackupOptions = {
         ...backupOptions,
@@ -122,6 +147,7 @@ export const BackupManagement: React.FC = () => {
       await loadBackups();
     } catch (err: any) {
       setError(`Failed to create backup: ${err.message || 'Unknown error'}`);
+      console.error('Backup creation error:', err);
     } finally {
       setCreating(false);
     }
@@ -165,6 +191,22 @@ export const BackupManagement: React.FC = () => {
       await loadBackups();
     } catch (err: any) {
       setError(`Failed to delete backup: ${err.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleViewActivityLog = async (backupId: string) => {
+    setSelectedBackupId(backupId);
+    setShowActivityLog(true);
+    setLoadingLog(true);
+    
+    try {
+      const log = await backupService.getBackupActivityLog(backupId, user!.id);
+      setActivityLog(log);
+    } catch (err: any) {
+      console.error('Failed to load activity log:', err);
+      setActivityLog([]);
+    } finally {
+      setLoadingLog(false);
     }
   };
 
@@ -241,13 +283,24 @@ export const BackupManagement: React.FC = () => {
           {/* Data Selection */}
           <div>
             <h4 className="text-sm font-medium text-gray-900 mb-3">Select Data to Backup</h4>
-            <div className="space-y-3">
+            <div className="space-y-2 max-h-96 overflow-y-auto">
               {[
                 { key: 'includePatients', label: 'Patient Records', icon: '👤' },
-                { key: 'includeAssessments', label: 'Patient Assessments', icon: '📋' },
+                { key: 'includeVitals', label: 'Vital Signs', icon: '❤️' },
                 { key: 'includeMedications', label: 'Medications', icon: '💊' },
-                { key: 'includeWoundCare', label: 'Wound Care Data', icon: '🩹' },
-                { key: 'includeAlerts', label: 'System Alerts', icon: '🔔' },
+                { key: 'includeAssessments', label: 'Patient Assessments', icon: '📋' },
+                { key: 'includeNotes', label: 'Patient Notes', icon: '📝' },
+                { key: 'includeDoctorsOrders', label: 'Doctor\'s Orders', icon: '⚕️' },
+                { key: 'includeAlerts', label: 'System Alerts', icon: '�' },
+                { key: 'includeWoundCare', label: 'Wound Care (Patient Wounds)', icon: '🩹' },
+                { key: 'includeWoundAssessments', label: 'Wound Assessments', icon: '🔬' },
+                { key: 'includeDiabeticRecords', label: 'Diabetic Records', icon: '�' },
+                { key: 'includeBowelRecords', label: 'Bowel Records', icon: '📊' },
+                { key: 'includeAdmissionRecords', label: 'Admission Records', icon: '🏥' },
+                { key: 'includeAdvancedDirectives', label: 'Advanced Directives', icon: '📜' },
+                { key: 'includeHandoverNotes', label: 'Handover Notes (SBAR)', icon: '🤝' },
+                { key: 'includePatientImages', label: 'Patient Images', icon: '🖼️' },
+                { key: 'includeSimulations', label: 'Simulation Templates & Active Simulations', icon: '🎭' },
                 { key: 'includeUsers', label: 'User Accounts', icon: '👥' },
                 { key: 'includeTenants', label: 'Tenant Settings', icon: '🏢' }
               ].map(({ key, label, icon }) => (
@@ -473,6 +526,13 @@ export const BackupManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
+                          onClick={() => handleViewActivityLog(backup.id)}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="View activity log"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={() => handleDownloadBackup(backup.id)}
                           disabled={downloading === backup.id || backup.status !== 'completed'}
                           className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
@@ -631,6 +691,104 @@ export const BackupManagement: React.FC = () => {
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   Restore Backup
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Log Modal */}
+      {showActivityLog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                  Backup Activity Log
+                </h3>
+                <button
+                  onClick={() => setShowActivityLog(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="mb-3 text-sm text-gray-600">
+                Backup ID: <span className="font-mono text-xs">{selectedBackupId}</span>
+              </div>
+
+              {loadingLog ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full" />
+                  <span className="ml-3 text-gray-600">Loading activity log...</span>
+                </div>
+              ) : activityLog.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No activity recorded for this backup
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {activityLog.map((activity, index) => (
+                    <div
+                      key={index}
+                      className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              activity.action === 'backup_created' ? 'bg-green-100 text-green-800' :
+                              activity.action === 'backup_downloaded' ? 'bg-blue-100 text-blue-800' :
+                              activity.action === 'backup_deleted' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {activity.action === 'backup_created' && '✨ Created'}
+                              {activity.action === 'backup_downloaded' && '📥 Downloaded'}
+                              {activity.action === 'backup_deleted' && '🗑️ Deleted'}
+                              {activity.action === 'restore_started' && '🔄 Restore Started'}
+                              {activity.action === 'restore_completed' && '✅ Restore Completed'}
+                              {activity.action === 'restore_failed' && '❌ Restore Failed'}
+                              {!['backup_created', 'backup_downloaded', 'backup_deleted', 'restore_started', 'restore_completed', 'restore_failed'].includes(activity.action) && activity.action}
+                            </span>
+                            <span className="text-sm text-gray-900 font-medium">
+                              {activity.user_profiles?.first_name && activity.user_profiles?.last_name
+                                ? `${activity.user_profiles.first_name} ${activity.user_profiles.last_name}`
+                                : activity.user_profiles?.email || 'Unknown User'}
+                            </span>
+                          </div>
+                          
+                          <div className="mt-2 text-xs text-gray-600">
+                            {formatDate(activity.created_at)}
+                          </div>
+
+                          {activity.details && Object.keys(activity.details).length > 0 && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              <details className="cursor-pointer">
+                                <summary className="font-medium text-gray-700 hover:text-gray-900">
+                                  View Details
+                                </summary>
+                                <pre className="mt-2 p-2 bg-white border border-gray-200 rounded text-xs overflow-x-auto">
+                                  {JSON.stringify(activity.details, null, 2)}
+                                </pre>
+                              </details>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowActivityLog(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Close
                 </button>
               </div>
             </div>
