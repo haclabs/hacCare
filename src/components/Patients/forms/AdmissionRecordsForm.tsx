@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, User, Building, Phone, Heart, AlertTriangle } from 'lucide-react';
-import { AdmissionRecord, fetchAdmissionRecord, upsertAdmissionRecord, createDefaultAdmissionRecord } from '../../../lib/admissionService';
+import { AdmissionRecord, fetchAdmissionRecord, upsertAdmissionRecord, createDefaultAdmissionRecord } from '../../../services/patient/admissionService';
 import { usePatients } from '../../../hooks/usePatients';
 
 interface AdmissionRecordsFormProps {

@@ -3,7 +3,7 @@ import { Edit, TrendingUp, RefreshCw, Plus, Thermometer, Heart, Activity, Drople
 import { VitalSigns } from '../../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
-import { fetchPatientVitals } from '../../../lib/patientService';
+import { fetchPatientVitals } from '../../../services/patient/patientService';
 
 interface VitalsContentProps {
   patientId: string;

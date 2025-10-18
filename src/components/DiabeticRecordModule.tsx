@@ -16,7 +16,7 @@ import {
   getCurrentTime,
   getCurrentDate 
 } from '../types/diabeticRecord';
-import { diabeticRecordService } from '../lib/diabeticRecordService';
+import { diabeticRecordService } from '../services/clinical/diabeticRecordService';
 
 interface DiabeticRecordModuleProps {
   patientId: string;

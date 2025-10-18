@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks } from '../../lib/alertService';
-import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
-import { queryKeys } from '../../lib/queryClient';
+import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
+import { queryKeys } from '../../lib/api/queryClient';
 import { Alert } from '../../types';
 
 // ========================================

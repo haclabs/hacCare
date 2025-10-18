@@ -11,12 +11,12 @@ import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { LoginForm } from './components/Auth/LoginForm';
 import { LandingPage } from './components/LandingPage/LandingPage';
-import { queryClient } from './lib/queryClient';
-import { initializeBarcodeScanner } from './lib/barcodeScanner';
+import { queryClient } from './lib/api/queryClient';
+import { initializeBarcodeScanner } from './lib/barcode/barcodeScanner';
 import App from './App.tsx';
 import './index.css';
-import { testSupabaseConnection } from './lib/supabase';
-import { getCurrentSubdomain } from './lib/subdomainService';
+import { testSupabaseConnection } from './lib/api/supabase';
+import { getCurrentSubdomain } from './lib/infrastructure/subdomainService';
 // import { initializeAuth } from './lib/browserAuthFix'; // Disabled for deployment fix
 
 // Initialize subdomain detection for production

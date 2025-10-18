@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Moon, Sun, Monitor, Terminal, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw, MemoryStick } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 import { SecuritySettings } from './SecuritySettings';
 

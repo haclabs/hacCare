@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Settings, Save, AlertCircle, Check } from 'lucide-react';
 import { LogoUpload } from './LogoUpload';
 import { useTenant } from '../../contexts/TenantContext';
-import { updateTenant } from '../../lib/tenantService';
+import { updateTenant } from '../../services/admin/tenantService';
 
 export const TenantSettings: React.FC = () => {
   const { currentTenant, refreshTenant } = useTenant();

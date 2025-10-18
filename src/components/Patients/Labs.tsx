@@ -9,7 +9,7 @@ import {
   getLabPanels,
   getLabResults,
   hasUnacknowledgedLabs,
-} from '../../lib/labService';
+} from '../../services/clinical/labService';
 import type { LabPanel, LabCategory } from '../../types/labs';
 import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../../types/labs';
 import { LabPanelDetail } from './LabPanelDetail';

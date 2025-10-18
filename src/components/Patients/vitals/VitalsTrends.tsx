@@ -3,7 +3,7 @@ import { TrendingUp, X, Activity, BarChart3, Plus, Trash2, RefreshCw } from 'luc
 import { format, parseISO, isValid } from 'date-fns';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePatients } from '../../../hooks/usePatients';
-import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../../lib/patientService';
+import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../../services/patient/patientService';
 
 interface VitalsTrendsProps {
   patientId: string;

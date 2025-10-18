@@ -3,7 +3,7 @@ import { Patient } from '../../../types';
 import { X, Printer, Download, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { generateCode128SVG } from '../../../utils/barcodeUtils';
-import { bcmaService } from '../../../lib/bcmaService';
+import { bcmaService } from '../../../services/clinical/bcmaService';
 
 /**
  * Hospital Bracelet Component

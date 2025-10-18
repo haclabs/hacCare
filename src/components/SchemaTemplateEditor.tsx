@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, FileText, AlertTriangle } from 'lucide-react';
 import { VitalsSchema } from '../types/schema';
-import { schemaEngine } from '../lib/schemaEngine';
+import { schemaEngine } from '../lib/infrastructure/schemaEngine';
 import { useTenant } from '../contexts/TenantContext';
 
 interface SchemaTemplateEditorProps {

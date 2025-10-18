@@ -1,9 +1,9 @@
 // @refresh reset
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/supabase';
+import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { initializeSessionPersistence, checkSessionWithRetry } from '../../lib/authPersistence';
+import { initializeSessionPersistence, checkSessionWithRetry } from '../../services/auth/authPersistence';
 
 /**
  * Authentication Context Interface

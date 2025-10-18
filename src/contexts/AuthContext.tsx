@@ -3,8 +3,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
-import { initializeSessionTracking, endUserSession } from '../lib/adminService';
+import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/api/supabase';
+import { initializeSessionTracking, endUserSession } from '../services/admin/adminService';
 
 interface AuthContextType {
   user: User | null;

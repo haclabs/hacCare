@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { X, FileText, AlertCircle } from 'lucide-react';
-import { createSimulationTemplate } from '../../services/simulationService';
+import { createSimulationTemplate } from '../../services/simulation/simulationService';
 
 interface CreateTemplateModalProps {
   onClose: () => void;

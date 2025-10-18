@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchDoctorsOrders } from '../lib/doctorsOrdersService';
+import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
 
 export const useDoctorsOrdersAlert = (patientId: string, refreshTrigger?: number) => {
   const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);

@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
-import { getActiveSimulations, updateSimulationStatus, resetSimulation, completeSimulation, deleteSimulation } from '../../services/simulationService';
+import { getActiveSimulations, updateSimulationStatus, resetSimulation, completeSimulation, deleteSimulation } from '../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
 

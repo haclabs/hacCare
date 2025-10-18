@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { transferPatient, PatientTransferOptions, PatientTransferResult } from '../lib/patientTransferService';
+import { transferPatient, PatientTransferOptions, PatientTransferResult } from '../services/patient/patientTransferService';
 
 /**
  * Hook for patient transfer functionality

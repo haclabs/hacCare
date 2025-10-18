@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, Stethoscope, Activity, Heart, Brain } from 'lucide-react';
 import { format } from 'date-fns';
-import { createAssessment, PatientAssessment } from '../../lib/assessmentService';
+import { createAssessment, PatientAssessment } from '../../../services/patient/assessmentService';
 import { useAuth } from '../../hooks/useAuth';
 
 /**

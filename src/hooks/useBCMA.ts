@@ -4,8 +4,8 @@
 
 import { useState, useCallback } from 'react';
 import { Patient, Medication } from '../types';
-import { bcmaService, BCMAValidationResult } from '../lib/bcmaService';
-import { isBCMACurrentlyActive } from '../lib/bcmaState';
+import { bcmaService, BCMAValidationResult } from '../services/clinical/bcmaService';
+import { isBCMACurrentlyActive } from '../services/simulation/bcmaState';
 
 export interface BCMAState {
   isActive: boolean;

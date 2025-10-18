@@ -9,7 +9,7 @@ import {
   addVitalsWithTenant,
   addPatientNoteWithTenant,
   getTenantPatientStats
-} from '../../lib/multiTenantPatientService';
+} from '../../services/patient/multiTenantPatientService';
 import { useTenant } from '../../contexts/TenantContext';
 
 /**

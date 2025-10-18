@@ -9,7 +9,7 @@ import { QuickStats } from './components/Dashboard/QuickStats';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
 import { useAlerts } from './hooks/useAlerts';
-import { getPatientByMedicationId } from './lib/medicationService';
+import { getPatientByMedicationId } from './services/clinical/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';

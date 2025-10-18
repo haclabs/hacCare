@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw } from 'lucide-react';
-import { supabase, UserProfile, UserRole } from '../../lib/supabase';
+import { supabase, UserProfile, UserRole } from '../../lib/api/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { UserForm } from './UserForm';
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { isSupabaseConfigured, supabase } from '../../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../../lib/api/supabase';
 import logo from '../../images/logo.png';
 
 export const LoginForm: React.FC = () => {

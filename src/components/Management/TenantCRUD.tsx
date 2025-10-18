@@ -8,7 +8,7 @@ import {
   deleteTenant,
   permanentlyDeleteTenant,
   getTenantUsers
-} from '../../lib/tenantService';
+} from '../../services/admin/tenantService';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
 interface TenantCRUDProps {

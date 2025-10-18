@@ -44,12 +44,12 @@ import { HandoverNotes } from './Patients/handover/HandoverNotes';
 import { DoctorsOrders } from './Patients/DoctorsOrders';
 import { Labs } from './Patients/Labs';
 import { Patient, DoctorsOrder } from '../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../lib/patientService';
-import { fetchPatientMedications } from '../lib/medicationService';
-import { fetchAdmissionRecord, fetchAdvancedDirective, AdmissionRecord, AdvancedDirective } from '../lib/admissionService';
-import { fetchDoctorsOrders } from '../lib/doctorsOrdersService';
-import { WoundCareService } from '../lib/woundCareService';
-import { hasUnacknowledgedLabs } from '../lib/labService';
+import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../services/patient/patientService';
+import { fetchPatientMedications } from '../services/clinical/medicationService';
+import { fetchAdmissionRecord, fetchAdvancedDirective, AdmissionRecord, AdvancedDirective } from '../services/patient/admissionService';
+import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
+import { WoundCareService } from '../services/patient/woundCareService';
+import { hasUnacknowledgedLabs } from '../services/clinical/labService';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 

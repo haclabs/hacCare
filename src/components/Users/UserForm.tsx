@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, Phone, Building, CreditCard, Users } from 'lucide-react';
-import { supabase, UserProfile, UserRole } from '../../lib/supabase';
+import { supabase, UserProfile, UserRole } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { useAuth } from '../../hooks/useAuth';
-import { getAllTenants } from '../../lib/tenantService';
+import { getAllTenants } from '../../services/admin/tenantService';
 import { Tenant } from '../../types';
 
 interface UserFormProps {

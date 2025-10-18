@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Save, FileText, Clock } from 'lucide-react';
-import { createBowelRecord, BowelRecord } from '../../../lib/bowelRecordService';
+import { createBowelRecord, BowelRecord } from '../../../services/clinical/bowelRecordService';
 import { useAuth } from '../../../hooks/useAuth';
 import { formatLocalTime } from '../../../utils/time';
 

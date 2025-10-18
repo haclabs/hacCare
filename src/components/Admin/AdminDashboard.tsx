@@ -6,7 +6,7 @@ import {
   getRecentLoginHistory,
   getSystemStats,
   UserSession
-} from '../../lib/adminService';
+} from '../../services/admin/adminService';
 
 // Interfaces imported from adminService
 

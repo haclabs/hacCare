@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase, UserProfile } from '../../lib/supabase';
+import { supabase, UserProfile } from '../../lib/api/supabase';
 import { SimulationSubTenantService } from '../../lib/simulationSubTenantService';
 
 interface SimulationContext {

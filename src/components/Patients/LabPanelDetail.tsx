@@ -19,7 +19,7 @@ import {
   deleteLabPanel,
   createStandardLabSet,
   getEffectiveRangeDisplay,
-} from '../../lib/labService';
+} from '../../services/clinical/labService';
 import type { LabPanel, LabResult, LabCategory } from '../../types/labs';
 import {
   LAB_CATEGORY_TABS,

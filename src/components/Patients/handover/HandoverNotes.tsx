@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { MessageSquare, Plus, RefreshCw } from 'lucide-react';
 import { HandoverNotesForm } from './HandoverNotesForm';
 import { HandoverNotesList } from './HandoverNotesList';
-import { createHandoverNote, CreateHandoverNoteData } from '../../../lib/handoverService';
+import { createHandoverNote, CreateHandoverNoteData } from '../../../services/patient/handoverService';
 
 interface HandoverNotesProps {
   patientId: string;

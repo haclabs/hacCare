@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Building, Eye, Play, FileText } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
-import { getTenantsForSwitching } from '../../lib/tenantService';
+import { getTenantsForSwitching } from '../../services/admin/tenantService';
 import { Tenant } from '../../types';
 
 /**

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Pill, User, Save, AlertTriangle } from 'lucide-react';
 import { Medication } from '../../../types';
-import { createMedication, updateMedication } from '../../../lib/medicationService'; 
+import { createMedication, updateMedication } from '../../../services/clinical/medicationService'; 
 import { addHours, setHours, setMinutes, format } from 'date-fns';
 import { formatLocalTime } from '../../../utils/dateUtils';
 import { CheckCircle } from 'lucide-react';

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
-import { queryKeys } from '../../lib/queryClient';
+import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
+import { queryKeys } from '../../lib/api/queryClient';
 
 // ========================================
 // 🔐 AUTHENTICATION QUERY HOOKS

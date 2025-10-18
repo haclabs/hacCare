@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../../lib/queryClient';
+import { queryKeys } from '../../lib/api/queryClient';
 import { 
   fetchPatients, 
   fetchPatientById, 
@@ -12,8 +12,8 @@ import {
   createPatientNote,
   updatePatientNote,
   deletePatientNote
-} from '../../lib/patientService';
-import { fetchPatientMedications } from '../../lib/medicationService';
+} from '../../services/patient/patientService';
+import { fetchPatientMedications } from '../../services/clinical/medicationService';
 import { Patient, VitalSigns, PatientNote } from '../../types';
 
 /**

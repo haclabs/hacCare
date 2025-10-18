@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Clock, User, RefreshCw } from 'lucide-react';
-import { fetchPatientBowelRecords, BowelRecord } from '../../../lib/bowelRecordService';
+import { fetchPatientBowelRecords, BowelRecord } from '../../../services/clinical/bowelRecordService';
 import { formatLocalTime } from '../../../utils/time';
 
 interface BowelRecordsListProps {

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Ban as Bandage, Sparkles } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../lib/patientService';
-import { fetchPatientMedications } from '../../../lib/medicationService';
+import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
 import { RecentActivity } from './RecentActivity';
 import { MedicationAdministration } from './MedicationAdministration';
 import { WoundAssessment } from '../forms/WoundAssessment';

@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, Check } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
-import { acknowledgeLabs } from '../../lib/labService';
+import { acknowledgeLabs } from '../../services/clinical/labService';
 import type { LabPanel, LabResult } from '../../types/labs';
 import { getFlagLabel, getFlagColorClass, getEffectiveRangeDisplay } from '../../types/labs';
 

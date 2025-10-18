@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AuthProvider as StandardAuthProvider } from './AuthContext';
 import { useAuth as useStandardAuth } from './useAuth';
-import { supabase } from '../../lib/supabase';
-import { initializeSessionTracking, endUserSession } from '../../lib/adminService';
+import { supabase } from '../../lib/api/supabase';
+import { initializeSessionTracking, endUserSession } from '../../services/admin/adminService';
 
 interface SimulationAwareContextType {
   isSimulationUser: boolean;
@@ -109,7 +109,7 @@ export const useAuth = () => {
     return async () => {
       console.log('Using fallback createProfile');
       // Import and use the standard auth context's createProfile
-      const { supabase } = await import('../../lib/supabase');
+      const { supabase } = await import('../../lib/api/supabase');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
       

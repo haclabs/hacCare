@@ -20,7 +20,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Plus, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { WoundAssessment, WoundTreatment, Patient } from '../../types';
-import { WoundCareService } from '../../lib/woundCareService';
+import { WoundCareService } from '../../services/patient/woundCareService';
 import { WoundAssessmentForm } from './WoundAssessmentForm';
 
 interface WoundCareModuleProps {

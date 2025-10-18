@@ -2,7 +2,7 @@
 // Replace the existing CreateTenantModal in ManagementDashboard.tsx with this version
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/api/supabase';
 
 // Add this interface near the top of your file
 interface AdminUser {

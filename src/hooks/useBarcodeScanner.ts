@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { isBCMACurrentlyActive } from '../lib/bcmaState';
+import { isBCMACurrentlyActive } from '../services/simulation/bcmaState';
 
 /**
  * Custom hook for barcode scanner integration

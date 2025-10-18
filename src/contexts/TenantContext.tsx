@@ -4,14 +4,14 @@ import {
   getCurrentUserTenant, 
   getTenantById,
   getTenantBySubdomain
-} from '../lib/tenantService';
+} from '../services/admin/tenantService';
 import { 
   superAdminTenantService,
   initializeSuperAdminAccess,
   switchSuperAdminToTenant,
   clearSuperAdminTenantContext
-} from '../lib/superAdminTenantService';
-import { getCurrentSubdomain } from '../lib/subdomainService';
+} from '../services/admin/superAdminTenantService';
+import { getCurrentSubdomain } from '../lib/infrastructure/subdomainService';
 import { useAuth } from './auth/SimulationAwareAuthProvider';
 
 /**

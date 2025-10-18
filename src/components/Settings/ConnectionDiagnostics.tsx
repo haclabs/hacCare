@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getConnectionStatus } from '../../lib/connectionTest';
+import { getConnectionStatus } from '../../lib/infrastructure/connectionTest';
 import { 
   AlertTriangle, CheckCircle, XCircle, RefreshCw, 
   Database, Key, Globe, Lock, FileText, Shield

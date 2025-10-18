@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPatientAssessments, PatientAssessment } from '../../../lib/assessmentService';
+import { fetchPatientAssessments, PatientAssessment } from '../../../services/patient/assessmentService';
 import { AssessmentDetail } from '../AssessmentDetail';
 import { AssessmentForm } from '../forms/AssessmentForm';
 import { BowelRecordForm } from '../forms/BowelRecordForm';

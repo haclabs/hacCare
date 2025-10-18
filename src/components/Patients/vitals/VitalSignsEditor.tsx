@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { VitalSigns } from '../../../types';
 import { Save, X, Thermometer, Heart, Activity, Droplets } from 'lucide-react';
-import { updatePatientVitals } from '../../../lib/patientService';
+import { updatePatientVitals } from '../../../services/patient/patientService';
 import { usePatients } from '../../../hooks/usePatients';
 
 interface VitalSignsEditorProps {

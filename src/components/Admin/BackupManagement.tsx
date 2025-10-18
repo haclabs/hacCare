@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle, FileUp, FileText, X } from 'lucide-react';
-import { backupService, BackupOptions, BackupMetadata, RestoreOptions, RestoreResult } from '../../services/backupService';
+import { backupService, BackupOptions, BackupMetadata, RestoreOptions, RestoreResult } from '../../services/operations/backupService';
 import { useAuth } from '../../hooks/useAuth';
 
 // Local formatter functions to avoid import issues

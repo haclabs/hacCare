@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3, Settings, Printer } from 'lucide-react';
 import { Tenant, ManagementDashboardStats, TenantUser } from '../../types';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/api/supabase';
 import {
   getAllTenants,
   getManagementDashboardStats,
@@ -10,8 +10,8 @@ import {
   deleteTenant,
   permanentlyDeleteTenant,
   getTenantUsers
-} from '../../lib/tenantService';
-import { getTenantPatientStats } from '../../lib/multiTenantPatientService';
+} from '../../services/admin/tenantService';
+import { getTenantPatientStats } from '../../services/patient/multiTenantPatientService';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { TenantSettings } from './TenantSettings';
 import BulkLabelPrint from '../Admin/BulkLabelPrint';

@@ -4,7 +4,7 @@ import {
   Activity, Globe, Database, Key
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/api/supabase';
 
 interface SecurityCheck {
   id: string;

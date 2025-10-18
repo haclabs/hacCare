@@ -6,10 +6,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { QrCode, Check, X, AlertTriangle, Clock, User, Pill, CheckCircle } from 'lucide-react';
 import { Patient, Medication } from '../../types';
-import { bcmaService, BCMAValidationResult } from '../../lib/bcmaService';
+import { bcmaService, BCMAValidationResult } from '../../services/clinical/bcmaService';
 import { BarcodeGenerator } from './BarcodeGenerator';
-import { simulateBarcodeScan } from '../../lib/barcodeScanner';
-import { setBCMAActive } from '../../lib/bcmaState';
+import { simulateBarcodeScan } from '../../lib/barcode/barcodeScanner';
+import { setBCMAActive } from '../../services/simulation/bcmaState';
 
 interface BCMAAdministrationProps {
   patient: Patient;

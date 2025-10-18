@@ -3,7 +3,7 @@ import {
   Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw,
   Database, Wifi, WifiOff, Clock, Server
 } from 'lucide-react';
-import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 
 /**
  * System Status Component

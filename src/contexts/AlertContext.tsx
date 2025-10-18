@@ -1,10 +1,10 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks, ALERT_CONFIG, setSimulationMode } from '../lib/alertService';
+import { fetchActiveAlerts, acknowledgeAlert as acknowledgeAlertService, runAlertChecks, ALERT_CONFIG, setSimulationMode } from '../services/operations/alertService';
 import { useAuth } from '../hooks/useAuth';
 import { useTenant } from './TenantContext';
 import { Alert } from '../types'; 
-import { isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
-import { filterByTenant } from '../lib/tenantService';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../lib/api/supabase';
+import { filterByTenant } from '../services/admin/tenantService';
 
 /**
  * Deduplicate alerts based on patient, type, and message similarity
@@ -102,7 +102,7 @@ export function AlertProvider({ children }: AlertProviderProps) {
       
       // Test the tenant service directly
       try {
-        const { getCurrentUserTenant } = await import('../lib/tenantService');
+        const { getCurrentUserTenant } = await import('../services/admin/tenantService');
         const result = await getCurrentUserTenant(user.id);
         console.log('   Direct tenant service test:', result);
       } catch (error) {

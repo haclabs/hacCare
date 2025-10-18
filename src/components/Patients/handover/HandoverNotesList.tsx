@@ -18,7 +18,7 @@ import {
   Target,
   Info
 } from 'lucide-react';
-import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote } from '../../../lib/handoverService';
+import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote } from '../../../services/patient/handoverService';
 import { format } from 'date-fns';
 
 interface HandoverNotesListProps {

@@ -16,7 +16,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AlertTriangle, CheckCircle, ChevronLeft, ChevronRight, Save } from 'lucide-react';
-import { schemaEngine } from '../../lib/schemaEngine';
+import { schemaEngine } from '../../lib/infrastructure/schemaEngine';
 import { 
   FormData, 
   ValidationResult, 

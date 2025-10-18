@@ -15,7 +15,7 @@ import {
   updateDoctorsOrder, 
   deleteDoctorsOrder,
   acknowledgeDoctorsOrder
-} from '../../lib/doctorsOrdersService';
+} from '../../services/clinical/doctorsOrdersService';
 
 interface DoctorsOrdersProps {
   patientId: string;

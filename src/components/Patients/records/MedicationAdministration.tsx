@@ -6,7 +6,7 @@ import { formatLocalTime } from '../../../utils/dateUtils';
 // import { MedicationAdministrationHistory } from './MedicationAdministrationHistory'; // Component not found
 import { MedicationForm } from '../forms/MedicationForm';
 import { useAuth } from '../../../hooks/useAuth';
-import { fetchPatientMedications, deleteMedication } from '../../../lib/medicationService';
+import { fetchPatientMedications, deleteMedication } from '../../../services/clinical/medicationService';
 import { runAlertChecks } from '../../../lib/alertService';
 // import { usePatients } from '../../../hooks/usePatients'; // Commented out as not currently used
 import { Medication } from '../../../types';

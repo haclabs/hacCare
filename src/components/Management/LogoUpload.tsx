@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Image, AlertCircle, Check } from 'lucide-react';
-import { uploadTenantLogo, deleteTenantLogo, updateTenantLogoUrl, validateImageFile } from '../../lib/fileUploadService';
+import { uploadTenantLogo, deleteTenantLogo, updateTenantLogoUrl, validateImageFile } from '../../services/operations/fileUploadService';
 import { Tenant } from '../../types';
 
 interface LogoUploadProps {

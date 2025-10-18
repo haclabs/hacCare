@@ -3,7 +3,7 @@ import { X, Save, Trash2 } from 'lucide-react';
 import ImageMarker from 'react-image-marker';
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '../../../hooks/useAuth';
-import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../../lib/imageService';
+import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../../lib/media/imageService';
 import { usePatients } from '../../../hooks/usePatients';
 import { format } from 'date-fns';
 

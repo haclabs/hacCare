@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
-import { getUserSimulationAssignments } from '../../services/simulationService';
+import { getUserSimulationAssignments } from '../../services/simulation/simulationService';
 
 interface SimulationAssignment {
   id: string;

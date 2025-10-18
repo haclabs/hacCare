@@ -2,7 +2,7 @@
 // Add this to your management dashboard temporarily to debug
 
 import React, { useState } from 'react';
-import { getTenantUsers } from '../../lib/tenantService';
+import { getTenantUsers } from '../../services/admin/tenantService';
 
 export const TenantUserDebugger: React.FC = () => {
   const [tenantId, setTenantId] = useState('');

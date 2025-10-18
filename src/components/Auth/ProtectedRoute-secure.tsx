@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
 import LoadingSpinner from '../UI/LoadingSpinner';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { User, AlertCircle, CheckCircle } from 'lucide-react';
 

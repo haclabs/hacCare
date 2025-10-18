@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { Monitor, Clock, AlertCircle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../contexts/TenantContext';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/api/supabase';
 
 interface SimulationInfo {
   id: string;

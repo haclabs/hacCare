@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, MapPin, AlertTriangle, Save } from 'lucide-react';
 import { CreateSimulationPatientRequest } from '../../../types';
-import { createActiveSimulationPatient } from '../../../lib/simulationService';
+import { createActiveSimulationPatient } from '../../../services/simulation/simulationService';
 import { useSimulation } from '../../../contexts/SimulationContext';
 
 /**

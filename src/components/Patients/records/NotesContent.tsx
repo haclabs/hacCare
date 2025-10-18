@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Edit, Trash2, Clock } from 'lucide-react';
 import { PatientNote } from '../../../types';
 import { PatientNoteForm } from '../forms/PatientNoteForm';
-import { fetchPatientNotes, deletePatientNote, createPatientNote, updatePatientNote } from '../../../lib/patientService';
+import { fetchPatientNotes, deletePatientNote, createPatientNote, updatePatientNote } from '../../../services/patient/patientService';
 import { useAuth } from '../../../hooks/useAuth';
 import { format, parseISO, isValid } from 'date-fns';
 

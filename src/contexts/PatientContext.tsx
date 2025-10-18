@@ -1,18 +1,18 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { Patient } from '../types';
-import { isSupabaseConfigured, checkDatabaseHealth } from '../lib/supabase';
+import { isSupabaseConfigured, checkDatabaseHealth } from '../lib/api/supabase';
 import { 
   fetchPatients, 
   createPatient as createPatientDB, 
   updatePatient as updatePatientDB, 
   deletePatient as deletePatientDB 
-} from '../lib/patientService';
+} from '../services/patient/patientService';
 import { 
   getPatientsByTenant,
   createPatientWithTenant,
   updatePatientWithTenant,
   deletePatientWithTenant
-} from '../lib/multiTenantPatientService';
+} from '../services/patient/multiTenantPatientService';
 import { useTenant } from './TenantContext';
 
 /**

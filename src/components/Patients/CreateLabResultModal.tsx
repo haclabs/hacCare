@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
-import { createLabResult, getLabResultRefs } from '../../lib/labService';
+import { createLabResult, getLabResultRefs } from '../../services/clinical/labService';
 import type { CreateLabResultInput, LabResultRef, LabCategory } from '../../types/labs';
 import { LAB_CATEGORY_TABS } from '../../types/labs';
 

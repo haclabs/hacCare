@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Printer, Download, Users, Pill, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../lib/bulkLabelService';
+import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../services/operations/bulkLabelService';
 import { BarcodeGenerator } from '../bcma/BarcodeGenerator';
 import { Tenant } from '../../types';
-import { bcmaService } from '../../lib/bcmaService';
+import { bcmaService } from '../../services/clinical/bcmaService';
 
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
