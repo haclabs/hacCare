@@ -104,26 +104,31 @@ DO $$ BEGIN
   RAISE NOTICE '---';
 END $$;
 
+WITH age_categories AS (
+  SELECT 
+    CASE 
+      WHEN created_at > NOW() - INTERVAL '1 day' THEN 'Last 24 hours'
+      WHEN created_at > NOW() - INTERVAL '7 days' THEN 'Last week'
+      WHEN created_at > NOW() - INTERVAL '30 days' THEN 'Last month'
+      WHEN created_at > NOW() - INTERVAL '90 days' THEN 'Last 3 months'
+      ELSE 'Older than 3 months'
+    END as age_category,
+    CASE 
+      WHEN created_at > NOW() - INTERVAL '1 day' THEN 1
+      WHEN created_at > NOW() - INTERVAL '7 days' THEN 2
+      WHEN created_at > NOW() - INTERVAL '30 days' THEN 3
+      WHEN created_at > NOW() - INTERVAL '90 days' THEN 4
+      ELSE 5
+    END as sort_order
+  FROM patient_alerts 
+  WHERE tenant_id IS NULL
+)
 SELECT 
-  CASE 
-    WHEN created_at > NOW() - INTERVAL '1 day' THEN 'Last 24 hours'
-    WHEN created_at > NOW() - INTERVAL '7 days' THEN 'Last week'
-    WHEN created_at > NOW() - INTERVAL '30 days' THEN 'Last month'
-    WHEN created_at > NOW() - INTERVAL '90 days' THEN 'Last 3 months'
-    ELSE 'Older than 3 months'
-  END as age_category,
+  age_category,
   COUNT(*) as count
-FROM patient_alerts 
-WHERE tenant_id IS NULL
-GROUP BY age_category
-ORDER BY 
-  CASE age_category
-    WHEN 'Last 24 hours' THEN 1
-    WHEN 'Last week' THEN 2
-    WHEN 'Last month' THEN 3
-    WHEN 'Last 3 months' THEN 4
-    ELSE 5
-  END;
+FROM age_categories
+GROUP BY age_category, sort_order
+ORDER BY sort_order;
 
 -- ============================================================================
 -- STEP 5: CHECK IF PATIENTS EXIST FOR ORPHANED ALERTS
