@@ -290,7 +290,7 @@ END $$;
 
 SELECT 
   COUNT(DISTINCT tablename) as tables_with_policies,
-  COUNT(*) as total_policies,
+  SUM(policy_count) as total_policies,
   ROUND(AVG(policy_count), 2) as avg_policies_per_table
 FROM (
   SELECT tablename, COUNT(*) as policy_count
