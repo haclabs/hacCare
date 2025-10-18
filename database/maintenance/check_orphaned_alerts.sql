@@ -5,17 +5,21 @@
 -- Run this BEFORE deploying 015_security_hardening.sql
 -- ===========================================================================
 
-\echo '============================================================================'
-\echo 'ORPHANED ALERTS DETECTION SCRIPT'
-\echo '============================================================================'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE 'ORPHANED ALERTS DETECTION SCRIPT';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE '';
+END $$;
 
 -- ============================================================================
 -- STEP 1: COUNT ORPHANED ALERTS
 -- ============================================================================
 
-\echo '📊 Step 1: Count Orphaned Alerts (NULL tenant_id)'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '📊 Step 1: Count Orphaned Alerts (NULL tenant_id)';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   COUNT(*) as orphaned_alert_count,
@@ -27,14 +31,15 @@ SELECT
 FROM patient_alerts 
 WHERE tenant_id IS NULL;
 
-\echo ''
-
 -- ============================================================================
 -- STEP 2: SHOW ORPHANED ALERT DETAILS
 -- ============================================================================
 
-\echo '📋 Step 2: Orphaned Alert Details'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Step 2: Orphaned Alert Details';
+  RAISE NOTICE '---';
+END $$;
 
 DO $$
 DECLARE
@@ -64,35 +69,40 @@ WHERE tenant_id IS NULL
 ORDER BY created_at DESC
 LIMIT 20;
 
-\echo ''
-\echo '(Showing max 20 most recent orphaned alerts)'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '(Showing max 20 most recent orphaned alerts)';
+  RAISE NOTICE '';
+END $$;
 
 -- ============================================================================
 -- STEP 3: ANALYZE ORPHANED ALERTS BY TYPE
 -- ============================================================================
 
-\echo '📊 Step 3: Orphaned Alerts by Type'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '📊 Step 3: Orphaned Alerts by Type';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   alert_type,
   COUNT(*) as count,
   COUNT(CASE WHEN acknowledged THEN 1 END) as acknowledged_count,
-  ROUND(COUNT(CASE WHEN acknowledged THEN 1 END)::numeric / COUNT(*)::numeric * 100, 2) as ack_percentage
+  ROUND(COUNT(CASE WHEN acknowledged THEN 1 END)::numeric / NULLIF(COUNT(*), 0)::numeric * 100, 2) as ack_percentage
 FROM patient_alerts 
 WHERE tenant_id IS NULL
 GROUP BY alert_type
 ORDER BY count DESC;
 
-\echo ''
-
 -- ============================================================================
 -- STEP 4: ANALYZE ORPHANED ALERTS BY AGE
 -- ============================================================================
 
-\echo '📊 Step 4: Orphaned Alerts by Age'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📊 Step 4: Orphaned Alerts by Age';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   CASE 
@@ -115,14 +125,15 @@ ORDER BY
     ELSE 5
   END;
 
-\echo ''
-
 -- ============================================================================
 -- STEP 5: CHECK IF PATIENTS EXIST FOR ORPHANED ALERTS
 -- ============================================================================
 
-\echo '📊 Step 5: Patient Existence Check'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📊 Step 5: Patient Existence Check';
+  RAISE NOTICE '---';
+END $$;
 
 WITH orphaned_alerts AS (
   SELECT patient_id FROM patient_alerts WHERE tenant_id IS NULL
@@ -139,14 +150,15 @@ SELECT
 FROM orphaned_alerts oa
 LEFT JOIN patients p ON p.id = oa.patient_id;
 
-\echo ''
-
 -- ============================================================================
 -- STEP 6: SHOW PATIENT DETAILS FOR ORPHANED ALERTS
 -- ============================================================================
 
-\echo '📋 Step 6: Patient Details (if patients exist)'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Step 6: Patient Details (if patients exist)';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   p.id,
@@ -164,18 +176,22 @@ GROUP BY p.id, p.patient_id, p.first_name, p.last_name, p.tenant_id, t.name
 ORDER BY orphaned_alert_count DESC
 LIMIT 10;
 
-\echo ''
-\echo '(Showing top 10 patients with orphaned alerts)'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '(Showing top 10 patients with orphaned alerts)';
+  RAISE NOTICE '';
+END $$;
 
 -- ============================================================================
 -- STEP 7: ANALYSIS AND RECOMMENDATIONS
 -- ============================================================================
 
-\echo '============================================================================'
-\echo '📊 ANALYSIS AND RECOMMENDATIONS'
-\echo '============================================================================'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE '📊 ANALYSIS AND RECOMMENDATIONS';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE '';
+END $$;
 
 DO $$
 DECLARE
@@ -219,37 +235,40 @@ END $$;
 -- STEP 8: GENERATE BACKUP SCRIPT (IF NEEDED)
 -- ============================================================================
 
-\echo ''
-\echo '📝 Step 8: Backup Script Generation'
-\echo '---'
-\echo 'If you want to backup orphaned alerts before deletion, run:'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📝 Step 8: Backup Script Generation';
+  RAISE NOTICE '---';
+  RAISE NOTICE 'If you want to backup orphaned alerts before deletion, run:';
+  RAISE NOTICE '';
+END $$;
 
 SELECT 'COPY (SELECT * FROM patient_alerts WHERE tenant_id IS NULL) TO ''/tmp/orphaned_alerts_backup_' || 
        to_char(NOW(), 'YYYY-MM-DD_HH24-MI-SS') || '.csv'' WITH CSV HEADER;' as backup_command;
-
-\echo ''
 
 -- ============================================================================
 -- FINAL SUMMARY
 -- ============================================================================
 
-\echo '============================================================================'
-\echo 'ORPHANED ALERTS CHECK COMPLETE'
-\echo '============================================================================'
-\echo ''
-\echo 'What to do next:'
-\echo ''
-\echo '  1. Review the analysis above'
-\echo '  2. If count > 0, decide whether to:'
-\echo '     a) Back up the orphaned alerts (use generated command above)'
-\echo '     b) Investigate why they exist'
-\echo '     c) Proceed with automatic cleanup'
-\echo '  3. Run 015_security_hardening.sql when ready'
-\echo ''
-\echo 'The migration will automatically:'
-\echo '  - Delete orphaned alerts'
-\echo '  - Add policy to prevent future NULL tenant_id alerts'
-\echo '  - Verify cleanup was successful'
-\echo ''
-\echo '============================================================================'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE 'ORPHANED ALERTS CHECK COMPLETE';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE '';
+  RAISE NOTICE 'What to do next:';
+  RAISE NOTICE '';
+  RAISE NOTICE '  1. Review the analysis above';
+  RAISE NOTICE '  2. If count > 0, decide whether to:';
+  RAISE NOTICE '     a) Back up the orphaned alerts (use generated command above)';
+  RAISE NOTICE '     b) Investigate why they exist';
+  RAISE NOTICE '     c) Proceed with automatic cleanup';
+  RAISE NOTICE '  3. Run 015_security_hardening.sql when ready';
+  RAISE NOTICE '';
+  RAISE NOTICE 'The migration will automatically:';
+  RAISE NOTICE '  - Delete orphaned alerts';
+  RAISE NOTICE '  - Add policy to prevent future NULL tenant_id alerts';
+  RAISE NOTICE '  - Verify cleanup was successful';
+  RAISE NOTICE '';
+  RAISE NOTICE '============================================================================';
+END $$;

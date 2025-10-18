@@ -5,17 +5,21 @@
 -- Run this AFTER deploying 015_security_hardening.sql
 -- ===========================================================================
 
-\echo '============================================================================'
-\echo 'SECURITY HARDENING TEST SUITE'
-\echo '============================================================================'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE 'SECURITY HARDENING TEST SUITE';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE '';
+END $$;
 
 -- ============================================================================
 -- TEST 1: VERIFY CMS TABLES REMOVED
 -- ============================================================================
 
-\echo '📋 Test 1: CMS Tables Removed'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '📋 Test 1: CMS Tables Removed';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   CASE 
@@ -25,8 +29,6 @@ SELECT
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
   AND table_name IN ('cms_audit_log', 'landing_page_content', 'landing_page_content_history');
-
-\echo ''
 
 -- ============================================================================
 -- TEST 2: VERIFY NO ORPHANED ALERTS
@@ -43,14 +45,15 @@ SELECT
 FROM patient_alerts 
 WHERE tenant_id IS NULL;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 3: VERIFY NEW POLICIES EXIST
 -- ============================================================================
 
-\echo '📋 Test 3: New RLS Policies Created'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 3: New RLS Policies Created';
+  RAISE NOTICE '---';
+END $$;
 
 WITH expected_policies AS (
   SELECT unnest(ARRAY[
@@ -77,14 +80,15 @@ FROM expected_policies ep
 LEFT JOIN actual_policies ap ON ep.policy_key = ap.policy_key
 ORDER BY ep.policy_key;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 4: VERIFY OLD POLICIES REMOVED
 -- ============================================================================
 
-\echo '📋 Test 4: Old Policies Removed'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 4: Old Policies Removed';
+  RAISE NOTICE '---';
+END $$;
 
 WITH removed_policies AS (
   SELECT unnest(ARRAY[
@@ -111,14 +115,15 @@ FROM removed_policies rp
 LEFT JOIN actual_policies ap ON rp.policy_key = ap.policy_key
 ORDER BY rp.policy_key;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 5: SIMULATION POLICIES INTACT
 -- ============================================================================
 
-\echo '📋 Test 5: Simulation System Policies Intact'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 5: Simulation System Policies Intact';
+  RAISE NOTICE '---';
+END $$;
 
 WITH simulation_policies AS (
   SELECT unnest(ARRAY[
@@ -141,14 +146,15 @@ LEFT JOIN pg_policies p ON p.tablename = sp.table_name AND p.schemaname = 'publi
 GROUP BY sp.table_name
 ORDER BY sp.table_name;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 6: CRITICAL FUNCTIONS EXIST
 -- ============================================================================
 
-\echo '📋 Test 6: Critical Security Functions Exist'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 6: Critical Security Functions Exist';
+  RAISE NOTICE '---';
+END $$;
 
 WITH required_functions AS (
   SELECT unnest(ARRAY[
@@ -169,14 +175,15 @@ LEFT JOIN pg_proc p ON p.proname = rf.function_name
 LEFT JOIN pg_namespace n ON p.pronamespace = n.oid AND n.nspname = 'public'
 ORDER BY rf.function_name;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 7: MULTI-TENANT ISOLATION
 -- ============================================================================
 
-\echo '📋 Test 7: Multi-Tenant Tables Have Proper Policies'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 7: Multi-Tenant Tables Have Proper Policies';
+  RAISE NOTICE '---';
+END $$;
 
 WITH tenant_tables AS (
   SELECT unnest(ARRAY[
@@ -202,14 +209,15 @@ LEFT JOIN pg_policies p ON p.tablename = tt.table_name AND p.schemaname = 'publi
 GROUP BY tt.table_name
 ORDER BY tt.table_name;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 8: RLS ENABLED ON ALL TABLES
 -- ============================================================================
 
-\echo '📋 Test 8: RLS Enabled on All Public Tables'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 8: RLS Enabled on All Public Tables';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   COUNT(*) as total_tables,
@@ -238,16 +246,17 @@ WHERE t.schemaname = 'public'
   AND c.relrowsecurity = false
 ORDER BY tablename;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 9: SECURITY DEFINER FUNCTIONS AUDIT
 -- ============================================================================
 
-\echo '📋 Test 9: Security Definer Functions (Audit)'
-\echo '---'
-\echo 'These functions bypass RLS - verify each is necessary:'
-\echo ''
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 9: Security Definer Functions (Audit)';
+  RAISE NOTICE '---';
+  RAISE NOTICE 'These functions bypass RLS - verify each is necessary:';
+  RAISE NOTICE '';
+END $$;
 
 SELECT 
   n.nspname as schema,
@@ -266,14 +275,15 @@ WHERE p.prosecdef = true
   AND n.nspname = 'public'
 ORDER BY p.proname;
 
-\echo ''
-
 -- ============================================================================
 -- TEST 10: POLICY COUNT SUMMARY
 -- ============================================================================
 
-\echo '📋 Test 10: RLS Policy Count Summary'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 10: RLS Policy Count Summary';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   COUNT(DISTINCT tablename) as tables_with_policies,
@@ -286,27 +296,28 @@ FROM (
   GROUP BY tablename
 ) subquery;
 
-\echo ''
-
 -- ============================================================================
 -- FINAL SUMMARY
 -- ============================================================================
 
-\echo '============================================================================'
-\echo 'TEST SUITE COMPLETE'
-\echo '============================================================================'
-\echo ''
-\echo 'Review the results above. All tests should show ✅ PASS or ✅ status.'
-\echo ''
-\echo 'If any tests show ❌ FAIL or ⚠️  WARNING:'
-\echo '  1. Review the specific failure'
-\echo '  2. Check the migration logs'
-\echo '  3. Consider rolling back if critical'
-\echo ''
-\echo 'Next Steps:'
-\echo '  1. Run integration tests (simulation, alerts, multi-tenant)'
-\echo '  2. Test in staging environment'
-\echo '  3. Monitor production logs for 24 hours'
-\echo '  4. Document any issues found'
-\echo ''
-\echo '============================================================================'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE 'TEST SUITE COMPLETE';
+  RAISE NOTICE '============================================================================';
+  RAISE NOTICE '';
+  RAISE NOTICE 'Review the results above. All tests should show ✅ PASS or ✅ status.';
+  RAISE NOTICE '';
+  RAISE NOTICE 'If any tests show ❌ FAIL or ⚠️  WARNING:';
+  RAISE NOTICE '  1. Review the specific failure';
+  RAISE NOTICE '  2. Check the migration logs';
+  RAISE NOTICE '  3. Consider rolling back if critical';
+  RAISE NOTICE '';
+  RAISE NOTICE 'Next Steps:';
+  RAISE NOTICE '  1. Run integration tests (simulation, alerts, multi-tenant)';
+  RAISE NOTICE '  2. Test in staging environment';
+  RAISE NOTICE '  3. Monitor production logs for 24 hours';
+  RAISE NOTICE '  4. Document any issues found';
+  RAISE NOTICE '';
+  RAISE NOTICE '============================================================================';
+END $$;
