@@ -34,8 +34,11 @@ WHERE table_schema = 'public'
 -- TEST 2: VERIFY NO ORPHANED ALERTS
 -- ============================================================================
 
-\echo '📋 Test 2: No Orphaned Alerts (NULL tenant_id)'
-\echo '---'
+DO $$ BEGIN
+  RAISE NOTICE '';
+  RAISE NOTICE '📋 Test 2: No Orphaned Alerts (NULL tenant_id)';
+  RAISE NOTICE '---';
+END $$;
 
 SELECT 
   CASE 
