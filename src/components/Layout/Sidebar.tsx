@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { SimulationIndicator } from '../Simulation/SimulationIndicator';
+import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
 
 /**
  * Sidebar Navigation Component

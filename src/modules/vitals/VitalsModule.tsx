@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Plus, AlertTriangle, TrendingDown, Minus, Activity } from 'lucide-react';
-import { VitalsTrends } from '../../components/Patients/vitals/VitalsTrends';
+import { VitalsTrends } from '../../features/patients/components/vitals/VitalsTrends';
 import { DynamicForm } from '../../components/forms/DynamicForm';
 import { schemaEngine } from '../../lib/infrastructure/schemaEngine';
 import { vitalsEntrySchema, vitalsReviewSchema } from '../../schemas/vitalsSchemas';

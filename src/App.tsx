@@ -2,7 +2,7 @@ import { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-import PatientCard from './components/Patients/records/PatientCard';
+import PatientCard from './features/patients/components/records/PatientCard';
 import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
@@ -13,21 +13,21 @@ import { getPatientByMedicationId } from './services/clinical/medicationService'
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
-import BackupManagement from './components/Admin/BackupManagement';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import SimulationManager from './components/Simulation/SimulationManager';
-import SimulationBanner from './components/Simulation/SimulationBanner';
-import SimulationRouter from './components/Simulation/SimulationRouter';
+import BackupManagement from './features/admin/components/BackupManagement';
+import AdminDashboard from './features/admin/components/AdminDashboard';
+import SimulationManager from './features/simulation/components/SimulationManager';
+import SimulationBanner from './features/simulation/components/SimulationBanner';
+import SimulationRouter from './features/simulation/components/SimulationRouter';
 import { AuthCallback } from './components/Auth/AuthCallback';
 
 // Lazy-loaded components
-const HospitalBracelet = lazy(() => import('./components/Patients/visuals/HospitalBracelet'));
-const UserManagement = lazy(() => import('./components/Users/UserManagement'));
-const PatientManagement = lazy(() => import('./components/Patients/PatientManagement'));
-const ManagementDashboard = lazy(() => import('./components/Management/ManagementDashboard'));
+const HospitalBracelet = lazy(() => import('./features/patients/components/visuals/HospitalBracelet'));
+const UserManagement = lazy(() => import('./features/admin/components/users/UserManagement'));
+const PatientManagement = lazy(() => import('./features/patients/components/PatientManagement'));
+const ManagementDashboard = lazy(() => import('./features/admin/components/management/ManagementDashboard'));
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
-const Settings = lazy(() => import('./components/Settings/Settings'));
+const Settings = lazy(() => import('./features/settings/components/Settings'));
 
 /**
  * Main Application Component

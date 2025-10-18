@@ -17,9 +17,9 @@ import { Patient, Medication } from '../../types';
 import { ValidationResult } from '../../types/schema';
 import { createMedication, updateMedication, deleteMedication } from '../../services/clinical/medicationService';
 import { formatLocalTime } from '../../utils/time';
-import { BCMAAdministration } from '../../components/bcma/BCMAAdministration';
-import { BarcodeGenerator } from '../../components/bcma/BarcodeGenerator';
-import { useBCMA } from '../../hooks/useBCMA';
+import { BCMAAdministration } from '../../features/clinical/components/BCMAAdministration';
+import { BarcodeGenerator } from '../../features/clinical/components/BarcodeGenerator';
+import { useBCMA } from '../../features/clinical/hooks/useBCMA';
 import DiabeticRecordModule from '../../components/DiabeticRecordModule';
 import { MedicationHistoryView } from './components/MedicationHistoryView';
 

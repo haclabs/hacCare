@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Header } from './Layout/Header';
 import { Sidebar } from './Layout/Sidebar';
-import { PatientManagement } from './Patients/PatientManagement';
+import { PatientManagement } from '../features/patients/components/PatientManagement';
 import { UserManagement } from './Users/UserManagement';
 import { Documentation } from './Documentation/Documentation';
 import { Changelog } from './Changelog/Changelog';
