@@ -284,6 +284,53 @@ export const LandingPage: React.FC = () => {
             ))}
           </div>
 
+          {/* BCMA Showcase */}
+          <div className="mt-16 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-12">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                  Barcode Medication Administration
+                </h3>
+                <p className="text-lg text-gray-600 mb-6">
+                  Experience realistic BCMA workflows with our comprehensive medication administration record system. Scan medications, verify patient identity, and document administration with the same tools used in real healthcare settings.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span className="text-gray-700">PRN (As Needed) and Scheduled Medications</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span className="text-gray-700">Real-time status tracking (Scheduled, Overdue, Administered)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span className="text-gray-700">Complete medication details with dosage and prescriber info</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-white text-sm">✓</span>
+                    </div>
+                    <span className="text-gray-700">Give PRN, Edit, and Delete functionality for realistic training</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <img 
+                  src="/images/barcode_med_admin.jpg" 
+                  alt="BCMA Medication Administration Record interface showing scheduled medications" 
+                  className="rounded-xl shadow-2xl w-full border-4 border-white"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="mt-16 rounded-2xl p-12 text-center text-white" style={{ backgroundColor: '#19ADF2' }}>
             <h3 className="text-3xl font-bold mb-4">
               Additional Clinical Tools
