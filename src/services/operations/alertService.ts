@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 import { Alert } from '../../types';
 import { superAdminTenantService } from '../admin/superAdminTenantService';
+import { simulationAlertStore } from '../simulation/simulationAlertStore';
 
 /**
  * Alert Service Configuration
@@ -109,7 +110,6 @@ export const fetchActiveAlerts = async (tenantId?: string): Promise<Alert[]> => 
   try {
     // In simulation mode, return alerts from memory
     if (isSimulationMode) {
-      const { simulationAlertStore } = await import('../simulation/simulationAlertStore');
       const alerts = tenantId 
         ? simulationAlertStore.getAlertsByTenant(tenantId)
         : simulationAlertStore.getAllAlerts();
@@ -187,7 +187,6 @@ export const createAlert = async (
 
     // For simulation mode, use in-memory storage
     if (isSimulationMode) {
-      const { simulationAlertStore } = await import('../simulation/simulationAlertStore');
       const simulationAlert: Alert = {
         id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         patientId: alert.patient_id,
@@ -331,7 +330,6 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
   try {
     // In simulation mode, acknowledge in memory
     if (isSimulationMode) {
-      const { simulationAlertStore } = await import('../simulation/simulationAlertStore');
       simulationAlertStore.acknowledgeAlert(alertId);
       console.log('✅ Simulation alert acknowledged in memory:', alertId);
       return;
