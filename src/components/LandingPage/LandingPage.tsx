@@ -10,12 +10,12 @@ export const LandingPage: React.FC = () => {
     {
       icon: Heart,
       title: "Patient-Centered Care",
-      description: "Comprehensive patient management with real-time vital signs monitoring, medication tracking, and complete medical history documentation."
+      description: "Deliver holistic, patient-focused training with tools for real-time assessment monitoring, trend tracking, medication administration, documentation, and complete medical histories all in one place."
     },
     {
       icon: BookOpen,
       title: "Realistic Clinical Scenarios",
-      description: "Practice with authentic electronic medication administration records in a safe, simulated environment designed for healthcare education."
+      description: "Easily create customized patient cases by uploading patient info, labs, orders, and medications to fit any simulation. Real-time alerts keep learners informed of critical values and outstanding orders, fostering clinical judgment and timely action."
     },
     {
       icon: Users,
@@ -25,18 +25,18 @@ export const LandingPage: React.FC = () => {
     {
       icon: Shield,
       title: "Safe Training Environment",
-      description: "HIPAA-compliant platform with enterprise-grade security, allowing students to learn without risk to actual patient data."
+      description: "Students practice using realistic electronic medication administration records without risk to real patients or data. The system is designed by healthcare professionals to provide authentic, hands-on experience in a secure environment."
     }
   ];
 
   const capabilities = [
     {
       title: "BCMA Integration",
-      description: "Barcode-driven medication administration with Five Rights verification ensures medication safety and regulatory compliance."
+      description: "Barcode-driven medication administration with medication rights verification ensures medication safety and regulatory compliance."
     },
     {
       title: "Clinical Documentation",
-      description: "Complete charting system including wound assessments, admission processing, diabetic care management, and advanced directives."
+      description: "Full charting capabilities, including wound assessments, admission processing, diabetic care, and advanced directives."
     },
     {
       title: "Smart Alert System",
@@ -45,6 +45,14 @@ export const LandingPage: React.FC = () => {
     {
       title: "Specialized Care Modules",
       description: "Dedicated tools for diabetic management, glucose monitoring, insulin tracking, and comprehensive medication administration records."
+    },
+    {
+      title: "Canadian Readings",
+      description: "Configured with Canadian units for seamless integration into Canadian healthcare education programs."
+    },
+    {
+      title: "Interactive Debriefing",
+      description: "Instructors can review every learner intervention post-simulation, give timely feedback, and support meaningful reflection."
     }
   ];
 
@@ -123,22 +131,33 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-          Simulated EMR &<br />Training Environment
-        </h1>
-        <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
-          A comprehensive platform designed for healthcare students to practice electronic medication administration records in a safe, simulated environment.
-        </p>
-        <button
-          onClick={() => navigate('/login')}
-          className="text-white px-8 py-4 rounded-lg transition-colors font-medium text-lg inline-flex items-center"
-          style={{ backgroundColor: '#19ADF2' }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
-        >
-          Start Learning Today
-        </button>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Simulated EMR &<br />Training Environment
+            </h1>
+            <p className="text-xl text-gray-600 mb-10">
+              A comprehensive platform built to prepare future healthcare providers. Learners engage with a high-fidelity electronic medical record (EMR) in a safe, simulated space that mirrors real clinical practice.
+            </p>
+            <button
+              onClick={() => navigate('/login')}
+              className="text-white px-8 py-4 rounded-lg transition-colors font-medium text-lg inline-flex items-center"
+              style={{ backgroundColor: '#19ADF2' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+            >
+              Start Learning Today
+            </button>
+          </div>
+          <div className="relative">
+            <img 
+              src="/images/barcode-scanning.jpg" 
+              alt="Healthcare professional using barcode scanning with EMR system" 
+              className="rounded-2xl shadow-2xl w-full"
+            />
+          </div>
+        </div>
       </section>
 
       {/* Feature Cards */}
@@ -171,28 +190,67 @@ export const LandingPage: React.FC = () => {
               Healthcare Education Reimagined
             </h2>
             <p className="text-lg text-gray-600">
-              HacCare provides healthcare students with hands-on experience using a realistic electronic medical record system. Built with modern technology and designed by healthcare professionals, our platform bridges the gap between classroom learning and clinical practice.
+              hacCare provides future healthcare professionals with hands-on experience using a realistic electronic medical record system. Built with modern technology and designed by healthcare professionals, our platform bridges the gap between classroom learning and clinical practice.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <img 
+                src="/images/nurse-scanning.jpg" 
+                alt="Nurse scanning patient wristband with laptop EMR system" 
+                className="rounded-2xl shadow-lg w-full"
+              />
+            </div>
             <div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">Purpose-Built for Learning</h3>
               <p className="text-gray-600 mb-4">
-                Our platform replicates real-world electronic health record systems, allowing students to develop competency in medication administration, patient documentation, and clinical workflows before entering actual healthcare settings.
+                Our easy to navigate platform replicates real-world electronic health record systems, allowing learners to develop competency in medication administration, documentation, and clinical workflows before entering actual healthcare settings.
               </p>
               <p className="text-gray-600">
-                With features like barcode medication administration, Five Rights verification, and comprehensive patient charting, students gain practical experience with the tools they will use throughout their careers.
+                With features like barcode scanning medication administration, medication rights verification, and comprehensive patient charting, students gain practical experience with the tools they will use throughout their careers.
               </p>
             </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 mt-16">
             <div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">Modern Technology Stack</h3>
               <p className="text-gray-600 mb-4">
-                Built with React, TypeScript, and Supabase, HacCare leverages enterprise-grade technology to deliver a responsive, real-time learning experience. The platform includes mobile-first design, real-time data synchronization, and advanced security features.
+                Built with React, TypeScript, and Supabase, hacCare leverages enterprise-grade technology to deliver a responsive, real-time learning experience. The platform includes mobile-first design, real-time data synchronization, and advanced security features.
               </p>
               <p className="text-gray-600">
-                Our commitment to security and compliance ensures student data is protected while providing an authentic healthcare technology experience.
+                Our commitment to security and compliance ensures data is protected while providing an authentic healthcare technology experience.
               </p>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Key Benefits</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <span className="text-white text-sm">✓</span>
+                  </div>
+                  <span className="text-gray-700">Real-time clinical decision making</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <span className="text-white text-sm">✓</span>
+                  </div>
+                  <span className="text-gray-700">Barcode scanning integration</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <span className="text-white text-sm">✓</span>
+                  </div>
+                  <span className="text-gray-700">Medication rights verification</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <span className="text-white text-sm">✓</span>
+                  </div>
+                  <span className="text-gray-700">Post-simulation debriefing tools</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -206,11 +264,11 @@ export const LandingPage: React.FC = () => {
               Comprehensive Feature Set
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Everything healthcare students need to practice and master electronic medical record systems.
+              Everything healthcare professionals need to practice and master electronic medical record systems.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {capabilities.map((capability, index) => (
               <div
                 key={index}
