@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Play, Users, Clock, AlertCircle } from 'lucide-react';
 import { launchSimulation } from '../../../services/simulation/simulationService';
 import { supabase } from '../../../lib/api/supabase';
-import type { SimulationTemplateWithDetails } from '../../../types/simulation';
+import type { SimulationTemplateWithDetails } from '../types/simulation';
 
 interface LaunchSimulationModalProps {
   template: SimulationTemplateWithDetails;

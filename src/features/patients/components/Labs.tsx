@@ -10,8 +10,8 @@ import {
   getLabResults,
   hasUnacknowledgedLabs,
 } from '../../../services/clinical/labService';
-import type { LabPanel, LabCategory } from '../../../types/labs';
-import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../../../types/labs';
+import type { LabPanel, LabCategory } from '../../../features/clinical/types/labs';
+import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../../../features/clinical/types/labs';
 import { LabPanelDetail } from './LabPanelDetail';
 import { CreateLabPanelModal } from './CreateLabPanelModal';
 

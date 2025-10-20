@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { updateLabResult } from '../../../services/clinical/labService';
-import type { LabResult } from '../../../types/labs';
+import type { LabResult } from '../../../features/clinical/types/labs';
 
 interface EditLabResultModalProps {
   result: LabResult;

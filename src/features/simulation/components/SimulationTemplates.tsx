@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Play, Save, Trash2, Camera } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate } from '../../../services/simulation/simulationService';
-import type { SimulationTemplateWithDetails } from '../../../types/simulation';
+import type { SimulationTemplateWithDetails } from '../types/simulation';
 import CreateTemplateModal from './CreateTemplateModal';
 import LaunchSimulationModal from './LaunchSimulationModal';
 import { formatDistanceToNow } from 'date-fns';

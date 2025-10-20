@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { X, Calendar, Clock, FileText } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { createLabPanel } from '../../../services/clinical/labService';
-import type { CreateLabPanelInput } from '../../../types/labs';
+import type { CreateLabPanelInput } from '../../../features/clinical/types/labs';
 
 interface CreateLabPanelModalProps {
   patientId: string;

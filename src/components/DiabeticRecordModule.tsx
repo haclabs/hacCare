@@ -15,7 +15,7 @@ import {
   getGlucoseStatus,
   getCurrentTime,
   getCurrentDate 
-} from '../types/diabeticRecord';
+} from '../features/clinical/types/diabetic';
 import { diabeticRecordService } from '../services/clinical/diabeticRecordService';
 
 interface DiabeticRecordModuleProps {

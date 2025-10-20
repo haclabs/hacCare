@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
-import { DiabeticRecord, DiabeticRecordFormData, GlucoseTrendPoint } from '../types/diabeticRecord';
+import { DiabeticRecord, DiabeticRecordFormData, GlucoseTrendPoint } from '../../features/clinical/types/diabetic';
 
 class DiabeticRecordService {
   /**

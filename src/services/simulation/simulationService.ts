@@ -24,7 +24,7 @@ import type {
   SimulationTemplateFilters,
   SimulationActiveFilters,
   SimulationHistoryFilters,
-} from '../../types/simulation';
+} from '../../features/simulation/types/simulation';
 
 // ============================================================================
 // TEMPLATE MANAGEMENT

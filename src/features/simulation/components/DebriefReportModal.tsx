@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { X, FileText, Printer, TrendingUp, Clock, Users, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
-import type { SimulationHistoryWithDetails } from '../../../types/simulation';
+import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { format, differenceInMinutes } from 'date-fns';
 
 interface DebriefReportModalProps {

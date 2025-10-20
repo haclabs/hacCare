@@ -20,14 +20,14 @@ import {
   createStandardLabSet,
   getEffectiveRangeDisplay,
 } from '../../../services/clinical/labService';
-import type { LabPanel, LabResult, LabCategory } from '../../../types/labs';
+import type { LabPanel, LabResult, LabCategory } from '../../../features/clinical/types/labs';
 import {
   LAB_CATEGORY_TABS,
   getFlagLabel,
   getFlagColorClass,
   getStatusLabel,
   getStatusColorClass,
-} from '../../../types/labs';
+} from '../../../features/clinical/types/labs';
 import { CreateLabResultModal } from './CreateLabResultModal';
 import { EditLabResultModal } from './EditLabResultModal';
 import { LabAcknowledgeModal } from './LabAcknowledgeModal';

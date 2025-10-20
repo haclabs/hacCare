@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { History, FileText, Clock, Users, TrendingUp } from 'lucide-react';
 import { getSimulationHistory } from '../../../services/simulation/simulationService';
-import type { SimulationHistoryWithDetails } from '../../../types/simulation';
+import type { SimulationHistoryWithDetails } from '../types/simulation';
 import DebriefReportModal from './DebriefReportModal';
 import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
 
