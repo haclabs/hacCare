@@ -35,10 +35,10 @@ import {
   MessageSquare,
   FlaskConical
 } from 'lucide-react';
-import { VitalsModule } from '../modules/vitals/VitalsModule';
-import { MARModule } from '../modules/mar/MARModule';
-import { FormsModule } from '../modules/forms/FormsModule';
-import { WoundCareModule } from '../modules/wound-care/WoundCareModule';
+import { VitalsModule } from '../features/clinical/components/vitals';
+import { MARModule } from '../features/clinical/components/mar';
+import { FormsModule } from '../features/forms';
+import { WoundCareModule } from '../features/clinical/components/wound-care';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';

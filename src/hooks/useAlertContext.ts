@@ -8,10 +8,10 @@ import { AlertContext } from '../contexts/AlertContext';
  * @returns {AlertContextType} Alert context value
  * @throws {Error} If used outside AlertProvider
  */
-export const useAlerts = () => {
+export const useAlertContext = () => {
   const context = useContext(AlertContext);
   if (context === undefined) {
-    throw new Error('useAlerts must be used within an AlertProvider');
+    throw new Error('useAlertContext must be used within an AlertProvider');
   }
   return context;
 };

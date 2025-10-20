@@ -182,7 +182,7 @@ export const integrateWithExistingComponents = () => {
     // How to use VitalsModule in existing VitalsContent
     vitalsIntegration: `
       // Replace VitalsContent component with:
-      import { VitalsModule } from '../../modules/vitals/VitalsModule';
+      import { VitalsModule } from '../../features/clinical/components/vitals';
       
       <VitalsModule
         patient={patient}
@@ -197,7 +197,7 @@ export const integrateWithExistingComponents = () => {
     // How to use MARModule in existing MedicationAdministration
     medicationIntegration: `
       // Replace MedicationAdministration component with:
-      import { MARModule } from '../../modules/mar/MARModule';
+      import { MARModule } from '../../features/clinical/components/mar';
       
       <MARModule
         patient={patient}
@@ -212,7 +212,7 @@ export const integrateWithExistingComponents = () => {
     // How to add FormsModule to assessments
     formsIntegration: `
       // Add FormsModule as new subtab in assessments:
-      import { FormsModule } from '../../modules/forms/FormsModule';
+      import { FormsModule } from '../../features/forms';
       
       // Add to subTabs array:
       { id: 'assessments', label: 'Clinical Forms', icon: FileText }

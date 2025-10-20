@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, User, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useAlerts } from '../../hooks/useAlerts';
+import { useAlertContext } from '../../hooks/useAlertContext';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
 import { TenantSwitcher } from './TenantSwitcher';
@@ -14,7 +14,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
-  const { unreadCount, loading: alertsLoading } = useAlerts();
+  const { unreadCount, loading: alertsLoading } = useAlertContext();
   const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
 
   const getRoleLabel = (role: string) => {

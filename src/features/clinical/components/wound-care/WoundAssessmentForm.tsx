@@ -15,8 +15,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Camera, Save, X, Upload, Trash2, Ruler, MapPin } from 'lucide-react';
-import { WoundAssessment, Patient } from '../../types';
-import { useAuth } from '../../hooks/useAuth';
+import { WoundAssessment, Patient } from '../../../../types';
+import { useAuth } from '../../../../hooks/useAuth';
 
 interface WoundAssessmentFormProps {
   patient: Patient;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getCurrentSubdomain } from '../lib/infrastructure/subdomainService';
+import { getCurrentSubdomain } from '../../../lib/infrastructure/subdomainService';
 import { getTenantBySubdomain } from '../services/admin/tenantService';
-import { Tenant } from '../types';
+import { Tenant } from '../../../types';
 
 /**
  * Hook to get tenant information for branding purposes

@@ -7,8 +7,8 @@ import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
-import { useMultiTenantPatients } from './hooks/queries/useMultiTenantPatients';
-import { useAlerts } from './hooks/useAlerts';
+import { useMultiTenantPatients } from './features/patients/hooks/useMultiTenantPatients';
+import { useAlertContext } from './hooks/useAlertContext';
 import { getPatientByMedicationId } from './services/clinical/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
@@ -78,7 +78,7 @@ function App() {
   const { patients = [], error: dbError } = useMultiTenantPatients();
   
   // Get alerts from AlertContext (avoid React Query conflicts)
-  const { alerts } = useAlerts();
+  const { alerts } = useAlertContext();
 
   // Create currentUser object for components that need it
   const currentUser = user && profile ? {

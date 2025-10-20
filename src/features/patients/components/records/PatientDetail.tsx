@@ -8,7 +8,7 @@ import { fetchAdmissionRecord, fetchAdvancedDirective, type AdmissionRecord, typ
 import { fetchDoctorsOrders } from '../../../../services/clinical/doctorsOrdersService';
 import { DoctorsOrder } from '../../../../types';
 import { RecentActivity } from './RecentActivity';
-import { MARModule } from '../../../../modules/mar/MARModule';
+import { MARModule } from '../../../clinical/components/mar';
 import { WoundAssessment } from '../forms/WoundAssessment';
 // import { ImageAnnotation } from '../visuals/ImageAnnotation';
 import { AdmissionRecordsForm } from '../forms/AdmissionRecordsForm';

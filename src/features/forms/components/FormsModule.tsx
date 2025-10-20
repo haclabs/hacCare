@@ -10,10 +10,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { FileText, Clipboard, Stethoscope, User, Save } from 'lucide-react';
-import { DynamicForm } from '../../components/forms/DynamicForm';
-import { schemaEngine } from '../../lib/infrastructure/schemaEngine';
-import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../schemas/formsSchemas';
-import { Patient } from '../../types';
+import { DynamicForm } from '../../../components/forms/DynamicForm';
+import { schemaEngine } from '../../../lib/infrastructure/schemaEngine';
+import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../../schemas/formsSchemas';
+import { Patient } from '../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 
 interface FormsModuleProps {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock, Pill, User, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
-import { MedicationAdministration } from '../../../types';
-import { usePatientAdministrationHistory24h } from '../../../hooks/queries/useMedications';
+import { MedicationAdministration } from '../../../../types';
+import { usePatientAdministrationHistory24h } from '../../hooks/useMedications';
 
 interface MedicationHistoryViewProps {
   patientId: string;

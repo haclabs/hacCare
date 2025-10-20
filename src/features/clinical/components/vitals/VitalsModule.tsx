@@ -11,12 +11,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Plus, AlertTriangle, TrendingDown, Minus, Activity } from 'lucide-react';
-import { VitalsTrends } from '../../features/patients/components/vitals/VitalsTrends';
-import { DynamicForm } from '../../components/forms/DynamicForm';
-import { schemaEngine } from '../../lib/infrastructure/schemaEngine';
-import { vitalsEntrySchema, vitalsReviewSchema } from '../../schemas/vitalsSchemas';
-import { updatePatientVitals } from '../../services/patient/patientService';
-import { Patient, VitalSigns } from '../../types';
+import { VitalsTrends } from '../../../../features/patients/components/vitals/VitalsTrends';
+import { DynamicForm } from '../../../../components/forms/DynamicForm';
+import { schemaEngine } from '../../../../lib/infrastructure/schemaEngine';
+import { vitalsEntrySchema, vitalsReviewSchema } from '../../../../schemas/vitalsSchemas';
+import { updatePatientVitals } from '../../../../services/patient/patientService';
+import { Patient, VitalSigns } from '../../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 
 interface VitalsModuleProps {

@@ -9,9 +9,9 @@ import {
   fetchPatientAdministrationHistory24h,
   getPatientByMedicationId,
   updateMedicationNextDue
-} from '../../services/clinical/medicationService';
-import { Medication, MedicationAdministration } from '../../types';
-import { queryKeys } from '../../lib/api/queryClient';
+} from '../../../services/clinical/medicationService';
+import { Medication, MedicationAdministration } from '../../../types';
+import { queryKeys } from '../../../lib/api/queryClient';
 
 // ========================================
 // 💊 MEDICATION QUERY HOOKS

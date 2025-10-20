@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, User, MapPin, Phone, AlertTriangle, Save, ChevronDown } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Patient } from '../../../../types';
-import { useTenantNurses } from '../../../../hooks/useTenantNurses';
+import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 
 /**
  * Patient Form Component

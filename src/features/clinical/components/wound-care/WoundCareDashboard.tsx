@@ -14,7 +14,7 @@
 
 import React, { useState } from 'react';
 import { Calendar, TrendingUp, Camera, Edit3, Plus, Ruler, AlertTriangle, Clock } from 'lucide-react';
-import { WoundAssessment, WoundTreatment, Patient } from '../../types';
+import { WoundAssessment, WoundTreatment, Patient } from '../../../../types';
 
 interface WoundCareDashboardProps {
   patient: Patient;

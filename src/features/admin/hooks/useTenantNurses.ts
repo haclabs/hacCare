@@ -6,9 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/api/supabase';
-import { useTenant } from '../contexts/TenantContext';
-import { useAuth } from '../contexts/auth/useAuth';
+import { supabase } from '../../../lib/api/supabase';
+import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../contexts/auth/useAuth';
 
 export interface NurseOption {
   id: string;

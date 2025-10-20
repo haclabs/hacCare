@@ -3,7 +3,7 @@ import { Alert } from '../../types';
 import { X, AlertTriangle, Clock, Pill, Activity, FileText, CheckCircle, RefreshCw, Play } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import { formatLocalTime } from '../../utils/dateUtils';
-import { useAlerts } from '../../hooks/useAlerts';
+import { useAlertContext } from '../../hooks/useAlertContext';
 
 // Helper function to format alert timestamp
 const formatAlertTime = (timestamp: string) => {
@@ -24,7 +24,7 @@ export const AlertPanel: React.FC<AlertPanelProps> = ({
   isOpen, 
   onClose
 }) => {
-  const { alerts, loading, error, acknowledgeAlert: contextAcknowledgeAlert, refreshAlerts, runChecks: contextRunChecks } = useAlerts();
+  const { alerts, loading, error, acknowledgeAlert: contextAcknowledgeAlert, refreshAlerts, runChecks: contextRunChecks } = useAlertContext();
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [acknowledgingAlerts, setAcknowledgingAlerts] = useState<Set<string>>(new Set());

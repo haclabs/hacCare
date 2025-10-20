@@ -11,17 +11,17 @@
 import React, { useState, useEffect } from 'react';
 import { Pill, Clock, AlertTriangle, CheckCircle, Plus, Syringe, Calendar, QrCode, Droplets, Edit3, Trash2 } from 'lucide-react';
 
-import { schemaEngine } from '../../lib/infrastructure/schemaEngine';
-import { medicationAdministrationSchema } from '../../schemas/medicationSchemas';
-import { Patient, Medication } from '../../types';
+import { schemaEngine } from '../../../../lib/infrastructure/schemaEngine';
+import { medicationAdministrationSchema } from '../../../../schemas/medicationSchemas';
+import { Patient, Medication } from '../../../../types';
 import { ValidationResult } from '../../types/schema';
-import { createMedication, updateMedication, deleteMedication } from '../../services/clinical/medicationService';
-import { formatLocalTime } from '../../utils/time';
-import { BCMAAdministration } from '../../features/clinical/components/BCMAAdministration';
-import { BarcodeGenerator } from '../../features/clinical/components/BarcodeGenerator';
-import { useBCMA } from '../../features/clinical/hooks/useBCMA';
-import DiabeticRecordModule from '../../components/DiabeticRecordModule';
-import { MedicationHistoryView } from './components/MedicationHistoryView';
+import { createMedication, updateMedication, deleteMedication } from '../../../../services/clinical/medicationService';
+import { formatLocalTime } from '../../../../utils/time';
+import { BCMAAdministration } from '../../components/BCMAAdministration';
+import { BarcodeGenerator } from '../../components/BarcodeGenerator';
+import { useBCMA } from '../../hooks/useBCMA';
+import DiabeticRecordModule from '../../../../components/DiabeticRecordModule';
+import { MedicationHistoryView } from './MedicationHistoryView';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 

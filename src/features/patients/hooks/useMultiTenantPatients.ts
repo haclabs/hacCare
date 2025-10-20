@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Patient, VitalSigns, PatientNote } from '../../types';
+import { Patient, VitalSigns, PatientNote } from '../../../types';
 import {
   getPatientsByTenant,
   createPatientWithTenant,
@@ -9,8 +9,8 @@ import {
   addVitalsWithTenant,
   addPatientNoteWithTenant,
   getTenantPatientStats
-} from '../../services/patient/multiTenantPatientService';
-import { useTenant } from '../../contexts/TenantContext';
+} from '../../../services/patient/multiTenantPatientService';
+import { useTenant } from '../../../contexts/TenantContext';
 
 /**
  * Custom hook for multi-tenant patient operations
