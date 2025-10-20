@@ -2,10 +2,9 @@ import { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-import PatientCard from './features/patients/components/records/PatientCard';
-import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
+import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './features/patients/hooks/useMultiTenantPatients';
 import { useAlertContext } from './hooks/useAlertContext';
@@ -13,14 +12,15 @@ import { getPatientByMedicationId } from './services/clinical/medicationService'
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
-import BackupManagement from './features/admin/components/BackupManagement';
-import AdminDashboard from './features/admin/components/AdminDashboard';
-import SimulationManager from './features/simulation/components/SimulationManager';
-import SimulationBanner from './features/simulation/components/SimulationBanner';
-import SimulationRouter from './features/simulation/components/SimulationRouter';
 import { AuthCallback } from './components/Auth/AuthCallback';
 
-// Lazy-loaded components
+// Lazy-loaded feature components for better code splitting
+const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
+const BackupManagement = lazy(() => import('./features/admin/components/BackupManagement'));
+const AdminDashboard = lazy(() => import('./features/admin/components/AdminDashboard'));
+const SimulationManager = lazy(() => import('./features/simulation/components/SimulationManager'));
+const SimulationBanner = lazy(() => import('./features/simulation/components/SimulationBanner'));
+const SimulationRouter = lazy(() => import('./features/simulation/components/SimulationRouter'));
 const HospitalBracelet = lazy(() => import('./features/patients/components/visuals/HospitalBracelet'));
 const UserManagement = lazy(() => import('./features/admin/components/users/UserManagement'));
 const PatientManagement = lazy(() => import('./features/patients/components/PatientManagement'));
