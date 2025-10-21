@@ -1,10 +1,55 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, BookOpen, Users, Shield, Mail, Phone, MapPin } from 'lucide-react';
 import logo from './logo.png';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+
+  // Add structured data for SEO
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "hacCare",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "A comprehensive platform built to prepare future healthcare providers. Learners engage with a high-fidelity electronic medical record (EMR) in a safe, simulated space that mirrors real clinical practice.",
+      "provider": {
+        "@type": "Organization",
+        "name": "halabs",
+        "url": "https://haccare.app"
+      },
+      "featureList": [
+        "BCMA Integration",
+        "Clinical Documentation",
+        "Smart Alert System",
+        "Specialized Care Modules",
+        "Canadian Readings",
+        "Interactive Debriefing"
+      ],
+      "screenshot": "https://haccare.app/images/barcode_med_admin.jpg",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5.0",
+        "ratingCount": "1"
+      }
+    });
+    document.head.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
 
   const features = [
     {
