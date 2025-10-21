@@ -43,9 +43,15 @@ const validateEnvironment = (): EnvironmentConfig => {
     supabaseUrl.length > 30
   );
   
+  // Support both legacy JWT keys and new sb_publishable_ format
   const isValidKey = supabaseAnonKey && 
-    supabaseAnonKey.length > 50 && 
-    /^[A-Za-z0-9._-]+$/.test(supabaseAnonKey);
+    supabaseAnonKey.length > 30 && 
+    (
+      // New format: sb_publishable_xxx or sb_xxx
+      supabaseAnonKey.startsWith('sb_') ||
+      // Legacy format: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      /^[A-Za-z0-9._-]+$/.test(supabaseAnonKey)
+    );
 
   const supabaseConfigured = isValidUrl && isValidKey;
 

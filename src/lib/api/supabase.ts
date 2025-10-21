@@ -40,10 +40,18 @@ if (import.meta.env.DEV) {
  * Checks if environment variables are properly set and valid
  */
 // Validate configuration - strict validation for production environment
+// Support both legacy JWT format and new sb_publishable_ format
 const isValidUrl = supabaseUrl && (
   supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co')
 );
-const isValidKey = supabaseAnonKey && supabaseAnonKey.length > 50;
+const isValidKey = supabaseAnonKey && 
+  supabaseAnonKey.length > 30 && 
+  (
+    // New format: sb_publishable_xxx
+    supabaseAnonKey.startsWith('sb_') ||
+    // Legacy format: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    supabaseAnonKey.startsWith('eyJ')
+  );
 const hasValidConfig = isValidUrl && isValidKey;
 
 if (import.meta.env.DEV) {
