@@ -67,7 +67,9 @@ const ActiveSimulations: React.FC = () => {
     }
     setActionLoading(id);
     try {
-      await resetSimulation(id);
+      const result = await resetSimulation(id);
+      console.log('✅ Simulation reset successfully:', result);
+      alert('Simulation reset successfully! Patient and medication IDs have been preserved.');
       await loadSimulations();
     } catch (error) {
       console.error('Error resetting simulation:', error);

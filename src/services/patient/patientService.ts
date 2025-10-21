@@ -169,7 +169,7 @@ const convertSimulationPatient = (simulationPatient: SimulationPatient): Patient
 /**
  * Fetch all patients from database or simulation
  */
-export const fetchPatients = async (simulationId?: string): Promise<Patient[]> => {
+export const fetchPatients = async (simulationId?: string, tenantId?: string): Promise<Patient[]> => {
   try {
     // If simulation mode, fetch simulation patients
     if (simulationId) {
@@ -204,12 +204,20 @@ export const fetchPatients = async (simulationId?: string): Promise<Patient[]> =
       return convertedPatients;
     }
     
-    console.log('Fetching patients from database...');
+    console.log('Fetching patients from database...', tenantId ? `for tenant: ${tenantId}` : '(all tenants)');
+    
+    // Build query for patients
+    let query = supabase
+      .from('patients')
+      .select('*');
+    
+    // Filter by tenant_id if provided (multi-tenant isolation)
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
+    }
     
     // Fetch patients
-    const { data: patients, error: patientsError } = await supabase
-      .from('patients')
-      .select('*')
+    const { data: patients, error: patientsError } = await query
       .order('created_at', { ascending: false });
 
     if (patientsError) {

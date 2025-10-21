@@ -41,7 +41,7 @@ export class SecurityHeaders {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https://*.supabase.co blob:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.ipify.org https://ipapi.co https://api64.ipify.org",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",

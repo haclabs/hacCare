@@ -15,17 +15,30 @@ import {
 } from '../../../services/patient/patientService';
 import { fetchPatientMedications } from '../../../services/clinical/medicationService';
 import { Patient, VitalSigns, PatientNote } from '../../../types';
+import { useTenant } from '../../../contexts/TenantContext';
 
 /**
  * Hook to fetch all patients
  * Replaces the patients state in PatientContext
+ * Automatically filters by current tenant for multi-tenant isolation
+ * For active simulation tenants, fetches from simulation_patients table
  */
 export function usePatients() {
+  const { currentTenant } = useTenant();
+  
+  // For active simulation tenants, use the simulation_id
+  const simulationId = currentTenant?.simulation_id;
+  
   return useQuery({
-    queryKey: queryKeys.patients,
-    queryFn: fetchPatients,
+    queryKey: [...queryKeys.patients, currentTenant?.id, simulationId],
+    queryFn: () => fetchPatients(simulationId, currentTenant?.id), // Pass simulation_id first, then tenant_id
     staleTime: 2 * 60 * 1000, // Patient list is fresh for 2 minutes
     select: (patients) => {
+      // Safety check: ensure patients is an array before sorting
+      if (!Array.isArray(patients)) {
+        console.warn('usePatients: received non-array data:', patients);
+        return [];
+      }
       // Sort patients by admission date (newest first)
       return patients.sort((a, b) => 
         new Date(b.admission_date).getTime() - new Date(a.admission_date).getTime()
