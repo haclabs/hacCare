@@ -21,6 +21,7 @@ import {
   SimulationPatientNote,
   CreateSimulationPatientRequest
 } from '../../types';
+import { generateSecurePatientId } from '../../../src/utils/secureRandom';
 import {
   getScenarioTemplateDetails,
   updateScenarioTemplate,
@@ -894,10 +895,10 @@ const AddPatientModal: React.FC<{
 }> = ({ onClose, onSubmit }) => {
   /**
    * Generate a unique patient ID in PTXXXXX format
+   * Uses cryptographically secure random number generation
    */
   const generatePatientId = (): string => {
-    const randomNum = Math.floor(Math.random() * 90000) + 10000; // Ensures 5 digits
-    return `PT${randomNum}`;
+    return generateSecurePatientId();
   };
 
   const [formData, setFormData] = useState<CreateSimulationPatientRequest>({

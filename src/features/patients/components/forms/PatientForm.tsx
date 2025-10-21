@@ -3,6 +3,7 @@ import { X, User, MapPin, Phone, AlertTriangle, Save, ChevronDown } from 'lucide
 import { v4 as uuidv4 } from 'uuid';
 import { Patient } from '../../../../types';
 import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
+import { generateSecurePatientId } from '../../../../utils/secureRandom';
 
 /**
  * Patient Form Component
@@ -23,7 +24,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
 
   // Form state management
   const [formData, setFormData] = useState<Partial<Patient>>({
-    patient_id: patient?.patient_id || generatePatientId(),
+    patient_id: patient?.patient_id || generateSecurePatientId(),
     first_name: patient?.first_name || '',
     last_name: patient?.last_name || '',
     date_of_birth: patient?.date_of_birth || '',
@@ -49,14 +50,13 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
   const [newAllergy, setNewAllergy] = useState('');
 
   /**
-   * Generate a unique patient ID in PTXXXXX format
+   * Generate a cryptographically secure patient ID
+   * DEPRECATED: Use generateSecurePatientId from utils/secureRandom.ts instead
    */
   function generatePatientId(): string {
-    const randomNum = Math.floor(Math.random() * 90000) + 10000; // Ensures 5 digits
-    return `PT${randomNum}`;
-  }
-
-  /**
+    // Replaced with secure implementation
+    return generateSecurePatientId();
+  }  /**
    * Update form field value
    */
   const updateField = (field: keyof Patient, value: any) => {

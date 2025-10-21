@@ -330,14 +330,34 @@ export const WoundAssessmentForm: React.FC<WoundAssessmentFormProps> = ({
       // In a real implementation, this would upload to Supabase Storage
       // For now, we'll create a mock URL
       const mockUrl = `https://example.com/wound-photos/${Date.now()}-${file.name}`;
-      setFormData(prev => ({
-        ...prev,
-        photos: [...prev.photos, mockUrl]
-      }));
+      
+      // Validate URL to prevent XSS attacks
+      if (isSafeImageUrl(mockUrl)) {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...prev.photos, mockUrl]
+        }));
+      } else {
+        console.error('Invalid or unsafe URL detected');
+      }
     } catch (error) {
       console.error('Error uploading photo:', error);
     } finally {
       setUploading(false);
+    }
+  };
+
+  /**
+   * Validate that a URL is safe for use in image src attributes
+   * Prevents javascript: and data: URLs that could execute code
+   */
+  const isSafeImageUrl = (url: string): boolean => {
+    try {
+      const parsed = new URL(url);
+      // Only allow http, https, and blob URLs (for file uploads)
+      return ['http:', 'https:', 'blob:'].includes(parsed.protocol);
+    } catch {
+      return false;
     }
   };
 
@@ -727,7 +747,7 @@ export const WoundAssessmentForm: React.FC<WoundAssessmentFormProps> = ({
             
             {formData.photos.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {formData.photos.map((photo, index) => (
+                {formData.photos.filter(isSafeImageUrl).map((photo, index) => (
                   <div key={index} className="relative">
                     <img
                       src={photo}

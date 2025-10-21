@@ -3,6 +3,7 @@ import { X, User, MapPin, AlertTriangle, Save } from 'lucide-react';
 import { CreateSimulationPatientRequest } from '../../../../types';
 import { createActiveSimulationPatient } from '../../../../services/simulation/simulationService';
 import { useSimulation } from '../../../../contexts/SimulationContext';
+import { generateSecurePatientId } from '../../../../utils/secureRandom';
 
 /**
  * Simulation Patient Form Component
@@ -21,10 +22,10 @@ export const SimulationPatientForm: React.FC<SimulationPatientFormProps> = ({ on
   
   /**
    * Generate a unique patient ID in PTXXXXX format
+   * Uses cryptographically secure random number generation
    */
   const generatePatientId = (): string => {
-    const randomNum = Math.floor(Math.random() * 90000) + 10000; // Ensures 5 digits
-    return `PT${randomNum}`;
+    return generateSecurePatientId();
   };
 
   // Form state management
