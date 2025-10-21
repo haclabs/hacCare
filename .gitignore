@@ -22,6 +22,9 @@ dist-ssr/
 tests/temp-*
 tests/*.tmp
 tests/test-output-*
+tests/**/*.mjs
+*.mjs
+scripts/**/*.mjs
 
 # Editor directories and files
 .vscode/
