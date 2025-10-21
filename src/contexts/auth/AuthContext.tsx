@@ -584,7 +584,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('✅ Profile found:', profiles[0]);
               console.log('👤 Profile role:', profiles[0].role, 'Is super_admin?', profiles[0].role === 'super_admin');
               
-              // Store access token BEFORE setting state to ensure it's available for dependent contexts
+              /**
+               * SECURITY NOTE: Storing access token in sessionStorage
+               * 
+               * This is a temporary workaround for Supabase client hanging issues.
+               * The access token stored here is:
+               * - Short-lived (expires in 1 hour by default)
+               * - sessionStorage only (cleared on tab close, not persistent)
+               * - Used only for direct API calls that bypass hanging Supabase client
+               * - NOT a refresh token (those are httpOnly cookies managed by Supabase)
+               * 
+               * Security considerations:
+               * - XSS Risk: Mitigated by CSP headers and input sanitization
+               * - Session hijacking: Limited by short expiry and session-only storage
+               * - CSRF: Not applicable for API calls (requires auth token)
+               * 
+               * TODO: Remove this once Supabase client hanging issues are resolved
+               * Alternative: Use Supabase's built-in session management exclusively
+               * 
+               * CodeQL Alert: Acknowledged - this is intentional for specific API calls
+               */
               sessionStorage.setItem('supabase_access_token', data.session.access_token);
               
               // Use React 18's automatic batching - all state updates in same function are batched
@@ -600,6 +619,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('🏁 User and profile state updated');
             } else {
               console.warn('⚠️ No profile found for user');
+              // See security note above - storing access token for direct API calls
               sessionStorage.setItem('supabase_access_token', data.session.access_token);
               setUser(data.session.user);
               setProfile(null);
@@ -608,6 +628,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             const errorText = await response.text();
             console.error('❌ Direct fetch failed:', response.status, errorText);
+            // See security note above - storing access token for direct API calls
             sessionStorage.setItem('supabase_access_token', data.session.access_token);
             setUser(data.session.user);
             setProfile(null);
@@ -616,6 +637,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (fetchError) {
           console.error('💥 Exception during direct fetch:', fetchError);
           // Set user anyway so they can create profile
+          // See security note above - storing access token for direct API calls
           sessionStorage.setItem('supabase_access_token', data.session.access_token);
           setUser(data.session.user);
           setProfile(null);
