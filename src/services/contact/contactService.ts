@@ -3,6 +3,8 @@
  * Handles sending contact form submissions to the backend
  */
 
+import { supabase } from '../../lib/api/supabase';
+
 export interface ContactFormData {
   name: string;
   email: string;
@@ -40,32 +42,23 @@ export async function submitContactForm(
       };
     }
 
-    // Call the Supabase Edge Function directly with anon key
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-contact-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-      },
-      body: JSON.stringify(formData),
+    // Call the Supabase Edge Function using the Supabase client
+    // The client automatically handles authentication with the anon key
+    const { data, error } = await supabase.functions.invoke('send-contact-email', {
+      body: formData,
     });
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('Error submitting contact form:', result);
+    if (error) {
+      console.error('Error submitting contact form:', error);
       return {
         success: false,
-        error: result.error || 'Failed to send message. Please try again or email support@haccare.app directly.',
+        error: 'Failed to send message. Please try again or email support@haccare.app directly.',
       };
     }
 
     return {
       success: true,
-      message: result.message || 'Thank you for your message! We\'ll get back to you soon.',
+      message: data?.message || 'Thank you for your message! We\'ll get back to you soon.',
     };
   } catch (error) {
     console.error('Unexpected error submitting contact form:', error);

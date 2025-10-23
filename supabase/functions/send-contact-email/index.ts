@@ -1,5 +1,5 @@
 // Supabase Edge Function to handle contact form submissions
-// Deploy with: supabase functions deploy send-contact-email
+// This function does NOT require authentication (public endpoint)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -19,10 +19,24 @@ serve(async (req) => {
     return new Response('ok', {
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name',
       },
     })
+  }
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { 
+        status: 405,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      }
+    )
   }
 
   try {
