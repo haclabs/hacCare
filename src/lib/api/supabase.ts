@@ -84,11 +84,6 @@ export const supabase = createClient(
       detectSessionInUrl: hasValidConfig,
       flowType: 'pkce',
     },
-    global: {
-      headers: {
-        'x-application-name': 'haccare-hospital'
-      }
-    },
     db: {
       schema: 'public'
     },
