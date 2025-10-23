@@ -1,6 +1,6 @@
-# 🏥 hacCare - Advanced Healthcare Management System
+# 🏥 hacCare - Simulated EMR & Training Environment
 
-A comprehensive, modern healthcare management platform built with React 18, TypeScript, and Supabase, designed for real-world clinical environments with advanced BCMA (Barcode Medication Administration), patient management, security diagnostics, diabetic care, and medical documentation systems.
+A comprehensive, modern healthcare simulation platform built with React 18, TypeScript, and Supabase, designed for real-world teaching environments with advanced BCMA (Barcode Medication Administration), patient management, security diagnostics, diabetic care, and medical documentation systems.
 
 ## 🌟 Key Highlights
 
