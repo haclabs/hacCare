@@ -469,7 +469,7 @@ export const LandingPage: React.FC = () => {
                     <Mail className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                  <p className="text-gray-600 text-sm">info@haccare.app</p>
+                  <p className="text-gray-600 text-sm">support@haccare.app</p>
                 </div>
                 <div>
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-3">
