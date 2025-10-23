@@ -3,8 +3,6 @@
  * Handles sending contact form submissions to the backend
  */
 
-import { supabase } from '../../lib/api/supabase';
-
 export interface ContactFormData {
   name: string;
   email: string;
@@ -42,22 +40,32 @@ export async function submitContactForm(
       };
     }
 
-    // Call the Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke('send-contact-email', {
-      body: formData,
+    // Call the Supabase Edge Function directly with anon key
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-contact-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify(formData),
     });
 
-    if (error) {
-      console.error('Error submitting contact form:', error);
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('Error submitting contact form:', result);
       return {
         success: false,
-        error: 'Failed to send message. Please try again or email support@haccare.app directly.',
+        error: result.error || 'Failed to send message. Please try again or email support@haccare.app directly.',
       };
     }
 
     return {
       success: true,
-      message: data?.message || 'Thank you for your message! We\'ll get back to you soon.',
+      message: result.message || 'Thank you for your message! We\'ll get back to you soon.',
     };
   } catch (error) {
     console.error('Unexpected error submitting contact form:', error);
