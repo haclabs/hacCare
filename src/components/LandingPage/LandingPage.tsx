@@ -1,10 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, BookOpen, Users, Shield, Mail, Phone, MapPin } from 'lucide-react';
 import logo from './logo.png';
+import { submitContactForm } from '../../services/contact/contactService';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  
+  // Contact form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    institution: '',
+    message: '',
+  });
+  const [formStatus, setFormStatus] = useState<{
+    type: 'idle' | 'loading' | 'success' | 'error';
+    message?: string;
+  }>({ type: 'idle' });
 
   // Add structured data for SEO
   useEffect(() => {
@@ -50,6 +63,38 @@ export const LandingPage: React.FC = () => {
       }
     };
   }, []);
+
+  // Handle form input changes
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  // Handle form submission
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormStatus({ type: 'loading' });
+
+    const result = await submitContactForm(formData);
+
+    if (result.success) {
+      setFormStatus({
+        type: 'success',
+        message: result.message || 'Thank you! We\'ll get back to you soon.',
+      });
+      // Reset form
+      setFormData({ name: '', email: '', institution: '', message: '' });
+      // Clear success message after 5 seconds
+      setTimeout(() => setFormStatus({ type: 'idle' }), 5000);
+    } else {
+      setFormStatus({
+        type: 'error',
+        message: result.error || 'Failed to send message. Please try again.',
+      });
+    }
+  };
 
   const features = [
     {
@@ -443,27 +488,47 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleContactSubmit}>
+              {formStatus.type === 'success' && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 text-sm">{formStatus.message}</p>
+                </div>
+              )}
+              
+              {formStatus.type === 'error' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-800 text-sm">{formStatus.message}</p>
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Name
+                    Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     id="name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    disabled={formStatus.type === 'loading'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="Your name"
                   />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     id="email"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    disabled={formStatus.type === 'loading'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -476,43 +541,47 @@ export const LandingPage: React.FC = () => {
                 <input
                   type="text"
                   id="institution"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={formData.institution}
+                  onChange={handleInputChange}
+                  disabled={formStatus.type === 'loading'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="Your institution name"
                 />
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Message
+                  Message <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="message"
                   rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  required
+                  disabled={formStatus.type === 'loading'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="Tell us about your needs..."
                 />
               </div>
 
-              <div className="flex items-start">
-                <input
-                  type="checkbox"
-                  id="captcha"
-                  className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="captcha" className="ml-2 text-sm text-gray-600">
-                  I'm not a robot (CAPTCHA verification will be enabled soon)
-                </label>
-              </div>
-
               <button
-                type="button"
-                onClick={() => alert('Contact form submission will be enabled soon. Please email info@haccare.app directly.')}
-                className="w-full text-white px-6 py-3 rounded-lg transition-colors font-medium"
-                style={{ backgroundColor: '#19ADF2' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+                type="submit"
+                disabled={formStatus.type === 'loading'}
+                className="w-full text-white px-6 py-3 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: formStatus.type === 'loading' ? '#9CA3AF' : '#19ADF2' }}
+                onMouseEnter={(e) => {
+                  if (formStatus.type !== 'loading') {
+                    e.currentTarget.style.backgroundColor = '#1598D6';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (formStatus.type !== 'loading') {
+                    e.currentTarget.style.backgroundColor = '#19ADF2';
+                  }
+                }}
               >
-                Send Message
+                {formStatus.type === 'loading' ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>
