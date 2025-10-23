@@ -20,7 +20,7 @@ serve(async (req) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name',
       },
     })
   }
@@ -74,7 +74,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           sender: 'HacCare Contact Form <noreply@haccare.app>',
-          to: ['info@haccare.app'],
+          to: ['support@haccare.app'],
           reply_to: formData.email,
           subject: `New Contact Form Submission from ${formData.name}`,
           html_body: `
@@ -133,7 +133,7 @@ ${formData.message}
         },
         body: JSON.stringify({
           from: 'HacCare Contact Form <noreply@haccare.app>',
-          to: ['info@haccare.app'],
+          to: ['support@haccare.app'],
           reply_to: formData.email,
           subject: `New Contact Form Submission from ${formData.name}`,
           html: `

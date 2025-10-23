@@ -51,7 +51,7 @@ export async function submitContactForm(
       console.error('Error submitting contact form:', error);
       return {
         success: false,
-        error: 'Failed to send message. Please try again or email info@haccare.app directly.',
+        error: 'Failed to send message. Please try again or email support@haccare.app directly.',
       };
     }
 
