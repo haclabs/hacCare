@@ -2954,10 +2954,12 @@ BEGIN
   -- Restore snapshot WITH THE SAME ID MAPPINGS (preserves barcode labels!)
   PERFORM restore_snapshot_to_tenant(v_tenant_id, v_snapshot, v_id_mappings);
   
-  -- Reset simulation timestamps but keep status
+  -- Reset simulation timestamps and status to running
+  -- This will trigger the calculate_simulation_ends_at trigger to recalculate ends_at
   UPDATE simulation_active
   SET 
     starts_at = now(),
+    status = 'running',
     updated_at = now()
   WHERE id = p_simulation_id;
   

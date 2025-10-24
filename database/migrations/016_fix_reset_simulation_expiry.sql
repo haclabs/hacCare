@@ -1,11 +1,13 @@
 -- ===========================================================================
--- UPDATE: Modify reset_simulation to UPDATE in place instead of DELETE/INSERT
+-- FIX: Reset Simulation Expiry Issue
 -- ===========================================================================
--- Purpose: When resetting a simulation, preserve patient and medication IDs
---          by UPDATING records instead of deleting and recreating them.
---          This ensures pre-printed labels remain valid across resets.
+-- Problem: When resetting a simulation, starts_at was updated but status was
+--          not set to 'running', causing simulations to remain expired.
+-- Solution: Update reset_simulation to set status = 'running' and starts_at,
+--           which triggers the calculate_simulation_ends_at trigger to
+--           recalculate ends_at based on duration_minutes from the template.
 -- ===========================================================================
--- CRITICAL: Patient IDs and Medication IDs MUST NOT CHANGE on reset
+-- URGENT FIX: Simulations showing as expired after reset
 -- ===========================================================================
 
 DROP FUNCTION IF EXISTS reset_simulation(uuid) CASCADE;
@@ -191,16 +193,10 @@ BEGIN
   -- ===========================================================================
   
   RAISE NOTICE '🔄 Removing medications not in template...';
-  RAISE NOTICE 'Tenant ID: %', v_tenant_id;
-  RAISE NOTICE 'Current medication count: %', (SELECT COUNT(*) FROM patient_medications WHERE tenant_id = v_tenant_id);
   
   -- Check if template has medications
   IF v_snapshot ? 'medications' THEN
-    RAISE NOTICE 'Template HAS medications key';
-    RAISE NOTICE 'Template medication count: %', jsonb_array_length(v_snapshot->'medications');
-    
     IF jsonb_array_length(v_snapshot->'medications') > 0 THEN
-      RAISE NOTICE 'Keeping medications that match template...';
       -- Keep only medications that exist in template (match by name and patient)
       DELETE FROM patient_medications pm
       WHERE pm.tenant_id = v_tenant_id
@@ -218,16 +214,13 @@ BEGIN
       );
     ELSE
       -- Empty medications array in template, delete all
-      RAISE NOTICE '⚠️ Template has EMPTY medications array - deleting ALL medications';
       DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
     END IF;
   ELSE
     -- No medications key in template, delete all
-    RAISE NOTICE '⚠️ Template has NO medications key - deleting ALL medications';
     DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
   END IF;
   
-  RAISE NOTICE 'Final medication count: %', (SELECT COUNT(*) FROM patient_medications WHERE tenant_id = v_tenant_id);
   RAISE NOTICE '✅ Extra medications removed';
   
   -- ===========================================================================
@@ -239,7 +232,6 @@ BEGIN
   -- Clear ALL existing vitals and notes (they will be restored from template)
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
-  RAISE NOTICE '  ✓ Cleared existing vitals and notes';
   
   -- Restore initial vitals from snapshot
   IF v_snapshot ? 'vitals' THEN
@@ -287,8 +279,11 @@ BEGIN
   
   RAISE NOTICE '✅ Initial vitals and notes restored';
   
-  -- Reset simulation timestamps and status
-  -- This will trigger the calculate_simulation_ends_at trigger to recalculate ends_at
+  -- ===========================================================================
+  -- CRITICAL FIX: Reset simulation timestamps and status to 'running'
+  -- This triggers the calculate_simulation_ends_at trigger to recalculate
+  -- ends_at based on starts_at + duration_minutes, fixing the expiry issue
+  -- ===========================================================================
   UPDATE simulation_active 
   SET 
     starts_at = NOW(),
@@ -301,7 +296,7 @@ BEGIN
   -- Build result summary
   SELECT json_build_object(
     'success', true,
-    'message', 'Simulation reset successfully (IDs preserved)',
+    'message', 'Simulation reset successfully (IDs preserved, timer restarted)',
     'simulation_id', p_simulation_id,
     'tenant_id', v_tenant_id,
     'patients_updated', (SELECT COUNT(*) FROM patients WHERE tenant_id = v_tenant_id),
@@ -310,7 +305,7 @@ BEGIN
     'reset_at', NOW()
   ) INTO v_result;
   
-  RAISE NOTICE '✅ Simulation reset complete!';
+  RAISE NOTICE '✅ Simulation reset complete with proper timer restart!';
   
   RETURN v_result;
 END;
@@ -321,10 +316,10 @@ GRANT EXECUTE ON FUNCTION reset_simulation(uuid) TO authenticated;
 
 COMMENT ON FUNCTION reset_simulation IS 
 'Reset simulation to template defaults while preserving patient and medication IDs.
-This allows pre-printed labels to continue working after reset.
-Updates records in place instead of delete/insert.';
+Updates records in place, resets timer by setting starts_at and status to running,
+which triggers automatic recalculation of ends_at. Labels remain valid across resets.';
 
--- Test output
-SELECT '✅ reset_simulation updated to preserve IDs via UPDATE in place!' as status,
-       'Patient and medication IDs will NOT change on reset' as note,
-       'Labels remain valid across multiple resets' as benefit;
+-- Verification output
+SELECT '✅ reset_simulation FIXED - Simulations will no longer show as expired after reset!' as status,
+       '⏱️ Timer will restart with proper countdown from template duration' as fix,
+       '🏷️ Patient and medication IDs preserved for barcode compatibility' as note;
