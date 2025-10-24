@@ -140,7 +140,6 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         )
       `)
       .eq('patients.tenant_id', tenantId)
-      .in('status', ['Active', 'active'])  // Try both capitalizations
       .order('name', { ascending: true });
 
     if (error) {
@@ -157,8 +156,15 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
       patient: Array.isArray(m.patients) ? m.patients[0] : m.patients
     })));
 
+    // Filter for active medications only (case-insensitive)
+    const activeMedications = (medications || []).filter(med => 
+      med.status && (med.status.toLowerCase() === 'active')
+    );
+    
+    console.log('🎯 Active medications after filter:', activeMedications.length);
+
     // Transform the data to include patient names
-    const medicationLabels: MedicationLabelData[] = (medications || []).map(med => {
+    const medicationLabels: MedicationLabelData[] = activeMedications.map(med => {
       const patient = Array.isArray(med.patients) ? med.patients[0] : med.patients;
       return {
         id: med.id,
