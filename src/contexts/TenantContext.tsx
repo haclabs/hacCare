@@ -211,6 +211,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
+      // Clear simulation tenant from localStorage first to prevent restore
+      localStorage.removeItem('current_simulation_tenant');
+      console.log('🧹 Cleared simulation tenant from localStorage before switch');
+
       // Use enhanced super admin service for tenant switching
       const result = await switchSuperAdminToTenant(tenantId);
       
@@ -227,6 +231,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Update state
       setSelectedTenantId(tenantId);
       setCurrentTenant(tenant);
+      console.log('✅ Switched to tenant:', tenant?.name);
     } catch (err) {
       console.error('Error switching tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to switch tenant');
