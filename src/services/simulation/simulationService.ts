@@ -377,9 +377,32 @@ export async function updateSimulationStatus(
 }
 
 /**
- * Reset simulation to template snapshot
+ * Reset simulation for next session (RECOMMENDED)
+ * Clears student work but preserves all medications and patient/medication IDs
+ * Use this for classroom scenarios where you've printed labels or added medications
  */
-export async function resetSimulation(
+export async function resetSimulationForNextSession(
+  simulationId: string
+): Promise<SimulationFunctionResult> {
+  try {
+    const { data, error } = await supabase.rpc('reset_simulation_for_next_session', {
+      p_simulation_id: simulationId,
+    });
+
+    if (error) throw error;
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    console.error('Error resetting simulation for next session:', error);
+    throw error;
+  }
+}
+
+/**
+ * Reset simulation to EXACT template snapshot (NUCLEAR OPTION)
+ * WARNING: Deletes ALL medications not in original template!
+ * Only use when you need exact restoration and are willing to reprint labels
+ */
+export async function resetSimulationToTemplate(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   try {
@@ -390,9 +413,20 @@ export async function resetSimulation(
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error resetting simulation:', error);
+    console.error('Error resetting simulation to template:', error);
     throw error;
   }
+}
+
+/**
+ * Reset simulation (alias for resetSimulationForNextSession)
+ * @deprecated Use resetSimulationForNextSession or resetSimulationToTemplate explicitly
+ */
+export async function resetSimulation(
+  simulationId: string
+): Promise<SimulationFunctionResult> {
+  console.warn('resetSimulation is deprecated. Use resetSimulationForNextSession instead.');
+  return resetSimulationForNextSession(simulationId);
 }
 
 /**

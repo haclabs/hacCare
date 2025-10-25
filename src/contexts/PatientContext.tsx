@@ -154,10 +154,12 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       let newPatient: Patient;
       
       if (isMultiTenantAdmin) {
-        if (selectedTenantId) {
-          // Super admin creating patient for a specific tenant
-          console.log('🔓 Super admin creating patient for selected tenant:', selectedTenantId);
-          const { data, error } = await createPatientWithTenant(patient, selectedTenantId);
+        // ✅ FIX: Use currentTenant.id instead of selectedTenantId
+        // currentTenant is updated when switching to simulation templates
+        if (currentTenant) {
+          // Super admin creating patient for current tenant (including simulation templates)
+          console.log('🔓 Super admin creating patient for current tenant:', currentTenant.id, currentTenant.name);
+          const { data, error } = await createPatientWithTenant(patient, currentTenant.id);
           
           if (error) {
             throw error;
@@ -170,7 +172,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
           newPatient = data;
         } else {
           // Super admin creating patient without tenant restriction (global)
-          console.log('🔓 Super admin creating global patient');
+          console.log('🔓 Super admin creating global patient - no tenant selected');
           newPatient = await createPatientDB(patient);
         }
       } else if (currentTenant) {

@@ -287,16 +287,11 @@ BEGIN
   
   RAISE NOTICE '✅ Initial vitals and notes restored';
   
-  -- Reset simulation timestamps and status
-  -- This will trigger the calculate_simulation_ends_at trigger to recalculate ends_at
+  -- Update simulation timestamp
   UPDATE simulation_active 
   SET 
-    starts_at = NOW(),
-    status = 'running',
     updated_at = NOW()
   WHERE id = p_simulation_id;
-  
-  RAISE NOTICE '✅ Simulation timestamps and status reset (starts_at updated, ends_at will be recalculated by trigger)';
   
   -- Build result summary
   SELECT json_build_object(

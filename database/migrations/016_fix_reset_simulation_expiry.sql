@@ -162,7 +162,7 @@ BEGIN
   LOOP
     -- Find matching template medication by patient_id and medication name
     SELECT m INTO v_template_medication
-    FROM jsonb_array_elements(v_snapshot->'medications') m
+    FROM jsonb_array_elements(v_snapshot->'patient_medications') m
     WHERE m->>'patient_id' = v_medication.patient_patient_id
     AND m->>'name' = v_medication.name;
     
@@ -195,8 +195,8 @@ BEGIN
   RAISE NOTICE '🔄 Removing medications not in template...';
   
   -- Check if template has medications
-  IF v_snapshot ? 'medications' THEN
-    IF jsonb_array_length(v_snapshot->'medications') > 0 THEN
+  IF v_snapshot ? 'patient_medications' THEN
+    IF jsonb_array_length(v_snapshot->'patient_medications') > 0 THEN
       -- Keep only medications that exist in template (match by name and patient)
       DELETE FROM patient_medications pm
       WHERE pm.tenant_id = v_tenant_id
@@ -207,7 +207,7 @@ BEGIN
         WHERE pm2.tenant_id = v_tenant_id
         AND EXISTS (
           SELECT 1
-          FROM jsonb_array_elements(v_snapshot->'medications') m
+          FROM jsonb_array_elements(v_snapshot->'patient_medications') m
           WHERE m->>'patient_id' = p.patient_id
           AND m->>'name' = pm2.name
         )
@@ -234,7 +234,7 @@ BEGIN
   DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
   
   -- Restore initial vitals from snapshot
-  IF v_snapshot ? 'vitals' THEN
+  IF v_snapshot ? 'patient_vitals' THEN
     INSERT INTO patient_vitals (
       patient_id, tenant_id, temperature, heart_rate, blood_pressure_systolic,
       blood_pressure_diastolic, respiratory_rate, oxygen_saturation, pain_level,
@@ -255,12 +255,12 @@ BEGIN
       v->>'notes',
       NOW(),
       NOW()
-    FROM jsonb_array_elements(v_snapshot->'vitals') v
+    FROM jsonb_array_elements(v_snapshot->'patient_vitals') v
     JOIN patients p ON p.patient_id = v->>'patient_id' AND p.tenant_id = v_tenant_id;
   END IF;
   
   -- Restore initial notes from snapshot
-  IF v_snapshot ? 'notes' THEN
+  IF v_snapshot ? 'patient_notes' THEN
     INSERT INTO patient_notes (
       patient_id, tenant_id, note_type, content, created_by,
       created_at, updated_at
@@ -273,7 +273,7 @@ BEGIN
       n->>'created_by',
       NOW(),
       NOW()
-    FROM jsonb_array_elements(v_snapshot->'notes') n
+    FROM jsonb_array_elements(v_snapshot->'patient_notes') n
     JOIN patients p ON p.patient_id = n->>'patient_id' AND p.tenant_id = v_tenant_id;
   END IF;
   
