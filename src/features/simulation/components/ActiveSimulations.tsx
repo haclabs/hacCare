@@ -48,10 +48,18 @@ const ActiveSimulations: React.FC = () => {
     }
   };
 
-  const handleResume = async (id: string) => {
+  const handleResume = async (id: string, isCompleted: boolean = false) => {
     setActionLoading(id);
     try {
-      await updateSimulationStatus(id, 'running');
+      if (isCompleted) {
+        // If simulation is completed, reset it with a fresh timer
+        const result = await resetSimulationForNextSession(id);
+        console.log('✅ Simulation reset and restarted:', result);
+        alert('Simulation restarted with fresh timer! Ready for next session.');
+      } else {
+        // If just paused, simply resume
+        await updateSimulationStatus(id, 'running');
+      }
       await loadSimulations();
     } catch (error) {
       console.error('Error resuming simulation:', error);
@@ -202,10 +210,10 @@ const ActiveSimulations: React.FC = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => handleResume(sim.id)}
+                  onClick={() => handleResume(sim.id, sim.status === 'completed')}
                   disabled={actionLoading === sim.id}
                   className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 disabled:opacity-50"
-                  title="Resume simulation"
+                  title={sim.status === 'completed' ? 'Restart simulation with fresh timer' : 'Resume simulation'}
                 >
                   <Play className="h-4 w-4" />
                 </button>
