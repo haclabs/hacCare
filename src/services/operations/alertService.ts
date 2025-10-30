@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 import { Alert } from '../../types';
 import { superAdminTenantService } from '../admin/superAdminTenantService';
-import { simulationAlertStore } from '../simulation/simulationAlertStore';
+import { simulationAlertStore } from '../../simulation/simulationAlertStore';
 
 /**
  * Alert Service Configuration

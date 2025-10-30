@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Hidden - uncomment to show TanStack devtools
 import { SimulationAwareAuthProvider } from './contexts/auth/SimulationAwareAuthProvider';
 import { PatientProvider } from './contexts/PatientContext';
 import { AlertProvider } from './contexts/AlertContext';
@@ -70,7 +70,8 @@ createRoot(document.getElementById('root')!).render(
             </Routes>
           </SimulationAwareAuthProvider>
         </ThemeProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* ReactQueryDevtools hidden - uncomment to show TanStack devtools */}
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>

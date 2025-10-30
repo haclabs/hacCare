@@ -15,6 +15,8 @@ export interface PatientTransferOptions {
   transferBowelRecords?: boolean;
   transferWoundCare?: boolean;
   transferDoctorsOrders?: boolean;
+  transferAdmissionRecords?: boolean;
+  transferAdvancedDirectives?: boolean;
   newPatientId?: string;
 }
 

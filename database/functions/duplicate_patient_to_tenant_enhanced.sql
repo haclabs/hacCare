@@ -9,13 +9,15 @@
 -- - Vital signs
 -- - Medications & administrations
 -- - Notes
--- - Assessments
+-- - Assessments (Nursing, Admission, Advanced Directives)
 -- - Handover notes (SBAR)
 -- - Patient alerts
 -- - Diabetic records
 -- - Bowel records
 -- - Wound care assessments & treatments
 -- - Doctors orders
+-- - Patient admission records
+-- - Patient advanced directives
 -- 
 -- IMPORTANT: Barcode Generation
 -- - New patient will get a new UUID, which generates a unique patient barcode (PT{uuid})
@@ -87,6 +89,8 @@ DECLARE
   v_wound_assessments_count INTEGER := 0;
   v_wound_treatments_count INTEGER := 0;
   v_doctors_orders_count INTEGER := 0;
+  v_admission_records_count INTEGER := 0;
+  v_advanced_directives_count INTEGER := 0;
   v_records_created JSONB;
 BEGIN
   -- Get source patient UUID
@@ -451,6 +455,98 @@ BEGIN
     END IF;
   END IF;
 
+  -- Copy patient admission records (Admission Assessment)
+  IF p_include_assessments THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'patient_admission_records') THEN
+      INSERT INTO patient_admission_records (
+        patient_id,
+        tenant_id,
+        admission_type,
+        attending_physician,
+        insurance_provider,
+        insurance_policy,
+        admission_source,
+        chief_complaint,
+        height,
+        weight,
+        bmi,
+        smoking_status,
+        alcohol_use,
+        exercise,
+        occupation,
+        family_history,
+        marital_status,
+        secondary_contact_name,
+        secondary_contact_relationship,
+        secondary_contact_phone,
+        secondary_contact_address
+      )
+      SELECT
+        v_new_patient_uuid,
+        p_target_tenant_id,
+        admission_type,
+        attending_physician,
+        insurance_provider,
+        insurance_policy,
+        admission_source,
+        chief_complaint,
+        height,
+        weight,
+        bmi,
+        smoking_status,
+        alcohol_use,
+        exercise,
+        occupation,
+        family_history,
+        marital_status,
+        secondary_contact_name,
+        secondary_contact_relationship,
+        secondary_contact_phone,
+        secondary_contact_address
+      FROM patient_admission_records
+      WHERE patient_id::text = v_source_patient_uuid::text;
+      
+      GET DIAGNOSTICS v_admission_records_count = ROW_COUNT;
+      RAISE NOTICE 'Copied % admission records', v_admission_records_count;
+    END IF;
+  END IF;
+
+  -- Copy patient advanced directives
+  IF p_include_assessments THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'patient_advanced_directives') THEN
+      INSERT INTO patient_advanced_directives (
+        patient_id,
+        tenant_id,
+        living_will_status,
+        living_will_date,
+        healthcare_proxy_name,
+        healthcare_proxy_phone,
+        dnr_status,
+        organ_donation_status,
+        organ_donation_details,
+        religious_preference,
+        special_instructions
+      )
+      SELECT
+        v_new_patient_uuid,
+        p_target_tenant_id,
+        living_will_status,
+        living_will_date,
+        healthcare_proxy_name,
+        healthcare_proxy_phone,
+        dnr_status,
+        organ_donation_status,
+        organ_donation_details,
+        religious_preference,
+        special_instructions
+      FROM patient_advanced_directives
+      WHERE patient_id::text = v_source_patient_uuid::text;
+      
+      GET DIAGNOSTICS v_advanced_directives_count = ROW_COUNT;
+      RAISE NOTICE 'Copied % advanced directives', v_advanced_directives_count;
+    END IF;
+  END IF;
+
   -- Copy wound care
   IF p_include_wound_care THEN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'wound_assessments') THEN
@@ -593,7 +689,9 @@ BEGIN
     'bowel_records', v_bowel_count,
     'wound_assessments', v_wound_assessments_count,
     'wound_treatments', v_wound_treatments_count,
-    'doctors_orders', v_doctors_orders_count
+    'doctors_orders', v_doctors_orders_count,
+    'admission_records', v_admission_records_count,
+    'advanced_directives', v_advanced_directives_count
   );
 
   -- Return success
@@ -606,7 +704,7 @@ BEGIN
      (v_vitals_count + v_medications_count + v_med_admin_count + v_notes_count + 
       v_assessments_count + v_handover_count + v_alerts_count + v_diabetic_count + 
       v_bowel_count + v_wound_assessments_count + v_wound_treatments_count + 
-      v_doctors_orders_count)::TEXT || ' associated records')::TEXT AS message;
+      v_doctors_orders_count + v_admission_records_count + v_advanced_directives_count)::TEXT || ' associated records')::TEXT AS message;
 
 END;
 $$;

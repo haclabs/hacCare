@@ -7,6 +7,74 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.1.4-rc3] - 2025-10-30 - OTTO RELEASE CANDIDATE 3 🚀
+===============================================================================
+
+SIMULATION SYSTEM FIXES - CRITICAL PRODUCTION UPDATES
+------------------------------------------------------
+
+* Fixed Simulation Time Display (CRITICAL FIX)
+  - Issue: Simulation countdown timer not displaying in active simulations
+  - Root cause: `ends_at` column remained NULL despite `starts_at` being set
+  - Trigger `calculate_simulation_active_ends_at` not firing on INSERT
+  - Solution: Explicitly calculate `ends_at` in `launch_simulation` function
+  - Formula: `ends_at = NOW() + (duration_minutes || ' minutes')::interval`
+  - Impact: Time remaining now displays correctly in SimulationIndicator
+  - File: database/functions/simulation/simulation_core_functions.sql
+
+* Fixed Complete Simulation Function (DATABASE ERROR FIX)
+  - Issue: "column up.full_name does not exist" error on simulation completion
+  - Root cause: user_profiles table uses first_name and last_name, not full_name
+  - Solution: Changed to `COALESCE(up.first_name || ' ' || up.last_name, up.email)`
+  - Impact: Complete button now works without errors
+  - Falls back to email if names not available
+
+* Added Missing calculate_simulation_metrics Function
+  - Issue: "function calculate_simulation_metrics(uuid) does not exist"
+  - Created comprehensive metrics aggregation function
+  - Metrics tracked: medications_administered, vitals_recorded, notes_created
+  - Additional metrics: alerts_generated, alerts_acknowledged, total_actions
+  - Returns JSONB with unique_participants count
+  - Required for simulation performance analytics
+
+* Fixed Doctors Orders Restoration in Reset
+  - Issue: doctors_orders not showing after reset_simulation_for_next_session_v2
+  - Root cause: Missing doctors_orders restoration in reset function
+  - Solution: Added round-robin distribution of orders to patients
+  - Strips old user IDs, sets simulation owner, updates dates to TODAY
+  - Preserves order content while adapting to new patient assignments
+  - File: database/functions/simulation/reset_and_management_functions.sql
+
+* Set Default starts_at for Active Simulations
+  - Added default value: `starts_at TIMESTAMPTZ DEFAULT NOW()`
+  - Updated existing running simulations with NULL starts_at
+  - Ensures all future simulations have valid start time
+  - Prevents "launched as expired" issue
+
+DATABASE FUNCTIONS UPDATED
+---------------------------
+* launch_simulation() - Added explicit ends_at calculation
+* restore_snapshot_to_tenant() - Maintained compatibility
+* complete_simulation() - Fixed user_profiles name concatenation
+* calculate_simulation_metrics() - New function for analytics
+* reset_simulation_for_next_session_v2() - Added doctors_orders restoration
+
+VERIFIED END-TO-END WORKFLOW
+-----------------------------
+✅ Template creation with snapshot data
+✅ Launch simulation with correct time display
+✅ Complete simulation without errors
+✅ Reset simulation preserving doctors_orders
+✅ Barcode preservation through reset cycles
+✅ All patient data restoration working
+
+TECHNICAL DEBT CLEANUP
+-----------------------
+* Removed 43 temporary SQL debug/fix files from repository root
+* Organized simulation fixes into proper database function files
+* Improved code maintainability and production readiness
+
+===============================================================================
 [5.0.0] - 2025-10-20 - FINAL RELEASE 🎉
 ===============================================================================
 

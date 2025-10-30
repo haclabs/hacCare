@@ -31,7 +31,7 @@ export interface AdvancedDirective {
 export async function fetchAdvancedDirective(patientId: string): Promise<AdvancedDirective | null> {
   try {
     const { data, error } = await supabase
-      .from('advanced_directives')
+      .from('patient_advanced_directives')
       .select('*')
       .eq('patient_id', patientId)
       .single();
@@ -50,7 +50,7 @@ export async function fetchAdvancedDirective(patientId: string): Promise<Advance
 export async function upsertAdvancedDirective(directive: AdvancedDirective): Promise<AdvancedDirective | null> {
   try {
     const { data, error } = await supabase
-      .from('advanced_directives')
+      .from('patient_advanced_directives')
       .upsert(directive, {
         onConflict: 'patient_id'
       })
@@ -71,7 +71,7 @@ export async function upsertAdvancedDirective(directive: AdvancedDirective): Pro
 export async function deleteAdvancedDirective(patientId: string): Promise<boolean> {
   try {
     const { error } = await supabase
-      .from('advanced_directives')
+      .from('patient_advanced_directives')
       .delete()
       .eq('patient_id', patientId);
 

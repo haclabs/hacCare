@@ -18,6 +18,7 @@ import { AuthCallback } from './components/Auth/AuthCallback';
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
 const BackupManagement = lazy(() => import('./features/admin/components/BackupManagement'));
 const AdminDashboard = lazy(() => import('./features/admin/components/AdminDashboard'));
+// Simulation components restored from commit 01ec049
 const SimulationManager = lazy(() => import('./features/simulation/components/SimulationManager'));
 const SimulationBanner = lazy(() => import('./features/simulation/components/SimulationBanner'));
 const SimulationRouter = lazy(() => import('./features/simulation/components/SimulationRouter'));
