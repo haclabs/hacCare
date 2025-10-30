@@ -41,6 +41,7 @@ import { FormsModule } from '../features/forms';
 import { WoundCareModule } from '../features/clinical/components/wound-care';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
+import { AdvancedDirectivesForm } from '../features/patients/components/forms/AdvancedDirectivesForm';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
 import { Patient, DoctorsOrder } from '../types';
@@ -63,7 +64,7 @@ interface ModularPatientDashboardProps {
   };
 }
 
-type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover';
+type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover' | 'advanced-directives';
 
 interface ModuleConfig {
   id: ActiveModule;
@@ -1056,6 +1057,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'SBAR communication framework for care transitions',
       icon: MessageSquare,
       color: 'indigo'
+    },
+    {
+      id: 'advanced-directives',
+      title: 'Advanced Directives',
+      description: 'Legal care preferences and end-of-life planning documentation',
+      icon: FileText,
+      color: 'teal'
     }
   ];
 
@@ -1116,6 +1124,24 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         badge: 'bg-purple-500 text-white',
         accent: 'bg-purple-500',
         gradient: 'from-purple-500 to-purple-600'
+      },
+      indigo: {
+        bg: isActive ? 'bg-gradient-to-br from-indigo-50 to-indigo-100' : 'bg-white',
+        border: isActive ? 'border-indigo-400 shadow-indigo-100' : 'border-gray-200',
+        text: isActive ? 'text-indigo-900' : 'text-gray-900',
+        icon: isActive ? 'text-indigo-600' : 'text-gray-500',
+        badge: 'bg-indigo-500 text-white',
+        accent: 'bg-indigo-500',
+        gradient: 'from-indigo-500 to-indigo-600'
+      },
+      teal: {
+        bg: isActive ? 'bg-gradient-to-br from-teal-50 to-teal-100' : 'bg-white',
+        border: isActive ? 'border-teal-400 shadow-teal-100' : 'border-gray-200',
+        text: isActive ? 'text-teal-900' : 'text-gray-900',
+        icon: isActive ? 'text-teal-600' : 'text-gray-500',
+        badge: 'bg-teal-500 text-white',
+        accent: 'bg-teal-500',
+        gradient: 'from-teal-500 to-teal-600'
       }
     };
     return colors[color as keyof typeof colors] || colors.blue;
@@ -1355,6 +1381,25 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     role: 'nurse'
                   }}
                 />
+              )}
+
+              {activeModule === 'advanced-directives' && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">Advanced Directives</h2>
+                    <p className="text-gray-600 mt-2">
+                      Legal care preferences and end-of-life planning documentation for {patient.first_name} {patient.last_name}
+                    </p>
+                  </div>
+                  <AdvancedDirectivesForm
+                    patientId={patient.patient_id}
+                    patientName={`${patient.first_name} ${patient.last_name}`}
+                    onClose={() => setActiveModule('overview')}
+                    onSave={() => {
+                      setLastUpdated(new Date());
+                    }}
+                  />
+                </div>
               )}
             </div>
           </div>

@@ -1926,7 +1926,7 @@ BEGIN
     'sim-act-' || lower(regexp_replace(p_name, '[^a-zA-Z0-9]+', '-', 'g')) || '-' || substr(gen_random_uuid()::text, 1, 8),
     'simulation_active',
     true,
-    (SELECT tenant_id FROM user_profiles WHERE id = v_user_id),
+    v_template_tenant_id,
     jsonb_build_object(
       'template_id', p_template_id,
       'launched_at', now()

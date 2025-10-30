@@ -37,6 +37,8 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
     transferBowelRecords: true,
     transferWoundCare: true,
     transferDoctorsOrders: true,
+    transferAdmissionRecords: true,
+    transferAdvancedDirectives: true,
   });
   const [loading, setLoading] = useState(false);
   const [canTransfer, setCanTransfer] = useState(false);
@@ -123,6 +125,8 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
       transferBowelRecords: true,
       transferWoundCare: true,
       transferDoctorsOrders: true,
+      transferAdmissionRecords: true,
+      transferAdvancedDirectives: true,
     });
     setError('');
   };
@@ -261,6 +265,8 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
                     { key: 'transferAlerts', label: 'Patient Alerts', icon: '🚨' },
                     { key: 'transferDiabeticRecords', label: 'Diabetic Records', icon: '🩸' },
                     { key: 'transferBowelRecords', label: 'Bowel Records', icon: '📊' },
+                    { key: 'transferAdmissionRecords', label: 'Admission Records', icon: '🏥' },
+                    { key: 'transferAdvancedDirectives', label: 'Advanced Directives', icon: '📜' },
                   ].map(({ key, label, icon }) => (
                     <label key={key} className="flex items-center">
                       <input
