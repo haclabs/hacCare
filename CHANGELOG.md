@@ -45,6 +45,15 @@ SIMULATION SYSTEM FIXES - CRITICAL PRODUCTION UPDATES
   - Preserves order content while adapting to new patient assignments
   - File: database/functions/simulation/reset_and_management_functions.sql
 
+* Fixed Timer Not Resetting on Simulation Reset (CRITICAL FIX)
+  - Issue: After completing simulation and resetting, timer didn't reset
+  - Root cause: reset_simulation_for_next_session_v2 didn't update starts_at/ends_at
+  - Previous behavior: Timer showed old start time from original launch
+  - Solution: Added timer reset in reset function UPDATE statement
+  - Now sets: `starts_at = NOW()`, `ends_at = NOW() + duration`, `status = 'running'`
+  - Impact: Timer now correctly resets to full duration on each reset
+  - File: database/migrations/DEPLOY_TO_CLOUD_SUPABASE.sql
+
 * Set Default starts_at for Active Simulations
   - Added default value: `starts_at TIMESTAMPTZ DEFAULT NOW()`
   - Updated existing running simulations with NULL starts_at
@@ -57,7 +66,7 @@ DATABASE FUNCTIONS UPDATED
 * restore_snapshot_to_tenant() - Maintained compatibility
 * complete_simulation() - Fixed user_profiles name concatenation
 * calculate_simulation_metrics() - New function for analytics
-* reset_simulation_for_next_session_v2() - Added doctors_orders restoration
+* reset_simulation_for_next_session_v2() - Added doctors_orders restoration + timer reset
 
 VERIFIED END-TO-END WORKFLOW
 -----------------------------

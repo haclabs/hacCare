@@ -367,13 +367,16 @@ BEGIN
     RAISE NOTICE '📊 Restored % vitals (via patient join)', v_count;
   END IF;
   
-  -- Update simulation metadata
+  -- Update simulation metadata and RESET TIMER
   UPDATE simulation_active
   SET
     session_number = COALESCE(session_number, 0) + 1,
     last_reset_at = now(),
     reset_count = COALESCE(reset_count, 0) + 1,
-    updated_at = now()
+    updated_at = now(),
+    starts_at = NOW(),
+    ends_at = NOW() + (duration_minutes || ' minutes')::interval,
+    status = 'running'
   WHERE id = p_simulation_id;
 
   RAISE NOTICE '🎉 Smart session reset complete!';
