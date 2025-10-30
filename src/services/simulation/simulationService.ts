@@ -114,31 +114,22 @@ export async function saveTemplateSnapshot(
   templateId: string
 ): Promise<SimulationFunctionResult> {
   try {
-    console.log('🔍 DEBUG: Calling save_template_snapshot_v2');
-    console.log('📝 Template ID:', templateId);
-    console.log('📝 Template ID type:', typeof templateId);
+    // Ensure templateId is a valid UUID string (trim whitespace, etc)
+    const cleanId = templateId.trim();
     
-    const { data, error } = await supabase.rpc('save_template_snapshot_v2', {
-      p_template_id: templateId,
+    console.log('Calling save_template_snapshot with ID:', cleanId);
+    
+    const { data, error } = await supabase.rpc('save_template_snapshot', {
+      p_template_id: cleanId,
     });
 
-    console.log('📦 Response data:', JSON.stringify(data, null, 2));
-    console.log('❌ Response error:', JSON.stringify(error, null, 2));
-
     if (error) {
-      console.error('💥 Error details:', JSON.stringify({
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-      }, null, 2));
+      console.error('RPC Error details:', error);
       throw error;
     }
-    
-    console.log('✅ Snapshot saved successfully:', JSON.stringify(data, null, 2));
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('❌ FULL Error saving template snapshot:', JSON.stringify(error, null, 2));
+    console.error('Error saving template snapshot:', error);
     throw error;
   }
 }
@@ -380,12 +371,13 @@ export async function updateSimulationStatus(
  * Reset simulation for next session (RECOMMENDED)
  * Clears student work but preserves all medications and patient/medication IDs
  * Use this for classroom scenarios where you've printed labels or added medications
+ * NOTE: Currently calls reset_simulation from 01ec049 which has known ID issues
  */
 export async function resetSimulationForNextSession(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   try {
-    const { data, error } = await supabase.rpc('reset_simulation_for_next_session_v2', {
+    const { data, error } = await supabase.rpc('reset_simulation', {
       p_simulation_id: simulationId,
     });
 
@@ -419,14 +411,22 @@ export async function resetSimulationToTemplate(
 }
 
 /**
- * Reset simulation (alias for resetSimulationForNextSession)
- * @deprecated Use resetSimulationForNextSession or resetSimulationToTemplate explicitly
+ * Reset simulation (calls the production reset_simulation function from commit 01ec049)
  */
 export async function resetSimulation(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
-  console.warn('resetSimulation is deprecated. Use resetSimulationForNextSession instead.');
-  return resetSimulationForNextSession(simulationId);
+  try {
+    const { data, error } = await supabase.rpc('reset_simulation', {
+      p_simulation_id: simulationId,
+    });
+
+    if (error) throw error;
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    console.error('Error resetting simulation:', error);
+    throw error;
+  }
 }
 
 /**
