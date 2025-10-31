@@ -27,8 +27,12 @@ import PatientTransferModal from './PatientTransferModal';
  * @returns {JSX.Element} The patient management component
  */
 export const PatientManagement: React.FC = () => {
+  console.log('🏥 PatientManagement component rendering');
+  
   // Get patient data using react-query hook
   const { data: patients = [], isLoading: loading, error, refetch: refreshPatients } = usePatients();
+  
+  console.log('📊 Patient data:', { patients, loading, error });
   
   // Mutation hooks for patient operations
   const createPatientMutation = useCreatePatient();
@@ -569,8 +573,8 @@ export const PatientManagement: React.FC = () => {
         />
       )}
 
-      {/* Bulk Label Print Modal */}
-      {showBulkPrint && (
+      {/* Bulk Label Print Modal - Commented out until implemented */}
+      {/* {showBulkPrint && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
             <div className="flex items-center justify-between mb-4">
@@ -588,7 +592,7 @@ export const PatientManagement: React.FC = () => {
             <BulkLabelPrint />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
