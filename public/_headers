@@ -1,6 +1,19 @@
 # Netlify Security Headers for hacCare
 # These headers enhance security for your healthcare application
 
+# App routes - prevent caching to ensure fresh simulation data
+/app/*
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+  Pragma: no-cache
+  Expires: 0
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-XSS-Protection: 1; mode=block
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://api64.ipify.org; frame-ancestors 'none';
+
 /*
   # Prevent clickjacking attacks
   X-Frame-Options: DENY

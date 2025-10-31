@@ -58,8 +58,8 @@ const ActiveSimulations: React.FC = () => {
         
         alert('Simulation restarted with fresh timer! Page will reload to show updated state.');
         
-        // Reload page to show fresh timer and reset state
-        window.location.reload();
+        // Hard reload with cache bypass - add timestamp to force fresh data
+        window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
       } else {
         // If just paused, simply resume
         await updateSimulationStatus(id, 'running');
@@ -84,8 +84,8 @@ const ActiveSimulations: React.FC = () => {
       alert('Simulation reset successfully! Patient and medication IDs have been preserved. Page will refresh to show updated data.');
       await loadSimulations();
       
-      // Force page reload to refresh all patient data views
-      window.location.reload();
+      // Hard reload with cache bypass - add timestamp to force fresh data
+      window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
     } catch (error) {
       console.error('Error resetting simulation:', error);
       alert('Failed to reset simulation');

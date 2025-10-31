@@ -8,259 +8,223 @@
     transition: all 0.3s ease;
   }
   
-  .terminal body {
-    font-family: 'Courier New', monospace !important;
+  /* 🎃 HALLOWEEN SPOOKY THEME - TRICK OR TREAT! 👻 */
+  .halloween body {
     background: #000000 !important;
-    color: #00ff00 !important;
+    color: #ff9933 !important;
+    position: relative;
   }
   
-  .terminal * {
-    font-family: 'Courier New', monospace !important;
+  /* Flying pumpkins animation */
+  .halloween::before {
+    content: '🎃';
+    position: fixed;
+    font-size: 40px;
+    top: -50px;
+    left: 10%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: float-down-1 15s ease-in infinite;
   }
   
-  .terminal h1, .terminal h2, .terminal h3 {
-    color: #00ff88 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.1em !important;
+  .halloween::after {
+    content: '👻';
+    position: fixed;
+    font-size: 35px;
+    top: -50px;
+    right: 20%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: float-down-2 18s ease-in infinite 3s;
   }
   
-  .terminal .bg-white {
-    background: #001100 !important;
-    border-color: #004400 !important;
+  /* Add more floating elements via pseudo-elements on body */
+  .halloween body::before {
+    content: '🦇';
+    position: fixed;
+    font-size: 30px;
+    top: -50px;
+    left: 60%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: float-down-3 20s ease-in infinite 6s;
   }
   
-  .terminal .bg-gray-50 {
-    background: #000000 !important;
+  .halloween body::after {
+    content: '🕷️';
+    position: fixed;
+    font-size: 25px;
+    top: -50px;
+    right: 40%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: float-down-4 16s ease-in infinite 9s;
   }
   
-  .terminal .text-gray-900 {
-    color: #00ff88 !important;
-  }
-  
-  .terminal .text-gray-600 {
-    color: #008800 !important;
-  }
-  
-  .terminal header {
-    background: #001100 !important;
-    border-color: #004400 !important;
-  }
-  
-  .terminal aside {
-    background: #001100 !important;
-    border-color: #004400 !important;
-  }
-  
-  /* 🎮 RETRO 80's SYNTHWAVE THEME - ULTRA NEON 🌆 */
-  .retro body {
-    font-family: 'Courier New', 'Consolas', monospace !important;
-    background: #0a0e27 !important;
-    color: #00ffff !important;
-    animation: scanlines 8s linear infinite;
-  }
-  
-  .retro * {
-    font-family: 'Courier New', 'Consolas', monospace !important;
-  }
-  
-  /* Intense Neon Text */
-  .retro h1, .retro h2, .retro h3, .retro h4 {
-    color: #ff00ff !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.2em !important;
+  /* Spooky Headers */
+  .halloween h1, .halloween h2, .halloween h3, .halloween h4 {
+    color: #ff9933 !important;
     text-shadow: 
-      0 0 5px #ff00ff,
-      0 0 10px #ff00ff,
-      0 0 20px #ff00ff,
-      0 0 40px #ff00ff,
-      0 0 80px #ff00ff !important;
-    animation: neon-glow 1.5s ease-in-out infinite alternate;
+      0 0 10px #ff9933,
+      0 0 20px #ff9933 !important;
   }
   
-  /* Ultra Glowing Cards */
-  .retro .bg-white {
-    background: rgba(10, 14, 39, 0.8) !important;
-    border: 3px solid #00ffff !important;
+  /* Haunted Cards */
+  .halloween .bg-white {
+    background: #1a1a1a !important;
+    border: 2px solid #ff9933 !important;
     box-shadow: 
-      0 0 10px #00ffff,
-      0 0 20px #00ffff,
-      0 0 40px rgba(0, 255, 255, 0.5),
-      inset 0 0 20px rgba(0, 255, 255, 0.1) !important;
+      0 0 10px rgba(255, 153, 51, 0.3),
+      inset 0 0 20px rgba(255, 153, 51, 0.05) !important;
   }
   
-  .retro .bg-gray-50 {
-    background: rgba(10, 14, 39, 0.5) !important;
-    border: 2px solid rgba(0, 255, 255, 0.3) !important;
+  .halloween .bg-gray-50 {
+    background: #111111 !important;
+    border: 1px solid rgba(255, 153, 51, 0.2) !important;
   }
   
-  .retro .bg-gray-100 {
-    background: rgba(10, 14, 39, 0.6) !important;
+  .halloween .bg-gray-100 {
+    background: #0a0a0a !important;
   }
   
-  /* Cyan Neon Text */
-  .retro .text-gray-900 {
-    color: #00ffff !important;
-    text-shadow: 
-      0 0 5px #00ffff,
-      0 0 10px #00ffff,
-      0 0 20px #00ffff !important;
+  /* Pumpkin Orange Text */
+  .halloween .text-gray-900 {
+    color: #ff9933 !important;
   }
   
-  /* Pink Neon Text */
-  .retro .text-gray-600, .retro .text-gray-500 {
-    color: #ff00ff !important;
-    text-shadow: 0 0 10px #ff00ff !important;
+  /* Purple Text */
+  .halloween .text-gray-600, .halloween .text-gray-500 {
+    color: #cc99ff !important;
   }
   
-  .retro .text-blue-600 {
-    color: #00ffff !important;
-    text-shadow: 
-      0 0 5px #00ffff,
-      0 0 10px #00ffff,
-      0 0 20px #00ffff !important;
+  .halloween .text-blue-600 {
+    color: #ff9933 !important;
   }
   
-  /* Glowing Buttons - Pink/Magenta */
-  .retro .bg-blue-600, .retro button {
-    background: rgba(255, 0, 255, 0.2) !important;
-    color: #ff00ff !important;
-    font-weight: bold !important;
-    text-shadow: 
-      0 0 5px #ff00ff,
-      0 0 10px #ff00ff !important;
-    border: 3px solid #ff00ff !important;
-    box-shadow: 
-      0 0 10px #ff00ff,
-      0 0 20px #ff00ff,
-      0 0 40px rgba(255, 0, 255, 0.5),
-      inset 0 0 10px rgba(255, 0, 255, 0.2) !important;
+  /* Spooky Buttons */
+  .halloween .bg-blue-600, .halloween button {
+    background: #222222 !important;
+    color: #ff9933 !important;
+    border: 2px solid #ff9933 !important;
+    box-shadow: 0 0 10px rgba(255, 153, 51, 0.3) !important;
     transition: all 0.3s ease !important;
   }
   
-  .retro button:hover {
-    transform: scale(1.05) !important;
-    background: rgba(255, 0, 255, 0.3) !important;
-    box-shadow: 
-      0 0 15px #ff00ff,
-      0 0 30px #ff00ff,
-      0 0 60px rgba(255, 0, 255, 0.8),
-      inset 0 0 20px rgba(255, 0, 255, 0.3) !important;
+  .halloween button:hover {
+    background: #2a2a2a !important;
+    box-shadow: 0 0 15px rgba(255, 153, 51, 0.5) !important;
+    transform: translateY(-1px) !important;
   }
   
-  /* Glowing Header */
-  .retro header {
-    background: rgba(10, 14, 39, 0.95) !important;
-    border-bottom: 3px solid #00ffff !important;
-    box-shadow: 
-      0 0 10px #00ffff,
-      0 0 20px #00ffff,
-      0 5px 40px rgba(0, 255, 255, 0.5) !important;
+  /* Haunted Header */
+  .halloween header {
+    background: #0a0a0a !important;
+    border-bottom: 2px solid #ff9933 !important;
+    box-shadow: 0 2px 10px rgba(255, 153, 51, 0.3) !important;
   }
   
-  /* Glowing Sidebar */
-  .retro aside {
-    background: rgba(10, 14, 39, 0.95) !important;
-    border-right: 3px solid #ff00ff !important;
-    box-shadow: 
-      0 0 10px #ff00ff,
-      0 0 20px #ff00ff,
-      5px 0 40px rgba(255, 0, 255, 0.4) !important;
+  /* Ghostly Sidebar */
+  .halloween aside {
+    background: #0a0a0a !important;
+    border-right: 2px solid #ff9933 !important;
   }
   
-  /* Neon Input Fields */
-  .retro input, .retro select, .retro textarea {
-    background: rgba(10, 14, 39, 0.8) !important;
-    border: 2px solid #00ffff !important;
-    color: #00ffff !important;
-    box-shadow: 
-      0 0 5px #00ffff,
-      0 0 10px rgba(0, 255, 255, 0.5),
-      inset 0 0 10px rgba(0, 255, 255, 0.1) !important;
+  /* Input Fields */
+  .halloween input, .halloween select, .halloween textarea {
+    background: #1a1a1a !important;
+    border: 1px solid #ff9933 !important;
+    color: #ff9933 !important;
   }
   
-  .retro input:focus, .retro select:focus, .retro textarea:focus {
-    border-color: #ff00ff !important;
-    box-shadow: 
-      0 0 10px #ff00ff,
-      0 0 20px rgba(255, 0, 255, 0.6),
-      inset 0 0 15px rgba(255, 0, 255, 0.2) !important;
+  .halloween input:focus, .halloween select:focus, .halloween textarea:focus {
+    border-color: #ffaa55 !important;
+    box-shadow: 0 0 5px rgba(255, 153, 51, 0.5) !important;
   }
   
-  /* Neon Borders */
-  .retro .border-gray-200, .retro .border-gray-300, .retro .border {
-    border-color: #00ffff !important;
-    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5) !important;
+  /* Borders */
+  .halloween .border-gray-200, .halloween .border-gray-300, .halloween .border {
+    border-color: #333333 !important;
   }
   
-  /* Rounded Elements Glow */
-  .retro .rounded-lg, .retro .rounded-xl, .retro .rounded-2xl {
-    box-shadow: 
-      0 0 10px rgba(0, 255, 255, 0.3),
-      inset 0 0 10px rgba(255, 0, 255, 0.1) !important;
+  /* Badges */
+  .halloween .rounded-full {
+    background: #222222 !important;
+    border: 1px solid #ff9933 !important;
   }
   
-  /* Badges and Pills */
-  .retro .rounded-full {
-    background: rgba(255, 0, 255, 0.3) !important;
-    border: 2px solid #ff00ff !important;
-    box-shadow: 
-      0 0 10px #ff00ff,
-      0 0 20px rgba(255, 0, 255, 0.5) !important;
+  /* Active States */
+  .halloween .bg-blue-50, .halloween .bg-blue-100 {
+    background: #222222 !important;
+    border: 1px solid #ff9933 !important;
   }
   
-  /* Active/Selected States */
-  .retro .bg-blue-50, .retro .bg-blue-100 {
-    background: rgba(0, 255, 255, 0.1) !important;
-    border: 2px solid #00ffff !important;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3) !important;
-  }
-  
-  /* Neon glow pulse animation */
-  @keyframes neon-glow {
-    from {
-      text-shadow: 
-        0 0 5px #ff00ff,
-        0 0 10px #ff00ff,
-        0 0 20px #ff00ff,
-        0 0 40px #ff00ff;
-    }
-    to {
-      text-shadow: 
-        0 0 10px #ff00ff,
-        0 0 20px #ff00ff,
-        0 0 40px #ff00ff,
-        0 0 80px #ff00ff,
-        0 0 120px #ff00ff;
-    }
-  }
-  
-  /* CRT scanlines effect */
-  @keyframes scanlines {
+  /* Flying animations */
+  @keyframes float-down-1 {
     0% {
-      background-position: 0 0;
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
     }
     100% {
-      background-position: 0 100%;
+      transform: translateY(100vh) translateX(50px) rotate(360deg);
+      opacity: 0;
     }
   }
   
-  /* Scanline overlay */
-  .retro::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 255, 255, 0.03) 0px,
-      transparent 1px,
-      transparent 2px,
-      rgba(255, 0, 255, 0.03) 3px
-    );
-    z-index: 9999;
+  @keyframes float-down-2 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) translateX(-30px) rotate(-360deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes float-down-3 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) translateX(-80px) rotate(180deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes float-down-4 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) translateX(100px) rotate(-180deg);
+      opacity: 0;
+    }
   }
 }
 
