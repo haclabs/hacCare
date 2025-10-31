@@ -371,20 +371,20 @@ export async function updateSimulationStatus(
  * Reset simulation for next session (RECOMMENDED)
  * Clears student work but preserves all medications and patient/medication IDs
  * Use this for classroom scenarios where you've printed labels or added medications
- * NOTE: Currently calls reset_simulation from 01ec049 which has known ID issues
+ * Uses the smart v2 function that resets timer and preserves IDs
  */
 export async function resetSimulationForNextSession(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   try {
-    const { data, error } = await supabase.rpc('reset_simulation', {
+    const { data, error } = await supabase.rpc('reset_simulation_for_next_session_v2', {
       p_simulation_id: simulationId,
     });
 
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error resetting simulation for next session:', error);
+    console.error('Error resetting simulation:', error);
     throw error;
   }
 }
@@ -411,22 +411,13 @@ export async function resetSimulationToTemplate(
 }
 
 /**
- * Reset simulation (calls the production reset_simulation function from commit 01ec049)
+ * Reset simulation (calls the v2 smart reset function with timer reset)
+ * Alias for resetSimulationForNextSession
  */
 export async function resetSimulation(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
-  try {
-    const { data, error } = await supabase.rpc('reset_simulation', {
-      p_simulation_id: simulationId,
-    });
-
-    if (error) throw error;
-    return data as SimulationFunctionResult;
-  } catch (error: any) {
-    console.error('Error resetting simulation:', error);
-    throw error;
-  }
+  return resetSimulationForNextSession(simulationId);
 }
 
 /**

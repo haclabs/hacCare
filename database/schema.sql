@@ -2753,7 +2753,7 @@ BEGIN
     END LOOP;
   END IF;
   
-  -- Restore medications using PRE-ALLOCATED IDs
+  -- Restore medications using PRE-ALLOCATED IDs and DYNAMIC INSERT
   IF p_snapshot->'patient_medications' IS NOT NULL THEN
     FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patient_medications')
     LOOP
@@ -2764,40 +2764,97 @@ BEGIN
       -- Use pre-allocated medication ID if available
       IF v_med_mapping ? v_old_med_id::text THEN
         v_new_med_id := (v_med_mapping->>v_old_med_id::text)::uuid;
-        RAISE NOTICE '  Medication % -> % (PRE-ALLOCATED)', 
-          v_record->>'medication_name', v_new_med_id;
       ELSE
         v_new_med_id := gen_random_uuid();
-        RAISE NOTICE '  Medication % -> % (RANDOM)', 
-          v_record->>'medication_name', v_new_med_id;
       END IF;
       
-      INSERT INTO patient_medications (
-        id, patient_id, tenant_id, medication_name, generic_name,
-        dosage, route, frequency, indication, start_date, end_date,
-        prescribing_physician, notes, is_prn, prn_parameters,
-        last_administered, next_due, status, barcode
-      )
-      VALUES (
-        v_new_med_id, v_new_patient_id, p_target_tenant_id,
-        v_record->>'medication_name', v_record->>'generic_name',
-        v_record->>'dosage', v_record->>'route', v_record->>'frequency',
-        v_record->>'indication',
-        COALESCE((v_record->>'start_date')::timestamptz, now()),
-        (v_record->>'end_date')::timestamptz,
-        v_record->>'prescribing_physician', v_record->>'notes',
-        COALESCE((v_record->>'is_prn')::boolean, false),
-        v_record->'prn_parameters',
-        (v_record->>'last_administered')::timestamptz,
-        (v_record->>'next_due')::timestamptz,
-        COALESCE(v_record->>'status', 'active'),
-        v_record->>'barcode'
-      );
+      -- Dynamic INSERT: Build from snapshot JSON, skip NULL/empty values
+      EXECUTE format(
+        'INSERT INTO patient_medications (id, patient_id, tenant_id, %s) SELECT $1, $2, $3, %s',
+        (SELECT string_agg(key, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'tenant_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL 
+           AND v_record->>key != ''),
+        (SELECT string_agg(
+          CASE 
+            WHEN key ~ '(_times|_parameters|_config|_data|_metadata)$' THEN '($4->>''' || key || ''')::jsonb'
+            WHEN key ~ '^(scheduled_time|admin_time)' THEN 'substring(($4->>''' || key || ''') from 1 for 5)'
+            WHEN key ~ '(date|_at|_due|administered)' THEN '($4->>''' || key || ''')::timestamptz'
+            WHEN key ~ 'id$' AND key != 'patient_id' THEN '($4->>''' || key || ''')::uuid'
+            WHEN key ~ '(is_|_flag)' THEN '($4->>''' || key || ''')::boolean'
+            WHEN key ~ '(_count|_number)' THEN '($4->>''' || key || ''')::integer'
+            ELSE '($4->>''' || key || ''')::text'
+          END, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'tenant_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL
+           AND v_record->>key != '')
+      ) USING v_new_med_id, v_new_patient_id, p_target_tenant_id, v_record;
     END LOOP;
   END IF;
   
-  -- Restore other tables (vitals, notes, etc.) using new patient IDs
-  -- ... (add other tables as needed)
+  -- Restore vitals with dynamic INSERT
+  IF p_snapshot->'patient_vitals' IS NOT NULL THEN
+    FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patient_vitals')
+    LOOP
+      v_old_patient_id := (v_record->>'patient_id')::uuid;
+      v_new_patient_id := (v_old_patient_uuid_map->>v_old_patient_id::text)::uuid;
+      
+      EXECUTE format(
+        'INSERT INTO patient_vitals (patient_id, %s) SELECT $1, %s',
+        (SELECT string_agg(key, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL 
+           AND v_record->>key != ''),
+        (SELECT string_agg(
+          CASE 
+            WHEN key ~ '(date|_at|time)' THEN '($2->>''' || key || ''')::timestamptz'
+            WHEN key ~ 'id$' AND key != 'patient_id' THEN '($2->>''' || key || ''')::uuid'
+            WHEN key ~ '(is_|_flag)' THEN '($2->>''' || key || ''')::boolean'
+            WHEN key ~ '(_level|_rate|_systolic|_diastolic|_saturation)' THEN '($2->>''' || key || ''')::integer'
+            WHEN key ~ 'temperature' THEN '($2->>''' || key || ''')::numeric'
+            ELSE '($2->>''' || key || ''')::text'
+          END, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL
+           AND v_record->>key != '')
+      ) USING v_new_patient_id, v_record;
+    END LOOP;
+  END IF;
+  
+  -- Restore patient_alerts with dynamic INSERT
+  IF p_snapshot->'patient_alerts' IS NOT NULL THEN
+    FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patient_alerts')
+    LOOP
+      v_old_patient_id := (v_record->>'patient_id')::uuid;
+      v_new_patient_id := (v_old_patient_uuid_map->>v_old_patient_id::text)::uuid;
+      
+      EXECUTE format(
+        'INSERT INTO patient_alerts (patient_id, tenant_id, %s) SELECT $1, $2, %s',
+        (SELECT string_agg(key, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'tenant_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL 
+           AND v_record->>key != ''),
+        (SELECT string_agg(
+          CASE 
+            WHEN key ~ '(date|_at|time)' THEN '($3->>''' || key || ''')::timestamptz'
+            WHEN key ~ 'id$' AND key != 'patient_id' THEN '($3->>''' || key || ''')::uuid'
+            WHEN key ~ '(is_|_flag|_active)' THEN '($3->>''' || key || ''')::boolean'
+            ELSE '($3->>''' || key || ''')::text'
+          END, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'tenant_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL
+           AND v_record->>key != '')
+      ) USING v_new_patient_id, p_target_tenant_id, v_record;
+    END LOOP;
+  END IF;
+  
+  -- TODO: Add other tables (notes, diabetic_records, doctors_orders, etc.) with dynamic INSERT
   
   RAISE NOTICE '✅ Snapshot restored with % patient IDs', 
     CASE WHEN p_id_mappings IS NOT NULL THEN 'REUSABLE' ELSE 'RANDOM' END;
@@ -4436,26 +4493,32 @@ BEGIN
     END LOOP;
   END IF;
   
-  -- Restore vitals - USES ->> OPERATOR!
+  -- Restore vitals
   IF p_snapshot->'patient_vitals' IS NOT NULL THEN
     FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patient_vitals')
     LOOP
-      INSERT INTO patient_vitals (
-        patient_id, blood_pressure_systolic, blood_pressure_diastolic,
-        heart_rate, respiratory_rate, temperature, oxygen_saturation,
-        pain_level, recorded_by
-      )
-      VALUES (
-        (v_patient_mapping->>(v_record->>'patient_id'))::uuid,  -- << DOUBLE ARROW HERE!
-        (v_record->>'blood_pressure_systolic')::integer,
-        (v_record->>'blood_pressure_diastolic')::integer,
-        (v_record->>'heart_rate')::integer,
-        (v_record->>'respiratory_rate')::integer,
-        (v_record->>'temperature')::numeric,
-        (v_record->>'oxygen_saturation')::integer,
-        (v_record->>'pain_level')::integer,
-        (v_record->>'recorded_by')::uuid
-      );
+      -- Dynamic INSERT: Build from snapshot JSON, skip NULL/empty values
+      EXECUTE format(
+        'INSERT INTO patient_vitals (patient_id, %s) SELECT $1, %s',
+        (SELECT string_agg(key, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL 
+           AND v_record->>key != ''),
+        (SELECT string_agg(
+          CASE 
+            WHEN key ~ '(date|_at|time)' THEN '($2->>''' || key || ''')::timestamptz'
+            WHEN key ~ 'id$' AND key != 'patient_id' THEN '($2->>''' || key || ''')::uuid'
+            WHEN key ~ '(is_|_flag)' THEN '($2->>''' || key || ''')::boolean'
+            WHEN key ~ '(_level|_rate|_systolic|_diastolic|_saturation)' THEN '($2->>''' || key || ''')::integer'
+            WHEN key ~ 'temperature' THEN '($2->>''' || key || ''')::numeric'
+            ELSE '($2->>''' || key || ''')::text'
+          END, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL
+           AND v_record->>key != '')
+      ) USING (v_patient_mapping->>(v_record->>'patient_id'))::uuid, v_record;
     END LOOP;
   END IF;
   
@@ -4479,19 +4542,26 @@ BEGIN
   IF p_snapshot->'patient_alerts' IS NOT NULL THEN
     FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patient_alerts')
     LOOP
-      INSERT INTO patient_alerts (
-        patient_id, alert_type, severity, message, 
-        is_active, created_by, tenant_id
-      )
-      VALUES (
-        (v_patient_mapping->>(v_record->>'patient_id'))::uuid,
-        v_record->>'alert_type',
-        v_record->>'severity',
-        v_record->>'message',
-        (v_record->>'is_active')::boolean,
-        (v_record->>'created_by')::uuid,
-        p_tenant_id
-      );
+      -- Dynamic INSERT: Build from snapshot JSON, skip NULL/empty values
+      EXECUTE format(
+        'INSERT INTO patient_alerts (patient_id, tenant_id, %s) SELECT $1, $2, %s',
+        (SELECT string_agg(key, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'tenant_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL 
+           AND v_record->>key != ''),
+        (SELECT string_agg(
+          CASE 
+            WHEN key ~ '(date|_at|time)' THEN '($3->>''' || key || ''')::timestamptz'
+            WHEN key ~ 'id$' AND key != 'patient_id' THEN '($3->>''' || key || ''')::uuid'
+            WHEN key ~ '(is_|_flag|_active)' THEN '($3->>''' || key || ''')::boolean'
+            ELSE '($3->>''' || key || ''')::text'
+          END, ', ') 
+         FROM jsonb_object_keys(v_record) k(key) 
+         WHERE key NOT IN ('id', 'patient_id', 'tenant_id', 'created_at', 'updated_at')
+           AND v_record->>key IS NOT NULL
+           AND v_record->>key != '')
+      ) USING (v_patient_mapping->>(v_record->>'patient_id'))::uuid, p_tenant_id, v_record;
     END LOOP;
   END IF;
   
