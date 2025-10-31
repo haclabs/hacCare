@@ -85,9 +85,11 @@ export const EnhancedTenantSwitcher: React.FC = () => {
       // Refresh access info
       const accessInfo = getSuperAdminCurrentAccess();
       setSuperAdminAccess(accessInfo);
+      
+      // Force page reload to refresh all data for new tenant
+      window.location.reload();
     } catch (err) {
       console.error('Error switching tenant:', err);
-    } finally {
       setLoading(false);
     }
   };
