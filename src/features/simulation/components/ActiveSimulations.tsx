@@ -56,11 +56,10 @@ const ActiveSimulations: React.FC = () => {
         const result = await resetSimulationForNextSession(id);
         console.log('✅ Simulation reset and restarted:', result);
         
-        // Wait a moment for database to commit changes
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await loadSimulations();
+        alert('Simulation restarted with fresh timer! Page will reload to show updated state.');
         
-        alert('Simulation restarted with fresh timer! Ready for next session.');
+        // Reload page to show fresh timer and reset state
+        window.location.reload();
       } else {
         // If just paused, simply resume
         await updateSimulationStatus(id, 'running');
