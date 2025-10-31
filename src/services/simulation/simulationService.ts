@@ -369,33 +369,20 @@ export async function updateSimulationStatus(
 
 /**
  * Reset simulation for next session (RECOMMENDED)
- * Clears student work but preserves all medications and patient/medication IDs
- * Use this for classroom scenarios where you've printed labels or added medications
- * Updates timer directly via SQL UPDATE
+ * Resets timer and clears expired status
+ * Use this when restarting a completed/expired simulation
+ * After cleanup, reset_simulation is a simple timer reset function
  */
 export async function resetSimulationForNextSession(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   try {
-    // First, update the timer directly to avoid function conflicts
-    const { error: updateError } = await supabase
-      .from('simulation_active')
-      .update({
-        starts_at: new Date().toISOString(),
-        status: 'running',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', simulationId);
+    const { data, error } = await supabase.rpc('reset_simulation', {
+      p_simulation_id: simulationId,
+    });
 
-    if (updateError) throw updateError;
-
-    // The trigger will automatically calculate ends_at
-    // Return success
-    return {
-      success: true,
-      message: 'Simulation timer reset successfully',
-      simulation_id: simulationId,
-    } as SimulationFunctionResult;
+    if (error) throw error;
+    return data as SimulationFunctionResult;
   } catch (error: any) {
     console.error('Error resetting simulation:', error);
     throw error;
