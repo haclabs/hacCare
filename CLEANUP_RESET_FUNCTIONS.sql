@@ -34,10 +34,11 @@ BEGIN
   END IF;
   
   -- Simply update the timer and status
-  -- The trigger will automatically calculate ends_at
+  -- Explicitly set ends_at to ensure it's correct
   UPDATE simulation_active
   SET 
     starts_at = now(),
+    ends_at = now() + (v_sim.duration_minutes || ' minutes')::interval,
     status = 'running',
     updated_at = now()
   WHERE id = p_simulation_id;
