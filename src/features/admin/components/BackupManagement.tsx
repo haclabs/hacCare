@@ -66,6 +66,8 @@ export const BackupManagement: React.FC = () => {
     includeDoctorsOrders: true,
     includePatientImages: true,
     includeSimulations: true,
+    includeLabOrders: true,
+    includeHacmapMarkers: true,
     encryptData: true,
     password: ''
   });
@@ -301,6 +303,8 @@ export const BackupManagement: React.FC = () => {
                 { key: 'includeHandoverNotes', label: 'Handover Notes (SBAR)', icon: '🤝' },
                 { key: 'includePatientImages', label: 'Patient Images', icon: '🖼️' },
                 { key: 'includeSimulations', label: 'Simulation Templates & Active Simulations', icon: '🎭' },
+                { key: 'includeLabOrders', label: 'Lab Orders (Specimen Orders)', icon: '🧪' },
+                { key: 'includeHacmapMarkers', label: 'hacMap Markers (Devices & Wounds)', icon: '📍' },
                 { key: 'includeUsers', label: 'User Accounts', icon: '👥' },
                 { key: 'includeTenants', label: 'Tenant Settings', icon: '🏢' }
               ].map(({ key, label, icon }) => (

@@ -7,8 +7,8 @@
 CREATE OR REPLACE FUNCTION create_simulation_snapshot(
     p_template_id UUID,
     p_name VARCHAR(255),
-    p_description TEXT DEFAULT NULL,
-    p_user_id UUID
+    p_user_id UUID,
+    p_description TEXT DEFAULT NULL
 ) 
 RETURNS UUID 
 LANGUAGE plpgsql
@@ -120,6 +120,69 @@ BEGIN
             )
             FROM notes n
             JOIN patients p ON p.id = n.patient_id
+            WHERE p.tenant_id = v_tenant_id 
+            AND p.is_template_patient = true
+        ), '[]'::jsonb),
+        
+        'lab_orders', COALESCE((
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'id', lo.id,
+                    'patient_id', lo.patient_id,
+                    'order_date', lo.order_date,
+                    'order_time', lo.order_time,
+                    'procedure_category', lo.procedure_category,
+                    'procedure_type', lo.procedure_type,
+                    'source_category', lo.source_category,
+                    'source_type', lo.source_type,
+                    'initials', lo.initials,
+                    'verified_by', lo.verified_by,
+                    'status', lo.status,
+                    'notes', lo.notes,
+                    'label_printed', lo.label_printed,
+                    'created_at', lo.created_at
+                )
+            )
+            FROM lab_orders lo
+            JOIN patients p ON p.id = lo.patient_id
+            WHERE p.tenant_id = v_tenant_id 
+            AND p.is_template_patient = true
+        ), '[]'::jsonb),
+        
+        'hacmap_markers', COALESCE((
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'id', hm.id,
+                    'patient_id', hm.patient_id,
+                    'marker_type', hm.marker_type,
+                    'x', hm.x,
+                    'y', hm.y,
+                    'body_side', hm.body_side,
+                    'label', hm.label,
+                    'device_type', hm.device_type,
+                    'device_subtype', hm.device_subtype,
+                    'insertion_date', hm.insertion_date,
+                    'insertion_site', hm.insertion_site,
+                    'size_gauge', hm.size_gauge,
+                    'length_depth', hm.length_depth,
+                    'site_condition', hm.site_condition,
+                    'securing_method', hm.securing_method,
+                    'wound_type', hm.wound_type,
+                    'wound_stage', hm.wound_stage,
+                    'wound_size', hm.wound_size,
+                    'wound_depth', hm.wound_depth,
+                    'exudate_amount', hm.exudate_amount,
+                    'exudate_type', hm.exudate_type,
+                    'wound_bed', hm.wound_bed,
+                    'surrounding_skin', hm.surrounding_skin,
+                    'pain_level', hm.pain_level,
+                    'odor', hm.odor,
+                    'notes', hm.notes,
+                    'created_at', hm.created_at
+                )
+            )
+            FROM hacmap_markers hm
+            JOIN patients p ON p.id = hm.patient_id
             WHERE p.tenant_id = v_tenant_id 
             AND p.is_template_patient = true
         ), '[]'::jsonb)

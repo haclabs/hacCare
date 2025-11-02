@@ -2,10 +2,11 @@
 // Allows admins to create new lab panels
 
 import React, { useState } from 'react';
-import { X, Calendar, Clock, FileText } from 'lucide-react';
+import { X, Calendar, FileText } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { createLabPanel } from '../../../services/clinical/labService';
 import type { CreateLabPanelInput } from '../../../features/clinical/types/labs';
+import { getCurrentLocalDateTimeString } from '../../../utils/time';
 
 interface CreateLabPanelModalProps {
   patientId: string;
@@ -24,7 +25,7 @@ export const CreateLabPanelModal: React.FC<CreateLabPanelModalProps> = ({
 
   const [formData, setFormData] = useState<CreateLabPanelInput>({
     patient_id: patientId,
-    panel_time: new Date().toISOString().slice(0, 16), // YYYY-MM-DDTHH:mm
+    panel_time: getCurrentLocalDateTimeString(), // Current system time
     source: 'manual entry',
     notes: '',
     ack_required: true,

@@ -29,6 +29,8 @@ export interface BackupOptions {
   includeDoctorsOrders: boolean;
   includePatientImages: boolean;
   includeSimulations: boolean;  // NEW: Simulation templates and active simulations
+  includeLabOrders: boolean;  // NEW: Lab specimen orders
+  includeHacmapMarkers: boolean;  // NEW: Device and wound markers
   dateRange?: {
     startDate: string;
     endDate: string;
@@ -127,6 +129,10 @@ export interface BackupData {
     simulation_templates?: any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     simulation_active?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    lab_orders?: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    hacmap_markers?: any[];
   };
 }
 
@@ -251,6 +257,16 @@ class BackupService {
         backupData.data.simulation_active = await this.exportActiveSimulations(options);
         backupData.metadata.record_counts.simulation_templates = backupData.data.simulation_templates.length;
         backupData.metadata.record_counts.simulation_active = backupData.data.simulation_active.length;
+      }
+
+      if (options.includeLabOrders) {
+        backupData.data.lab_orders = await this.exportLabOrders(options);
+        backupData.metadata.record_counts.lab_orders = backupData.data.lab_orders.length;
+      }
+
+      if (options.includeHacmapMarkers) {
+        backupData.data.hacmap_markers = await this.exportHacmapMarkers(options);
+        backupData.metadata.record_counts.hacmap_markers = backupData.data.hacmap_markers.length;
       }
 
       // Generate checksum
@@ -533,7 +549,9 @@ class BackupService {
       options.includeHandoverNotes,
       options.includeDoctorsOrders,
       options.includePatientImages,
-      options.includeSimulations
+      options.includeSimulations,
+      options.includeLabOrders,
+      options.includeHacmapMarkers
     ];
 
     const enabledCount = allOptions.filter(Boolean).length;
@@ -871,6 +889,44 @@ class BackupService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async exportActiveSimulations(options: BackupOptions): Promise<any[]> {
     let query = supabase.from('simulation_active').select('*');
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportLabOrders(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('lab_orders').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('order_date', options.dateRange.startDate)
+        .lte('order_date', options.dateRange.endDate);
+    }
+
+    if (options.tenantIds?.length) {
+      query = query.in('tenant_id', options.tenantIds);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async exportHacmapMarkers(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('hacmap_markers').select('*');
+
+    if (options.dateRange) {
+      query = query
+        .gte('created_at', options.dateRange.startDate)
+        .lte('created_at', options.dateRange.endDate);
+    }
 
     if (options.tenantIds?.length) {
       query = query.in('tenant_id', options.tenantIds);

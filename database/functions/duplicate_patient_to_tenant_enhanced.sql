@@ -91,6 +91,8 @@ DECLARE
   v_doctors_orders_count INTEGER := 0;
   v_admission_records_count INTEGER := 0;
   v_advanced_directives_count INTEGER := 0;
+  v_lab_orders_count INTEGER := 0;
+  v_hacmap_markers_count INTEGER := 0;
   v_records_created JSONB;
 BEGIN
   -- Get source patient UUID
@@ -676,6 +678,120 @@ BEGIN
     END IF;
   END IF;
 
+  -- Copy lab orders
+  DECLARE
+    v_lab_orders_count INTEGER := 0;
+  BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'lab_orders') THEN
+      INSERT INTO lab_orders (
+        patient_id,
+        tenant_id,
+        order_date,
+        order_time,
+        procedure_category,
+        procedure_type,
+        source_category,
+        source_type,
+        initials,
+        verified_by,
+        status,
+        notes,
+        label_printed,
+        created_by
+      )
+      SELECT
+        v_new_patient_uuid,
+        p_target_tenant_id,
+        order_date,
+        order_time,
+        procedure_category,
+        procedure_type,
+        source_category,
+        source_type,
+        initials,
+        verified_by,
+        status,
+        notes,
+        false, -- Reset label_printed for new patient
+        created_by
+      FROM lab_orders
+      WHERE patient_id = v_source_patient_uuid;
+      
+      GET DIAGNOSTICS v_lab_orders_count = ROW_COUNT;
+      RAISE NOTICE 'Copied % lab orders', v_lab_orders_count;
+    END IF;
+  END;
+
+  -- Copy hacMap markers (devices and wounds)
+  DECLARE
+    v_hacmap_markers_count INTEGER := 0;
+  BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hacmap_markers') THEN
+      INSERT INTO hacmap_markers (
+        patient_id,
+        tenant_id,
+        marker_type,
+        x,
+        y,
+        body_side,
+        label,
+        device_type,
+        device_subtype,
+        insertion_date,
+        insertion_site,
+        size_gauge,
+        length_depth,
+        site_condition,
+        securing_method,
+        wound_type,
+        wound_stage,
+        wound_size,
+        wound_depth,
+        exudate_amount,
+        exudate_type,
+        wound_bed,
+        surrounding_skin,
+        pain_level,
+        odor,
+        notes,
+        created_by
+      )
+      SELECT
+        v_new_patient_uuid,
+        p_target_tenant_id,
+        marker_type,
+        x,
+        y,
+        body_side,
+        label,
+        device_type,
+        device_subtype,
+        insertion_date,
+        insertion_site,
+        size_gauge,
+        length_depth,
+        site_condition,
+        securing_method,
+        wound_type,
+        wound_stage,
+        wound_size,
+        wound_depth,
+        exudate_amount,
+        exudate_type,
+        wound_bed,
+        surrounding_skin,
+        pain_level,
+        odor,
+        notes,
+        created_by
+      FROM hacmap_markers
+      WHERE patient_id = v_source_patient_uuid;
+      
+      GET DIAGNOSTICS v_hacmap_markers_count = ROW_COUNT;
+      RAISE NOTICE 'Copied % hacMap markers', v_hacmap_markers_count;
+    END IF;
+  END;
+
   -- Build result JSON
   v_records_created := jsonb_build_object(
     'vitals', v_vitals_count,
@@ -691,7 +807,9 @@ BEGIN
     'wound_treatments', v_wound_treatments_count,
     'doctors_orders', v_doctors_orders_count,
     'admission_records', v_admission_records_count,
-    'advanced_directives', v_advanced_directives_count
+    'advanced_directives', v_advanced_directives_count,
+    'lab_orders', v_lab_orders_count,
+    'hacmap_markers', v_hacmap_markers_count
   );
 
   -- Return success
@@ -704,7 +822,8 @@ BEGIN
      (v_vitals_count + v_medications_count + v_med_admin_count + v_notes_count + 
       v_assessments_count + v_handover_count + v_alerts_count + v_diabetic_count + 
       v_bowel_count + v_wound_assessments_count + v_wound_treatments_count + 
-      v_doctors_orders_count + v_admission_records_count + v_advanced_directives_count)::TEXT || ' associated records')::TEXT AS message;
+      v_doctors_orders_count + v_admission_records_count + v_advanced_directives_count + 
+      v_lab_orders_count + v_hacmap_markers_count)::TEXT || ' associated records')::TEXT AS message;
 
 END;
 $$;

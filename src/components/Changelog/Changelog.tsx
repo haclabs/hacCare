@@ -31,13 +31,89 @@ interface ChangelogEntry {
  * @returns {JSX.Element} The changelog component
  */
 export const Changelog: React.FC = () => {
-  const [selectedVersion, setSelectedVersion] = useState<string>('5.0.0-rc.2');
+  const [selectedVersion, setSelectedVersion] = useState<string>('5.2.0-rc4');
 
   /**
    * Changelog data
    * Contains all version history with categorized changes
    */
   const changelogData: ChangelogEntry[] = [
+    {
+      version: "5.2.0-rc4",
+      codename: "OTTO",
+      date: "2025-11-02",
+      isMajor: true,
+      changes: [
+        {
+          type: "feature",
+          description: "Lab Orders System - Complete specimen ordering with 6 procedure categories (40+ test types) and 6 source categories (30+ sites)"
+        },
+        {
+          type: "feature",
+          description: "hacMap Body Mapping - Interactive device and wound tracking with front/back body diagrams and comprehensive clinical details"
+        },
+        {
+          type: "feature",
+          description: "Lab order cascading dropdowns: Hematology, Chemistry, Microbiology, Serology, Urinalysis, Special Tests"
+        },
+        {
+          type: "feature",
+          description: "Specimen collection sites: Venipuncture, Capillary, Arterial, Urine, Culture, and Other categories"
+        },
+        {
+          type: "feature",
+          description: "4x4\" printable specimen labels with barcode integration and order status tracking"
+        },
+        {
+          type: "feature",
+          description: "Device markers: Central Line, Peripheral IV, Foley Catheter, NG Tube, ET Tube with insertion details"
+        },
+        {
+          type: "feature",
+          description: "Wound markers: Pressure Injury, Surgical, Diabetic Ulcer with staging, size, exudate, and pain assessment"
+        },
+        {
+          type: "improvement",
+          description: "Simulation Integration - Lab orders and hacMap markers captured in simulation templates and snapshots"
+        },
+        {
+          type: "improvement",
+          description: "Simulation Reset Enhancement - Smart cleanup of student-entered data while preserving template baseline"
+        },
+        {
+          type: "improvement",
+          description: "Patient Duplication Enhancement - Lab orders and markers copied across tenants with complete clinical details"
+        },
+        {
+          type: "improvement",
+          description: "Super Admin Backup Service - Added lab orders and hacMap markers to comprehensive backup system"
+        },
+        {
+          type: "improvement",
+          description: "Backup Management UI - New checkboxes for lab orders and hacMap markers in backup creation interface"
+        },
+        {
+          type: "security",
+          description: "Complete RLS (Row Level Security) policies for lab_orders and hacmap_markers with tenant isolation"
+        },
+        {
+          type: "bugfix",
+          description: "Fixed create_simulation_snapshot() parameter ordering - resolved PostgreSQL default parameter error"
+        },
+        {
+          type: "improvement",
+          description: "Data Integrity - Proper foreign key constraints, label printing state management, and cascading deletes"
+        },
+        {
+          type: "improvement",
+          description: "Performance Optimization - JSONB aggregation for snapshots, indexed foreign keys, optimized DELETE queries"
+        },
+        {
+          type: "feature",
+          description: "Comprehensive Documentation - Created simulation/backup integration guides with testing checklists"
+        }
+      ]
+    },
     {
       version: "5.0.0-rc.2",
       codename: "Mint",
@@ -770,14 +846,14 @@ export const Changelog: React.FC = () => {
       <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6">
         <div className="flex items-center space-x-3 mb-3">
           <Star className="h-5 w-5 text-orange-600" />
-          <h3 className="text-lg font-medium text-orange-900">Version 5.0.0-rc.1 "Mango" - Major Release Highlights</h3>
+          <h3 className="text-lg font-medium text-orange-900">Version 5.2.0-rc4 "OTTO" - Major Release Highlights</h3>
         </div>
         <div className="text-orange-800 space-y-2 text-sm">
-          <p>• <strong>Security Transformation:</strong> Eliminated 240+ security warnings achieving zero security alerts</p>
-          <p>• <strong>Performance Revolution:</strong> 50-90% faster database queries with optimized RLS policies</p>
-          <p>• <strong>Enterprise Architecture:</strong> Complete professional restructure with 60+ files reorganized</p>
-          <p>• <strong>PostgreSQL Upgrade:</strong> Latest 17.6.1.011 with cutting-edge security patches</p>
-          <p>• <strong>Development Excellence:</strong> Zero compilation errors and streamlined workflows</p>
+          <p>• <strong>Lab Orders System:</strong> Complete specimen ordering with 40+ tests across 6 categories and 30+ collection sites</p>
+          <p>• <strong>hacMap Integration:</strong> Visual device and wound tracking with interactive body diagrams</p>
+          <p>• <strong>Simulation Enhancement:</strong> Lab orders and markers fully integrated into template/snapshot/reset workflow</p>
+          <p>• <strong>Data Preservation:</strong> Complete clinical context maintained through simulations and backups</p>
+          <p>• <strong>Zero Breaking Changes:</strong> 100% backward compatibility with comprehensive testing validation</p>
         </div>
       </div>
 

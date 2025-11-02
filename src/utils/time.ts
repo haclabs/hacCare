@@ -120,3 +120,68 @@ export const isToday = (date: Date | string): boolean => {
     return false;
   }
 };
+
+/**
+ * Format date and time in 24-hour format
+ * Standard format for displaying dates with time across the application
+ * 
+ * @param {Date | string | null | undefined} dateValue - Date value to format
+ * @returns {string} Formatted date and time string in 24-hour format
+ */
+export const format24HourDateTime = (dateValue: Date | string | null | undefined): string => {
+  if (!dateValue) return 'N/A';
+  
+  try {
+    const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
+    
+    if (!isValid(date)) {
+      return 'N/A';
+    }
+    
+    // Format: "MMM dd, yyyy, HH:mm" (e.g., "Nov 02, 2025, 14:30")
+    return format(date, 'MMM dd, yyyy, HH:mm');
+  } catch (error) {
+    console.error('Error formatting 24-hour date time:', error);
+    return 'Invalid Date';
+  }
+};
+
+/**
+ * Format time only in 24-hour format
+ * 
+ * @param {Date | string | null | undefined} dateValue - Date value to format
+ * @returns {string} Formatted time string in 24-hour format
+ */
+export const format24HourTime = (dateValue: Date | string | null | undefined): string => {
+  if (!dateValue) return 'N/A';
+  
+  try {
+    const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
+    
+    if (!isValid(date)) {
+      return 'N/A';
+    }
+    
+    // Format: "HH:mm" (e.g., "14:30")
+    return format(date, 'HH:mm');
+  } catch (error) {
+    console.error('Error formatting 24-hour time:', error);
+    return 'Invalid Time';
+  }
+};
+
+/**
+ * Get current date/time formatted for datetime-local input
+ * Returns current system time in the format required by HTML5 datetime-local input
+ * 
+ * @returns {string} Current date/time in YYYY-MM-DDTHH:mm format
+ */
+export const getCurrentLocalDateTimeString = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};

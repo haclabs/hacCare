@@ -33,7 +33,8 @@ import {
   ArrowRight,
   Camera,
   MessageSquare,
-  FlaskConical
+  FlaskConical,
+  MapPin
 } from 'lucide-react';
 import { VitalsModule } from '../features/clinical/components/vitals';
 import { MARModule } from '../features/clinical/components/mar';
@@ -41,6 +42,7 @@ import { FormsModule } from '../features/forms';
 import { WoundCareModule } from '../features/clinical/components/wound-care';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
+import { AvatarBoard } from '../features/hacmap/AvatarBoard';
 import { AdvancedDirectivesForm } from '../features/patients/components/forms/AdvancedDirectivesForm';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
@@ -64,7 +66,7 @@ interface ModularPatientDashboardProps {
   };
 }
 
-type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover' | 'advanced-directives';
+type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover' | 'advanced-directives' | 'hacmap';
 
 interface ModuleConfig {
   id: ActiveModule;
@@ -1064,6 +1066,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Legal care preferences and end-of-life planning documentation',
       icon: FileText,
       color: 'teal'
+    },
+    {
+      id: 'hacmap',
+      title: 'hacMap - Device & Wound Map',
+      description: 'Visual mapping of medical devices and wound locations on body diagram',
+      icon: MapPin,
+      color: 'purple'
     }
   ];
 
@@ -1277,16 +1286,28 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 ID Bracelet
               </button>
             )}
-            {isMultiTenantAdmin && (
-              <button
-                onClick={() => setShowSchemaEditor(true)}
-                className="flex items-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-4 py-2.5 rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300 hover:scale-105 font-medium"
-                title="Edit Schema Templates"
+            
+            {/* hacMap Button */}
+            <button
+              onClick={() => setActiveModule('hacmap')}
+              className="flex items-center text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-4 py-2.5 rounded-xl transition-all duration-200 border border-purple-200 hover:border-purple-300 hover:scale-105 font-medium"
+              title="Open Device & Wound Map"
+            >
+              <svg 
+                className="h-4 w-4 mr-2" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <Settings className="h-4 w-4 mr-2" />
-                Edit Template
-              </button>
-            )}
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              hacMap - Device & Wound Map
+            </button>
+            
             {/* Contact button removed as requested */}
           </div>
           {/* End Modern Action Row */}
@@ -1401,6 +1422,16 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   />
                 </div>
               )}
+
+              {activeModule === 'hacmap' && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <AvatarBoard 
+                    patientId={patient.id}
+                    patientName={`${patient.first_name} ${patient.last_name}`}
+                    patientNumber={patient.patient_id}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1441,6 +1472,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 patientId={patient.id}
                 patientNumber={patient.patient_id}
                 patientName={`${patient.first_name} ${patient.last_name}`}
+                patientDOB={patient.date_of_birth}
                 onLabsChange={handleLabsChange}
               />
             </div>

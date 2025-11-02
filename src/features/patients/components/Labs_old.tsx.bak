@@ -1,7 +1,7 @@
 // Labs Main Component
-// Displays lab panels with tab navigation (All/Chemistry/ABG/Hematology/Order Entry)
+// Displays lab panels with tab navigation (All/Chemistry/ABG/Hematology)
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -10,14 +10,11 @@ import {
   getLabResults,
   hasUnacknowledgedLabs,
 } from '../../../services/clinical/labService';
-import { getLabOrders } from '../../../services/clinical/labOrderService';
 import type { LabPanel, LabCategory } from '../../../features/clinical/types/labs';
-import type { LabOrder } from '../../../features/clinical/types/labOrders';
 import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../../../features/clinical/types/labs';
 import { LabPanelDetail } from './LabPanelDetail';
 import { CreateLabPanelModal } from './CreateLabPanelModal';
 import { LabOrderEntryForm } from './LabOrderEntryForm';
-import { LabOrderCard } from './LabOrderCard';
 import { format24HourDateTime } from '../../../utils/time';
 
 interface LabsProps {
@@ -33,7 +30,6 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState<LabCategory | 'all' | 'order'>('all');
   const [panels, setPanels] = useState<LabPanel[]>([]);
-  const [labOrders, setLabOrders] = useState<LabOrder[]>([]);
   const [selectedPanel, setSelectedPanel] = useState<LabPanel | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,7 +38,12 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
 
   const isAdmin = hasRole('admin') || hasRole('super_admin');
 
-  const loadPanels = useCallback(async () => {
+  useEffect(() => {
+    loadPanels();
+    checkForNewLabs();
+  }, [patientId, currentTenant]);
+
+  const loadPanels = async () => {
     if (!currentTenant) return;
 
     setLoading(true);
@@ -58,32 +59,14 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
     }
 
     setLoading(false);
-  }, [patientId, currentTenant]);
+  };
 
-  const loadLabOrders = useCallback(async () => {
-    if (!currentTenant) return;
-
-    const { data, error: err } = await getLabOrders(patientId, currentTenant.id);
-
-    if (err) {
-      console.error('Failed to load lab orders:', err);
-    } else {
-      setLabOrders(data || []);
-    }
-  }, [patientId, currentTenant]);
-
-  const checkForNewLabs = useCallback(async () => {
+  const checkForNewLabs = async () => {
     if (!currentTenant) return;
 
     const { hasUnacked } = await hasUnacknowledgedLabs(patientId, currentTenant.id);
     setHasNewLabs(hasUnacked);
-  }, [patientId, currentTenant]);
-
-  useEffect(() => {
-    loadPanels();
-    loadLabOrders();
-    checkForNewLabs();
-  }, [loadPanels, loadLabOrders, checkForNewLabs]);
+  };
 
   const handlePanelCreated = () => {
     loadPanels();
@@ -92,9 +75,8 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
 
   const handlePanelUpdated = () => {
     loadPanels();
-    loadLabOrders();
     checkForNewLabs();
-    onLabsChange?.();
+    onLabsChange?.(); // Notify parent component
   };
 
   const getCategoryIcon = (category: string) => {
@@ -111,7 +93,9 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   };
 
   const filteredPanels = panels.filter(() => {
-    if (activeTab === 'all' || activeTab === 'order') return true;
+    if (activeTab === 'all') return true;
+    // We'll need to check if panel has results in this category
+    // For now, show all panels in all tabs
     return true;
   });
 
@@ -133,7 +117,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* Header with tabs and actions */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-3">
@@ -162,7 +146,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Category tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-2">
           {LAB_CATEGORY_TABS.map((tab) => (
@@ -201,7 +185,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
         </nav>
       </div>
 
-      {/* Content */}
+      {/* Lab Order Entry Form */}
       {activeTab === 'order' ? (
         <LabOrderEntryForm
           patientId={patientId}
@@ -209,12 +193,13 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
           patientNumber={patientNumber || patientId}
           patientDOB={patientDOB || ''}
           onSuccess={() => {
-            loadLabOrders(); // Reload orders after creating new one
             setActiveTab('all');
+            // Could load lab orders here if we want to display them
           }}
         />
       ) : (
         <>
+          {/* Error message */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
               <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
@@ -222,56 +207,40 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
             </div>
           )}
 
+          {/* Loading state */}
           {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-sm text-gray-500">Loading labs...</p>
-            </div>
-          ) : filteredPanels.length === 0 && labOrders.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <FlaskConical className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">No lab panels or orders found</p>
-              {isAdmin && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  Create first panel
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Lab Orders Section */}
-              {labOrders.length > 0 && (
-                <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
-                  {labOrders.map((order) => (
-                    <LabOrderCard
-                      key={order.id}
-                      order={order}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Lab Panels Section */}
-              {filteredPanels.length > 0 && (
-                <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
-                  {filteredPanels.map((panel) => (
-                    <PanelCard
-                      key={panel.id}
-                      panel={panel}
-                      onClick={() => setSelectedPanel(panel)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-sm text-gray-500">Loading labs...</p>
+        </div>
+      ) : filteredPanels.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <FlaskConical className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">No lab panels found</p>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              Create first panel
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
+          {filteredPanels.map((panel) => (
+            <PanelCard
+              key={panel.id}
+              panel={panel}
+              onClick={() => setSelectedPanel(panel)}
+            />
+          ))}
+        </div>
           )}
         </>
       )}
 
-      {/* Create Panel Modal */}
+      {/* Create modal */}
       {showCreateModal && (
         <CreateLabPanelModal
           patientId={patientId}
@@ -283,7 +252,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   );
 };
 
-// Panel Card Component
+// Panel card component
 interface PanelCardProps {
   panel: LabPanel;
   onClick: () => void;
@@ -296,7 +265,11 @@ const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick }) => {
     critical: number;
   }>({ total: 0, abnormal: 0, critical: 0 });
 
-  const loadResultStats = useCallback(async () => {
+  useEffect(() => {
+    loadResultStats();
+  }, [panel.id]);
+
+  const loadResultStats = async () => {
     const { data: results } = await getLabResults(panel.id);
     if (results) {
       const abnormal = results.filter(r => 
@@ -312,11 +285,7 @@ const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick }) => {
         critical,
       });
     }
-  }, [panel.id]);
-
-  useEffect(() => {
-    loadResultStats();
-  }, [loadResultStats]);
+  };
 
   return (
     <div

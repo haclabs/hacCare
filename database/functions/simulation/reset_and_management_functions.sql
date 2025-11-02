@@ -49,6 +49,20 @@ BEGIN
     DELETE FROM sim_run_notes WHERE run_id = p_run_id;
     GET DIAGNOSTICS v_notes_count = ROW_COUNT;
     
+    -- Delete lab orders created during run
+    DELETE FROM lab_orders lo
+    USING sim_run_patients rp, patients p
+    WHERE lo.patient_id = p.id
+    AND p.patient_id = rp.public_patient_id
+    AND rp.run_id = p_run_id;
+    
+    -- Delete hacmap markers created during run  
+    DELETE FROM hacmap_markers hm
+    USING sim_run_patients rp, patients p
+    WHERE hm.patient_id = p.id
+    AND p.patient_id = rp.public_patient_id
+    AND rp.run_id = p_run_id;
+    
     -- Update run status and timestamp
     UPDATE sim_runs 
     SET updated_at = NOW()
@@ -168,6 +182,65 @@ BEGIN
             )
             FROM sim_template_barcodes tb
             WHERE tb.template_id = p_template_id
+        ), '[]'::jsonb),
+        
+        'lab_orders', COALESCE((
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'template_patient_id', tp.id,
+                    'order_date', lo.order_date,
+                    'order_time', lo.order_time,
+                    'procedure_category', lo.procedure_category,
+                    'procedure_type', lo.procedure_type,
+                    'source_category', lo.source_category,
+                    'source_type', lo.source_type,
+                    'initials', lo.initials,
+                    'status', lo.status,
+                    'notes', lo.notes
+                )
+            )
+            FROM sim_template_patients tp
+            LEFT JOIN patients p ON p.patient_id = tp.public_patient_id
+            LEFT JOIN lab_orders lo ON lo.patient_id = p.id
+            WHERE tp.template_id = p_template_id
+            AND lo.id IS NOT NULL
+        ), '[]'::jsonb),
+        
+        'hacmap_markers', COALESCE((
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'template_patient_id', tp.id,
+                    'marker_type', hm.marker_type,
+                    'x', hm.x,
+                    'y', hm.y,
+                    'body_side', hm.body_side,
+                    'label', hm.label,
+                    'device_type', hm.device_type,
+                    'device_subtype', hm.device_subtype,
+                    'insertion_date', hm.insertion_date,
+                    'insertion_site', hm.insertion_site,
+                    'size_gauge', hm.size_gauge,
+                    'length_depth', hm.length_depth,
+                    'site_condition', hm.site_condition,
+                    'securing_method', hm.securing_method,
+                    'wound_type', hm.wound_type,
+                    'wound_stage', hm.wound_stage,
+                    'wound_size', hm.wound_size,
+                    'wound_depth', hm.wound_depth,
+                    'exudate_amount', hm.exudate_amount,
+                    'exudate_type', hm.exudate_type,
+                    'wound_bed', hm.wound_bed,
+                    'surrounding_skin', hm.surrounding_skin,
+                    'pain_level', hm.pain_level,
+                    'odor', hm.odor,
+                    'notes', hm.notes
+                )
+            )
+            FROM sim_template_patients tp
+            LEFT JOIN patients p ON p.patient_id = tp.public_patient_id
+            LEFT JOIN hacmap_markers hm ON hm.patient_id = p.id
+            WHERE tp.template_id = p_template_id
+            AND hm.id IS NOT NULL
         ), '[]'::jsonb),
         
         'template_metadata', (
