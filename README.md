@@ -659,25 +659,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history and feature updates.
 
-### Version 5.0.0-rc.1 "Mango" (Current) - Major Architecture Overhaul
-- ✅ **Enterprise Project Organization**: Feature-based architecture with professional structure
-- ✅ **Complete Security Hardening**: 240+ database warnings resolved to zero
-- ✅ **PostgreSQL 17.6.1.011 Upgrade**: Latest enterprise database with enhanced security
-- ✅ **60+ Files Reorganized**: Moved to docs/development/ with proper categorization
-- ✅ **Zero TypeScript Errors**: Clean compilation and optimized build process
-- ✅ **Dependency Modernization**: Updated to latest stable versions (Vite 7.1.9, React Router 6.26.2)
-- ✅ **Performance Optimization**: 35% project file reduction and faster development
-- ✅ **Professional Documentation**: Comprehensive development environment structure
-- ✅ **Enhanced BCMA System**: Complete barcode medication administration
-- ✅ **Advanced Security Suite**: HIPAA-compliant logging and threat detection
-
-### Previous Versions
-- **Version 3.0.0**: Complete BCMA system, diabetic care, security diagnostics
-- **Version 2.x**: Core patient management and basic features
-- **Version 1.x**: Initial healthcare management platform
-
----
-
-**🏥 hacCare v5.0.0-rc.1 "Mango"** - *Enterprise-grade healthcare management with complete security hardening, professional architecture, and advanced BCMA medication administration.*
+**🏥 hacCare v5.2.0-rc.4 "OTTO"** - *Enterprise-grade healthcare management with complete security hardening, professional architecture, and advanced BCMA medication administration.*
 
 **Built with ❤️ by the hacCare Team** | **Powered by React, TypeScript, and Supabase**
