@@ -7,7 +7,7 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
-[5.1.4-rc3] - 2025-10-30 - OTTO RELEASE CANDIDATE 3 🚀
+[5.2.0-rc4] - 2025-11-02 - OTTO RELEASE CANDIDATE 4 🚀
 ===============================================================================
 
 SIMULATION SYSTEM FIXES - CRITICAL PRODUCTION UPDATES
