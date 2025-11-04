@@ -218,26 +218,28 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="bg-blue-600 text-white p-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold flex items-center space-x-2">
-            <FileText className="h-6 w-6" />
-            <span>Doctors Orders</span>
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-gray-200 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
+        {/* Header - Matching Labs Page Style */}
+        <div className="border-b border-gray-200 bg-white p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FileText className="h-6 w-6 text-blue-600" />
+              <h2 className="text-2xl font-bold text-gray-900">Doctors Orders</h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          <p className="text-gray-600 mt-1">
+            Patient Orders ({orders.length})
+          </p>
         </div>
 
         <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
           {/* Add Order Button */}
-          <div className="mb-6 flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">
-              Patient Orders ({orders.length})
-            </h3>
+          <div className="mb-6 flex justify-end">
             <button
               onClick={() => setShowAddForm(true)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors space-x-2"

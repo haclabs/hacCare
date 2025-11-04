@@ -11,6 +11,7 @@ import { DeviceForm } from './forms/DeviceForm';
 import { WoundForm } from './forms/WoundForm';
 import {
   createAvatarLocation,
+  updateAvatarLocation,
   listMarkers,
   getDevice,
   createDevice,
@@ -41,11 +42,12 @@ interface AvatarBoardProps {
 }
 
 type PanelMode = 'create-device' | 'create-wound' | 'edit-device' | 'edit-wound' | null;
+type PlacementMode = 'device' | 'wound' | null;
 
 export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName, patientNumber }) => {
   const { user } = useAuth();
   const { currentTenant } = useTenant();
-  const [mode, setMode] = useState<'device' | 'wound'>('device');
+  const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
   const [markers, setMarkers] = useState<MarkerWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,11 +105,13 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
         region_key: regionKey,
         x_percent: coords.x,
         y_percent: coords.y,
+        body_view: coords.view, // Track which view marker was placed on
         created_by: user.id
       });
 
       setSelectedLocationId(location.id);
-      setPanelMode(mode === 'device' ? 'create-device' : 'create-wound');
+      setPanelMode(placementMode === 'device' ? 'create-device' : 'create-wound');
+      setPlacementMode(null); // Exit placement mode after creating
     } catch (err) {
       console.error('Error creating location:', err);
       alert('Failed to create location. Please try again.');
@@ -131,6 +135,35 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
     } catch (err) {
       console.error('Error loading item:', err);
       alert('Failed to load item. Please try again.');
+    }
+  };
+
+  // Handle marker drag/move
+  const handleMarkerMove = async (id: string, regionKey: RegionKey, coords: Coordinates) => {
+    try {
+      // Find the marker to get its location_id
+      const marker = markers.find(m => m.id === id);
+      if (!marker?.location?.id) return;
+
+      // Update the location in database
+      await updateAvatarLocation(marker.location.id, {
+        x_percent: coords.x,
+        y_percent: coords.y,
+        region_key: regionKey
+      });
+
+      // Optimistically update local state
+      setMarkers(prevMarkers =>
+        prevMarkers.map(m =>
+          m.id === id
+            ? { ...m, x: coords.x, y: coords.y, regionKey: regionKey }
+            : m
+        )
+      );
+    } catch (err) {
+      console.error('Error moving marker:', err);
+      // Reload to revert on error
+      await loadMarkers();
     }
   };
 
@@ -255,7 +288,8 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
           {patientName}
         </h2>
         <p className="text-sm text-gray-600 mt-1">
-          MRN: {patientNumber} • Click the body to add {mode === 'device' ? 'devices' : 'wounds/incisions'}
+          MRN: {patientNumber}
+          {placementMode ? ` • Click the body to add ${placementMode === 'device' ? 'devices' : 'wounds/incisions'}` : ' • Click a marker to edit or select Add Device/Wound below'}
         </p>
       </div>
 
@@ -292,10 +326,11 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
           <div className="flex items-start gap-10 justify-center">
             {/* Avatar */}
             <AvatarCanvas
-              mode={mode}
+              mode={placementMode}
               markers={filteredMarkers}
-              onCreateAt={handleCreateAt}
+              onCreateAt={placementMode ? handleCreateAt : undefined}
               onMarkerClick={handleMarkerClick}
+              onMarkerMove={handleMarkerMove}
               className=""
             />
             
@@ -306,9 +341,9 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                 <div className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Quick Add</div>
                 <div className="space-y-2">
                   <button
-                    onClick={() => setMode('device')}
+                    onClick={() => setPlacementMode(placementMode === 'device' ? null : 'device')}
                     className={`w-full px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
-                      mode === 'device'
+                      placementMode === 'device'
                         ? 'bg-green-500 text-white shadow-md hover:bg-green-600'
                         : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
                     }`}
@@ -317,18 +352,18 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                       <rect x="7" y="2" width="2" height="12" rx="1" />
                       <rect x="2" y="7" width="12" height="2" rx="1" />
                     </svg>
-                    <span>Add Device</span>
+                    <span>{placementMode === 'device' ? 'Cancel' : 'Add Device'}</span>
                   </button>
                   <button
-                    onClick={() => setMode('wound')}
+                    onClick={() => setPlacementMode(placementMode === 'wound' ? null : 'wound')}
                     className={`w-full px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
-                      mode === 'wound'
+                      placementMode === 'wound'
                         ? 'bg-pink-500 text-white shadow-md hover:bg-pink-600'
                         : 'bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100'
                     }`}
                   >
                     <div className="w-4 h-4 rounded-full border-2 border-current"></div>
-                    <span>Add Wound</span>
+                    <span>{placementMode === 'wound' ? 'Cancel' : 'Add Wound'}</span>
                   </button>
                 </div>
               </div>

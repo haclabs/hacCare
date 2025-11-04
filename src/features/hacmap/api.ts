@@ -41,6 +41,28 @@ export async function createAvatarLocation(
 }
 
 /**
+ * Update an avatar location (for dragging markers)
+ */
+export async function updateAvatarLocation(
+  locationId: string,
+  coords: { x_percent: number; y_percent: number; region_key: string }
+): Promise<AvatarLocation> {
+  const { data, error } = await supabase
+    .from('avatar_locations')
+    .update(coords)
+    .eq('id', locationId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating avatar location:', error);
+    throw new Error(`Failed to update avatar location: ${error.message}`);
+  }
+
+  return data;
+}
+
+/**
  * Get all markers for a patient (devices + wounds with locations)
  */
 export async function listMarkers(patientId: string): Promise<MarkerWithDetails[]> {
@@ -95,6 +117,7 @@ export async function listMarkers(patientId: string): Promise<MarkerWithDetails[
             regionKey: device.location.region_key,
             x: device.location.x_percent,
             y: device.location.y_percent,
+            bodyView: device.location.body_view,
             label: device.type,
             location: device.location,
             device: device
@@ -113,6 +136,7 @@ export async function listMarkers(patientId: string): Promise<MarkerWithDetails[
             regionKey: wound.location.region_key,
             x: wound.location.x_percent,
             y: wound.location.y_percent,
+            bodyView: wound.location.body_view,
             label: wound.wound_type,
             location: wound.location,
             wound: wound

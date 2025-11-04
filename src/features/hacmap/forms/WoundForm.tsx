@@ -41,11 +41,12 @@ export const WoundForm: React.FC<WoundFormProps> = ({
   const [closure, setClosure] = useState(wound?.closure || '');
   const [sutureSutapleLine, setSutureSutapleLine] = useState(wound?.suture_staple_line || '');
   const [suturesIntact, setSuturesIntact] = useState(wound?.sutures_intact || '');
+  const [enteredBy, setEnteredBy] = useState(wound?.entered_by || '');
   const [notes, setNotes] = useState(wound?.notes || '');
 
   useEffect(() => {
     setIsDirty(true);
-  }, [woundType, periWoundTemperature, woundLengthCm, woundWidthCm, woundDepthCm, woundDescription, drainageDescription, drainageConsistency, woundOdor, drainageAmount, woundEdges, closure, sutureSutapleLine, suturesIntact, notes]);
+  }, [woundType, periWoundTemperature, woundLengthCm, woundWidthCm, woundDepthCm, woundDescription, drainageDescription, drainageConsistency, woundOdor, drainageAmount, woundEdges, closure, sutureSutapleLine, suturesIntact, enteredBy, notes]);
 
   const handleArrayToggle = (
     value: string,
@@ -77,6 +78,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
         closure: closure || undefined,
         suture_staple_line: sutureSutapleLine || undefined,
         sutures_intact: suturesIntact || undefined,
+        entered_by: enteredBy || undefined,
         notes: notes || undefined
       };
 
@@ -364,6 +366,21 @@ export const WoundForm: React.FC<WoundFormProps> = ({
           <option value="no">No</option>
           <option value="unknown">Unknown</option>
         </select>
+      </div>
+
+      {/* Entered By */}
+      <div>
+        <label htmlFor="enteredBy" className="block text-sm font-medium text-gray-700 mb-1">
+          Entered By (Nurse/Clinician Name)
+        </label>
+        <input
+          type="text"
+          id="enteredBy"
+          value={enteredBy}
+          onChange={(e) => setEnteredBy(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+          placeholder="e.g., Sarah Johnson, RN"
+        />
       </div>
 
       {/* Notes */}

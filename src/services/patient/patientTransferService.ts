@@ -17,6 +17,7 @@ export interface PatientTransferOptions {
   transferDoctorsOrders?: boolean;
   transferAdmissionRecords?: boolean;
   transferAdvancedDirectives?: boolean;
+  transferHacmap?: boolean;
   newPatientId?: string;
 }
 
@@ -42,6 +43,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
     transferBowelRecords = true,
     transferWoundCare = true,
     transferDoctorsOrders = true,
+    transferHacmap = true,
     newPatientId
   } = options;
 
@@ -93,7 +95,8 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         p_include_diabetic_records: transferDiabeticRecords,
         p_include_bowel_records: transferBowelRecords,
         p_include_wound_care: transferWoundCare,
-        p_include_doctors_orders: transferDoctorsOrders
+        p_include_doctors_orders: transferDoctorsOrders,
+        p_include_hacmap: transferHacmap
       });
 
       const { data, error } = await supabase
@@ -109,7 +112,8 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
           p_include_diabetic_records: transferDiabeticRecords,
           p_include_bowel_records: transferBowelRecords,
           p_include_wound_care: transferWoundCare,
-          p_include_doctors_orders: transferDoctorsOrders
+          p_include_doctors_orders: transferDoctorsOrders,
+          p_include_hacmap: transferHacmap
         });
 
       if (error) {

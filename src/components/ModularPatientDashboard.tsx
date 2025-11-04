@@ -818,7 +818,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Create SBAR communication notes for care transitions',
       icon: MessageSquare,
       action: () => setActiveModule('handover'),
-      color: 'blue'
+      color: 'sky' // Matches handover module
     },
     {
       id: 'patient-record',
@@ -826,7 +826,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Generate comprehensive medical record',
       icon: FileText,
       action: handlePrintRecord,
-      color: 'blue'
+      color: 'blue' // Unique: Blue for patient record
     },
     {
       id: 'discharge-summary',
@@ -834,7 +834,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Create discharge documentation',
       icon: FileCheck,
       action: () => alert('Discharge Summary feature coming soon!'),
-      color: 'green'
+      color: 'green' // Unique: Green for discharge
     },
     {
       id: 'transfer-request',
@@ -842,7 +842,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Initiate patient transfer process',
       icon: ArrowRight,
       action: () => alert('Transfer Request feature coming soon!'),
-      color: 'purple'
+      color: 'amber' // Unique: Amber for transfer
     },
     {
       id: 'doctors-orders',
@@ -850,7 +850,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'View and manage physician orders',
       icon: FileText,
       action: () => setShowDoctorsOrders(true),
-      color: 'blue',
+      color: 'indigo', // Unique: Indigo for doctor's orders
       badge: unacknowledgedCount > 0 ? 'New Order' : undefined
     },
     {
@@ -859,7 +859,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'View and manage laboratory results',
       icon: FlaskConical,
       action: () => setShowLabs(true),
-      color: 'purple',
+      color: 'violet', // Unique: Violet for labs
       badge: unacknowledgedLabsCount > 0 ? 'New Labs' : undefined
     }
   ];
@@ -1020,14 +1020,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     );
   }
 
-  // Module configurations with enhanced styling
+  // Module configurations with enhanced styling - Each with unique color
   const moduleConfigs: ModuleConfig[] = [
     {
       id: 'vitals',
       title: 'Vital Signs',
       description: 'Monitor and record patient vital signs with real-time tracking',
       icon: Activity,
-      color: 'blue',
+      color: 'cyan', // Unique: Light blue for vitals
       badge: patient.vitals?.length?.toString() || '0'
     },
     {
@@ -1035,7 +1035,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       title: 'Medications',
       description: 'Complete medication administration and reconciliation system',
       icon: Pill,
-      color: 'green',
+      color: 'emerald', // Unique: Bright green for meds
       badge: patient.medications?.length?.toString() || '0'
     },
     {
@@ -1043,7 +1043,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       title: 'Wound Care',
       description: 'Comprehensive wound assessment and treatment tracking',
       icon: Camera,
-      color: 'orange',
+      color: 'orange', // Unique: Orange for wounds
       badge: patient.wound_assessments?.length?.toString() || '0'
     },
     {
@@ -1051,28 +1051,28 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       title: 'Assessments',
       description: 'Clinical assessment forms and comprehensive documentation',
       icon: FileText,
-      color: 'purple'
+      color: 'purple' // Unique: Purple for assessments
     },
     {
       id: 'handover',
       title: 'Handover Notes',
       description: 'SBAR communication framework for care transitions',
       icon: MessageSquare,
-      color: 'indigo'
+      color: 'sky' // Unique: Sky blue for handover
     },
     {
       id: 'advanced-directives',
       title: 'Advanced Directives',
       description: 'Legal care preferences and end-of-life planning documentation',
       icon: FileText,
-      color: 'teal'
+      color: 'teal' // Unique: Teal for directives
     },
     {
       id: 'hacmap',
       title: 'hacMap - Device & Wound Map',
       description: 'Visual mapping of medical devices and wound locations on body diagram',
       icon: MapPin,
-      color: 'purple'
+      color: 'rose' // Unique: Rose/pink for hacMap
     }
   ];
 
@@ -1151,6 +1151,60 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         badge: 'bg-teal-500 text-white',
         accent: 'bg-teal-500',
         gradient: 'from-teal-500 to-teal-600'
+      },
+      rose: {
+        bg: isActive ? 'bg-gradient-to-br from-rose-50 to-rose-100' : 'bg-white',
+        border: isActive ? 'border-rose-400 shadow-rose-100' : 'border-gray-200',
+        text: isActive ? 'text-rose-900' : 'text-gray-900',
+        icon: isActive ? 'text-rose-600' : 'text-gray-500',
+        badge: 'bg-rose-500 text-white',
+        accent: 'bg-rose-500',
+        gradient: 'from-rose-500 to-rose-600'
+      },
+      cyan: {
+        bg: isActive ? 'bg-gradient-to-br from-cyan-50 to-cyan-100' : 'bg-white',
+        border: isActive ? 'border-cyan-400 shadow-cyan-100' : 'border-gray-200',
+        text: isActive ? 'text-cyan-900' : 'text-gray-900',
+        icon: isActive ? 'text-cyan-600' : 'text-gray-500',
+        badge: 'bg-cyan-500 text-white',
+        accent: 'bg-cyan-500',
+        gradient: 'from-cyan-500 to-cyan-600'
+      },
+      emerald: {
+        bg: isActive ? 'bg-gradient-to-br from-emerald-50 to-emerald-100' : 'bg-white',
+        border: isActive ? 'border-emerald-400 shadow-emerald-100' : 'border-gray-200',
+        text: isActive ? 'text-emerald-900' : 'text-gray-900',
+        icon: isActive ? 'text-emerald-600' : 'text-gray-500',
+        badge: 'bg-emerald-500 text-white',
+        accent: 'bg-emerald-500',
+        gradient: 'from-emerald-500 to-emerald-600'
+      },
+      amber: {
+        bg: isActive ? 'bg-gradient-to-br from-amber-50 to-amber-100' : 'bg-white',
+        border: isActive ? 'border-amber-400 shadow-amber-100' : 'border-gray-200',
+        text: isActive ? 'text-amber-900' : 'text-gray-900',
+        icon: isActive ? 'text-amber-600' : 'text-gray-500',
+        badge: 'bg-amber-500 text-white',
+        accent: 'bg-amber-500',
+        gradient: 'from-amber-500 to-amber-600'
+      },
+      sky: {
+        bg: isActive ? 'bg-gradient-to-br from-sky-50 to-sky-100' : 'bg-white',
+        border: isActive ? 'border-sky-400 shadow-sky-100' : 'border-gray-200',
+        text: isActive ? 'text-sky-900' : 'text-gray-900',
+        icon: isActive ? 'text-sky-600' : 'text-gray-500',
+        badge: 'bg-sky-500 text-white',
+        accent: 'bg-sky-500',
+        gradient: 'from-sky-500 to-sky-600'
+      },
+      violet: {
+        bg: isActive ? 'bg-gradient-to-br from-violet-50 to-violet-100' : 'bg-white',
+        border: isActive ? 'border-violet-400 shadow-violet-100' : 'border-gray-200',
+        text: isActive ? 'text-violet-900' : 'text-gray-900',
+        icon: isActive ? 'text-violet-600' : 'text-gray-500',
+        badge: 'bg-violet-500 text-white',
+        accent: 'bg-violet-500',
+        gradient: 'from-violet-500 to-violet-600'
       }
     };
     return colors[color as keyof typeof colors] || colors.blue;
@@ -1172,47 +1226,110 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
   // Render modern module selector with enhanced cards
   const renderModuleSelector = () => {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {moduleConfigs.map((module) => {
-          const Icon = module.icon;
-          const isActive = activeModule === module.id;
-          const colorClasses = getModuleColorClasses(module.color, isActive);
+    // Define row layouts with original module IDs
+    const rowLayouts = [
+      // Row 1: View Patient Record, Advanced Directives, hacMap
+      ['patient-record', 'advanced-directives', 'hacmap'],
+      // Row 2: Doctors Orders, Labs, Vitals
+      ['doctors-orders', 'labs', 'vitals'],
+      // Row 3: Handover Notes, Medications, Wound Care
+      ['handover', 'medications', 'wound-care'],
+      // Row 4: Assessments, Transfer Request, Discharge Summary
+      ['forms', 'transfer-request', 'discharge-summary']
+    ];
 
-          return (
-            <button
-              key={module.id}
-              onClick={() => setActiveModule(module.id)}
-              className={`group relative p-6 rounded-xl border-2 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 ${colorClasses.bg} ${colorClasses.border} ${isActive ? 'shadow-lg' : 'shadow-sm hover:shadow-md'}`}
-            >
-              {/* Gradient accent bar */}
-              <div className={`absolute top-0 left-0 w-full h-1 rounded-t-xl bg-gradient-to-r ${colorClasses.gradient}`}></div>
-              
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClasses.gradient} shadow-md`}>
-                  <Icon className="h-6 w-6 text-white" />
+    const renderCard = (moduleId: string) => {
+      // Check if it's an action card
+      const actionCard = actionCards.find(ac => ac.id === moduleId);
+      if (actionCard) {
+        const Icon = actionCard.icon;
+        const colorClasses = getModuleColorClasses(actionCard.color, false);
+        
+        return (
+          <button
+            key={actionCard.id}
+            onClick={actionCard.action}
+            className={`group relative p-6 rounded-xl border-2 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 ${colorClasses.bg} ${colorClasses.border} shadow-sm hover:shadow-md`}
+          >
+            {/* Gradient accent bar */}
+            <div className={`absolute top-0 left-0 w-full h-1 rounded-t-xl bg-gradient-to-r ${colorClasses.gradient}`}></div>
+            
+            <div className="flex items-start justify-between mb-4">
+              <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClasses.gradient} shadow-md`}>
+                <Icon className="h-6 w-6 text-white" />
+              </div>
+              {actionCard.badge && (
+                <div className="px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-200 shadow-sm animate-pulse">
+                  {actionCard.badge}
                 </div>
-                {module.badge && (
-                  <div className={`px-3 py-1 text-xs font-bold rounded-full ${colorClasses.badge} shadow-sm`}>
-                    {module.badge}
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <h3 className={`text-xl font-bold mb-2 ${colorClasses.text} group-hover:text-opacity-90`}>
-                  {module.title}
-                </h3>
-                <p className={`text-sm leading-relaxed ${isActive ? 'text-gray-700' : 'text-gray-600'} group-hover:text-gray-700`}>
-                  {module.description}
-                </p>
-              </div>
+              )}
+            </div>
+            
+            <div>
+              <h3 className={`text-xl font-bold mb-2 ${colorClasses.text} group-hover:text-opacity-90`}>
+                {actionCard.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-gray-600 group-hover:text-gray-700">
+                {actionCard.description}
+              </p>
+            </div>
 
-              {/* Subtle animated border on hover */}
-              <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-gray-200 transition-colors duration-300"></div>
-            </button>
-          );
-        })}
+            {/* Subtle animated border on hover */}
+            <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-gray-200 transition-colors duration-300"></div>
+          </button>
+        );
+      }
+
+      // It's a module card - find it in moduleConfigs
+      const module = moduleConfigs.find(m => m.id === moduleId);
+      if (!module) return null;
+
+      const Icon = module.icon;
+      const isActive = activeModule === module.id;
+      const colorClasses = getModuleColorClasses(module.color, isActive);
+
+      return (
+        <button
+          key={module.id}
+          onClick={() => setActiveModule(module.id)}
+          className={`group relative p-6 rounded-xl border-2 text-left transition-all duration-300 hover:shadow-xl hover:scale-105 ${colorClasses.bg} ${colorClasses.border} ${isActive ? 'shadow-lg' : 'shadow-sm hover:shadow-md'}`}
+        >
+          {/* Gradient accent bar */}
+          <div className={`absolute top-0 left-0 w-full h-1 rounded-t-xl bg-gradient-to-r ${colorClasses.gradient}`}></div>
+          
+          <div className="flex items-start justify-between mb-4">
+            <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClasses.gradient} shadow-md`}>
+              <Icon className="h-6 w-6 text-white" />
+            </div>
+            {module.badge && (
+              <div className={`px-3 py-1 text-xs font-bold rounded-full ${colorClasses.badge} shadow-sm`}>
+                {module.badge}
+              </div>
+            )}
+          </div>
+          
+          <div>
+            <h3 className={`text-xl font-bold mb-2 ${colorClasses.text} group-hover:text-opacity-90`}>
+              {module.title}
+            </h3>
+            <p className={`text-sm leading-relaxed ${isActive ? 'text-gray-700' : 'text-gray-600'} group-hover:text-gray-700`}>
+              {module.description}
+            </p>
+          </div>
+
+          {/* Subtle animated border on hover */}
+          <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-gray-200 transition-colors duration-300"></div>
+        </button>
+      );
+    };
+
+    return (
+      <div className="space-y-6 mb-8">
+        {rowLayouts.map((row, rowIndex) => (
+          <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {row.map(moduleId => renderCard(moduleId))}
+          </div>
+        ))}
       </div>
     );
   };
@@ -1335,7 +1452,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         {activeModule === 'overview' ? (
           <div className="space-y-8">
             {renderPatientOverview()}
-            {renderActionCards()}
             {renderModuleSelector()}
           </div>
         ) : (

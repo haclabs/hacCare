@@ -7,39 +7,55 @@ import React, { useState } from 'react';
 import type { Marker, Coordinates, RegionKey } from '../../../types/hacmap';
 
 interface AvatarCanvasProps {
-  mode: 'device' | 'wound';
+  mode: 'device' | 'wound' | null;
   markers: Marker[];
-  onCreateAt: (regionKey: RegionKey, coords: Coordinates) => void;
+  onCreateAt?: (regionKey: RegionKey, coords: Coordinates) => void;
   onMarkerClick: (id: string, kind: 'device' | 'wound') => void;
+  onMarkerMove?: (id: string, regionKey: RegionKey, coords: Coordinates) => void;
   className?: string;
 }
 
 type ViewType = 'front' | 'back';
 
-// Region definitions with boundaries (percentage of viewBox - based on 200x600 coordinate system)
-// Updated to match new realistic avatar proportions with curves
-const REGIONS: Record<RegionKey, { x: [number, number]; y: [number, number] }> = {
-  'head': { x: [37, 63], y: [3, 12] },
-  'neck': { x: [42, 58], y: [12, 16] },
-  'chest': { x: [35, 65], y: [16, 30] },
-  'abdomen': { x: [37, 63], y: [30, 45] },
-  'pelvis': { x: [40, 60], y: [45, 57] },
-  'back': { x: [35, 65], y: [16, 40] },
-  'lower-back': { x: [37, 63], y: [40, 55] },
-  'left-shoulder': { x: [28, 38], y: [13, 20] },
-  'right-shoulder': { x: [62, 72], y: [13, 20] },
-  'left-arm': { x: [24, 34], y: [20, 40] },              // Adjusted for curved upper arm
-  'right-arm': { x: [66, 76], y: [20, 40] },             // Adjusted for curved upper arm
-  'left-forearm': { x: [20, 30], y: [40, 58] },          // Extended range for forearm
-  'right-forearm': { x: [70, 80], y: [40, 58] },         // Extended range for forearm
-  'left-hand': { x: [18, 28], y: [58, 63] },             // Adjusted for new hand position
-  'right-hand': { x: [72, 82], y: [58, 63] },            // Adjusted for new hand position
-  'left-thigh': { x: [38, 48], y: [50, 75] },            // Adjusted for curved thigh
-  'right-thigh': { x: [52, 62], y: [50, 75] },           // Adjusted for curved thigh
-  'left-leg': { x: [38, 48], y: [75, 88] },              // Adjusted for new calf position
-  'right-leg': { x: [52, 62], y: [75, 88] },             // Adjusted for new calf position
-  'left-foot': { x: [36, 46], y: [88, 92] },             // Adjusted for new foot position
-  'right-foot': { x: [54, 64], y: [88, 92] }             // Adjusted for new foot position
+// Region definitions with boundaries (percentage of viewBox - based on 200x400 image dimensions)
+// Coordinates are in percentages: viewBox is 200x600, images are 200x400, so y-scaling factor is 1.5x
+const REGIONS: Record<RegionKey, { x: [number, number]; y: [number, number]; view: 'front' | 'back' | 'both' }> = {
+  // HEAD & NECK (both views)
+  'head': { x: [35, 65], y: [2, 15], view: 'both' },
+  'neck': { x: [42, 58], y: [15, 20], view: 'both' },
+  
+  // FRONT VIEW - TORSO
+  'chest': { x: [30, 70], y: [20, 35], view: 'front' },
+  'abdomen': { x: [35, 65], y: [35, 50], view: 'front' },
+  'pelvis': { x: [38, 62], y: [50, 60], view: 'front' },
+  
+  // BACK VIEW - TORSO
+  'back': { x: [30, 70], y: [20, 45], view: 'back' },
+  'lower-back': { x: [35, 65], y: [45, 60], view: 'back' },
+  
+  // SHOULDERS (both views)
+  'left-shoulder': { x: [20, 35], y: [18, 28], view: 'both' },
+  'right-shoulder': { x: [65, 80], y: [18, 28], view: 'both' },
+  
+  // LEFT ARM (both views)
+  'left-arm': { x: [12, 28], y: [28, 42], view: 'both' },
+  'left-forearm': { x: [8, 24], y: [42, 54], view: 'both' },
+  'left-hand': { x: [5, 22], y: [54, 62], view: 'both' },
+  
+  // RIGHT ARM (both views)
+  'right-arm': { x: [72, 88], y: [28, 42], view: 'both' },
+  'right-forearm': { x: [76, 92], y: [42, 54], view: 'both' },
+  'right-hand': { x: [78, 95], y: [54, 62], view: 'both' },
+  
+  // LEFT LEG (both views)
+  'left-thigh': { x: [35, 48], y: [60, 80], view: 'both' },
+  'left-leg': { x: [35, 48], y: [80, 95], view: 'both' },
+  'left-foot': { x: [33, 48], y: [95, 100], view: 'both' },
+  
+  // RIGHT LEG (both views)
+  'right-thigh': { x: [52, 65], y: [60, 80], view: 'both' },
+  'right-leg': { x: [52, 65], y: [80, 95], view: 'both' },
+  'right-foot': { x: [52, 67], y: [95, 100], view: 'both' }
 };
 
 export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
@@ -47,11 +63,33 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
   markers,
   onCreateAt,
   onMarkerClick,
+  onMarkerMove,
   className = ''
 }) => {
   const [view, setView] = useState<ViewType>('front');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [hoveredMarker, setHoveredMarker] = useState<Marker | null>(null);
+  const svgRef = React.useRef<SVGSVGElement>(null);
+  const hoverTimeoutRef = React.useRef<number | null>(null);
+  
+  // Stable hover handlers with debounce
+  const handleMarkerEnter = React.useCallback((marker: Marker) => {
+    if (draggingId) return;
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHoveredMarker(marker);
+  }, [draggingId]);
+  
+  const handleMarkerLeave = React.useCallback(() => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = window.setTimeout(() => {
+      setHoveredMarker(null);
+    }, 50); // Small delay to prevent flashing
+  }, []);
 
   const handleSvgClick = (event: React.MouseEvent<SVGSVGElement>) => {
+    // Only allow creating new markers when in placement mode
+    if (!mode || !onCreateAt) return;
+    
     const svg = event.currentTarget;
     const rect = svg.getBoundingClientRect();
     
@@ -62,15 +100,27 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
     // Find which region was clicked
     const regionKey = findRegion(x, y);
     if (regionKey) {
-      onCreateAt(regionKey, { x, y });
+      onCreateAt(regionKey, { x, y, view });
     }
   };
 
   const findRegion = (x: number, y: number): RegionKey | null => {
-    for (const [key, bounds] of Object.entries(REGIONS)) {
+    for (const [key, region] of Object.entries(REGIONS)) {
+      // Check if region is visible in current view
+      if (region.view !== 'both' && region.view !== view) {
+        continue;
+      }
+      
+      // For front view, we need to flip left/right regions since we're looking at the patient face-to-face
+      let adjustedX = x;
+      if (view === 'front' && (key.includes('left-') || key.includes('right-'))) {
+        // Mirror the x coordinate around the center (50%)
+        adjustedX = 100 - x;
+      }
+      
       if (
-        x >= bounds.x[0] && x <= bounds.x[1] &&
-        y >= bounds.y[0] && y <= bounds.y[1]
+        adjustedX >= region.x[0] && adjustedX <= region.x[1] &&
+        y >= region.y[0] && y <= region.y[1]
       ) {
         return key as RegionKey;
       }
@@ -78,10 +128,68 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
     return null;
   };
 
+  // Convert screen coordinates to SVG percentage coordinates
+  const screenToSvgCoords = (clientX: number, clientY: number): { x: number; y: number } | null => {
+    if (!svgRef.current) return null;
+    
+    const svg = svgRef.current;
+    const rect = svg.getBoundingClientRect();
+    
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    
+    return { x, y };
+  };
+
+  // Handle marker drag start with pointer events
+  const handleMarkerDragStart = (e: React.PointerEvent, marker: Marker) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Capture pointer on the element that received pointerdown
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    
+    setDraggingId(marker.id);
+    setHoveredMarker(null); // Hide tooltip during drag
+  };
+
+  // Handle marker drag with pointer events
+  const handleMarkerDrag = (e: React.PointerEvent) => {
+    if (!draggingId || !onMarkerMove) return;
+    
+    const coords = screenToSvgCoords(e.clientX, e.clientY);
+    if (!coords) return;
+    
+    // Clamp coordinates to valid range
+    const clampedX = Math.max(0, Math.min(100, coords.x));
+    const clampedY = Math.max(0, Math.min(100, coords.y));
+    
+    const regionKey = findRegion(clampedX, clampedY);
+    if (regionKey) {
+      onMarkerMove(draggingId, regionKey, { x: clampedX, y: clampedY });
+    }
+  };
+
+  // Handle marker drag end with pointer events
+  const handleMarkerDragEnd = (e: React.PointerEvent) => {
+    if (e.target && 'releasePointerCapture' in e.target) {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    }
+    setDraggingId(null);
+  };
+
   // Filter markers by view
   const filteredMarkers = markers.filter(marker => {
-    const isBackRegion = marker.regionKey === 'back' || marker.regionKey === 'lower-back';
-    return view === 'back' ? isBackRegion : !isBackRegion;
+    const region = REGIONS[marker.regionKey];
+    if (!region) return true; // Show if region not found
+    
+    // If marker has bodyView set (new system), only show on matching view
+    if (marker.bodyView) {
+      return marker.bodyView === view;
+    }
+    
+    // Otherwise use region definition (legacy/fallback)
+    return region.view === 'both' || region.view === view;
   });
 
   return (
@@ -110,38 +218,23 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
         </button>
       </div>
       
-      {/* Avatar SVG */}
+      {/* Avatar SVG with Image Background */}
       <div className="relative max-w-[360px] flex-shrink-0">
         <svg
-          viewBox="0 0 200 600"
-          className="w-full h-auto cursor-crosshair bg-gradient-to-b from-gray-50 to-white rounded-lg"
-          style={{ maxHeight: '480px' }}
+          ref={svgRef}
+          viewBox="0 0 200 400"
+          className={`w-full h-auto bg-white rounded-lg shadow-sm`}
+          style={{ 
+            maxHeight: '600px', 
+            touchAction: 'none',
+            cursor: draggingId ? 'grabbing' : (hoveredMarker && !mode ? 'grab' : (mode ? 'crosshair' : 'default'))
+          }}
           onClick={handleSvgClick}
           aria-label="Body diagram for device and wound placement"
           preserveAspectRatio="xMidYMid meet"
         >
-        {/* Define gradients and filters for realistic 3D effect */}
+        {/* Define filters for markers */}
         <defs>
-          {/* More realistic skin-like gradient */}
-          <linearGradient id="bodyGradient" x1="30%" y1="0%" x2="70%" y2="0%">
-            <stop offset="0%" stopColor="#d1d5db" />
-            <stop offset="50%" stopColor="#e8eaed" />
-            <stop offset="100%" stopColor="#d1d5db" />
-          </linearGradient>
-          
-          {/* Subtle shadow for depth */}
-          <filter id="softShadow">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="1.5"/>
-            <feOffset dx="0" dy="1" result="offsetblur"/>
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.15"/>
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-          
           {/* Marker shadow */}
           <filter id="markerShadow">
             <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
@@ -156,152 +249,73 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
           </filter>
         </defs>
 
-        {/* Realistic human silhouette - medical diagram style (wider, shorter limbs) */}
-        {view === 'front' ? (
-          // FRONT VIEW
-          <g fill="url(#bodyGradient)" stroke="#b0b5ba" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" filter="url(#softShadow)">
-            {/* Head - slightly wider */}
-            <ellipse cx="100" cy="35" rx="22" ry="25" />
-            <path d="M 83 55 Q 100 60 117 55" fill="none" stroke="#d1d5db" strokeWidth="1" /> {/* Chin line */}
-          
-          {/* Neck - wider */}
-          <path d="M 90 60 L 88 75 L 112 75 L 110 60 Z" />
-          
-          {/* Shoulders - even wider */}
-          <ellipse cx="70" cy="82" rx="18" ry="12" />
-          <ellipse cx="130" cy="82" rx="18" ry="12" />
-          
-          {/* Torso - wider body */}
-          <path d="
-            M 88 75
-            L 73 90
-            L 68 130
-            Q 65 160 67 190
-            L 70 230
-            L 73 270
-            L 127 270
-            L 130 230
-            L 133 190
-            Q 135 160 132 130
-            L 127 90
-            L 112 75
-            Z
-          " />
-          
-          {/* Left arm - more natural proportions */}
-          <path d="M 70 82 Q 60 95 56 120 Q 54 140 52 165" strokeWidth="13" /> {/* Upper arm with curve */}
-          <path d="M 52 165 Q 50 185 48 210 L 46 235" strokeWidth="11" /> {/* Forearm */}
-          <ellipse cx="45" cy="245" rx="9" ry="11" /> {/* Hand */}
-          
-          {/* Right arm - more natural proportions */}
-          <path d="M 130 82 Q 140 95 144 120 Q 146 140 148 165" strokeWidth="13" /> {/* Upper arm with curve */}
-          <path d="M 148 165 Q 150 185 152 210 L 154 235" strokeWidth="11" /> {/* Forearm */}
-          <ellipse cx="155" cy="245" rx="9" ry="11" /> {/* Hand */}
-          
-          {/* Pelvis/Hips - wider */}
-          <path d="M 73 270 Q 70 285 72 300 L 128 300 Q 130 285 127 270 Z" />
-          
-          {/* Left leg - more natural proportions */}
-          <path d="M 78 300 Q 79 330 80 370 Q 81 410 82 450" strokeWidth="17" /> {/* Thigh with slight curve */}
-          <path d="M 82 450 Q 81 475 80 500 L 78 525" strokeWidth="14" /> {/* Calf */}
-          <ellipse cx="77" cy="540" rx="11" ry="9" /> {/* Foot */}
-          
-          {/* Right leg - more natural proportions */}
-          <path d="M 122 300 Q 121 330 120 370 Q 119 410 118 450" strokeWidth="17" /> {/* Thigh with slight curve */}
-          <path d="M 118 450 Q 119 475 120 500 L 122 525" strokeWidth="14" /> {/* Calf */}
-          <ellipse cx="123" cy="540" rx="11" ry="9" /> {/* Foot */}
-          </g>
-        ) : (
-          // BACK VIEW
-          <g fill="url(#bodyGradient)" stroke="#b0b5ba" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" filter="url(#softShadow)">
-            {/* Head - back of head */}
-            <ellipse cx="100" cy="35" rx="22" ry="25" />
-            
-            {/* Neck - back */}
-            <path d="M 90 60 L 88 75 L 112 75 L 110 60 Z" />
-            
-            {/* Shoulders - back view */}
-            <ellipse cx="70" cy="82" rx="18" ry="12" />
-            <ellipse cx="130" cy="82" rx="18" ry="12" />
-            
-            {/* Back - spine indication */}
-            <path d="M 100 75 L 100 270" stroke="#b0b5ba" strokeWidth="2" fill="none" opacity="0.3" />
-            
-            {/* Upper back/torso */}
-            <path d="
-              M 88 75
-              L 73 90
-              L 68 130
-              Q 65 160 67 190
-              L 70 230
-              L 73 270
-              L 127 270
-              L 130 230
-              L 133 190
-              Q 135 160 132 130
-              L 127 90
-              L 112 75
-              Z
-            " />
-            
-            {/* Left arm - back view, more natural proportions */}
-            <path d="M 70 82 Q 60 95 56 120 Q 54 140 52 165" strokeWidth="13" />
-            <path d="M 52 165 Q 50 185 48 210 L 46 235" strokeWidth="11" />
-            <ellipse cx="45" cy="245" rx="9" ry="11" />
-            
-            {/* Right arm - back view, more natural proportions */}
-            <path d="M 130 82 Q 140 95 144 120 Q 146 140 148 165" strokeWidth="13" />
-            <path d="M 148 165 Q 150 185 152 210 L 154 235" strokeWidth="11" />
-            <ellipse cx="155" cy="245" rx="9" ry="11" />
-            
-            {/* Pelvis/Hips */}
-            <path d="M 73 270 Q 70 285 72 300 L 128 300 Q 130 285 127 270 Z" />
-            
-            {/* Left leg - back view, more natural proportions */}
-            <path d="M 78 300 Q 79 330 80 370 Q 81 410 82 450" strokeWidth="17" />
-            <path d="M 82 450 Q 81 475 80 500 L 78 525" strokeWidth="14" />
-            <ellipse cx="77" cy="540" rx="11" ry="9" />
-            
-            {/* Right leg - back view, more natural proportions */}
-            <path d="M 122 300 Q 121 330 120 370 Q 119 410 118 450" strokeWidth="17" />
-            <path d="M 118 450 Q 119 475 120 500 L 122 525" strokeWidth="14" />
-            <ellipse cx="123" cy="540" rx="11" ry="9" />
-          </g>
-        )}
+        {/* Body Image - Front or Back */}
+        <image
+          href={view === 'front' ? '/images/body-front.png' : '/images/body-back.png'}
+          x="0"
+          y="0"
+          width="200"
+          height="400"
+          preserveAspectRatio="xMidYMid meet"
+          pointerEvents="none"
+        />
 
         {/* Region hit areas (invisible but hoverable) - filtered by view */}
-        {Object.entries(REGIONS)
-          .filter(([key]) => {
-            const isBackRegion = key === 'back' || key === 'lower-back';
-            return view === 'back' ? isBackRegion : !isBackRegion;
-          })
-          .map(([key, bounds]) => (
-            <rect
-              key={key}
-              x={bounds.x[0] * 2}
-              y={bounds.y[0] * 6}
-              width={(bounds.x[1] - bounds.x[0]) * 2}
-              height={(bounds.y[1] - bounds.y[0]) * 6}
-              fill="transparent"
-              className="hover:fill-blue-100 hover:fill-opacity-10 transition-all"
-              style={{ cursor: 'crosshair' }}
-            >
-              <title>{key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</title>
-            </rect>
-          ))}
+        {!draggingId && Object.entries(REGIONS)
+          .filter(([, region]) => region.view === 'both' || region.view === view)
+          .map(([key, region]) => {
+            // For front view, mirror left/right regions
+            let rectX = region.x[0] * 2;
+            if (view === 'front' && (key.includes('left-') || key.includes('right-'))) {
+              // Mirror the x coordinate around center
+              rectX = 200 - (region.x[1] * 2);
+            }
+            
+            return (
+              <rect
+                key={key}
+                x={rectX}
+                y={region.y[0] * 4}
+                width={(region.x[1] - region.x[0]) * 2}
+                height={(region.y[1] - region.y[0]) * 4}
+                fill="transparent"
+                className="hover:fill-blue-100 hover:fill-opacity-10 transition-all"
+                pointerEvents={draggingId ? 'none' : 'all'}
+              >
+                <title>{key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</title>
+              </rect>
+            );
+          })}
 
         {/* Modern pin-style markers */}
         {filteredMarkers.map((marker) => (
           <g
             key={marker.id}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMarkerClick(marker.id, marker.kind);
-            }}
-            className="cursor-pointer hover:scale-110 transition-transform"
-            transform={`translate(${marker.x * 2}, ${marker.y * 6})`}
+            className={`${draggingId === marker.id ? 'scale-110' : 'hover:scale-110'} transition-transform`}
+            transform={`translate(${marker.x * 2}, ${marker.y * 4})`}
             filter="url(#markerShadow)"
           >
+            {/* Draggable invisible larger hit area */}
+            <circle
+              cx="0"
+              cy="0"
+              r="20"
+              fill="transparent"
+              style={{ touchAction: 'none', cursor: 'inherit' }}
+              onMouseEnter={() => handleMarkerEnter(marker)}
+              onMouseLeave={handleMarkerLeave}
+              onPointerDown={(e) => handleMarkerDragStart(e, marker)}
+              onPointerMove={draggingId === marker.id ? handleMarkerDrag : undefined}
+              onPointerUp={draggingId === marker.id ? handleMarkerDragEnd : undefined}
+              onPointerCancel={draggingId === marker.id ? handleMarkerDragEnd : undefined}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (draggingId !== marker.id) {
+                  onMarkerClick(marker.id, marker.kind);
+                }
+              }}
+            />
+            
             {/* Pin shadow/glow base */}
             <circle
               cx="0"
@@ -309,6 +323,7 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
               r="16"
               fill={marker.kind === 'device' ? '#10b981' : '#ec4899'}
               opacity="0.15"
+              pointerEvents="none"
             />
             
             {/* Main pin button */}
@@ -319,6 +334,7 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
               fill={marker.kind === 'device' ? '#10b981' : '#ec4899'}
               stroke="white"
               strokeWidth="2.5"
+              pointerEvents="none"
             />
             
             {/* Inner circle for depth */}
@@ -330,18 +346,19 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
               stroke="white"
               strokeWidth="0.5"
               opacity="0.3"
+              pointerEvents="none"
             />
             
             {/* Icon with better styling */}
             {marker.kind === 'device' ? (
               // Device icon - medical cross with rounded ends
-              <g fill="white" stroke="none">
+              <g fill="white" stroke="none" pointerEvents="none">
                 <rect x="-1" y="-6" width="2" height="12" rx="1" />
                 <rect x="-6" y="-1" width="12" height="2" rx="1" />
               </g>
             ) : (
               // Wound icon - pulsing dot
-              <g>
+              <g pointerEvents="none">
                 <circle cx="0" cy="0" r="3.5" fill="white" opacity="0.9" />
                 <circle cx="0" cy="0" r="2" fill="white" />
               </g>
@@ -349,11 +366,47 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
           </g>
         ))}
         </svg>
+        
+        {/* Hover Tooltip */}
+        {hoveredMarker && !draggingId && (
+          <div 
+            className="absolute pointer-events-none z-50"
+            style={{
+              left: `${(hoveredMarker.x / 50) * 100}%`,
+              top: `${(hoveredMarker.y / 100) * 100}%`,
+              transform: 'translate(-50%, calc(-100% - 35px))'
+            }}
+          >
+            <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl border border-gray-700 whitespace-nowrap">
+              <div className="font-semibold">
+                {hoveredMarker.kind === 'device' 
+                  ? hoveredMarker.label?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
+                  : hoveredMarker.label?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
+                }
+              </div>
+              <div className="text-gray-300 text-[10px] mt-1">
+                {hoveredMarker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+              </div>
+              <div className="text-gray-400 text-[10px] mt-1">
+                {hoveredMarker.kind === 'device' ? '🔧 Device' : '🩹 Wound'} • Click to edit • Drag to move
+              </div>
+              {/* Arrow pointing down to marker */}
+              <div 
+                className="absolute left-1/2 bottom-0 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"
+                style={{ transform: 'translate(-50%, 100%)' }}
+              />
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Instructions below avatar */}
       <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-xs text-blue-800 text-center max-w-[360px]">
-        <span className="font-medium">Tip:</span> Click anywhere on the body to place a marker
+        <span className="font-medium">Tip:</span> {
+          mode 
+            ? 'Click anywhere on the body to place a marker' 
+            : 'Click a marker to edit • Drag markers to reposition • Select Add Device/Wound to place new markers'
+        }
       </div>
     </div>
   );

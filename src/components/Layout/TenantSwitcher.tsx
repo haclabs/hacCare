@@ -60,9 +60,10 @@ export const TenantSwitcher: React.FC = () => {
       setLoading(true);
       await switchToTenant(tenantId);
       setIsOpen(false);
+      // Refresh the page to update all tenant-specific data
+      window.location.reload();
     } catch (err) {
       console.error('Error switching tenant:', err);
-    } finally {
       setLoading(false);
     }
   };
@@ -72,9 +73,10 @@ export const TenantSwitcher: React.FC = () => {
       setLoading(true);
       await viewAllTenants();
       setIsOpen(false);
+      // Refresh the page to show all tenants data
+      window.location.reload();
     } catch (err) {
       console.error('Error viewing all tenants:', err);
-    } finally {
       setLoading(false);
     }
   };

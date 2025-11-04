@@ -107,9 +107,11 @@ export const EnhancedTenantSwitcher: React.FC = () => {
       
       // Clear access info
       setSuperAdminAccess({ tenantId: null, tenantName: null, hasAccess: true });
+      
+      // Refresh the page to show all tenants data
+      window.location.reload();
     } catch (err) {
       console.error('Error viewing all tenants:', err);
-    } finally {
       setLoading(false);
     }
   };

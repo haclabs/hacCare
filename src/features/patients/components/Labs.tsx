@@ -186,11 +186,11 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
             <button
               onClick={() => setActiveTab('order')}
               className={`
-                flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border-2
                 ${
                   activeTab === 'order'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300'
                 }
               `}
             >

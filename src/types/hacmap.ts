@@ -77,6 +77,7 @@ export interface AvatarLocation {
   region_key: RegionKey;
   x_percent: number; // 0-100
   y_percent: number; // 0-100
+  body_view?: 'front' | 'back'; // Track which view marker was placed on
   free_text?: string;
   created_by: string;
   created_at: string;
@@ -137,6 +138,7 @@ export interface Wound {
   closure?: string;
   suture_staple_line?: string; // approximated/non-approximated
   sutures_intact?: string; // yes/no/unknown
+  entered_by?: string; // Name of nurse/clinician who documented wound
   notes?: string;
   
   created_by: string;
@@ -157,6 +159,7 @@ export interface Marker {
   regionKey: RegionKey;
   x: number; // percent
   y: number; // percent
+  bodyView?: 'front' | 'back'; // Which body view marker was placed on
   label?: string;
 }
 
@@ -175,6 +178,7 @@ export interface MarkerWithDetails extends Marker {
 export interface Coordinates {
   x: number; // percent 0-100
   y: number; // percent 0-100
+  view?: 'front' | 'back'; // Which body view marker was placed on
 }
 
 // ============================================================================
@@ -187,6 +191,7 @@ export interface CreateAvatarLocationInput {
   region_key: RegionKey;
   x_percent: number;
   y_percent: number;
+  body_view?: 'front' | 'back';
   free_text?: string;
   created_by: string;
 }
@@ -247,6 +252,7 @@ export interface CreateWoundInput {
   closure?: string;
   suture_staple_line?: string;
   sutures_intact?: string;
+  entered_by?: string;
   notes?: string;
   created_by: string;
 }
@@ -266,6 +272,7 @@ export interface UpdateWoundInput {
   closure?: string;
   suture_staple_line?: string;
   sutures_intact?: string;
+  entered_by?: string;
   notes?: string;
 }
 
