@@ -352,10 +352,39 @@ export const fetchPatientById = async (patientId: string, simulationId?: string)
 
 /**
  * Create a new patient
+ * 
+ * CRITICAL FIX (2025-11-07): Patient Tenant Race Condition
+ * 
+ * PROBLEM: Patients were being created in wrong tenant despite correct UI selection
+ * ROOT CAUSE:
+ *   1. TenantContext loads asynchronously from localStorage
+ *   2. PatientManagement uses React Query hooks which bypass PatientContext
+ *   3. This service had no tenant_id assignment logic for super admin users
+ * 
+ * SOLUTION: Read superAdminTenantId from localStorage at call time
+ * WHY: Avoids race condition and works for all code paths (context or direct service call)
+ * 
+ * TESTING:
+ *   - Check localStorage.getItem('superAdminTenantId') matches tenant_id in database
+ *   - Verify console logs show correct tenant_id being used
+ * 
+ * RELATED: src/contexts/PatientContext.tsx (secondary fix), 
+ *          database/migrations/simulation_config_v2/HOTFIX_RLS_SIMULATION_ACTIVE.sql
  */
 export const createPatient = async (patient: Patient): Promise<Patient> => {
   try {
     const dbPatient = convertToDatabase(patient);
+    
+    // CRITICAL: For super admins, read tenant ID from localStorage at call time.
+    // This prevents race condition where tenant context isn't initialized yet.
+    // React Query hooks call this service directly, bypassing PatientContext.
+    const freshTenantId = localStorage.getItem('superAdminTenantId');
+    if (freshTenantId && !dbPatient.tenant_id) {
+      console.log('PATIENT SERVICE: Setting tenant_id from localStorage:', freshTenantId);
+      dbPatient.tenant_id = freshTenantId;
+    }
+    
+    console.log('PATIENT SERVICE: Creating patient with tenant_id:', dbPatient.tenant_id);
     
     const { data, error } = await supabase
       .from('patients')

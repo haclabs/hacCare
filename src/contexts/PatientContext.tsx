@@ -15,6 +15,10 @@ import {
 } from '../services/patient/multiTenantPatientService';
 import { useTenant } from './TenantContext';
 
+// MODULE LOAD TIMESTAMP - If you don't see this in console, browser is using cached code
+// Used for debugging Vite HMR caching issues during development
+console.log('PatientContext.tsx LOADED AT:', new Date().toISOString());
+
 /**
  * Patient Context Interface
  */
@@ -149,17 +153,34 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
       }
 
-      console.log('➕ Creating patient in database...');
+      console.log('Creating patient in database...');
       
       let newPatient: Patient;
       
       if (isMultiTenantAdmin) {
-        // ✅ FIX: Use currentTenant.id instead of selectedTenantId
-        // currentTenant is updated when switching to simulation templates
-        if (currentTenant) {
-          // Super admin creating patient for current tenant (including simulation templates)
-          console.log('🔓 Super admin creating patient for current tenant:', currentTenant.id, currentTenant.name);
-          const { data, error } = await createPatientWithTenant(patient, currentTenant.id);
+        // CRITICAL FIX (2025-11-07): Read tenant ID from localStorage at CALL TIME
+        // NOTE: This is a fallback for code paths that use PatientContext directly.
+        // Most patient creation now goes through React Query -> patientService (see patientService.ts:356)
+        // 
+        // REASON: TenantContext loads asynchronously, so closure-captured selectedTenantId
+        // may be null/stale when this context initializes. Reading from localStorage
+        // at call time ensures we get the current value.
+        const freshTenantId = localStorage.getItem('superAdminTenantId');
+        
+        console.log('TENANT CONTEXT CHECK (AT CALL TIME):', {
+          isMultiTenantAdmin,
+          freshTenantId_from_localStorage: freshTenantId,
+          selectedTenantId_from_closure: selectedTenantId,
+          currentTenant_from_closure: currentTenant ? { id: currentTenant.id, name: currentTenant.name } : null,
+        });
+        
+        const targetTenantId = freshTenantId || selectedTenantId || currentTenant?.id;
+        
+        if (targetTenantId) {
+          // Super admin creating patient for selected tenant (including simulation templates)
+          console.log('Super admin creating patient for tenant ID:', targetTenantId);
+          console.log('ACTUAL TENANT_ID BEING USED:', targetTenantId);
+          const { data, error } = await createPatientWithTenant(patient, targetTenantId);
           
           if (error) {
             throw error;

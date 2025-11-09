@@ -15,6 +15,7 @@ import { schemaEngine } from '../../../lib/infrastructure/schemaEngine';
 import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../../schemas/formsSchemas';
 import { Patient } from '../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
+import { fetchPatientAssessments } from '../../../services/patient/assessmentService';
 
 interface FormsModuleProps {
   patient: Patient;
@@ -56,6 +57,35 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
 
     registerSchemas();
   }, []);
+
+  // Load existing assessments from database on mount
+  useEffect(() => {
+    const loadAssessments = async () => {
+      try {
+        console.log('Loading assessments for patient:', patient.id);
+        const assessments = await fetchPatientAssessments(patient.id);
+        console.log('Loaded assessments:', assessments);
+        
+        // Convert database assessments to component format
+        const formattedAssessments = assessments.map(assessment => ({
+          id: assessment.id,
+          patientId: patient.id,
+          type: 'nursing-assessment',
+          data: assessment.assessment_notes ? JSON.parse(assessment.assessment_notes) : {},
+          submittedBy: assessment.nurse_name,
+          submittedAt: assessment.created_at,
+          validation: { valid: true, errors: [], warnings: [] }
+        }));
+        
+        setCompletedAssessments(formattedAssessments);
+        console.log('✅ Loaded', formattedAssessments.length, 'assessments from database');
+      } catch (error) {
+        console.error('Error loading assessments:', error);
+      }
+    };
+
+    loadAssessments();
+  }, [patient.id]);
 
   // Generate form context with patient and clinical data
   const generateFormContext = (): FormGenerationContext => {

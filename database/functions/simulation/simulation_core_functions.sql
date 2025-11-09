@@ -304,6 +304,7 @@ AS $$
 DECLARE
     v_snapshot_data JSONB;
     v_tenant_id UUID;
+    v_restore_result JSONB;
 BEGIN
     -- Get the snapshot data for this instance
     SELECT s.snapshot_data, si.tenant_id
@@ -315,6 +316,12 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Simulation instance not found: %', p_instance_id;
     END IF;
+    
+    -- ACTUALLY RESTORE DATA: Delete student-added data and restore baseline from snapshot
+    -- This is the critical step that was missing!
+    v_restore_result := restore_snapshot_to_tenant_v2(v_tenant_id, v_snapshot_data);
+    
+    RAISE NOTICE '✅ Reset simulation: %', v_restore_result->>'message';
     
     -- Reset current state to snapshot state (preserving persistent identifiers)
     UPDATE simulation_instances 
@@ -336,7 +343,8 @@ BEGIN
         'simulation_reset',
         jsonb_build_object(
             'reset_at', NOW(),
-            'reset_by', p_user_id
+            'reset_by', p_user_id,
+            'restore_result', v_restore_result
         ),
         v_tenant_id
     );

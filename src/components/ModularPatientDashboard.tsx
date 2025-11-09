@@ -47,12 +47,16 @@ import { AdvancedDirectivesForm } from '../features/patients/components/forms/Ad
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
 import { Patient, DoctorsOrder } from '../types';
-import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../services/patient/patientService';
+import { fetchPatientById, fetchPatientVitals } from '../services/patient/patientService';
 import { fetchPatientMedications } from '../services/clinical/medicationService';
-import { fetchAdmissionRecord, fetchAdvancedDirective, AdmissionRecord, AdvancedDirective } from '../services/patient/admissionService';
+import { fetchAdmissionRecord, fetchAdvancedDirective, upsertAdmissionRecord, AdmissionRecord, AdvancedDirective } from '../services/patient/admissionService';
+import { supabase } from '../lib/api/supabase';
 import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
+import { fetchPatientAssessments, createAssessment } from '../services/patient/assessmentService';
+import { fetchPatientBowelRecords, createBowelRecord } from '../services/clinical/bowelRecordService';
+import { getLabPanels, getLabResults, hasUnacknowledgedLabs } from '../services/clinical/labService';
 import { WoundCareService } from '../services/patient/woundCareService';
-import { hasUnacknowledgedLabs } from '../services/clinical/labService';
+import type { LabPanel, LabResult } from '../features/clinical/types/labs';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 
@@ -121,15 +125,54 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     }
 
     try {
-      // Get all patient data for comprehensive record
-      const [vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
+      // Get all patient data for comprehensive record including clinical assessments
+      console.log('🔍 DEBUG: Fetching lab panels for patient.id:', patient.id, 'tenant:', currentTenant?.id);
+      
+      const [vitalsData, medicationsData, assessmentsData, bowelRecordsData, admissionData, directiveData, ordersData, labPanelsResponse] = await Promise.all([
         fetchPatientVitals(patient.id),
         fetchPatientMedications(patient.id),
-        fetchPatientNotes(patient.id),
+        fetchPatientAssessments(patient.id),
+        fetchPatientBowelRecords(patient.id),
         fetchAdmissionRecord(patient.id),
         fetchAdvancedDirective(patient.id),
-        fetchDoctorsOrders(patient.id)
+        fetchDoctorsOrders(patient.id),
+        getLabPanels(patient.id, currentTenant?.id || '')
       ]);
+
+      const labPanelsData = labPanelsResponse.data || [];
+      
+      // Fetch lab results for each panel
+      const labPanelsWithResults = await Promise.all(
+        labPanelsData.map(async (panel: LabPanel) => {
+          const resultsResponse = await getLabResults(panel.id);
+          return {
+            ...panel,
+            results: resultsResponse.data || []
+          };
+        })
+      );
+      
+      // Debug: Log lab panels data
+      console.log('🔍 DEBUG: labPanelsResponse:', labPanelsResponse);
+      console.log('🔍 DEBUG: labPanelsData:', labPanelsData);
+      console.log('🔍 DEBUG: labPanelsData.length:', labPanelsData.length);
+      console.log('🔍 DEBUG: labPanelsWithResults:', labPanelsWithResults);
+      
+      // Debug: Log assessments data
+      console.log('🔍 DEBUG: assessmentsData:', assessmentsData);
+      if (assessmentsData.length > 0) {
+        console.log('🔍 DEBUG: First assessment:', assessmentsData[0]);
+        console.log('🔍 DEBUG: assessment_notes field:', assessmentsData[0].assessment_notes);
+        console.log('🔍 DEBUG: typeof assessment_notes:', typeof assessmentsData[0].assessment_notes);
+      }
+      
+      // Debug: Log advanced directives data
+      console.log('🔍 DEBUG: directiveData:', directiveData);
+      console.log('Assessments Data for patient record:', assessmentsData);
+      if (assessmentsData.length > 0) {
+        console.log('First assessment:', assessmentsData[0]);
+        console.log('First assessment notes:', assessmentsData[0].assessment_notes);
+      }
 
       // Create a new window for the hospital record
       const reportWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
@@ -603,6 +646,57 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               </div>
 
               <div class="form-section">
+                <div class="section-header">Laboratory Results</div>
+                <div class="section-content">
+                  ${labPanelsWithResults.length > 0 ? labPanelsWithResults.slice(0, 5).map((panel: any) => `
+                    <div style="margin-bottom: 25px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                      <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 12px 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <strong style="font-size: 14px;">Panel Time:</strong> ${new Date(panel.panel_time).toLocaleString()}
+                          </div>
+                          <div>
+                            <span style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; background: ${panel.status === 'new' ? '#fee2e2' : panel.status === 'partial_ack' ? '#fef3c7' : '#d1fae5'}; color: ${panel.status === 'new' ? '#dc2626' : panel.status === 'partial_ack' ? '#d97706' : '#065f46'};">${panel.status}</span>
+                          </div>
+                        </div>
+                        <div style="margin-top: 4px; font-size: 12px;">
+                          <strong>Source:</strong> ${panel.source} | 
+                          <strong>Entered By:</strong> ${panel.entered_by_name || 'Unknown'}
+                          ${panel.notes ? ` | <strong>Notes:</strong> ${panel.notes}` : ''}
+                        </div>
+                      </div>
+                      ${panel.results && panel.results.length > 0 ? `
+                        <table class="medication-table" style="margin: 0; border: none;">
+                          <thead>
+                            <tr style="background: #f9fafb;">
+                              <th>Test Name</th>
+                              <th>Value</th>
+                              <th>Units</th>
+                              <th>Reference Range</th>
+                              <th>Flag</th>
+                              <th>Category</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${panel.results.map((result: LabResult) => `
+                              <tr style="background: ${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#fee2e2' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#fef3c7' : 'white'};">
+                                <td><strong>${result.test_name}</strong></td>
+                                <td style="font-weight: bold; color: ${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#dc2626' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#d97706' : '#065f46'};">${result.value !== null ? result.value : 'N/A'}</td>
+                                <td>${result.units || '-'}</td>
+                                <td>${result.ref_operator === '<=' ? '≤' + result.ref_high : result.ref_operator === '>=' ? '≥' + result.ref_low : (result.ref_low || '-') + ' - ' + (result.ref_high || '-')}</td>
+                                <td><span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: ${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#dc2626' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#d97706' : '#10b981'}; color: white;">${result.flag === 'normal' ? '✓' : result.flag === 'critical_high' ? '↑↑' : result.flag === 'critical_low' ? '↓↓' : result.flag === 'abnormal_high' ? '↑' : '↓'}</span></td>
+                                <td style="font-size: 11px; color: #6b7280;">${result.category}</td>
+                              </tr>
+                            `).join('')}
+                          </tbody>
+                        </table>
+                      ` : '<p style="padding: 16px; text-align: center; font-style: italic; color: #6b7280;">No test results recorded for this panel</p>'}
+                    </div>
+                  `).join('') : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No laboratory panels recorded</p>'}
+                </div>
+              </div>
+
+              <div class="form-section">
                 <div class="section-header">Latest Vital Signs</div>
                 <div class="section-content">
                   ${vitalsData.length > 0 ? `
@@ -633,99 +727,319 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               </div>
 
               <div class="form-section">
-                <div class="section-header">Clinical Notes and Assessments</div>
+                <div class="section-header">Clinical Assessment Forms</div>
                 <div class="section-content">
                   <div class="notes-section">
-                    ${notesData.length > 0 ? notesData.slice(0, 8).map(note => `
-                      <div class="note-entry">
-                        <div class="note-header">${note.type || 'Clinical Note'}</div>
-                        <div class="note-content">${note.content}</div>
-                        <div class="note-meta">Recorded: ${new Date(note.created_at || new Date()).toLocaleString()}</div>
+                    ${admissionData ? `
+                      <div class="note-entry" style="background: #fefce8; border-color: #eab308;">
+                        <div class="note-header" style="color: #854d0e;">📝 Admission Assessment</div>
+                        <div class="note-content">
+                          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px;">
+                            ${admissionData.admission_date ? `
+                              <div>
+                                <span style="font-weight: 600; color: #854d0e;">Admission Date:</span>
+                                <span style="margin-left: 5px;">${new Date(admissionData.admission_date).toLocaleString()}</span>
+                              </div>
+                            ` : ''}
+                            ${admissionData.admission_type ? `
+                              <div>
+                                <span style="font-weight: 600; color: #854d0e;">Admission Type:</span>
+                                <span style="margin-left: 5px;">${admissionData.admission_type}</span>
+                              </div>
+                            ` : ''}
+                            ${admissionData.admitting_diagnosis ? `
+                              <div style="grid-column: span 2;">
+                                <span style="font-weight: 600; color: #854d0e;">Admitting Diagnosis:</span>
+                                <span style="margin-left: 5px;">${admissionData.admitting_diagnosis}</span>
+                              </div>
+                            ` : ''}
+                            ${admissionData.chief_complaint ? `
+                              <div style="grid-column: span 2;">
+                                <span style="font-weight: 600; color: #854d0e;">Chief Complaint:</span>
+                                <span style="margin-left: 5px;">${admissionData.chief_complaint}</span>
+                              </div>
+                            ` : ''}
+                            ${admissionData.attending_physician ? `
+                              <div>
+                                <span style="font-weight: 600; color: #854d0e;">Attending Physician:</span>
+                                <span style="margin-left: 5px;">${admissionData.attending_physician}</span>
+                              </div>
+                            ` : ''}
+                            ${admissionData.allergies ? `
+                              <div>
+                                <span style="font-weight: 600; color: #dc2626;">Allergies:</span>
+                                <span style="margin-left: 5px;">${admissionData.allergies}</span>
+                              </div>
+                            ` : ''}
+                            ${admissionData.current_medications ? `
+                              <div style="grid-column: span 2;">
+                                <span style="font-weight: 600; color: #059669;">Current Medications:</span>
+                                <span style="margin-left: 5px;">${admissionData.current_medications}</span>
+                              </div>
+                            ` : ''}
+                          </div>
+                          
+                          ${admissionData.emergency_contact_name ? `
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                              <div style="font-weight: 600; color: #475569; margin-bottom: 6px;">Emergency Contact</div>
+                              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px;">
+                                <div><strong>Name:</strong> ${admissionData.emergency_contact_name}</div>
+                                ${admissionData.emergency_contact_phone ? `<div><strong>Phone:</strong> ${admissionData.emergency_contact_phone}</div>` : ''}
+                                ${admissionData.emergency_contact_relationship ? `<div><strong>Relationship:</strong> ${admissionData.emergency_contact_relationship}</div>` : ''}
+                              </div>
+                            </div>
+                          ` : ''}
+                        </div>
                       </div>
-                    `).join('') : '<p style="text-align: center; font-style: italic; margin: 20px 0;">No clinical notes recorded</p>'}
-                  </div>
-                </div>
-              </div>
+                    ` : '<div class="note-entry"><div class="note-content" style="text-align: center; font-style: italic;">No admission assessment recorded</div></div>'}
 
-              ${admissionData ? `
-              <div class="form-section">
-                <div class="section-header">Admission Information</div>
-                <div class="section-content">
-                  <div class="info-grid">
-                    <div class="info-field">
-                      <div class="field-label">Admission Type:</div>
-                      <div class="field-value">${admissionData.admission_type || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Attending Physician:</div>
-                      <div class="field-value">${admissionData.attending_physician || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Chief Complaint:</div>
-                      <div class="field-value">${admissionData.chief_complaint || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Height:</div>
-                      <div class="field-value">${admissionData.height || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Weight:</div>
-                      <div class="field-value">${admissionData.weight || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">BMI:</div>
-                      <div class="field-value">${admissionData.bmi || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Insurance Provider:</div>
-                      <div class="field-value">${admissionData.insurance_provider || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Policy Number:</div>
-                      <div class="field-value">${admissionData.insurance_policy || 'N/A'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              ` : ''}
-
-              ${directiveData ? `
-              <div class="form-section">
-                <div class="section-header">Advanced Directives</div>
-                <div class="section-content">
-                  <div class="info-grid">
-                    <div class="info-field" style="grid-column: 1 / -1;">
-                      <div class="field-label">DNR Status:</div>
-                      <div class="field-value" style="font-weight: bold; color: ${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'}; font-size: 14px;">
-                        ${directiveData.dnr_status || 'Not Specified'}
+                    ${directiveData ? `
+                      <div class="note-entry" style="background: #fef2f2; border: 2px solid ${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'};">
+                        <div class="note-header" style="color: ${directiveData.dnr_status === 'Full Code' ? '#166534' : '#991b1b'};">⚕️ Advanced Directives</div>
+                        <div class="note-content">
+                          <strong>DNR Status:</strong> <span style="font-weight: bold; font-size: 16px; color: ${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'};">${directiveData.dnr_status || 'Not Specified'}</span><br>
+                          <strong>Healthcare Proxy:</strong> ${directiveData.healthcare_proxy_name || 'None designated'}<br>
+                          ${directiveData.healthcare_proxy_phone ? `<strong>Proxy Contact:</strong> ${directiveData.healthcare_proxy_phone}<br>` : ''}
+                          ${directiveData.healthcare_proxy_relationship ? `<strong>Relationship:</strong> ${directiveData.healthcare_proxy_relationship}<br>` : ''}
+                          <strong>Organ Donation:</strong> ${directiveData.organ_donation_status || 'Not specified'}<br>
+                          ${directiveData.religious_preference ? `<strong>Religious Preference:</strong> ${directiveData.religious_preference}<br>` : ''}
+                          ${directiveData.special_instructions ? `<strong>Special Instructions:</strong> ${directiveData.special_instructions}` : ''}
+                        </div>
+                        <div class="note-meta">End-of-life care preferences and legal healthcare decisions</div>
                       </div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Healthcare Proxy:</div>
-                      <div class="field-value">${directiveData.healthcare_proxy_name || 'None designated'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Proxy Contact:</div>
-                      <div class="field-value">${directiveData.healthcare_proxy_phone || 'N/A'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Organ Donation:</div>
-                      <div class="field-value">${directiveData.organ_donation_status || 'Not specified'}</div>
-                    </div>
-                    <div class="info-field">
-                      <div class="field-label">Religious Preference:</div>
-                      <div class="field-value">${directiveData.religious_preference || 'Not specified'}</div>
-                    </div>
-                    ${directiveData.special_instructions ? `
-                    <div class="info-field" style="grid-column: 1 / -1;">
-                      <div class="field-label">Special Instructions:</div>
-                      <div class="field-value">${directiveData.special_instructions}</div>
-                    </div>
-                    ` : ''}
+                    ` : '<div class="note-entry"><div class="note-content" style="text-align: center; font-style: italic;">No advanced directives recorded</div></div>'}
+
+                    ${assessmentsData.length > 0 ? `
+                      <div class="note-entry" style="background: #f0f9ff; border-color: #3b82f6;">
+                        <div class="note-header" style="color: #1e40af;">📋 Nursing Assessments (${assessmentsData.length} on file)</div>
+                        <div class="note-content">
+                          ${assessmentsData.map((assessment, idx) => {
+                            let parsedData = null;
+                            console.log(`🔍 DEBUG: Processing assessment #${idx + 1}:`, assessment);
+                            console.log(`🔍 DEBUG: assessment_notes type:`, typeof assessment.assessment_notes);
+                            console.log(`🔍 DEBUG: assessment_notes value:`, assessment.assessment_notes);
+                            try {
+                              parsedData = JSON.parse(assessment.assessment_notes);
+                              console.log(`🔍 DEBUG: Parsed data:`, parsedData);
+                            } catch (e) {
+                              console.log(`🔍 DEBUG: Parse error:`, e);
+                              // If it's not JSON, display as plain text
+                            }
+                            
+                            if (parsedData && typeof parsedData === 'object') {
+                              return `
+                                ${idx > 0 ? '<hr style="margin: 15px 0; border: none; border-top: 1px solid #e5e7eb;">' : ''}
+                                <div style="margin-bottom: ${idx < assessmentsData.length - 1 ? '15px' : '0'};">
+                                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong style="font-size: 14px; color: #1e40af; font-weight: 700;">${parsedData.assessmentType ? parsedData.assessmentType.toUpperCase() : 'NURSING ASSESSMENT'}</strong>
+                                    <span style="font-size: 12px; color: #64748b;">${new Date(parsedData.assessmentDate || assessment.created_at).toLocaleString()}</span>
+                                  </div>
+                                  
+                                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px;">
+                                    ${parsedData.patientId ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Patient ID:</span>
+                                        <span style="margin-left: 5px;">${parsedData.patientId}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.generalAppearance ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">General Appearance:</span>
+                                        <span style="margin-left: 5px;">${parsedData.generalAppearance}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.levelOfConsciousness ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Level of Consciousness:</span>
+                                        <span style="margin-left: 5px;">${parsedData.levelOfConsciousness}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.respiratoryAssessment ? `
+                                      <div style="grid-column: span 2;">
+                                        <span style="font-weight: 600; color: #475569;">Respiratory:</span>
+                                        <span style="margin-left: 5px;">${parsedData.respiratoryAssessment}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.cardiovascularAssessment ? `
+                                      <div style="grid-column: span 2;">
+                                        <span style="font-weight: 600; color: #475569;">Cardiovascular:</span>
+                                        <span style="margin-left: 5px;">${parsedData.cardiovascularAssessment}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.motorFunction ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Motor Function:</span>
+                                        <span style="margin-left: 5px;">${parsedData.motorFunction}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.cognitiveFunction ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Cognitive Function:</span>
+                                        <span style="margin-left: 5px;">${parsedData.cognitiveFunction}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.skinCondition ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Skin Condition:</span>
+                                        <span style="margin-left: 5px;">${parsedData.skinCondition}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.pressureUlcerRisk ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: ${parsedData.pressureUlcerRisk === 'high' ? '#dc2626' : '#475569'};">Pressure Ulcer Risk:</span>
+                                        <span style="margin-left: 5px;">${parsedData.pressureUlcerRisk}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.fallRiskScore !== null && parsedData.fallRiskScore !== undefined ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Fall Risk Score:</span>
+                                        <span style="margin-left: 5px;">${parsedData.fallRiskScore}</span>
+                                      </div>
+                                    ` : ''}
+                                    ${parsedData.fallRiskFactors ? `
+                                      <div>
+                                        <span style="font-weight: 600; color: #475569;">Fall Risk Factors:</span>
+                                        <span style="margin-left: 5px;">${parsedData.fallRiskFactors}</span>
+                                      </div>
+                                    ` : ''}
+                                  </div>
+                                  
+                                  ${parsedData.assessmentNotes ? `
+                                    <div style="background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                                      <div style="font-weight: 600; color: #1e40af; margin-bottom: 6px;">Assessment Notes</div>
+                                      <div style="font-size: 13px; color: #334155;">${parsedData.assessmentNotes}</div>
+                                    </div>
+                                  ` : ''}
+                                  
+                                  ${parsedData.recommendations ? `
+                                    <div style="background: #f0fdf4; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                                      <div style="font-weight: 600; color: #059669; margin-bottom: 6px;">Recommendations</div>
+                                      <div style="font-size: 13px; color: #334155;">${parsedData.recommendations}</div>
+                                    </div>
+                                  ` : ''}
+                                  
+                                  <div style="margin-top: 10px; font-size: 12px; color: #64748b;">
+                                    <strong>Assessed by:</strong> ${parsedData.nurseName || assessment.nurse_name} • 
+                                    <strong>Priority:</strong> ${parsedData.priorityLevel || assessment.priority || 'routine'}
+                                  </div>
+                                </div>
+                              `;
+                            } else {
+                              // Fallback for non-JSON or nursing assessments saved as plain text
+                              const content = assessment.assessment_notes || assessment.content || 'No notes provided';
+                              
+                              // Try to parse it as JSON one more time for nursing assessments
+                              let nursingData = null;
+                              try {
+                                nursingData = JSON.parse(content);
+                              } catch (e) {
+                                // Not JSON, display as text
+                              }
+                              
+                              if (nursingData && typeof nursingData === 'object') {
+                                // Display nursing assessment data
+                                return `
+                                  ${idx > 0 ? '<hr style="margin: 15px 0; border: none; border-top: 1px solid #e5e7eb;">' : ''}
+                                  <div style="margin-bottom: ${idx < assessmentsData.length - 1 ? '15px' : '0'};">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                      <strong style="font-size: 14px; color: #1e40af;">Nursing Assessment #${idx + 1}</strong>
+                                      <span style="font-size: 12px; color: #64748b;">${new Date(assessment.created_at).toLocaleString()}</span>
+                                    </div>
+                                    
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px;">
+                                      ${nursingData.patientId ? `
+                                        <div>
+                                          <span style="font-weight: 600; color: #475569;">Patient ID:</span>
+                                          <span style="margin-left: 5px;">${nursingData.patientId}</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.assessmentType ? `
+                                        <div>
+                                          <span style="font-weight: 600; color: #475569;">Type:</span>
+                                          <span style="margin-left: 5px;">${nursingData.assessmentType}</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.generalAppearance ? `
+                                        <div>
+                                          <span style="font-weight: 600; color: #475569;">Appearance:</span>
+                                          <span style="margin-left: 5px;">${nursingData.generalAppearance}</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.levelOfConsciousness ? `
+                                        <div>
+                                          <span style="font-weight: 600; color: #475569;">LOC:</span>
+                                          <span style="margin-left: 5px;">${nursingData.levelOfConsciousness}</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.respiratoryAssessment ? `
+                                        <div style="grid-column: span 2;">
+                                          <span style="font-weight: 600; color: #475569;">🫁 Respiratory:</span>
+                                          <span style="margin-left: 5px;">${nursingData.respiratoryAssessment}</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.cardiovascularAssessment ? `
+                                        <div style="grid-column: span 2;">
+                                          <span style="font-weight: 600; color: #475569;">💓 Cardiovascular:</span>
+                                          <span style="margin-left: 5px;">${nursingData.cardiovascularAssessment}</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.painPresent && nursingData.painScale ? `
+                                        <div>
+                                          <span style="font-weight: 600; color: #dc2626;">⚠️ Pain Scale:</span>
+                                          <span style="margin-left: 5px;">${nursingData.painScale}/10</span>
+                                        </div>
+                                      ` : ''}
+                                      ${nursingData.painLocation ? `
+                                        <div>
+                                          <span style="font-weight: 600; color: #475569;">Pain Location:</span>
+                                          <span style="margin-left: 5px;">${nursingData.painLocation}</span>
+                                        </div>
+                                      ` : ''}
+                                    </div>
+                                    
+                                    <div style="margin-top: 10px; font-size: 12px; color: #64748b;">
+                                      <strong>Assessed by:</strong> ${assessment.nurse_name || nursingData.nurseName} • 
+                                      <strong>Priority:</strong> ${assessment.priority || 'Medium'}
+                                    </div>
+                                  </div>
+                                `;
+                              } else {
+                                // Plain text display
+                                return `
+                                  ${idx > 0 ? '<hr style="margin: 15px 0; border: none; border-top: 1px solid #e5e7eb;">' : ''}
+                                  <div style="margin-bottom: ${idx < assessmentsData.length - 1 ? '15px' : '0'};">
+                                    <strong>Latest Assessment:</strong> ${new Date(assessment.created_at).toLocaleDateString()}<br>
+                                    <strong>Type:</strong> ${assessment.type || 'Assessment'}<br>
+                                    <strong>By:</strong> ${assessment.nurse_name}<br>
+                                    <strong>Notes:</strong> ${content}
+                                    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
+                                      Priority: ${assessment.priority || 'Medium'}
+                                    </div>
+                                  </div>
+                                `;
+                              }
+                            }
+                          }).join('')}
+                        </div>
+                      </div>
+                    ` : '<div class="note-entry"><div class="note-content" style="text-align: center; font-style: italic;">No nursing assessments recorded</div></div>'}
+
+                    ${bowelRecordsData.length > 0 ? `
+                      <div class="note-entry" style="background: #f0fdf4; border-color: #22c55e;">
+                        <div class="note-header" style="color: #166534;">📊 Bowel Movement Records (${bowelRecordsData.length} on file)</div>
+                        <div class="note-content">
+                          <strong>Latest Record:</strong> ${new Date(bowelRecordsData[0].recorded_at).toLocaleString()}<br>
+                          <strong>Continence Status:</strong> ${bowelRecordsData[0].bowel_incontinence}<br>
+                          <strong>Stool Appearance:</strong> ${bowelRecordsData[0].stool_appearance}<br>
+                          <strong>Consistency:</strong> ${bowelRecordsData[0].stool_consistency}, <strong>Colour:</strong> ${bowelRecordsData[0].stool_colour}, <strong>Amount:</strong> ${bowelRecordsData[0].stool_amount}<br>
+                          ${bowelRecordsData[0].notes ? `<strong>Notes:</strong> ${bowelRecordsData[0].notes}` : ''}
+                        </div>
+                        <div class="note-meta">Recorded by: ${bowelRecordsData[0].nurse_name}</div>
+                      </div>
+                    ` : '<div class="note-entry"><div class="note-content" style="text-align: center; font-style: italic;">No bowel records documented</div></div>'}
                   </div>
                 </div>
               </div>
-              ` : ''}
 
               ${ordersData && ordersData.length > 0 ? `
               <div class="form-section">
@@ -1089,10 +1403,97 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     handlePatientUpdate({ medications });
   };
 
-  const handleAssessmentSave = (assessment: any) => {
-    // In a real implementation, this would be saved to assessments collection
-    console.log('Assessment saved:', assessment);
-    setLastUpdated(new Date());
+  const handleAssessmentSave = async (assessment: any) => {
+    try {
+      console.log('Saving assessment to database:', assessment);
+      console.log('Assessment type:', assessment.type);
+      
+      // Route to appropriate table based on assessment type
+      if (assessment.type === 'admission-assessment') {
+        // Save to patient_admission_records table
+        // Only save fields that are actually collected by the form
+        const admissionRecord: AdmissionRecord = {
+          patient_id: assessment.patientId,
+          admission_type: 'Emergency', // Default since form doesn't collect this
+          admission_date: assessment.data.admissionDate || new Date().toISOString(),
+          chief_complaint: assessment.data.chiefComplaint || '',
+          admitting_diagnosis: assessment.data.admittingDiagnosis || '',
+          attending_physician: null, // Form doesn't collect this
+          allergies: Array.isArray(assessment.data.allergies) ? assessment.data.allergies.join(', ') : assessment.data.allergies || '',
+          current_medications: assessment.data.medications || '',
+          // Form doesn't collect height/weight/BMI, insurance, or emergency contact
+          height: null,
+          weight: null,
+          bmi: null,
+          insurance_provider: null,
+          insurance_policy: null,
+          emergency_contact_name: null,
+          emergency_contact_phone: null,
+          emergency_contact_relationship: null
+        };
+        
+        await upsertAdmissionRecord(admissionRecord);
+        console.log('Admission assessment saved to patient_admission_records');
+        
+      } else if (assessment.type === 'nursing-assessment') {
+        // Save to patient_notes table directly with JSON content
+        const { data: savedNote, error } = await supabase
+          .from('patient_notes')
+          .insert({
+            patient_id: assessment.patientId,
+            nurse_id: currentUser?.id || '',
+            nurse_name: assessment.submittedBy,
+            type: 'Assessment',
+            content: JSON.stringify(assessment.data), // Store raw JSON
+            priority: 'Medium'
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error('Error saving nursing assessment:', error);
+          throw error;
+        }
+        
+        console.log('Nursing assessment saved to patient_notes:', savedNote);
+        
+      } else if (assessment.type === 'bowel-assessment') {
+        // Save to bowel_records table
+        await createBowelRecord({
+          patient_id: assessment.patientId,
+          nurse_id: currentUser?.id || '',
+          nurse_name: assessment.submittedBy,
+          recorded_at: assessment.data.recordedAt || new Date().toISOString(),
+          bowel_incontinence: assessment.data.bowelIncontinence || 'Continent',
+          stool_appearance: assessment.data.stoolAppearance || 'Normal',
+          stool_consistency: assessment.data.stoolConsistency || 'Formed',
+          stool_colour: assessment.data.stoolColour || 'Brown',
+          stool_amount: assessment.data.stoolAmount || 'Moderate',
+          notes: assessment.data.notes || ''
+        });
+        console.log('Bowel assessment saved to bowel_records');
+        
+      } else {
+        // Default: save as generic assessment
+        await createAssessment({
+          patient_id: assessment.patientId,
+          nurse_id: currentUser?.id || '',
+          nurse_name: assessment.submittedBy,
+          assessment_type: 'physical',
+          assessment_date: new Date().toISOString(),
+          assessment_notes: JSON.stringify(assessment.data),
+          recommendations: '',
+          follow_up_required: false,
+          priority_level: 'routine'
+        });
+        console.log('Generic assessment saved to patient_notes');
+      }
+      
+      console.log('Assessment saved to database successfully');
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error saving assessment to database:', error);
+    }
   };
 
   // Get enhanced color classes for modern styling
@@ -1529,11 +1930,12 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     </p>
                   </div>
                   <AdvancedDirectivesForm
-                    patientId={patient.patient_id}
+                    patientId={patient.id}
                     patientName={`${patient.first_name} ${patient.last_name}`}
                     onClose={() => setActiveModule('overview')}
                     onSave={() => {
                       setLastUpdated(new Date());
+                      setActiveModule('overview');
                     }}
                   />
                 </div>

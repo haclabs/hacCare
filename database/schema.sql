@@ -2987,6 +2987,8 @@ BEGIN
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_images WHERE tenant_id = v_tenant_id;
   DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id;
+  DELETE FROM lab_results WHERE tenant_id = v_tenant_id;
+  DELETE FROM lab_panels WHERE tenant_id = v_tenant_id;
   
   -- Delete from tables without tenant_id (use patient_id join)
   DELETE FROM patient_admission_records WHERE patient_id IN (
@@ -4360,6 +4362,19 @@ BEGIN
       JOIN patients p ON p.id = br.patient_id
       WHERE p.tenant_id = v_tenant_id
     ),
+    'lab_panels', (
+      SELECT COALESCE(json_agg(row_to_json(lp.*)), '[]'::json)
+      FROM lab_panels lp
+      JOIN patients p ON p.id = lp.patient_id
+      WHERE p.tenant_id = v_tenant_id
+    ),
+    'lab_results', (
+      SELECT COALESCE(json_agg(row_to_json(lr.*)), '[]'::json)
+      FROM lab_results lr
+      JOIN lab_panels lp ON lp.id = lr.panel_id
+      JOIN patients p ON p.id = lp.patient_id
+      WHERE p.tenant_id = v_tenant_id
+    ),
     'patient_wounds', (
       SELECT COALESCE(json_agg(row_to_json(pw.*)), '[]'::json)
       FROM patient_wounds pw
@@ -4435,6 +4450,9 @@ DECLARE
   v_wound_mapping jsonb := '{}'::jsonb;
   v_old_wound_id uuid;
   v_new_wound_id uuid;
+  v_panel_mapping jsonb := '{}'::jsonb;
+  v_old_panel_id uuid;
+  v_new_panel_id uuid;
   v_record jsonb;
 BEGIN
   -- Restore patients first (create ID mapping)
@@ -4649,6 +4667,65 @@ BEGIN
         v_record->>'amount',
         v_record->>'notes',
         (v_record->>'recorded_by')::uuid
+      );
+    END LOOP;
+  END IF;
+  
+  -- Restore lab panels (create panel ID mapping for lab results)
+  IF p_snapshot->'lab_panels' IS NOT NULL THEN
+    FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'lab_panels')
+    LOOP
+      v_old_panel_id := (v_record->>'id')::uuid;
+      
+      INSERT INTO lab_panels (
+        tenant_id, patient_id, panel_time, source, notes,
+        status, ack_required, entered_by
+      )
+      VALUES (
+        p_tenant_id,
+        (v_patient_mapping->>(v_record->>'patient_id'))::uuid,
+        (v_record->>'panel_time')::timestamptz,
+        v_record->>'source',
+        v_record->>'notes',
+        v_record->>'status',
+        (v_record->>'ack_required')::boolean,
+        (v_record->>'entered_by')::uuid
+      )
+      RETURNING id INTO v_new_panel_id;
+      
+      v_panel_mapping := v_panel_mapping || jsonb_build_object(
+        v_old_panel_id::text, v_new_panel_id::text
+      );
+    END LOOP;
+  END IF;
+  
+  -- Restore lab results (using panel mapping)
+  IF p_snapshot->'lab_results' IS NOT NULL THEN
+    FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'lab_results')
+    LOOP
+      INSERT INTO lab_results (
+        tenant_id, patient_id, panel_id, category, test_code, test_name,
+        value, units, ref_low, ref_high, ref_operator, sex_ref,
+        critical_low, critical_high, flag, entered_by, comments
+      )
+      VALUES (
+        p_tenant_id,
+        (v_patient_mapping->>(v_record->>'patient_id'))::uuid,
+        (v_panel_mapping->>(v_record->>'panel_id'))::uuid,
+        (v_record->>'category')::lab_category,
+        v_record->>'test_code',
+        v_record->>'test_name',
+        (v_record->>'value')::numeric,
+        v_record->>'units',
+        (v_record->>'ref_low')::numeric,
+        (v_record->>'ref_high')::numeric,
+        (v_record->>'ref_operator')::ref_operator,
+        (v_record->>'sex_ref')::jsonb,
+        (v_record->>'critical_low')::numeric,
+        (v_record->>'critical_high')::numeric,
+        (v_record->>'flag')::lab_flag,
+        (v_record->>'entered_by')::uuid,
+        v_record->>'comments'
       );
     END LOOP;
   END IF;

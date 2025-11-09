@@ -53,6 +53,7 @@ export interface PatientAssessment {
 /**
  * Create a new patient assessment
  * Stores assessments in patient_notes table with proper formatting
+ * NOTE: tenant_id will be auto-set by database trigger
  */
 export const createAssessment = async (assessment: PatientAssessment): Promise<PatientAssessment> => {
   try {
@@ -85,6 +86,8 @@ export const createAssessment = async (assessment: PatientAssessment): Promise<P
     noteContent += `Priority: ${assessment.priority_level}\n`;
     noteContent += `Follow-up Required: ${assessment.follow_up_required ? 'Yes' : 'No'}`;
 
+    // Note: tenant_id is automatically set by the auto_set_tenant_id trigger
+    // based on the patient_id's tenant
     const { data, error } = await supabase
       .from('patient_notes')
       .insert({
@@ -150,29 +153,54 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
 
     // Convert notes back to assessment format
     const assessments: PatientAssessment[] = (data || []).map(note => {
-      // Parse assessment type from content
-      let assessmentType: 'physical' | 'pain' | 'neurological' = 'physical';
-      if (note.content.includes('Assessment Type: Pain')) {
-        assessmentType = 'pain';
-      } else if (note.content.includes('Assessment Type: Neurological')) {
-        assessmentType = 'neurological';
+      // Try to parse content as JSON first (new format)
+      let parsedContent = null;
+      try {
+        parsedContent = JSON.parse(note.content);
+      } catch (e) {
+        // Not JSON, it's old formatted text
       }
 
-      return {
-        id: note.id,
-        patient_id: note.patient_id,
-        nurse_id: note.nurse_id,
-        nurse_name: note.nurse_name,
-        assessment_type: assessmentType,
-        assessment_date: note.created_at,
-        assessment_notes: note.content.split('Assessment Notes: ')[1]?.split('\n')[0] || note.content,
-        recommendations: note.content.includes('Recommendations: ') ? 
-          note.content.split('Recommendations: ')[1]?.split('\n')[0] : '',
-        follow_up_required: note.content.includes('Follow-up Required: Yes'),
-        priority_level: note.priority === 'Critical' ? 'critical' : 
-                       note.priority === 'High' ? 'urgent' : 'routine',
-        created_at: note.created_at
-      };
+      if (parsedContent && typeof parsedContent === 'object') {
+        // New JSON format - return the assessment with JSON content
+        return {
+          id: note.id,
+          patient_id: note.patient_id,
+          nurse_id: note.nurse_id,
+          nurse_name: note.nurse_name,
+          assessment_type: 'physical',
+          assessment_date: note.created_at,
+          assessment_notes: note.content, // Keep as JSON string
+          recommendations: parsedContent.recommendations || '',
+          follow_up_required: parsedContent.follow_up_required || false,
+          priority_level: parsedContent.priorityLevel || 'routine',
+          created_at: note.created_at
+        };
+      } else {
+        // Old formatted text format
+        let assessmentType: 'physical' | 'pain' | 'neurological' = 'physical';
+        if (note.content.includes('Assessment Type: Pain')) {
+          assessmentType = 'pain';
+        } else if (note.content.includes('Assessment Type: Neurological')) {
+          assessmentType = 'neurological';
+        }
+
+        return {
+          id: note.id,
+          patient_id: note.patient_id,
+          nurse_id: note.nurse_id,
+          nurse_name: note.nurse_name,
+          assessment_type: assessmentType,
+          assessment_date: note.created_at,
+          assessment_notes: note.content.split('Assessment Notes: ')[1]?.split('\n')[0] || note.content,
+          recommendations: note.content.includes('Recommendations: ') ? 
+            note.content.split('Recommendations: ')[1]?.split('\n')[0] : '',
+          follow_up_required: note.content.includes('Follow-up Required: Yes'),
+          priority_level: note.priority === 'Critical' ? 'critical' : 
+                         note.priority === 'High' ? 'urgent' : 'routine',
+          created_at: note.created_at
+        };
+      }
     });
 
     console.log(`Fetched ${assessments.length} assessments for patient ${patientId}`);

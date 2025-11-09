@@ -20,7 +20,6 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const { refreshPatients } = usePatients();
 
   useEffect(() => {
     loadAdvancedDirective();
@@ -38,7 +37,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
         living_will_date: '',
         healthcare_proxy_name: '',
         healthcare_proxy_phone: '',
-        dnr_status: false,
+        dnr_status: '' as any, // String value for new DNR status codes
         organ_donation_status: false,
         organ_donation_details: '',
         religious_preference: '',
@@ -75,9 +74,6 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       // Save to database
       const savedDirective = await upsertAdvancedDirective(formData);
       console.log('Advanced directive saved successfully:', savedDirective);
-      
-      // Refresh patient data to reflect changes
-      await refreshPatients();
       
       if (onSave) {
         onSave();
@@ -229,16 +225,19 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
                   DNR Status
                 </label>
                 <select
-                  value={formData.dnr_status ? 'yes' : 'no'}
-                  onChange={(e) => updateBooleanField('dnr_status', e.target.value)}
+                  value={typeof formData.dnr_status === 'string' ? formData.dnr_status : (formData.dnr_status ? 'yes' : 'no')}
+                  onChange={(e) => updateField('dnr_status', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600`}
                   required
                 >
-                  <option value="no">No DNR</option>
-                  <option value="yes">DNR (Do Not Resuscitate)</option>
-                  <option value="DNI">Do Not Intubate</option>
-                  <option value="DNR/DNI">DNR/DNI</option>
-                  <option value="Comfort Care">Comfort Care Only</option>
+                  <option value="">Select DNR Status</option>
+                  <option value="R1">R1 (Resuscitative care)</option>
+                  <option value="R2">R2 (Resuscitative care)</option>
+                  <option value="R3">R3 (Resuscitative care)</option>
+                  <option value="M1">M1 (Medical care)</option>
+                  <option value="M2">M2 (Medical care)</option>
+                  <option value="C1">C1 (Comfort care)</option>
+                  <option value="C2">C2 (Comfort care)</option>
                 </select>
               </div>
             </div>

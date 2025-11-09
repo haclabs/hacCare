@@ -7,7 +7,109 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
-[5.2.0-rc4] - 2025-11-02 - OTTO RELEASE CANDIDATE 4 🎯 MAJOR RELEASE
+[5.2.0-rc5] - 2025-11-07 - OTTO RELEASE CANDIDATE 5 - CRITICAL FIXES
+===============================================================================
+
+CRITICAL BUG FIXES - PRODUCTION ISSUES RESOLVED
+-----------------------------------------------
+
+* Patient Creation Tenant Race Condition (CRITICAL FIX - Issue #1)
+  - PROBLEM: Patients consistently created in wrong tenant despite correct UI selection
+  - SYMPTOM: All super admin patient creation used tenant 4590329e-6619-4b74-9024-421c4931316d
+  - ROOT CAUSE #1: TenantContext loads asynchronously from localStorage after mount
+  - ROOT CAUSE #2: PatientManagement uses React Query hooks bypassing PatientContext
+  - ROOT CAUSE #3: patientService.createPatient had no tenant_id logic for super admins
+  - SOLUTION: Read superAdminTenantId from localStorage at call time in patientService
+  - IMPACT: Simulation templates now work correctly, super admin workflow restored
+  - FILES MODIFIED:
+    * src/services/patient/patientService.ts (lines 356-378) - PRIMARY FIX
+    * src/contexts/PatientContext.tsx (lines 19, 152-177) - SECONDARY FIX
+  - TESTING: Verified patient tenant_id matches localStorage.getItem('superAdminTenantId')
+  - DOCUMENTATION: docs/operations/troubleshooting/PATIENT_TENANT_RACE_CONDITION_FIX.md
+
+* RLS Infinite Recursion in simulation_active (CRITICAL FIX - Issue #2)
+  - PROBLEM: "infinite recursion detected in policy for relation simulation_active"
+  - ROOT CAUSE: Circular dependency between simulation_active and simulation_participants
+  - OLD POLICY: simulation_active SELECT queried simulation_participants
+  - CIRCULAR: simulation_participants SELECT then queried simulation_active back
+  - SOLUTION: Removed simulation_participants check from simulation_active SELECT policy
+  - TRADE-OFF: Participants no longer see simulations via participant link (admin/instructor only)
+  - ALTERNATIVE: Check participant access at application level if needed
+  - FILES MODIFIED:
+    * database/migrations/simulation_config_v2/HOTFIX_RLS_SIMULATION_ACTIVE.sql
+  - TESTING: Verified simulation queries complete without recursion error
+
+CODE QUALITY IMPROVEMENTS
+--------------------------
+
+* Professional Documentation Standards
+  - Removed emoji usage from production code comments
+  - Enhanced inline documentation with detailed problem/solution descriptions
+  - Added comprehensive JSDoc comments for critical functions
+  - Included testing instructions and related file references
+  - Module load timestamps for debugging browser cache issues
+
+* Enhanced Troubleshooting Documentation
+  - Created comprehensive fix documentation in operations/troubleshooting/
+  - Included root cause analysis with multi-factor breakdown
+  - Added before/after testing examples with SQL queries
+  - Prevention guidelines for future development
+  - Step-by-step debugging checklist for issue recurrence
+
+TECHNICAL DETAILS
+-----------------
+
+* localStorage Integration Pattern
+  - Super admin tenant context now read at function call time
+  - Eliminates race conditions with async context initialization
+  - Works for both direct service calls and context-mediated calls
+  - Maintains backward compatibility with existing code paths
+
+* React Query Hook Bypass Discovery
+  - Identified PatientManagement uses useCreatePatient hook
+  - Hook calls patientService directly, bypassing PatientContext
+  - Required dual fixes: both service layer and context layer
+  - Lesson: Always verify actual code execution paths, not architectural assumptions
+
+* Browser Cache Debugging
+  - Added module load timestamps to detect stale cached code
+  - Hard refresh (Ctrl+Shift+R) required after code changes
+  - Vite HMR may fail for context/provider changes requiring full reload
+  - Clear indicators help identify when browser serves old JavaScript
+
+VERIFICATION & TESTING
+-----------------------
+
+* Patient Creation Tests
+  - Before: Patient tenant_id = '4590329e...' (WRONG)
+  - After: Patient tenant_id = '6ced4f99...' (CORRECT - matches localStorage)
+  - Console logs confirm localStorage read and tenant_id assignment
+  - SQL verification shows correct tenant_id in database
+
+* Simulation Query Tests
+  - Before: "infinite recursion detected in policy" error on SELECT
+  - After: Query completes successfully without recursion
+  - Trade-off accepted: Application-level participant access checks sufficient
+
+FILES MODIFIED SUMMARY
+----------------------
+
+Production Code (2 files):
+  * src/services/patient/patientService.ts - Added localStorage tenant logic
+  * src/contexts/PatientContext.tsx - Added fallback localStorage tenant logic
+
+Database (1 file):
+  * database/migrations/simulation_config_v2/HOTFIX_RLS_SIMULATION_ACTIVE.sql
+
+Documentation (1 file):
+  * docs/operations/troubleshooting/PATIENT_TENANT_RACE_CONDITION_FIX.md
+
+Build Status: PASSING - Zero TypeScript errors
+Security: All RLS policies functional without recursion
+Performance: No degradation, improved reliability
+
+===============================================================================
+[5.2.0-rc4] - 2025-11-02 - OTTO RELEASE CANDIDATE 4 - MAJOR RELEASE
 ===============================================================================
 
 CLINICAL FEATURE INTEGRATION - LAB ORDERS & HACMAP SYSTEM

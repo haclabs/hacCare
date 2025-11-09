@@ -108,7 +108,9 @@ export async function getSimulationTemplate(
 }
 
 /**
- * Save snapshot of template
+ * Save snapshot of template (V2 - Config-driven)
+ * Uses save_template_snapshot_v2 which automatically captures all tables
+ * from simulation_table_config (18 patient tables)
  */
 export async function saveTemplateSnapshot(
   templateId: string
@@ -117,9 +119,9 @@ export async function saveTemplateSnapshot(
     // Ensure templateId is a valid UUID string (trim whitespace, etc)
     const cleanId = templateId.trim();
     
-    console.log('Calling save_template_snapshot with ID:', cleanId);
+    console.log('Calling save_template_snapshot_v2 with ID:', cleanId);
     
-    const { data, error } = await supabase.rpc('save_template_snapshot', {
+    const { data, error } = await supabase.rpc('save_template_snapshot_v2', {
       p_template_id: cleanId,
     });
 
@@ -127,6 +129,8 @@ export async function saveTemplateSnapshot(
       console.error('RPC Error details:', error);
       throw error;
     }
+    
+    console.log('Snapshot saved (V2):', data);
     return data as SimulationFunctionResult;
   } catch (error: any) {
     console.error('Error saving template snapshot:', error);
@@ -368,23 +372,48 @@ export async function updateSimulationStatus(
 }
 
 /**
- * Reset simulation for next session (RECOMMENDED)
- * Resets timer and clears expired status
- * Use this when restarting a completed/expired simulation
- * After cleanup, reset_simulation is a simple timer reset function
+ * Reset simulation for next session (V2 - Config-driven)
+ * Uses restore_snapshot_to_tenant_v2 which:
+ * 1. Deletes all student-added data from simulation tenant
+ * 2. Restores baseline data from template snapshot
+ * 3. Preserves patient and medication IDs for barcode labels
  */
 export async function resetSimulationForNextSession(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   try {
-    const { data, error } = await supabase.rpc('reset_simulation', {
-      p_simulation_id: simulationId,
+    // First, get the simulation to find tenant_id and template snapshot
+    const { data: simulation, error: simError } = await supabase
+      .from('simulation_active')
+      .select('tenant_id, template_id')
+      .eq('id', simulationId)
+      .single();
+
+    if (simError) throw simError;
+    if (!simulation) throw new Error('Simulation not found');
+
+    // Get the template snapshot
+    const { data: template, error: templateError } = await supabase
+      .from('simulation_templates')
+      .select('snapshot_data')
+      .eq('id', simulation.template_id)
+      .single();
+
+    if (templateError) throw templateError;
+    if (!template?.snapshot_data) throw new Error('Template snapshot not found');
+
+    // Call V2 restore function (which deletes + restores)
+    const { data, error } = await supabase.rpc('restore_snapshot_to_tenant_v2', {
+      p_tenant_id: simulation.tenant_id,
+      p_snapshot: template.snapshot_data,
     });
 
     if (error) throw error;
+    
+    console.log('Reset completed (V2):', data);
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error resetting simulation:', error);
+    console.error('Error resetting simulation (V2):', error);
     throw error;
   }
 }
