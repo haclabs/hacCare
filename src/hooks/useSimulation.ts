@@ -1,6 +1,7 @@
 // Simulation Hooks for the new clean architecture
+// NOTE: This file is currently unused legacy code kept for reference
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/api/supabase';
 
 // Types for the new simulation system
 export interface SimTemplate {
@@ -65,12 +66,6 @@ export interface SimRunBarcodePool {
   assigned_to_patient_id?: string;
   assigned_at?: string;
 }
-
-// Initialize Supabase client (you'll need to configure this)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // ===============================================
 // MAIN SIMULATION RUN HOOK
