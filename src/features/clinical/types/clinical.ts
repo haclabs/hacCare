@@ -46,6 +46,7 @@ export interface MedicationAdministration {
     frequency: string;
   };
   medication_name?: string; // Fallback field
+  student_name?: string; // Student who administered
 }
 
 /**

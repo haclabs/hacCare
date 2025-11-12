@@ -141,7 +141,8 @@ export interface LabOrder {
   procedure_type: string;
   source_category: string;
   source_type: string;
-  initials: string;
+  student_name: string;
+  initials?: string; // Legacy field, use student_name instead
   verified_by: string;
   status: string;
   notes?: string;
@@ -160,7 +161,7 @@ export interface CreateLabOrderInput {
   procedure_type: string;
   source_category: string;
   source_type: string;
-  initials: string;
+  student_name: string;
   verified_by: string;
   notes?: string;
 }

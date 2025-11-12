@@ -26,7 +26,10 @@ const ActiveSimulations: React.FC = () => {
 
   const loadSimulations = async () => {
     try {
-      const data = await getActiveSimulations();
+      // Show running, paused, and completed simulations - completed ones can be restarted
+      const data = await getActiveSimulations({
+        status: ['running', 'paused', 'completed']
+      });
       setSimulations(data);
     } catch (error) {
       console.error('Error loading active simulations:', error);
@@ -49,25 +52,28 @@ const ActiveSimulations: React.FC = () => {
   };
 
   const handleResume = async (id: string, isCompleted: boolean = false) => {
+    console.log('🎯 handleResume called:', { id, isCompleted });
     setActionLoading(id);
     try {
       if (isCompleted) {
         // If simulation is completed, reset it with a fresh timer
+        console.log('🔄 Resetting completed simulation...');
         const result = await resetSimulationForNextSession(id);
         console.log('✅ Simulation reset and restarted:', result);
         
-        alert('Simulation restarted with fresh timer! Page will reload to show updated state.');
+        alert('Simulation restarted with fresh timer! Reloading data...');
         
-        // Hard reload with cache bypass - add timestamp to force fresh data
-        window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+        // Reload data instead of hard refresh
+        await loadSimulations();
       } else {
         // If just paused, simply resume
+        console.log('▶️ Resuming paused simulation...');
         await updateSimulationStatus(id, 'running');
         await loadSimulations();
       }
     } catch (error) {
-      console.error('Error resuming simulation:', error);
-      alert('Failed to resume simulation');
+      console.error('❌ Error resuming simulation:', error);
+      alert('Failed to resume simulation: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setActionLoading(null);
     }
@@ -94,16 +100,30 @@ const ActiveSimulations: React.FC = () => {
   };
 
   const handleComplete = async (id: string) => {
-    if (!confirm('Complete this simulation? It will be moved to History.')) {
+    if (!confirm('Complete this simulation? Student activity report will be generated and saved to History.')) {
       return;
     }
+    console.log('🎯 handleComplete called for:', id);
     setActionLoading(id);
     try {
-      await completeSimulation(id);
+      // First, get student activities BEFORE completing
+      console.log('📊 Generating student activity report...');
+      const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
+      const activities = await getStudentActivitiesBySimulation(id);
+      console.log('✅ Student activities captured:', activities.length, 'students');
+      
+      // Now complete the simulation WITH the activities snapshot
+      const result = await completeSimulation(id, activities);
+      console.log('✅ Complete simulation result:', result);
+      
+      // Show success message
+      const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
+      alert(`Simulation completed!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
+      
       await loadSimulations();
     } catch (error) {
-      console.error('Error completing simulation:', error);
-      alert('Failed to complete simulation');
+      console.error('❌ Error completing simulation:', error);
+      alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setActionLoading(null);
     }

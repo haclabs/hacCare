@@ -48,15 +48,17 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
     assessment: '',
     recommendations: '',
     shift: 'day' as 'day' | 'evening' | 'night',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    studentName: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.situation.trim() || !formData.background.trim() || 
-        !formData.assessment.trim() || !formData.recommendations.trim()) {
-      alert('Please fill in all SBAR sections before submitting.');
+        !formData.assessment.trim() || !formData.recommendations.trim() || 
+        !formData.studentName.trim()) {
+      alert('Please fill in all SBAR sections and student name before submitting.');
       return;
     }
 
@@ -65,6 +67,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
       await onSave({
         patient_id: patientId,
         ...formData,
+        student_name: formData.studentName,
         created_by: currentUser.id,
         created_by_name: currentUser.name,
         created_by_role: currentUser.role
@@ -77,7 +80,8 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
         assessment: '',
         recommendations: '',
         shift: 'day',
-        priority: 'medium'
+        priority: 'medium',
+        studentName: ''
       });
       
       onClose();
@@ -246,6 +250,24 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
                 </div>
               );
             })}
+          </div>
+
+          {/* Student Verification */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <label className="block text-sm font-medium text-yellow-900 mb-2">
+              Student Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.studentName}
+              onChange={(e) => setFormData(prev => ({ ...prev, studentName: e.target.value }))}
+              className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              placeholder="Enter your full name"
+              required
+            />
+            <p className="text-xs text-yellow-700 mt-2">
+              By entering your name, you verify that all information above is correct and you performed this handover.
+            </p>
           </div>
 
           {/* Action Buttons */}

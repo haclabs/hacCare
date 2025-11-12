@@ -490,7 +490,8 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       dosage: administration.dosage,
       route: administration.route,
       status: administration.status || 'completed',
-      medication_name: administration.medication_name
+      medication_name: administration.medication_name,
+      student_name: administration.student_name
     };
     
     // Remove undefined values to avoid Supabase issues

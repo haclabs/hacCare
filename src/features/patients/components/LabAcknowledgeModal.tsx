@@ -7,6 +7,7 @@ import { useTenant } from '../../../contexts/TenantContext';
 import { acknowledgeLabs } from '../../../services/clinical/labService';
 import type { LabPanel, LabResult } from '../../../features/clinical/types/labs';
 import { getFlagLabel, getFlagColorClass, getEffectiveRangeDisplay } from '../../../features/clinical/types/labs';
+import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
 
 interface LabAcknowledgeModalProps {
   panel: LabPanel;
@@ -27,6 +28,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
+  const [showStudentModal, setShowStudentModal] = useState(false);
 
   // Filter unacknowledged results
   const unackedResults = results.filter(r => !r.ack_at);
@@ -34,10 +36,13 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
   // Filter abnormal/critical results
   const abnormalResults = unackedResults.filter(r => r.flag !== 'normal');
 
-  const handleAcknowledge = async () => {
+  const handleAcknowledge = () => {
+    setShowStudentModal(true);
+  };
+
+  const confirmAcknowledge = async (studentName: string) => {
     if (!currentTenant) {
-      setError('No tenant selected');
-      return;
+      throw new Error('No tenant selected');
     }
 
     setLoading(true);
@@ -50,14 +55,17 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
         note: note || undefined,
       },
       patientId,
-      currentTenant.id
+      currentTenant.id,
+      studentName
     );
 
     if (err) {
       setError('Failed to acknowledge labs');
       console.error(err);
       setLoading(false);
+      throw err; // Re-throw to let modal handle error display
     } else {
+      setShowStudentModal(false);
       onSuccess();
     }
   };
@@ -256,6 +264,17 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Student Acknowledge Modal */}
+      {showStudentModal && (
+        <StudentAcknowledgeModal
+          title="Acknowledge Lab Results"
+          message="Please enter your name to acknowledge that you have reviewed these lab results and any abnormal values."
+          actionText="Acknowledge Labs"
+          onConfirm={confirmAcknowledge}
+          onCancel={() => setShowStudentModal(false)}
+        />
+      )}
     </div>
   );
 };

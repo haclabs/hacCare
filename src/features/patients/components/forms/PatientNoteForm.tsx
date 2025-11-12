@@ -48,7 +48,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   const [formData, setFormData] = useState({
     type: note?.type || note?.type || 'General',
     content: note?.content || note?.content || '', 
-    priority: note?.priority || note?.priority || 'Medium'
+    priority: note?.priority || note?.priority || 'Medium',
+    studentName: note?.student_name || ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -93,6 +94,14 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
       newErrors.content = 'Note content must be less than 2000 characters';
     }
 
+    if (!formData.studentName.trim()) {
+      newErrors.studentName = 'Student name is required';
+    }
+
+    if (formData.studentName.trim().length < 2) {
+      newErrors.studentName = 'Student name must be at least 2 characters';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -118,7 +127,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           ...note,
           type: formData.type as PatientNote['type'],
           content: formData.content.trim(),
-          priority: formData.priority as PatientNote['priority']
+          priority: formData.priority as PatientNote['priority'],
+          student_name: formData.studentName.trim()
         };
         await onSave(updatedNote);
       } else {
@@ -131,7 +141,8 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
           type: formData.type as PatientNote['type'],
           content: formData.content.trim(),
           priority: formData.priority as PatientNote['priority'],
-          patient_id: patientId
+          patient_id: patientId,
+          student_name: formData.studentName.trim()
         };
         await onSave(newNote);
       }
@@ -296,6 +307,29 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
               <li>• Document in chronological order when possible</li>
               <li>• Include patient quotes when relevant (use quotation marks)</li>
             </ul>
+          </div>
+
+          {/* Student Verification */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-300 mb-2">
+              Student Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.studentName}
+              onChange={(e) => updateField('studentName', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                errors.studentName ? 'border-red-300 dark:border-red-600' : 'border-yellow-300 dark:border-yellow-600'
+              }`}
+              placeholder="Enter your full name"
+              required
+            />
+            {errors.studentName && (
+              <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.studentName}</p>
+            )}
+            <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
+              By entering your name, you verify that all information above is correct and you created this patient note.
+            </p>
           </div>
 
           {/* Form Actions */}

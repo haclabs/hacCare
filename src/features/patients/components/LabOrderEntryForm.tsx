@@ -50,7 +50,7 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
     procedure_type: '',
     source_category: '',
     source_type: '',
-    initials: '',
+    student_name: '',
     verified_by: user?.id || '',
     notes: ''
   });
@@ -181,7 +181,7 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
             <span class="field-label">Source:</span> ${formData.source_type}
           </div>
           <div class="verification">
-            <div><span class="field-label">Verified by:</span> ${formData.initials}</div>
+            <div><span class="field-label">Verified by:</span> ${formData.student_name}</div>
             <div style="margin-top: 5px; font-size: 10px;">Order ID: ${orderId}</div>
           </div>
         </div>
@@ -363,19 +363,19 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
         {/* Verification */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <label className="block text-sm font-medium text-yellow-900 mb-2">
-            Initials <span className="text-red-500">*</span>
+            Student Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            value={formData.initials}
-            onChange={(e) => setFormData({ ...formData, initials: e.target.value.toUpperCase() })}
+            value={formData.student_name}
+            onChange={(e) => setFormData({ ...formData, student_name: e.target.value })}
             className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-            placeholder="Your initials"
-            maxLength={4}
+            placeholder="Enter your full name"
+            minLength={2}
             required
           />
           <p className="text-xs text-yellow-700 mt-2">
-            By entering your initials, you verify that all information above is correct.
+            By entering your name, you verify that all information above is correct and you performed this lab order.
           </p>
         </div>
 

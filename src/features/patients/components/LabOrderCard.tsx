@@ -84,7 +84,7 @@ export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick }) =>
             <Clock className="w-4 h-4" />
             <span>Ordered: {formatDate(order.created_at)}</span>
           </div>
-          <p className="text-sm font-medium text-gray-900 mt-1">By: {order.initials}</p>
+          <p className="text-sm font-medium text-gray-900 mt-1">By: {order.student_name || order.initials || 'Unknown'}</p>
         </div>
       </div>
     </div>

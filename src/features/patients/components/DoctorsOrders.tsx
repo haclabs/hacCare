@@ -16,6 +16,7 @@ import {
   deleteDoctorsOrder,
   acknowledgeDoctorsOrder
 } from '../../../services/clinical/doctorsOrdersService';
+import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
 
 interface DoctorsOrdersProps {
   patientId: string;
@@ -59,6 +60,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [acknowledgingOrderId, setAcknowledgingOrderId] = useState<string | null>(null);
 
   // Check if user has admin privileges
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin';
@@ -153,28 +155,38 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
     }
   };
 
-  const handleAcknowledge = async (orderId: string) => {
+  const handleAcknowledge = (orderId: string) => {
+    setAcknowledgingOrderId(orderId);
+  };
+
+  const confirmAcknowledge = async (studentName: string) => {
+    if (!acknowledgingOrderId) return;
+
     try {
-      await acknowledgeDoctorsOrder(orderId);
+      await acknowledgeDoctorsOrder(acknowledgingOrderId, studentName);
       
       // Update the order in the local state
       setOrders(orders.map(order => 
-        order.id === orderId 
+        order.id === acknowledgingOrderId 
           ? { 
               ...order, 
               is_acknowledged: true, 
               acknowledged_by: currentUser.id,
               acknowledged_by_name: currentUser.name,
+              acknowledged_by_student: studentName,
               acknowledged_at: new Date().toISOString()
             }
           : order
       ));
+      
+      setAcknowledgingOrderId(null);
       
       // Notify parent component of the change
       onOrdersChange?.();
     } catch (error) {
       console.error('Error acknowledging order:', error);
       setError('Failed to acknowledge order');
+      throw error; // Re-throw to let modal handle error display
     }
   };
 
@@ -537,6 +549,17 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
           )}
         </div>
       </div>
+      
+      {/* Student Acknowledge Modal */}
+      {acknowledgingOrderId && (
+        <StudentAcknowledgeModal
+          title="Acknowledge Doctor's Order"
+          message="Please enter your name to acknowledge that you have reviewed and understood this doctor's order."
+          actionText="Acknowledge Order"
+          onConfirm={confirmAcknowledge}
+          onCancel={() => setAcknowledgingOrderId(null)}
+        />
+      )}
     </div>
   );
 };

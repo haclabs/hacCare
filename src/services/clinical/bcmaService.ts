@@ -244,7 +244,8 @@ class BCMAService {
     scannedMedicationId: string,
     validationResult: BCMAValidationResult,
     manualOverrides: string[] = [],
-    notes?: string
+    notes?: string,
+    studentName?: string
   ): Promise<AdministrationLog> {
     console.log('🔵 BCMA: Creating administration record in database...');
     
@@ -266,14 +267,16 @@ class BCMAService {
       // Create the medication administration record in the database
       const administrationRecord: MedicationAdministration = {
         medication_id: medication.id,
-        patient_id: patient.patient_id || patient.id,
+        patient_id: patient.id, // Use database UUID, not patient_id (MRN)
         administered_by: currentUser.name,
         administered_by_id: currentUser.id,
         timestamp: log.timestamp,
         notes: notes ? `BCMA Administration. ${notes}` : 'BCMA Administration',
         dosage: medication.dosage,
         route: medication.route,
-        status: 'completed'
+        status: 'completed',
+        medication_name: medication.name,
+        student_name: studentName
       };
 
       console.log('🔵 BCMA: Recording administration:', administrationRecord);

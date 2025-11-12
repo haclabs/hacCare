@@ -42,6 +42,7 @@ export interface CreateHandoverNoteData {
   created_by: string;
   created_by_name: string;
   created_by_role: string;
+  student_name?: string;
 }
 
 /**

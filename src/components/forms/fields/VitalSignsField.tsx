@@ -83,11 +83,11 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return 'border-red-500 bg-red-50';
+        return 'border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-400';
       case 'abnormal':
-        return 'border-yellow-500 bg-yellow-50';
+        return 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-400';
       default:
-        return 'border-gray-300 bg-white';
+        return 'border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white';
     }
   };
 
@@ -115,7 +115,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
-        <label className="text-sm font-medium text-gray-900">
+        <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
           {field.title}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -134,7 +134,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Thermometer className="h-4 w-4 text-red-500" />
-            <label className="text-sm font-medium text-gray-700">Temperature (°C)</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Temperature (°C)</label>
             {getStatusIcon(getFieldStatus(value.temperature, ranges.temperature))}
           </div>
           <input
@@ -153,7 +153,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             placeholder="37.0"
           />
           {focusedField === 'temperature' && (
-            <p className="text-xs text-gray-600">Normal: 36.1-37.2°C</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 36.1-37.2°C</p>
           )}
         </div>
 
@@ -161,7 +161,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Heart className="h-4 w-4 text-red-500" />
-            <label className="text-sm font-medium text-gray-700">Heart Rate (BPM)</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Heart Rate (BPM)</label>
             {getStatusIcon(getFieldStatus(value.heartRate, ranges.heartRate))}
           </div>
           <input
@@ -179,7 +179,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             placeholder="72"
           />
           {focusedField === 'heartRate' && (
-            <p className="text-xs text-gray-600">Normal: 60-100 BPM</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 60-100 BPM</p>
           )}
         </div>
 
@@ -187,7 +187,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Droplets className="h-4 w-4 text-blue-500" />
-            <label className="text-sm font-medium text-gray-700">O2 Saturation (%)</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">O2 Saturation (%)</label>
             {getStatusIcon(getFieldStatus(value.oxygenSaturation, ranges.oxygenSaturation))}
           </div>
           <input
@@ -205,7 +205,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             placeholder="98"
           />
           {focusedField === 'oxygenSaturation' && (
-            <p className="text-xs text-gray-600">Normal: 95-100%</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 95-100%</p>
           )}
         </div>
 
@@ -213,7 +213,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Droplets className="h-4 w-4 text-cyan-500" />
-            <label className="text-sm font-medium text-gray-700">Oxygen Delivery</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Oxygen Delivery</label>
           </div>
           <select
             value={value.oxygenDelivery || 'Room Air'}
@@ -221,7 +221,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onFocus={() => setFocusedField('oxygenDelivery')}
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="Room Air">Room Air (RA)</option>
             {Array.from({ length: 15 }, (_, i) => i + 1).map(flow => (
@@ -231,7 +231,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             ))}
           </select>
           {focusedField === 'oxygenDelivery' && (
-            <p className="text-xs text-gray-600">Select oxygen delivery method</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Select oxygen delivery method</p>
           )}
         </div>
       </div>
@@ -240,7 +240,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
       <div className="space-y-2">
         <div className="flex items-center space-x-2">
           <Activity className="h-4 w-4 text-green-500" />
-          <label className="text-sm font-medium text-gray-700">Blood Pressure (mmHg)</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Blood Pressure (mmHg)</label>
           {(getStatusIcon(getFieldStatus(value.bloodPressure?.systolic, ranges.systolic)) ||
             getStatusIcon(getFieldStatus(value.bloodPressure?.diastolic, ranges.diastolic)))}
         </div>
@@ -259,7 +259,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             }`}
             placeholder="120"
           />
-          <span className="text-gray-500 font-medium">/</span>
+          <span className="text-gray-500 dark:text-gray-400 font-medium">/</span>
           <input
             type="number"
             min="30"
@@ -275,7 +275,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             placeholder="80"
           />
           {(focusedField === 'systolic' || focusedField === 'diastolic') && (
-            <p className="text-xs text-gray-600 ml-2">Normal: 90-140/60-90 mmHg</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 ml-2">Normal: 90-140/60-90 mmHg</p>
           )}
         </div>
       </div>
@@ -285,7 +285,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Wind className="h-4 w-4 text-purple-500" />
-            <label className="text-sm font-medium text-gray-700">Respiratory Rate (/min)</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Respiratory Rate (/min)</label>
             {getStatusIcon(getFieldStatus(value.respiratoryRate, ranges.respiratoryRate))}
           </div>
           <input
@@ -303,13 +303,13 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             placeholder="16"
           />
           {focusedField === 'respiratoryRate' && (
-            <p className="text-xs text-gray-600">Normal: 12-20 /min</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 12-20 /min</p>
           )}
         </div>
 
         {/* Pain Scale */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Pain Scale (0-10)</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pain Scale (0-10)</label>
           <div className="flex items-center space-x-2">
             <input
               type="range"
@@ -328,7 +328,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
               {value.painScale || 0}
             </span>
           </div>
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>No Pain</span>
             <span>Worst Pain</span>
           </div>

@@ -35,6 +35,18 @@ export const vitalsEntrySchema: VitalsSchema = {
         width: 'half'
       }
     },
+    studentName: {
+      type: 'string',
+      title: 'Student Name',
+      description: 'Full name of student recording vitals',
+      required: true,
+      validation: {
+        minLength: 2
+      },
+      layout: {
+        width: 'half'
+      }
+    },
     vitalSigns: {
       type: 'vital-signs',
       title: 'Current Vital Signs',
@@ -96,14 +108,14 @@ export const vitalsEntrySchema: VitalsSchema = {
       }
     }
   },
-  required: ['patientId', 'recordedBy', 'vitalSigns'],
+  required: ['patientId', 'recordedBy', 'studentName', 'vitalSigns'],
   layout: {
     type: 'sections',
     sections: [
       {
         id: 'patient-info',
         title: 'Patient Information',
-        fields: ['patientId', 'recordedBy']
+        fields: ['patientId', 'recordedBy', 'studentName']
       },
       {
         id: 'vitals',

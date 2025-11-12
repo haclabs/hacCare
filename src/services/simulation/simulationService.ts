@@ -408,9 +408,52 @@ export async function resetSimulationForNextSession(
       p_snapshot: template.snapshot_data,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error in restore_snapshot_to_tenant_v2:', error);
+      throw error;
+    }
     
-    console.log('Reset completed (V2):', data);
+    // Check if the function returned an error in the data
+    if (!data.success) {
+      console.error('Reset failed:', data);
+      throw new Error(data.error || 'Reset operation failed');
+    }
+    
+    console.log('✅ Reset completed (V2):', data);
+    
+    // Get full simulation record to access duration_minutes
+    const { data: fullSim, error: simFetchError } = await supabase
+      .from('simulation_active')
+      .select('duration_minutes')
+      .eq('id', simulationId)
+      .single();
+    
+    if (simFetchError) throw simFetchError;
+    
+    // Reset the simulation status and timer for next session
+    const now = new Date();
+    const nowISO = now.toISOString();
+    
+    // Calculate new ends_at based on duration_minutes
+    const endsAt = new Date(now.getTime() + ((fullSim?.duration_minutes || 60) * 60000));
+    const endsAtISO = endsAt.toISOString();
+    
+    const { error: updateError } = await supabase
+      .from('simulation_active')
+      .update({
+        status: 'running',
+        starts_at: nowISO,
+        ends_at: endsAtISO,
+        completed_at: null,
+        updated_at: nowISO,
+      })
+      .eq('id', simulationId);
+    
+    if (updateError) {
+      console.error('Error updating simulation timestamp:', updateError);
+      throw updateError;
+    }
+    
     return data as SimulationFunctionResult;
   } catch (error: any) {
     console.error('Error resetting simulation (V2):', error);
@@ -450,14 +493,16 @@ export async function resetSimulation(
 }
 
 /**
- * Complete simulation and move to history
+ * Complete simulation and move to history with student activities snapshot
  */
 export async function completeSimulation(
-  simulationId: string
+  simulationId: string,
+  activities: any[] = []
 ): Promise<SimulationFunctionResult> {
   try {
     const { data, error } = await supabase.rpc('complete_simulation', {
       p_simulation_id: simulationId,
+      p_activities: activities,
     });
 
     if (error) throw error;

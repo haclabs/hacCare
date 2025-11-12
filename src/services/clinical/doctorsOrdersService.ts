@@ -233,7 +233,7 @@ export const deleteDoctorsOrder = async (orderId: string): Promise<void> => {
 /**
  * Acknowledge a doctors order (nurses can do this)
  */
-export const acknowledgeDoctorsOrder = async (orderId: string): Promise<DoctorsOrder> => {
+export const acknowledgeDoctorsOrder = async (orderId: string, studentName?: string): Promise<DoctorsOrder> => {
   try {
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -246,6 +246,7 @@ export const acknowledgeDoctorsOrder = async (orderId: string): Promise<DoctorsO
       .update({
         is_acknowledged: true,
         acknowledged_by: user.id,
+        acknowledged_by_student: studentName || null,
         acknowledged_at: new Date().toISOString(),
         updated_by: user.id,
         updated_at: new Date().toISOString()

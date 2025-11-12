@@ -59,6 +59,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [overrideReason, setOverrideReason] = useState<string>('');
   const [overriddenChecks, setOverriddenChecks] = useState<string[]>([]);
+  const [studentName, setStudentName] = useState<string>('');
 
   // Set BCMA as active when component mounts
   useEffect(() => {
@@ -201,7 +202,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         scannedMedicationId,
         validationResult,
         overriddenChecks,
-        notes
+        notes,
+        studentName
       );
 
       setCurrentStep('complete');
@@ -654,6 +656,26 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                   placeholder="Enter any notes about the administration..."
                 />
               </div>
+
+              {/* Student Verification */}
+              {currentStep === 'verify' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-yellow-900 mb-2">
+                    Student Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    placeholder="Enter your full name"
+                    required
+                  />
+                  <p className="text-xs text-yellow-700 mt-2">
+                    By entering your name, you verify that all information above is correct and you administered this medication.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -692,15 +714,17 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             {currentStep === 'verify' && (
               <button
                 onClick={handleAdministration}
-                disabled={!validationResult?.isValid || (requiresGlucoseReading && !glucoseReading)}
+                disabled={!validationResult?.isValid || (requiresGlucoseReading && !glucoseReading) || !studentName.trim()}
                 className={`flex-1 px-4 py-2 rounded-lg font-medium ${
-                  (validationResult?.isValid && (!requiresGlucoseReading || glucoseReading))
+                  (validationResult?.isValid && (!requiresGlucoseReading || glucoseReading) && studentName.trim())
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 {requiresGlucoseReading && !glucoseReading 
-                  ? 'Glucose Reading Required' 
+                  ? 'Glucose Reading Required'
+                  : !studentName.trim()
+                  ? 'Student Name Required'
                   : 'Administer Medication'
                 }
               </button>

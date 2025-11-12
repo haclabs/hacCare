@@ -151,6 +151,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   // Render field based on type
   const renderField = (field: any) => {
     if (!field.visible) return null;
+    // Skip studentName field - it will be rendered in yellow box at bottom
+    if (field.name === 'studentName') return null;
 
     const commonProps = {
       field,
@@ -426,6 +428,32 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
         {/* Form content */}
         {renderFormSections()}
+
+        {/* Student Verification - render studentName field in yellow box if present */}
+        {formConfig.fields.find(f => f.name === 'studentName') && (
+          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <label className="block text-sm font-medium text-yellow-900 mb-2">
+              Student Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.studentName || ''}
+              onChange={(e) => handleFieldChange('studentName', e.target.value)}
+              className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              placeholder="Enter your full name"
+              required
+              disabled={readOnly}
+            />
+            {validation.errors.find(e => e.field === 'studentName') && (
+              <p className="text-red-600 text-xs mt-1">
+                {validation.errors.find(e => e.field === 'studentName')?.message}
+              </p>
+            )}
+            <p className="text-xs text-yellow-700 mt-2">
+              By entering your name, you verify that all information above is correct and you recorded these vital signs.
+            </p>
+          </div>
+        )}
 
         {/* Form actions */}
         {!readOnly && (

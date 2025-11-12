@@ -201,9 +201,15 @@ export const nursingAssessmentSchema: AssessmentSchema = {
         enumNames: ['Routine', 'Urgent', 'Emergent']
       },
       default: 'routine'
+    },
+    studentName: {
+      type: 'string',
+      title: 'Student Name',
+      required: true,
+      description: 'By entering your name, you verify you completed this nursing assessment.'
     }
   },
-  required: ['patientId', 'assessmentDate', 'nurseName', 'assessmentType'],
+  required: ['patientId', 'assessmentDate', 'nurseName', 'assessmentType', 'studentName'],
   layout: {
     type: 'tabs',
     sections: [
@@ -332,9 +338,15 @@ export const admissionAssessmentSchema: AssessmentSchema = {
         enum: ['independent', 'assistance', 'wheelchair', 'bedbound'],
         enumNames: ['Independent', 'Needs Assistance', 'Wheelchair', 'Bedbound']
       }
+    },
+    studentName: {
+      type: 'string',
+      title: 'Student Name',
+      required: true,
+      description: 'By entering your name, you verify you completed this admission assessment.'
     }
   },
-  required: ['patientId', 'admissionDate', 'admittingDiagnosis', 'chiefComplaint', 'vitalSigns'],
+  required: ['patientId', 'admissionDate', 'admittingDiagnosis', 'chiefComplaint', 'vitalSigns', 'studentName'],
   layout: {
     type: 'sections',
     sections: [
@@ -448,6 +460,12 @@ export const bowelAssessmentSchema: AssessmentSchema = {
       title: 'Additional Notes',
       required: true,
       description: 'Any additional observations or notes about the bowel movement'
+    },
+    studentName: {
+      type: 'string',
+      title: 'Student Name',
+      required: true,
+      description: 'By entering your name, you verify you documented this bowel assessment.'
     }
   },
   layout: {

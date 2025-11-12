@@ -659,7 +659,7 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
 /**
  * Update patient vitals
  */
-export const updatePatientVitals = async (patientId: string, vitals: VitalSigns): Promise<void> => {
+export const updatePatientVitals = async (patientId: string, vitals: VitalSigns, studentName?: string): Promise<void> => {
   try {
     console.log('Inserting vitals for patient:', patientId, vitals);
     console.log('Storing temperature in Celsius:', vitals.temperature);
@@ -688,7 +688,8 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns)
         respiratory_rate: vitals.respiratoryRate,
         oxygen_saturation: vitals.oxygenSaturation,
         oxygen_delivery: vitals.oxygenDelivery || 'Room Air', // Add oxygen delivery field
-        recorded_at: new Date().toISOString() // Add the recorded_at timestamp
+        recorded_at: new Date().toISOString(), // Add the recorded_at timestamp
+        student_name: studentName || null // Add student name if provided
       });
 
     if (error) {

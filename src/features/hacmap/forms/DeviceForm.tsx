@@ -48,10 +48,11 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
   const [securementMethod, setSecurementMethod] = useState<string[]>(device?.securement_method || []);
   const [patientTolerance, setPatientTolerance] = useState(device?.patient_tolerance || '');
   const [notes, setNotes] = useState(device?.notes || '');
+  const [studentName, setStudentName] = useState('');
 
   useEffect(() => {
     setIsDirty(true);
-  }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes]);
+  }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes, studentName]);
 
   const handleOrientationToggle = (value: Orientation) => {
     setOrientation(prev =>
@@ -353,6 +354,25 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
         />
       </div>
 
+      {/* Student Name Verification */}
+      <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-md">
+        <label htmlFor="studentName" className="block text-sm font-medium text-gray-900 mb-2">
+          Student Name
+        </label>
+        <input
+          type="text"
+          id="studentName"
+          value={studentName}
+          onChange={(e) => setStudentName(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          placeholder="Enter your full name"
+        />
+        <p className="mt-2 text-xs text-gray-600">
+          By entering your name, you verify you placed this device.
+        </p>
+      </div>
+
       {/* Actions */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">
         <div>
@@ -379,7 +399,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !studentName.trim()}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
           >
             <Save className="h-4 w-4" />

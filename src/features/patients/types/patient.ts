@@ -64,4 +64,5 @@ export interface PatientNote {
   content: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   patient_id?: string;
+  student_name?: string;
 }

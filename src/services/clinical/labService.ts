@@ -537,7 +537,8 @@ export async function deleteLabResult(resultId: string): Promise<{ error: any }>
 export async function acknowledgeLabs(
   input: AcknowledgeLabsInput,
   patientId: string,
-  tenantId: string
+  tenantId: string,
+  studentName?: string
 ): Promise<{ error: any }> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -584,6 +585,7 @@ export async function acknowledgeLabs(
     .from('lab_results')
     .update({
       ack_by: userId,
+      acknowledged_by_student: studentName || null,
       ack_at: new Date().toISOString(),
     })
     .in('id', resultIds);

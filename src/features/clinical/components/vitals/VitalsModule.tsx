@@ -103,9 +103,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         lastUpdated: new Date().toISOString()
       };
 
-      // Save vitals to database
+      // Save vitals to database with student name
       console.log('Saving vitals to database for patient:', patient.id);
-      await updatePatientVitals(patient.id, newVitals);
+      await updatePatientVitals(patient.id, newVitals, data.studentName);
       console.log('Vitals saved to database successfully');
 
       // Update local state through parent component
