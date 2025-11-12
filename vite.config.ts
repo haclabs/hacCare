@@ -44,16 +44,15 @@ export default defineConfig({
             if (id.includes('@supabase')) {
               return 'vendor-supabase';
             }
-            if (id.includes('@tanstack/react-query')) {
-              return 'vendor-query';
-            }
+            // Put react-query in the main vendor chunk to ensure it loads first
+            // This prevents "i is not a constructor" errors from race conditions
             if (id.includes('lucide-react') || id.includes('clsx') || id.includes('class-variance-authority')) {
               return 'vendor-ui';
             }
             if (id.includes('date-fns') || id.includes('uuid') || id.includes('dompurify')) {
               return 'vendor-utils';
             }
-            // All other node_modules go to vendor
+            // All other node_modules (including @tanstack/react-query) go to vendor
             return 'vendor';
           }
           
