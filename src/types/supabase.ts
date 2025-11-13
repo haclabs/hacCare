@@ -1,4 +1,3 @@
-Initialising login role...
 export type Json =
   | string
   | number
@@ -1588,6 +1587,93 @@ export type Database = {
           },
         ]
       }
+      patient_intake_output_events: {
+        Row: {
+          amount_ml: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          direction: string
+          event_timestamp: string
+          id: string
+          patient_id: string
+          route: string | null
+          shift_label: string | null
+          student_name: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_ml: number
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          direction: string
+          event_timestamp?: string
+          id?: string
+          patient_id: string
+          route?: string | null
+          shift_label?: string | null
+          student_name?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_ml?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          direction?: string
+          event_timestamp?: string
+          id?: string
+          patient_id?: string
+          route?: string | null
+          shift_label?: string | null
+          student_name?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_intake_output_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_intake_output_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_intake_output_events_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_intake_output_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_intake_output_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_medications: {
         Row: {
           admin_time: string | null
@@ -2280,7 +2366,9 @@ export type Database = {
           simulation_id: string | null
           started_at: string
           status: Database["public"]["Enums"]["simulation_active_status"]
+          student_activities: Json | null
           template_id: string
+          tenant_id: string | null
         }
         Insert: {
           activity_summary?: Json | null
@@ -2298,7 +2386,9 @@ export type Database = {
           simulation_id?: string | null
           started_at: string
           status: Database["public"]["Enums"]["simulation_active_status"]
+          student_activities?: Json | null
           template_id: string
+          tenant_id?: string | null
         }
         Update: {
           activity_summary?: Json | null
@@ -2316,7 +2406,9 @@ export type Database = {
           simulation_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["simulation_active_status"]
+          student_activities?: Json | null
           template_id?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -3272,7 +3364,12 @@ export type Database = {
       cleanup_expired_simulations: { Args: never; Returns: number }
       cleanup_old_sessions: { Args: never; Returns: number }
       cleanup_orphaned_users: { Args: never; Returns: number }
-      complete_simulation: { Args: { p_simulation_id: string }; Returns: Json }
+      complete_simulation:
+        | { Args: { p_simulation_id: string }; Returns: Json }
+        | {
+            Args: { p_activities?: Json; p_simulation_id: string }
+            Returns: Json
+          }
       confirm_user_email: { Args: { target_user_id: string }; Returns: boolean }
       create_alert_for_tenant: {
         Args: {
