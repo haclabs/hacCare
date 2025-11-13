@@ -50,8 +50,6 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
       
       // Deduplicate students in case snapshot has duplicate entries
       const deduped = deduplicateStudentActivities(activities);
-      console.log('📌 Setting state with deduplicated activities:', deduped.length, 'students');
-      deduped.forEach((s, i) => console.log(`  [${i}] ${s.studentName} - ${s.totalEntries} entries`));
       setStudentActivities(deduped);
     } catch (error) {
       console.error('Error loading student activities:', error);
@@ -62,22 +60,15 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
 
   // Helper to merge duplicate student entries (for old snapshots with bad data)
   const deduplicateStudentActivities = (activities: StudentActivity[]): StudentActivity[] => {
-    console.log('🔍 Deduplicating activities:', activities.length, 'entries');
-    activities.forEach((a, i) => {
-      console.log(`  [${i}] studentName: "${a.studentName}" (length: ${a.studentName.length}, entries: ${a.totalEntries})`);
-      console.log(`      bytes:`, Array.from(a.studentName).map(c => c.charCodeAt(0)));
-    });
-    
     const studentMap = new Map<string, StudentActivity>();
     
-    activities.forEach((activity, index) => {
-      // Normalize the student name (trim whitespace, normalize case for comparison)
+    activities.forEach((activity) => {
+      // Normalize the student name (trim whitespace)
       const normalizedName = activity.studentName.trim();
       const existing = studentMap.get(normalizedName);
       
       if (existing) {
-        console.log(`  ⚠️ DUPLICATE FOUND at index ${index}: "${activity.studentName}" matches existing "${normalizedName}"`);
-        // Merge activities
+        // Merge activities from duplicate entry
         existing.activities.vitals.push(...activity.activities.vitals);
         existing.activities.medications.push(...activity.activities.medications);
         existing.activities.labOrders.push(...activity.activities.labOrders);
@@ -91,17 +82,14 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
         existing.totalEntries += activity.totalEntries;
       } else {
-        console.log(`  ✅ NEW student at index ${index}: "${normalizedName}"`);
         // First occurrence - deep clone to avoid mutation, use normalized name
         const cloned = JSON.parse(JSON.stringify(activity));
-        cloned.studentName = normalizedName; // Use normalized name
+        cloned.studentName = normalizedName;
         studentMap.set(normalizedName, cloned);
       }
     });
     
-    const result = Array.from(studentMap.values());
-    console.log('✅ Deduplication complete:', result.length, 'unique students');
-    return result;
+    return Array.from(studentMap.values());
   };
 
   const handleGeneratePDF = () => {
