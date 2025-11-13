@@ -46,6 +46,7 @@ import { AvatarBoard } from '../features/hacmap/AvatarBoard';
 import { AdvancedDirectivesForm } from '../features/patients/components/forms/AdvancedDirectivesForm';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
+import { IntakeOutputCard } from '../features/clinical/components/intake-output';
 import { Patient, DoctorsOrder } from '../types';
 import { fetchPatientById, fetchPatientVitals } from '../services/patient/patientService';
 import { fetchPatientMedications } from '../services/clinical/medicationService';
@@ -1151,14 +1152,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       color: 'green' // Unique: Green for discharge
     },
     {
-      id: 'transfer-request',
-      title: 'Transfer Request',
-      description: 'Initiate patient transfer process',
-      icon: ArrowRight,
-      action: () => alert('Transfer Request feature coming soon!'),
-      color: 'amber' // Unique: Amber for transfer
-    },
-    {
       id: 'doctors-orders',
       title: 'Doctors Orders',
       description: 'View and manage physician orders',
@@ -1854,6 +1847,15 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           <div className="space-y-8">
             {renderPatientOverview()}
             {renderModuleSelector()}
+            
+            {/* Intake & Output Card */}
+            <IntakeOutputCard
+              patientId={patient.id}
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              onRefresh={() => setLastUpdated(new Date())}
+            />
+            
+            {renderActionCards()}
           </div>
         ) : (
           <div className="space-y-6">
