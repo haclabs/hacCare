@@ -28,30 +28,34 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-8 xl:px-12 py-4 transition-colors shadow-sm">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center space-x-4 lg:space-x-6">
-          <div className="flex-shrink-0">
-            {/* HacCare Logo */}
-            <div className="flex items-center">
-              <img 
-                src={logo} 
-                alt="HacCare Logo" 
-                className="h-auto w-auto"
-                style={{ height: '50px' }}
-              />
-            </div>
-          </div>
+      <div className="flex items-center w-full gap-4">
+        {/* Left: Logo */}
+        <div className="flex items-center flex-shrink-0">
+          <img 
+            src={logo} 
+            alt="HacCare Logo" 
+            className="h-auto w-auto"
+            style={{ height: '50px' }}
+          />
         </div>
 
-        <div className="flex items-center space-x-4 lg:space-x-6 xl:space-x-8">
+        {/* Center: Controls (grows to fill space, centered) */}
+        <div className="flex items-center justify-center flex-1 space-x-3 lg:space-x-6 xl:space-x-8">
           {/* Barcode Scanner - Compact Icon */}
           {onBarcodeScan && (
             <div className="flex items-center space-x-2">
               <div 
-                className="relative p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group"
+                className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
                 title="Barcode Scanner Active"
               >
-                <span className="text-base">📱</span>
+                {/* QR Code / Scanner Icon */}
+                <svg 
+                  className="w-5 h-5 text-green-600 dark:text-green-400" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2v-2zM15 15h2v2h-2v-2zM13 17h2v2h-2v-2zM15 19h2v2h-2v-2zM17 13h2v2h-2v-2zM19 15h2v2h-2v-2zM17 17h2v2h-2v-2zM19 19h2v2h-2v-2z"/>
+                </svg>
                 <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
                 
                 {/* Tooltip */}
@@ -88,27 +92,28 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
               </span>
             )}
           </button>
+        </div>
 
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {profile?.first_name} {profile?.last_name}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {getRoleLabel(profile?.role || '')} • {profile?.department || 'No Department'}
-              </p>
+        {/* Right: User Profile */}
+        <div className="flex items-center space-x-3 flex-shrink-0">
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {profile?.first_name} {profile?.last_name}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {getRoleLabel(profile?.role || '')} • {profile?.department || 'No Department'}
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+              <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
-                <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <button 
-                onClick={signOut}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
+            <button 
+              onClick={signOut}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
