@@ -46,7 +46,24 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     yPos += 15;
   };
 
-  // ========== REPORT HEADER ==========
+  // ========== REPORT HEADER WITH LOGO ==========
+  // Add hacCare logo (if available - using text fallback)
+  doc.setFillColor(99, 102, 241); // Indigo brand color
+  doc.rect(0, 0, pageWidth, 35, 'F');
+  
+  // hacCare branding
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('hacCare', margin, 15);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Simulation & Clinical Education Platform', margin, 23);
+  
+  yPos = 45;
+  
+  // Report title
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(75, 0, 130); // Purple
@@ -61,8 +78,9 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     yPos += 10;
   }
 
-  // Horizontal line
-  doc.setDrawColor(200, 200, 200);
+  // Professional horizontal line with gradient effect
+  doc.setDrawColor(99, 102, 241);
+  doc.setLineWidth(0.5);
   doc.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 10;
 
@@ -111,6 +129,7 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
       { title: "Doctor's Orders", items: student.activities.doctorsOrders, color: [147, 51, 234], formatter: formatDoctorOrder },
       { title: 'Lab Acknowledgements', items: student.activities.labAcknowledgements, color: [20, 184, 166], formatter: formatLabAck },
       { title: 'Lab Orders', items: student.activities.labOrders, color: [34, 197, 94], formatter: formatLabOrder },
+      { title: 'Intake & Output', items: student.activities.intakeOutput, color: [6, 182, 212], formatter: formatIntakeOutput },
       { title: 'Patient Notes', items: student.activities.patientNotes, color: [245, 158, 11], formatter: formatNote },
       { title: 'Handover Notes', items: student.activities.handoverNotes, color: [249, 115, 22], formatter: formatHandover },
       { title: 'HAC Map Devices', items: student.activities.hacmapDevices, color: [16, 185, 129], formatter: formatDevice },
@@ -122,12 +141,19 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
       if (section.items.length > 0) {
         checkPageBreak(15);
 
-        // Section header
+        // Professional section header with background
+        doc.setFillColor(section.color[0], section.color[1], section.color[2]);
+        doc.setDrawColor(section.color[0], section.color[1], section.color[2]);
+        doc.roundedRect(margin, yPos - 4, contentWidth, 8, 1, 1, 'FD');
+        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(section.color[0], section.color[1], section.color[2]);
-        doc.text(`${section.title} (${section.items.length})`, margin, yPos);
-        yPos += 7;
+        doc.setTextColor(255, 255, 255);
+        doc.text(`${section.title}`, margin + 3, yPos + 2);
+        
+        doc.setTextColor(255, 255, 255);
+        doc.text(`${section.items.length} ${section.items.length === 1 ? 'entry' : 'entries'}`, pageWidth - margin - 3, yPos + 2, { align: 'right' });
+        yPos += 9;
 
         // Section items
         doc.setFont('helvetica', 'normal');
@@ -159,14 +185,28 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     }
   });
 
-  // ========== FOOTER ON LAST PAGE ==========
+  // ========== PROFESSIONAL FOOTER ==========
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
-  const footerY = pageHeight - 10;
+  const footerY = pageHeight - 15;
+  
+  // Footer separator line
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+  
   doc.text(
-    `Generated on ${format(new Date(), 'PPpp')} | hacCare Simulation System`,
+    `Generated on ${format(new Date(), 'PPpp')}`,
     pageWidth / 2,
     footerY,
+    { align: 'center' }
+  );
+  
+  doc.setFontSize(7);
+  doc.text(
+    'hacCare Simulation & Clinical Education Platform',
+    pageWidth / 2,
+    footerY + 5,
     { align: 'center' }
   );
 
@@ -187,13 +227,32 @@ function formatVital(v: any): string[] {
 }
 
 function formatMedicationAdmin(m: any): string[] {
-  const parts = [];
-  parts.push(`Medication: ${m.medication_name || 'N/A'}`);
-  if (m.dosage) parts.push(`Dose: ${m.dosage}`);
-  if (m.route) parts.push(`Route: ${m.route}`);
-  if (m.status) parts.push(`Status: ${m.status}`);
-  if (m.notes) parts.push(`Notes: ${m.notes}`);
-  return parts;
+  const lines = [
+    `${format(new Date(m.timestamp), 'PPp')}`,
+    `  → Medication: ${m.medication_name || 'N/A'}`
+  ];
+  if (m.dosage) lines.push(`  → Dose: ${m.dosage}`);
+  if (m.route) lines.push(`  → Route: ${m.route}`);
+  if (m.status) lines.push(`  → Status: ${m.status}`);
+  
+  // BCMA safety information
+  if (m.barcode_scanned) {
+    lines.push(`  ✓ BCMA: Barcode scanned`);
+  } else {
+    lines.push(`  ⚠ BCMA: Manual entry (no barcode)`);
+  }
+  
+  if (m.override_reason) {
+    lines.push(`  ⚠ OVERRIDE: ${m.override_reason}`);
+  }
+  
+  if (m.witness_name) {
+    lines.push(`  → Witnessed by: ${m.witness_name}`);
+  }
+  
+  if (m.notes) lines.push(`  → Notes: ${m.notes}`);
+  
+  return lines;
 }
 
 function formatMedication(m: any): string[] {
@@ -230,44 +289,65 @@ function formatMedication(m: any): string[] {
 
 function formatDoctorOrder(o: any): string[] {
   const lines = [
-    `${format(new Date(o.acknowledged_at), 'PPp')}`,
-    `  Type: ${o.order_type}`
+    `${format(new Date(o.acknowledged_at), 'PPp')} - ACKNOWLEDGED`,
+    `  Order Type: ${o.order_type || 'N/A'}`
   ];
+  
   if (o.order_details) {
     // Parse order details if it's a JSON object
     if (typeof o.order_details === 'object') {
-      // Extract common fields from order details
+      // Extract and display all relevant fields
       if (o.order_details.medication) {
-        lines.push(`  Medication: ${o.order_details.medication}`);
-        if (o.order_details.dose) lines.push(`  Dose: ${o.order_details.dose}`);
-        if (o.order_details.route) lines.push(`  Route: ${o.order_details.route}`);
-        if (o.order_details.frequency) lines.push(`  Frequency: ${o.order_details.frequency}`);
+        lines.push(`  → Medication: ${o.order_details.medication}`);
+        if (o.order_details.dose) lines.push(`    Dose: ${o.order_details.dose}`);
+        if (o.order_details.route) lines.push(`    Route: ${o.order_details.route}`);
+        if (o.order_details.frequency) lines.push(`    Frequency: ${o.order_details.frequency}`);
       }
       if (o.order_details.order_text) {
-        lines.push(`  Order: ${o.order_details.order_text}`);
+        lines.push(`  → Order: ${o.order_details.order_text}`);
       }
       if (o.order_details.instructions) {
-        lines.push(`  Instructions: ${o.order_details.instructions}`);
+        lines.push(`  → Instructions: ${o.order_details.instructions}`);
       }
-      // Include any other fields as well
+      if (o.order_details.priority) {
+        lines.push(`  → Priority: ${o.order_details.priority}`);
+      }
+      if (o.order_details.indication) {
+        lines.push(`  → Indication: ${o.order_details.indication}`);
+      }
+      // Include any other fields that haven't been explicitly handled
       Object.keys(o.order_details).forEach(key => {
-        if (!['medication', 'dose', 'route', 'frequency', 'order_text', 'instructions'].includes(key)) {
-          lines.push(`  ${key}: ${o.order_details[key]}`);
+        if (!['medication', 'dose', 'route', 'frequency', 'order_text', 'instructions', 'priority', 'indication'].includes(key)) {
+          const value = o.order_details[key];
+          if (value !== null && value !== undefined && value !== '') {
+            lines.push(`  → ${key}: ${value}`);
+          }
         }
       });
     } else {
       // String format
-      lines.push(`  Details: ${o.order_details}`);
+      lines.push(`  → Details: ${o.order_details}`);
     }
   }
   return lines;
 }
 
 function formatLabAck(l: any): string[] {
-  return [
-    `${format(new Date(l.acknowledged_at), 'PPp')}`,
-    `  ${l.test_name}: ${l.result_value}${l.abnormal_flag ? ' ⚠ ABNORMAL' : ''}`
+  const lines = [
+    `${format(new Date(l.acknowledged_at), 'PPp')} - ACKNOWLEDGED`,
+    `  → Test: ${l.test_name}`,
+    `  → Result: ${l.result_value}${l.abnormal_flag ? ' ⚠ ABNORMAL' : ' (Normal)'}`
   ];
+  
+  if (l.reference_range) {
+    lines.push(`  → Reference Range: ${l.reference_range}`);
+  }
+  
+  if (l.units) {
+    lines.push(`  → Units: ${l.units}`);
+  }
+  
+  return lines;
 }
 
 function formatLabOrder(l: any): string[] {
@@ -360,4 +440,24 @@ function formatBowel(b: any): string[] {
     `${format(new Date(b.created_at), 'PPp')}`,
     `  Appearance: ${b.stool_appearance}, Consistency: ${b.stool_consistency}${b.stool_colour ? `, Colour: ${b.stool_colour}` : ''}${b.stool_amount ? `, Amount: ${b.stool_amount}` : ''}${b.bowel_incontinence ? `, Incontinence: ${b.bowel_incontinence}` : ''}`
   ];
+}
+
+function formatIntakeOutput(io: any): string[] {
+  const directionIcon = io.direction === 'intake' ? '\u2193' : '\u2191'; // ↓ for intake, ↑ for output
+  const directionColor = io.direction === 'intake' ? 'IN' : 'OUT';
+  
+  const lines = [
+    `${format(new Date(io.event_timestamp), 'PPp')} - ${directionColor}`,
+    `  ${directionIcon} ${io.category.toUpperCase()}: ${io.amount_ml} mL`
+  ];
+  
+  if (io.route) {
+    lines.push(`  \u2192 Route: ${io.route}`);
+  }
+  
+  if (io.description) {
+    lines.push(`  \u2192 Notes: ${io.description}`);
+  }
+  
+  return lines;
 }
