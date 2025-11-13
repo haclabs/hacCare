@@ -124,21 +124,21 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
 
     // Activity sections
     const sections = [
-      { title: 'Vital Signs', items: student.activities.vitals, color: [220, 38, 38], formatter: formatVital },
-      { title: 'Medications (BCMA)', items: student.activities.medications, color: [37, 99, 235], formatter: formatMedicationAdmin },
-      { title: "Doctor's Orders", items: student.activities.doctorsOrders, color: [147, 51, 234], formatter: formatDoctorOrder },
-      { title: 'Lab Acknowledgements', items: student.activities.labAcknowledgements, color: [20, 184, 166], formatter: formatLabAck },
-      { title: 'Lab Orders', items: student.activities.labOrders, color: [34, 197, 94], formatter: formatLabOrder },
-      { title: 'Intake & Output', items: student.activities.intakeOutput, color: [6, 182, 212], formatter: formatIntakeOutput },
-      { title: 'Patient Notes', items: student.activities.patientNotes, color: [245, 158, 11], formatter: formatNote },
-      { title: 'Handover Notes', items: student.activities.handoverNotes, color: [249, 115, 22], formatter: formatHandover },
-      { title: 'HAC Map Devices', items: student.activities.hacmapDevices, color: [16, 185, 129], formatter: formatDevice },
-      { title: 'HAC Map Wounds', items: student.activities.hacmapWounds, color: [236, 72, 153], formatter: formatWound },
-      { title: 'Bowel Assessments', items: student.activities.bowelAssessments, color: [234, 179, 8], formatter: formatBowel },
+      { title: 'Vital Signs', items: student.activities.vitals || [], color: [220, 38, 38], formatter: formatVital },
+      { title: 'Medications (BCMA)', items: student.activities.medications || [], color: [37, 99, 235], formatter: formatMedicationAdmin },
+      { title: "Doctor's Orders", items: student.activities.doctorsOrders || [], color: [147, 51, 234], formatter: formatDoctorOrder },
+      { title: 'Lab Acknowledgements', items: student.activities.labAcknowledgements || [], color: [20, 184, 166], formatter: formatLabAck },
+      { title: 'Lab Orders', items: student.activities.labOrders || [], color: [34, 197, 94], formatter: formatLabOrder },
+      { title: 'Intake & Output', items: student.activities.intakeOutput || [], color: [6, 182, 212], formatter: formatIntakeOutput },
+      { title: 'Patient Notes', items: student.activities.patientNotes || [], color: [245, 158, 11], formatter: formatNote },
+      { title: 'Handover Notes', items: student.activities.handoverNotes || [], color: [249, 115, 22], formatter: formatHandover },
+      { title: 'HAC Map Devices', items: student.activities.hacmapDevices || [], color: [16, 185, 129], formatter: formatDevice },
+      { title: 'HAC Map Wounds', items: student.activities.hacmapWounds || [], color: [236, 72, 153], formatter: formatWound },
+      { title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: [234, 179, 8], formatter: formatBowel },
     ];
 
     sections.forEach(section => {
-      if (section.items.length > 0) {
+      if (section.items && section.items.length > 0) {
         checkPageBreak(15);
 
         // Professional section header with background
