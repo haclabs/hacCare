@@ -74,7 +74,6 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
     try {
       await createIntakeOutputEvent({
         patient_id: patientId,
-        tenant_id: '', // Will be auto-filled by RLS
         direction: formData.direction,
         category: formData.category,
         route: formData.route || null,
