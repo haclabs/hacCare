@@ -4,11 +4,12 @@
  * Form for entering new intake or output events
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Droplets, Save } from 'lucide-react';
 import { createIntakeOutputEvent, getCategoryDisplayName } from '../../../../services/clinical/intakeOutputService';
 import type { IoDirection, IoCategory } from '../../../../services/clinical/intakeOutputService';
 import { getCurrentLocalDateTimeString } from '../../../../utils/time';
+import { supabase } from '../../../../lib/api/supabase';
 
 interface AddIntakeOutputModalProps {
   patientId: string;
@@ -33,6 +34,7 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [tenantId, setTenantId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     direction: 'intake' as IoDirection,
@@ -43,6 +45,25 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
     event_timestamp: getCurrentLocalDateTimeString(),
     student_name: ''
   });
+
+  // Fetch patient's tenant_id on mount
+  useEffect(() => {
+    const fetchPatientTenant = async () => {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', patientId)
+        .single();
+      
+      if (data && !error) {
+        setTenantId(data.tenant_id);
+      } else {
+        console.error('Failed to fetch patient tenant:', error);
+      }
+    };
+    
+    fetchPatientTenant();
+  }, [patientId]);
 
   const updateField = (field: string, value: string | IoDirection | IoCategory) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -71,9 +92,16 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
     setLoading(true);
     setError('');
 
+    if (!tenantId) {
+      setError('Unable to determine patient tenant. Please try again.');
+      setLoading(false);
+      return;
+    }
+
     try {
       await createIntakeOutputEvent({
         patient_id: patientId,
+        tenant_id: tenantId,
         direction: formData.direction,
         category: formData.category,
         route: formData.route || null,
