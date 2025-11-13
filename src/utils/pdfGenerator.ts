@@ -9,6 +9,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import type { StudentActivity } from '../services/simulation/studentActivityService';
+import { HACCARE_LOGO_BASE64 } from './logoBase64';
 
 interface StudentReportData {
   simulationName: string;
@@ -47,21 +48,28 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   };
 
   // ========== REPORT HEADER WITH LOGO ==========
-  // Add hacCare logo (if available - using text fallback)
+  // Add hacCare branded header with logo
   doc.setFillColor(99, 102, 241); // Indigo brand color
-  doc.rect(0, 0, pageWidth, 35, 'F');
+  doc.rect(0, 0, pageWidth, 40, 'F');
   
-  // hacCare branding
-  doc.setFontSize(24);
+  // Add hacCare logo image
+  try {
+    doc.addImage(HACCARE_LOGO_BASE64, 'PNG', margin, 8, 40, 24);
+  } catch (error) {
+    console.warn('Could not add logo to PDF:', error);
+  }
+  
+  // hacCare branding text (next to logo)
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('hacCare', margin, 15);
+  doc.text('hacCare', margin + 45, 18);
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('Simulation & Clinical Education Platform', margin, 23);
+  doc.text('Simulation & Clinical Education Platform', margin + 45, 26);
   
-  yPos = 45;
+  yPos = 50;
   
   // Report title
   doc.setFontSize(20);
