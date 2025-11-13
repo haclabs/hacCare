@@ -22,6 +22,7 @@ export interface StudentActivity {
     hacmapDevices: HacMapDeviceEntry[];
     hacmapWounds: HacMapWoundEntry[];
     bowelAssessments: BowelAssessmentEntry[];
+    intakeOutput: IntakeOutputEntry[];
   };
 }
 
@@ -123,6 +124,16 @@ interface BowelAssessmentEntry {
   stool_amount: string;
 }
 
+interface IntakeOutputEntry {
+  id: string;
+  event_timestamp: string;
+  direction: 'intake' | 'output';
+  category: string;
+  route: string | null;
+  description: string | null;
+  amount_ml: number;
+}
+
 /**
  * Get all activities for a specific simulation grouped by student
  */
@@ -205,6 +216,7 @@ export async function getStudentActivitiesBySimulation(
       bowelData,
       devicesData,
       woundsData,
+      intakeOutputData,
     ] = await Promise.all([
       // Vitals
       supabase
@@ -291,6 +303,14 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('patient_id', patientId)
         .order('created_at', { ascending: false }),
+
+      // Intake & Output Events
+      supabase
+        .from('patient_intake_output_events')
+        .select('*')
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .order('event_timestamp', { ascending: false }),
     ]);
 
     // Group all activities by student name
@@ -313,6 +333,7 @@ export async function getStudentActivitiesBySimulation(
             hacmapDevices: [],
             hacmapWounds: [],
             bowelAssessments: [],
+            intakeOutput: [],
           },
         });
       }
@@ -479,6 +500,21 @@ export async function getStudentActivitiesBySimulation(
         stool_consistency: bowel.stool_consistency,
         stool_colour: bowel.stool_colour,
         stool_amount: bowel.stool_amount,
+      });
+      student.totalEntries++;
+    });
+
+    // Process intake & output events
+    intakeOutputData.data?.forEach((io: any) => {
+      const student = getOrCreateStudent(io.student_name);
+      student.activities.intakeOutput.push({
+        id: io.id,
+        event_timestamp: io.event_timestamp,
+        direction: io.direction,
+        category: io.category,
+        route: io.route,
+        description: io.description,
+        amount_ml: io.amount_ml,
       });
       student.totalEntries++;
     });
