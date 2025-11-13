@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 import { X, Droplets, Save } from 'lucide-react';
 import { createIntakeOutputEvent, getCategoryDisplayName } from '../../../../services/clinical/intakeOutputService';
 import type { IoDirection, IoCategory } from '../../../../services/clinical/intakeOutputService';
-import { useAuth } from '../../../../hooks/useAuth';
 import { getCurrentLocalDateTimeString } from '../../../../utils/time';
 
 interface AddIntakeOutputModalProps {
@@ -32,7 +31,6 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,7 +41,7 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
     description: '',
     amount_ml: '',
     event_timestamp: getCurrentLocalDateTimeString(),
-    student_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || ''
+    student_name: ''
   });
 
   const updateField = (field: string, value: string | IoDirection | IoCategory) => {
