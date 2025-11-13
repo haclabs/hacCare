@@ -69,6 +69,7 @@ interface DoctorsOrderEntry {
   id: string;
   acknowledged_at: string;
   order_type: string;
+  order_text: string | null;
   order_details: any;
 }
 
@@ -258,7 +259,7 @@ export async function getStudentActivitiesBySimulation(
         .not('acknowledged_by_student', 'is', null)
         .order('ack_at', { ascending: false }),
 
-      // Doctor's Orders Acknowledgements
+      // Doctor's Orders Acknowledgements (with full order details)
       supabase
         .from('doctors_orders')
         .select('*')
@@ -412,6 +413,7 @@ export async function getStudentActivitiesBySimulation(
         id: order.id,
         acknowledged_at: order.acknowledged_at,
         order_type: order.order_type,
+        order_text: order.order_text,
         order_details: order.order_details,
       });
       student.totalEntries++;

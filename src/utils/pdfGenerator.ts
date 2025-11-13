@@ -99,7 +99,9 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     ? data.studentActivities.filter(s => s.studentName === studentFilter)
     : data.studentActivities;
 
-  doc.text(`Students: ${activitiesToShow.length}`, margin, yPos);
+  // Count unique student names
+  const uniqueStudents = new Set(activitiesToShow.map(s => s.studentName)).size;
+  doc.text(`Students: ${uniqueStudents}`, margin, yPos);
   yPos += 7;
   const totalEntries = activitiesToShow.reduce((sum, s) => sum + s.totalEntries, 0);
   doc.text(`Total Entries: ${totalEntries}`, margin, yPos);
@@ -290,6 +292,11 @@ function formatDoctorOrder(o: any): string[] {
     `${format(new Date(o.acknowledged_at), 'PPp')} - ACKNOWLEDGED`,
     `  Order Type: ${o.order_type || 'N/A'}`
   ];
+  
+  // Show the main order text if available
+  if (o.order_text) {
+    lines.push(`  → Order: ${o.order_text}`);
+  }
   
   if (o.order_details) {
     // Parse order details if it's a JSON object
