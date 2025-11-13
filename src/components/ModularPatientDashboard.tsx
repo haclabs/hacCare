@@ -1127,22 +1127,15 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   };
 
   // Action Cards Configuration
+  // Action cards for special functions (not full modules)
   const actionCards = [
-    {
-      id: 'handover-notes',
-      title: 'Handover Notes',
-      description: 'Create SBAR communication notes for care transitions',
-      icon: MessageSquare,
-      action: () => setActiveModule('handover'),
-      color: 'sky' // Matches handover module
-    },
     {
       id: 'patient-record',
       title: 'View Patient Record',
       description: 'Generate comprehensive medical record',
       icon: FileText,
       action: handlePrintRecord,
-      color: 'blue' // Unique: Blue for patient record
+      color: 'blue'
     },
     {
       id: 'discharge-summary',
@@ -1150,7 +1143,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Create discharge documentation',
       icon: FileCheck,
       action: () => alert('Discharge Summary feature coming soon!'),
-      color: 'green' // Unique: Green for discharge
+      color: 'green'
     },
     {
       id: 'doctors-orders',
@@ -1158,7 +1151,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'View and manage physician orders',
       icon: FileText,
       action: () => setShowDoctorsOrders(true),
-      color: 'indigo', // Unique: Indigo for doctor's orders
+      color: 'indigo',
       badge: unacknowledgedCount > 0 ? 'New Order' : undefined
     },
     {
@@ -1167,75 +1160,10 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'View and manage laboratory results',
       icon: FlaskConical,
       action: () => setShowLabs(true),
-      color: 'violet', // Unique: Violet for labs
+      color: 'violet',
       badge: unacknowledgedLabsCount > 0 ? 'New Labs' : undefined
     }
   ];
-
-  // Render Action Cards
-  const renderActionCards = () => {
-    return (
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Patient Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {actionCards.map((card) => {
-            const IconComponent = card.icon;
-            return (
-              <div
-                key={card.id}
-                onClick={card.action}
-                className={`
-                  bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 
-                  p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer
-                  hover:border-${card.color}-300 dark:hover:border-${card.color}-600
-                  group hover:scale-[1.02]
-                `}
-              >
-                <div className="flex items-center mb-4">
-                  <div className={`
-                    p-3 rounded-lg mr-4
-                    ${card.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/50 group-hover:bg-blue-200 dark:group-hover:bg-blue-800/70' :
-                      card.color === 'green' ? 'bg-green-100 dark:bg-green-900/50 group-hover:bg-green-200 dark:group-hover:bg-green-800/70' :
-                      'bg-purple-100 dark:bg-purple-900/50 group-hover:bg-purple-200 dark:group-hover:bg-purple-800/70'}
-                    transition-colors duration-300
-                  `}>
-                    <IconComponent className={`h-6 w-6 ${
-                      card.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                      card.color === 'green' ? 'text-green-600 dark:text-green-400' :
-                      'text-purple-600 dark:text-purple-400'
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {card.title}
-                      </h4>
-                      {card.badge && (
-                        <div className="px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-200 animate-pulse">
-                          {card.badge}
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {card.description}
-                    </p>
-                  </div>
-                </div>
-                <div className={`
-                  text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                  ${card.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                    card.color === 'green' ? 'text-green-600 dark:text-green-400' :
-                    'text-purple-600 dark:text-purple-400'}
-                `}>
-                  Click to {card.title.toLowerCase()}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   // Load patient data from URL parameter
   useEffect(() => {
@@ -1636,8 +1564,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       ['doctors-orders', 'labs', 'vitals'],
       // Row 3: Handover Notes, Medications, Wound Care
       ['handover', 'medications', 'wound-care'],
-      // Row 4: Assessments, Transfer Request, Discharge Summary
-      ['forms', 'transfer-request', 'discharge-summary']
+      // Row 4: Assessments, Intake & Output, Discharge Summary
+      ['forms', 'intake-output', 'discharge-summary']
     ];
 
     const renderCard = (moduleId: string) => {
@@ -1855,7 +1783,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           <div className="space-y-8">
             {renderPatientOverview()}
             {renderModuleSelector()}
-            {renderActionCards()}
           </div>
         ) : (
           <div className="space-y-6">
