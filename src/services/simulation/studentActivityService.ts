@@ -448,12 +448,10 @@ export async function getStudentActivitiesBySimulation(
 
     // Process devices (from HAC Map)
     devicesData.data?.forEach((device: any) => {
-      // Use created_by as student identifier (user_id)
-      const studentId = device.created_by;
-      if (studentId) {
-        // For devices, we need to look up the user's name
-        // For now, we'll store by user_id and resolve names later
-        const student = getOrCreateStudent(studentId);
+      // Use inserted_by as student name (text field from form)
+      const studentName = device.inserted_by;
+      if (studentName) {
+        const student = getOrCreateStudent(studentName);
         student.activities.hacmapDevices.push({
           id: device.id,
           created_at: device.created_at,
@@ -469,10 +467,10 @@ export async function getStudentActivitiesBySimulation(
 
     // Process wounds (from HAC Map)
     woundsData.data?.forEach((wound: any) => {
-      // Use created_by as student identifier (user_id)
-      const studentId = wound.created_by;
-      if (studentId) {
-        const student = getOrCreateStudent(studentId);
+      // Use entered_by as student name (text field from form)
+      const studentName = wound.entered_by;
+      if (studentName) {
+        const student = getOrCreateStudent(studentName);
         student.activities.hacmapWounds.push({
           id: wound.id,
           created_at: wound.created_at,
