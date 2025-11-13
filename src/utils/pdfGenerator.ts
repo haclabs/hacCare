@@ -225,36 +225,25 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
 // ========== FORMATTERS ==========
 
 function formatVital(v: any): string[] {
-  const parts = [`BP: ${v.blood_pressure_systolic}/${v.blood_pressure_diastolic}`, `HR: ${v.heart_rate}`, `RR: ${v.respiratory_rate}`, `Temp: ${v.temperature}°C`, `SpO2: ${v.oxygen_saturation}%`];
-  if (v.pain_score !== null) parts.push(`Pain: ${v.pain_score}/10`);
-  return parts;
+  const lines = [
+    `${format(new Date(v.recorded_at), 'PPp')}`,
+    `  BP: ${v.blood_pressure_systolic}/${v.blood_pressure_diastolic} mmHg  |  HR: ${v.heart_rate} bpm  |  RR: ${v.respiratory_rate}/min`,
+    `  Temp: ${v.temperature}°C  |  SpO₂: ${v.oxygen_saturation}%${v.pain_score !== null ? `  |  Pain: ${v.pain_score}/10` : ''}`
+  ];
+  return lines;
 }
 
 function formatMedicationAdmin(m: any): string[] {
   const lines = [
     `${format(new Date(m.timestamp), 'PPp')}`,
-    `  → Medication: ${m.medication_name || 'N/A'}`
+    `  Medication: ${m.medication_name || 'N/A'}${m.dosage ? ` - ${m.dosage}` : ''}${m.route ? ` via ${m.route}` : ''}${m.status ? ` (${m.status})` : ''}`
   ];
-  if (m.dosage) lines.push(`  → Dose: ${m.dosage}`);
-  if (m.route) lines.push(`  → Route: ${m.route}`);
-  if (m.status) lines.push(`  → Status: ${m.status}`);
   
-  // BCMA safety information
-  if (m.barcode_scanned) {
-    lines.push(`  ✓ BCMA: Barcode scanned`);
-  } else {
-    lines.push(`  ⚠ BCMA: Manual entry (no barcode)`);
-  }
+  // BCMA safety information on same line
+  const bcmaStatus = m.barcode_scanned ? '✓ Barcode scanned' : '⚠ Manual entry';
+  lines.push(`  BCMA: ${bcmaStatus}${m.override_reason ? ` - Override: ${m.override_reason}` : ''}${m.witness_name ? ` - Witnessed by: ${m.witness_name}` : ''}`);
   
-  if (m.override_reason) {
-    lines.push(`  ⚠ OVERRIDE: ${m.override_reason}`);
-  }
-  
-  if (m.witness_name) {
-    lines.push(`  → Witnessed by: ${m.witness_name}`);
-  }
-  
-  if (m.notes) lines.push(`  → Notes: ${m.notes}`);
+  if (m.notes) lines.push(`  Notes: ${m.notes}`);
   
   return lines;
 }
@@ -294,67 +283,43 @@ function formatMedication(m: any): string[] {
 function formatDoctorOrder(o: any): string[] {
   const lines = [
     `${format(new Date(o.acknowledged_at), 'PPp')} - ACKNOWLEDGED`,
-    `  Order Type: ${o.order_type || 'N/A'}`
+    `  Type: ${o.order_type || 'N/A'}`
   ];
   
   // Show the main order text if available
   if (o.order_text) {
-    lines.push(`  → Order: ${o.order_text}`);
+    lines.push(`  Order: ${o.order_text}`);
   }
   
-  if (o.order_details) {
-    // Parse order details if it's a JSON object
-    if (typeof o.order_details === 'object') {
-      // Extract and display all relevant fields
-      if (o.order_details.medication) {
-        lines.push(`  → Medication: ${o.order_details.medication}`);
-        if (o.order_details.dose) lines.push(`    Dose: ${o.order_details.dose}`);
-        if (o.order_details.route) lines.push(`    Route: ${o.order_details.route}`);
-        if (o.order_details.frequency) lines.push(`    Frequency: ${o.order_details.frequency}`);
-      }
-      if (o.order_details.order_text) {
-        lines.push(`  → Order: ${o.order_details.order_text}`);
-      }
-      if (o.order_details.instructions) {
-        lines.push(`  → Instructions: ${o.order_details.instructions}`);
-      }
-      if (o.order_details.priority) {
-        lines.push(`  → Priority: ${o.order_details.priority}`);
-      }
-      if (o.order_details.indication) {
-        lines.push(`  → Indication: ${o.order_details.indication}`);
-      }
-      // Include any other fields that haven't been explicitly handled
-      Object.keys(o.order_details).forEach(key => {
-        if (!['medication', 'dose', 'route', 'frequency', 'order_text', 'instructions', 'priority', 'indication'].includes(key)) {
-          const value = o.order_details[key];
-          if (value !== null && value !== undefined && value !== '') {
-            lines.push(`  → ${key}: ${value}`);
-          }
-        }
-      });
-    } else {
-      // String format
-      lines.push(`  → Details: ${o.order_details}`);
+  if (o.order_details && typeof o.order_details === 'object') {
+    // Build compact detail line
+    const details = [];
+    if (o.order_details.medication) {
+      let medDetail = o.order_details.medication;
+      if (o.order_details.dose) medDetail += ` ${o.order_details.dose}`;
+      if (o.order_details.route) medDetail += ` via ${o.order_details.route}`;
+      if (o.order_details.frequency) medDetail += ` ${o.order_details.frequency}`;
+      details.push(medDetail);
     }
+    if (o.order_details.priority) details.push(`Priority: ${o.order_details.priority}`);
+    if (o.order_details.indication) details.push(`Indication: ${o.order_details.indication}`);
+    if (o.order_details.instructions) lines.push(`  Instructions: ${o.order_details.instructions}`);
+    
+    if (details.length > 0) {
+      lines.push(`  ${details.join(' - ')}`);
+    }
+  } else if (o.order_details && typeof o.order_details === 'string') {
+    lines.push(`  Details: ${o.order_details}`);
   }
+  
   return lines;
 }
 
 function formatLabAck(l: any): string[] {
   const lines = [
     `${format(new Date(l.acknowledged_at), 'PPp')} - ACKNOWLEDGED`,
-    `  → Test: ${l.test_name}`,
-    `  → Result: ${l.result_value}${l.abnormal_flag ? ' ⚠ ABNORMAL' : ' (Normal)'}`
+    `  ${l.test_name}: ${l.result_value}${l.units ? ` ${l.units}` : ''}${l.abnormal_flag ? ' ⚠ ABNORMAL' : ''}${l.reference_range ? ` (Ref: ${l.reference_range})` : ''}`
   ];
-  
-  if (l.reference_range) {
-    lines.push(`  → Reference Range: ${l.reference_range}`);
-  }
-  
-  if (l.units) {
-    lines.push(`  → Units: ${l.units}`);
-  }
   
   return lines;
 }
@@ -362,7 +327,7 @@ function formatLabAck(l: any): string[] {
 function formatLabOrder(l: any): string[] {
   return [
     `${format(new Date(l.ordered_at), 'PPp')}`,
-    `  ${l.test_name} - ${l.priority} priority (${l.specimen_type})`
+    `  ${l.test_name} - ${l.priority} priority - ${l.specimen_type} specimen`
   ];
 }
 
