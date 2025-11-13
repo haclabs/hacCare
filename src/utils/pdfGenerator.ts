@@ -48,28 +48,17 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   };
 
   // ========== REPORT HEADER WITH LOGO ==========
-  // Add hacCare branded header with logo
-  doc.setFillColor(99, 102, 241); // Indigo brand color
-  doc.rect(0, 0, pageWidth, 40, 'F');
-  
-  // Add hacCare logo image
+  // Add hacCare logo at top
   try {
-    doc.addImage(HACCARE_LOGO_BASE64, 'PNG', margin, 8, 40, 24);
+    // Logo dimensions: maintain aspect ratio (approx 3:1 width to height)
+    const logoWidth = 60;
+    const logoHeight = 20;
+    doc.addImage(HACCARE_LOGO_BASE64, 'PNG', margin, yPos, logoWidth, logoHeight);
+    yPos += logoHeight + 10;
   } catch (error) {
     console.warn('Could not add logo to PDF:', error);
+    yPos += 5;
   }
-  
-  // hacCare branding text (next to logo)
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('hacCare', margin + 45, 18);
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Simulation & Clinical Education Platform', margin + 45, 26);
-  
-  yPos = 50;
   
   // Report title
   doc.setFontSize(20);
