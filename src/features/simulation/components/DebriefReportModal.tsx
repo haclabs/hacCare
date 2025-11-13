@@ -135,7 +135,7 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
                 <User className="h-4 w-4" />
                 <span className="text-sm font-medium">Students</span>
               </div>
-              <p className="text-2xl font-bold">{studentActivities.length}</p>
+              <p className="text-2xl font-bold">{new Set(studentActivities.map(s => s.studentName)).size}</p>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
               <div className="flex items-center gap-2 text-green-600 mb-2">

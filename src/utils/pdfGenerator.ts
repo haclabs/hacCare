@@ -99,8 +99,8 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     ? data.studentActivities.filter(s => s.studentName === studentFilter)
     : data.studentActivities;
 
-  // Count unique student names
-  const uniqueStudents = new Set(activitiesToShow.map(s => s.studentName)).size;
+  // Count unique student names from FULL dataset (not filtered)
+  const uniqueStudents = new Set(data.studentActivities.map(s => s.studentName)).size;
   doc.text(`Students: ${uniqueStudents}`, margin, yPos);
   yPos += 7;
   const totalEntries = activitiesToShow.reduce((sum, s) => sum + s.totalEntries, 0);
