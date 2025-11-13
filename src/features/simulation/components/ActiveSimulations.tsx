@@ -7,15 +7,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer } from 'lucide-react';
 import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, completeSimulation, deleteSimulation } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
+import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 
 const ActiveSimulations: React.FC = () => {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [printLabelsSimulation, setPrintLabelsSimulation] = useState<SimulationActiveWithDetails | null>(null);
 
   useEffect(() => {
     loadSimulations();
@@ -225,6 +227,13 @@ const ActiveSimulations: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPrintLabelsSimulation(sim)}
+                className="p-2 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+                title="Print patient and medication labels"
+              >
+                <Printer className="h-4 w-4" />
+              </button>
               {sim.status === 'running' ? (
                 <button
                   onClick={() => handlePause(sim.id)}
@@ -291,6 +300,15 @@ const ActiveSimulations: React.FC = () => {
           )}
         </div>
       ))}
+
+      {/* Label Printing Modal */}
+      {printLabelsSimulation && (
+        <SimulationLabelPrintModal
+          simulationName={printLabelsSimulation.name}
+          tenantId={printLabelsSimulation.tenant_id}
+          onClose={() => setPrintLabelsSimulation(null)}
+        />
+      )}
     </div>
   );
 };
