@@ -246,20 +246,21 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
             />
           </div>
 
-          {/* Student Name (auto-filled) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Student Name (Optional)
+          {/* Student Name Verification */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">
+              Student Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.student_name}
               onChange={(e) => updateField('student_name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              placeholder="Your name"
+              className="w-full px-3 py-2 border border-yellow-300 dark:border-yellow-700 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              placeholder="Enter your full name"
+              required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Leave blank for instructor/admin entries
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+              By entering your name, you verify this intake/output entry is accurate.
             </p>
           </div>
 
