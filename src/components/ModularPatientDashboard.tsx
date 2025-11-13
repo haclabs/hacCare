@@ -34,7 +34,8 @@ import {
   Camera,
   MessageSquare,
   FlaskConical,
-  MapPin
+  MapPin,
+  Droplets
 } from 'lucide-react';
 import { VitalsModule } from '../features/clinical/components/vitals';
 import { MARModule } from '../features/clinical/components/mar';
@@ -71,7 +72,7 @@ interface ModularPatientDashboardProps {
   };
 }
 
-type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover' | 'advanced-directives' | 'hacmap';
+type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover' | 'advanced-directives' | 'hacmap' | 'intake-output';
 
 interface ModuleConfig {
   id: ActiveModule;
@@ -1380,6 +1381,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       description: 'Visual mapping of medical devices and wound locations on body diagram',
       icon: MapPin,
       color: 'rose' // Unique: Rose/pink for hacMap
+    },
+    {
+      id: 'intake-output',
+      title: 'Intake & Output',
+      description: 'Fluid balance tracking with intake and output monitoring',
+      icon: Droplets,
+      color: 'cyan' // Cyan for fluid tracking
     }
   ];
 
@@ -1847,14 +1855,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           <div className="space-y-8">
             {renderPatientOverview()}
             {renderModuleSelector()}
-            
-            {/* Intake & Output Card */}
-            <IntakeOutputCard
-              patientId={patient.id}
-              patientName={`${patient.first_name} ${patient.last_name}`}
-              onRefresh={() => setLastUpdated(new Date())}
-            />
-            
             {renderActionCards()}
           </div>
         ) : (
@@ -1939,6 +1939,16 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                       setLastUpdated(new Date());
                       setActiveModule('overview');
                     }}
+                  />
+                </div>
+              )}
+
+              {activeModule === 'intake-output' && (
+                <div className="p-6">
+                  <IntakeOutputCard
+                    patientId={patient.id}
+                    patientName={`${patient.first_name} ${patient.last_name}`}
+                    onRefresh={() => setLastUpdated(new Date())}
                   />
                 </div>
               )}
