@@ -36,21 +36,55 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
     try {
       setLoading(true);
       
+      let activities: StudentActivity[];
+      
       // Check if history record has stored activities snapshot
       if (historyRecord.student_activities && Array.isArray(historyRecord.student_activities)) {
         console.log('📸 Using stored activity snapshot');
-        setStudentActivities(historyRecord.student_activities as StudentActivity[]);
+        activities = historyRecord.student_activities as StudentActivity[];
       } else {
         // Fallback: query activities (for older history records)
         console.log('🔍 Querying activities (pre-snapshot record)');
-        const activities = await getStudentActivitiesBySimulation(historyRecord.id);
-        setStudentActivities(activities);
+        activities = await getStudentActivitiesBySimulation(historyRecord.id);
       }
+      
+      // Deduplicate students in case snapshot has duplicate entries
+      const deduped = deduplicateStudentActivities(activities);
+      setStudentActivities(deduped);
     } catch (error) {
       console.error('Error loading student activities:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to merge duplicate student entries (for old snapshots with bad data)
+  const deduplicateStudentActivities = (activities: StudentActivity[]): StudentActivity[] => {
+    const studentMap = new Map<string, StudentActivity>();
+    
+    activities.forEach(activity => {
+      const existing = studentMap.get(activity.studentName);
+      if (existing) {
+        // Merge activities
+        existing.activities.vitals.push(...activity.activities.vitals);
+        existing.activities.medications.push(...activity.activities.medications);
+        existing.activities.labOrders.push(...activity.activities.labOrders);
+        existing.activities.labAcknowledgements.push(...activity.activities.labAcknowledgements);
+        existing.activities.doctorsOrders.push(...activity.activities.doctorsOrders);
+        existing.activities.patientNotes.push(...activity.activities.patientNotes);
+        existing.activities.handoverNotes.push(...activity.activities.handoverNotes);
+        existing.activities.hacmapDevices.push(...activity.activities.hacmapDevices);
+        existing.activities.hacmapWounds.push(...activity.activities.hacmapWounds);
+        existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
+        existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
+        existing.totalEntries += activity.totalEntries;
+      } else {
+        // First occurrence - deep clone to avoid mutation
+        studentMap.set(activity.studentName, JSON.parse(JSON.stringify(activity)));
+      }
+    });
+    
+    return Array.from(studentMap.values());
   };
 
   const handleGeneratePDF = () => {
