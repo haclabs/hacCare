@@ -27,9 +27,9 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 transition-colors shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-8 xl:px-12 py-4 transition-colors shadow-sm">
+      <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+        <div className="flex items-center space-x-4 lg:space-x-6">
           <div className="flex-shrink-0">
             {/* HacCare Logo */}
             <div className="flex items-center">
@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
           </div>
         </div>
 
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4 lg:space-x-6 xl:space-x-8">
           {/* Barcode Scanner - Compact Icon */}
           {onBarcodeScan && (
             <div className="flex items-center space-x-2">
