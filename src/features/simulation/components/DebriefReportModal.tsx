@@ -50,6 +50,8 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
       
       // Deduplicate students in case snapshot has duplicate entries
       const deduped = deduplicateStudentActivities(activities);
+      console.log('📌 Setting state with deduplicated activities:', deduped.length, 'students');
+      deduped.forEach((s, i) => console.log(`  [${i}] ${s.studentName} - ${s.totalEntries} entries`));
       setStudentActivities(deduped);
     } catch (error) {
       console.error('Error loading student activities:', error);
