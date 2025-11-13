@@ -62,37 +62,38 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   }
   
   // Report title
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(55, 65, 81); // Subtle gray-blue
+  doc.setTextColor(55, 65, 81);
   doc.text('Student Activity Report', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 10;
+  yPos += 8;
 
   // Facility name (if provided)
   if (data.facilityName) {
-    doc.setFontSize(12);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 100, 100);
     doc.text(data.facilityName, pageWidth / 2, yPos, { align: 'center' });
-    yPos += 10;
+    yPos += 8;
   }
 
   // Professional horizontal line
-  doc.setDrawColor(209, 213, 219); // Light gray
+  doc.setDrawColor(209, 213, 219);
   doc.setLineWidth(0.5);
   doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
+  yPos += 8;
 
   // ========== SIMULATION DETAILS ==========
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(60, 60, 60);
   
   doc.text(`Simulation: ${data.simulationName}`, margin, yPos);
-  yPos += 7;
+  yPos += 5;
   doc.text(`Date: ${data.simulationDate}`, margin, yPos);
-  yPos += 7;
+  yPos += 5;
   doc.text(`Duration: ${data.duration}`, margin, yPos);
-  yPos += 7;
+  yPos += 5;
 
   // Filter activities if specific student requested
   const activitiesToShow = studentFilter
@@ -102,25 +103,26 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   // Count unique student names from FULL dataset (not filtered)
   const uniqueStudents = new Set(data.studentActivities.map(s => s.studentName)).size;
   doc.text(`Students: ${uniqueStudents}`, margin, yPos);
-  yPos += 7;
+  yPos += 5;
   const totalEntries = activitiesToShow.reduce((sum, s) => sum + s.totalEntries, 0);
   doc.text(`Total Entries: ${totalEntries}`, margin, yPos);
-  yPos += 15;
+  yPos += 10;
 
   // ========== STUDENT ACTIVITIES ==========
   activitiesToShow.forEach((student, studentIndex) => {
     checkPageBreak(40);
 
     // Student header box
-    doc.setFillColor(71, 85, 105); // Subtle slate
-    doc.rect(margin, yPos, contentWidth, 10, 'F');
-    doc.setFontSize(12);
+    doc.setFillColor(71, 85, 105);
+    doc.rect(margin, yPos, contentWidth, 8, 'F');
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.text(`${student.studentName}`, margin + 3, yPos + 7);
-    doc.setFontSize(9);
-    doc.text(`${student.totalEntries} total entries`, pageWidth - margin - 3, yPos + 7, { align: 'right' });
-    yPos += 15;
+    doc.text(`${student.studentName}`, margin + 3, yPos + 6);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${student.totalEntries} total entries`, pageWidth - margin - 3, yPos + 6, { align: 'right' });
+    yPos += 11;
 
     // Activity sections with subtle pastel colors
     const sections = [
@@ -144,49 +146,51 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
         // Professional section header with subtle background
         doc.setFillColor(section.color[0], section.color[1], section.color[2]);
         doc.setDrawColor(section.color[0], section.color[1], section.color[2]);
-        doc.roundedRect(margin, yPos - 4, contentWidth, 8, 1, 1, 'FD');
+        doc.roundedRect(margin, yPos - 3, contentWidth, 7, 1, 1, 'FD');
         
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(55, 65, 81); // Dark gray for readability on pastel
+        doc.setTextColor(55, 65, 81);
         doc.text(`${section.title}`, margin + 3, yPos + 2);
         
-        doc.setTextColor(75, 85, 99); // Slightly lighter gray
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(75, 85, 99);
         doc.text(`${section.items.length} ${section.items.length === 1 ? 'entry' : 'entries'}`, pageWidth - margin - 3, yPos + 2, { align: 'right' });
-        yPos += 9;
+        yPos += 7;
 
         // Section items
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setTextColor(60, 60, 60);
 
         section.items.forEach((item: any) => {
           const lines = section.formatter(item);
-          const requiredSpace = lines.length * 5 + 3;
+          const requiredSpace = lines.length * 4 + 2;
           checkPageBreak(requiredSpace);
 
           lines.forEach(line => {
             const wrappedLines = doc.splitTextToSize(line, contentWidth - 10);
             wrappedLines.forEach((wrappedLine: string) => {
               doc.text(wrappedLine, margin + 5, yPos);
-              yPos += 5;
+              yPos += 4;
             });
           });
-          yPos += 2; // Space between entries
+          yPos += 1; // Space between entries
         });
 
-        yPos += 5; // Space between sections
+        yPos += 3; // Space between sections
       }
     });
 
     // Space between students
     if (studentIndex < activitiesToShow.length - 1) {
-      yPos += 10;
+      yPos += 6;
     }
   });
 
   // ========== PROFESSIONAL FOOTER ==========
-  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
   const footerY = pageHeight - 15;
   
@@ -202,11 +206,11 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     { align: 'center' }
   );
   
-  doc.setFontSize(7);
+  doc.setFontSize(6);
   doc.text(
     'hacCare Simulation & Clinical Education Platform',
     pageWidth / 2,
-    footerY + 5,
+    footerY + 4,
     { align: 'center' }
   );
 
