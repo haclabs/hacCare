@@ -386,20 +386,26 @@ function formatHandover(n: any): string[] {
 function formatDevice(d: any): string[] {
   const lines = [
     `${format(new Date(d.created_at), 'PPp')}`,
-    `  Device Type: ${d.type}`
+    `  → Device Type: ${d.type}`
   ];
   if (d.placement_date) {
-    lines.push(`  Placement Date: ${format(new Date(d.placement_date), 'PP')}`);
+    lines.push(`  → Placement Date: ${format(new Date(d.placement_date), 'PP')}`);
   }
   if (d.inserted_by) {
-    lines.push(`  Inserted By: ${d.inserted_by}`);
+    lines.push(`  → Inserted By: ${d.inserted_by}`);
   }
   // Include any location/position information if available
   if (d.location) {
-    lines.push(`  Location: ${d.location}`);
+    // Check if location is a UUID (36 chars with dashes) or a readable name
+    const isUUID = typeof d.location === 'string' && d.location.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    if (!isUUID) {
+      lines.push(`  → Location: ${d.location}`);
+    } else {
+      lines.push(`  → Location: [Body area marked on HAC Map]`);
+    }
   }
   if (d.site) {
-    lines.push(`  Site: ${d.site}`);
+    lines.push(`  → Notes: ${d.site}`);
   }
   return lines;
 }
@@ -407,28 +413,34 @@ function formatDevice(d: any): string[] {
 function formatWound(w: any): string[] {
   const lines = [
     `${format(new Date(w.created_at), 'PPp')}`,
-    `  Wound Type: ${w.wound_type}`
+    `  → Wound Type: ${w.wound_type}`
   ];
   if (w.wound_length_cm || w.wound_width_cm) {
-    lines.push(`  Dimensions: ${w.wound_length_cm || '?'} cm (L) × ${w.wound_width_cm || '?'} cm (W)`);
+    lines.push(`  → Dimensions: ${w.wound_length_cm || '?'} cm (L) × ${w.wound_width_cm || '?'} cm (W)`);
   }
   if (w.wound_depth_cm) {
-    lines.push(`  Depth: ${w.wound_depth_cm} cm`);
+    lines.push(`  → Depth: ${w.wound_depth_cm} cm`);
   }
   if (w.wound_stage) {
-    lines.push(`  Stage: ${w.wound_stage}`);
+    lines.push(`  → Stage: ${w.wound_stage}`);
   }
   if (w.wound_appearance) {
-    lines.push(`  Appearance: ${w.wound_appearance}`);
+    lines.push(`  → Appearance: ${w.wound_appearance}`);
   }
   if (w.drainage_type || w.drainage_amount) {
-    lines.push(`  Drainage: ${w.drainage_type || ''} ${w.drainage_amount || ''}`);
+    lines.push(`  → Drainage: ${w.drainage_type || ''} ${w.drainage_amount || ''}`);
   }
   if (w.wound_description) {
-    lines.push(`  Description: ${w.wound_description}`);
+    lines.push(`  → Description: ${w.wound_description}`);
   }
   if (w.location) {
-    lines.push(`  Location: ${w.location}`);
+    // Check if location is a UUID or a readable name
+    const isUUID = typeof w.location === 'string' && w.location.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    if (!isUUID) {
+      lines.push(`  → Location: ${w.location}`);
+    } else {
+      lines.push(`  → Location: [Body area marked on HAC Map]`);
+    }
   }
   return lines;
 }
