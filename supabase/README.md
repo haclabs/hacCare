@@ -16,7 +16,9 @@ supabase/
 
 ## Setup
 
-The Supabase CLI is already installed and configured. Your project is linked to your Supabase instance.
+The Supabase CLI is already installed and configured. Your project is linked to:
+- **Project:** cwhqffubvqolhnkecyck
+- **Region:** US East (Ohio)
 
 ## Common Commands
 
@@ -110,7 +112,7 @@ These are kept for reference but are no longer used. The Supabase CLI workflow i
 
 Make sure these are set in your `.env` file:
 ```
-VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_URL=https://cwhqffubvqolhnkecyck.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 

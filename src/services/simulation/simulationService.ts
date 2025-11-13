@@ -659,7 +659,7 @@ export async function getSimulationHistory(
         *,
         template:simulation_templates(id, name, description)
       `)
-      .order('completed_at', { ascending: false, nullsFirst: false });
+      .order('created_at', { ascending: false });
 
     // Apply filters
     if (filters?.template_id) {

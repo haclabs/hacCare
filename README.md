@@ -77,6 +77,15 @@ A comprehensive, modern healthcare simulation platform built with React 18, Type
 - **Real-time Security Monitoring**: Continuous assessment and threat detection
 - **Audit Logging**: Comprehensive activity tracking and compliance reporting
 
+### 🎓 Simulation System
+- **Template Management**: Create reusable patient scenarios for teaching
+- **Multi-Session Support**: Launch, reset, and reuse simulations across classes
+- **Student Activity Tracking**: Monitor and review all student clinical actions
+- **Debrief Reports**: Comprehensive student work summaries with PDF export
+- **Data Isolation**: Each simulation runs in isolated tenant space
+- **Schema-Agnostic Design**: Automatic adaptation to database changes
+- **See [docs/features/SIMULATION_SYSTEM.md](docs/features/SIMULATION_SYSTEM.md) for details**
+
 ## 🛠️ Technology Stack
 
 ### Frontend Architecture
