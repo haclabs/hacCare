@@ -60,11 +60,21 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
 
   // Helper to merge duplicate student entries (for old snapshots with bad data)
   const deduplicateStudentActivities = (activities: StudentActivity[]): StudentActivity[] => {
+    console.log('🔍 Deduplicating activities:', activities.length, 'entries');
+    activities.forEach((a, i) => {
+      console.log(`  [${i}] studentName: "${a.studentName}" (length: ${a.studentName.length}, entries: ${a.totalEntries})`);
+      console.log(`      bytes:`, Array.from(a.studentName).map(c => c.charCodeAt(0)));
+    });
+    
     const studentMap = new Map<string, StudentActivity>();
     
-    activities.forEach(activity => {
-      const existing = studentMap.get(activity.studentName);
+    activities.forEach((activity, index) => {
+      // Normalize the student name (trim whitespace, normalize case for comparison)
+      const normalizedName = activity.studentName.trim();
+      const existing = studentMap.get(normalizedName);
+      
       if (existing) {
+        console.log(`  ⚠️ DUPLICATE FOUND at index ${index}: "${activity.studentName}" matches existing "${normalizedName}"`);
         // Merge activities
         existing.activities.vitals.push(...activity.activities.vitals);
         existing.activities.medications.push(...activity.activities.medications);
@@ -79,12 +89,17 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
         existing.totalEntries += activity.totalEntries;
       } else {
-        // First occurrence - deep clone to avoid mutation
-        studentMap.set(activity.studentName, JSON.parse(JSON.stringify(activity)));
+        console.log(`  ✅ NEW student at index ${index}: "${normalizedName}"`);
+        // First occurrence - deep clone to avoid mutation, use normalized name
+        const cloned = JSON.parse(JSON.stringify(activity));
+        cloned.studentName = normalizedName; // Use normalized name
+        studentMap.set(normalizedName, cloned);
       }
     });
     
-    return Array.from(studentMap.values());
+    const result = Array.from(studentMap.values());
+    console.log('✅ Deduplication complete:', result.length, 'unique students');
+    return result;
   };
 
   const handleGeneratePDF = () => {
