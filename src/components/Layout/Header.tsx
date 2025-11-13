@@ -44,11 +44,21 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
         </div>
 
         <div className="flex items-center space-x-6">
-          {/* Barcode Scanner */}
+          {/* Barcode Scanner - Compact Icon */}
           {onBarcodeScan && (
-            <div className="mr-2 flex items-center space-x-2">
-              <div className="flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">📱 Barcode Scanner Active</div>
+            <div className="flex items-center space-x-2">
+              <div 
+                className="relative p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group"
+                title="Barcode Scanner Active"
+              >
+                <span className="text-base">📱</span>
+                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                
+                {/* Tooltip */}
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  Barcode Scanner Active
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
+                </div>
               </div>
               <BarcodeScanner onScan={onBarcodeScan} debug={true} />
             </div>
