@@ -48,12 +48,13 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   };
 
   // ========== REPORT HEADER WITH LOGO ==========
-  // Add hacCare logo at top
+  // Add centered hacCare logo at top
   try {
     // Logo dimensions: maintain aspect ratio (approx 3:1 width to height)
     const logoWidth = 60;
     const logoHeight = 20;
-    doc.addImage(HACCARE_LOGO_BASE64, 'PNG', margin, yPos, logoWidth, logoHeight);
+    const logoX = (pageWidth - logoWidth) / 2; // Center the logo
+    doc.addImage(HACCARE_LOGO_BASE64, 'PNG', logoX, yPos, logoWidth, logoHeight);
     yPos += logoHeight + 10;
   } catch (error) {
     console.warn('Could not add logo to PDF:', error);
@@ -63,7 +64,7 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   // Report title
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(75, 0, 130); // Purple
+  doc.setTextColor(55, 65, 81); // Subtle gray-blue
   doc.text('Student Activity Report', pageWidth / 2, yPos, { align: 'center' });
   yPos += 10;
 
@@ -75,8 +76,8 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     yPos += 10;
   }
 
-  // Professional horizontal line with gradient effect
-  doc.setDrawColor(99, 102, 241);
+  // Professional horizontal line
+  doc.setDrawColor(209, 213, 219); // Light gray
   doc.setLineWidth(0.5);
   doc.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 10;
@@ -109,7 +110,7 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     checkPageBreak(40);
 
     // Student header box
-    doc.setFillColor(99, 102, 241); // Indigo
+    doc.setFillColor(71, 85, 105); // Subtle slate
     doc.rect(margin, yPos, contentWidth, 10, 'F');
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -119,36 +120,36 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
     doc.text(`${student.totalEntries} total entries`, pageWidth - margin - 3, yPos + 7, { align: 'right' });
     yPos += 15;
 
-    // Activity sections
+    // Activity sections with subtle pastel colors
     const sections = [
-      { title: 'Vital Signs', items: student.activities.vitals || [], color: [220, 38, 38], formatter: formatVital },
-      { title: 'Medications (BCMA)', items: student.activities.medications || [], color: [37, 99, 235], formatter: formatMedicationAdmin },
-      { title: "Doctor's Orders", items: student.activities.doctorsOrders || [], color: [147, 51, 234], formatter: formatDoctorOrder },
-      { title: 'Lab Acknowledgements', items: student.activities.labAcknowledgements || [], color: [20, 184, 166], formatter: formatLabAck },
-      { title: 'Lab Orders', items: student.activities.labOrders || [], color: [34, 197, 94], formatter: formatLabOrder },
-      { title: 'Intake & Output', items: student.activities.intakeOutput || [], color: [6, 182, 212], formatter: formatIntakeOutput },
-      { title: 'Patient Notes', items: student.activities.patientNotes || [], color: [245, 158, 11], formatter: formatNote },
-      { title: 'Handover Notes', items: student.activities.handoverNotes || [], color: [249, 115, 22], formatter: formatHandover },
-      { title: 'HAC Map Devices', items: student.activities.hacmapDevices || [], color: [16, 185, 129], formatter: formatDevice },
-      { title: 'HAC Map Wounds', items: student.activities.hacmapWounds || [], color: [236, 72, 153], formatter: formatWound },
-      { title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: [234, 179, 8], formatter: formatBowel },
+      { title: 'Vital Signs', items: student.activities.vitals || [], color: [147, 197, 253], formatter: formatVital }, // Light blue
+      { title: 'Medications (BCMA)', items: student.activities.medications || [], color: [167, 139, 250], formatter: formatMedicationAdmin }, // Light purple
+      { title: "Doctor's Orders", items: student.activities.doctorsOrders || [], color: [196, 181, 253], formatter: formatDoctorOrder }, // Lighter purple
+      { title: 'Lab Acknowledgements', items: student.activities.labAcknowledgements || [], color: [153, 246, 228], formatter: formatLabAck }, // Light teal
+      { title: 'Lab Orders', items: student.activities.labOrders || [], color: [134, 239, 172], formatter: formatLabOrder }, // Light green
+      { title: 'Intake & Output', items: student.activities.intakeOutput || [], color: [165, 243, 252], formatter: formatIntakeOutput }, // Light cyan
+      { title: 'Patient Notes', items: student.activities.patientNotes || [], color: [253, 224, 71], formatter: formatNote }, // Light yellow
+      { title: 'Handover Notes', items: student.activities.handoverNotes || [], color: [253, 186, 116], formatter: formatHandover }, // Light orange
+      { title: 'HAC Map Devices', items: student.activities.hacmapDevices || [], color: [134, 239, 172], formatter: formatDevice }, // Light emerald
+      { title: 'HAC Map Wounds', items: student.activities.hacmapWounds || [], color: [249, 168, 212], formatter: formatWound }, // Light pink
+      { title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: [253, 230, 138], formatter: formatBowel }, // Light amber
     ];
 
     sections.forEach(section => {
       if (section.items && section.items.length > 0) {
         checkPageBreak(15);
 
-        // Professional section header with background
+        // Professional section header with subtle background
         doc.setFillColor(section.color[0], section.color[1], section.color[2]);
         doc.setDrawColor(section.color[0], section.color[1], section.color[2]);
         doc.roundedRect(margin, yPos - 4, contentWidth, 8, 1, 1, 'FD');
         
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(55, 65, 81); // Dark gray for readability on pastel
         doc.text(`${section.title}`, margin + 3, yPos + 2);
         
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(75, 85, 99); // Slightly lighter gray
         doc.text(`${section.items.length} ${section.items.length === 1 ? 'entry' : 'entries'}`, pageWidth - margin - 3, yPos + 2, { align: 'right' });
         yPos += 9;
 
