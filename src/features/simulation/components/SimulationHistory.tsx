@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { History, FileText, Clock, Users, TrendingUp } from 'lucide-react';
 import { getSimulationHistory } from '../../../services/simulation/simulationService';
 import type { SimulationHistoryWithDetails } from '../types/simulation';
-import DebriefReportModal from './DebriefReportModal';
+import EnhancedDebriefModal from './EnhancedDebriefModal';
 import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
 
 const SimulationHistory: React.FC = () => {
@@ -157,7 +157,7 @@ const SimulationHistory: React.FC = () => {
 
       {/* Debrief Modal */}
       {showDebriefModal && selectedHistory && (
-        <DebriefReportModal
+        <EnhancedDebriefModal
           historyRecord={selectedHistory}
           onClose={() => {
             setShowDebriefModal(false);
