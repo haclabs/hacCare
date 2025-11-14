@@ -18,6 +18,7 @@ export interface PatientTransferOptions {
   transferAdmissionRecords?: boolean;
   transferAdvancedDirectives?: boolean;
   transferHacmap?: boolean;
+  transferIntakeOutput?: boolean;
   newPatientId?: string;
 }
 
@@ -44,6 +45,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
     transferWoundCare = true,
     transferDoctorsOrders = true,
     transferHacmap = true,
+    transferIntakeOutput = true,
     newPatientId
   } = options;
 
@@ -96,7 +98,8 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         p_include_bowel_records: transferBowelRecords,
         p_include_wound_care: transferWoundCare,
         p_include_doctors_orders: transferDoctorsOrders,
-        p_include_hacmap: transferHacmap
+        p_include_hacmap: transferHacmap,
+        p_include_intake_output: transferIntakeOutput
       });
 
       const { data, error } = await supabase
@@ -113,7 +116,8 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
           p_include_bowel_records: transferBowelRecords,
           p_include_wound_care: transferWoundCare,
           p_include_doctors_orders: transferDoctorsOrders,
-          p_include_hacmap: transferHacmap
+          p_include_hacmap: transferHacmap,
+          p_include_intake_output: transferIntakeOutput
         });
 
       if (error) {
@@ -125,14 +129,33 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         };
       }
 
-      const result = data?.[0];
-      console.log('Success:', result);
+      console.log('Raw RPC response:', { data, type: typeof data, isArray: Array.isArray(data) });
+      
+      // When RETURNS TABLE is used, Supabase returns an array of rows
+      // data is already the array: [{ success: true, new_patient_id: 'uuid', ... }]
+      const result = Array.isArray(data) ? data[0] : data;
+      console.log('Parsed result:', result);
+
+      if (!result || !result.success) {
+        return {
+          success: false,
+          message: result?.message || 'Patient duplication failed',
+          error: result?.message
+        };
+      }
+
+      // Check if patient was actually created
+      if (!result.new_patient_id) {
+        console.error('⚠️ WARNING: Function returned success but new_patient_id is null!');
+        console.error('This indicates the database function may have an issue or is returning the wrong format.');
+        console.error('Result:', result);
+      }
 
       return {
         success: true,
-        newPatientId: result?.new_patient_id,
-        message: `Patient duplicated! ID: ${result?.new_patient_identifier}`,
-        recordsCopied: result?.records_created
+        newPatientId: result.new_patient_id,
+        message: result.message || `Patient duplicated! ID: ${result.new_patient_identifier}`,
+        recordsCopied: result.records_created
       };
     }
 
