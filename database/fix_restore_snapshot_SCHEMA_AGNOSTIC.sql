@@ -44,20 +44,51 @@ DECLARE
   v_column_type text;
   v_udt_name text;
 BEGIN
-  RAISE NOTICE '🔄 Schema-agnostic restore to tenant % (skip_patients=%)', p_tenant_id, p_skip_patients;
+  RAISE NOTICE '🔄 Schema-agnostic restore to tenant % (skip_patients=%, preserve_barcodes=%)', p_tenant_id, p_skip_patients, p_preserve_barcodes;
   
-  -- If we're skipping patients but p_id_mappings provided, use those as patient mapping
-  IF p_skip_patients AND p_id_mappings IS NOT NULL THEN
+  -- =====================================================
+  -- STEP 1: Build patient mapping (DON'T touch patients when preserving barcodes!)
+  -- =====================================================
+  
+  -- If preserving barcodes, map snapshot patients to existing tenant patients (DON'T create new!)
+  IF p_preserve_barcodes AND p_snapshot ? 'patients' THEN
+    RAISE NOTICE '💾 Preserving patient barcodes - mapping to existing patients';
+    v_count := 0;
+    
+    FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patients')
+    LOOP
+      v_old_patient_id := (v_record->>'id')::uuid;
+      
+      -- Find existing patient in tenant (by order of creation)
+      SELECT id INTO v_new_patient_id
+      FROM patients
+      WHERE tenant_id = p_tenant_id
+      ORDER BY created_at
+      OFFSET v_count
+      LIMIT 1;
+      
+      IF v_new_patient_id IS NULL THEN
+        RAISE EXCEPTION 'Not enough existing patients in tenant for mapping!';
+      END IF;
+      
+      v_patient_mapping := v_patient_mapping || jsonb_build_object(v_old_patient_id::text, v_new_patient_id);
+      v_id_mapping := v_id_mapping || jsonb_build_object(v_old_patient_id::text, v_new_patient_id);
+      
+      RAISE NOTICE '💾 Mapped snapshot patient % to existing patient % (barcode preserved)', v_old_patient_id, v_new_patient_id;
+      v_count := v_count + 1;
+    END LOOP;
+    
+    RAISE NOTICE '✅ Mapped % patients to existing tenant patients', v_count;
+    
+  -- If skipping patients and p_id_mappings provided, use those
+  ELSIF p_skip_patients AND p_id_mappings IS NOT NULL THEN
     v_patient_mapping := p_id_mappings;
     v_id_mapping := p_id_mappings;
     RAISE NOTICE '📋 Using existing patient IDs from mapping: %', jsonb_pretty(v_patient_mapping);
-  END IF;
-  
-  -- =====================================================
-  -- STEP 1: Restore PATIENTS first to build ID mapping (unless skipping)
-  -- =====================================================
-  IF p_snapshot ? 'patients' AND NOT p_skip_patients THEN
-    RAISE NOTICE '👤 Restoring patients...';
+    
+  -- Otherwise, create NEW patients (normal launch scenario)
+  ELSIF p_snapshot ? 'patients' THEN
+    RAISE NOTICE '👤 Creating new patients...';
     v_count := 0;
     
     FOR v_record IN SELECT * FROM jsonb_array_elements(p_snapshot->'patients')
