@@ -65,9 +65,69 @@ BEGIN
   END LOOP;
 
   -- =====================================================
-  -- STEP 2: CALL restore_snapshot_to_tenant WITH BARCODE PRESERVATION
+  -- STEP 2: DELETE ALL DATA (except patients)
   -- =====================================================
-  -- This will delete everything and restore from snapshot while preserving patient barcodes
+  -- Delete EVERYTHING to ensure clean slate
+  
+  DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % medication administrations', v_count;
+  
+  DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % vitals', v_count;
+  
+  DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % notes', v_count;
+  
+  DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % alerts', v_count;
+  
+  DELETE FROM patient_images WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % images', v_count;
+  
+  DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % wound assessments', v_count;
+  
+  DELETE FROM lab_results WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % lab results', v_count;
+  
+  DELETE FROM lab_panels WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % lab panels', v_count;
+  
+  DELETE FROM diabetic_records WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % diabetic records', v_count;
+  
+  DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % doctors orders', v_count;
+  
+  -- Delete baseline items too (will be restored from snapshot)
+  DELETE FROM wounds WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % wounds', v_count;
+  
+  DELETE FROM devices WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % devices', v_count;
+  
+  DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % avatar locations', v_count;
+  
+  RAISE NOTICE '✅ All data deleted (except patients)';
+
+  -- =====================================================
+  -- STEP 3: RESTORE FROM SNAPSHOT WITH BARCODE PRESERVATION
+  -- =====================================================
+  -- Restore all baseline data, mapping to existing patients
   SELECT restore_snapshot_to_tenant(
     p_tenant_id := v_tenant_id,
     p_snapshot := v_snapshot,
@@ -79,7 +139,7 @@ BEGIN
   RAISE NOTICE '📊 Restore result: %', jsonb_pretty(v_result);
 
   -- =====================================================
-  -- STEP 3: RESET SIMULATION TIMER
+  -- STEP 4: RESET SIMULATION TIMER
   -- =====================================================
   
   UPDATE simulation_active
@@ -94,7 +154,7 @@ BEGIN
   RAISE NOTICE '⏱️  Timer reset: duration = % minutes', v_duration_minutes;
 
   -- =====================================================
-  -- STEP 4: LOG THE RESET
+  -- STEP 5: LOG THE RESET
   -- =====================================================
   
   INSERT INTO simulation_activity_log (
