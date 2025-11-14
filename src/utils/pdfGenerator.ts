@@ -484,8 +484,8 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   yPos += 10;
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.5);
-  const lineStart = pageWidth / 2 - 30;
-  doc.line(lineStart, yPos, lineStart + 60, yPos);
+  const separatorStart = pageWidth / 2 - 30;
+  doc.line(separatorStart, yPos, separatorStart + 60, yPos);
   yPos += 15;
   
   // Performance Summary Box
