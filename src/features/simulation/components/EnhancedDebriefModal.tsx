@@ -40,6 +40,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
 
   useEffect(() => {
     loadStudentActivities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyRecord.id]);
 
   const loadStudentActivities = async () => {
@@ -104,6 +105,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       totalNotes += (student.activities.patientNotes?.length || 0) + (student.activities.handoverNotes?.length || 0);
       totalIO += student.activities.intakeOutput?.length || 0;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       student.activities.medications?.forEach((med: any) => {
         bcmaTotal++;
         if (med.barcode_scanned) bcmaScanned++;
@@ -494,6 +496,7 @@ const StudentActivitySection: React.FC<{ student: StudentActivity }> = ({ studen
 
 // Activity Section Component
 const ActivitySection: React.FC<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   section: any;
   isExpanded: boolean;
   onToggle: () => void;
@@ -538,6 +541,7 @@ const ActivitySection: React.FC<{
       {isExpanded && (
         <div className="px-6 pb-6">
           <div className="space-y-3 mt-2">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {section.items.map((item: any, idx: number) => (
               <ActivityItem key={idx} item={item} sectionKey={section.key} />
             ))}
@@ -549,6 +553,7 @@ const ActivitySection: React.FC<{
 };
 
 // Activity Item Component
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, sectionKey }) => {
   const formatItem = () => {
     switch (sectionKey) {
