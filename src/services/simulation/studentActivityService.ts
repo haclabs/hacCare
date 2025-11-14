@@ -98,6 +98,14 @@ interface HacMapDeviceEntry {
   inserted_by: string | null;
   location: string | null;
   site: string | null;
+  tube_size_fr?: string | null;
+  reservoir_type?: string | null;
+  reservoir_size_ml?: number | null;
+  orientation?: string[] | null;
+  tube_number?: number | null;
+  number_of_sutures_placed?: number | null;
+  securement_method?: string[] | null;
+  patient_tolerance?: string | null;
 }
 
 interface HacMapWoundEntry {
@@ -251,7 +259,7 @@ export async function getStudentActivitiesBySimulation(
         .not('student_name', 'is', null)
         .order('created_at', { ascending: false }),
 
-      // Lab Acknowledgements
+      // Lab Acknowledgements  
       supabase
         .from('lab_results')
         .select('*')
@@ -296,14 +304,32 @@ export async function getStudentActivitiesBySimulation(
         .from('devices')
         .select('*')
         .eq('patient_id', patientId)
-        .order('created_at', { ascending: false }),
+        .not('inserted_by', 'is', null)
+        .order('created_at', { ascending: false })
+        .then(result => {
+          console.log('🔧 Devices query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            data: result.data
+          });
+          return result;
+        }),
 
       // Wounds (from HAC Map) - query wounds table directly
       supabase
         .from('wounds')
         .select('*')
         .eq('patient_id', patientId)
-        .order('created_at', { ascending: false }),
+        .not('entered_by', 'is', null)
+        .order('created_at', { ascending: false })
+        .then(result => {
+          console.log('🩹 Wounds query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            data: result.data
+          });
+          return result;
+        }),
 
       // Intake & Output Events
       supabase
@@ -384,10 +410,10 @@ export async function getStudentActivitiesBySimulation(
       const student = getOrCreateStudent(lab.student_name);
       student.activities.labOrders.push({
         id: lab.id,
-        ordered_at: lab.ordered_at,
-        test_name: lab.test_name,
-        priority: lab.priority,
-        specimen_type: lab.specimen_type,
+        ordered_at: lab.created_at,  // Use created_at as the order timestamp
+        test_name: lab.procedure_type,  // Use procedure_type as test name
+        priority: 'ROUTINE',  // Default priority since not in schema
+        specimen_type: lab.source_type,  // Use source_type as specimen
         status: lab.status,
       });
       student.totalEntries++;
@@ -395,13 +421,14 @@ export async function getStudentActivitiesBySimulation(
 
     // Process lab acknowledgements
     labAcksData.data?.forEach((lab: any) => {
+      if (!lab.acknowledged_by_student) return; // Skip if no student name
       const student = getOrCreateStudent(lab.acknowledged_by_student);
       student.activities.labAcknowledgements.push({
         id: lab.id,
-        acknowledged_at: lab.acknowledged_at,
+        acknowledged_at: lab.ack_at,
         test_name: lab.test_name,
-        result_value: lab.result_value,
-        abnormal_flag: lab.abnormal_flag,
+        result_value: lab.value + (lab.units ? ' ' + lab.units : ''),
+        abnormal_flag: lab.flag?.includes('abnormal') || lab.flag?.includes('critical') || false,
       });
       student.totalEntries++;
     });
@@ -460,6 +487,14 @@ export async function getStudentActivitiesBySimulation(
           inserted_by: device.inserted_by,
           location: device.location_id,
           site: device.notes,
+          tube_size_fr: device.tube_size_fr,
+          reservoir_type: device.reservoir_type,
+          reservoir_size_ml: device.reservoir_size_ml,
+          orientation: device.orientation,
+          tube_number: device.tube_number,
+          number_of_sutures_placed: device.number_of_sutures_placed,
+          securement_method: device.securement_method,
+          patient_tolerance: device.patient_tolerance,
         });
         student.totalEntries++;
       }

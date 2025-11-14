@@ -130,10 +130,22 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
   };
 
   const calculateDuration = () => {
-    if (!historyRecord.started_at || !historyRecord.completed_at) return 'N/A';
+    // Try different field name combinations for start/end times
+    const startTime = historyRecord.started_at || historyRecord.starts_at || historyRecord.created_at;
+    const endTime = historyRecord.completed_at || historyRecord.ends_at || historyRecord.updated_at;
+    
+    // If we have duration_minutes field, use that
+    if (historyRecord.duration_minutes) {
+      const hours = Math.floor(historyRecord.duration_minutes / 60);
+      const mins = historyRecord.duration_minutes % 60;
+      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    }
+    
+    // Otherwise calculate from timestamps
+    if (!startTime || !endTime) return 'N/A';
     const minutes = differenceInMinutes(
-      new Date(historyRecord.completed_at),
-      new Date(historyRecord.started_at)
+      new Date(endTime),
+      new Date(startTime)
     );
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -229,7 +241,11 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                       <span className="text-xs font-medium text-purple-900 uppercase tracking-wide">Students</span>
                     </div>
                     <p className="text-2xl font-bold text-purple-900">{studentActivities.length}</p>
-                    <p className="text-xs text-purple-700 mt-1">Participants</p>
+                    <p className="text-xs text-purple-700 mt-1 truncate" title={studentActivities.map(s => s.studentName).join(', ')}>
+                      {studentActivities.length > 0 
+                        ? studentActivities.map(s => s.studentName).join(', ')
+                        : 'No participants'}
+                    </p>
                   </div>
 
                   <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
@@ -611,13 +627,85 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
             </div>
           </div>
         );
-      default:
+      case 'labOrders':
         return (
           <div className="text-sm">
-            <p className="font-medium text-gray-700">{format(new Date(item.created_at || item.recorded_at || item.timestamp), 'PPp')}</p>
+            <p className="font-medium text-gray-700">{item.ordered_at ? format(new Date(item.ordered_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">{item.test_name}</p>
+            <div className="mt-1 flex items-center space-x-2">
+              <span className={`text-xs px-2 py-0.5 rounded ${
+                item.priority === 'STAT' ? 'bg-red-100 text-red-700' :
+                item.priority === 'URGENT' ? 'bg-orange-100 text-orange-700' :
+                'bg-gray-100 text-gray-700'
+              }`}>
+                {item.priority || 'ROUTINE'}
+              </span>
+              <span className="text-xs text-gray-600">{item.specimen_type}</span>
+              <span className="text-xs text-gray-600">Status: {item.status}</span>
+            </div>
+          </div>
+        );
+      case 'labAcknowledgements':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.acknowledged_at ? format(new Date(item.acknowledged_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">✓ ACKNOWLEDGED: {item.test_name}</p>
+            <div className="mt-1 flex items-center space-x-2">
+              <span className="text-gray-900 font-semibold">{item.result_value}</span>
+              {item.abnormal_flag && (
+                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded">⚠ ABNORMAL</span>
+              )}
+            </div>
+          </div>
+        );
+      case 'hacmapDevices':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">{item.type?.toUpperCase().replace(/-/g, ' ')}</p>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+              {item.placement_date && <span>Placed: {item.placement_date}</span>}
+              {item.inserted_by && <span>By: {item.inserted_by}</span>}
+              {item.location && <span>Location: {item.location}</span>}
+              {item.tube_size_fr && <span>Size: {item.tube_size_fr} Fr</span>}
+              {item.reservoir_type && <span>Reservoir: {item.reservoir_type}</span>}
+              {item.orientation && item.orientation.length > 0 && (
+                <span>Orientation: {item.orientation.join(', ')}</span>
+              )}
+            </div>
+          </div>
+        );
+      case 'hacmapWounds':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">{item.wound_type?.toUpperCase().replace(/-/g, ' ')}</p>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+              {item.location && <span>Location: {item.location}</span>}
+              {item.wound_length_cm && item.wound_width_cm && (
+                <span>Size: {item.wound_length_cm} × {item.wound_width_cm} cm</span>
+              )}
+              {item.wound_depth_cm && <span>Depth: {item.wound_depth_cm} cm</span>}
+              {item.wound_stage && <span>Stage: {item.wound_stage}</span>}
+              {item.drainage_amount && <span>Drainage: {item.drainage_amount}</span>}
+              {item.wound_description && <span className="col-span-2">{item.wound_description}</span>}
+            </div>
+          </div>
+        );
+      default: {
+        // Safely get timestamp with fallback chain and null check
+        const timestamp = item.created_at || item.recorded_at || item.timestamp || item.event_timestamp || item.ordered_at || item.acknowledged_at;
+        const dateStr = timestamp && !isNaN(new Date(timestamp).getTime()) 
+          ? format(new Date(timestamp), 'PPp')
+          : 'N/A';
+        
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{dateStr}</p>
             <p className="text-gray-600 mt-1">{JSON.stringify(item).substring(0, 100)}...</p>
           </div>
         );
+      }
     }
   };
 

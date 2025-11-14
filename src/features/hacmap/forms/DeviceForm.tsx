@@ -76,7 +76,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
         placement_date: placementDate || undefined,
         placement_time: placementTime || undefined,
         placed_pre_arrival: placedPreArrival || undefined,
-        inserted_by: insertedBy || undefined,
+        inserted_by: studentName || insertedBy || undefined,  // Use studentName for student tracking
         tube_number: tubeNumber,
         orientation: orientation.length > 0 ? orientation : undefined,
         tube_size_fr: tubeSizeFr || undefined,

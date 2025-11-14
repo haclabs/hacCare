@@ -79,7 +79,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
         closure: closure || undefined,
         suture_staple_line: sutureSutapleLine || undefined,
         sutures_intact: suturesIntact || undefined,
-        entered_by: enteredBy || undefined,
+        entered_by: studentName || enteredBy || undefined,  // Use studentName for student tracking
         notes: notes || undefined
       };
 

@@ -33,11 +33,11 @@ export const SimulationIndicator: React.FC = () => {
       try {
         setIsExiting(true);
         await exitSimulationTenant();
-        navigate('/app');
+        // Force a full page reload to ensure clean tenant switch
+        window.location.href = '/app';
       } catch (error) {
         console.error('Error exiting simulation:', error);
         alert('Failed to exit simulation. Please try again.');
-      } finally {
         setIsExiting(false);
       }
     }
