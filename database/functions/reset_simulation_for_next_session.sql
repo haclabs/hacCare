@@ -73,6 +73,10 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % medication administrations', v_count;
   
+  DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % patient medications', v_count;
+  
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % vitals', v_count;
@@ -108,6 +112,29 @@ BEGIN
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % doctors orders', v_count;
+  
+  DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % handover notes', v_count;
+  
+  DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % lab orders', v_count;
+  
+  DELETE FROM bowel_records WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % bowel records', v_count;
+  
+  -- Try tenant_id first, fall back to patient_id if column doesn't exist
+  BEGIN
+    DELETE FROM patient_intake_output_events WHERE tenant_id = v_tenant_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RAISE NOTICE '🗑️  Deleted % intake/output events (via tenant_id)', v_count;
+  EXCEPTION WHEN undefined_column THEN
+    DELETE FROM patient_intake_output_events WHERE patient_id IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RAISE NOTICE '🗑️  Deleted % intake/output events (via patient_id)', v_count;
+  END;
   
   -- Delete baseline items too (will be restored from snapshot)
   DELETE FROM wounds WHERE tenant_id = v_tenant_id;
