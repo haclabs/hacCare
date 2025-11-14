@@ -112,11 +112,14 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
         participant_roles: formData.participant_roles,
       });
 
-      if (result.success) {
-        alert(`Simulation launched successfully!\n\nSimulation ID: ${result.simulation_id}\nTenant ID: ${result.tenant_id}\n\nParticipants can now log in and access this simulation.`);
+      // RPC returns array with single row
+      const launchResult = Array.isArray(result) ? result[0] : result;
+      
+      if (launchResult && launchResult.simulation_id) {
+        alert(`Simulation launched successfully!\n\nSimulation ID: ${launchResult.simulation_id}\nTenant ID: ${launchResult.tenant_id}\n\nParticipants can now log in and access this simulation.`);
         onSuccess();
       } else {
-        setError(result.message || 'Failed to launch simulation');
+        setError(launchResult?.message || 'Failed to launch simulation');
       }
     } catch (err: any) {
       console.error('Error launching simulation:', err);
