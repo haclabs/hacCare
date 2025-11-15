@@ -28,40 +28,21 @@ AS $$
 DECLARE
   v_simulation_tenant_id UUID;
   v_home_tenant_id UUID;
-  v_user_role TEXT;
   v_simulation_id UUID;
   v_snapshot JSONB;
-  v_snapshot_version INTEGER;
-  v_participant_id UUID;
-  v_role TEXT;
-  i INTEGER;
+  v_patient_count INTEGER;
 BEGIN
-  -- Check if user profile exists and get role
-  SELECT role INTO v_user_role
+  -- Get user's home tenant_id
+  SELECT tenant_id INTO v_home_tenant_id
   FROM user_profiles
   WHERE id = auth.uid();
 
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'User profile not found. Please ensure your account is properly set up.'
-      USING HINT = 'Contact administrator to create user profile';
-  END IF;
-
-  -- For simulation launch, we just need ANY parent tenant as a reference
-  -- The simulation creates its own isolated tenant anyway
-  SELECT id INTO v_home_tenant_id
-  FROM tenants
-  WHERE is_simulation = false
-  ORDER BY created_at ASC
-  LIMIT 1;
-  
   IF v_home_tenant_id IS NULL THEN
-    RAISE EXCEPTION 'No tenant found in system. Please create a tenant first.';
+    RAISE EXCEPTION 'User has no tenant_id';
   END IF;
-  
-  RAISE NOTICE '% launching simulation - using parent tenant: %', v_user_role, v_home_tenant_id;
 
-  -- Fetch the template snapshot and version
-  SELECT snapshot_data, snapshot_version INTO v_snapshot, v_snapshot_version
+  -- Fetch the template snapshot
+  SELECT snapshot INTO v_snapshot
   FROM simulation_templates
   WHERE id = p_template_id;
 
@@ -103,6 +84,11 @@ BEGIN
     p_preserve_barcodes := false  -- New simulation = new patients
   );
 
+  -- Count patients created
+  SELECT COUNT(*) INTO v_patient_count
+  FROM patients
+  WHERE tenant_id = v_simulation_tenant_id;
+
   -- Create simulation_active record with proper timer calculation
   INSERT INTO simulation_active (
     id,
@@ -112,9 +98,11 @@ BEGIN
     duration_minutes,
     starts_at,
     ends_at,  -- CRITICAL: Set ends_at = NOW() + duration
-    created_by,
+    launched_by,
     status,
-    template_snapshot_version
+    patient_count,
+    participant_user_ids,
+    participant_roles
   )
   VALUES (
     v_simulation_id,
@@ -125,39 +113,20 @@ BEGIN
     NOW(),
     NOW() + (p_duration_minutes || ' minutes')::INTERVAL,  -- Fix timer display
     auth.uid(),
-    'running',
-    COALESCE(v_snapshot_version, 0)
+    'active',
+    v_patient_count,
+    p_participant_user_ids,
+    p_participant_roles
   );
-
-  -- Add participants to simulation_participants table
-  IF p_participant_user_ids IS NOT NULL AND array_length(p_participant_user_ids, 1) > 0 THEN
-    FOR i IN 1..array_length(p_participant_user_ids, 1) LOOP
-      v_participant_id := p_participant_user_ids[i];
-      v_role := COALESCE(p_participant_roles[i], 'student');
-      
-      INSERT INTO simulation_participants (
-        simulation_id,
-        user_id,
-        role,
-        granted_by
-      )
-      VALUES (
-        v_simulation_id,
-        v_participant_id,
-        v_role::simulation_role,
-        auth.uid()
-      );
-    END LOOP;
-  END IF;
 
   RAISE NOTICE 'Simulation launched: % (%) for simulation tenant: % with duration: % minutes (ends_at: %)',
     v_simulation_id, p_name, v_simulation_tenant_id, p_duration_minutes, 
     NOW() + (p_duration_minutes || ' minutes')::INTERVAL;
 
   RETURN QUERY SELECT 
-    v_simulation_id AS simulation_id,
-    v_simulation_tenant_id AS tenant_id,
-    'Simulation launched successfully'::TEXT AS message;
+    v_simulation_id,
+    v_simulation_tenant_id,  -- Return the simulation tenant ID
+    'Simulation launched successfully'::TEXT;
 END;
 $$;
 

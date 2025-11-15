@@ -108,7 +108,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       student.activities.medications?.forEach((med: any) => {
         bcmaTotal++;
-        if (med.barcode_scanned) bcmaScanned++;
+        // BCMA compliant if BOTH patient and medication barcodes were scanned
+        if (med.barcode_scanned_patient && med.barcode_scanned_medication) bcmaScanned++;
       });
     });
 
@@ -593,8 +594,8 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
             <p className="font-medium text-gray-700">{format(new Date(item.timestamp), 'PPp')}</p>
             <p className="text-gray-900 mt-1">{item.medication_name} - {item.dosage} via {item.route}</p>
             <div className="mt-1 flex items-center space-x-2">
-              {item.barcode_scanned ? (
-                <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">✓ Barcode Scanned</span>
+              {item.barcode_scanned_patient && item.barcode_scanned_medication ? (
+                <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">✓ BCMA Compliant</span>
               ) : (
                 <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded">⚠ Manual Entry</span>
               )}

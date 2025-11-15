@@ -46,6 +46,8 @@ interface MedicationAdministrationEntry {
   route: string | null;
   status: string | null;
   notes: string | null;
+  barcode_scanned_patient?: string | null;
+  barcode_scanned_medication?: string | null;
 }
 
 interface LabOrderEntry {

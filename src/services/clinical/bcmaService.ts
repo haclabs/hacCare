@@ -276,7 +276,10 @@ class BCMAService {
         route: medication.route,
         status: 'completed',
         medication_name: medication.name,
-        student_name: studentName
+        student_name: studentName,
+        // ✅ CRITICAL: Include barcode scan information for BCMA compliance
+        barcode_scanned_patient: scannedPatientId,
+        barcode_scanned_medication: scannedMedicationId
       };
 
       console.log('🔵 BCMA: Recording administration:', administrationRecord);

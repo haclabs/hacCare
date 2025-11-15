@@ -47,6 +47,8 @@ export interface MedicationAdministration {
   };
   medication_name?: string; // Fallback field
   student_name?: string; // Student who administered
+  barcode_scanned_patient?: string; // Patient barcode scanned (for BCMA compliance)
+  barcode_scanned_medication?: string; // Medication barcode scanned (for BCMA compliance)
 }
 
 /**
