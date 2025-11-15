@@ -51,9 +51,11 @@ BEGIN
   RAISE NOTICE '✅ Found simulation - tenant: %, template: %', v_tenant_id, v_template_id;
   
   -- =====================================================
-  -- STEP 1: SAVE PATIENT BARCODE IDs (CRITICAL!)
+  -- STEP 1: SAVE PATIENT & MEDICATION BARCODE IDs (CRITICAL!)
   -- =====================================================
   -- These are printed on labels and CANNOT change
+  
+  -- Save patient barcodes
   FOR v_patient_id, v_barcode IN 
     SELECT id, patient_id 
     FROM patients 
@@ -61,21 +63,46 @@ BEGIN
     ORDER BY created_at
   LOOP
     v_patient_barcodes := v_patient_barcodes || jsonb_build_object(v_patient_id::text, v_barcode);
-    RAISE NOTICE '💾 Saving barcode: patient % has barcode %', v_patient_id, v_barcode;
+    RAISE NOTICE '💾 Saving patient barcode: % has barcode %', v_patient_id, v_barcode;
   END LOOP;
+  
+  -- 🆕 Save medication UUIDs (for barcode compatibility)
+  -- Map by patient + medication name to preserve across reset
+  DECLARE
+    v_medication_mappings jsonb := '{}'::jsonb;
+    v_med_id uuid;
+    v_med_name text;
+    v_med_patient_id uuid;
+    v_mapping_key text;
+  BEGIN
+    FOR v_med_id, v_med_name, v_med_patient_id IN
+      SELECT pm.id, pm.name, pm.patient_id
+      FROM patient_medications pm
+      WHERE pm.tenant_id = v_tenant_id
+      ORDER BY pm.created_at
+    LOOP
+      -- Create composite key: patient_id||medication_name
+      v_mapping_key := v_med_patient_id::text || '||' || v_med_name;
+      v_medication_mappings := v_medication_mappings || jsonb_build_object(v_mapping_key, v_med_id);
+      RAISE NOTICE '💊 Saving medication mapping: % (%)', v_med_name, v_med_id;
+    END LOOP;
+    
+    -- Store in v_patient_barcodes with special key (hacky but works with existing function signature)
+    v_patient_barcodes := v_patient_barcodes || jsonb_build_object('__medication_mappings__', v_medication_mappings);
+  END;
 
   -- =====================================================
-  -- STEP 2: DELETE ALL DATA (except patients)
+  -- STEP 2: DELETE STUDENT WORK (preserve medications!)
   -- =====================================================
-  -- Delete EVERYTHING to ensure clean slate
+  -- Delete student-added data but KEEP medications (preserve UUIDs for barcodes)
   
   DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % medication administrations', v_count;
   
-  DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
-  GET DIAGNOSTICS v_count = ROW_COUNT;
-  RAISE NOTICE '🗑️  Deleted % patient medications', v_count;
+  -- 🆕 DON'T delete medications - we'll update them in place to preserve UUIDs
+  -- DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
+  RAISE NOTICE '💊 Preserving medication UUIDs for barcode compatibility';
   
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
@@ -166,6 +193,130 @@ BEGIN
   RAISE NOTICE '📊 Restore result: %', jsonb_pretty(v_result);
 
   -- =====================================================
+  -- STEP 3B: UPDATE MEDICATIONS IN PLACE (preserve UUIDs!)
+  -- =====================================================
+  -- Extract medication mappings from barcode mappings
+  DECLARE
+    v_medication_mappings jsonb;
+    v_snapshot_med jsonb;
+    v_med_name text;
+    v_med_patient_id uuid;
+    v_mapping_key text;
+    v_existing_med_id uuid;
+    v_snapshot_patient_id text;
+    v_actual_patient_id uuid;
+    v_meds_updated integer := 0;
+    v_meds_inserted integer := 0;
+  BEGIN
+    v_medication_mappings := v_patient_barcodes->'__medication_mappings__';
+    
+    IF v_medication_mappings IS NOT NULL AND v_snapshot ? 'medications' THEN
+      RAISE NOTICE '💊 Updating medications in place to preserve UUIDs...';
+      
+      -- Loop through snapshot medications
+      FOR v_snapshot_med IN SELECT * FROM jsonb_array_elements(v_snapshot->'medications')
+      LOOP
+        v_med_name := v_snapshot_med->>'name';
+        v_snapshot_patient_id := v_snapshot_med->>'patient_id';
+        
+        -- Map snapshot patient_id to actual patient_id
+        v_actual_patient_id := (v_patient_barcodes->>v_snapshot_patient_id)::uuid;
+        
+        IF v_actual_patient_id IS NULL THEN
+          -- Try direct UUID lookup
+          v_actual_patient_id := v_snapshot_patient_id::uuid;
+        END IF;
+        
+        -- Build composite key
+        v_mapping_key := v_actual_patient_id::text || '||' || v_med_name;
+        v_existing_med_id := (v_medication_mappings->>v_mapping_key)::uuid;
+        
+        IF v_existing_med_id IS NOT NULL THEN
+          -- Update existing medication (preserves UUID!)
+          UPDATE patient_medications
+          SET
+            name = v_med_name,
+            dosage = v_snapshot_med->>'dosage',
+            route = v_snapshot_med->>'route',
+            frequency = v_snapshot_med->>'frequency',
+            start_date = (v_snapshot_med->>'start_date')::timestamptz,
+            prescribed_by = v_snapshot_med->>'prescribed_by',
+            status = COALESCE(v_snapshot_med->>'status', 'active'),
+            category = v_snapshot_med->>'category',
+            last_administered = NULL,
+            next_due = (v_snapshot_med->>'next_due')::timestamptz,
+            admin_times = COALESCE((v_snapshot_med->>'admin_times')::jsonb, '[]'::jsonb),
+            instructions = v_snapshot_med->>'instructions',
+            indication = v_snapshot_med->>'indication',
+            updated_at = NOW()
+          WHERE id = v_existing_med_id;
+          
+          v_meds_updated := v_meds_updated + 1;
+          RAISE NOTICE '💊 Updated medication: % (UUID preserved: %)', v_med_name, v_existing_med_id;
+        ELSE
+          -- New medication not in previous session - insert it
+          -- (This handles medications added to template after last session)
+          INSERT INTO patient_medications (
+            tenant_id,
+            patient_id,
+            name,
+            dosage,
+            route,
+            frequency,
+            start_date,
+            prescribed_by,
+            status,
+            category,
+            next_due,
+            admin_times,
+            instructions,
+            indication
+          ) VALUES (
+            v_tenant_id,
+            v_actual_patient_id,
+            v_med_name,
+            v_snapshot_med->>'dosage',
+            v_snapshot_med->>'route',
+            v_snapshot_med->>'frequency',
+            (v_snapshot_med->>'start_date')::timestamptz,
+            v_snapshot_med->>'prescribed_by',
+            COALESCE(v_snapshot_med->>'status', 'active'),
+            v_snapshot_med->>'category',
+            (v_snapshot_med->>'next_due')::timestamptz,
+            COALESCE((v_snapshot_med->>'admin_times')::jsonb, '[]'::jsonb),
+            v_snapshot_med->>'instructions',
+            v_snapshot_med->>'indication'
+          );
+          
+          v_meds_inserted := v_meds_inserted + 1;
+          RAISE NOTICE '💊 Inserted new medication: % (not in previous session)', v_med_name;
+        END IF;
+      END LOOP;
+      
+      -- Delete medications that are no longer in template
+      WITH snapshot_meds AS (
+        SELECT 
+          v_actual_patient_id as patient_id,
+          med->>'name' as med_name
+        FROM jsonb_array_elements(v_snapshot->'medications') med,
+        LATERAL (
+          SELECT (v_patient_barcodes->>(med->>'patient_id'))::uuid as v_actual_patient_id
+        ) mapping
+      )
+      DELETE FROM patient_medications pm
+      WHERE pm.tenant_id = v_tenant_id
+      AND NOT EXISTS (
+        SELECT 1 FROM snapshot_meds sm
+        WHERE sm.patient_id = pm.patient_id
+        AND sm.med_name = pm.name
+      );
+      
+      GET DIAGNOSTICS v_count = ROW_COUNT;
+      RAISE NOTICE '💊 Medications updated: %, inserted: %, removed: %', v_meds_updated, v_meds_inserted, v_count;
+    END IF;
+  END;
+
+  -- =====================================================
   -- STEP 4: RESET SIMULATION TIMER
   -- =====================================================
   
@@ -196,7 +347,7 @@ BEGIN
     auth.uid(),
     'simulation_reset',
     v_result,
-    'Simulation reset for next session - used restore_snapshot_to_tenant with barcode preservation'
+    'Simulation reset for next session - preserved patient and medication UUIDs for barcode compatibility'
   );
 
   RAISE NOTICE '🎉 Session reset complete!';
@@ -216,4 +367,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION reset_simulation_for_next_session(uuid) TO authenticated;
 
 COMMENT ON FUNCTION reset_simulation_for_next_session IS 
-'Reset simulation for next class session - deletes student work but preserves patients and barcode IDs';
+'Reset simulation for next class session - deletes student work but preserves patient and medication UUIDs for barcode compatibility';
