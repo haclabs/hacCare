@@ -28,23 +28,36 @@ AS $$
 DECLARE
   v_simulation_tenant_id UUID;
   v_home_tenant_id UUID;
+  v_user_role TEXT;
   v_simulation_id UUID;
   v_snapshot JSONB;
   v_patient_count INTEGER;
 BEGIN
-  -- Get user's home tenant_id
-  SELECT tenant_id INTO v_home_tenant_id
+  -- Get user's role from user_profiles
+  SELECT user_profiles.role INTO v_user_role
   FROM user_profiles
-  WHERE id = auth.uid();
-
-  IF v_home_tenant_id IS NULL THEN
-    RAISE EXCEPTION 'User has no tenant_id';
+  WHERE user_profiles.id = auth.uid();
+  
+  -- Get user's home tenant_id from user_tenant_access
+  SELECT user_tenant_access.tenant_id INTO v_home_tenant_id
+  FROM user_tenant_access
+  WHERE user_tenant_access.user_id = auth.uid()
+    AND user_tenant_access.is_active = true
+  LIMIT 1;
+  
+  -- Super admins without tenant: use first non-simulation tenant
+  IF v_home_tenant_id IS NULL AND v_user_role = 'super_admin' THEN
+    SELECT tenants.id INTO v_home_tenant_id
+    FROM tenants
+    WHERE tenants.is_simulation = false
+    ORDER BY tenants.created_at ASC
+    LIMIT 1;
   END IF;
 
   -- Fetch the template snapshot
-  SELECT snapshot INTO v_snapshot
+  SELECT simulation_templates.snapshot_data INTO v_snapshot
   FROM simulation_templates
-  WHERE id = p_template_id;
+  WHERE simulation_templates.id = p_template_id;
 
   IF v_snapshot IS NULL THEN
     RAISE EXCEPTION 'Template not found: %', p_template_id;
@@ -68,7 +81,7 @@ BEGIN
     'sim-act-' || lower(regexp_replace(p_name, '[^a-zA-Z0-9]+', '-', 'g')) || '-' || substr(gen_random_uuid()::text, 1, 8),
     'simulation_active',
     true,
-    v_home_tenant_id,
+    v_home_tenant_id,  -- NULL for super admins is OK
     jsonb_build_object(
       'template_id', p_template_id,
       'launched_at', now()
@@ -87,7 +100,7 @@ BEGIN
   -- Count patients created
   SELECT COUNT(*) INTO v_patient_count
   FROM patients
-  WHERE tenant_id = v_simulation_tenant_id;
+  WHERE patients.tenant_id = v_simulation_tenant_id;
 
   -- Create simulation_active record with proper timer calculation
   INSERT INTO simulation_active (
@@ -98,11 +111,9 @@ BEGIN
     duration_minutes,
     starts_at,
     ends_at,  -- CRITICAL: Set ends_at = NOW() + duration
-    launched_by,
+    created_by,
     status,
-    patient_count,
-    participant_user_ids,
-    participant_roles
+    template_snapshot_version
   )
   VALUES (
     v_simulation_id,
@@ -113,15 +124,34 @@ BEGIN
     NOW(),
     NOW() + (p_duration_minutes || ' minutes')::INTERVAL,  -- Fix timer display
     auth.uid(),
-    'active',
-    v_patient_count,
-    p_participant_user_ids,
-    p_participant_roles
+    'running',
+    1  -- Default snapshot version
   );
 
   RAISE NOTICE 'Simulation launched: % (%) for simulation tenant: % with duration: % minutes (ends_at: %)',
     v_simulation_id, p_name, v_simulation_tenant_id, p_duration_minutes, 
     NOW() + (p_duration_minutes || ' minutes')::INTERVAL;
+
+  -- Add participants if provided
+  IF p_participant_user_ids IS NOT NULL AND array_length(p_participant_user_ids, 1) > 0 THEN
+    FOR i IN 1..array_length(p_participant_user_ids, 1)
+    LOOP
+      INSERT INTO simulation_participants (
+        simulation_id,
+        user_id,
+        role,
+        granted_by
+      )
+      VALUES (
+        v_simulation_id,
+        p_participant_user_ids[i],
+        COALESCE(p_participant_roles[i], 'student')::simulation_role,
+        auth.uid()
+      );
+    END LOOP;
+    
+    RAISE NOTICE '✅ Added % participants to simulation', array_length(p_participant_user_ids, 1);
+  END IF;
 
   RETURN QUERY SELECT 
     v_simulation_id,

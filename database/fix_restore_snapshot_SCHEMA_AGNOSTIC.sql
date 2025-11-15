@@ -24,6 +24,7 @@ CREATE OR REPLACE FUNCTION restore_snapshot_to_tenant(
 RETURNS json AS $$
 DECLARE
   v_table_name text;
+  v_actual_table_name text;  -- Mapped table name (e.g., medications -> patient_medications)
   v_table_data jsonb;
   v_record jsonb;
   v_patient_mapping jsonb := '{}'::jsonb;
@@ -33,6 +34,7 @@ DECLARE
   v_old_id uuid;
   v_new_id uuid;
   v_count integer;
+  v_count_check integer;  -- For column existence checks
   v_total_records integer := 0;
   v_columns text[];
   v_placeholders text[];
@@ -125,6 +127,18 @@ BEGIN
         FROM jsonb_each(v_record)
         WHERE key NOT IN ('id', 'tenant_id', 'patient_id', 'created_at', 'updated_at')
       LOOP
+        -- Check if column exists in patients table
+        SELECT COUNT(*) INTO v_count_check
+        FROM information_schema.columns
+        WHERE table_name = 'patients'
+        AND column_name = v_col.key
+        AND table_schema = 'public';
+        
+        IF v_count_check = 0 THEN
+          RAISE NOTICE '⚠️  Skipping patient column % - does not exist in patients table', v_col.key;
+          CONTINUE;
+        END IF;
+        
         v_columns := array_append(v_columns, quote_ident(v_col.key));
         
         -- Handle arrays (like allergies) specially
@@ -176,6 +190,12 @@ BEGIN
   LOOP
     v_table_data := p_snapshot->v_table_name;
     
+    -- Map 'medications' snapshot key to 'patient_medications' table
+    v_actual_table_name := CASE 
+      WHEN v_table_name = 'medications' THEN 'patient_medications'
+      ELSE v_table_name
+    END;
+    
     IF jsonb_array_length(v_table_data) > 0 THEN
       RAISE NOTICE '📦 Restoring % (% records)...', v_table_name, jsonb_array_length(v_table_data);
       v_count := 0;
@@ -191,7 +211,7 @@ BEGIN
             v_record->>'type', v_record->>'location_id';
         END IF;
         
-        -- Generate NEW id for this record (map old to new)
+        -- Generate NEW id for this record - fresh UUID for new tenant
         v_old_id := (v_record->>'id')::uuid;
         v_new_id := gen_random_uuid();
         v_columns := array_append(v_columns, 'id');
@@ -207,13 +227,45 @@ BEGIN
         -- Map patient_id if exists
         IF v_record ? 'patient_id' THEN
           v_old_patient_id := (v_record->>'patient_id')::uuid;
+          
           IF v_patient_mapping ? v_old_patient_id::text THEN
             v_new_patient_id := (v_patient_mapping->>v_old_patient_id::text)::uuid;
             v_columns := array_append(v_columns, 'patient_id');
             v_values := array_append(v_values, quote_literal(v_new_patient_id));
           ELSE
-            -- Skip if patient mapping not found
-            CONTINUE;
+            -- Patient mapping not found - medications from template use template tenant patient IDs
+            -- We need to map by matching to the FIRST (and likely only) patient in the new simulation
+            DECLARE
+              v_target_patient_id uuid;
+              v_patients_in_template integer;
+              v_patients_in_simulation integer;
+            BEGIN
+              -- Count patients in snapshot and simulation
+              SELECT jsonb_array_length(p_snapshot->'patients') INTO v_patients_in_template;
+              SELECT COUNT(*) INTO v_patients_in_simulation 
+              FROM patients WHERE tenant_id = p_tenant_id;
+              
+              -- If both have exactly 1 patient, map them
+              IF v_patients_in_template = 1 AND v_patients_in_simulation = 1 THEN
+                SELECT id INTO v_target_patient_id
+                FROM patients
+                WHERE tenant_id = p_tenant_id
+                LIMIT 1;
+                
+                IF v_target_patient_id IS NOT NULL THEN
+                  v_columns := array_append(v_columns, 'patient_id');
+                  v_values := array_append(v_values, quote_literal(v_target_patient_id));
+                ELSE
+                  RAISE WARNING '⚠️ [%] No patient found in simulation tenant', v_table_name;
+                  CONTINUE;
+                END IF;
+              ELSE
+                -- Multiple patients - need more sophisticated mapping
+                RAISE WARNING '⚠️ [%] Skipping - template has % patients, simulation has %', 
+                  v_table_name, v_patients_in_template, v_patients_in_simulation;
+                CONTINUE;
+              END IF;
+            END;
           END IF;
         END IF;
         
@@ -223,6 +275,19 @@ BEGIN
           FROM jsonb_each(v_record)
           WHERE key NOT IN ('id', 'tenant_id', 'patient_id', 'created_at', 'updated_at')
         LOOP
+          -- ⭐ FIX: Check if column exists in target table BEFORE adding it
+          SELECT COUNT(*) INTO v_count
+          FROM information_schema.columns
+          WHERE table_name = v_actual_table_name
+          AND column_name = v_col.key
+          AND table_schema = 'public';
+          
+          IF v_count = 0 THEN
+            -- Column doesn't exist in target table - skip it
+            RAISE NOTICE '⚠️  Skipping column % - does not exist in %', v_col.key, v_actual_table_name;
+            CONTINUE;
+          END IF;
+          
           v_columns := array_append(v_columns, quote_ident(v_col.key));
           
           -- Check if this is a foreign key UUID that needs mapping (ends with _id and is a valid UUID)
@@ -245,41 +310,46 @@ BEGIN
             END IF;
           -- Handle different data types
           ELSIF jsonb_typeof(v_col.value) = 'array' THEN
-            -- Check if this is an ENUM array first
+            -- Check column type first
             SELECT data_type, udt_name
             INTO v_column_type, v_udt_name
             FROM information_schema.columns
-            WHERE table_name = v_table_name
+            WHERE table_name = v_actual_table_name
             AND column_name = v_col.key
             AND table_schema = 'public';
             
-            -- Build array elements
-            SELECT string_agg(quote_literal(elem), ',')
-            INTO v_array_elements
-            FROM jsonb_array_elements_text(v_col.value) elem;
-            
-            IF v_array_elements IS NULL OR v_array_elements = '' THEN
-              -- Empty array - cast to appropriate type
-              IF v_column_type = 'ARRAY' AND v_udt_name LIKE '\_%' THEN
-                -- ENUM array (udt_name starts with underscore)
-                v_values := array_append(v_values, 'ARRAY[]::' || substring(v_udt_name from 2) || '[]');
-              ELSE
-                -- Regular text array
-                v_values := array_append(v_values, 'ARRAY[]::text[]');
-              END IF;
+            -- ⭐ FIX: If target column is JSONB (like admin_times), keep as JSONB!
+            IF v_column_type = 'jsonb' THEN
+              v_values := array_append(v_values, quote_literal(v_col.value::text) || '::jsonb');
             ELSE
-              -- Non-empty array - cast to appropriate type
-              IF v_column_type = 'ARRAY' AND v_udt_name LIKE '\_%' THEN
-                -- ENUM array (udt_name starts with underscore, e.g., _orientation_enum)
-                v_values := array_append(v_values, 'ARRAY[' || v_array_elements || ']::' || substring(v_udt_name from 2) || '[]');
-                IF v_table_name = 'devices' THEN
-                  RAISE NOTICE '📋 Device ENUM array %: [%] cast to %', v_col.key, v_array_elements, substring(v_udt_name from 2) || '[]';
+              -- Otherwise, convert to PostgreSQL array
+              SELECT string_agg(quote_literal(elem), ',')
+              INTO v_array_elements
+              FROM jsonb_array_elements_text(v_col.value) elem;
+              
+              IF v_array_elements IS NULL OR v_array_elements = '' THEN
+                -- Empty array - cast to appropriate type
+                IF v_column_type = 'ARRAY' AND v_udt_name LIKE '\_%' THEN
+                  -- ENUM array (udt_name starts with underscore)
+                    v_values := array_append(v_values, 'ARRAY[]::' || substring(v_udt_name from 2) || '[]');
+                ELSE
+                  -- Regular text array
+                  v_values := array_append(v_values, 'ARRAY[]::text[]');
                 END IF;
               ELSE
-                -- Regular text array
-                v_values := array_append(v_values, 'ARRAY[' || v_array_elements || ']');
-                IF v_table_name = 'devices' THEN
-                  RAISE NOTICE '📋 Device text array %: [%]', v_col.key, v_array_elements;
+                -- Non-empty array - cast to appropriate type
+                IF v_column_type = 'ARRAY' AND v_udt_name LIKE '\_%' THEN
+                  -- ENUM array (udt_name starts with underscore, e.g., _orientation_enum)
+                  v_values := array_append(v_values, 'ARRAY[' || v_array_elements || ']::' || substring(v_udt_name from 2) || '[]');
+                  IF v_table_name = 'devices' THEN
+                    RAISE NOTICE '📋 Device ENUM array %: [%] cast to %', v_col.key, v_array_elements, substring(v_udt_name from 2) || '[]';
+                  END IF;
+                ELSE
+                  -- Regular text array
+                  v_values := array_append(v_values, 'ARRAY[' || v_array_elements || ']');
+                  IF v_table_name = 'devices' THEN
+                    RAISE NOTICE '📋 Device text array %: [%]', v_col.key, v_array_elements;
+                  END IF;
                 END IF;
               END IF;
             END IF;
@@ -293,7 +363,7 @@ BEGIN
             SELECT data_type, udt_name
             INTO v_column_type, v_udt_name
             FROM information_schema.columns
-            WHERE table_name = v_table_name
+            WHERE table_name = v_actual_table_name
             AND column_name = v_col.key
             AND table_schema = 'public';
             
@@ -312,32 +382,34 @@ BEGIN
         
         -- Execute dynamic INSERT
         BEGIN
+          -- Debug: Check column/value count mismatch
+          IF array_length(v_columns, 1) != array_length(v_values, 1) THEN
+            RAISE WARNING '❌ Column/Value mismatch in %: % columns, % values', 
+              v_actual_table_name, array_length(v_columns, 1), array_length(v_values, 1);
+            RAISE WARNING '📋 Columns: %', array_to_string(v_columns, ', ');
+            RAISE WARNING '📋 Values: %', array_to_string(v_values, ', ');
+            RAISE WARNING '📋 Record: %', v_record::text;
+            -- Skip this record
+            CONTINUE;
+          END IF;
+          
           v_sql := format('INSERT INTO %I (%s) VALUES (%s)',
-            v_table_name,
+            v_actual_table_name,
             array_to_string(v_columns, ', '),
             array_to_string(v_values, ', ')
           );
           
-          -- Log SQL for devices specifically
-          IF v_table_name = 'devices' THEN
-            RAISE NOTICE '🔍 Device INSERT SQL: %', v_sql;
-          END IF;
-          
           EXECUTE v_sql;
           v_count := v_count + 1;
-          
-          IF v_table_name = 'devices' THEN
-            RAISE NOTICE '✅ Device INSERT succeeded!';
-          END IF;
         EXCEPTION WHEN OTHERS THEN
-          RAISE WARNING '⚠️ Failed to insert into %: % | SQL: %', v_table_name, SQLERRM, v_sql;
+          RAISE WARNING '⚠️ Failed to insert into %: % | SQL: %', v_actual_table_name, SQLERRM, v_sql;
           RAISE WARNING '⚠️ Record data: %', v_record::text;
           RAISE WARNING '⚠️ SQLSTATE: %', SQLSTATE;
         END;
       END LOOP;
       
       v_total_records := v_total_records + v_count;
-      RAISE NOTICE '✅ Restored % records to %', v_count, v_table_name;
+      RAISE NOTICE '✅ Restored % records to %', v_count, v_actual_table_name;
     END IF;
   END LOOP;
   
