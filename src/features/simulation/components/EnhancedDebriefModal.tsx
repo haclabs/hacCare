@@ -878,6 +878,8 @@ const ActivitySection: React.FC<{
 // Activity Item Component
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, sectionKey }) => {
+  const [showAssessmentData, setShowAssessmentData] = useState(false);
+  
   const formatItem = () => {
     switch (sectionKey) {
       case 'vitals':
@@ -1015,10 +1017,56 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
               {item.status && <span>Status: {item.status}</span>}
               {item.output_amount_ml && <span>Output: {item.output_amount_ml} mL</span>}
               {item.notes && <span className="col-span-2">Notes: {item.notes}</span>}
-              {item.assessment_data && Object.keys(item.assessment_data).length > 0 && (
-                <span className="col-span-2 text-indigo-600">+ {Object.keys(item.assessment_data).length} detailed assessment fields</span>
-              )}
             </div>
+            {item.assessment_data && Object.keys(item.assessment_data).length > 0 && (
+              <div className="mt-2">
+                <button
+                  onClick={() => setShowAssessmentData(!showAssessmentData)}
+                  className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center space-x-1 print:hidden"
+                >
+                  <span>+ {Object.keys(item.assessment_data).length} detailed assessment fields</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showAssessmentData ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showAssessmentData && (
+                  <div className="mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      {Object.entries(item.assessment_data).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="font-medium text-indigo-900 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="text-indigo-700 text-right ml-2">
+                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
+                             Array.isArray(value) ? value.join(', ') : 
+                             value?.toString() || 'N/A'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Print view - always show fields */}
+                <div className="hidden print:block mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                  <div className="grid grid-cols-1 gap-2 text-xs">
+                    {Object.entries(item.assessment_data).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="font-medium text-indigo-900 capitalize">{key.replace(/_/g, ' ')}:</span>
+                        <span className="text-indigo-700 text-right ml-2">
+                          {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
+                           Array.isArray(value) ? value.join(', ') : 
+                           value?.toString() || 'N/A'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'woundAssessments':
