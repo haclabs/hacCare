@@ -105,6 +105,10 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % wound assessments', v_count;
   
+  DELETE FROM device_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % device assessments', v_count;
+  
   DELETE FROM lab_results WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % lab results', v_count;
@@ -158,6 +162,25 @@ BEGIN
   RAISE NOTICE '🗑️  Deleted % avatar locations', v_count;
   
   RAISE NOTICE '✅ All data deleted (except patients)';
+
+  -- =====================================================
+  -- STEP 2.5: GENERATE DEBRIEF (TODO - Nov 17, 2025)
+  -- =====================================================
+  -- TODO: Before deletion, capture student work for debrief report:
+  --   - device_assessments (with student_name, device_type, assessment_data JSONB)
+  --   - wound_assessments (with student_name, wound details)
+  --   - devices added by students (not in baseline snapshot)
+  --   - wounds added by students (not in baseline snapshot)
+  --   - medication_administrations (timing, student, notes)
+  --   - patient_vitals (with student_name, values, timing)
+  --   - patient_notes (student clinical notes)
+  --   - doctors_orders (student-generated orders)
+  -- 
+  -- Store in: simulation_debrief_data table (JSONB)
+  -- Link to: simulation_id, session_date, session_number
+  -- Use for: Instructor review, student grading, competency tracking
+  
+  RAISE NOTICE '⚠️  TODO: Debrief generation not yet implemented';
 
   -- =====================================================
   -- STEP 3: RESTORE FROM SNAPSHOT WITH BARCODE PRESERVATION

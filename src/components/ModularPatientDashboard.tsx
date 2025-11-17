@@ -1317,8 +1317,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     },
     {
       id: 'hacmap',
-      title: 'hacMap - Device & Wound Map',
-      description: 'Visual mapping of medical devices and wound locations on body diagram',
+      title: 'hacMap - Device & Wound Care',
+      description: 'Visual mapping and care of medical devices and wound locations on body diagram',
       icon: MapPin,
       color: 'rose' // Unique: Rose/pink for hacMap
     },

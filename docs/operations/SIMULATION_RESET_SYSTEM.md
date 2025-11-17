@@ -130,16 +130,17 @@ const { data, error } = await supabase.rpc('reset_simulation_for_next_session', 
 - `patient_notes` - All notes students wrote
 - `patient_alerts` - All alerts generated
 - `patient_images` - All images uploaded
-- `wound_assessments` - All wound assessments
+- `wound_assessments` - All wound assessments (hacMap v2)
+- `device_assessments` - All device assessments (hacMap v2)
 - `lab_results` - All lab results students ordered
 - `lab_panels` - All lab panels students ordered
 - `diabetic_records` - All blood sugar readings
 - `doctors_orders` - All orders students created
 
 **Baseline Data** (deleted then restored from snapshot):
-- `wounds` - Baseline wounds from template
-- `devices` - Baseline devices (IVs, catheters, etc.)
-- `avatar_locations` - Body map marker locations
+- `wounds` - Baseline wounds from template (hacMap v2)
+- `devices` - Baseline devices with IV/Feeding Tube fields (hacMap v2)
+- `avatar_locations` - Body map marker locations (hacMap v2)
 
 **NEVER DELETED**:
 - `patients` - Patient demographics and barcode IDs
@@ -225,6 +226,13 @@ SELECT
 **Delete anything else related to old simulation debugging.**
 
 ## History
+
+- **Nov 17, 2025**: Integrated hacMap v2 into simulation system
+  - Added `device_assessments` table (student work - deleted on reset)
+  - Added device-specific fields to `devices` table (IV: gauge, site; Feeding Tube: route, placement verification)
+  - Updated reset function to delete device_assessments
+  - Devices, wounds, avatar_locations restored from snapshot
+  - Device and wound assessments captured for debrief (TODO: implement debrief generation)
 
 - **Nov 14, 2025**: Complete rewrite of reset system
   - Fixed patient duplication
