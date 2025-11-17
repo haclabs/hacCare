@@ -13,8 +13,8 @@ CREATE POLICY device_assessments_tenant_isolation
   ON device_assessments
   FOR ALL
   TO authenticated
-  USING (tenant_id = app.current_tenant_id())
-  WITH CHECK (tenant_id = app.current_tenant_id());
+  USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::uuid);
 
 COMMENT ON POLICY device_assessments_tenant_isolation ON device_assessments IS 
 'Multi-tenant isolation - users can only access device_assessments for their current tenant. WITH CHECK ensures inserts/updates also enforce tenant isolation.';
