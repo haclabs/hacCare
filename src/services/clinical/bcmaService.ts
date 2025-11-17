@@ -245,7 +245,9 @@ class BCMAService {
     validationResult: BCMAValidationResult,
     manualOverrides: string[] = [],
     notes?: string,
-    studentName?: string
+    studentName?: string,
+    overrideReason?: string,
+    witnessName?: string
   ): Promise<AdministrationLog> {
     console.log('🔵 BCMA: Creating administration record in database...');
     
@@ -268,6 +270,7 @@ class BCMAService {
       const administrationRecord: MedicationAdministration = {
         medication_id: medication.id,
         patient_id: patient.id, // Use database UUID, not patient_id (MRN)
+        tenant_id: patient.tenant_id, // ✅ CRITICAL: Include tenant_id for proper scoping
         administered_by: currentUser.name,
         administered_by_id: currentUser.id,
         timestamp: log.timestamp,
@@ -278,8 +281,11 @@ class BCMAService {
         medication_name: medication.name,
         student_name: studentName,
         // ✅ CRITICAL: Include barcode scan information for BCMA compliance
-        barcode_scanned_patient: scannedPatientId,
-        barcode_scanned_medication: scannedMedicationId
+        barcode_scanned: manualOverrides.length === 0, // Only true if no overrides
+        patient_barcode_scanned: scannedPatientId,
+        medication_barcode_scanned: scannedMedicationId,
+        override_reason: overrideReason,
+        witness_name: witnessName
       };
 
       console.log('🔵 BCMA: Recording administration:', administrationRecord);

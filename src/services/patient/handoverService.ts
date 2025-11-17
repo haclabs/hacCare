@@ -153,7 +153,8 @@ export const updateHandoverNote = async (
  */
 export const acknowledgeHandoverNote = async (
   noteId: string,
-  acknowledgedBy: string
+  acknowledgedBy: string,
+  studentName?: string
 ): Promise<HandoverNote> => {
   try {
     const { data, error } = await supabase
@@ -161,6 +162,7 @@ export const acknowledgeHandoverNote = async (
       .update({
         acknowledged_by: acknowledgedBy,
         acknowledged_at: new Date().toISOString(),
+        student_name: studentName || null, // ✅ Track which student acknowledged
         updated_at: new Date().toISOString()
       })
       .eq('id', noteId)

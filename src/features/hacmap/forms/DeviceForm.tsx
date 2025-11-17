@@ -31,7 +31,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
   onCancel
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
+  const [_isDirty, setIsDirty] = useState(false);
   
   // Form state
   const [type, setType] = useState<DeviceType>(device?.type || 'closed-suction-drain');
@@ -49,10 +49,23 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
   const [patientTolerance, setPatientTolerance] = useState(device?.patient_tolerance || '');
   const [notes, setNotes] = useState(device?.notes || '');
   const [studentName, setStudentName] = useState('');
+  
+  // IV-specific fields
+  const [gauge, setGauge] = useState(device?.gauge || '');
+  const [siteSide, setSiteSide] = useState(device?.site_side || '');
+  const [siteLocation, setSiteLocation] = useState(device?.site_location || '');
+  
+  // Feeding Tube-specific fields
+  const [route, setRoute] = useState(device?.route || '');
+  const [externalLengthCm, setExternalLengthCm] = useState<number | undefined>(device?.external_length_cm);
+  const [initialXrayConfirmed, setInitialXrayConfirmed] = useState(device?.initial_xray_confirmed || false);
+  const [initialPh, setInitialPh] = useState<number | undefined>(device?.initial_ph);
+  const [initialAspirateAppearance, setInitialAspirateAppearance] = useState(device?.initial_aspirate_appearance || '');
+  const [placementConfirmed, setPlacementConfirmed] = useState(device?.placement_confirmed || false);
 
   useEffect(() => {
     setIsDirty(true);
-  }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes, studentName]);
+  }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes, studentName, gauge, siteSide, siteLocation, route, externalLengthCm, initialXrayConfirmed, initialPh, initialAspirateAppearance, placementConfirmed]);
 
   const handleOrientationToggle = (value: Orientation) => {
     setOrientation(prev =>
@@ -71,7 +84,8 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      const data: any = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: Record<string, any> = {
         type,
         placement_date: placementDate || undefined,
         placement_time: placementTime || undefined,
@@ -85,7 +99,18 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
         reservoir_size_ml: reservoirSizeMl,
         securement_method: securementMethod.length > 0 ? securementMethod : undefined,
         patient_tolerance: patientTolerance || undefined,
-        notes: notes || undefined
+        notes: notes || undefined,
+        // IV-specific fields
+        gauge: gauge || undefined,
+        site_side: siteSide || undefined,
+        site_location: siteLocation || undefined,
+        // Feeding Tube-specific fields
+        route: route || undefined,
+        external_length_cm: externalLengthCm,
+        initial_xray_confirmed: initialXrayConfirmed || undefined,
+        initial_ph: initialPh,
+        initial_aspirate_appearance: initialAspirateAppearance || undefined,
+        placement_confirmed: placementConfirmed || undefined
       };
 
       if (!device) {
@@ -142,6 +167,168 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           ))}
         </select>
       </div>
+
+      {/* IV-Specific Fields */}
+      {(type === 'iv-peripheral' || type === 'iv-picc' || type === 'iv-port') && (
+        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <h3 className="text-sm font-semibold text-blue-900">IV Site Information</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="gauge" className="block text-sm font-medium text-gray-700 mb-1">
+                Gauge Size
+              </label>
+              <select
+                id="gauge"
+                value={gauge}
+                onChange={(e) => setGauge(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select...</option>
+                <option value="14G">14G</option>
+                <option value="16G">16G</option>
+                <option value="18G">18G</option>
+                <option value="20G">20G</option>
+                <option value="22G">22G</option>
+                <option value="24G">24G</option>
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="siteSide" className="block text-sm font-medium text-gray-700 mb-1">
+                Site Side
+              </label>
+              <select
+                id="siteSide"
+                value={siteSide}
+                onChange={(e) => setSiteSide(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select...</option>
+                <option value="Left">Left</option>
+                <option value="Right">Right</option>
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label htmlFor="siteLocation" className="block text-sm font-medium text-gray-700 mb-1">
+              Site Location
+            </label>
+            <input
+              type="text"
+              id="siteLocation"
+              value={siteLocation}
+              onChange={(e) => setSiteLocation(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Left Antecubital, Right Hand Dorsum"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Feeding Tube-Specific Fields */}
+      {type === 'feeding-tube' && (
+        <div className="space-y-4 p-4 bg-purple-50 border border-purple-200 rounded-md">
+          <h3 className="text-sm font-semibold text-purple-900">Feeding Tube Information</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="route" className="block text-sm font-medium text-gray-700 mb-1">
+                Route
+              </label>
+              <select
+                id="route"
+                value={route}
+                onChange={(e) => setRoute(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="">Select...</option>
+                <option value="NG">NG (Nasogastric)</option>
+                <option value="OG">OG (Orogastric)</option>
+                <option value="PEG">PEG (Percutaneous Endoscopic Gastrostomy)</option>
+                <option value="PEJ">PEJ (Percutaneous Endoscopic Jejunostomy)</option>
+                <option value="GJ">GJ (Gastrojejunal)</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="externalLengthCm" className="block text-sm font-medium text-gray-700 mb-1">
+                External Length (cm)
+              </label>
+              <input
+                type="number"
+                id="externalLengthCm"
+                value={externalLengthCm || ''}
+                onChange={(e) => setExternalLengthCm(e.target.value ? parseFloat(e.target.value) : undefined)}
+                step="0.1"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+          </div>
+          
+          <div className="border-t border-purple-200 pt-4 mt-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Initial Placement Verification</h4>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="initialPh" className="block text-sm font-medium text-gray-700 mb-1">
+                  Initial pH
+                </label>
+                <input
+                  type="number"
+                  id="initialPh"
+                  value={initialPh || ''}
+                  onChange={(e) => setInitialPh(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  step="0.1"
+                  min="0"
+                  max="14"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="0.0 - 14.0"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="initialAspirateAppearance" className="block text-sm font-medium text-gray-700 mb-1">
+                  Initial Aspirate Appearance
+                </label>
+                <input
+                  type="text"
+                  id="initialAspirateAppearance"
+                  value={initialAspirateAppearance}
+                  onChange={(e) => setInitialAspirateAppearance(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="e.g., Clear, Bile-tinged"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2 mt-3">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={initialXrayConfirmed}
+                  onChange={(e) => setInitialXrayConfirmed(e.target.checked)}
+                  className="rounded text-purple-500 focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-700">Initial X-ray Confirmed Placement</span>
+              </label>
+              
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={placementConfirmed}
+                  onChange={(e) => setPlacementConfirmed(e.target.checked)}
+                  className="rounded text-purple-500 focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-700 font-medium">Placement Confirmed (Required before use)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Placement Date & Time */}
       <div className="grid grid-cols-2 gap-4">

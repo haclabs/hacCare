@@ -1171,12 +1171,16 @@ export type Database = {
         Row: {
           administered_by: string
           administered_by_id: string | null
+          barcode_scanned: boolean | null
           created_at: string | null
           dosage: string | null
           id: string
+          medication_barcode_scanned: string | null
           medication_id: string | null
           medication_name: string | null
           notes: string | null
+          override_reason: string | null
+          patient_barcode_scanned: string | null
           patient_id: string
           route: string | null
           status: string | null
@@ -1184,16 +1188,21 @@ export type Database = {
           tenant_id: string | null
           timestamp: string
           updated_at: string | null
+          witness_name: string | null
         }
         Insert: {
           administered_by: string
           administered_by_id?: string | null
+          barcode_scanned?: boolean | null
           created_at?: string | null
           dosage?: string | null
           id?: string
+          medication_barcode_scanned?: string | null
           medication_id?: string | null
           medication_name?: string | null
           notes?: string | null
+          override_reason?: string | null
+          patient_barcode_scanned?: string | null
           patient_id: string
           route?: string | null
           status?: string | null
@@ -1201,16 +1210,21 @@ export type Database = {
           tenant_id?: string | null
           timestamp?: string
           updated_at?: string | null
+          witness_name?: string | null
         }
         Update: {
           administered_by?: string
           administered_by_id?: string | null
+          barcode_scanned?: boolean | null
           created_at?: string | null
           dosage?: string | null
           id?: string
+          medication_barcode_scanned?: string | null
           medication_id?: string | null
           medication_name?: string | null
           notes?: string | null
+          override_reason?: string | null
+          patient_barcode_scanned?: string | null
           patient_id?: string
           route?: string | null
           status?: string | null
@@ -1218,6 +1232,7 @@ export type Database = {
           tenant_id?: string | null
           timestamp?: string
           updated_at?: string | null
+          witness_name?: string | null
         }
         Relationships: [
           {

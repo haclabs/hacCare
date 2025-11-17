@@ -19,6 +19,7 @@ import {
   Info
 } from 'lucide-react';
 import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote } from '../../../../services/patient/handoverService';
+import { StudentAcknowledgeModal } from '../../../../components/modals/StudentAcknowledgeModal';
 import { format } from 'date-fns';
 
 interface HandoverNotesListProps {
@@ -43,6 +44,7 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
   const [filter, setFilter] = useState<'all' | 'acknowledged' | 'pending'>('all');
   const [selectedNote, setSelectedNote] = useState<HandoverNote | null>(null);
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
+  const [acknowledgingNoteId, setAcknowledgingNoteId] = useState<string | null>(null);
 
   const loadNotes = async () => {
     try {
@@ -60,15 +62,23 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
     loadNotes();
   }, [patientId]);
 
-  const handleAcknowledge = async (noteId: string) => {
+  const handleAcknowledge = (noteId: string) => {
+    setAcknowledgingNoteId(noteId);
+  };
+
+  const confirmAcknowledge = async (studentName: string) => {
+    if (!acknowledgingNoteId) return;
+
     try {
-      setAcknowledging(noteId);
-      await acknowledgeHandoverNote(noteId, currentUser.id);
+      setAcknowledging(acknowledgingNoteId);
+      await acknowledgeHandoverNote(acknowledgingNoteId, currentUser.id, studentName);
       await loadNotes(); // Refresh the list
       if (onRefresh) onRefresh();
+      setAcknowledgingNoteId(null);
     } catch (error) {
       console.error('Error acknowledging note:', error);
       alert('Failed to acknowledge note. Please try again.');
+      throw error; // Re-throw to let modal handle error display
     } finally {
       setAcknowledging(null);
     }
@@ -286,6 +296,17 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Student Acknowledge Modal */}
+      {acknowledgingNoteId && (
+        <StudentAcknowledgeModal
+          title="Acknowledge Handover Note"
+          message="Please enter your name to acknowledge that you have read and understood this SBAR handover note."
+          actionText="Acknowledge Handover"
+          onConfirm={confirmAcknowledge}
+          onCancel={() => setAcknowledgingNoteId(null)}
+        />
       )}
     </div>
   );

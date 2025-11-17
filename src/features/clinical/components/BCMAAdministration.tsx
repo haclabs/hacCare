@@ -203,7 +203,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         validationResult,
         overriddenChecks,
         notes,
-        studentName
+        studentName,
+        overriddenChecks.length > 0 ? overrideReason : undefined,
+        undefined // witnessName - can be added later if needed
       );
 
       setCurrentStep('complete');
@@ -244,7 +246,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
       setOverriddenChecks([...overriddenChecks, ...failedChecks]);
       setShowOverrideModal(false);
-      setOverrideReason('');
+      // ✅ DON'T clear overrideReason here - we need it for the administration log
+      // It will be cleared after successful administration
     }
   };
 

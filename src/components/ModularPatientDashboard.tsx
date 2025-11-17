@@ -14,7 +14,7 @@
  * - Quick action workflows with enhanced UX
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Activity, 
@@ -40,7 +40,6 @@ import {
 import { VitalsModule } from '../features/clinical/components/vitals';
 import { MARModule } from '../features/clinical/components/mar';
 import { FormsModule } from '../features/forms';
-import { WoundCareModule } from '../features/clinical/components/wound-care';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
 import { AvatarBoard } from '../features/hacmap/AvatarBoard';
@@ -54,10 +53,10 @@ import { fetchPatientMedications } from '../services/clinical/medicationService'
 import { fetchAdmissionRecord, fetchAdvancedDirective, upsertAdmissionRecord, AdmissionRecord, AdvancedDirective } from '../services/patient/admissionService';
 import { supabase } from '../lib/api/supabase';
 import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
+import { getPatientHandoverNotes } from '../services/patient/handoverService';
 import { fetchPatientAssessments, createAssessment } from '../services/patient/assessmentService';
 import { fetchPatientBowelRecords, createBowelRecord } from '../services/clinical/bowelRecordService';
 import { getLabPanels, getLabResults, hasUnacknowledgedLabs } from '../services/clinical/labService';
-import { WoundCareService } from '../services/patient/woundCareService';
 import type { LabPanel, LabResult } from '../features/clinical/types/labs';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
@@ -72,7 +71,7 @@ interface ModularPatientDashboardProps {
   };
 }
 
-type ActiveModule = 'vitals' | 'medications' | 'forms' | 'wound-care' | 'overview' | 'handover' | 'advanced-directives' | 'hacmap' | 'intake-output';
+type ActiveModule = 'vitals' | 'medications' | 'forms' | 'overview' | 'handover' | 'advanced-directives' | 'hacmap' | 'intake-output';
 
 interface ModuleConfig {
   id: ActiveModule;
@@ -109,13 +108,24 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     setLabsRefreshTrigger(prev => prev + 1);
   };
   
+  const handleHandoverChange = () => {
+    // Trigger a refresh of handover notes count and patient data
+    setHandoverRefreshTrigger(prev => prev + 1);
+  };
+  
   // Track unacknowledged doctors orders
   const [ordersRefreshTrigger, setOrdersRefreshTrigger] = useState(0);
   const { unacknowledgedCount } = useDoctorsOrdersAlert(patient?.id || '', ordersRefreshTrigger);
   
   // Track unacknowledged labs
   const [labsRefreshTrigger, setLabsRefreshTrigger] = useState(0);
+  
+  // Track handover notes changes
+  const [handoverRefreshTrigger, setHandoverRefreshTrigger] = useState(0);
   const [unacknowledgedLabsCount, setUnacknowledgedLabsCount] = useState(0);
+
+  // Track unacknowledged handover notes
+  const [unacknowledgedHandoverCount, setUnacknowledgedHandoverCount] = useState(0);
   
 
 
@@ -1175,27 +1185,22 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         setError(null);
         
         // Fetch patient data, medications, and wound assessments simultaneously
-        const [patientData, medicationsData, woundAssessmentsData] = await Promise.all([
+        const [patientData, medicationsData] = await Promise.all([
           fetchPatientById(id),
           fetchPatientMedications(id).catch(err => {
             console.warn('Failed to fetch medications:', err);
             return []; // Return empty array if medications fail to load
-          }),
-          WoundCareService.getAssessmentsByPatient(id).catch(err => {
-            console.warn('Failed to fetch wound assessments:', err);
-            return []; // Return empty array if wound assessments fail to load
           })
         ]);
         
         if (patientData) {
-          // Include medications and wound assessments in patient data
+          // Include medications in patient data
           const patientWithData = {
             ...patientData,
-            medications: medicationsData,
-            wound_assessments: woundAssessmentsData
+            medications: medicationsData
           };
           setPatient(patientWithData);
-          console.log(`✅ Patient loaded with ${medicationsData.length} medications and ${woundAssessmentsData.length} wound assessments`);
+          console.log(`✅ Patient loaded with ${medicationsData.length} medications`);
         }
         
         setLastUpdated(new Date());
@@ -1220,7 +1225,21 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     };
     
     checkUnacknowledgedLabs();
-  }, [patient?.id, currentTenant?.id, labsRefreshTrigger]);
+  }, [patient?.id, currentTenant?.id, labsRefreshTrigger, handoverRefreshTrigger]);
+
+  // Memoized function to refresh handover count
+  const refreshHandoverCount = useCallback(async () => {
+    if (patient?.id) {
+      const notes = await getPatientHandoverNotes(patient.id);
+      const unacknowledgedCount = notes.filter(note => !note.acknowledged_by).length;
+      setUnacknowledgedHandoverCount(unacknowledgedCount);
+    }
+  }, [patient?.id, handoverRefreshTrigger]);
+
+  // Check for unacknowledged handover notes on mount
+  useEffect(() => {
+    refreshHandoverCount();
+  }, [refreshHandoverCount]);
 
   // Show loading state
   if (loading) {
@@ -1275,14 +1294,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       badge: patient.medications?.length?.toString() || '0'
     },
     {
-      id: 'wound-care',
-      title: 'Wound Care',
-      description: 'Comprehensive wound assessment and treatment tracking',
-      icon: Camera,
-      color: 'orange', // Unique: Orange for wounds
-      badge: patient.wound_assessments?.length?.toString() || '0'
-    },
-    {
       id: 'forms',
       title: 'Assessments',
       description: 'Clinical assessment forms and comprehensive documentation',
@@ -1294,7 +1305,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       title: 'Handover Notes',
       description: 'SBAR communication framework for care transitions',
       icon: MessageSquare,
-      color: 'sky' // Unique: Sky blue for handover
+      color: 'sky', // Unique: Sky blue for handover
+      badge: unacknowledgedHandoverCount > 0 ? 'Pending' : undefined
     },
     {
       id: 'advanced-directives',
@@ -1562,10 +1574,10 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       ['patient-record', 'advanced-directives', 'hacmap'],
       // Row 2: Doctors Orders, Labs, Vitals
       ['doctors-orders', 'labs', 'vitals'],
-      // Row 3: Handover Notes, Medications, Wound Care
-      ['handover', 'medications', 'wound-care'],
-      // Row 4: Assessments, Intake & Output, Discharge Summary
-      ['forms', 'intake-output', 'discharge-summary']
+      // Row 3: Handover Notes, Medications, Assessments
+      ['handover', 'medications', 'forms'],
+      // Row 4: Intake & Output, Discharge Summary (2-column layout)
+      ['intake-output', 'discharge-summary']
     ];
 
     const renderCard = (moduleId: string) => {
@@ -1733,29 +1745,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 ID Bracelet
               </button>
             )}
-            
-            {/* hacMap Button */}
-            <button
-              onClick={() => setActiveModule('hacmap')}
-              className="flex items-center text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-4 py-2.5 rounded-xl transition-all duration-200 border border-purple-200 hover:border-purple-300 hover:scale-105 font-medium"
-              title="Open Device & Wound Map"
-            >
-              <svg 
-                className="h-4 w-4 mr-2" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              hacMap - Device & Wound Map
-            </button>
-            
-            {/* Contact button removed as requested */}
           </div>
           {/* End Modern Action Row */}
           <div className="text-right">
@@ -1823,13 +1812,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 />
               )}
 
-              {activeModule === 'wound-care' && (
-                <WoundCareModule
-                  patient={patient}
-                  onPatientUpdate={handlePatientUpdate}
-                />
-              )}
-
               {activeModule === 'forms' && (
                 <FormsModule
                   patient={patient}
@@ -1846,6 +1828,10 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     id: 'unknown',
                     name: 'Unknown User',
                     role: 'nurse'
+                  }}
+                  onRefresh={() => {
+                    refreshHandoverCount();
+                    handleHandoverChange();
                   }}
                 />
               )}

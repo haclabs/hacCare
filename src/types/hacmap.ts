@@ -34,6 +34,7 @@ export type DeviceType =
   | 'closed-suction-drain'
   | 'chest-tube'
   | 'foley'
+  | 'feeding-tube'
   | 'iv-peripheral'
   | 'iv-picc'
   | 'iv-port'
@@ -62,6 +63,39 @@ export type WoundType =
   | 'other';
 
 export type MarkerKind = 'device' | 'wound';
+
+export type SiteCondition =
+  | 'intact'
+  | 'erythema'
+  | 'edema'
+  | 'purulent'
+  | 'dry'
+  | 'macerated'
+  | 'other';
+
+export type DrainageType =
+  | 'serous'
+  | 'sanguineous'
+  | 'serosanguineous'
+  | 'purulent'
+  | 'none';
+
+export type DrainageAmount =
+  | 'none'
+  | 'scant'
+  | 'small'
+  | 'moderate'
+  | 'large'
+  | 'copious';
+
+export type WoundAppearance =
+  | 'clean'
+  | 'granulating'
+  | 'epithelializing'
+  | 'slough'
+  | 'eschar'
+  | 'necrotic'
+  | 'infected';
 
 // ============================================================================
 // CORE INTERFACES
@@ -105,6 +139,17 @@ export interface Device {
   securement_method?: string[];
   patient_tolerance?: string;
   notes?: string;
+  // IV-specific fields
+  gauge?: string; // 14G, 16G, 18G, 20G, 22G, 24G
+  site_side?: string; // Left, Right
+  site_location?: string; // Anatomical description
+  // Feeding Tube-specific fields
+  route?: string; // NG, OG, PEG, PEJ, GJ, Other
+  external_length_cm?: number;
+  initial_xray_confirmed?: boolean;
+  initial_ph?: number;
+  initial_aspirate_appearance?: string;
+  placement_confirmed?: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -142,6 +187,44 @@ export interface Wound {
   notes?: string;
   
   created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Assessment record - tracks ongoing evaluation of devices and wounds
+ */
+export interface Assessment {
+  id: string;
+  device_id?: string | null;
+  wound_id?: string | null;
+  patient_id: string;
+  tenant_id: string;
+  assessed_at: string;
+  student_name: string;
+  
+  // Common fields
+  site_condition?: string;
+  pain_level?: number; // 0-10
+  notes?: string;
+  
+  // Wound-specific measurements
+  wound_length_cm?: number;
+  wound_width_cm?: number;
+  wound_depth_cm?: number;
+  wound_appearance?: string;
+  drainage_type?: string[];
+  drainage_amount?: string;
+  surrounding_skin?: string;
+  
+  // Treatment
+  treatment_applied?: string;
+  dressing_type?: string;
+  
+  // Device-specific
+  device_functioning?: boolean;
+  output_amount_ml?: number;
+  
   created_at: string;
   updated_at: string;
 }
@@ -214,6 +297,17 @@ export interface CreateDeviceInput {
   securement_method?: string[];
   patient_tolerance?: string;
   notes?: string;
+  // IV-specific fields
+  gauge?: string;
+  site_side?: string;
+  site_location?: string;
+  // Feeding Tube-specific fields
+  route?: string;
+  external_length_cm?: number;
+  initial_xray_confirmed?: boolean;
+  initial_ph?: number;
+  initial_aspirate_appearance?: string;
+  placement_confirmed?: boolean;
   created_by: string;
 }
 
@@ -232,6 +326,17 @@ export interface UpdateDeviceInput {
   securement_method?: string[];
   patient_tolerance?: string;
   notes?: string;
+  // IV-specific fields
+  gauge?: string;
+  site_side?: string;
+  site_location?: string;
+  // Feeding Tube-specific fields
+  route?: string;
+  external_length_cm?: number;
+  initial_xray_confirmed?: boolean;
+  initial_ph?: number;
+  initial_aspirate_appearance?: string;
+  placement_confirmed?: boolean;
 }
 
 export interface CreateWoundInput {
@@ -276,6 +381,48 @@ export interface UpdateWoundInput {
   notes?: string;
 }
 
+export interface CreateAssessmentInput {
+  device_id?: string | null;
+  wound_id?: string | null;
+  patient_id: string;
+  tenant_id: string;
+  assessed_at?: string;
+  student_name: string;
+  site_condition?: string;
+  pain_level?: number;
+  notes?: string;
+  wound_length_cm?: number;
+  wound_width_cm?: number;
+  wound_depth_cm?: number;
+  wound_appearance?: string;
+  drainage_type?: string[];
+  drainage_amount?: string;
+  surrounding_skin?: string;
+  treatment_applied?: string;
+  dressing_type?: string;
+  device_functioning?: boolean;
+  output_amount_ml?: number;
+}
+
+export interface UpdateAssessmentInput {
+  assessed_at?: string;
+  student_name?: string;
+  site_condition?: string;
+  pain_level?: number;
+  notes?: string;
+  wound_length_cm?: number;
+  wound_width_cm?: number;
+  wound_depth_cm?: number;
+  wound_appearance?: string;
+  drainage_type?: string[];
+  drainage_amount?: string;
+  surrounding_skin?: string;
+  treatment_applied?: string;
+  dressing_type?: string;
+  device_functioning?: boolean;
+  output_amount_ml?: number;
+}
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -284,6 +431,7 @@ export const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
   'closed-suction-drain': 'Closed Suction Drain',
   'chest-tube': 'Chest Tube',
   'foley': 'Foley Catheter',
+  'feeding-tube': 'Feeding Tube',
   'iv-peripheral': 'IV Peripheral',
   'iv-picc': 'IV PICC Line',
   'iv-port': 'IV Port',
@@ -338,3 +486,112 @@ export const REGION_LABELS: Record<RegionKey, string> = {
   'left-foot': 'Left Foot',
   'right-foot': 'Right Foot'
 };
+
+// ============================================================================
+// DEVICE ASSESSMENTS
+// ============================================================================
+
+/**
+ * Device Assessment - separate from wound assessments
+ */
+export interface DeviceAssessment {
+  id: string;
+  device_id: string;
+  patient_id: string;
+  tenant_id: string;
+  assessed_at: string;
+  student_name: string;
+  device_type: DeviceType;
+  status?: string;
+  output_amount_ml?: number;
+  notes?: string;
+  assessment_data: Record<string, any>; // JSONB for device-specific fields
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateDeviceAssessmentInput {
+  device_id: string;
+  patient_id: string;
+  tenant_id: string;
+  assessed_at?: string;
+  student_name: string;
+  device_type: DeviceType;
+  status?: string;
+  output_amount_ml?: number;
+  notes?: string;
+  assessment_data?: Record<string, any>;
+}
+
+export interface UpdateDeviceAssessmentInput {
+  assessed_at?: string;
+  student_name?: string;
+  status?: string;
+  output_amount_ml?: number;
+  notes?: string;
+  assessment_data?: Record<string, any>;
+}
+
+// Device-specific assessment data structures
+export interface IVAssessmentData {
+  site_location?: string;
+  site_side?: 'Left' | 'Right';
+  gauge?: string;
+  local_site_assessment?: string[]; // redness, swelling, pain, warmth, etc.
+  infiltration_suspected?: boolean;
+  phlebitis_suspected?: boolean;
+  drainage_colour?: string[];
+  site_notes?: string;
+  line_status?: 'patent_infusing' | 'patent_saline_lock' | 'sluggish' | 'occluded' | 'discontinued';
+  line_interventions?: string[];
+  dressing_type?: string;
+  dressing_status?: string[];
+  dressing_tolerance?: string;
+}
+
+export interface FoleyAssessmentData {
+  patency_maintained?: boolean;
+  patency_notes?: string;
+  system_integrity?: boolean;
+  integrity_notes?: string;
+  catheter_secure?: boolean;
+  securement_notes?: string;
+  urine_amount_ml?: number;
+  urine_appearance?: string;
+  urine_odor?: 'normal' | 'foul';
+  site_findings?: string[];
+  site_notes?: string;
+  patient_comfort?: string;
+  hygiene_provided?: boolean;
+  hygiene_notes?: string;
+  indication_valid?: boolean;
+  plan?: 'continue' | 'consider_removal' | 'remove_today';
+}
+
+export interface FeedingTubeAssessmentData {
+  placement_reverified?: boolean;
+  reverification_method?: string[];
+  site_findings?: string[];
+  dressing_condition?: string[];
+  dressing_changed?: boolean;
+  site_notes?: string;
+  tube_flushed?: boolean;
+  flush_resistance?: 'none' | 'mild' | 'significant';
+  blockage_noted?: boolean;
+  actions_taken?: string;
+  residual_volume_ml?: number;
+  residual_appearance?: string;
+  residual_returned?: boolean;
+  formula_name?: string;
+  feeding_method?: 'bolus' | 'gravity' | 'continuous';
+  rate_ml_per_hr?: number;
+  volume_given_ml?: number;
+  water_flushes_ml?: number;
+  flush_timing?: string[];
+  nausea_vomiting?: boolean;
+  nausea_notes?: string;
+  cramping?: boolean;
+  abdominal_distension?: boolean;
+  bowel_sounds?: 'normal' | 'hypoactive' | 'hyperactive' | 'absent';
+  hob_elevated?: boolean;
+}

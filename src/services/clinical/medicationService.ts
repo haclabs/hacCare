@@ -483,6 +483,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     const cleanAdministration = {
       medication_id: administration.medication_id,
       patient_id: administration.patient_id,
+      tenant_id: administration.tenant_id, // ✅ CRITICAL: Include tenant_id for proper scoping
       administered_by: administration.administered_by,
       administered_by_id: administration.administered_by_id,
       timestamp: administration.timestamp,
@@ -491,7 +492,13 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       route: administration.route,
       status: administration.status || 'completed',
       medication_name: administration.medication_name,
-      student_name: administration.student_name
+      student_name: administration.student_name,
+      // ✅ BCMA compliance tracking fields
+      barcode_scanned: administration.barcode_scanned,
+      patient_barcode_scanned: administration.patient_barcode_scanned,
+      medication_barcode_scanned: administration.medication_barcode_scanned,
+      override_reason: administration.override_reason,
+      witness_name: administration.witness_name
     };
     
     // Remove undefined values to avoid Supabase issues

@@ -46,8 +46,11 @@ interface MedicationAdministrationEntry {
   route: string | null;
   status: string | null;
   notes: string | null;
-  barcode_scanned_patient?: string | null;
-  barcode_scanned_medication?: string | null;
+  barcode_scanned?: boolean | null; // ✅ True if all BCMA checks passed
+  patient_barcode_scanned?: string | null; // ✅ Actual patient barcode scanned
+  medication_barcode_scanned?: string | null; // ✅ Actual medication barcode scanned
+  override_reason?: string | null; // ✅ Reason if checks were overridden
+  witness_name?: string | null; // ✅ Witness for manual overrides
 }
 
 interface LabOrderEntry {
@@ -90,6 +93,7 @@ interface HandoverNoteEntry {
   background: string;
   assessment: string;
   recommendation: string;
+  student_name: string | null;
 }
 
 interface HacMapDeviceEntry {
@@ -233,6 +237,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('patient_vitals')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('recorded_at', { ascending: false }),
@@ -241,6 +246,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('medication_administrations')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('timestamp', { ascending: false })
@@ -257,6 +263,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('lab_orders')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('created_at', { ascending: false }),
@@ -265,6 +272,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('lab_results')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('acknowledged_by_student', 'is', null)
         .order('ack_at', { ascending: false }),
@@ -273,6 +281,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('doctors_orders')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('acknowledged_by_student', 'is', null)
         .order('acknowledged_at', { ascending: false }),
@@ -281,11 +290,12 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('patient_notes')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('created_at', { ascending: false }),
 
-      // Handover Notes
+      // Handover Notes (no tenant_id column in this table)
       supabase
         .from('handover_notes')
         .select('*')
@@ -297,6 +307,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('bowel_records')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('created_at', { ascending: false }),
@@ -305,6 +316,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('devices')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('inserted_by', 'is', null)
         .order('created_at', { ascending: false })
@@ -321,6 +333,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('wounds')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('entered_by', 'is', null)
         .order('created_at', { ascending: false })
@@ -337,6 +350,7 @@ export async function getStudentActivitiesBySimulation(
       supabase
         .from('patient_intake_output_events')
         .select('*')
+        .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('event_timestamp', { ascending: false }),
@@ -403,6 +417,12 @@ export async function getStudentActivitiesBySimulation(
         route: med.route,
         status: med.status,
         notes: med.notes,
+        // ✅ BCMA compliance tracking
+        barcode_scanned: med.barcode_scanned,
+        patient_barcode_scanned: med.patient_barcode_scanned,
+        medication_barcode_scanned: med.medication_barcode_scanned,
+        override_reason: med.override_reason,
+        witness_name: med.witness_name,
       });
       student.totalEntries++;
     });
@@ -461,18 +481,22 @@ export async function getStudentActivitiesBySimulation(
       student.totalEntries++;
     });
 
-    // Process handover notes
+    // Process handover notes (only acknowledged ones)
     handoverNotesData.data?.forEach((note: any) => {
-      const student = getOrCreateStudent(note.student_name);
-      student.activities.handoverNotes.push({
-        id: note.id,
-        created_at: note.created_at,
-        situation: note.situation,
-        background: note.background,
-        assessment: note.assessment,
-        recommendation: note.recommendation,
-      });
-      student.totalEntries++;
+      // Only count handover notes that were acknowledged by a student
+      if (note.student_name) {
+        const student = getOrCreateStudent(note.student_name);
+        student.activities.handoverNotes.push({
+          id: note.id,
+          created_at: note.created_at,
+          situation: note.situation,
+          background: note.background,
+          assessment: note.assessment,
+          recommendation: note.recommendation,
+          student_name: note.student_name,
+        });
+        student.totalEntries++;
+      }
     });
 
     // Process devices (from HAC Map)

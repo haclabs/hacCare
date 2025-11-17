@@ -32,6 +32,7 @@ export interface MedicationAdministration {
   id?: string;
   medication_id?: string;
   patient_id?: string;
+  tenant_id?: string; // ✅ Simulation/tenant scope
   administered_by: string;
   administered_by_id?: string;
   timestamp: string;
@@ -47,8 +48,13 @@ export interface MedicationAdministration {
   };
   medication_name?: string; // Fallback field
   student_name?: string; // Student who administered
+  barcode_scanned?: boolean; // ✅ BCMA compliance: true if all checks passed
   barcode_scanned_patient?: string; // Patient barcode scanned (for BCMA compliance)
+  patient_barcode_scanned?: string; // ✅ Actual patient barcode scanned
   barcode_scanned_medication?: string; // Medication barcode scanned (for BCMA compliance)
+  medication_barcode_scanned?: string; // ✅ Actual medication barcode scanned
+  override_reason?: string; // ✅ Reason if BCMA checks were overridden
+  witness_name?: string; // ✅ Witness name for manual overrides
 }
 
 /**

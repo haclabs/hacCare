@@ -9,6 +9,9 @@ import { useTenant } from '../../contexts/TenantContext';
 import { AvatarCanvas } from './components/AvatarCanvas';
 import { DeviceForm } from './forms/DeviceForm';
 import { WoundForm } from './forms/WoundForm';
+import { AssessmentForm } from './forms/AssessmentForm';
+import { DeviceAssessmentForm } from './forms/DeviceAssessmentForm';
+import { DeviceAssessmentViewer } from './components/DeviceAssessmentViewer';
 import {
   createAvatarLocation,
   updateAvatarLocation,
@@ -22,18 +25,30 @@ import {
   updateWound,
   deleteWound
 } from './api';
+import {
+  getWoundAssessments,
+  createAssessment
+} from '../../services/hacmap/assessmentService';
+import {
+  getDeviceAssessments as getDeviceAssessmentsList,
+  createDeviceAssessment
+} from '../../services/hacmap/deviceAssessmentService';
 import type {
   MarkerWithDetails,
   Coordinates,
   RegionKey,
   Device,
   Wound,
+  Assessment,
+  DeviceAssessment,
   CreateDeviceInput,
   UpdateDeviceInput,
   CreateWoundInput,
-  UpdateWoundInput
+  UpdateWoundInput,
+  CreateAssessmentInput,
+  CreateDeviceAssessmentInput
 } from '../../types/hacmap';
-import { AlertCircle, Filter, X } from 'lucide-react';
+import { AlertCircle, Filter, X, FileText, Plus } from 'lucide-react';
 
 interface AvatarBoardProps {
   patientId: string;
@@ -58,11 +73,26 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [selectedWound, setSelectedWound] = useState<Wound | null>(null);
   
+  // Record selection for assessments
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [selectedRecordType, setSelectedRecordType] = useState<'device' | 'wound' | null>(null);
+  const [deviceAssessments, setDeviceAssessments] = useState<DeviceAssessment[]>([]);
+  const [woundAssessments, setWoundAssessments] = useState<Assessment[]>([]);
+  const [loadingAssessments, setLoadingAssessments] = useState(false);
+  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
+  const [selectedDeviceAssessment, setSelectedDeviceAssessment] = useState<DeviceAssessment | null>(null);
+  const [selectedWoundAssessment, setSelectedWoundAssessment] = useState<Assessment | null>(null);
+  const [showViewAssessmentModal, setShowViewAssessmentModal] = useState(false);
+  
   // Filters
   const [showDevices, setShowDevices] = useState(true);
   const [showWounds, setShowWounds] = useState(true);
 
   const tenantId = currentTenant?.id;
+
+  // Get current assessments based on record type
+  const currentAssessments = selectedRecordType === 'device' ? deviceAssessments : woundAssessments;
+  const currentAssessmentCount = currentAssessments.length;
 
   // Load markers on mount
   useEffect(() => {
@@ -252,6 +282,125 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
     setSelectedLocationId(null);
     setSelectedDevice(null);
     setSelectedWound(null);
+    setSelectedRecordId(null);
+    setSelectedRecordType(null);
+    setDeviceAssessments([]);
+    setWoundAssessments([]);
+  };
+
+  // Handle record selection for assessment
+  const handleRecordSelect = async (markerId: string, kind: 'device' | 'wound') => {
+    if (!tenantId) return;
+
+    // If clicking the same record, deselect it
+    if (selectedRecordId === markerId) {
+      setSelectedRecordId(null);
+      setSelectedRecordType(null);
+      setDeviceAssessments([]);
+      setWoundAssessments([]);
+      return;
+    }
+
+    setSelectedRecordId(markerId);
+    setSelectedRecordType(kind);
+    setLoadingAssessments(true);
+
+    try {
+      // Load assessment history for this record
+      if (kind === 'device') {
+        const data = await getDeviceAssessmentsList(markerId, tenantId);
+        setDeviceAssessments(data);
+        setWoundAssessments([]);
+      } else {
+        const data = await getWoundAssessments(markerId, tenantId);
+        setWoundAssessments(data);
+        setDeviceAssessments([]);
+      }
+    } catch (err) {
+      console.error('Error loading assessments:', err);
+      setDeviceAssessments([]);
+      setWoundAssessments([]);
+    } finally {
+      setLoadingAssessments(false);
+    }
+  };
+
+  // Handle View Record button
+  const handleViewRecord = () => {
+    if (!selectedRecordId || !selectedRecordType) return;
+    
+    const marker = markers.find(m => m.id === selectedRecordId);
+    if (!marker) return;
+
+    // Open the edit form for viewing
+    handleMarkerClick(selectedRecordId, selectedRecordType);
+  };
+
+  // Handle Add Assessment button
+  const handleAddAssessment = async () => {
+    if (!selectedRecordId || !selectedRecordType) return;
+    
+    // Load device data if assessing a device
+    if (selectedRecordType === 'device') {
+      try {
+        const device = await getDevice(selectedRecordId);
+        setSelectedDevice(device);
+      } catch (err) {
+        console.error('Error loading device:', err);
+        alert('Failed to load device information.');
+        return;
+      }
+    }
+    
+    setShowAssessmentModal(true);
+  };
+
+  // Handle Save Assessment (Wound)
+  const handleSaveAssessment = async (data: CreateAssessmentInput) => {
+    try {
+      if (selectedRecordType === 'wound') {
+        await createAssessment(data);
+      }
+      setShowAssessmentModal(false);
+      
+      // Reload assessments
+      if (selectedRecordId && selectedRecordType && tenantId) {
+        const data = await getWoundAssessments(selectedRecordId, tenantId);
+        setWoundAssessments(data);
+      }
+    } catch (err) {
+      console.error('Error saving wound assessment:', err);
+      throw err;
+    }
+  };
+
+  // Handle Save Device Assessment
+  const handleSaveDeviceAssessment = async (data: CreateDeviceAssessmentInput) => {
+    try {
+      await createDeviceAssessment(data);
+      setShowAssessmentModal(false);
+      
+      // Reload device assessments
+      if (selectedRecordId && tenantId) {
+        const data = await getDeviceAssessmentsList(selectedRecordId, tenantId);
+        setDeviceAssessments(data);
+      }
+    } catch (err) {
+      console.error('Error saving device assessment:', err);
+      throw err;
+    }
+  };
+
+  // Handle View Device Assessment
+  const handleViewDeviceAssessment = (assessment: DeviceAssessment) => {
+    setSelectedDeviceAssessment(assessment);
+    setShowViewAssessmentModal(true);
+  };
+
+  // Handle View Wound Assessment
+  const handleViewWoundAssessment = (assessment: Assessment) => {
+    setSelectedWoundAssessment(assessment);
+    setShowViewAssessmentModal(true);
   };
 
   // Filter markers based on toggles
@@ -465,7 +614,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
               <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-semibold text-gray-900">Records</h3>
                 <p className="text-xs text-gray-600 mt-1">
-                  Click a marker on the body to edit
+                  Select a record to view or add assessment
                 </p>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -484,23 +633,87 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                         </h4>
                         <div className="space-y-2">
                           {markers.filter(m => m.kind === 'device').map(marker => (
-                            <button
-                              key={marker.id}
-                              onClick={() => handleMarkerClick(marker.id, 'device')}
-                              className="w-full text-left p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {marker.device?.type?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Device'}
-                                  </p>
-                                  <p className="text-xs text-gray-600 mt-1">
-                                    {marker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                            <div key={marker.id} className="space-y-2">
+                              <button
+                                onClick={() => handleRecordSelect(marker.id, 'device')}
+                                className={`w-full text-left p-3 border rounded-lg transition-all ${
+                                  selectedRecordId === marker.id
+                                    ? 'bg-green-100 border-green-400 shadow-md'
+                                    : 'bg-green-50 hover:bg-green-100 border-green-200'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {marker.device?.type?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Device'}
+                                    </p>
+                                    <p className="text-xs text-gray-600 mt-1">
+                                      {marker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                    </p>
+                                    {marker.device?.inserted_by && (
+                                      <p className="text-xs text-gray-500 mt-1">By: {marker.device.inserted_by}</p>
+                                    )}
+                                  </div>
+                                  <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
+                                </div>
+                              </button>
+                              
+                              {/* Action Buttons */}
+                              {selectedRecordId === marker.id && (
+                                <div className="ml-3 flex gap-2 animate-fadeIn">
+                                  <button
+                                    onClick={handleViewRecord}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    View Record
+                                  </button>
+                                  <button
+                                    onClick={handleAddAssessment}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                    Add Assessment
+                                  </button>
+                                </div>
+                              )}
+                              
+                              {/* Assessment History */}
+                              {selectedRecordId === marker.id && currentAssessmentCount > 0 && (
+                                <div className="ml-3 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                  <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                                    Assessment History ({currentAssessmentCount})
+                                  </h5>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {currentAssessments.map((assessment: DeviceAssessment | Assessment) => (
+                                      <button
+                                        key={assessment.id}
+                                        onClick={() => selectedRecordType === 'device' ? handleViewDeviceAssessment(assessment as DeviceAssessment) : handleViewWoundAssessment(assessment as Assessment)}
+                                        className="w-full text-left text-xs text-gray-600 border-l-2 border-purple-400 pl-2 hover:bg-purple-50 rounded transition-colors p-1"
+                                      >
+                                        <div className="font-medium">{assessment.student_name}</div>
+                                        <div className="text-gray-500">{new Date(assessment.assessed_at).toLocaleString()}</div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* No Assessments Message */}
+                              {selectedRecordId === marker.id && !loadingAssessments && currentAssessmentCount === 0 && (
+                                <div className="ml-3 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                                  <p className="text-xs text-blue-700">
+                                    No assessments recorded yet. Click 'Add Assessment' above to document your first assessment.
                                   </p>
                                 </div>
-                                <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
-                              </div>
-                            </button>
+                              )}
+                              
+                              {selectedRecordId === marker.id && loadingAssessments && (
+                                <div className="ml-3 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                                  <div className="text-xs text-gray-500">Loading assessments...</div>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -514,23 +727,87 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                         </h4>
                         <div className="space-y-2">
                           {markers.filter(m => m.kind === 'wound').map(marker => (
-                            <button
-                              key={marker.id}
-                              onClick={() => handleMarkerClick(marker.id, 'wound')}
-                              className="w-full text-left p-3 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded-lg transition-colors"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {marker.wound?.wound_type?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Wound'}
-                                  </p>
-                                  <p className="text-xs text-gray-600 mt-1">
-                                    {marker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                            <div key={marker.id} className="space-y-2">
+                              <button
+                                onClick={() => handleRecordSelect(marker.id, 'wound')}
+                                className={`w-full text-left p-3 border rounded-lg transition-all ${
+                                  selectedRecordId === marker.id
+                                    ? 'bg-pink-100 border-pink-400 shadow-md'
+                                    : 'bg-pink-50 hover:bg-pink-100 border-pink-200'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {marker.wound?.wound_type?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Wound'}
+                                    </p>
+                                    <p className="text-xs text-gray-600 mt-1">
+                                      {marker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                    </p>
+                                    {marker.wound?.entered_by && (
+                                      <p className="text-xs text-gray-500 mt-1">By: {marker.wound.entered_by}</p>
+                                    )}
+                                  </div>
+                                  <div className="w-3 h-3 rounded-full bg-pink-500 border-2 border-white shadow-sm"></div>
+                                </div>
+                              </button>
+                              
+                              {/* Action Buttons */}
+                              {selectedRecordId === marker.id && (
+                                <div className="ml-3 flex gap-2 animate-fadeIn">
+                                  <button
+                                    onClick={handleViewRecord}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    View Record
+                                  </button>
+                                  <button
+                                    onClick={handleAddAssessment}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                    Add Assessment
+                                  </button>
+                                </div>
+                              )}
+                              
+                              {/* Assessment History */}
+                              {selectedRecordId === marker.id && currentAssessmentCount > 0 && (
+                                <div className="ml-3 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                  <h5 className="text-xs font-semibold text-gray-700 mb-2">
+                                    Assessment History ({currentAssessmentCount})
+                                  </h5>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {currentAssessments.map((assessment: DeviceAssessment | Assessment) => (
+                                      <button
+                                        key={assessment.id}
+                                        onClick={() => selectedRecordType === 'device' ? handleViewDeviceAssessment(assessment as DeviceAssessment) : handleViewWoundAssessment(assessment as Assessment)}
+                                        className="w-full text-left text-xs text-gray-600 border-l-2 border-purple-400 pl-2 hover:bg-purple-50 rounded transition-colors p-1"
+                                      >
+                                        <div className="font-medium">{assessment.student_name}</div>
+                                        <div className="text-gray-500">{new Date(assessment.assessed_at).toLocaleString()}</div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* No Assessments Message */}
+                              {selectedRecordId === marker.id && !loadingAssessments && currentAssessmentCount === 0 && (
+                                <div className="ml-3 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                                  <p className="text-xs text-blue-700">
+                                    No assessments recorded yet. Click 'Add Assessment' above to document your first assessment.
                                   </p>
                                 </div>
-                                <div className="w-3 h-3 rounded-full bg-pink-500 border-2 border-white shadow-sm"></div>
-                              </div>
-                            </button>
+                              )}
+                              
+                              {selectedRecordId === marker.id && loadingAssessments && (
+                                <div className="ml-3 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                                  <div className="text-xs text-gray-500">Loading assessments...</div>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
@@ -542,6 +819,247 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
           )}
         </div>
       </div>
+
+      {/* Assessment Modal */}
+      {showAssessmentModal && selectedRecordId && selectedRecordType && tenantId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Add Assessment - {selectedRecordType === 'device' ? 'Device' : 'Wound'}
+              </h3>
+              <button
+                onClick={() => setShowAssessmentModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {selectedRecordType === 'device' && selectedDevice ? (
+                <DeviceAssessmentForm
+                  device={selectedDevice}
+                  patientId={patientId}
+                  tenantId={tenantId || ''}
+                  onSave={handleSaveDeviceAssessment}
+                  onCancel={() => setShowAssessmentModal(false)}
+                />
+              ) : (
+                <AssessmentForm
+                  recordType={selectedRecordType}
+                  recordId={selectedRecordId}
+                  patientId={patientId}
+                  tenantId={tenantId}
+                  onSave={handleSaveAssessment}
+                  onCancel={() => setShowAssessmentModal(false)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Assessment Modal */}
+      {showViewAssessmentModal && (selectedWoundAssessment || selectedDeviceAssessment) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-purple-50">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Assessment Details
+              </h3>
+              <button
+                onClick={() => {
+                  setShowViewAssessmentModal(false);
+                  setSelectedWoundAssessment(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {selectedDeviceAssessment ? (
+                <DeviceAssessmentViewer
+                  assessment={selectedDeviceAssessment}
+                  device={selectedDevice || undefined}
+                />
+              ) : selectedWoundAssessment ? (
+              <div className="space-y-6">
+                {/* Header Info */}
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-purple-900 mb-1">
+                        Assessment Type
+                      </label>
+                      <p className="text-gray-900">
+                        {selectedWoundAssessment.device_id ? 'Device Assessment' : 'Wound Assessment'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-purple-900 mb-1">
+                        Assessed By
+                      </label>
+                      <p className="text-gray-900">{selectedWoundAssessment.student_name}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-purple-900 mb-1">
+                        Assessment Date/Time
+                      </label>
+                      <p className="text-gray-900">
+                        {new Date(selectedWoundAssessment.assessed_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Common Fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedWoundAssessment.site_condition && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Site Condition
+                      </label>
+                      <p className="text-gray-900 capitalize">{selectedWoundAssessment.site_condition}</p>
+                    </div>
+                  )}
+                  {selectedWoundAssessment.pain_level !== null && selectedWoundAssessment.pain_level !== undefined && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Pain Level
+                      </label>
+                      <p className="text-gray-900">{selectedWoundAssessment.pain_level}/10</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Device-Specific Fields */}
+                {selectedWoundAssessment.device_id && (
+                  <div className="border-t pt-4">
+                    <h4 className="text-md font-semibold text-gray-900 mb-3">Device Details</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedWoundAssessment.device_functioning !== null && selectedWoundAssessment.device_functioning !== undefined && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Device Functioning
+                          </label>
+                          <p className="text-gray-900">
+                            {selectedWoundAssessment.device_functioning ? 'Yes' : 'No'}
+                          </p>
+                        </div>
+                      )}
+                      {selectedWoundAssessment.output_amount_ml && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Output Amount
+                          </label>
+                          <p className="text-gray-900">{selectedWoundAssessment.output_amount_ml} mL</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Wound-Specific Fields */}
+                {selectedWoundAssessment.wound_id && (
+                  <div className="border-t pt-4">
+                    <h4 className="text-md font-semibold text-gray-900 mb-3">Wound Details</h4>
+                    <div className="space-y-4">
+                      {/* Dimensions */}
+                      {(selectedWoundAssessment.wound_length_cm || selectedWoundAssessment.wound_width_cm || selectedWoundAssessment.wound_depth_cm) && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Dimensions
+                          </label>
+                          <p className="text-gray-900">
+                            L: {selectedWoundAssessment.wound_length_cm || '-'} cm × 
+                            W: {selectedWoundAssessment.wound_width_cm || '-'} cm × 
+                            D: {selectedWoundAssessment.wound_depth_cm || '-'} cm
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedWoundAssessment.wound_appearance && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Wound Appearance
+                            </label>
+                            <p className="text-gray-900 capitalize">{selectedWoundAssessment.wound_appearance}</p>
+                          </div>
+                        )}
+                        {selectedWoundAssessment.drainage_amount && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Drainage Amount
+                            </label>
+                            <p className="text-gray-900 capitalize">{selectedWoundAssessment.drainage_amount}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedWoundAssessment.drainage_type && selectedWoundAssessment.drainage_type.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Drainage Type
+                          </label>
+                          <p className="text-gray-900 capitalize">
+                            {selectedWoundAssessment.drainage_type.join(', ')}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedWoundAssessment.treatment_applied && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Treatment Applied
+                            </label>
+                            <p className="text-gray-900">{selectedWoundAssessment.treatment_applied}</p>
+                          </div>
+                        )}
+                        {selectedWoundAssessment.dressing_type && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Dressing Type
+                            </label>
+                            <p className="text-gray-900">{selectedWoundAssessment.dressing_type}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedWoundAssessment.notes && (
+                  <div className="border-t pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Additional Notes
+                    </label>
+                    <p className="text-gray-900 whitespace-pre-wrap">{selectedWoundAssessment.notes}</p>
+                  </div>
+                )}
+              </div>
+              ) : null}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => {
+                  setShowViewAssessmentModal(false);
+                  setSelectedWoundAssessment(null);
+                  setSelectedDeviceAssessment(null);
+                }}
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
