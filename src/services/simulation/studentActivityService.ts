@@ -21,6 +21,8 @@ export interface StudentActivity {
     handoverNotes: HandoverNoteEntry[];
     hacmapDevices: HacMapDeviceEntry[];
     hacmapWounds: HacMapWoundEntry[];
+    deviceAssessments: DeviceAssessmentEntry[]; // ✅ NEW: hacMap v2
+    woundAssessments: WoundAssessmentEntry[]; // ✅ NEW: hacMap v2
     bowelAssessments: BowelAssessmentEntry[];
     intakeOutput: IntakeOutputEntry[];
   };
@@ -129,6 +131,29 @@ interface HacMapWoundEntry {
   location: string | null;
 }
 
+interface DeviceAssessmentEntry {
+  id: string;
+  assessed_at: string;
+  device_type: string;
+  status: string | null;
+  output_amount_ml: number | null;
+  notes: string | null;
+  assessment_data: any; // JSONB with device-specific fields
+}
+
+interface WoundAssessmentEntry {
+  id: string;
+  assessed_at: string;
+  site_condition: string | null;
+  pain_level: number | null;
+  wound_appearance: string | null;
+  drainage_type: string | null;
+  drainage_amount: string | null;
+  treatment_applied: string | null;
+  dressing_type: string | null;
+  notes: string | null;
+}
+
 interface BowelAssessmentEntry {
   id: string;
   created_at: string;
@@ -231,6 +256,8 @@ export async function getStudentActivitiesBySimulation(
       bowelData,
       devicesData,
       woundsData,
+      deviceAssessmentsData, // ✅ NEW: hacMap v2
+      woundAssessmentsData, // ✅ NEW: hacMap v2
       intakeOutputData,
     ] = await Promise.all([
       // Vitals
@@ -346,6 +373,40 @@ export async function getStudentActivitiesBySimulation(
           return result;
         }),
 
+      // Device Assessments (hacMap v2) - NEW
+      supabase
+        .from('device_assessments')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .order('assessed_at', { ascending: false })
+        .then(result => {
+          console.log('🔧📋 Device Assessments query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            data: result.data
+          });
+          return result;
+        }),
+
+      // Wound Assessments (hacMap v2) - NEW
+      supabase
+        .from('wound_assessments')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .order('assessed_at', { ascending: false })
+        .then(result => {
+          console.log('🩹📋 Wound Assessments query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            data: result.data
+          });
+          return result;
+        }),
+
       // Intake & Output Events
       supabase
         .from('patient_intake_output_events')
@@ -375,6 +436,8 @@ export async function getStudentActivitiesBySimulation(
             handoverNotes: [],
             hacmapDevices: [],
             hacmapWounds: [],
+            deviceAssessments: [], // ✅ NEW: hacMap v2
+            woundAssessments: [], // ✅ NEW: hacMap v2
             bowelAssessments: [],
             intakeOutput: [],
           },
@@ -548,6 +611,39 @@ export async function getStudentActivitiesBySimulation(
         });
         student.totalEntries++;
       }
+    });
+
+    // Process device assessments (hacMap v2) - NEW
+    deviceAssessmentsData.data?.forEach((assessment: any) => {
+      const student = getOrCreateStudent(assessment.student_name);
+      student.activities.deviceAssessments.push({
+        id: assessment.id,
+        assessed_at: assessment.assessed_at,
+        device_type: assessment.device_type,
+        status: assessment.status,
+        output_amount_ml: assessment.output_amount_ml,
+        notes: assessment.notes,
+        assessment_data: assessment.assessment_data, // JSONB with IV/Foley/Feeding Tube specific fields
+      });
+      student.totalEntries++;
+    });
+
+    // Process wound assessments (hacMap v2) - NEW
+    woundAssessmentsData.data?.forEach((assessment: any) => {
+      const student = getOrCreateStudent(assessment.student_name);
+      student.activities.woundAssessments.push({
+        id: assessment.id,
+        assessed_at: assessment.assessed_at,
+        site_condition: assessment.site_condition,
+        pain_level: assessment.pain_level,
+        wound_appearance: assessment.wound_appearance,
+        drainage_type: assessment.drainage_type,
+        drainage_amount: assessment.drainage_amount,
+        treatment_applied: assessment.treatment_applied,
+        dressing_type: assessment.dressing_type,
+        notes: assessment.notes,
+      });
+      student.totalEntries++;
     });
 
     // Process bowel assessments
