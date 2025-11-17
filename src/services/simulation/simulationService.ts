@@ -621,13 +621,10 @@ export async function getSimulationHistory(
   filters?: SimulationHistoryFilters
 ): Promise<SimulationHistoryWithDetails[]> {
   try {
+    // First get history records
     let query = supabase
       .from('simulation_history')
-      .select(`
-        *,
-        template:simulation_templates(id, name, description),
-        participants
-      `)
+      .select('*')
       .order('completed_at', { ascending: false, nullsFirst: false });
 
     // Apply filters
@@ -649,10 +646,39 @@ export async function getSimulationHistory(
       query = query.eq('created_by', filters.created_by);
     }
 
-    const { data, error } = await query;
-
+    const { data: historyData, error } = await query;
     if (error) throw error;
-    return (data || []) as SimulationHistoryWithDetails[];
+    if (!historyData) return [];
+
+    // Enrich with template and participant data
+    const enrichedData = await Promise.all(
+      historyData.map(async (record) => {
+        // Get template
+        const { data: template } = await supabase
+          .from('simulation_templates')
+          .select('id, name, description')
+          .eq('id', record.template_id)
+          .single();
+
+        // Get participants using simulation_id (the active simulation reference)
+        let participantCount = 0;
+        if (record.simulation_id) {
+          const { data: participants } = await supabase
+            .from('simulation_participants')
+            .select('user_id')
+            .eq('simulation_id', record.simulation_id);
+          participantCount = participants?.length || 0;
+        }
+
+        return {
+          ...record,
+          template,
+          participants: Array(participantCount).fill({}), // Create array of correct length for display
+        };
+      })
+    );
+
+    return enrichedData as SimulationHistoryWithDetails[];
   } catch (error: any) {
     console.error('Error fetching simulation history:', error);
     throw error;

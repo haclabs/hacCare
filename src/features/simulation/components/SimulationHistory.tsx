@@ -56,6 +56,20 @@ const SimulationHistory: React.FC = () => {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
+  const getParticipantCount = (record: SimulationHistoryWithDetails): number => {
+    // Parse student_activities JSON to get unique student names
+    try {
+      const activities = record.student_activities || [];
+      if (typeof activities === 'string') {
+        const parsed = JSON.parse(activities);
+        return Array.isArray(parsed) ? parsed.length : 0;
+      }
+      return Array.isArray(activities) ? activities.length : 0;
+    } catch {
+      return 0;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -130,7 +144,7 @@ const SimulationHistory: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      <span>{record.participants?.length || 0} participants</span>
+                      <span>{getParticipantCount(record)} participants</span>
                     </div>
                     {record.completed_at && (
                       <div className="text-xs">
