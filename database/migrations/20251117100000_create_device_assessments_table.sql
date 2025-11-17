@@ -81,7 +81,8 @@ CREATE POLICY device_assessments_tenant_isolation
   ON device_assessments
   FOR ALL
   TO authenticated
-  USING (tenant_id = app.current_tenant_id());
+  USING (tenant_id = app.current_tenant_id())
+  WITH CHECK (tenant_id = app.current_tenant_id());
 
 -- =====================================================
 -- TRIGGERS
