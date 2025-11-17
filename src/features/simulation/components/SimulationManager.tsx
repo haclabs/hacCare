@@ -10,12 +10,13 @@
  */
 
 import React, { useState } from 'react';
-import { Beaker, FileText, History, AlertCircle } from 'lucide-react';
+import { Beaker, FileText, History, AlertCircle, BookOpen } from 'lucide-react';
 import ActiveSimulations from './ActiveSimulations';
 import SimulationTemplates from './SimulationTemplates';
 import SimulationHistory from './SimulationHistory';
+import SimulationGuide from './SimulationGuide';
 
-type TabType = 'active' | 'templates' | 'history';
+type TabType = 'active' | 'templates' | 'history' | 'guide';
 
 const SimulationManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('active');
@@ -24,6 +25,7 @@ const SimulationManager: React.FC = () => {
     { id: 'active' as TabType, label: 'Active', icon: Beaker },
     { id: 'templates' as TabType, label: 'Templates', icon: FileText },
     { id: 'history' as TabType, label: 'History', icon: History },
+    { id: 'guide' as TabType, label: 'Instructor Guide', icon: BookOpen, highlight: true },
   ];
 
   return (
@@ -61,6 +63,7 @@ const SimulationManager: React.FC = () => {
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const isGuide = tab.id === 'guide';
               return (
                 <button
                   key={tab.id}
@@ -68,8 +71,12 @@ const SimulationManager: React.FC = () => {
                   className={`
                     flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
                     ${
-                      isActive
+                      isActive && isGuide
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+                        : isActive
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                        : isGuide
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 border-2 border-emerald-300 dark:border-emerald-700'
                         : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                     }
                   `}
@@ -89,6 +96,7 @@ const SimulationManager: React.FC = () => {
           {activeTab === 'active' && <ActiveSimulations />}
           {activeTab === 'templates' && <SimulationTemplates />}
           {activeTab === 'history' && <SimulationHistory />}
+          {activeTab === 'guide' && <SimulationGuide />}
         </div>
       </div>
     </div>
