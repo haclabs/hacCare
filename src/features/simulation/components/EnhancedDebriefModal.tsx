@@ -665,8 +665,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                       { label: 'Lab Acknowledgements', value: metrics.totalLabAcks, color: 'bg-teal-500' },
                       { label: 'Documentation', value: metrics.totalNotes, color: 'bg-amber-500' },
                       { label: 'Intake & Output', value: metrics.totalIO, color: 'bg-cyan-500' },
-                      { label: 'HAC Map Devices', value: metrics.totalHacmapDevices, color: 'bg-emerald-500' },
-                      { label: 'HAC Map Wounds', value: metrics.totalHacmapWounds, color: 'bg-rose-500' },
+                      { label: 'hacMap - Add Device', value: metrics.totalHacmapDevices, color: 'bg-emerald-500' },
+                      { label: 'hacMap - Add Wound', value: metrics.totalHacmapWounds, color: 'bg-rose-500' },
                       { label: 'Device Assessments', value: metrics.totalDeviceAssessments, color: 'bg-indigo-500' },
                       { label: 'Wound Assessments', value: metrics.totalWoundAssessments, color: 'bg-fuchsia-500' },
                       { label: 'Bowel Assessments', value: metrics.totalBowelAssessments, color: 'bg-orange-500' }
@@ -799,8 +799,8 @@ const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded
     { key: 'intakeOutput', title: 'Intake & Output', items: student.activities.intakeOutput || [], color: 'cyan', icon: '💧' },
     { key: 'patientNotes', title: 'Patient Notes', items: student.activities.patientNotes || [], color: 'yellow', icon: '📝' },
     { key: 'handoverNotes', title: 'Handover Notes', items: student.activities.handoverNotes || [], color: 'orange', icon: '🤝' },
-    { key: 'hacmapDevices', title: 'HAC Map Devices', items: student.activities.hacmapDevices || [], color: 'emerald', icon: '🔧' },
-    { key: 'hacmapWounds', title: 'HAC Map Wounds', items: student.activities.hacmapWounds || [], color: 'rose', icon: '🩹' },
+    { key: 'hacmapDevices', title: 'hacMap - Add Device', items: student.activities.hacmapDevices || [], color: 'emerald', icon: '🔧' },
+    { key: 'hacmapWounds', title: 'hacMap - Add Wound', items: student.activities.hacmapWounds || [], color: 'rose', icon: '🩹' },
     { key: 'deviceAssessments', title: 'Device Assessments', items: student.activities.deviceAssessments || [], color: 'indigo', icon: '🩺' },
     { key: 'woundAssessments', title: 'Wound Assessments', items: student.activities.woundAssessments || [], color: 'fuchsia', icon: '🔍' },
     { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' }
