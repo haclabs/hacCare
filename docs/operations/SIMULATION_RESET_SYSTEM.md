@@ -225,14 +225,97 @@ SELECT
 
 **Delete anything else related to old simulation debugging.**
 
+## RLS Policy Configuration (CRITICAL)
+
+### device_assessments Table
+
+The `device_assessments` table uses a simplified RLS policy:
+
+```sql
+CREATE POLICY device_assessments_allow_authenticated
+  ON device_assessments
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+```
+
+**Why NOT use `current_setting('app.current_tenant_id')`?**
+
+The application **never sets** `current_setting('app.current_tenant_id')` in the PostgreSQL session. This is by design:
+- Application explicitly passes `tenant_id` in all INSERT/UPDATE/SELECT queries
+- RLS policy just needs to allow authenticated users through
+- Tenant isolation happens at the **application level**, not database level
+
+**DO NOT** change this to:
+```sql
+-- ❌ WRONG - This will cause 403 Forbidden errors!
+USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::uuid)
+```
+
+**Migrations**:
+- `20251117100000_create_device_assessments_table.sql` - Initial table with correct RLS
+- `20251117150000_fix_device_assessments_rls_allow_authenticated.sql` - RLS hotfix migration
+- `fix_device_assessments_rls_remove_check.sql` - Manual SQL for emergency deployment
+
+### Other Clinical Tables
+
+Most clinical tables follow the same pattern:
+- `wound_assessments` - Uses `USING (true)` (working correctly)
+- Application handles tenant_id filtering explicitly
+- No session variables required
+
+## Student Activity Tracking (Debrief System)
+
+**Location**: `/src/services/simulation/studentActivityService.ts`
+
+Device and wound assessments are captured for the debrief report by:
+
+1. **Query by `student_name`**:
+```typescript
+const { data: deviceAssessmentsData } = await supabase
+  .from('device_assessments')
+  .select('*')
+  .eq('tenant_id', tenantId)
+  .eq('patient_id', patientId)
+  .not('student_name', 'is', null)
+  .order('assessed_at', { ascending: false });
+```
+
+2. **Group by student**:
+```typescript
+deviceAssessmentsData.data?.forEach((assessment: any) => {
+  const student = getOrCreateStudent(assessment.student_name);
+  student.activities.deviceAssessments.push({
+    id: assessment.id,
+    assessed_at: assessment.assessed_at,
+    device_type: assessment.device_type,
+    status: assessment.status,
+    output_amount_ml: assessment.output_amount_ml,
+    notes: assessment.notes,
+    assessment_data: assessment.assessment_data // JSONB with device-specific fields
+  });
+  student.totalEntries++;
+});
+```
+
+3. **Display in debrief**:
+- Each assessment shows as a card with expandable JSONB details
+- Students see all their device/wound assessment entries
+- Instructors can review what each student documented
+
+**CRITICAL**: `student_name` is **required** in device_assessments schema. Without it, assessments won't appear in debrief!
+
 ## History
 
 - **Nov 17, 2025**: Integrated hacMap v2 into simulation system
   - Added `device_assessments` table (student work - deleted on reset)
   - Added device-specific fields to `devices` table (IV: gauge, site; Feeding Tube: route, placement verification)
-  - Updated reset function to delete device_assessments
-  - Devices, wounds, avatar_locations restored from snapshot
-  - Device and wound assessments captured for debrief (TODO: implement debrief generation)
+  - Updated reset function to DELETE device_assessments (student work)
+  - Devices, wounds, avatar_locations restored from snapshot (baseline data)
+  - Fixed RLS policy - removed `current_setting('app.current_tenant_id')` requirement
+  - Device and wound assessments fully captured in debrief report
+  - Enhanced debrief with all 12 activity types and proportional progress bars
 
 - **Nov 14, 2025**: Complete rewrite of reset system
   - Fixed patient duplication
