@@ -29,9 +29,17 @@ interface Metrics {
   totalOrders: number;
   totalNotes: number;
   totalIO: number;
+  totalLabOrders: number;
+  totalLabAcks: number;
+  totalHacmapDevices: number;
+  totalHacmapWounds: number;
+  totalDeviceAssessments: number;
+  totalWoundAssessments: number;
+  totalBowelAssessments: number;
   bcmaCompliance: number;
   avgEntriesPerStudent: number;
   totalInterventions: number;
+  totalAllActivities: number;
 }
 
 const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyRecord, onClose }) => {
@@ -102,6 +110,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
 
   const calculateMetrics = (): Metrics => {
     let totalVitals = 0, totalMeds = 0, totalOrders = 0, totalNotes = 0, totalIO = 0;
+    let totalLabOrders = 0, totalLabAcks = 0, totalHacmapDevices = 0, totalHacmapWounds = 0;
+    let totalDeviceAssessments = 0, totalWoundAssessments = 0, totalBowelAssessments = 0;
     let bcmaScanned = 0, bcmaTotal = 0;
 
     studentActivities.forEach(student => {
@@ -110,6 +120,13 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       totalOrders += student.activities.doctorsOrders?.length || 0;
       totalNotes += (student.activities.patientNotes?.length || 0) + (student.activities.handoverNotes?.length || 0);
       totalIO += student.activities.intakeOutput?.length || 0;
+      totalLabOrders += student.activities.labOrders?.length || 0;
+      totalLabAcks += student.activities.labAcknowledgements?.length || 0;
+      totalHacmapDevices += student.activities.hacmapDevices?.length || 0;
+      totalHacmapWounds += student.activities.hacmapWounds?.length || 0;
+      totalDeviceAssessments += student.activities.deviceAssessments?.length || 0;
+      totalWoundAssessments += student.activities.woundAssessments?.length || 0;
+      totalBowelAssessments += student.activities.bowelAssessments?.length || 0;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       student.activities.medications?.forEach((med: any) => {
@@ -123,6 +140,10 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     const avgEntriesPerStudent = studentActivities.length > 0 
       ? Math.round(studentActivities.reduce((sum, s) => sum + s.totalEntries, 0) / studentActivities.length) 
       : 0;
+    
+    const totalAllActivities = totalVitals + totalMeds + totalOrders + totalIO + totalLabOrders + 
+      totalLabAcks + totalHacmapDevices + totalHacmapWounds + totalDeviceAssessments + 
+      totalWoundAssessments + totalBowelAssessments;
 
     return {
       totalVitals,
@@ -130,9 +151,17 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       totalOrders,
       totalNotes,
       totalIO,
+      totalLabOrders,
+      totalLabAcks,
+      totalHacmapDevices,
+      totalHacmapWounds,
+      totalDeviceAssessments,
+      totalWoundAssessments,
+      totalBowelAssessments,
       bcmaCompliance,
       avgEntriesPerStudent,
-      totalInterventions: totalVitals + totalMeds + totalOrders + totalIO
+      totalInterventions: totalVitals + totalMeds + totalOrders + totalIO,
+      totalAllActivities
     };
   };
 
@@ -629,24 +658,41 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   <h4 className="text-sm font-semibold text-gray-700 mb-3">Clinical Activity Breakdown</h4>
                   <div className="space-y-3">
                     {[
-                      { label: 'Vital Signs', value: metrics.totalVitals, color: 'bg-blue-500', max: metrics.totalInterventions },
-                      { label: 'Medications', value: metrics.totalMeds, color: 'bg-purple-500', max: metrics.totalInterventions },
-                      { label: 'Orders Acknowledged', value: metrics.totalOrders, color: 'bg-pink-500', max: metrics.totalInterventions },
-                      { label: 'Documentation', value: metrics.totalNotes, color: 'bg-amber-500', max: metrics.totalInterventions },
-                      { label: 'Intake & Output', value: metrics.totalIO, color: 'bg-cyan-500', max: metrics.totalInterventions }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center">
-                        <span className="text-sm text-gray-600 w-40">{item.label}</span>
-                        <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden">
-                          <div 
-                            className={`${item.color} h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-3`}
-                            style={{ width: `${(item.value / item.max) * 100}%` }}
-                          >
-                            <span className="text-xs font-semibold text-white">{item.value}</span>
+                      { label: 'Vital Signs', value: metrics.totalVitals, color: 'bg-blue-500' },
+                      { label: 'Medications', value: metrics.totalMeds, color: 'bg-purple-500' },
+                      { label: 'Orders Acknowledged', value: metrics.totalOrders, color: 'bg-pink-500' },
+                      { label: 'Lab Orders', value: metrics.totalLabOrders, color: 'bg-green-500' },
+                      { label: 'Lab Acknowledgements', value: metrics.totalLabAcks, color: 'bg-teal-500' },
+                      { label: 'Documentation', value: metrics.totalNotes, color: 'bg-amber-500' },
+                      { label: 'Intake & Output', value: metrics.totalIO, color: 'bg-cyan-500' },
+                      { label: 'HAC Map Devices', value: metrics.totalHacmapDevices, color: 'bg-emerald-500' },
+                      { label: 'HAC Map Wounds', value: metrics.totalHacmapWounds, color: 'bg-rose-500' },
+                      { label: 'Device Assessments', value: metrics.totalDeviceAssessments, color: 'bg-indigo-500' },
+                      { label: 'Wound Assessments', value: metrics.totalWoundAssessments, color: 'bg-fuchsia-500' },
+                      { label: 'Bowel Assessments', value: metrics.totalBowelAssessments, color: 'bg-orange-500' }
+                    ].map((item, idx) => {
+                      const widthPercent = metrics.totalAllActivities > 0 
+                        ? (item.value / metrics.totalAllActivities) * 100 
+                        : 0;
+                      return (
+                        <div key={idx} className="flex items-center">
+                          <span className="text-sm text-gray-600 w-48 flex-shrink-0">{item.label}</span>
+                          <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden">
+                            {item.value > 0 && (
+                              <div 
+                                className={`${item.color} h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-3`}
+                                style={{ width: `${Math.max(widthPercent, 8)}%` }}
+                              >
+                                <span className="text-xs font-semibold text-white">{item.value}</span>
+                              </div>
+                            )}
+                            {item.value === 0 && (
+                              <span className="absolute inset-0 flex items-center justify-end pr-3 text-xs font-semibold text-gray-400">0</span>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
