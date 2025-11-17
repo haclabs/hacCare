@@ -625,9 +625,10 @@ export async function getSimulationHistory(
       .from('simulation_history')
       .select(`
         *,
-        template:simulation_templates(id, name, description)
+        template:simulation_templates(id, name, description),
+        participants
       `)
-      .order('created_at', { ascending: false });
+      .order('completed_at', { ascending: false, nullsFirst: false });
 
     // Apply filters
     if (filters?.template_id) {

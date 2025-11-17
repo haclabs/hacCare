@@ -39,10 +39,17 @@ const SimulationHistory: React.FC = () => {
     setShowDebriefModal(true);
   };
 
-  const calculateDuration = (startsAt: string, completedAt: string | null) => {
-    if (!completedAt) return 'N/A';
-    const start = new Date(startsAt);
-    const end = new Date(completedAt);
+  const calculateDuration = (record: SimulationHistoryWithDetails) => {
+    // Use duration_minutes if available
+    if (record.duration_minutes) {
+      const hours = Math.floor(record.duration_minutes / 60);
+      const mins = record.duration_minutes % 60;
+      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    }
+    // Otherwise calculate from timestamps
+    if (!record.completed_at || !record.started_at) return 'N/A';
+    const start = new Date(record.started_at);
+    const end = new Date(record.completed_at);
     const minutes = differenceInMinutes(end, start);
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -119,15 +126,17 @@ const SimulationHistory: React.FC = () => {
                   <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      <span>Duration: {calculateDuration(record.started_at, record.completed_at)}</span>
+                      <span>Duration: {calculateDuration(record)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       <span>{record.participants?.length || 0} participants</span>
                     </div>
-                    <div className="text-xs">
-                      Completed {record.completed_at ? formatDistanceToNow(new Date(record.completed_at), { addSuffix: true }) : 'N/A'}
-                    </div>
+                    {record.completed_at && (
+                      <div className="text-xs">
+                        Completed {formatDistanceToNow(new Date(record.completed_at), { addSuffix: true })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Metrics Summary */}
