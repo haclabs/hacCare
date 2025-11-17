@@ -70,6 +70,24 @@ const SimulationHistory: React.FC = () => {
     }
   };
 
+  const getParticipantNames = (record: SimulationHistoryWithDetails): string => {
+    // Parse student_activities JSON to get student names
+    try {
+      const activities = record.student_activities || [];
+      let parsed = activities;
+      if (typeof activities === 'string') {
+        parsed = JSON.parse(activities);
+      }
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const names = parsed.map((activity: any) => activity.studentName).filter(Boolean);
+        return names.join(', ');
+      }
+      return 'No participants';
+    } catch {
+      return 'No participants';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -137,20 +155,26 @@ const SimulationHistory: React.FC = () => {
                     Template: {record.template?.name}
                   </p>
 
-                  <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>Duration: {calculateDuration(record)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      <span>{getParticipantCount(record)} participants</span>
-                    </div>
-                    {record.completed_at && (
-                      <div className="text-xs">
-                        Completed {formatDistanceToNow(new Date(record.completed_at), { addSuffix: true })}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>Duration: {calculateDuration(record)}</span>
                       </div>
-                    )}
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>{getParticipantCount(record)} participants</span>
+                      </div>
+                      {record.completed_at && (
+                        <div className="text-xs">
+                          Completed {formatDistanceToNow(new Date(record.completed_at), { addSuffix: true })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-slate-500 dark:text-slate-500">Students:</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">{getParticipantNames(record)}</span>
+                    </div>
                   </div>
 
                   {/* Metrics Summary */}
