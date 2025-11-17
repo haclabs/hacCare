@@ -85,6 +85,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.handoverNotes.push(...activity.activities.handoverNotes);
         existing.activities.hacmapDevices.push(...activity.activities.hacmapDevices);
         existing.activities.hacmapWounds.push(...activity.activities.hacmapWounds);
+        existing.activities.deviceAssessments.push(...activity.activities.deviceAssessments);
+        existing.activities.woundAssessments.push(...activity.activities.woundAssessments);
         existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
         existing.totalEntries += activity.totalEntries;
@@ -753,6 +755,8 @@ const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded
     { key: 'handoverNotes', title: 'Handover Notes', items: student.activities.handoverNotes || [], color: 'orange', icon: '🤝' },
     { key: 'hacmapDevices', title: 'HAC Map Devices', items: student.activities.hacmapDevices || [], color: 'emerald', icon: '🔧' },
     { key: 'hacmapWounds', title: 'HAC Map Wounds', items: student.activities.hacmapWounds || [], color: 'rose', icon: '🩹' },
+    { key: 'deviceAssessments', title: 'Device Assessments', items: student.activities.deviceAssessments || [], color: 'indigo', icon: '🩺' },
+    { key: 'woundAssessments', title: 'Wound Assessments', items: student.activities.woundAssessments || [], color: 'fuchsia', icon: '🔍' },
     { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' }
   ].filter(s => s.items.length > 0);
   
@@ -999,6 +1003,38 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
               {item.wound_stage && <span>Stage: {item.wound_stage}</span>}
               {item.drainage_amount && <span>Drainage: {item.drainage_amount}</span>}
               {item.wound_description && <span className="col-span-2">{item.wound_description}</span>}
+            </div>
+          </div>
+        );
+      case 'deviceAssessments':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.assessed_at ? format(new Date(item.assessed_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">🩺 {item.device_type?.toUpperCase().replace(/-/g, ' ')} ASSESSMENT</p>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+              {item.status && <span>Status: {item.status}</span>}
+              {item.output_amount_ml && <span>Output: {item.output_amount_ml} mL</span>}
+              {item.notes && <span className="col-span-2">Notes: {item.notes}</span>}
+              {item.assessment_data && Object.keys(item.assessment_data).length > 0 && (
+                <span className="col-span-2 text-indigo-600">+ {Object.keys(item.assessment_data).length} detailed assessment fields</span>
+              )}
+            </div>
+          </div>
+        );
+      case 'woundAssessments':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.assessed_at ? format(new Date(item.assessed_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">🔍 WOUND ASSESSMENT</p>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+              {item.site_condition && <span>Site: {item.site_condition}</span>}
+              {item.pain_level !== null && <span>Pain: {item.pain_level}/10</span>}
+              {item.wound_appearance && <span>Appearance: {item.wound_appearance}</span>}
+              {item.drainage_type && <span>Drainage: {item.drainage_type}</span>}
+              {item.drainage_amount && <span>Amount: {item.drainage_amount}</span>}
+              {item.treatment_applied && <span>Treatment: {item.treatment_applied}</span>}
+              {item.dressing_type && <span>Dressing: {item.dressing_type}</span>}
+              {item.notes && <span className="col-span-2">Notes: {item.notes}</span>}
             </div>
           </div>
         );
