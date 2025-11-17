@@ -343,13 +343,32 @@ const SimulationGuide: React.FC = () => {
           </section>
 
           {/* Footer */}
-          <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              <strong>Document Version:</strong> 1.0 | <strong>Last Updated:</strong> November 17, 2025
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-              For technical documentation, see <code>/docs/operations/SIMULATION_RESET_SYSTEM.md</code>
-            </p>
+          <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <div className="text-center mb-6">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                <strong>Document Version:</strong> 1.0 | <strong>Last Updated:</strong> November 17, 2025
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+                For technical documentation, see <code>/docs/operations/SIMULATION_RESET_SYSTEM.md</code>
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-black rounded-lg p-6 text-center">
+              <div className="flex flex-col items-center space-y-3">
+                <p className="text-slate-300 dark:text-slate-400 text-sm">
+                  © hacCare 2025 - A <span className="font-semibold text-white">haclabs</span> Product
+                </p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-slate-400">Need assistance?</span>
+                  <a 
+                    href="mailto:support@haccare.app" 
+                    className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors underline decoration-emerald-400/50 hover:decoration-emerald-300"
+                  >
+                    support@haccare.app
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
