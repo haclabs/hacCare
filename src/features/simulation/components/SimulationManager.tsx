@@ -24,7 +24,7 @@ const SimulationManager: React.FC = () => {
   const tabs = [
     { id: 'active' as TabType, label: 'Active', icon: Beaker },
     { id: 'templates' as TabType, label: 'Templates', icon: FileText },
-    { id: 'history' as TabType, label: 'History', icon: History },
+    { id: 'history' as TabType, label: 'Debrief Reports', icon: History },
     { id: 'guide' as TabType, label: 'Instructor Guide', icon: BookOpen, highlight: true },
   ];
 

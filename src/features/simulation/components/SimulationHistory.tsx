@@ -115,7 +115,7 @@ const SimulationHistory: React.FC = () => {
       <div className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            Simulation History
+            Debrief Reports
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             View completed simulations and performance reports

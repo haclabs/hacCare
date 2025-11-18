@@ -18,6 +18,7 @@ const ActiveSimulations: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [printLabelsSimulation, setPrintLabelsSimulation] = useState<SimulationActiveWithDetails | null>(null);
+  const [resetModalOpen, setResetModalOpen] = useState<string | null>(null);
 
   useEffect(() => {
     loadSimulations();
@@ -82,10 +83,16 @@ const ActiveSimulations: React.FC = () => {
   };
 
   const handleReset = async (id: string) => {
-    if (!confirm('Are you sure you want to reset this simulation? All progress will be lost.')) {
-      return;
-    }
+    setResetModalOpen(id);
+  };
+
+  const confirmReset = async () => {
+    if (!resetModalOpen) return;
+    
+    const id = resetModalOpen;
+    setResetModalOpen(null);
     setActionLoading(id);
+    
     try {
       const result = await resetSimulationForNextSession(id);
       console.log('✅ Simulation reset successfully:', result);
@@ -308,6 +315,59 @@ const ActiveSimulations: React.FC = () => {
           tenantId={printLabelsSimulation.tenant_id}
           onClose={() => setPrintLabelsSimulation(null)}
         />
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {resetModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full border-4 border-yellow-400 dark:border-yellow-500">
+            {/* Header with Warning Icon */}
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-6 py-4 border-b border-yellow-200 dark:border-yellow-700 flex items-center gap-3">
+              <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 dark:bg-yellow-900/40 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
+                Reset Simulation Warning
+              </h3>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="mb-6">
+                <p className="text-base text-slate-700 dark:text-slate-300 font-medium mb-3">
+                  ⚠️ Ensure you have <span className="text-red-600 dark:text-red-400 font-bold">completed the simulation</span> before resetting!
+                </p>
+                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r">
+                  <p className="text-sm text-red-800 dark:text-red-300">
+                    <strong>All student work will be permanently lost</strong> if you reset without completing the simulation first.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Reminder:</strong> Click "Complete Simulation" first to save student activities to debrief report before resetting.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setResetModalOpen(null)}
+                  className="flex-1 px-4 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 font-medium rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmReset}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors shadow-lg hover:shadow-xl"
+                >
+                  Reset Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
