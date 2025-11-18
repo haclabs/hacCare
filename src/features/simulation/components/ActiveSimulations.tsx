@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, FileText } from 'lucide-react';
 import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, completeSimulation, deleteSimulation } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
@@ -177,12 +177,14 @@ const ActiveSimulations: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
-      {simulations.map((sim) => (
-        <div
-          key={sim.id}
-          className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6"
-        >
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Left Column - Active Simulations */}
+      <div className="lg:col-span-2 space-y-4">
+        {simulations.map((sim) => (
+          <div
+            key={sim.id}
+            className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6"
+          >
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -307,6 +309,114 @@ const ActiveSimulations: React.FC = () => {
           )}
         </div>
       ))}
+      </div>
+
+      {/* Right Column - Instructor Guide */}
+      <div className="lg:col-span-1">
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border-2 border-emerald-200 dark:border-emerald-800 p-6 sticky top-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="font-bold text-emerald-900 dark:text-emerald-100">
+              Instructor Quick Guide
+            </h3>
+          </div>
+
+          <div className="space-y-6 text-sm">
+            {/* Start/Pause */}
+            <div>
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+                <Play className="h-4 w-4" />
+                Start / Pause
+              </h4>
+              <p className="text-slate-700 dark:text-slate-300 mb-2">
+                Control simulation flow during the session:
+              </p>
+              <ul className="space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <li className="flex items-start gap-2">
+                  <Play className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
+                  <span><strong>Start:</strong> Begins timer countdown and enables student access</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Pause className="h-3 w-3 text-yellow-600 mt-1 flex-shrink-0" />
+                  <span><strong>Pause:</strong> Freezes timer, students can still document</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Complete */}
+            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Complete Simulation
+              </h4>
+              <p className="text-slate-700 dark:text-slate-300 mb-2">
+                Click when students finish their work. This will:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <li>Save all student activities</li>
+                <li>Generate debrief report</li>
+                <li>Move to Debrief Reports tab</li>
+                <li>Preserve data for review</li>
+              </ul>
+              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-800 dark:text-blue-200">
+                💡 Complete first before resetting for next group
+              </div>
+            </div>
+
+            {/* Reset */}
+            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Reset for Next Group
+              </h4>
+              <p className="text-slate-700 dark:text-slate-300 mb-2">
+                Prepares simulation for new students:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <li>Restores baseline data</li>
+                <li>Clears student work</li>
+                <li>Resets timer</li>
+                <li>Preserves patient barcodes</li>
+              </ul>
+              <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-800 dark:text-red-200">
+                ⚠️ <strong>Warning:</strong> Previous work is permanently deleted
+              </div>
+            </div>
+
+            {/* Delete */}
+            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+                <Trash2 className="h-4 w-4" />
+                Delete Simulation
+              </h4>
+              <p className="text-slate-600 dark:text-slate-400 text-xs">
+                Permanently removes the entire simulation session. Use only if simulation won't be needed again.
+              </p>
+            </div>
+
+            {/* Timer Status */}
+            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+                ⏱️ Timer Colors
+              </h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-slate-600 dark:text-slate-400">Plenty of time</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-slate-600 dark:text-slate-400">&lt; 15 minutes left</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-slate-600 dark:text-slate-400">&lt; 5 minutes left</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Label Printing Modal */}
       {printLabelsSimulation && (

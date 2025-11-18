@@ -112,18 +112,20 @@ const SimulationHistory: React.FC = () => {
 
   return (
     <>
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            Debrief Reports
-          </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            View completed simulations and performance reports
-          </p>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - History List */}
+        <div className="lg:col-span-2 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Debrief Reports
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              View completed simulations and performance reports
+            </p>
+          </div>
 
-        {/* History List */}
-        <div className="space-y-3">
+          {/* History List */}
+          <div className="space-y-3">
           {history.map((record) => (
             <div
               key={record.id}
@@ -199,6 +201,83 @@ const SimulationHistory: React.FC = () => {
               </div>
             </div>
           ))}
+          </div>
+        </div>
+
+        {/* Right Column - Instructor Guide */}
+        <div className="lg:col-span-1">
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border-2 border-emerald-200 dark:border-emerald-800 p-6 sticky top-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="font-bold text-emerald-900 dark:text-emerald-100">
+                Instructor Quick Guide
+              </h3>
+            </div>
+
+            <div className="space-y-6 text-sm">
+              {/* Viewing Debrief Reports */}
+              <div>
+                <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  View Debrief Report
+                </h4>
+                <p className="text-slate-700 dark:text-slate-300 mb-2">
+                  Click <strong>View Debrief</strong> on any completed simulation to access:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                  <li>Session overview metrics</li>
+                  <li>BCMA compliance percentage</li>
+                  <li>Student activity timeline</li>
+                  <li>All clinical entries by type</li>
+                  <li>Device & wound assessments</li>
+                  <li>Instructor notes section</li>
+                </ul>
+              </div>
+
+              {/* Best Practices */}
+              <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+                  Debrief Best Practices
+                </h4>
+                <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span>Review report immediately after completion</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span>Use metrics to guide discussion (BCMA, documentation gaps)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span>Note both strengths and improvement areas</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span>Save or print report for student records</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Tips */}
+              <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+                  💡 Quick Tips
+                </h4>
+                <div className="space-y-2 text-slate-600 dark:text-slate-400">
+                  <p className="bg-white dark:bg-slate-800 rounded p-2 text-xs">
+                    <strong>Activity Log:</strong> Expand student sections to see individual actions with timestamps
+                  </p>
+                  <p className="bg-white dark:bg-slate-800 rounded p-2 text-xs">
+                    <strong>Progress Bars:</strong> Visual breakdown shows intervention distribution by category
+                  </p>
+                  <p className="bg-white dark:bg-slate-800 rounded p-2 text-xs">
+                    <strong>Print Ready:</strong> Use the Print/PDF button for record keeping
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
