@@ -413,17 +413,21 @@ export async function getLabResults(
 
 /**
  * Get previous lab result for the same test (from earlier panels)
+ * NOTE: Only finds results within the SAME tenant (simulation session)
+ * This prevents showing results from previous simulation sessions
  */
 export async function getPreviousLabResult(
   patientId: string,
   testCode: string,
-  currentResultCreatedAt: string
+  currentResultCreatedAt: string,
+  tenantId: string
 ): Promise<{ data: LabResult | null; error: any }> {
   const { data, error } = await supabase
     .from('lab_results')
     .select('*')
     .eq('patient_id', patientId)
     .eq('test_code', testCode)
+    .eq('tenant_id', tenantId)
     .lt('created_at', currentResultCreatedAt)
     .order('created_at', { ascending: false })
     .limit(1)

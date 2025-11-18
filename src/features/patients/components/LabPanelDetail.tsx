@@ -85,7 +85,8 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
           const { data: prevData } = await getPreviousLabResult(
             patientId,
             result.test_code,
-            result.created_at
+            result.created_at,
+            currentTenant!.id
           );
           prevResults[result.id] = prevData;
         }
