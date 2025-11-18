@@ -321,11 +321,31 @@ const ActiveSimulations: React.FC = () => {
             </h3>
           </div>
 
-          <div className="space-y-6 text-sm">
+          <div className="space-y-4 text-sm">
+            {/* Print Labels */}
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-700 rounded-lg p-4">
+              <h4 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2 flex items-center gap-2">
+                <Printer className="h-4 w-4" />
+                Print Labels
+              </h4>
+              <p className="text-slate-700 dark:text-slate-300 mb-2">
+                Print patient and medication barcode labels for BCMA scanning.
+              </p>
+              <div className="mt-2 p-2 bg-white dark:bg-slate-800 rounded text-xs">
+                <p className="font-medium text-indigo-800 dark:text-indigo-300 mb-1">Printing Instructions:</p>
+                <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                  <li>Use Avery 5160 label sheets (30 labels per sheet)</li>
+                  <li>Select high-quality print setting for barcode clarity</li>
+                  <li>Test print one sheet before bulk printing</li>
+                </ul>
+              </div>
+            </div>
+
             {/* Start/Pause */}
-            <div>
-              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
-                <Play className="h-4 w-4" />
+            <div className="bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-900/20 dark:to-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                <Play className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <Pause className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                 Start / Pause
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
@@ -344,8 +364,8 @@ const ActiveSimulations: React.FC = () => {
             </div>
 
             {/* Complete */}
-            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
-              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+            <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
+              <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
                 Complete Simulation
               </h4>
@@ -358,14 +378,14 @@ const ActiveSimulations: React.FC = () => {
                 <li>Move to Debrief Reports tab</li>
                 <li>Preserve data for review</li>
               </ul>
-              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-800 dark:text-blue-200">
+              <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded text-xs text-emerald-800 dark:text-emerald-200">
                 💡 Complete first before resetting for next group
               </div>
             </div>
 
             {/* Reset */}
-            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
-              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
                 <RotateCcw className="h-4 w-4" />
                 Reset for Next Group
               </h4>
@@ -384,8 +404,8 @@ const ActiveSimulations: React.FC = () => {
             </div>
 
             {/* Delete */}
-            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
-              <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+            <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-700 rounded-lg p-4">
+              <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
                 <Trash2 className="h-4 w-4" />
                 Delete Simulation
               </h4>
