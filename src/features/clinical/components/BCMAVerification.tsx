@@ -111,6 +111,7 @@ export const BCMAVerification: React.FC<BCMAVerificationProps> = ({
   const getMinimumInterval = (frequency: string): number => {
     const intervals: { [key: string]: number } = {
       'Once daily': 20 * 60 * 60 * 1000, // 20 hours minimum
+      'Once monthly': 25 * 24 * 60 * 60 * 1000, // 25 days minimum
       'Twice daily': 10 * 60 * 60 * 1000, // 10 hours minimum
       'Three times daily': 6 * 60 * 60 * 1000, // 6 hours minimum
       'Four times daily': 4 * 60 * 60 * 1000, // 4 hours minimum

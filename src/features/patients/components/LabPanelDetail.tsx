@@ -19,6 +19,7 @@ import {
   deleteLabPanel,
   createStandardLabSet,
   getEffectiveRangeDisplay,
+  getPreviousLabResult,
 } from '../../../services/clinical/labService';
 import type { LabPanel, LabResult, LabCategory } from '../../../features/clinical/types/labs';
 import {
@@ -52,6 +53,7 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   const { hasRole } = useAuth();
   const { currentTenant } = useTenant();
   const [results, setResults] = useState<LabResult[]>([]);
+  const [previousResults, setPreviousResults] = useState<Record<string, LabResult | null>>({});
   const [activeTab, setActiveTab] = useState<LabCategory | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -74,6 +76,22 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
       console.error('Failed to load results:', error);
     } else {
       setResults(data || []);
+      
+      // Fetch previous results for each test
+      if (data && data.length > 0) {
+        const prevResults: Record<string, LabResult | null> = {};
+        
+        for (const result of data) {
+          const { data: prevData } = await getPreviousLabResult(
+            patientId,
+            result.test_code,
+            result.created_at
+          );
+          prevResults[result.id] = prevData;
+        }
+        
+        setPreviousResults(prevResults);
+      }
     }
     
     setLoading(false);
@@ -337,6 +355,8 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
                     null
                   );
 
+                  const previousResult = previousResults[result.id];
+                  
                   return (
                     <tr key={result.id} className={result.ack_at ? 'bg-gray-50' : ''}>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
@@ -346,7 +366,19 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {result.value !== null ? result.value : '-'}
+                        <div>
+                          <div>{result.value !== null ? result.value : '-'}</div>
+                          {previousResult ? (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Previous: {previousResult.value} 
+                              <span className={`ml-1 ${getFlagColorClass(previousResult.flag)}`}>
+                                ({getFlagLabel(previousResult.flag)})
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-400 mt-1 italic">No previous reading</div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {result.units || '-'}

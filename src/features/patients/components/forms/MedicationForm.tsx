@@ -529,6 +529,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   <option value="Every 4 hours">Every 4 hours</option>
                   <option value="As needed (PRN)">As needed (PRN)</option>
                   <option value="Once weekly">Once weekly</option>
+                  <option value="Once monthly">Once monthly</option>
                   <option value="At bedtime">At bedtime (HS)</option>
                   <option value="Before meals">Before meals (AC)</option>
                   <option value="After meals">After meals (PC)</option>

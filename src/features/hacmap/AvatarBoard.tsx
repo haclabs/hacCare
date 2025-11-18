@@ -48,6 +48,7 @@ import type {
   CreateAssessmentInput,
   CreateDeviceAssessmentInput
 } from '../../types/hacmap';
+import { DEVICE_TYPE_LABELS, WOUND_TYPE_LABELS } from '../../types/hacmap';
 import { AlertCircle, Filter, X, FileText, Plus } from 'lucide-react';
 
 interface AvatarBoardProps {
@@ -551,7 +552,9 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                         <div className="flex items-center space-x-2">
                           <div className={`w-2 h-2 rounded-full ${marker.kind === 'device' ? 'bg-green-500' : 'bg-pink-500'}`}></div>
                           <span className="font-medium text-gray-700">
-                            {marker.kind === 'device' ? marker.device?.type : marker.wound?.wound_type}
+                            {marker.kind === 'device' 
+                              ? (marker.device?.type ? DEVICE_TYPE_LABELS[marker.device.type] : marker.device?.type)
+                              : (marker.wound?.wound_type ? WOUND_TYPE_LABELS[marker.wound.wound_type] : marker.wound?.wound_type)}
                           </span>
                         </div>
                         <div className="text-gray-500 ml-4 mt-1">
@@ -645,7 +648,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <p className="text-sm font-medium text-gray-900">
-                                      {marker.device?.type?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Device'}
+                                      {marker.device?.type ? DEVICE_TYPE_LABELS[marker.device.type] : 'Device'}
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1">
                                       {marker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
@@ -739,7 +742,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <p className="text-sm font-medium text-gray-900">
-                                      {marker.wound?.wound_type?.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Wound'}
+                                      {marker.wound?.wound_type ? WOUND_TYPE_LABELS[marker.wound.wound_type] : 'Wound'}
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1">
                                       {marker.regionKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}

@@ -412,6 +412,27 @@ export async function getLabResults(
 }
 
 /**
+ * Get previous lab result for the same test (from earlier panels)
+ */
+export async function getPreviousLabResult(
+  patientId: string,
+  testCode: string,
+  currentResultCreatedAt: string
+): Promise<{ data: LabResult | null; error: any }> {
+  const { data, error } = await supabase
+    .from('lab_results')
+    .select('*')
+    .eq('patient_id', patientId)
+    .eq('test_code', testCode)
+    .lt('created_at', currentResultCreatedAt)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return { data, error };
+}
+
+/**
  * Create a new lab result
  */
 export async function createLabResult(

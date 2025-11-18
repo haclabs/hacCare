@@ -292,6 +292,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       {
         label: 'O2 Saturation',
         value: `${latestVitals.oxygenSaturation}%`,
+        subtitle: latestVitals.oxygenDelivery || 'Room Air',
         rawValue: latestVitals.oxygenSaturation,
         type: 'oxygenSaturation'
       },
@@ -338,6 +339,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
                   <p className={`text-xl font-semibold ${status.color}`}>
                     {vital.value}
                   </p>
+                  {vital.subtitle && (
+                    <p className="text-xs text-red-600 font-medium mt-1">{vital.subtitle}</p>
+                  )}
                   <div className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${
                     status.status === 'normal' ? 'bg-green-100 text-green-700' :
                     status.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :

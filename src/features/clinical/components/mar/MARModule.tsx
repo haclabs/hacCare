@@ -485,6 +485,21 @@ export const MARModule: React.FC<MARModuleProps> = ({
           return tomorrow.toISOString();
         }
 
+      case 'Once monthly':
+        const monthlyToday = new Date(now);
+        const todayMonthlyAdmin = new Date(monthlyToday);
+        todayMonthlyAdmin.setHours(hours, minutes, 0, 0);
+        
+        // If today's admin time hasn't passed, use it; otherwise, use next month (same day)
+        if (todayMonthlyAdmin > now) {
+          return todayMonthlyAdmin.toISOString();
+        } else {
+          const nextMonth = new Date(now);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          nextMonth.setHours(hours, minutes, 0, 0);
+          return nextMonth.toISOString();
+        }
+
       case 'Twice daily':
         // 8 AM and 8 PM typically, but use admin time as base
         const firstDose = new Date(now);
@@ -1450,6 +1465,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                       <option value="TID (Three times daily)">TID (Three times daily)</option>
                       <option value="QID (Four times daily)">QID (Four times daily)</option>
                       <option value="PRN (As needed)">PRN (As needed)</option>
+                      <option value="Once monthly">Once monthly</option>
                       <option value="Continuous">Continuous</option>
                     </select>
                   </div>
@@ -1487,7 +1503,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   </div>
 
                   {/* Multiple Administration Times for daily frequencies */}
-                  {(editMedicationForm.frequency.includes('time') || editMedicationForm.frequency.includes('daily')) && !editMedicationForm.frequency.includes('PRN') && !editMedicationForm.frequency.includes('Once daily') && !editMedicationForm.frequency.includes('Continuous') && (
+                  {(editMedicationForm.frequency.includes('time') || editMedicationForm.frequency.includes('daily')) && !editMedicationForm.frequency.includes('PRN') && !editMedicationForm.frequency.includes('Once daily') && !editMedicationForm.frequency.includes('Once monthly') && !editMedicationForm.frequency.includes('Continuous') && (
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
                       <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
                         ⏰ Administration Times *
@@ -1571,7 +1587,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   )}
 
                   {/* Single Administration Time for other frequencies */}
-                  {((!editMedicationForm.frequency.includes('time') && !editMedicationForm.frequency.includes('daily')) || editMedicationForm.frequency.includes('PRN') || editMedicationForm.frequency.includes('Once daily') || editMedicationForm.frequency.includes('Continuous')) && (
+                  {((!editMedicationForm.frequency.includes('time') && !editMedicationForm.frequency.includes('daily')) || editMedicationForm.frequency.includes('PRN') || editMedicationForm.frequency.includes('Once daily') || editMedicationForm.frequency.includes('Once monthly') || editMedicationForm.frequency.includes('Continuous')) && (
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
                       <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
                         ⏰ Administration Time *

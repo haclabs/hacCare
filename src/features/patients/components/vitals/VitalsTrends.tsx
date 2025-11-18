@@ -396,7 +396,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                             {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic} mmHg
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.oxygen_saturation}%
+                            {vital.oxygen_saturation}% <span className="text-red-600 font-medium">{vital.oxygen_delivery || 'Room Air'}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {vital.respiratory_rate}/min
