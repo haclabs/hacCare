@@ -273,7 +273,7 @@ const ActiveSimulations: React.FC = () => {
               <button
                 onClick={() => handleComplete(sim.id)}
                 disabled={actionLoading === sim.id}
-                className="p-2 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 disabled:opacity-50"
+                className="p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 disabled:opacity-50"
                 title="Complete simulation"
               >
                 <CheckCircle className="h-4 w-4" />
