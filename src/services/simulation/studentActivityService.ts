@@ -183,12 +183,13 @@ export async function getStudentActivitiesBySimulation(
   try {
     console.log('🎯 getStudentActivitiesBySimulation called with simulation ID:', simulationId);
     
-    // Try to get tenant_id from simulation_active first, then simulation_history
+    // Try to get tenant_id AND start time from simulation_active first, then simulation_history
     let tenantId: string | null = null;
+    let simulationStartTime: string | null = null;
     
     const { data: activeSim, error: activeError } = await supabase
       .from('simulation_active')
-      .select('tenant_id')
+      .select('tenant_id, starts_at')
       .eq('id', simulationId)
       .maybeSingle();
 
@@ -196,13 +197,14 @@ export async function getStudentActivitiesBySimulation(
 
     if (activeSim?.tenant_id) {
       tenantId = activeSim.tenant_id;
-      console.log('✅ Found in simulation_active with tenant_id:', tenantId);
+      simulationStartTime = activeSim.starts_at;
+      console.log('✅ Found in simulation_active with tenant_id:', tenantId, 'starts_at:', simulationStartTime);
     } else {
       // Not in active, check history
       console.log('🔍 Not in active, checking simulation_history...');
       const { data: historySim, error: historyError } = await supabase
         .from('simulation_history')
-        .select('tenant_id')
+        .select('tenant_id, started_at')
         .eq('id', simulationId)
         .maybeSingle();
       
@@ -210,13 +212,20 @@ export async function getStudentActivitiesBySimulation(
       
       if (historySim?.tenant_id) {
         tenantId = historySim.tenant_id;
-        console.log('✅ Found in simulation_history with tenant_id:', tenantId);
+        simulationStartTime = historySim.started_at;
+        console.log('✅ Found in simulation_history with tenant_id:', tenantId, 'started_at:', simulationStartTime);
       }
     }
 
     if (!tenantId) {
       console.warn('❌ Could not determine tenant for simulation:', simulationId);
       return [];
+    }
+
+    if (!simulationStartTime) {
+      console.warn('⚠️ No start time found for simulation - data may include historical records');
+    } else {
+      console.log('📅 Filtering activities after:', simulationStartTime);
     }
 
     console.log('🔍 Looking for patient(s) with tenant_id:', tenantId);
@@ -267,6 +276,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
 
       // Medication Administrations (BCMA)
@@ -276,6 +286,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('timestamp', simulationStartTime || '1970-01-01')
         .order('timestamp', { ascending: false })
         .then(result => {
           console.log('💊 Medications query result:', { 
@@ -293,6 +304,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Lab Acknowledgements  
@@ -302,6 +314,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('acknowledged_by_student', 'is', null)
+        .gte('ack_at', simulationStartTime || '1970-01-01')
         .order('ack_at', { ascending: false }),
 
       // Doctor's Orders Acknowledgements (with full order details)
@@ -311,6 +324,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('acknowledged_by_student', 'is', null)
+        .gte('acknowledged_at', simulationStartTime || '1970-01-01')
         .order('acknowledged_at', { ascending: false }),
 
       // Patient Notes
@@ -320,6 +334,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Handover Notes (no tenant_id column in this table)
@@ -328,6 +343,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Bowel Records
@@ -337,6 +353,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Devices (from HAC Map) - query devices table directly
@@ -346,6 +363,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('inserted_by', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
           console.log('🔧 Devices query result:', {
@@ -363,6 +381,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('entered_by', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
           console.log('🩹 Wounds query result:', {
@@ -380,6 +399,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
         .then(result => {
           console.log('🔧📋 Device Assessments query result:', {
@@ -397,6 +417,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
         .then(result => {
           console.log('🩹📋 Wound Assessments query result:', {
@@ -414,6 +435,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
+        .gte('event_timestamp', simulationStartTime || '1970-01-01')
         .order('event_timestamp', { ascending: false }),
     ]);
 
