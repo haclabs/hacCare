@@ -2,13 +2,14 @@
 // Displays lab panels with tab navigation (All/Chemistry/ABG/Hematology/Order Entry)
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText } from 'lucide-react';
+import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText, Trash2 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import {
   getLabPanels,
   getLabResults,
   hasUnacknowledgedLabs,
+  deleteLabPanel,
 } from '../../../services/clinical/labService';
 import { getLabOrders } from '../../../services/clinical/labOrderService';
 import type { LabPanel, LabCategory } from '../../../features/clinical/types/labs';
@@ -262,6 +263,17 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
                       key={panel.id}
                       panel={panel}
                       onClick={() => setSelectedPanel(panel)}
+                      onDelete={async () => {
+                        if (confirm('Delete this lab panel and all its results? This cannot be undone.')) {
+                          const { error } = await deleteLabPanel(panel.id);
+                          if (error) {
+                            alert('Failed to delete panel: ' + error.message);
+                          } else {
+                            loadPanels();
+                          }
+                        }
+                      }}
+                      isSuperAdmin={hasRole('super_admin')}
                     />
                   ))}
                 </div>
@@ -287,9 +299,11 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
 interface PanelCardProps {
   panel: LabPanel;
   onClick: () => void;
+  onDelete?: () => void;
+  isSuperAdmin?: boolean;
 }
 
-const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick }) => {
+const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick, onDelete, isSuperAdmin }) => {
   const [resultStats, setResultStats] = useState<{
     total: number;
     abnormal: number;

@@ -970,14 +970,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
             Diabetic Record
           </button>
           
-          <button
-            onClick={() => setShowBarcodeLabels(!showBarcodeLabels)}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-            title="Show/Hide Barcode Labels"
-          >
-            <QrCode className="h-4 w-4" />
-            <span>Labels</span>
-          </button>
         </div>
       </div>
 
