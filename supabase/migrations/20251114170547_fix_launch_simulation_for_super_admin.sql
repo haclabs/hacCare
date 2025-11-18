@@ -1,13 +1,11 @@
 -- ============================================================================
--- LAUNCH SIMULATION FUNCTION
+-- FIX LAUNCH SIMULATION FOR SUPER ADMINS
 -- ============================================================================
--- Launches a new simulation from a template and sets up timer correctly
--- 
--- CRITICAL FIX: Sets ends_at = NOW() + duration to fix "Expired" display
+-- Allow super admins to launch simulations without having a tenant_id assigned
+-- Super admins manage globally, so they can use any available tenant
 -- ============================================================================
 
--- Drop ALL existing launch_simulation function signatures
-DROP FUNCTION IF EXISTS launch_simulation(UUID, UUID, INTEGER, UUID);
+-- Drop existing function
 DROP FUNCTION IF EXISTS launch_simulation(UUID, TEXT, INTEGER, UUID[], TEXT[]);
 
 CREATE OR REPLACE FUNCTION launch_simulation(
@@ -111,19 +109,19 @@ BEGIN
     name,
     duration_minutes,
     starts_at,
-    ends_at,  -- CRITICAL: Set ends_at = NOW() + duration
+    ends_at,
     created_by,
     status,
     template_snapshot_version
   )
   VALUES (
     v_simulation_id,
-    v_simulation_tenant_id,  -- Use the NEW simulation tenant
+    v_simulation_tenant_id,
     p_template_id,
     p_name,
     p_duration_minutes,
     NOW(),
-    NOW() + (p_duration_minutes || ' minutes')::INTERVAL,  -- Fix timer display
+    NOW() + (p_duration_minutes || ' minutes')::INTERVAL,
     auth.uid(),
     'running',
     COALESCE(v_snapshot_version, 0)
@@ -162,9 +160,8 @@ BEGIN
     END LOOP;
   END IF;
 
-  RAISE NOTICE 'Simulation launched: % (%) for simulation tenant: % with duration: % minutes (ends_at: %)',
-    v_simulation_id, p_name, v_simulation_tenant_id, p_duration_minutes, 
-    NOW() + (p_duration_minutes || ' minutes')::INTERVAL;
+  RAISE NOTICE 'Simulation launched: % (%) for simulation tenant: % with duration: % minutes',
+    v_simulation_id, p_name, v_simulation_tenant_id, p_duration_minutes;
 
   RETURN QUERY SELECT 
     v_simulation_id AS simulation_id,
@@ -173,4 +170,5 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION launch_simulation IS 'Launch a new simulation from template with proper timer calculation';
+COMMENT ON FUNCTION launch_simulation IS 
+  'Launch a new simulation from template. Super admins can launch without tenant_id by using first available tenant.';
