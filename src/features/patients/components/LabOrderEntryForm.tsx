@@ -114,7 +114,28 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
     setLoading(false);
   };
 
+  /**
+   * Escape HTML special characters to prevent XSS attacks
+   * Converts characters like <, >, &, ", ' to their HTML entity equivalents
+   */
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
   const printLabel = (orderId: string) => {
+    // Sanitize all user-controlled data before inserting into HTML
+    const safePatientName = escapeHtml(patientName);
+    const safePatientNumber = escapeHtml(patientNumber);
+    const safePatientDOB = escapeHtml(formatDate(patientDOB));
+    const safeOrderDate = escapeHtml(formData.order_date);
+    const safeOrderTime = escapeHtml(formData.order_time);
+    const safeProcedureType = escapeHtml(formData.procedure_type);
+    const safeSourceType = escapeHtml(formData.source_type);
+    const safeStudentName = escapeHtml(formData.student_name);
+    const safeOrderId = escapeHtml(orderId);
+
     const labelContent = `
       <!DOCTYPE html>
       <html>
@@ -169,20 +190,20 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
       </head>
       <body>
         <div class="label">
-          <div class="patient-name">${patientName}</div>
-          <div class="field"><span class="field-label">MRN:</span> ${patientNumber}</div>
-          <div class="field"><span class="field-label">DOB:</span> ${formatDate(patientDOB)}</div>
-          <div class="field"><span class="field-label">Date:</span> ${formData.order_date}</div>
-          <div class="field"><span class="field-label">Time:</span> ${formData.order_time}</div>
+          <div class="patient-name">${safePatientName}</div>
+          <div class="field"><span class="field-label">MRN:</span> ${safePatientNumber}</div>
+          <div class="field"><span class="field-label">DOB:</span> ${safePatientDOB}</div>
+          <div class="field"><span class="field-label">Date:</span> ${safeOrderDate}</div>
+          <div class="field"><span class="field-label">Time:</span> ${safeOrderTime}</div>
           <div class="procedure">
-            ${formData.procedure_type}
+            ${safeProcedureType}
           </div>
           <div class="field" style="margin-top: 10px;">
-            <span class="field-label">Source:</span> ${formData.source_type}
+            <span class="field-label">Source:</span> ${safeSourceType}
           </div>
           <div class="verification">
-            <div><span class="field-label">Verified by:</span> ${formData.student_name}</div>
-            <div style="margin-top: 5px; font-size: 10px;">Order ID: ${orderId}</div>
+            <div><span class="field-label">Verified by:</span> ${safeStudentName}</div>
+            <div style="margin-top: 5px; font-size: 10px;">Order ID: ${safeOrderId}</div>
           </div>
         </div>
       </body>
