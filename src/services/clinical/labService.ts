@@ -422,18 +422,29 @@ export async function getPreviousLabResult(
   currentResultCreatedAt: string,
   tenantId: string
 ): Promise<{ data: LabResult | null; error: any }> {
+  // Join through lab_panels to filter by patient_id
+  // lab_results doesn't have patient_id, only panel_id
   const { data, error } = await supabase
     .from('lab_results')
-    .select('*')
-    .eq('patient_id', patientId)
+    .select(`
+      *,
+      lab_panels!inner(patient_id, tenant_id)
+    `)
+    .eq('lab_panels.patient_id', patientId)
+    .eq('lab_panels.tenant_id', tenantId)
     .eq('test_code', testCode)
-    .eq('tenant_id', tenantId)
     .lt('created_at', currentResultCreatedAt)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  return { data, error };
+  // Remove the joined panel data before returning
+  if (data) {
+    const { lab_panels, ...result } = data as any;
+    return { data: result as LabResult, error: null };
+  }
+
+  return { data: null, error };
 }
 
 /**
