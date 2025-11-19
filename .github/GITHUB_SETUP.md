@@ -13,36 +13,51 @@ This document outlines the recommended GitHub repository settings for hacCare.
 
 ## 🔧 Manual Configuration Needed
 
-### Branch Protection Rules
+### Branch Rulesets (GitHub's Modern Branch Protection)
 
 To set up branch protection for `main`, go to:
-**Settings → Branches → Add branch protection rule**
+**Settings → Rules → Rulesets → New branch ruleset**
 
-#### Recommended Settings:
+#### Recommended Configuration:
 
-**Branch name pattern:** `main`
+**Step 1: Basic Setup**
+- **Ruleset Name:** `Main`
+- **Enforcement status:** Active
+- **Bypass list:** Leave empty (or add yourself only if working solo)
 
-✅ **Required:**
-- [x] Require a pull request before merging
-  - [x] Require approvals: 1
-  - [x] Dismiss stale pull request approvals when new commits are pushed
-- [x] Require status checks to pass before merging
-  - [x] Require branches to be up to date before merging
-  - Status checks to require:
+**Step 2: Target Branches**
+- Click **Add target**
+- Select **Include by pattern**
+- Pattern: `main`
+
+**Step 3: Branch Rules (Check these boxes)**
+
+✅ **Essential (Highly Recommended):**
+- [x] **Require a pull request before merging**
+  - Number of approvals required: `1` (or `0` if working solo)
+  - Dismiss stale pull request approvals when new commits are pushed
+- [x] **Require status checks to pass**
+  - Add status checks:
     - `Test & Lint`
     - `Security Audit`
-- [x] Require conversation resolution before merging
-- [x] Do not allow bypassing the above settings
+  - Require branches to be up to date before merging
+- [x] **Block force pushes** - Prevents history rewriting
+- [x] **Restrict deletions** - Prevents accidental branch deletion
 
-⚠️ **Optional (Recommended for teams):**
-- [ ] Require signed commits
-- [ ] Require linear history
-- [ ] Include administrators (enforce rules for admins too)
+✅ **Recommended (Good to Have):**
+- [x] **Require code scanning results** - Ensures CodeQL passes
+- [x] **Require linear history** - Keeps git history clean
+
+⚠️ **Optional (Team/Enterprise):**
+- [ ] **Require signed commits** - Cryptographic commit verification
+- [ ] **Require deployments to succeed** - Wait for Netlify deploy
+- [ ] **Automatically request Copilot code review** - AI code review
 
 #### For Solo Development:
 If you're working alone, you can:
-- Skip "Require approvals" 
+- Set approvals to `0` (still requires PR, but no manual approval)
 - Still keep status checks required (catches bugs before merge)
+- Skip signed commits (adds friction without team benefits)
 
 ---
 
@@ -97,20 +112,37 @@ Your Netlify deployment is already configured to:
 
 ---
 
-## How to Set Up Branch Protection (Step-by-Step)
+## How to Set Up Branch Rulesets (Step-by-Step)
 
-1. Go to https://github.com/haclabs/hacCare/settings/branches
-2. Click **Add branch protection rule**
-3. Enter `main` as the branch name pattern
-4. Check **Require a pull request before merging**
-   - Set required approvals to `1` (or `0` if working solo)
-5. Check **Require status checks to pass before merging**
-   - Search and add: `Test & Lint`
-   - Search and add: `Security Audit`
-6. Check **Require conversation resolution before merging**
-7. Click **Create** at the bottom
+1. Go to https://github.com/haclabs/hacCare/settings/rules
+2. Click **New branch ruleset**
+3. Configure the following:
 
-**That's it!** Your main branch is now protected.
+**Basic Setup:**
+- Ruleset Name: `Main`
+- Enforcement status: `Active`
+- Bypass list: Leave empty
+
+**Target Branches:**
+- Click **Add target** → **Include by pattern**
+- Enter pattern: `main`
+
+**Branch Rules - Check these boxes:**
+- ✅ **Require a pull request before merging**
+  - Required approvals: `0` or `1` (depending on team size)
+  - ✅ Dismiss stale reviews when new commits are pushed
+- ✅ **Require status checks to pass**
+  - Click **Add checks** and search for:
+    - `Test & Lint`
+    - `Security Audit`
+  - ✅ Require branches to be up to date
+- ✅ **Block force pushes**
+- ✅ **Restrict deletions**
+- ✅ **Require code scanning results** (optional but recommended)
+
+4. Scroll to bottom and click **Create**
+
+**That's it!** Your main branch is now protected with Rulesets.
 
 ---
 
@@ -140,10 +172,19 @@ git push origin feature/my-feature
 
 ### Hotfix Workflow (emergency)
 
-If you need to bypass branch protection for an emergency:
-1. Temporarily disable protection (Settings → Branches → Edit rule → Save)
-2. Push hotfix directly to main
-3. Re-enable protection immediately after
+If you need to bypass rulesets for an emergency:
+
+**Option 1: Add yourself to bypass list**
+1. Settings → Rules → Rulesets → Edit `Main` ruleset
+2. Under "Bypass list" → Add bypass → Add yourself
+3. Push hotfix directly to main
+4. Remove yourself from bypass list immediately after
+
+**Option 2: Temporarily disable (not recommended)**
+1. Settings → Rules → Rulesets → Edit `Main` ruleset
+2. Change enforcement status to `Disabled`
+3. Push hotfix
+4. Re-enable immediately
 
 ---
 
@@ -156,7 +197,7 @@ If you need to bypass branch protection for an emergency:
 
 ### Monthly Tasks
 - Audit access permissions
-- Review branch protection rules
+- Review branch rulesets configuration
 - Update this documentation if settings change
 
 ---
