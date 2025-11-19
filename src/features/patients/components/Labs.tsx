@@ -42,7 +42,6 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   const [hasNewLabs, setHasNewLabs] = useState(false);
 
   const isAdmin = hasRole('admin') || hasRole('super_admin');
-  const canEnterLabOrders = isAdmin || hasRole('nurse') || hasRole('instructor');
 
   const loadPanels = useCallback(async () => {
     if (!currentTenant) return;
@@ -184,7 +183,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
               {tab.label}
             </button>
           ))}
-          {canEnterLabOrders && (
+          {isAdmin && (
             <button
               onClick={() => setActiveTab('order')}
               className={`

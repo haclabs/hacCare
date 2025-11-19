@@ -369,11 +369,11 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               padding-left: 8px;
               padding-right: 8px;
               min-width: 1.6in;
-              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+              background: #ffffff;
               border-right: 2px solid #e9ecef;
             }
             .medication-name {
-              font-size: 13px;
+              font-size: 14px;
               font-weight: 800;
               margin-bottom: 4px;
               line-height: 1.3;
@@ -382,37 +382,50 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               text-transform: uppercase;
               letter-spacing: 0.3px;
               padding: 4px 6px;
-              background: linear-gradient(90deg, #e3f2fd 0%, transparent 100%);
-              border-left: 3px solid #2196f3;
+              background: #ffffff;
+              border-left: 3px solid #000000;
               border-radius: 2px;
             }
             .patient-name {
-              font-size: 11px;
-              font-weight: 600;
-              color: #0066cc;
+              font-size: 13px;
+              font-weight: 700;
+              color: #000000;
               margin-top: 2px;
               line-height: 1.3;
               word-wrap: break-word;
               padding: 3px 6px;
-              background: rgba(0, 102, 204, 0.05);
-              border-left: 2px solid #0066cc;
+              background: #ffffff;
+              border-left: 2px solid #666666;
               border-radius: 2px;
+            }
+            .med-id {
+              font-size: 9px;
+              font-weight: 700;
+              color: #333333;
+              margin-top: 2px;
+              line-height: 1;
+              padding: 2px 6px;
+              background: #ffffff;
+              border-left: 1px solid #999999;
+              border-radius: 1px;
+              font-family: monospace;
+              letter-spacing: 0.5px;
             }
             .barcode-area {
               display: flex;
               justify-content: center;
               align-items: center;
-              width: 0.9in;
-              height: 0.9in;
+              width: 0.85in;
+              height: 0.98in;
               transform: rotate(90deg);
               transform-origin: center;
               background: #ffffff;
-              border-radius: 4px;
-              padding: 2px;
+              border-radius: 1px;
+              padding: 0;
             }
             .barcode-canvas {
-              width: 0.8in;
-              height: 0.8in;
+              width: 0.75in;
+              height: 0.9in;
               background: #ffffff;
             }
             @media print {
@@ -425,44 +438,47 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 height: 11in !important;
               }
               .barcode-canvas {
-                width: 0.8in !important;
-                height: 0.8in !important;
+                width: 0.75in !important;
+                height: 0.9in !important;
               }
               .barcode-area {
-                width: 0.9in !important;
-                height: 0.9in !important;
+                width: 0.85in !important;
+                height: 0.98in !important;
                 transform: rotate(90deg) !important;
                 transform-origin: center !important;
+              }
+              .med-id {
+                background: #ffffff !important;
               }
               .label-content {
                 background: #ffffff !important;
               }
               .medication-name {
-                background: #f0f8ff !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                background: #ffffff !important;
               }
               .patient-name {
-                background: #f0f7ff !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                background: #ffffff !important;
               }
             }
           </style>
         </head>
         <body>
           <div class="labels-grid">
-            ${medications.map((medication, index) => `
+            ${medications.map((medication, index) => {
+              const barcodeValue = 'MED' + medication.id.slice(-7).toUpperCase();
+              return `
               <div class="label">
                 <div class="label-content">
                   <div class="medication-name">${medication.medication_name}</div>
                   <div class="patient-name">${medication.patient_name}</div>
+                  <div class="med-id">ID: ${barcodeValue}</div>
                 </div>
                 <div class="barcode-area">
                   <canvas id="medication-barcode-${index}" class="barcode-canvas"></canvas>
                 </div>
               </div>
-            `).join('')}
+              `;
+            }).join('')}
             ${Array(Math.max(0, 30 - medications.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
@@ -492,15 +508,12 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               } as { id: string; name: string });
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
-                width: 2, // INCREASED from 1 to 2 for thicker bars (better for heavy labels)
-                height: 60,
-                displayValue: true,
-                fontSize: 8,
-                margin: 2, // REDUCED margin to fit wider bars
+                width: 3, // OPTIMIZED for round bottles: thicker bars for 1200 DPI
+                height: 52, // OPTIMIZED height to minimize curve wrap on bottles
+                displayValue: false, // Hide rotated text - showing horizontally instead
+                margin: 1, // Minimal margin to maximize bar area
                 background: "#ffffff",
-                lineColor: "#000000",
-                textAlign: "center",
-                textPosition: "bottom"
+                lineColor: "#000000"
               });
             }
           });

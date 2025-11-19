@@ -31,39 +31,33 @@ DECLARE
   v_user_role TEXT;
   v_simulation_id UUID;
   v_snapshot JSONB;
-  v_snapshot_version INTEGER;
-  v_participant_id UUID;
-  v_role TEXT;
-  i INTEGER;
+  v_patient_count INTEGER;
 BEGIN
-  -- Check if user profile exists and get role
-  SELECT role INTO v_user_role
+  -- Get user's role from user_profiles
+  SELECT user_profiles.role INTO v_user_role
   FROM user_profiles
-  WHERE id = auth.uid();
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'User profile not found. Please ensure your account is properly set up.'
-      USING HINT = 'Contact administrator to create user profile';
-  END IF;
-
-  -- For simulation launch, we just need ANY parent tenant as a reference
-  -- The simulation creates its own isolated tenant anyway
-  SELECT id INTO v_home_tenant_id
-  FROM tenants
-  WHERE is_simulation = false
-  ORDER BY created_at ASC
+  WHERE user_profiles.id = auth.uid();
+  
+  -- Get user's home tenant_id from user_tenant_access
+  SELECT user_tenant_access.tenant_id INTO v_home_tenant_id
+  FROM user_tenant_access
+  WHERE user_tenant_access.user_id = auth.uid()
+    AND user_tenant_access.is_active = true
   LIMIT 1;
   
-  IF v_home_tenant_id IS NULL THEN
-    RAISE EXCEPTION 'No tenant found in system. Please create a tenant first.';
+  -- Super admins without tenant: use first non-simulation tenant
+  IF v_home_tenant_id IS NULL AND v_user_role = 'super_admin' THEN
+    SELECT tenants.id INTO v_home_tenant_id
+    FROM tenants
+    WHERE tenants.is_simulation = false
+    ORDER BY tenants.created_at ASC
+    LIMIT 1;
   END IF;
-  
-  RAISE NOTICE '% launching simulation - using parent tenant: %', v_user_role, v_home_tenant_id;
 
-  -- Fetch the template snapshot and version
-  SELECT snapshot_data, snapshot_version INTO v_snapshot, v_snapshot_version
+  -- Fetch the template snapshot
+  SELECT simulation_templates.snapshot_data INTO v_snapshot
   FROM simulation_templates
-  WHERE id = p_template_id;
+  WHERE simulation_templates.id = p_template_id;
 
   IF v_snapshot IS NULL THEN
     RAISE EXCEPTION 'Template not found: %', p_template_id;
@@ -87,7 +81,7 @@ BEGIN
     'sim-act-' || lower(regexp_replace(p_name, '[^a-zA-Z0-9]+', '-', 'g')) || '-' || substr(gen_random_uuid()::text, 1, 8),
     'simulation_active',
     true,
-    v_home_tenant_id,
+    v_home_tenant_id,  -- NULL for super admins is OK
     jsonb_build_object(
       'template_id', p_template_id,
       'launched_at', now()
@@ -102,6 +96,11 @@ BEGIN
     p_snapshot := v_snapshot,
     p_preserve_barcodes := false  -- New simulation = new patients
   );
+
+  -- Count patients created
+  SELECT COUNT(*) INTO v_patient_count
+  FROM patients
+  WHERE patients.tenant_id = v_simulation_tenant_id;
 
   -- Create simulation_active record with proper timer calculation
   INSERT INTO simulation_active (
@@ -126,16 +125,17 @@ BEGIN
     NOW() + (p_duration_minutes || ' minutes')::INTERVAL,  -- Fix timer display
     auth.uid(),
     'running',
-    COALESCE(v_snapshot_version, 0)
+    1  -- Default snapshot version
   );
 
-  -- Add participants to simulation_participants table AND tenant_users for RLS access
+  RAISE NOTICE 'Simulation launched: % (%) for simulation tenant: % with duration: % minutes (ends_at: %)',
+    v_simulation_id, p_name, v_simulation_tenant_id, p_duration_minutes, 
+    NOW() + (p_duration_minutes || ' minutes')::INTERVAL;
+
+  -- Add participants if provided
   IF p_participant_user_ids IS NOT NULL AND array_length(p_participant_user_ids, 1) > 0 THEN
-    FOR i IN 1..array_length(p_participant_user_ids, 1) LOOP
-      v_participant_id := p_participant_user_ids[i];
-      v_role := COALESCE(p_participant_roles[i], 'student');
-      
-      -- Add to simulation_participants
+    FOR i IN 1..array_length(p_participant_user_ids, 1)
+    LOOP
       INSERT INTO simulation_participants (
         simulation_id,
         user_id,
@@ -144,32 +144,19 @@ BEGIN
       )
       VALUES (
         v_simulation_id,
-        v_participant_id,
-        v_role::simulation_role,
+        p_participant_user_ids[i],
+        COALESCE(p_participant_roles[i], 'student')::simulation_role,
         auth.uid()
       );
-      
-      -- Add to tenant_users for RLS access to simulation tenant data
-      BEGIN
-        INSERT INTO tenant_users (user_id, tenant_id, is_active)
-        VALUES (v_participant_id, v_simulation_tenant_id, true);
-      EXCEPTION
-        WHEN unique_violation THEN
-          -- User already in tenant_users, update to active
-          UPDATE tenant_users SET is_active = true
-          WHERE tenant_users.user_id = v_participant_id AND tenant_users.tenant_id = v_simulation_tenant_id;
-      END;
     END LOOP;
+    
+    RAISE NOTICE '✅ Added % participants to simulation', array_length(p_participant_user_ids, 1);
   END IF;
 
-  RAISE NOTICE 'Simulation launched: % (%) for simulation tenant: % with duration: % minutes (ends_at: %)',
-    v_simulation_id, p_name, v_simulation_tenant_id, p_duration_minutes, 
-    NOW() + (p_duration_minutes || ' minutes')::INTERVAL;
-
   RETURN QUERY SELECT 
-    v_simulation_id AS simulation_id,
-    v_simulation_tenant_id AS tenant_id,
-    'Simulation launched successfully'::TEXT AS message;
+    v_simulation_id,
+    v_simulation_tenant_id,  -- Return the simulation tenant ID
+    'Simulation launched successfully'::TEXT;
 END;
 $$;
 
