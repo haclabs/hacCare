@@ -338,11 +338,9 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               border: 1px solid #dee2e6;
               padding: 3px;
               box-sizing: border-box;
-              display: flex;
-              flex-direction: row;
-              align-items: stretch;
+              display: block;
               text-align: left;
-              overflow: hidden;
+              overflow: visible;
               background: #ffffff;
               box-shadow: 0 1px 3px rgba(0,0,0,0.08);
               border-radius: 3px;
@@ -362,15 +360,15 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
             .label-content {
-              flex: 1;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding-left: 8px;
-              padding-right: 8px;
-              min-width: 1.6in;
+              padding: 0.1in 0.05in;
+              padding-right: 0.65in;
+              width: 100%;
+              height: 100%;
+              box-sizing: border-box;
               background: #ffffff;
-              border-right: 2px solid #e9ecef;
             }
             .medication-name {
               font-size: 14px;
@@ -399,34 +397,39 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               border-radius: 2px;
             }
             .med-id {
-              font-size: 9px;
+              font-size: 11px;
               font-weight: 700;
-              color: #333333;
-              margin-top: 2px;
-              line-height: 1;
-              padding: 2px 6px;
+              color: #000000;
+              margin-top: 3px;
+              line-height: 1.2;
+              padding: 3px 6px;
               background: #ffffff;
-              border-left: 1px solid #999999;
+              border-left: 2px solid #666666;
               border-radius: 1px;
               font-family: monospace;
-              letter-spacing: 0.5px;
+              letter-spacing: 0.8px;
             }
             .barcode-area {
               display: flex;
               justify-content: center;
               align-items: center;
-              width: 0.85in;
-              height: 0.98in;
+              width: 0.94in;
+              height: 0.6in;
               transform: rotate(90deg);
               transform-origin: center;
               background: #ffffff;
-              border-radius: 1px;
+              border: none;
               padding: 0;
+              position: absolute;
+              right: 0.05in;
+              top: 50%;
+              margin-top: -0.3in;
             }
             .barcode-canvas {
-              width: 0.75in;
-              height: 0.9in;
+              width: 0.92in;
+              height: 0.58in;
               background: #ffffff;
+              border: none;
             }
             @media print {
               .label {
@@ -438,12 +441,12 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 height: 11in !important;
               }
               .barcode-canvas {
-                width: 0.75in !important;
-                height: 0.9in !important;
+                width: 0.92in !important;
+                height: 0.58in !important;
               }
               .barcode-area {
-                width: 0.85in !important;
-                height: 0.98in !important;
+                width: 0.94in !important;
+                height: 0.6in !important;
                 transform: rotate(90deg) !important;
                 transform-origin: center !important;
               }
@@ -465,7 +468,19 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         <body>
           <div class="labels-grid">
             ${medications.map((medication, index) => {
-              const barcodeValue = 'MED' + medication.id.slice(-7).toUpperCase();
+              // Use BCMA service to generate the correct barcode that matches the medication records
+              const med = { id: medication.id, name: medication.medication_name || 'Unknown' };
+              // Generate barcode ID using the same logic as bcmaService
+              const cleanName = med.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+              const namePrefix = cleanName.charAt(0) || 'X';
+              const cleanId = med.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+              let numericCode = 0;
+              for (let i = 0; i < cleanId.length; i++) {
+                numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+              }
+              const idSuffix = numericCode.toString().padStart(5, '0');
+              const barcodeValue = 'M' + namePrefix + idSuffix;
+              
               return `
               <div class="label">
                 <div class="label-content">
@@ -508,10 +523,10 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               } as { id: string; name: string });
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
-                width: 3, // OPTIMIZED for round bottles: thicker bars for 1200 DPI
-                height: 52, // OPTIMIZED height to minimize curve wrap on bottles
-                displayValue: false, // Hide rotated text - showing horizontally instead
-                margin: 1, // Minimal margin to maximize bar area
+                width: 5, // Extra thick bars for junky 1D scanners
+                height: 100, // Maximum height fills 0.97in width
+                displayValue: false, // Hide text
+                margin: 5, // Good margin for scanner lock-on
                 background: "#ffffff",
                 lineColor: "#000000"
               });

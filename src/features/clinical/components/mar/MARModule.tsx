@@ -793,7 +793,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
   // Render individual medication item
   const renderMedicationItem = (medication: Medication, category: string) => {
     const isDue = medication.next_due && new Date(medication.next_due) <= new Date();
-    const isOverdue = medication.next_due && new Date(medication.next_due) < new Date(Date.now() - 30 * 60 * 1000); // 30 min overdue
+    // Don't show overdue for continuous/IV medications - they run continuously
+    const isOverdue = category !== 'continuous' && medication.next_due && new Date(medication.next_due) < new Date(Date.now() - 30 * 60 * 1000); // 30 min overdue
     
     // Determine alert level based on category
     const shouldAlert = category === 'scheduled' || category === 'continuous' || category === 'diabetic';
