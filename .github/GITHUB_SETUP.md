@@ -34,13 +34,13 @@ To set up branch protection for `main`, go to:
 
 ✅ **Essential (Highly Recommended):**
 - [x] **Require a pull request before merging**
-  - Number of approvals required: `1` (or `0` if working solo)
-  - Dismiss stale pull request approvals when new commits are pushed
+  - Number of approvals required: `0` (for solo dev) or `1` (for teams)
+  - [x] **Require conversation resolution before merging** (recommended)
 - [x] **Require status checks to pass**
-  - Add status checks:
-    - `Test & Lint`
-    - `Security Audit`
-  - Require branches to be up to date before merging
+  - Click **"+ Add checks"** and add:
+    - `test` (displays as "Test & Lint")
+    - `security` (displays as "Security Audit")
+  - [x] **Require branches to be up to date before merging** (recommended)
 - [x] **Block force pushes** - Prevents history rewriting
 - [x] **Restrict deletions** - Prevents accidental branch deletion
 
@@ -129,16 +129,18 @@ Your Netlify deployment is already configured to:
 
 **Branch Rules - Check these boxes:**
 - ✅ **Require a pull request before merging**
-  - Required approvals: `0` or `1` (depending on team size)
-  - ✅ Dismiss stale reviews when new commits are pushed
+  - Required approvals: `0` (for solo dev) or `1` (for teams)
+  - ✅ **Require conversation resolution before merging**
 - ✅ **Require status checks to pass**
-  - Click **Add checks** and search for:
-    - `Test & Lint`
-    - `Security Audit`
-  - ✅ Require branches to be up to date
+  - Click **"+ Add checks"** and add:
+    - `test`
+    - `security`
+  - ✅ **Require branches to be up to date before merging**
 - ✅ **Block force pushes**
 - ✅ **Restrict deletions**
 - ✅ **Require code scanning results** (optional but recommended)
+
+**⚠️ Important:** Don't forget to add target branches or the ruleset won't apply!
 
 4. Scroll to bottom and click **Create**
 
