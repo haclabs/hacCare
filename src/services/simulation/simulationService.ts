@@ -194,6 +194,8 @@ export async function launchSimulation(
       p_duration_minutes: params.duration_minutes,
       p_participant_user_ids: params.participant_user_ids,
       p_participant_roles: params.participant_roles || null,
+      p_primary_categories: params.primary_categories || [],
+      p_sub_categories: params.sub_categories || [],
     });
 
     console.log('📦 Launch response data:', JSON.stringify(data, null, 2));

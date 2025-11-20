@@ -7,9 +7,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, FileText } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, FileText, Filter, X } from 'lucide-react';
 import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, completeSimulation, deleteSimulation } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
+import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 
@@ -19,6 +20,8 @@ const ActiveSimulations: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [printLabelsSimulation, setPrintLabelsSimulation] = useState<SimulationActiveWithDetails | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState<string | null>(null);
+  const [selectedPrimaryCategories, setSelectedPrimaryCategories] = useState<string[]>([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
 
   useEffect(() => {
     loadSimulations();
@@ -162,6 +165,15 @@ const ActiveSimulations: React.FC = () => {
     );
   }
 
+  // Filter simulations based on selected categories
+  const filteredSimulations = simulations.filter(sim => {
+    const matchesPrimary = selectedPrimaryCategories.length === 0 || 
+      (sim.primary_categories && sim.primary_categories.some(cat => selectedPrimaryCategories.includes(cat)));
+    const matchesSub = selectedSubCategories.length === 0 || 
+      (sim.sub_categories && sim.sub_categories.some(cat => selectedSubCategories.includes(cat)));
+    return matchesPrimary && matchesSub;
+  });
+
   if (simulations.length === 0) {
     return (
       <div className="text-center py-12">
@@ -177,10 +189,93 @@ const ActiveSimulations: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column - Active Simulations */}
-      <div className="lg:col-span-2 space-y-4">
-        {simulations.map((sim) => (
+    <div className="space-y-4">
+      {/* Category Filters */}
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+          <h3 className="text-sm font-medium text-slate-900 dark:text-white">Filter by Category</h3>
+          {(selectedPrimaryCategories.length > 0 || selectedSubCategories.length > 0) && (
+            <button
+              onClick={() => {
+                setSelectedPrimaryCategories([]);
+                setSelectedSubCategories([]);
+              }}
+              className="ml-auto text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+            >
+              <X className="h-3 w-3" />
+              Clear all
+            </button>
+          )}
+        </div>
+        
+        <div className="space-y-3">
+          {/* Primary Category Filters */}
+          <div>
+            <div className="text-xs text-slate-600 dark:text-slate-400 mb-2">Primary (Program):</div>
+            <div className="flex flex-wrap gap-2">
+              {PRIMARY_CATEGORIES.map((category) => (
+                <button
+                  key={category.value}
+                  onClick={() => {
+                    if (selectedPrimaryCategories.includes(category.value)) {
+                      setSelectedPrimaryCategories(selectedPrimaryCategories.filter(c => c !== category.value));
+                    } else {
+                      setSelectedPrimaryCategories([...selectedPrimaryCategories, category.value]);
+                    }
+                  }}
+                  className={`
+                    px-3 py-1 rounded-full text-xs font-medium transition-all
+                    ${selectedPrimaryCategories.includes(category.value)
+                      ? category.color + ' ring-2 ring-blue-500'
+                      : category.color + ' opacity-50 hover:opacity-100'
+                    }
+                  `}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Sub Category Filters */}
+          <div>
+            <div className="text-xs text-slate-600 dark:text-slate-400 mb-2">Sub-Category (Type):</div>
+            <div className="flex flex-wrap gap-2">
+              {SUB_CATEGORIES.map((category) => (
+                <button
+                  key={category.value}
+                  onClick={() => {
+                    if (selectedSubCategories.includes(category.value)) {
+                      setSelectedSubCategories(selectedSubCategories.filter(c => c !== category.value));
+                    } else {
+                      setSelectedSubCategories([...selectedSubCategories, category.value]);
+                    }
+                  }}
+                  className={`
+                    px-3 py-1 rounded-full text-xs font-medium transition-all
+                    ${selectedSubCategories.includes(category.value)
+                      ? category.color + ' ring-2 ring-purple-500'
+                      : category.color + ' opacity-50 hover:opacity-100'
+                    }
+                  `}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <div className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+          Showing {filteredSimulations.length} of {simulations.length} simulations
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Active Simulations */}
+        <div className="lg:col-span-2 space-y-4">
+          {filteredSimulations.map((sim) => (
           <div
             key={sim.id}
             className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6"
@@ -212,9 +307,32 @@ const ActiveSimulations: React.FC = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                 Template: {sim.template?.name}
               </p>
+              
+              {/* Category Badges */}
+              {((sim.primary_categories && sim.primary_categories.length > 0) || (sim.sub_categories && sim.sub_categories.length > 0)) && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {sim.primary_categories?.map((cat) => {
+                    const categoryConfig = PRIMARY_CATEGORIES.find(c => c.value === cat);
+                    return categoryConfig ? (
+                      <span key={cat} className={`px-2 py-1 rounded text-xs font-medium ${categoryConfig.color}`}>
+                        {categoryConfig.label}
+                      </span>
+                    ) : null;
+                  })}
+                  {sim.sub_categories?.map((cat) => {
+                    const categoryConfig = SUB_CATEGORIES.find(c => c.value === cat);
+                    return categoryConfig ? (
+                      <span key={cat} className={`px-2 py-1 rounded text-xs font-medium ${categoryConfig.color}`}>
+                        {categoryConfig.label}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              
               <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -499,6 +617,7 @@ const ActiveSimulations: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
