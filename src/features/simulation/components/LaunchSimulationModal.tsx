@@ -7,10 +7,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Play, Users, Clock, AlertCircle } from 'lucide-react';
+import { X, Play, Users, Clock, AlertCircle, Tag } from 'lucide-react';
 import { launchSimulation } from '../../../services/simulation/simulationService';
 import { supabase } from '../../../lib/api/supabase';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
+import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 
 interface LaunchSimulationModalProps {
   template: SimulationTemplateWithDetails;
@@ -36,6 +37,8 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
     duration_minutes: template.default_duration_minutes,
     participant_user_ids: [] as string[],
     participant_roles: [] as ('instructor' | 'student')[],
+    primary_categories: [] as string[],
+    sub_categories: [] as string[],
   });
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,6 +113,8 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
         duration_minutes: formData.duration_minutes,
         participant_user_ids: formData.participant_user_ids,
         participant_roles: formData.participant_roles,
+        primary_categories: formData.primary_categories,
+        sub_categories: formData.sub_categories,
       });
 
       // RPC returns array with single row
@@ -238,6 +243,106 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Simulation will auto-complete after this time expires
+            </p>
+          </div>
+
+          {/* Primary Categories */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <Tag className="inline h-4 w-4 mr-1" />
+              Primary Category (Program)
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {PRIMARY_CATEGORIES.map((category) => {
+                const isSelected = formData.primary_categories.includes(category.value);
+                return (
+                  <label
+                    key={category.value}
+                    className={`
+                      flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all
+                      ${isSelected 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
+                      }
+                    `}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            primary_categories: [...formData.primary_categories, category.value]
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            primary_categories: formData.primary_categories.filter(c => c !== category.value)
+                          });
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${category.color}`}>
+                      {category.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Select one or more programs (optional)
+            </p>
+          </div>
+
+          {/* Sub Categories */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <Tag className="inline h-4 w-4 mr-1" />
+              Sub-Category (Type)
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {SUB_CATEGORIES.map((category) => {
+                const isSelected = formData.sub_categories.includes(category.value);
+                return (
+                  <label
+                    key={category.value}
+                    className={`
+                      flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all
+                      ${isSelected 
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' 
+                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
+                      }
+                    `}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            sub_categories: [...formData.sub_categories, category.value]
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            sub_categories: formData.sub_categories.filter(c => c !== category.value)
+                          });
+                        }
+                      }}
+                      className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                    />
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${category.color}`}>
+                      {category.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Select one or more types (optional)
             </p>
           </div>
 

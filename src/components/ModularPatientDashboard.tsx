@@ -35,13 +35,15 @@ import {
   MessageSquare,
   FlaskConical,
   MapPin,
-  Droplets
+  Droplets,
+  BookOpen
 } from 'lucide-react';
 import { VitalsModule } from '../features/clinical/components/vitals';
 import { MARModule } from '../features/clinical/components/mar';
 import { FormsModule } from '../features/forms';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
+import StudentQuickIntro from './StudentQuickIntro';
 import { AvatarBoard } from '../features/hacmap/AvatarBoard';
 import { AdvancedDirectivesForm } from '../features/patients/components/forms/AdvancedDirectivesForm';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
@@ -93,6 +95,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showQuickIntro, setShowQuickIntro] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showDoctorsOrders, setShowDoctorsOrders] = useState(false);
   const [showLabs, setShowLabs] = useState(false);
@@ -185,6 +188,20 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         console.log('First assessment:', assessmentsData[0]);
         console.log('First assessment notes:', assessmentsData[0].assessment_notes);
       }
+
+      // Pre-format vitals data for display to avoid [object Object] issues
+      const formattedVitalsData = vitalsData.map(vital => ({
+        ...vital,
+        bloodPressureDisplay: vital.bloodPressure?.systolic && vital.bloodPressure?.diastolic 
+          ? `${vital.bloodPressure.systolic}/${vital.bloodPressure.diastolic}`
+          : vital.blood_pressure_systolic && vital.blood_pressure_diastolic
+          ? `${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic}`
+          : 'N/A',
+        respiratoryRateDisplay: vital.respiratoryRate || vital.respiratory_rate || 'N/A',
+        oxygenSaturationDisplay: vital.oxygenSaturation || vital.oxygen_saturation || 'N/A',
+        roomAirIndicator: ((vital.oxygenSaturation || vital.oxygen_saturation) >= 95 && 
+                          (vital.oxygenSaturation || vital.oxygen_saturation) <= 100) ? ' (RA)' : ''
+      }));
 
       // Create a new window for the hospital record
       const reportWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
@@ -513,7 +530,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
             
             <div class="record-container">
               <div class="hospital-header">
-                <img src="/src/images/logo.png" alt="HacCare Logo" class="logo-img" />
+                <img src="/images/logo.png" alt="HacCare Logo" class="logo-img" />
                 <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
                 <div class="hospital-address">
                   1234 Healthcare Drive • Medical City, MC 12345<br>
@@ -711,7 +728,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               <div class="form-section">
                 <div class="section-header">Latest Vital Signs</div>
                 <div class="section-content">
-                  ${vitalsData.length > 0 ? `
+                  ${formattedVitalsData.length > 0 ? `
                     <table class="vitals-table">
                       <thead>
                         <tr>
@@ -725,12 +742,12 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                       </thead>
                       <tbody>
                         <tr>
-                          <td>${vitalsData[0].temperature}°F</td>
-                          <td>${vitalsData[0].heartRate} bpm</td>
-                          <td>${vitalsData[0].bloodPressure}</td>
-                          <td>${vitalsData[0].respiratoryRate}/min</td>
-                          <td>${vitalsData[0].oxygenSaturation}%</td>
-                          <td>${vitalsData[0].recorded_at ? new Date(vitalsData[0].recorded_at).toLocaleString() : 'Not recorded'}</td>
+                          <td>${formattedVitalsData[0].temperature}°F</td>
+                          <td>${formattedVitalsData[0].heartRate} bpm</td>
+                          <td>${formattedVitalsData[0].bloodPressureDisplay}</td>
+                          <td>${formattedVitalsData[0].respiratoryRateDisplay}/min</td>
+                          <td>${formattedVitalsData[0].oxygenSaturationDisplay}%${formattedVitalsData[0].roomAirIndicator}</td>
+                          <td>${formattedVitalsData[0].recorded_at ? new Date(formattedVitalsData[0].recorded_at).toLocaleString() : 'Not recorded'}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1745,6 +1762,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 ID Bracelet
               </button>
             )}
+            <button
+              onClick={() => setShowQuickIntro(true)}
+              className="flex items-center text-green-600 hover:text-green-700 hover:bg-green-50 px-4 py-2.5 rounded-xl transition-all duration-200 border border-green-200 hover:border-green-300 hover:scale-105 font-medium"
+              title="Student Quick Introduction Guide"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Quick Intro
+            </button>
           </div>
           {/* End Modern Action Row */}
           <div className="text-right">
@@ -1933,6 +1958,11 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           setShowSchemaEditor(false);
         }}
       />
+
+      {/* Student Quick Intro Modal */}
+      {showQuickIntro && (
+        <StudentQuickIntro onClose={() => setShowQuickIntro(false)} />
+      )}
     </div>
   );
 };

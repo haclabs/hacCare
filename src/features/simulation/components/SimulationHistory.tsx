@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { History, FileText, Clock, Users, TrendingUp } from 'lucide-react';
 import { getSimulationHistory } from '../../../services/simulation/simulationService';
 import type { SimulationHistoryWithDetails } from '../types/simulation';
+import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
 import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
 
@@ -153,9 +154,31 @@ const SimulationHistory: React.FC = () => {
                     </span>
                   </div>
 
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Template: {record.template?.name}
                   </p>
+
+                  {/* Category Badges */}
+                  {((record.primary_categories && record.primary_categories.length > 0) || (record.sub_categories && record.sub_categories.length > 0)) && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {record.primary_categories?.map((cat) => {
+                        const categoryConfig = PRIMARY_CATEGORIES.find(c => c.value === cat);
+                        return categoryConfig ? (
+                          <span key={cat} className={`px-2 py-1 rounded text-xs font-medium ${categoryConfig.color}`}>
+                            {categoryConfig.label}
+                          </span>
+                        ) : null;
+                      })}
+                      {record.sub_categories?.map((cat) => {
+                        const categoryConfig = SUB_CATEGORIES.find(c => c.value === cat);
+                        return categoryConfig ? (
+                          <span key={cat} className={`px-2 py-1 rounded text-xs font-medium ${categoryConfig.color}`}>
+                            {categoryConfig.label}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">

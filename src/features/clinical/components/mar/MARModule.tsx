@@ -722,10 +722,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 continuous: { 
                   title: 'IV/Continuous', 
                   icon: Syringe, 
-                  color: 'red',
-                  description: 'Critical alerts enabled',
-                  bgColor: 'bg-red-50',
-                  borderColor: 'border-red-200'
+                  color: 'blue',
+                  description: 'Running continuously until discontinued',
+                  bgColor: 'bg-blue-50',
+                  borderColor: 'border-blue-200'
                 },
                 diabetic: { 
                   title: 'Diabetic Medications', 
@@ -815,7 +815,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 category === 'prn' ? 'bg-blue-100 text-blue-800' :
                 category === 'scheduled' ? 'bg-green-100 text-green-800' :
                 medication.category === 'diabetic' ? 'bg-orange-100 text-orange-800' :
-                category === 'continuous' ? 'bg-red-100 text-red-800' :
+                category === 'continuous' ? 'bg-purple-100 text-purple-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
                 {category === 'prn' ? 'PRN' : 
@@ -830,10 +830,12 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     ? 'bg-red-100 text-red-700 font-bold' 
                     : isOverdue 
                     ? 'bg-red-100 text-red-700 font-bold'
+                    : category === 'continuous'
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-yellow-100 text-yellow-800'
                 }`}>
                   <AlertTriangle className={`h-3 w-3 ${isOverdue ? 'text-red-700' : ''}`} />
-                  <span className={isOverdue ? 'text-red-700 font-bold' : ''}>{isOverdue ? 'OVERDUE' : 'DUE'}</span>
+                  <span className={isOverdue ? 'text-red-700 font-bold' : ''}>{isOverdue ? 'OVERDUE' : category === 'continuous' ? 'RUNNING' : 'DUE'}</span>
                 </span>
               )}
             </div>
@@ -842,7 +844,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
             </p>
             {medication.next_due && category !== 'prn' && (
               <p className="text-sm text-gray-500 mt-1">
-                Next due: {formatLocalTime(new Date(medication.next_due), 'dd MMM yyyy - HH:mm')}
+                Next due: {category === 'continuous' 
+                  ? 'Continuous' 
+                  : formatLocalTime(new Date(medication.next_due), 'dd MMM yyyy - HH:mm')}
               </p>
             )}
           </div>

@@ -437,6 +437,20 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         fetchAdvancedDirective(id!),
         fetchDoctorsOrders(id!)
       ]);
+      
+      // Format vitals data for display
+      const formattedVitalsData = vitalsData.map(vital => ({
+        ...vital,
+        bloodPressureDisplay: vital.bloodPressure?.systolic && vital.bloodPressure?.diastolic 
+          ? `${vital.bloodPressure.systolic}/${vital.bloodPressure.diastolic}`
+          : vital.blood_pressure_systolic && vital.blood_pressure_diastolic
+          ? `${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic}`
+          : 'N/A',
+        respiratoryRateDisplay: vital.respiratoryRate || vital.respiratory_rate || 'N/A',
+        oxygenSaturationDisplay: vital.oxygenSaturation || vital.oxygen_saturation || 'N/A',
+        roomAirIndicator: ((vital.oxygenSaturation || vital.oxygen_saturation) >= 95 && 
+                          (vital.oxygenSaturation || vital.oxygen_saturation) <= 100) ? ' (RA)' : ''
+      }));
 
       // Create a new window for the hospital record
       const reportWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
@@ -765,7 +779,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
             
             <div class="record-container">
               <div class="hospital-header">
-                <img src="/src/images/logo.png" alt="HacCare Logo" class="logo-img" />
+                <img src="${window.location.origin}/images/logo.png" alt="HacCare Logo" class="logo-img" onerror="this.style.display='none'" />
                 <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
                 <div class="hospital-address">
                   1234 Healthcare Drive • Medical City, MC 12345<br>
@@ -912,7 +926,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
               <div class="form-section">
                 <div class="section-header">Latest Vital Signs</div>
                 <div class="section-content">
-                  ${vitalsData.length > 0 ? `
+                  ${formattedVitalsData.length > 0 ? `
                     <table class="vitals-table">
                       <thead>
                         <tr>
@@ -926,12 +940,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                       </thead>
                       <tbody>
                         <tr>
-                          <td>${vitalsData[0].temperature}°F</td>
-                          <td>${vitalsData[0].heartRate} bpm</td>
-                          <td>${vitalsData[0].bloodPressure}</td>
-                          <td>${vitalsData[0].respiratoryRate}/min</td>
-                          <td>${vitalsData[0].oxygenSaturation}%</td>
-                          <td>${vitalsData[0].recorded_at ? new Date(vitalsData[0].recorded_at).toLocaleString() : 'Not recorded'}</td>
+                          <td>${formattedVitalsData[0].temperature}°F</td>
+                          <td>${formattedVitalsData[0].heartRate} bpm</td>
+                          <td>${formattedVitalsData[0].bloodPressureDisplay}</td>
+                          <td>${formattedVitalsData[0].respiratoryRateDisplay}/min</td>
+                          <td>${formattedVitalsData[0].oxygenSaturationDisplay}%${formattedVitalsData[0].roomAirIndicator}</td>
+                          <td>${formattedVitalsData[0].recorded_at ? new Date(formattedVitalsData[0].recorded_at).toLocaleString() : 'Not recorded'}</td>
                         </tr>
                       </tbody>
                     </table>

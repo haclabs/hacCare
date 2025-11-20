@@ -308,6 +308,34 @@ deviceAssessmentsData.data?.forEach((assessment: any) => {
 
 ## History
 
+- **Nov 20, 2025**: Added simulation category tag system
+  - Added `primary_categories` TEXT[] and `sub_categories` TEXT[] columns to both `simulation_active` and `simulation_history` tables
+  - Categories: Primary (PN, NESA, SIM Hub, BNAD), Sub (Labs, Simulation, Testing)
+  - Categories preserved through simulation lifecycle:
+    * Selected via checkboxes during launch
+    * Displayed with color-coded badges on active simulations
+    * Can be edited retroactively via purple Tag button (doesn't disrupt running simulation)
+    * Filtered by clicking category badges in filter panel
+    * Auto-copied to history when simulation completes
+    * Displayed on history/debrief page
+  - **CRITICAL COLUMN NAME DIFFERENCE**: 
+    * `simulation_active` uses `starts_at` and `ends_at`
+    * `simulation_history` uses `started_at` and `ended_at`
+    * Reset function maps: `NEW.starts_at` → `started_at` when copying to history
+  - Updated `complete_simulation()` RPC function to include category fields in INSERT
+  - Updated `complete_simulation_with_categories()` trigger to use correct column names
+  - Categories NOT affected by reset - preserved through reset operations
+  - Files modified:
+    * `/supabase/migrations/20251120000000_add_simulation_categories.sql`
+    * `/database/functions/launch_simulation_with_categories.sql`
+    * `/database/functions/update_simulation_categories.sql`
+    * `/database/functions/complete_simulation_with_categories.sql`
+    * `/src/features/simulation/types/simulation.ts`
+    * `/src/features/simulation/components/LaunchSimulationModal.tsx`
+    * `/src/features/simulation/components/ActiveSimulations.tsx`
+    * `/src/features/simulation/components/SimulationHistory.tsx`
+    * `/src/services/simulation/simulationService.ts`
+
 - **Nov 17, 2025**: Integrated hacMap v2 into simulation system
   - Added `device_assessments` table (student work - deleted on reset)
   - Added device-specific fields to `devices` table (IV: gauge, site; Feeding Tube: route, placement verification)

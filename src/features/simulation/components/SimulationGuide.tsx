@@ -6,26 +6,234 @@
  * ===========================================================================
  */
 
-import React from 'react';
-import { BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { format } from 'date-fns';
+import { HACCARE_LOGO_BASE64 } from '../../../utils/logoBase64';
 
 const SimulationGuide: React.FC = () => {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPdf(true);
+    
+    try {
+      const element = document.getElementById('instructor-guide-content');
+      if (!element) {
+        console.error('Guide content element not found');
+        return;
+      }
+
+      // Temporarily scale down the content for better PDF sizing
+      const originalTransform = element.style.transform;
+      element.style.transform = 'scale(0.75)';
+      element.style.transformOrigin = 'top left';
+      element.style.width = '133.33%'; // Compensate for scale
+      
+      // Wait for layout
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Create canvas from the content
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1060, // Wider for better text rendering
+        allowTaint: true,
+      });
+      
+      // Restore original styles
+      element.style.transform = originalTransform;
+      element.style.width = '';
+
+      // Calculate PDF dimensions
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const contentStartY = 50; // Start content below header
+      
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      // Add title metadata
+      pdf.setProperties({
+        title: 'Simulation Training System - Instructor Guide',
+        subject: 'Clinical Simulation Instructor Reference',
+        author: 'hacCare Clinical Simulation Platform',
+        keywords: 'simulation, instructor, guide, training, clinical',
+        creator: 'hacCare'
+      });
+
+      // ========== PROFESSIONAL HEADER ==========
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      
+      // White background header
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, pageWidth, 35, 'F');
+      
+      // Add hacCare logo at top
+      try {
+        const logoWidth = 40;
+        const logoHeight = 13;
+        const logoX = (pageWidth - logoWidth) / 2;
+        pdf.addImage(HACCARE_LOGO_BASE64, 'PNG', logoX, 8, logoWidth, logoHeight);
+      } catch (error) {
+        console.warn('Could not add logo to PDF:', error);
+      }
+      
+      // Document title below logo
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(30, 41, 59); // Slate-800
+      pdf.text('hacCare - Patient Record Simulation', pageWidth / 2, 25, { align: 'center' });
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(71, 85, 105); // Slate-600
+      pdf.text('Instructor Simulation Quick Start', pageWidth / 2, 30, { align: 'center' });
+      
+      // Decorative line
+      pdf.setDrawColor(203, 213, 225);
+      pdf.setLineWidth(0.3);
+      pdf.line(20, 33, pageWidth - 20, 33);
+
+      // Process sections individually to avoid page break issues
+      const margin = 10;
+      let currentY = contentStartY;
+      
+      // Get all major sections
+      const sections = element.querySelectorAll('.bg-slate-50, section, hr');
+      
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i] as HTMLElement;
+        
+        // Skip hidden sections
+        if (section.offsetParent === null) continue;
+
+        // Create canvas for each section individually
+        const sectionCanvas = await html2canvas(section, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          windowWidth: 1060,
+          allowTaint: true,
+        });
+        
+        const sectionImgWidth = imgWidth - (margin * 2);
+        const sectionImgHeight = (sectionCanvas.height * sectionImgWidth) / sectionCanvas.width;
+        
+        // Check if section fits on current page (leave 15mm margin at bottom)
+        if (currentY + sectionImgHeight > pageHeight - 15) {
+          // Start new page with header
+          pdf.addPage();
+          
+          // Add header to new page
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(0, 0, pageWidth, 35, 'F');
+          
+          try {
+            const logoWidth = 40;
+            const logoHeight = 13;
+            const logoX = (pageWidth - logoWidth) / 2;
+            pdf.addImage(HACCARE_LOGO_BASE64, 'PNG', logoX, 8, logoWidth, logoHeight);
+          } catch (error) {
+            // Silent fail
+          }
+          
+          pdf.setFontSize(11);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(30, 41, 59);
+          pdf.text('hacCare - Patient Record Simulation', pageWidth / 2, 25, { align: 'center' });
+          
+          pdf.setFontSize(9);
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(71, 85, 105);
+          pdf.text('Instructor Simulation Quick Start', pageWidth / 2, 30, { align: 'center' });
+          
+          pdf.setDrawColor(203, 213, 225);
+          pdf.setLineWidth(0.3);
+          pdf.line(20, 33, pageWidth - 20, 33);
+          
+          currentY = contentStartY;
+        }
+
+        // Convert section to image and add to PDF
+        const sectionImgData = sectionCanvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(sectionImgData, 'JPEG', margin, currentY, sectionImgWidth, sectionImgHeight, undefined, 'FAST');
+        
+        currentY += sectionImgHeight + 3; // Small gap between sections
+      }
+
+      // Footer on last page
+      const finalPageNum = pdf.getNumberOfPages();
+      pdf.setPage(finalPageNum);
+      const footerY = pageHeight - 15;
+      
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(
+        `Generated ${format(new Date(), 'MMM dd, yyyy h:mm a')}`,
+        pageWidth / 2,
+        footerY,
+        { align: 'center' }
+      );
+      
+      pdf.setFontSize(7);
+      pdf.text(
+        'hacCare® Clinical Simulation Platform',
+        pageWidth / 2,
+        footerY + 4,
+        { align: 'center' }
+      );
+
+      // Save the PDF
+      const filename = `Instructor_Guide_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      pdf.save(filename);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-lg">
-          <div className="flex items-center gap-3">
-            <BookOpen className="h-8 w-8" />
-            <div>
-              <h1 className="text-2xl font-bold">Simulation Training System - Instructor Guide</h1>
-              <p className="text-emerald-100 mt-1">Quick Reference Guide for Creating and Managing Clinical Simulations</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-8 w-8" />
+              <div>
+                <h1 className="text-2xl font-bold">Simulation Training System - Instructor Guide</h1>
+                <p className="text-emerald-100 mt-1">Quick Reference Guide for Creating and Managing Clinical Simulations</p>
+              </div>
             </div>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPdf}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-5 w-5" />
+              <span>{isGeneratingPdf ? 'Generating...' : 'Download PDF'}</span>
+            </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-8 prose prose-slate dark:prose-invert max-w-none">
+        <div id="instructor-guide-content" className="p-8 prose prose-slate dark:prose-invert max-w-none">
           <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-0 mb-2">Overview</h2>
             <p className="text-slate-700 dark:text-slate-300 mb-0">

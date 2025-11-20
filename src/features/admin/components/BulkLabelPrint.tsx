@@ -9,10 +9,16 @@ import { bcmaService } from '../../../services/clinical/bcmaService';
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
   onClose: () => void;
+  quantity: number;
 }
 
-const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, onClose }) => {
+const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, onClose, quantity }) => {
   const [debugMode, setDebugMode] = useState(false);
+  
+  // Duplicate each patient label based on quantity
+  const duplicatedPatients = patients.flatMap(patient => 
+    Array(quantity).fill(patient)
+  );
   
   const handlePrint = () => {
     // Create a new window with only the labels for printing
@@ -48,14 +54,12 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               width: 2.625in;
               height: 1in;
               border: ${debugMode ? '2px solid #ff0000' : '1px solid #dee2e6'};
-              padding: 8px;
+              padding: 0;
               box-sizing: border-box;
               ${debugMode ? 'background-color: rgba(255, 0, 0, 0.1);' : 'background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);'}
               display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: flex-start;
-              text-align: left;
+              flex-direction: row;
+              align-items: stretch;
               overflow: hidden;
               box-shadow: 0 1px 3px rgba(0,0,0,0.08);
               border-radius: 3px;
@@ -74,48 +78,49 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             .label:nth-child(n+22):nth-child(-n+24) { top: 7.5in; }
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
+            .label-content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              padding: 0.1in;
+              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            }
             .patient-name {
-              font-size: 11px;
-              font-weight: 800;
-              margin-bottom: 2px;
+              font-size: 16px;
+              font-weight: 900;
+              margin-bottom: 6px;
               line-height: 1.2;
               color: #1a1a1a;
               text-transform: uppercase;
-              letter-spacing: 0.3px;
-              padding: 3px 6px;
+              letter-spacing: 0.5px;
+              padding: 4px 8px;
               background: linear-gradient(90deg, #e8f5e9 0%, transparent 100%);
-              border-left: 3px solid #4caf50;
-              border-radius: 2px;
-              width: 100%;
-              box-sizing: border-box;
+              border-left: 4px solid #4caf50;
+              border-radius: 3px;
             }
             .patient-info {
-              font-size: 8px;
-              line-height: 1.2;
-              margin-bottom: 2px;
-              padding: 2px 6px;
-              color: #555;
-              font-weight: 600;
-              background: rgba(76, 175, 80, 0.05);
-              border-left: 2px solid #81c784;
+              font-size: 12px;
+              line-height: 1.3;
+              padding: 3px 8px;
+              color: #333;
+              font-weight: 700;
+              background: rgba(76, 175, 80, 0.08);
+              border-left: 3px solid #81c784;
               border-radius: 2px;
-              width: 100%;
-              box-sizing: border-box;
             }
             .barcode-area {
-              margin: 3px 0 0 0;
-              width: 100%;
+              width: 0.9in;
               display: flex;
               justify-content: center;
               align-items: center;
               background: #ffffff;
-              padding: 2px;
-              border-radius: 2px;
-              border: 1px solid #e0e0e0;
+              padding: 0.05in;
+              border-left: 1px solid #e0e0e0;
             }
             .barcode-canvas {
-              max-width: 2.2in;
-              max-height: 0.45in;
+              max-width: 0.8in;
+              max-height: 0.9in;
             }
             @media print {
               .label {
@@ -154,16 +159,18 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
         </head>
         <body>
           <div class="labels-grid">
-            ${patients.map((patient, index) => `
+            ${duplicatedPatients.map((patient, index) => `
               <div class="label">
-                <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                <div class="label-content">
+                  <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                </div>
                 <div class="barcode-area">
                   <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
                 </div>
               </div>
             `).join('')}
-            ${Array(30 - patients.length).fill(0).map(() => `
+            ${Array(Math.max(0, 30 - duplicatedPatients.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
           </div>
@@ -182,7 +189,7 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
         const windowWithBarcode = printWindow as any;
         if (windowWithBarcode.JsBarcode) {
           // Generate patient barcodes
-          patients.forEach((patient, index) => {
+          duplicatedPatients.forEach((patient, index) => {
             const canvas = printWindow.document.getElementById(`patient-barcode-${index}`);
             if (canvas) {
               const barcodeValue = `PT${patient.patient_id.slice(-8).toUpperCase()}`;
@@ -252,12 +259,19 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
             <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
           </div>
+          <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded">
+            <p className="text-sm text-purple-700">
+              <strong>Quantity: {quantity}×</strong> - Each patient will have {quantity} label{quantity !== 1 ? 's' : ''} printed ({patients.length} patient{patients.length !== 1 ? 's' : ''} × {quantity} = {duplicatedPatients.length} total labels)
+            </p>
+          </div>
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
-            {patients.slice(0, 15).map((patient) => (
-              <div key={patient.id} className="border border-gray-300 p-2 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex flex-col items-start" style={{width: '2.625in', height: '1in'}}>
-                <div className="font-extrabold text-sm mb-2 uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-green-50 to-transparent border-l-3 border-green-500 rounded w-full" style={{borderLeftWidth: '3px', letterSpacing: '0.5px'}}>{patient.first_name} {patient.last_name}</div>
-                <div className="text-xs font-semibold mb-2 px-2 py-1 bg-green-50 bg-opacity-50 border-l-2 border-green-400 rounded w-full text-gray-700" style={{borderLeftWidth: '2px'}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
-                <div className="flex justify-center w-full bg-white p-1 rounded border border-gray-200">
+            {duplicatedPatients.slice(0, 15).map((patient, idx) => (
+              <div key={`${patient.id}-${idx}`} className="border border-gray-300 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex items-stretch" style={{width: '2.625in', height: '1in'}}>
+                <div className="flex-1 flex flex-col justify-center px-3 py-2">
+                  <div className="font-black text-base mb-2 uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-green-50 to-transparent border-l-4 border-green-500 rounded" style={{letterSpacing: '0.5px', fontWeight: 900}}>{patient.first_name} {patient.last_name}</div>
+                  <div className="text-sm font-bold px-2 py-1 bg-green-50 bg-opacity-50 border-l-3 border-green-400 rounded text-gray-700" style={{borderLeftWidth: '3px'}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                </div>
+                <div className="w-20 flex justify-center items-center bg-white border-l border-gray-200 p-1">
                   <BarcodeGenerator
                     data={`PT${patient.patient_id.slice(-8).toUpperCase()}`}
                     type="patient"
@@ -266,9 +280,9 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               </div>
             ))}
           </div>
-          {patients.length > 15 && (
+          {duplicatedPatients.length > 15 && (
             <div className="mt-4 text-center text-gray-500 text-sm">
-              Preview showing first 15 labels. Print will include all {patients.length} patient labels.
+              Preview showing first 15 labels. Print will include all {duplicatedPatients.length} patient labels.
             </div>
           )}
         </div>
@@ -297,9 +311,15 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
 interface MedicationLabelsModalProps {
   medications: MedicationLabelData[];
   onClose: () => void;
+  quantity: number;
 }
 
-const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, onClose }) => {
+const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, onClose, quantity }) => {
+  // Duplicate each medication label based on quantity
+  const duplicatedMedications = medications.flatMap(medication => 
+    Array(quantity).fill(medication)
+  );
+  
   const handlePrint = () => {
     // Create a new window with only the labels for printing
     const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -465,7 +485,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         </head>
         <body>
           <div class="labels-grid">
-            ${medications.map((medication, index) => {
+            ${duplicatedMedications.map((medication, index) => {
               // Use BCMA service to generate the correct barcode that matches the medication records
               const med = { id: medication.id, name: medication.medication_name || 'Unknown' };
               // Generate barcode ID using the same logic as bcmaService
@@ -492,7 +512,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               </div>
               `;
             }).join('')}
-            ${Array(Math.max(0, 30 - medications.length)).fill(0).map(() => `
+            ${Array(Math.max(0, 30 - duplicatedMedications.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
           </div>
@@ -511,7 +531,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         const windowWithBarcode = printWindow as any;
         if (windowWithBarcode.JsBarcode) {
           // Generate medication barcodes
-          medications.forEach((medication, index) => {
+          duplicatedMedications.forEach((medication, index) => {
             const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
             if (canvas) {
               // Generate short, scannable barcode using BCMA service
@@ -578,9 +598,14 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             <p className="text-xs text-blue-600">• Equal-sized medication and patient names for consistent readability</p>
             <p className="text-xs text-blue-600">• Balanced barcode width for optimal scan success and label space usage</p>
           </div>
+          <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded">
+            <p className="text-sm text-purple-700">
+              <strong>Quantity: {quantity}×</strong> - Each medication will have {quantity} label{quantity !== 1 ? 's' : ''} printed ({medications.length} medication{medications.length !== 1 ? 's' : ''} × {quantity} = {duplicatedMedications.length} total labels)
+            </p>
+          </div>
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
-            {medications.slice(0, 15).map((medication) => (
-              <div key={medication.id} className="border border-gray-300 p-1 bg-white flex items-stretch rounded shadow-sm" style={{width: '2.625in', height: '1in'}}>
+            {duplicatedMedications.slice(0, 15).map((medication, idx) => (
+              <div key={`${medication.id}-${idx}`} className="border border-gray-300 p-1 bg-white flex items-stretch rounded shadow-sm" style={{width: '2.625in', height: '1in'}}>
                 <div className="flex-1 flex flex-col justify-center px-2 bg-gradient-to-br from-gray-50 to-white border-r-2 border-gray-200" style={{minWidth: '1.6in'}}>
                   <div className="font-extrabold text-sm mb-1 leading-tight uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-blue-50 to-transparent border-l-3 border-blue-500 rounded" style={{borderLeftWidth: '3px'}}>{medication.medication_name}</div>
                   <div className="text-xs font-semibold text-blue-600 leading-tight mt-1 px-2 py-1 bg-blue-50 bg-opacity-50 border-l-2 border-blue-600 rounded" style={{borderLeftWidth: '2px'}}>{medication.patient_name}</div>
@@ -600,9 +625,9 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               </div>
             ))}
           </div>
-          {medications.length > 15 && (
+          {duplicatedMedications.length > 15 && (
             <div className="mt-4 text-center text-gray-500 text-sm">
-              Preview showing first 15 labels. Print will include all {medications.length} medication labels.
+              Preview showing first 15 labels. Print will include all {duplicatedMedications.length} medication labels.
             </div>
           )}
         </div>
@@ -639,6 +664,8 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
   const [error, setError] = useState<string | null>(null);
   const [showMedicationLabels, setShowMedicationLabels] = useState(false);
   const [showPatientBracelets, setShowPatientBracelets] = useState(false);
+  const [patientQuantity, setPatientQuantity] = useState(1);
+  const [medicationQuantity, setMedicationQuantity] = useState(1);
 
   const fetchLabels = async () => {
     if (!profile || !hasRole(['admin', 'super_admin'])) {
@@ -754,25 +781,85 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
       {/* Labels Summary */}
       {labels && (
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Bulk Label Preview</h3>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowPatientBracelets(true)}
-                disabled={labels.patients.length === 0}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Users className="w-4 h-4" />
-                Patient Bracelets ({labels.patients.length})
-              </button>
-              <button
-                onClick={() => setShowMedicationLabels(true)}
-                disabled={labels.medications.length === 0}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Pill className="w-4 h-4" />
-                MAR Medication Labels ({labels.medications.length})
-              </button>
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Print Labels</h3>
+            
+            {/* Patient Bracelets Section */}
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-600 text-white p-2 rounded">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-blue-900">Patient Bracelets</h4>
+                    <p className="text-sm text-blue-700">Patient identification labels</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-blue-900">Qty per patient:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={patientQuantity}
+                      onChange={(e) => setPatientQuantity(Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+                      className="w-16 px-2 py-1 border border-blue-300 rounded text-center font-medium"
+                    />
+                  </div>
+                  <div className="text-sm text-blue-700 font-medium">
+                    = {labels.patients.length * patientQuantity} labels
+                  </div>
+                  <button
+                    onClick={() => setShowPatientBracelets(true)}
+                    disabled={labels.patients.length === 0}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Print
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Medication Labels Section */}
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-green-600 text-white p-2 rounded">
+                    <Pill className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-green-900">Medication Labels</h4>
+                    <p className="text-sm text-green-700">MAR medication labels</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-green-900">Qty per medication:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={medicationQuantity}
+                      onChange={(e) => setMedicationQuantity(Math.max(1, Math.min(30, parseInt(e.target.value) || 1)))}
+                      className="w-16 px-2 py-1 border border-green-300 rounded text-center font-medium"
+                    />
+                  </div>
+                  <div className="text-sm text-green-700 font-medium">
+                    = {labels.medications.length * medicationQuantity} labels
+                  </div>
+                  <button
+                    onClick={() => setShowMedicationLabels(true)}
+                    disabled={labels.medications.length === 0}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Print
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -801,16 +888,16 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
             </div>
           </div>
           
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-yellow-900">Bulk Printing Instructions</h4>
+                <h4 className="font-medium text-yellow-900">Printing Instructions</h4>
                 <ul className="text-yellow-800 text-sm mt-1 space-y-1">
-                  <li>• <strong>Patient bracelets:</strong> Use standard bracelet paper for wristbands</li>
-                  <li>• <strong>Medication labels:</strong> Use Avery 5167 label sheets for MAR compatibility</li>
-                  <li>• <strong>Quality settings:</strong> Use high-quality print setting for barcode clarity</li>
-                  <li>• <strong>Security:</strong> Store unused labels in secure, controlled environment</li>
+                  <li>• Use <strong>Avery 5160</strong> label sheets (30 labels per sheet)</li>
+                  <li>• Select <strong>high-quality</strong> print setting for barcode clarity</li>
+                  <li>• Test print one sheet before bulk printing</li>
+                  <li>• Store unused labels in secure, controlled environment</li>
                 </ul>
               </div>
             </div>
@@ -844,6 +931,7 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
         <MedicationLabelsModal
           medications={labels.medications}
           onClose={() => setShowMedicationLabels(false)}
+          quantity={medicationQuantity}
         />
       )}
       
@@ -852,6 +940,7 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
         <PatientBraceletsModal
           patients={labels.patients}
           onClose={() => setShowPatientBracelets(false)}
+          quantity={patientQuantity}
         />
       )}
     </div>

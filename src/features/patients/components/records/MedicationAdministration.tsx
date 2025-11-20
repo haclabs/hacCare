@@ -260,7 +260,9 @@ const handleDeleteMedication = async (medicationId: string) => {
                   <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <span className="font-semibold text-gray-700 dark:text-gray-300 min-w-16">Next:</span>
                     <span className="text-gray-900 dark:text-gray-100 text-xs">
-                      {formatLocalTime(parseISO(medication.next_due), 'MMM dd, HH:mm')}
+                      {medication.category === 'continuous' 
+                        ? 'Running' 
+                        : formatLocalTime(parseISO(medication.next_due), 'MMM dd, HH:mm')}
                     </span>
                   </div>
                 )}
