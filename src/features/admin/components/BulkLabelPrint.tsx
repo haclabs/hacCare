@@ -54,14 +54,12 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               width: 2.625in;
               height: 1in;
               border: ${debugMode ? '2px solid #ff0000' : '1px solid #dee2e6'};
-              padding: 8px;
+              padding: 0;
               box-sizing: border-box;
               ${debugMode ? 'background-color: rgba(255, 0, 0, 0.1);' : 'background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);'}
               display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: flex-start;
-              text-align: left;
+              flex-direction: row;
+              align-items: stretch;
               overflow: hidden;
               box-shadow: 0 1px 3px rgba(0,0,0,0.08);
               border-radius: 3px;
@@ -80,48 +78,49 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             .label:nth-child(n+22):nth-child(-n+24) { top: 7.5in; }
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
+            .label-content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              padding: 0.1in;
+              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            }
             .patient-name {
-              font-size: 11px;
-              font-weight: 800;
-              margin-bottom: 2px;
+              font-size: 16px;
+              font-weight: 900;
+              margin-bottom: 6px;
               line-height: 1.2;
               color: #1a1a1a;
               text-transform: uppercase;
-              letter-spacing: 0.3px;
-              padding: 3px 6px;
+              letter-spacing: 0.5px;
+              padding: 4px 8px;
               background: linear-gradient(90deg, #e8f5e9 0%, transparent 100%);
-              border-left: 3px solid #4caf50;
-              border-radius: 2px;
-              width: 100%;
-              box-sizing: border-box;
+              border-left: 4px solid #4caf50;
+              border-radius: 3px;
             }
             .patient-info {
-              font-size: 8px;
-              line-height: 1.2;
-              margin-bottom: 2px;
-              padding: 2px 6px;
-              color: #555;
-              font-weight: 600;
-              background: rgba(76, 175, 80, 0.05);
-              border-left: 2px solid #81c784;
+              font-size: 12px;
+              line-height: 1.3;
+              padding: 3px 8px;
+              color: #333;
+              font-weight: 700;
+              background: rgba(76, 175, 80, 0.08);
+              border-left: 3px solid #81c784;
               border-radius: 2px;
-              width: 100%;
-              box-sizing: border-box;
             }
             .barcode-area {
-              margin: 3px 0 0 0;
-              width: 100%;
+              width: 0.9in;
               display: flex;
               justify-content: center;
               align-items: center;
               background: #ffffff;
-              padding: 2px;
-              border-radius: 2px;
-              border: 1px solid #e0e0e0;
+              padding: 0.05in;
+              border-left: 1px solid #e0e0e0;
             }
             .barcode-canvas {
-              max-width: 2.2in;
-              max-height: 0.45in;
+              max-width: 0.8in;
+              max-height: 0.9in;
             }
             @media print {
               .label {
@@ -162,8 +161,10 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
           <div class="labels-grid">
             ${duplicatedPatients.map((patient, index) => `
               <div class="label">
-                <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                <div class="label-content">
+                  <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                </div>
                 <div class="barcode-area">
                   <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
                 </div>
@@ -265,10 +266,12 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
           </div>
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
             {duplicatedPatients.slice(0, 15).map((patient, idx) => (
-              <div key={`${patient.id}-${idx}`} className="border border-gray-300 p-2 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex flex-col items-start" style={{width: '2.625in', height: '1in'}}>
-                <div className="font-extrabold text-sm mb-2 uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-green-50 to-transparent border-l-3 border-green-500 rounded w-full" style={{borderLeftWidth: '3px', letterSpacing: '0.5px'}}>{patient.first_name} {patient.last_name}</div>
-                <div className="text-xs font-semibold mb-2 px-2 py-1 bg-green-50 bg-opacity-50 border-l-2 border-green-400 rounded w-full text-gray-700" style={{borderLeftWidth: '2px'}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
-                <div className="flex justify-center w-full bg-white p-1 rounded border border-gray-200">
+              <div key={`${patient.id}-${idx}`} className="border border-gray-300 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex items-stretch" style={{width: '2.625in', height: '1in'}}>
+                <div className="flex-1 flex flex-col justify-center px-3 py-2">
+                  <div className="font-black text-base mb-2 uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-green-50 to-transparent border-l-4 border-green-500 rounded" style={{letterSpacing: '0.5px', fontWeight: 900}}>{patient.first_name} {patient.last_name}</div>
+                  <div className="text-sm font-bold px-2 py-1 bg-green-50 bg-opacity-50 border-l-3 border-green-400 rounded text-gray-700" style={{borderLeftWidth: '3px'}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                </div>
+                <div className="w-20 flex justify-center items-center bg-white border-l border-gray-200 p-1">
                   <BarcodeGenerator
                     data={`PT${patient.patient_id.slice(-8).toUpperCase()}`}
                     type="patient"
