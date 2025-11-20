@@ -804,10 +804,14 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   📅 Next Scheduled Administration
                 </label>
                 <div className="px-3 py-2 bg-white dark:bg-gray-800 border border-green-300 dark:border-green-600 rounded-lg text-sm font-medium text-green-800 dark:text-green-200">
-                  {formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime, formData.adminTimes)), 'dd MMM yyyy - HH:mm')}
+                  {formData.category === 'continuous' 
+                    ? 'Running' 
+                    : formatLocalTime(new Date(calculateNextDue(formData.frequency, formData.startDate, formData.adminTime, formData.adminTimes)), 'dd MMM yyyy - HH:mm')}
                 </div>
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                  🔔 Alert will trigger 15 minutes before • BCMA window: ±30 minutes • 24-hour format
+                  {formData.category === 'continuous' 
+                    ? '💉 This IV medication runs continuously until discontinued by the doctor'
+                    : '🔔 Alert will trigger 15 minutes before • BCMA window: ±30 minutes • 24-hour format'}
                 </p>
               </div>
             </div>
