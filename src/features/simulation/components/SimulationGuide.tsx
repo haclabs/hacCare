@@ -6,26 +6,111 @@
  * ===========================================================================
  */
 
-import React from 'react';
-import { BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { format } from 'date-fns';
 
 const SimulationGuide: React.FC = () => {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPdf(true);
+    
+    try {
+      const element = document.getElementById('instructor-guide-content');
+      if (!element) {
+        console.error('Guide content element not found');
+        return;
+      }
+
+      // Create canvas from the content
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 794, // A4 width
+        allowTaint: true,
+      });
+
+      // Calculate PDF dimensions
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      // Add title metadata
+      pdf.setProperties({
+        title: 'Simulation Training System - Instructor Guide',
+        subject: 'Clinical Simulation Instructor Reference',
+        author: 'hacCare Clinical Simulation Platform',
+        keywords: 'simulation, instructor, guide, training, clinical',
+        creator: 'hacCare'
+      });
+
+      // Convert canvas to image
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+      // Add pages as needed
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+      }
+
+      // Save the PDF
+      const filename = `Instructor_Guide_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      pdf.save(filename);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-lg">
-          <div className="flex items-center gap-3">
-            <BookOpen className="h-8 w-8" />
-            <div>
-              <h1 className="text-2xl font-bold">Simulation Training System - Instructor Guide</h1>
-              <p className="text-emerald-100 mt-1">Quick Reference Guide for Creating and Managing Clinical Simulations</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-8 w-8" />
+              <div>
+                <h1 className="text-2xl font-bold">Simulation Training System - Instructor Guide</h1>
+                <p className="text-emerald-100 mt-1">Quick Reference Guide for Creating and Managing Clinical Simulations</p>
+              </div>
             </div>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPdf}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-5 w-5" />
+              <span>{isGeneratingPdf ? 'Generating...' : 'Download PDF'}</span>
+            </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-8 prose prose-slate dark:prose-invert max-w-none">
+        <div id="instructor-guide-content" className="p-8 prose prose-slate dark:prose-invert max-w-none">
           <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-0 mb-2">Overview</h2>
             <p className="text-slate-700 dark:text-slate-300 mb-0">
