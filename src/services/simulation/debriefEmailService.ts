@@ -53,14 +53,21 @@ export async function sendDebriefEmail(
 
     // Use direct fetch to call the Edge Function WITHOUT auth headers (like contact form)
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const url = `${supabaseUrl}/functions/v1/send-debrief-report`;
     
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-debrief-report`, {
+    console.log('🔥 CALLING EDGE FUNCTION (NO AUTH):', url);
+    console.log('🔥 Request body:', { recipientEmails: request.recipientEmails });
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
     });
+    
+    console.log('🔥 Response status:', response.status);
+    console.log('🔥 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
