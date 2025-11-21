@@ -51,34 +51,24 @@ export async function sendDebriefEmail(
       };
     }
 
-    // Use direct fetch to call the Edge Function WITHOUT auth headers (like contact form)
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const url = `${supabaseUrl}/functions/v1/send-debrief-report`;
+    // Call the Supabase Edge Function using the Supabase client
+    // The client automatically handles authentication with the new JWT format
+    console.log('🔥 CALLING EDGE FUNCTION via supabase.functions.invoke');
+    console.log('🔥 Request:', { recipientEmails: request.recipientEmails });
     
-    console.log('🔥 CALLING EDGE FUNCTION (NO AUTH):', url);
-    console.log('🔥 Request body:', { recipientEmails: request.recipientEmails });
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+    const { data, error } = await supabase.functions.invoke('send-debrief-report', {
+      body: request,
     });
-    
-    console.log('🔥 Response status:', response.status);
-    console.log('🔥 Response headers:', Object.fromEntries(response.headers.entries()));
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error sending debrief email:', response.status, errorText);
+    console.log('🔥 Response:', { data, error });
+
+    if (error) {
+      console.error('Error sending debrief email:', error);
       return {
         success: false,
-        error: `Failed to send email (${response.status}). Please try again.`,
+        error: error.message || 'Failed to send email. Please try again.',
       };
     }
-
-    const data = await response.json();
     return {
       success: true,
       message: data?.message || `Email sent to ${request.recipientEmails.length} recipient${request.recipientEmails.length !== 1 ? 's' : ''}`,
