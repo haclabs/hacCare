@@ -7,11 +7,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Download, Clock, User, Activity, FileDown } from 'lucide-react';
+import { X, FileText, Download, Clock, User, Activity, FileDown, Mail } from 'lucide-react';
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
 import type { Database } from '../../../types/supabase';
-import { generateStudentActivityPDF } from '../../../utils/pdfGenerator';
+import { generateStudentActivityPDF, generateStudentActivityPDFForEmail } from '../../../utils/pdfGenerator';
+import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
+import { EmailDebriefModal } from './EmailDebriefModal';
 
 // Extended type to include student_activities snapshot
 type HistoryRecordWithActivities = Database['public']['Tables']['simulation_history']['Row'] & {
@@ -26,6 +28,7 @@ interface DebriefReportModalProps {
 const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, onClose }) => {
   const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   useEffect(() => {
     loadStudentActivities();
@@ -113,6 +116,34 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
     );
   };
 
+  const handleEmailSend = async (emails: string[]) => {
+    try {
+      // Generate PDF for email
+      const pdfData = generateStudentActivityPDFForEmail({
+        simulationName: historyRecord.name,
+        simulationDate: format(new Date(historyRecord.started_at), 'PPP'),
+        duration: calculateDuration(),
+        studentActivities: studentActivities,
+      });
+
+      // Send email
+      const response = await sendDebriefEmail({
+        historyRecordId: historyRecord.id,
+        recipientEmails: emails,
+        pdfBase64: pdfData.base64,
+        pdfFilename: pdfData.filename,
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Error sending email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send email',
+      };
+    }
+  };
+
   const calculateDuration = () => {
     // Use ended_at if available, otherwise fall back to completed_at
     const endTime = historyRecord.ended_at || historyRecord.completed_at;
@@ -145,6 +176,13 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
             </div>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowEmailModal(true)}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              title="Email PDF Report"
+            >
+              <Mail className="h-5 w-5 text-slate-500" />
+            </button>
             <button
               onClick={handleGeneratePDF}
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -443,6 +481,14 @@ const DebriefReportModal: React.FC<DebriefReportModalProps> = ({ historyRecord, 
           </button>
         </div>
       </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <EmailDebriefModal
+          onClose={() => setShowEmailModal(false)}
+          onSend={handleEmailSend}
+        />
+      )}
     </div>
   );
 };
