@@ -204,7 +204,7 @@ serve(async (req) => {
         'X-Smtp2go-Api-Key': SMTP2GO_API_KEY,
       },
       body: JSON.stringify({
-        sender: 'HacCare Simulation Reports <noreply@haccare.app>',
+        sender: 'HacCare Simulation Reports <support@haccare.app>',
         to: requestData.recipientEmails,
         subject: subject,
         html_body: `
