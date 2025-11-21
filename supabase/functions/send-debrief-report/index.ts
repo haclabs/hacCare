@@ -138,13 +138,14 @@ serve(async (req) => {
     // Fetch the history record to get details for the email subject
     const { data: historyRecord, error: historyError } = await supabaseClient
       .from('simulation_history')
-      .select('simulation_name, completed_at, student_activities')
+      .select('name, completed_at, started_at, student_activities')
       .eq('id', requestData.historyRecordId)
       .single()
 
     if (historyError || !historyRecord) {
+      console.error('History fetch error:', historyError)
       return new Response(
-        JSON.stringify({ error: 'Simulation history record not found' }),
+        JSON.stringify({ error: 'Simulation history record not found', details: historyError?.message }),
         { 
           status: 404,
           headers: {
@@ -178,7 +179,7 @@ serve(async (req) => {
 
     // Build subject line
     const studentsStr = studentNames.length > 0 ? ` - ${studentNames.join(', ')}` : ''
-    const subject = `${historyRecord.simulation_name} - ${timestamp}${studentsStr}`
+    const subject = `${historyRecord.name} - ${timestamp}${studentsStr}`
 
     // Check if SMTP2GO API key is configured
     if (!SMTP2GO_API_KEY) {
@@ -212,7 +213,7 @@ serve(async (req) => {
             <h2 style="color: #2563eb;">Simulation Debrief Report</h2>
             <p>Please find attached the detailed debrief report for:</p>
             <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 5px 0;"><strong>Simulation:</strong> ${historyRecord.simulation_name}</p>
+              <p style="margin: 5px 0;"><strong>Simulation:</strong> ${historyRecord.name}</p>
               <p style="margin: 5px 0;"><strong>Completed:</strong> ${timestamp}</p>
               ${studentNames.length > 0 ? `<p style="margin: 5px 0;"><strong>Students:</strong> ${studentNames.join(', ')}</p>` : ''}
             </div>
@@ -232,7 +233,7 @@ serve(async (req) => {
         text_body: `
 Simulation Debrief Report
 
-Simulation: ${historyRecord.simulation_name}
+Simulation: ${historyRecord.name}
 Completed: ${timestamp}
 ${studentNames.length > 0 ? `Students: ${studentNames.join(', ')}` : ''}
 
