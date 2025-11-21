@@ -42,16 +42,6 @@ serve(async (req) => {
   try {
     console.log('=== Send Debrief Report Function Started ===')
 
-    // Create Supabase client with service role for admin access
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    )
-
-    // Note: Authentication is handled by Supabase's built-in JWT validation
-    // Users must be logged in to call this function, but we don't enforce role checks here
-    // Role-based access control should be handled at the application level
-
     // Parse the request body
     const requestData: SendDebriefRequest = await req.json()
     console.log('Request data:', { 
@@ -61,10 +51,10 @@ serve(async (req) => {
       filename: requestData.pdfFilename
     })
     
-    // Validate required fields
-    if (!requestData.historyRecordId || !requestData.recipientEmails || !requestData.pdfBase64 || !requestData.pdfFilename) {
+    // Validate required fields (only emails required for test)
+    if (!requestData.recipientEmails || requestData.recipientEmails.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing recipient emails' }),
         { 
           status: 400,
           headers: {
@@ -91,54 +81,10 @@ serve(async (req) => {
       )
     }
 
-    // Fetch the history record to get details for the email subject - use admin client to bypass RLS
-    console.log('Fetching history record:', requestData.historyRecordId)
-    const { data: historyRecord, error: historyError } = await supabaseAdmin
-      .from('simulation_history')
-      .select('name, completed_at, started_at, student_activities')
-      .eq('id', requestData.historyRecordId)
-      .single()
-
-    console.log('History record:', historyRecord ? 'Found' : 'Not found', 'Error:', historyError)
-
-    if (historyError || !historyRecord) {
-      console.error('History fetch error:', historyError)
-      return new Response(
-        JSON.stringify({ error: 'Simulation history record not found', details: historyError?.message }),
-        { 
-          status: 404,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          }
-        }
-      )
-    }
-
-    // Extract student names from student_activities
-    const studentNames: string[] = []
-    if (historyRecord.student_activities && Array.isArray(historyRecord.student_activities)) {
-      historyRecord.student_activities.forEach((activity: any) => {
-        if (activity.studentName) {
-          studentNames.push(activity.studentName)
-        }
-      })
-    }
-
-    // Format timestamp in MST 24-hour format
-    const completedDate = new Date(historyRecord.completed_at)
-    
-    // Convert to MST (UTC-7)
-    const mstDate = new Date(completedDate.getTime() - (7 * 60 * 60 * 1000))
-    
-    // Format: YYYY-MM-DD HH:mm MST
-    const dateStr = mstDate.toISOString().split('T')[0]
-    const timeStr = mstDate.toISOString().split('T')[1].substring(0, 5)
-    const timestamp = `${dateStr} ${timeStr} MST`
-
-    // Build subject line
-    const studentsStr = studentNames.length > 0 ? ` - ${studentNames.join(', ')}` : ''
-    const subject = `${historyRecord.name} - ${timestamp}${studentsStr}`
+    // SIMPLIFIED TEST VERSION - just send basic email
+    console.log('📧 TEST MODE: Sending simple email without database lookup')
+    const subject = 'Test Simulation Debrief Report'
+    const timestamp = new Date().toISOString()
 
     // Check if SMTP2GO API key is configured
     if (!SMTP2GO_API_KEY) {
@@ -154,9 +100,9 @@ serve(async (req) => {
       )
     }
 
-    console.log(`📧 Sending debrief report via SMTP2GO to: ${requestData.recipientEmails.join(', ')}`)
+    console.log(`📧 Sending TEST email via SMTP2GO to: ${requestData.recipientEmails.join(', ')}`)
 
-    // Send email via SMTP2GO with PDF attachment
+    // Send simple email via SMTP2GO WITHOUT PDF attachment for testing
     const res = await fetch('https://api.smtp2go.com/v3/email/send', {
       method: 'POST',
       headers: {
@@ -169,45 +115,22 @@ serve(async (req) => {
         subject: subject,
         html_body: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2563eb;">Simulation Debrief Report</h2>
-            <p>Please find attached the detailed debrief report for:</p>
+            <h2 style="color: #2563eb;">Test Email - Simulation Debrief Report</h2>
+            <p>This is a test email from the HacCare debrief email system.</p>
             <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 5px 0;"><strong>Simulation:</strong> ${historyRecord.name}</p>
-              <p style="margin: 5px 0;"><strong>Completed:</strong> ${timestamp}</p>
-              ${studentNames.length > 0 ? `<p style="margin: 5px 0;"><strong>Students:</strong> ${studentNames.join(', ')}</p>` : ''}
+              <p style="margin: 5px 0;"><strong>Test Time:</strong> ${timestamp}</p>
+              <p style="margin: 5px 0;"><strong>Status:</strong> Edge Function is working!</p>
             </div>
-            <p>The attached PDF contains:</p>
-            <ul>
-              <li>Student activity summary</li>
-              <li>Performance metrics</li>
-              <li>Clinical interventions</li>
-              <li>Detailed activity logs</li>
-            </ul>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
-              This email was sent from HacCare Simulation Training System.<br>
-              If you have questions, please contact your simulation coordinator.
-            </p>
+            <p>If you received this email, the email delivery system is functioning correctly.</p>
           </div>
         `,
-        text_body: `
-Simulation Debrief Report
+        text_body: `Test Email - Simulation Debrief Report
 
-Simulation: ${historyRecord.name}
-Completed: ${timestamp}
-${studentNames.length > 0 ? `Students: ${studentNames.join(', ')}` : ''}
+This is a test email from the HacCare debrief email system.
+Test Time: ${timestamp}
+Status: Edge Function is working!
 
-Please see the attached PDF for the complete debrief report including student activity summary, performance metrics, clinical interventions, and detailed activity logs.
-
----
-This email was sent from HacCare Simulation Training System.
-        `.trim(),
-        attachments: [
-          {
-            filename: requestData.pdfFilename,
-            fileblob: requestData.pdfBase64,
-            mimetype: 'application/pdf'
-          }
-        ]
+If you received this email, the email delivery system is functioning correctly.`.trim(),
       }),
     })
 
