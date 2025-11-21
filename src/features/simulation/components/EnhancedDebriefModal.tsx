@@ -8,10 +8,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award } from 'lucide-react';
+import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award, Mail } from 'lucide-react';
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
 import { exportDebriefToPdf } from '../../../services/export/debriefPdfExport';
+import { generateStudentActivityPDFForEmail } from '../../../utils/pdfGenerator';
+import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
+import { EmailDebriefModal } from './EmailDebriefModal';
 import type { Database } from '../../../types/supabase';
 
 type HistoryRecordWithActivities = Database['public']['Tables']['simulation_history']['Row'] & {
@@ -49,6 +52,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
   const [isExporting, setIsExporting] = useState(false);
   const [instructorName, setInstructorName] = useState('');
   const [instructorNotes, setInstructorNotes] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   useEffect(() => {
     loadStudentActivities();
@@ -454,6 +458,37 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     };
   };
 
+  const handleEmailSend = async (emails: string[]) => {
+    try {
+      // Calculate duration for PDF
+      const duration = calculateDuration();
+
+      // Generate PDF for email
+      const pdfData = generateStudentActivityPDFForEmail({
+        simulationName: historyRecord.name,
+        simulationDate: format(new Date(historyRecord.started_at), 'PPP'),
+        duration,
+        studentActivities: studentActivities,
+      });
+
+      // Send email
+      const response = await sendDebriefEmail({
+        historyRecordId: historyRecord.id,
+        recipientEmails: emails,
+        pdfBase64: pdfData.base64,
+        pdfFilename: pdfData.filename,
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Error sending email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send email',
+      };
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -490,6 +525,13 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowEmailModal(true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>Email Report</span>
+                  </button>
                   <button
                     onClick={handleExportPdf}
                     disabled={isExporting}
@@ -783,6 +825,14 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
           </div>
         </div>
       </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <EmailDebriefModal
+          onClose={() => setShowEmailModal(false)}
+          onSend={handleEmailSend}
+        />
+      )}
     </div>
   );
 };
