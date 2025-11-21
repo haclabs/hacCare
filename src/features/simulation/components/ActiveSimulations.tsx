@@ -605,6 +605,7 @@ const ActiveSimulations: React.FC = () => {
         <SimulationLabelPrintModal
           simulationName={printLabelsSimulation.name}
           tenantId={printLabelsSimulation.tenant_id}
+          participants={printLabelsSimulation.participants}
           onClose={() => setPrintLabelsSimulation(null)}
         />
       )}
