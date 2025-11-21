@@ -51,19 +51,13 @@ export async function sendDebriefEmail(
       };
     }
 
-    // Get the current session for auth token
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // Use direct fetch to call the Edge Function (bypassing supabase client auth issues)
+    // Use direct fetch to call the Edge Function WITHOUT auth headers (like contact form)
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     
     const response = await fetch(`${supabaseUrl}/functions/v1/send-debrief-report`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${session?.access_token || supabaseAnonKey}`,
       },
       body: JSON.stringify(request),
     });
