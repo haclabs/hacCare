@@ -40,8 +40,12 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== Send Debrief Report Function Started ===')
+    
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
@@ -55,7 +59,13 @@ serve(async (req) => {
       )
     }
 
-    // Create Supabase client with the user's JWT
+    // Create Supabase client with service role for admin access
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
+
+    // Create client with user's JWT for auth verification
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -66,12 +76,14 @@ serve(async (req) => {
       }
     )
 
-    // Verify user is authenticated and has proper role
+    // Verify user is authenticated
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    
+    console.log('User verification:', user ? `User ${user.id}` : 'No user', 'Error:', userError)
     
     if (userError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
         { 
           status: 401,
           headers: {
@@ -82,12 +94,15 @@ serve(async (req) => {
       )
     }
 
-    // Check user role (must be instructor, admin, or super_admin)
-    const { data: profile } = await supabaseClient
+    // Check user role (must be instructor, admin, or super_admin) - use admin client to bypass RLS
+    console.log('Fetching user profile for:', user.id)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .select('role')
       .eq('id', user.id)
       .single()
+
+    console.log('Profile data:', profile, 'Profile error:', profileError)
 
     if (!profile || !['instructor', 'admin', 'super_admin'].includes(profile.role)) {
       return new Response(
@@ -104,6 +119,12 @@ serve(async (req) => {
 
     // Parse the request body
     const requestData: SendDebriefRequest = await req.json()
+    console.log('Request data:', { 
+      historyRecordId: requestData.historyRecordId, 
+      recipientCount: requestData.recipientEmails?.length,
+      hasPDF: !!requestData.pdfBase64,
+      filename: requestData.pdfFilename
+    })
     
     // Validate required fields
     if (!requestData.historyRecordId || !requestData.recipientEmails || !requestData.pdfBase64 || !requestData.pdfFilename) {
@@ -135,12 +156,15 @@ serve(async (req) => {
       )
     }
 
-    // Fetch the history record to get details for the email subject
-    const { data: historyRecord, error: historyError } = await supabaseClient
+    // Fetch the history record to get details for the email subject - use admin client to bypass RLS
+    console.log('Fetching history record:', requestData.historyRecordId)
+    const { data: historyRecord, error: historyError } = await supabaseAdmin
       .from('simulation_history')
       .select('name, completed_at, started_at, student_activities')
       .eq('id', requestData.historyRecordId)
       .single()
+
+    console.log('History record:', historyRecord ? 'Found' : 'Not found', 'Error:', historyError)
 
     if (historyError || !historyRecord) {
       console.error('History fetch error:', historyError)
@@ -284,9 +308,16 @@ This email was sent from HacCare Simulation Training System.
     }
 
   } catch (error) {
-    console.error('Error sending debrief report:', error)
+    console.error('=== ERROR in send-debrief-report ===')
+    console.error('Error:', error)
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    
     return new Response(
-      JSON.stringify({ error: 'Failed to send debrief report' }),
+      JSON.stringify({ 
+        error: 'Failed to send debrief report', 
+        details: error instanceof Error ? error.message : String(error)
+      }),
       {
         status: 500,
         headers: {
