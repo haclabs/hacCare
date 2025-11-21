@@ -7,11 +7,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Play, Save, Trash2, Camera } from 'lucide-react';
+import { FileText, Plus, Play, Save, Trash2, Camera, Upload } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate } from '../../../services/simulation/simulationService';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import CreateTemplateModal from './CreateTemplateModal';
 import LaunchSimulationModal from './LaunchSimulationModal';
+import TemplateExportButton from './TemplateExportButton';
+import TemplateImportModal from './TemplateImportModal';
 import { formatDistanceToNow } from 'date-fns';
 
 const SimulationTemplates: React.FC = () => {
@@ -19,6 +21,7 @@ const SimulationTemplates: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLaunchModal, setShowLaunchModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -87,7 +90,7 @@ const SimulationTemplates: React.FC = () => {
   return (
     <>
       <div className="space-y-4">
-        {/* Header with Create Button */}
+        {/* Header with Create and Import Buttons */}
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -97,13 +100,22 @@ const SimulationTemplates: React.FC = () => {
               Create and manage simulation scenarios
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
-          >
-            <Plus className="h-4 w-4" />
-            Create Template
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              Import Template
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
+            >
+              <Plus className="h-4 w-4" />
+              Create Template
+            </button>
+          </div>
         </div>
 
         {/* Templates Grid */}
@@ -188,6 +200,11 @@ const SimulationTemplates: React.FC = () => {
                   >
                     <Save className="h-4 w-4" />
                   </button>
+                  <TemplateExportButton
+                    templateId={template.id}
+                    templateName={template.name}
+                    disabled={!template.snapshot_data || actionLoading === template.id}
+                  />
                   <button
                     onClick={() => handleDelete(template.id)}
                     disabled={actionLoading === template.id}
@@ -283,6 +300,16 @@ const SimulationTemplates: React.FC = () => {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
+            loadTemplates();
+          }}
+        />
+      )}
+
+      {showImportModal && (
+        <TemplateImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => {
             loadTemplates();
           }}
         />
