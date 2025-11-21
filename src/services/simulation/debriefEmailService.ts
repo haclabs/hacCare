@@ -60,7 +60,8 @@ export async function sendDebriefEmail(
       body: request,
     });
 
-    console.log('🔥 Response:', { data, error });
+    console.log('🔥 Response data:', data);
+    console.log('🔥 Response error:', error);
 
     if (error) {
       console.error('Error sending debrief email:', error);
@@ -69,6 +70,16 @@ export async function sendDebriefEmail(
         error: error.message || 'Failed to send email. Please try again.',
       };
     }
+
+    // Check if the response data contains an error
+    if (data?.error) {
+      console.error('Edge Function returned error:', data.error);
+      return {
+        success: false,
+        error: data.error,
+      };
+    }
+
     return {
       success: true,
       message: data?.message || `Email sent to ${request.recipientEmails.length} recipient${request.recipientEmails.length !== 1 ? 's' : ''}`,
