@@ -12,6 +12,7 @@ import { X, Printer, Users, Pill, AlertTriangle } from 'lucide-react';
 import { fetchAllLabelsForPrinting, BulkLabelData, PatientLabelData, MedicationLabelData } from '../../../services/operations/bulkLabelService';
 import { BarcodeGenerator } from '../../clinical/components/BarcodeGenerator';
 import { bcmaService } from '../../../services/clinical/bcmaService';
+import type { Medication } from '../../clinical/types/clinical';
 
 interface WindowWithJsBarcode extends Window {
   JsBarcode: (canvas: HTMLElement, text: string, options: Record<string, unknown>) => void;
@@ -19,21 +20,41 @@ interface WindowWithJsBarcode extends Window {
 
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
+  simulationName: string;
+  participants: Array<{ user_profiles?: { first_name?: string; last_name?: string; } | null; role?: string; }>;
   onClose: () => void;
   quantity: number;
+  startRow: number;
 }
 
 /**
  * Patient Bracelets Modal - Exact copy from BulkLabelPrint.tsx
  * Uses the same Avery 5160 positioning and JsBarcode generation
  */
-const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, onClose, quantity }) => {
+const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, simulationName, participants, onClose, quantity, startRow }) => {
   const [debugMode, setDebugMode] = useState(false);
+  
+  // Get instructor names
+  const instructors = participants
+    .filter(p => p.role === 'instructor')
+    .map(p => {
+      const profile = p.user_profiles;
+      if (!profile) return 'Unknown Instructor';
+      const first = profile.first_name || '';
+      const last = profile.last_name || '';
+      return `${first} ${last}`.trim() || 'Unknown Instructor';
+    });
+  
+  const instructorNames = instructors.length > 0 ? instructors.join(', ') : 'No Instructor Assigned';
   
   // Duplicate each patient label based on quantity
   const duplicatedPatients = patients.flatMap(patient => 
     Array(quantity).fill(patient)
   );
+  
+  // Calculate empty labels to skip based on starting row
+  // Each row has 3 labels, so skip (startRow - 1) * 3 labels
+  const labelsToSkip = (startRow - 1) * 3;
   
   const handlePrint = () => {
     // Create a new window with only the labels for printing
@@ -174,6 +195,18 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
         </head>
         <body>
           <div class="labels-grid">
+            <!-- Empty labels for starting row offset -->
+            ${Array(labelsToSkip).fill(0).map(() => `
+              <div class="label"></div>
+            `).join('')}
+            <!-- Header Label -->
+            <div class="label">
+              <div class="label-content" style="display: flex; flex-direction: column; justify-content: center; padding: 0.15in;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 0.05in; line-height: 1.2;">${simulationName}</div>
+                <div style="font-size: 9px; color: #666; margin-bottom: 0.05in;">Instructors: ${instructorNames}</div>
+                <div style="font-size: 8px; color: #999;">${duplicatedPatients.length} patient${duplicatedPatients.length !== 1 ? 's' : ''} • Patient Bracelets</div>
+              </div>
+            </div>
             ${duplicatedPatients.map((patient, index) => `
               <div class="label">
                 <div class="label-content">
@@ -185,7 +218,7 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
                 </div>
               </div>
             `).join('')}
-            ${Array(Math.max(0, 30 - duplicatedPatients.length)).fill(0).map(() => `
+            ${Array(Math.max(0, 30 - labelsToSkip - 1 - duplicatedPatients.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
           </div>
@@ -308,19 +341,41 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
 
 interface MedicationLabelsModalProps {
   medications: MedicationLabelData[];
+  simulationName: string;
+  participants: Array<{ user_profiles?: { first_name?: string; last_name?: string; } | null; role?: string; }>;
   onClose: () => void;
   quantity: number;
+  startRow: number;
 }
 
 /**
  * Medication Labels Modal - Exact copy from BulkLabelPrint.tsx
  * Uses the same Avery 5160 positioning with vertical barcodes
  */
-const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, onClose, quantity }) => {
+const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, simulationName, participants, onClose, quantity, startRow }) => {
+  const [debugMode, setDebugMode] = useState(false);
+  
+  // Get instructor names
+  const instructors = participants
+    .filter(p => p.role === 'instructor')
+    .map(p => {
+      const profile = p.user_profiles;
+      if (!profile) return 'Unknown Instructor';
+      const first = profile.first_name || '';
+      const last = profile.last_name || '';
+      return `${first} ${last}`.trim() || 'Unknown Instructor';
+    });
+  
+  const instructorNames = instructors.length > 0 ? instructors.join(', ') : 'No Instructor Assigned';
+  
   // Duplicate each medication label based on quantity
   const duplicatedMedications = medications.flatMap(medication => 
     Array(quantity).fill(medication)
   );
+  
+  // Calculate empty labels to skip based on starting row
+  // Each row has 3 labels, so skip (startRow - 1) * 3 labels
+  const labelsToSkip = (startRow - 1) * 3;
   
   const handlePrint = () => {
     // Create a new window with only the labels for printing
@@ -487,6 +542,18 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
         </head>
         <body>
           <div class="labels-grid">
+            <!-- Empty labels for starting row offset -->
+            ${Array(labelsToSkip).fill(0).map(() => `
+              <div class="label"></div>
+            `).join('')}
+            <!-- Header Label -->
+            <div class="label">
+              <div class="label-content" style="display: flex; flex-direction: column; justify-content: center; padding: 0.15in;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 0.05in; line-height: 1.2;">${simulationName}</div>
+                <div style="font-size: 9px; color: #666; margin-bottom: 0.05in;">Instructors: ${instructorNames}</div>
+                <div style="font-size: 8px; color: #999;">${duplicatedMedications.length} medication${duplicatedMedications.length !== 1 ? 's' : ''} • Medication Labels</div>
+              </div>
+            </div>
             ${duplicatedMedications.map((medication, index) => {
               // Use BCMA service to generate the correct barcode that matches the medication records
               const med = { id: medication.id, name: medication.medication_name || 'Unknown' };
@@ -514,7 +581,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               </div>
               `;
             }).join('')}
-            ${Array(Math.max(0, 30 - duplicatedMedications.length)).fill(0).map(() => `
+            ${Array(Math.max(0, 30 - labelsToSkip - 1 - duplicatedMedications.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
           </div>
@@ -540,7 +607,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               const barcodeValue = bcmaService.generateMedicationBarcode({
                 id: medication.id,
                 name: medication.medication_name || 'Unknown'
-              } as { id: string; name: string });
+              } as unknown as Medication);
               windowWithBarcode.JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
                 width: 5, // Extra thick bars for junky 1D scanners
@@ -574,13 +641,22 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             <h2 className="text-xl font-bold text-gray-900">Medication Labels</h2>
             <p className="text-sm text-gray-600 mt-1">Medication labels with vertical barcodes for round containers</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-2">
+            <label className="flex items-center text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+                className="mr-2"
+              />
+              Debug Mode
+            </label>
             <button
               onClick={handlePrint}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
             >
               <Printer className="h-4 w-4 mr-2" />
-              Print
+              {debugMode ? 'Print Test' : 'Print'}
             </button>
             <button
               onClick={onClose}
@@ -615,7 +691,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                       data={bcmaService.generateMedicationBarcode({
                         id: medication.id,
                         name: medication.medication_name || 'Unknown'
-                      } as { id: string; name: string })}
+                      } as unknown as Medication)}
                       type="medication"
                       vertical={true}
                     />
@@ -635,9 +711,473 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
   );
 };
 
+interface AllLabelsModalProps {
+  patients: PatientLabelData[];
+  medications: MedicationLabelData[];
+  simulationName: string;
+  participants: Array<{ user_profiles?: { first_name?: string; last_name?: string; } | null; role?: string; }>;
+  onClose: () => void;
+  patientQuantity: number;
+  medicationQuantity: number;
+  startRow: number;
+}
+
+/**
+ * All Labels Modal - Combines patient bracelets and medication labels in one print job
+ */
+const AllLabelsModal: React.FC<AllLabelsModalProps> = ({ 
+  patients, 
+  medications, 
+  simulationName, 
+  participants, 
+  onClose, 
+  patientQuantity, 
+  medicationQuantity, 
+  startRow 
+}) => {
+  const [debugMode, setDebugMode] = useState(false);
+  
+  // Get instructor names
+  const instructors = participants
+    .filter(p => p.role === 'instructor')
+    .map(p => {
+      const profile = p.user_profiles;
+      if (!profile) return 'Unknown Instructor';
+      const first = profile.first_name || '';
+      const last = profile.last_name || '';
+      return `${first} ${last}`.trim() || 'Unknown Instructor';
+    });
+  
+  const instructorNames = instructors.length > 0 ? instructors.join(', ') : 'No Instructor Assigned';
+  
+  // Duplicate labels based on quantity
+  const duplicatedPatients = patients.flatMap(patient => 
+    Array(patientQuantity).fill(patient)
+  );
+  
+  const duplicatedMedications = medications.flatMap(medication => 
+    Array(medicationQuantity).fill(medication)
+  );
+  
+  const labelsToSkip = (startRow - 1) * 3;
+  const totalLabels = 1 + duplicatedPatients.length + duplicatedMedications.length; // 1 for header
+  
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>All Labels - ${simulationName}</title>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+          <style>
+            @page { 
+              size: 8.5in 11in; 
+              margin: 0; 
+            }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 0; 
+              font-size: 7px;
+            }
+            .labels-grid {
+              position: relative;
+              width: 8.5in;
+              height: 11in;
+              margin: 0;
+              padding: 0;
+            }
+            /* Base label styles - positioning done via inline styles */
+            .label {
+              position: absolute;
+              width: 2.625in;
+              height: 1in;
+              border: 1px solid #dee2e6;
+              box-sizing: border-box;
+              overflow: hidden;
+              background: #ffffff;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+              border-radius: 3px;
+            }
+            
+            /* Patient bracelet styles - horizontal layout */
+            .label.patient-bracelet {
+              padding: 0;
+              display: flex;
+              flex-direction: row;
+              align-items: stretch;
+              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            }
+            .patient-bracelet .label-content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              padding: 0.1in;
+              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            }
+            .patient-bracelet .patient-name {
+              font-size: 16px;
+              font-weight: 900;
+              margin-bottom: 6px;
+              line-height: 1.2;
+              color: #1a1a1a;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              padding: 4px 8px;
+              background: linear-gradient(90deg, #e8f5e9 0%, transparent 100%);
+              border-left: 4px solid #4caf50;
+              border-radius: 3px;
+            }
+            .patient-bracelet .patient-info {
+              font-size: 12px;
+              line-height: 1.3;
+              padding: 3px 8px;
+              color: #333;
+              font-weight: 700;
+              background: rgba(76, 175, 80, 0.08);
+              border-left: 3px solid #81c784;
+              border-radius: 2px;
+            }
+            .patient-bracelet .barcode-area {
+              width: 0.9in;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              background: #ffffff;
+              padding: 0.05in;
+              border-left: 1px solid #e0e0e0;
+              transform: none;
+            }
+            .patient-bracelet .barcode-canvas {
+              max-width: 0.8in;
+              max-height: 0.9in;
+            }
+            
+            /* Medication label styles - vertical barcode layout */
+            .label.medication-label {
+              padding: 3px;
+              display: block;
+            }
+            .medication-label .label-content {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              padding: 0.1in 0.05in;
+              padding-right: 0.65in;
+              width: 100%;
+              height: 100%;
+              box-sizing: border-box;
+            }
+            .medication-label .medication-name {
+              font-size: 14px;
+              font-weight: 800;
+              margin-bottom: 4px;
+              line-height: 1.3;
+              color: #1a1a1a;
+              word-wrap: break-word;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              padding: 4px 6px;
+              background: #ffffff;
+              border-left: 3px solid #000000;
+              border-radius: 2px;
+            }
+            .medication-label .patient-name-med {
+              font-size: 13px;
+              font-weight: 700;
+              color: #000000;
+              margin-top: 2px;
+              line-height: 1.3;
+              word-wrap: break-word;
+              padding: 3px 6px;
+              background: #ffffff;
+              border-left: 2px solid #666666;
+              border-radius: 2px;
+            }
+            .medication-label .med-id {
+              font-size: 11px;
+              font-weight: 700;
+              color: #000000;
+              margin-top: 3px;
+              line-height: 1.2;
+              padding: 3px 6px;
+              background: #ffffff;
+              border-left: 2px solid #666666;
+              border-radius: 1px;
+              font-family: monospace;
+              letter-spacing: 0.8px;
+            }
+            .medication-label .barcode-area {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              width: 0.94in;
+              height: 0.6in;
+              transform: rotate(90deg);
+              transform-origin: center;
+              background: #ffffff;
+              border: none;
+              padding: 0;
+              position: absolute;
+              right: 0.05in;
+              top: 50%;
+              margin-top: -0.3in;
+            }
+            .medication-label .barcode-canvas {
+              width: 0.92in;
+              height: 0.58in;
+              background: #ffffff;
+              border: none;
+            }
+            
+            @media print {
+              .label {
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+              }
+              .patient-bracelet {
+                background: #ffffff !important;
+              }
+              .labels-grid {
+                width: 8.5in !important;
+                height: 11in !important;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="labels-grid">
+            <!-- Empty labels for starting row offset -->
+            ${Array(labelsToSkip).fill(0).map((_, idx) => {
+              const col = idx % 3;
+              const row = Math.floor(idx / 3);
+              const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
+              const topPos = (0.5 + row * 1.0) + 'in';
+              return `<div class="label" style="left: ${leftPos}; top: ${topPos};"></div>`;
+            }).join('')}
+            
+            <!-- Header Label -->
+            ${(() => {
+              const position = labelsToSkip;
+              const col = position % 3;
+              const row = Math.floor(position / 3);
+              const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
+              const topPos = (0.5 + row * 1.0) + 'in';
+              return `
+            <div class="label" style="left: ${leftPos}; top: ${topPos};">
+              <div class="label-content" style="display: flex; flex-direction: column; justify-content: center; padding: 0.15in;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 0.05in; line-height: 1.2;">${simulationName}</div>
+                <div style="font-size: 9px; color: #666; margin-bottom: 0.05in;">Instructors: ${instructorNames}</div>
+                <div style="font-size: 8px; color: #999;">${duplicatedPatients.length} bracelets + ${duplicatedMedications.length} medications = ${totalLabels - 1} labels</div>
+              </div>
+            </div>`;
+            })()}
+            
+            <!-- Patient Bracelet Labels -->
+            ${duplicatedPatients.map((patient, index) => {
+              // Calculate position: skip labels + 1 header + current index
+              const position = labelsToSkip + 1 + index;
+              const col = position % 3;
+              const row = Math.floor(position / 3);
+              const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
+              const topPos = (0.5 + row * 1.0) + 'in';
+              
+              return `
+              <div class="label patient-bracelet" style="left: ${leftPos}; top: ${topPos};">
+                <div class="label-content">
+                  <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                </div>
+                <div class="barcode-area">
+                  <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
+                </div>
+              </div>
+              `;
+            }).join('')}
+            
+            <!-- Medication Labels -->
+            ${duplicatedMedications.map((medication, index) => {
+              // Calculate position: skip labels + 1 header + patient count + current index
+              const position = labelsToSkip + 1 + duplicatedPatients.length + index;
+              const col = position % 3;
+              const row = Math.floor(position / 3);
+              const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
+              const topPos = (0.5 + row * 1.0) + 'in';
+              
+              const med = { id: medication.id, name: medication.medication_name || 'Unknown' };
+              const cleanName = med.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+              const namePrefix = cleanName.charAt(0) || 'X';
+              const cleanId = med.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+              let numericCode = 0;
+              for (let i = 0; i < cleanId.length; i++) {
+                numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+              }
+              const idSuffix = numericCode.toString().padStart(5, '0');
+              const barcodeValue = 'M' + namePrefix + idSuffix;
+              
+              return `
+              <div class="label medication-label" style="left: ${leftPos}; top: ${topPos};">
+                <div class="label-content">
+                  <div class="medication-name">${medication.medication_name}</div>
+                  <div class="patient-name-med">${medication.patient_name}</div>
+                  <div class="med-id">ID: ${barcodeValue}</div>
+                </div>
+                <div class="barcode-area">
+                  <canvas id="medication-barcode-${index}" class="barcode-canvas"></canvas>
+                </div>
+              </div>
+              `;
+            }).join('')}
+            
+            <!-- Fill remaining labels -->
+            ${Array(Math.max(0, 30 - labelsToSkip - totalLabels)).fill(0).map((_, idx) => {
+              const position = labelsToSkip + totalLabels + idx;
+              const col = position % 3;
+              const row = Math.floor(position / 3);
+              const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
+              const topPos = (0.5 + row * 1.0) + 'in';
+              return `<div class="label" style="left: ${leftPos}; top: ${topPos};"></div>`;
+            }).join('')}
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Generate barcodes after content loads
+    printWindow.onload = () => {
+      const checkJsBarcode = () => {
+        const windowWithBarcode = printWindow as unknown as WindowWithJsBarcode;
+        if (windowWithBarcode.JsBarcode) {
+          // Generate patient barcodes
+          duplicatedPatients.forEach((patient, index) => {
+            const canvas = printWindow.document.getElementById(`patient-barcode-${index}`);
+            if (canvas) {
+              const barcodeValue = `PT${patient.patient_id.slice(-8).toUpperCase()}`;
+              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
+                format: "CODE128",
+                width: 1,
+                height: 40,
+                displayValue: true,
+                fontSize: 8,
+                margin: 3,
+                background: "#ffffff",
+                lineColor: "#000000"
+              });
+            }
+          });
+          
+          // Generate medication barcodes
+          duplicatedMedications.forEach((medication, index) => {
+            const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
+            if (canvas) {
+              const barcodeValue = bcmaService.generateMedicationBarcode({
+                id: medication.id,
+                name: medication.medication_name || 'Unknown'
+              } as unknown as Medication);
+              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
+                format: "CODE128",
+                width: 1,
+                height: 40,
+                displayValue: true,
+                fontSize: 8,
+                margin: 3,
+                background: "#ffffff",
+                lineColor: "#000000"
+              });
+            }
+          });
+          
+          if (!debugMode) {
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          }
+        } else {
+          setTimeout(checkJsBarcode, 50);
+        }
+      };
+      checkJsBarcode();
+    };
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">All Labels</h2>
+            <p className="text-sm text-gray-600 mt-1">Combined patient bracelets and medication labels</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <label className="flex items-center text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+                className="mr-2"
+              />
+              Debug Mode
+            </label>
+            <button
+              onClick={handlePrint}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              {debugMode ? 'Print Test' : 'Print'}
+            </button>
+            <button
+              onClick={onClose}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Close
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-[70vh]">
+          <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded">
+            <h3 className="font-medium text-purple-900 mb-1">Combined Label Print</h3>
+            <p className="text-sm text-purple-700">
+              <strong>Total: {totalLabels} labels</strong> (1 header + {duplicatedPatients.length} bracelets + {duplicatedMedications.length} medications)
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+              <h4 className="font-medium text-blue-900 mb-2">Patient Bracelets</h4>
+              <p className="text-sm text-blue-700">{patients.length} patients × {patientQuantity} = {duplicatedPatients.length} labels</p>
+            </div>
+            
+            <div className="p-3 bg-green-50 border border-green-200 rounded">
+              <h4 className="font-medium text-green-900 mb-2">Medication Labels</h4>
+              <p className="text-sm text-green-700">{medications.length} medications × {medicationQuantity} = {duplicatedMedications.length} labels</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-sm text-yellow-800">
+              <strong>Efficient printing:</strong> All labels will print together with one header label, maximizing label sheet usage.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface SimulationLabelPrintModalProps {
   simulationName: string;
   tenantId: string;
+  participants?: Array<{ user_profiles?: { first_name?: string; last_name?: string; } | null; role?: string; }>;
   onClose: () => void;
 }
 
@@ -647,6 +1187,7 @@ interface SimulationLabelPrintModalProps {
 export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps> = ({
   simulationName,
   tenantId,
+  participants = [],
   onClose
 }) => {
   const [labels, setLabels] = useState<BulkLabelData | null>(null);
@@ -654,7 +1195,9 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
   const [error, setError] = useState<string | null>(null);
   const [showPatientBracelets, setShowPatientBracelets] = useState(false);
   const [showMedicationLabels, setShowMedicationLabels] = useState(false);
+  const [showAllLabels, setShowAllLabels] = useState(false);
   const [patientQuantity, setPatientQuantity] = useState(1);
+  const [startRow, setStartRow] = useState(1);
   const [medicationQuantity, setMedicationQuantity] = useState(1);
 
   const fetchLabels = useCallback(async () => {
@@ -695,12 +1238,26 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
               <h2 className="text-xl font-bold text-gray-900">Print Labels</h2>
               <p className="text-sm text-gray-600 mt-1">{simulationName}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center text-sm text-gray-700">
+                <span className="mr-2 font-medium">Start at row:</span>
+                <select
+                  value={startRow}
+                  onChange={(e) => setStartRow(Number(e.target.value))}
+                  className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map(row => (
+                    <option key={row} value={row}>Row {row}</option>
+                  ))}
+                </select>
+              </label>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
           </div>
 
           <div className="p-6 overflow-y-auto max-h-[70vh]">
@@ -798,6 +1355,18 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
                   </div>
                 </div>
 
+                {/* Print All Labels Button */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowAllLabels(true)}
+                    disabled={labels.patients.length === 0 && labels.medications.length === 0}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-medium text-base"
+                  >
+                    <Printer className="h-5 w-5" />
+                    Print All Labels (1 header + {labels.patients.length * patientQuantity} bracelets + {labels.medications.length * medicationQuantity} medications = {1 + labels.patients.length * patientQuantity + labels.medications.length * medicationQuantity} labels)
+                  </button>
+                </div>
+
                 <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -821,8 +1390,11 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
       {showPatientBracelets && labels && labels.patients.length > 0 && (
         <PatientBraceletsModal
           patients={labels.patients}
+          simulationName={simulationName}
+          participants={participants}
           onClose={() => setShowPatientBracelets(false)}
           quantity={patientQuantity}
+          startRow={startRow}
         />
       )}
 
@@ -830,8 +1402,25 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
       {showMedicationLabels && labels && labels.medications.length > 0 && (
         <MedicationLabelsModal
           medications={labels.medications}
+          simulationName={simulationName}
+          participants={participants}
           onClose={() => setShowMedicationLabels(false)}
           quantity={medicationQuantity}
+          startRow={startRow}
+        />
+      )}
+
+      {/* All Labels Modal */}
+      {showAllLabels && labels && (
+        <AllLabelsModal
+          patients={labels.patients}
+          medications={labels.medications}
+          simulationName={simulationName}
+          participants={participants}
+          onClose={() => setShowAllLabels(false)}
+          patientQuantity={patientQuantity}
+          medicationQuantity={medicationQuantity}
+          startRow={startRow}
         />
       )}
     </>
