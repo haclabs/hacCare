@@ -1,5 +1,0 @@
-{
-  "name": "send-debrief-report",
-  "description": "Send debrief report via email with PDF attachment",
-  "verify_jwt": false
-}

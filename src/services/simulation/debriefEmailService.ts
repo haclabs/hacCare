@@ -51,25 +51,33 @@ export async function sendDebriefEmail(
       };
     }
 
-    // Get the current session to pass auth token
+    // Get the current session for auth token
     const { data: { session } } = await supabase.auth.getSession();
     
-    // Call the Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke('send-debrief-report', {
-      body: request,
-      headers: session?.access_token ? {
-        Authorization: `Bearer ${session.access_token}`
-      } : undefined,
+    // Use direct fetch to call the Edge Function (bypassing supabase client auth issues)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-debrief-report`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${session?.access_token || supabaseAnonKey}`,
+      },
+      body: JSON.stringify(request),
     });
 
-    if (error) {
-      console.error('Error sending debrief email:', error);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error sending debrief email:', response.status, errorText);
       return {
         success: false,
-        error: error.message || 'Failed to send email. Please try again.',
+        error: `Failed to send email (${response.status}). Please try again.`,
       };
     }
 
+    const data = await response.json();
     return {
       success: true,
       message: data?.message || `Email sent to ${request.recipientEmails.length} recipient${request.recipientEmails.length !== 1 ? 's' : ''}`,
