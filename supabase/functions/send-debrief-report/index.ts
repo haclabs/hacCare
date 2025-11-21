@@ -267,8 +267,7 @@ This email was sent from hacCare Simulation Training System.
     
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to send debrief report', 
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to send debrief report. Please try again later.' 
       }),
       {
         status: 500,
