@@ -134,6 +134,20 @@ serve(async (req) => {
 
     // Format timestamp in MST 24-hour format
     const completedDate = new Date(historyRecord.completed_at)
+    // Check if date is valid
+    if (isNaN(completedDate.getTime())) {
+      console.error('Invalid completed_at date:', historyRecord.completed_at)
+      return new Response(
+        JSON.stringify({ error: 'Invalid simulation completion date' }),
+        { 
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          }
+        }
+      )
+    }
     const mstDate = new Date(completedDate.getTime() - (7 * 60 * 60 * 1000))
     const dateStr = mstDate.toISOString().split('T')[0]
     const timeStr = mstDate.toISOString().split('T')[1].substring(0, 5)
@@ -167,7 +181,7 @@ serve(async (req) => {
         'X-Smtp2go-Api-Key': SMTP2GO_API_KEY,
       },
       body: JSON.stringify({
-        sender: 'HacCare Simulation Reports <support@haccare.app>',
+        sender: 'hacCare Simulation Reports <support@haccare.app>',
         to: requestData.recipientEmails,
         subject: subject,
         html_body: `
@@ -187,7 +201,7 @@ serve(async (req) => {
               <li>Detailed activity logs</li>
             </ul>
             <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
-              This email was sent from HacCare Simulation Training System.<br>
+              This email was sent from hacCare Simulation Training System.<br>
               If you have questions, please contact your simulation coordinator.
             </p>
           </div>
@@ -202,7 +216,7 @@ ${studentNames.length > 0 ? `Students: ${studentNames.join(', ')}` : ''}
 Please see the attached PDF for the complete debrief report including student activity summary, performance metrics, clinical interventions, and detailed activity logs.
 
 ---
-This email was sent from HacCare Simulation Training System.
+This email was sent from hacCare Simulation Training System.
         `.trim(),
         attachments: [
           {
