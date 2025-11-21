@@ -744,8 +744,8 @@ export function generateStudentActivityPDFForEmail(data: StudentReportData, stud
     const activityTypes = [
       { label: 'Vital Signs', data: student.activities.vitals, formatter: formatVital },
       { label: 'Medication Administration', data: student.activities.medications, formatter: formatMedicationAdmin },
-      { label: "Doctor's Orders", data: student.activities.doctorsOrders, formatter: formatOrder },
-      { label: 'Intake/Output', data: student.activities.intakeOutput, formatter: formatIO },
+      { label: "Doctor's Orders", data: student.activities.doctorsOrders, formatter: formatDoctorOrder },
+      { label: 'Intake/Output', data: student.activities.intakeOutput, formatter: formatIntakeOutput },
       { label: 'Patient Notes', data: student.activities.patientNotes, formatter: formatNote },
       { label: 'Handover Notes', data: student.activities.handoverNotes, formatter: formatNote }
     ];
