@@ -51,9 +51,15 @@ export async function sendDebriefEmail(
       };
     }
 
+    // Get the current session to pass auth token
+    const { data: { session } } = await supabase.auth.getSession();
+    
     // Call the Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('send-debrief-report', {
       body: request,
+      headers: session?.access_token ? {
+        Authorization: `Bearer ${session.access_token}`
+      } : undefined,
     });
 
     if (error) {
