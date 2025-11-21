@@ -565,6 +565,243 @@ export function generateStudentActivityPDF(data: StudentReportData, studentFilte
   doc.save(fileName);
 }
 
+/**
+ * Generate a PDF report for email attachment (returns base64 instead of downloading)
+ */
+export function generateStudentActivityPDFForEmail(data: StudentReportData, studentFilter?: string): { base64: string; filename: string } {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2);
+  let yPos = margin;
+  let pageNumber = 1;
+
+  // Helper to check if we need a new page
+  const checkPageBreak = (requiredSpace: number = 20): void => {
+    if (yPos + requiredSpace > pageHeight - margin - 20) {
+      addPageFooter();
+      doc.addPage();
+      pageNumber++;
+      yPos = margin;
+      addPageHeader();
+    }
+  };
+
+  // Helper to add page header on new pages
+  const addPageHeader = (): void => {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text(`${data.simulationName}`, margin, yPos);
+    doc.text(`Page ${pageNumber}`, pageWidth - margin, yPos, { align: 'right' });
+    
+    // Subtle header line
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3);
+    yPos += 12;
+  };
+
+  // Helper to add page footer
+  const addPageFooter = (): void => {
+    const footerY = pageHeight - 15;
+    
+    // Footer separator line
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    
+    // Footer text
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text('hacCARE Clinical Simulation System', margin, footerY);
+    doc.text(`Generated ${format(new Date(), 'PP')}`, pageWidth - margin, footerY, { align: 'right' });
+  };
+
+  // ========== TITLE PAGE ==========
+  // Logo
+  if (HACCARE_LOGO_BASE64) {
+    try {
+      doc.addImage(HACCARE_LOGO_BASE64, 'PNG', margin, yPos, 40, 40);
+    } catch (error) {
+      console.warn('Failed to add logo:', error);
+    }
+  }
+  yPos += 50;
+
+  // Main title
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(51, 51, 51);
+  doc.text('Clinical Simulation Debrief', margin, yPos);
+  yPos += 12;
+
+  // Simulation details
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 80);
+  doc.text(data.simulationName, margin, yPos);
+  yPos += 8;
+
+  doc.setFontSize(11);
+  doc.setTextColor(120, 120, 120);
+  doc.text(data.simulationDate, margin, yPos);
+  yPos += 20;
+
+  // Calculate metrics
+  const metrics = calculateMetrics(data.studentActivities);
+  const filteredActivities = studentFilter
+    ? data.studentActivities.filter(s => s.studentName === studentFilter)
+    : data.studentActivities;
+
+  // ========== OVERVIEW SECTION ==========
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(51, 51, 51);
+  doc.text('Performance Metrics', margin, yPos);
+  yPos += 10;
+
+  // Metrics boxes
+  const boxHeight = 35;
+  const boxSpacing = 5;
+  const numBoxes = 4;
+  const boxWidth = (contentWidth - (boxSpacing * (numBoxes - 1))) / numBoxes;
+
+  // Duration box
+  doc.setFillColor(240, 247, 255);
+  doc.rect(margin, yPos, boxWidth, boxHeight, 'F');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Duration', margin + 5, yPos + 8);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(51, 51, 51);
+  doc.text(data.duration, margin + 5, yPos + 22);
+
+  // Students box
+  const studentsX = margin + boxWidth + boxSpacing;
+  doc.setFillColor(250, 240, 255);
+  doc.rect(studentsX, yPos, boxWidth, boxHeight, 'F');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Students', studentsX + 5, yPos + 8);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(51, 51, 51);
+  doc.text(String(filteredActivities.length), studentsX + 5, yPos + 22);
+
+  // Total Entries box
+  const entriesX = studentsX + boxWidth + boxSpacing;
+  doc.setFillColor(240, 255, 245);
+  doc.rect(entriesX, yPos, boxWidth, boxHeight, 'F');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('Total Entries', entriesX + 5, yPos + 8);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(51, 51, 51);
+  doc.text(String(metrics.totalInterventions), entriesX + 5, yPos + 22);
+
+  // BCMA Compliance box
+  const bcmaX = entriesX + boxWidth + boxSpacing;
+  doc.setFillColor(255, 250, 240);
+  doc.rect(bcmaX, yPos, boxWidth, boxHeight, 'F');
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text('BCMA Compliance', bcmaX + 5, yPos + 8);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(51, 51, 51);
+  doc.text(`${metrics.bcmaCompliance}%`, bcmaX + 5, yPos + 22);
+
+  yPos += boxHeight + 20;
+
+  // ========== STUDENT SECTIONS ==========
+  filteredActivities.forEach((student, index) => {
+    checkPageBreak(60);
+
+    // Student header
+    doc.setFillColor(245, 245, 250);
+    doc.rect(margin, yPos, contentWidth, 12, 'F');
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(51, 51, 51);
+    doc.text(student.studentName, margin + 5, yPos + 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`${student.totalEntries} entries`, pageWidth - margin - 5, yPos + 8, { align: 'right' });
+    yPos += 18;
+
+    // Activities
+    const activityTypes = [
+      { label: 'Vital Signs', data: student.activities.vitals, formatter: formatVital },
+      { label: 'Medication Administration', data: student.activities.medications, formatter: formatMedicationAdmin },
+      { label: "Doctor's Orders", data: student.activities.doctorsOrders, formatter: formatDoctorOrder },
+      { label: 'Intake/Output', data: student.activities.intakeOutput, formatter: formatIntakeOutput },
+      { label: 'Patient Notes', data: student.activities.patientNotes, formatter: formatNote },
+      { label: 'Handover Notes', data: student.activities.handoverNotes, formatter: formatNote }
+    ];
+
+    activityTypes.forEach(actType => {
+      if (!actType.data || actType.data.length === 0) return;
+
+      checkPageBreak(30);
+
+      // Section header
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(70, 70, 70);
+      doc.text(`${actType.label} (${actType.data.length})`, margin + 3, yPos);
+      yPos += 8;
+
+      // Render each activity
+      actType.data.forEach((activity: any) => {
+        const lines = actType.formatter(activity);
+        const requiredSpace = lines.length * 5 + 3;
+        checkPageBreak(requiredSpace);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+
+        lines.forEach((line: string) => {
+          doc.text(line, margin + 6, yPos);
+          yPos += 5;
+        });
+        yPos += 1;
+      });
+
+      yPos += 5;
+    });
+
+    yPos += 8;
+  });
+
+  // Add final footer
+  addPageFooter();
+
+  // Return base64 and filename instead of downloading
+  const fileName = studentFilter
+    ? `${studentFilter.replace(/\s+/g, '_')}_Debrief_Report_${format(new Date(), 'yyyyMMdd')}.pdf`
+    : `Clinical_Simulation_Debrief_${format(new Date(), 'yyyyMMdd')}.pdf`;
+
+  // Get base64 string (remove data URL prefix)
+  const base64String = doc.output('dataurlstring').split(',')[1];
+
+  return {
+    base64: base64String,
+    filename: fileName
+  };
+}
+
 // ========== FORMATTERS ==========
 
 function formatVital(v: any): string[] {
