@@ -104,7 +104,7 @@ serve(async (req) => {
     console.log('Fetching history record:', requestData.historyRecordId)
     const { data: historyRecord, error: historyError } = await supabaseAdmin
       .from('simulation_history')
-      .select('name, completed_at, student_activities')
+      .select('name, completed_at, ended_at, started_at, student_activities')
       .eq('id', requestData.historyRecordId)
       .single()
 
@@ -133,10 +133,13 @@ serve(async (req) => {
     }
 
     // Format timestamp in MST 24-hour format
-    const completedDate = new Date(historyRecord.completed_at)
+    // Use completed_at if available, fallback to ended_at, then started_at
+    const dateToUse = historyRecord.completed_at || historyRecord.ended_at || historyRecord.started_at
+    const completedDate = new Date(dateToUse)
+    
     // Check if date is valid
     if (isNaN(completedDate.getTime())) {
-      console.error('Invalid completed_at date:', historyRecord.completed_at)
+      console.error('Invalid date:', { completed_at: historyRecord.completed_at, ended_at: historyRecord.ended_at, started_at: historyRecord.started_at })
       return new Response(
         JSON.stringify({ error: 'Invalid simulation completion date' }),
         { 
@@ -148,10 +151,14 @@ serve(async (req) => {
         }
       )
     }
+    
+    // Convert to MST (UTC-7)
     const mstDate = new Date(completedDate.getTime() - (7 * 60 * 60 * 1000))
     const dateStr = mstDate.toISOString().split('T')[0]
     const timeStr = mstDate.toISOString().split('T')[1].substring(0, 5)
     const timestamp = `${dateStr} ${timeStr} MST`
+    
+    console.log('Timestamp calculation:', { dateToUse, completedDate: completedDate.toISOString(), timestamp })
 
     // Build subject line
     const studentsStr = studentNames.length > 0 ? ` - ${studentNames.join(', ')}` : ''
