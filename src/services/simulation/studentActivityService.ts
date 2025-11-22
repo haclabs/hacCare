@@ -494,9 +494,13 @@ export async function getStudentActivitiesBySimulation(
 
     // Helper to initialize student entry
     const getOrCreateStudent = (name: string): StudentActivity => {
-      if (!studentMap.has(name)) {
-        studentMap.set(name, {
-          studentName: name,
+      // Normalize student name: trim whitespace and lowercase for lookup
+      const normalizedName = name.trim().toLowerCase();
+      const trimmedName = name.trim();
+      
+      if (!studentMap.has(normalizedName)) {
+        studentMap.set(normalizedName, {
+          studentName: trimmedName, // Store trimmed version for display
           totalEntries: 0,
           activities: {
             vitals: [],
@@ -516,7 +520,7 @@ export async function getStudentActivitiesBySimulation(
           },
         });
       }
-      return studentMap.get(name)!;
+      return studentMap.get(normalizedName)!;
     };
 
     // Process vitals
