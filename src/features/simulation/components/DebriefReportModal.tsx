@@ -11,7 +11,7 @@ import { X, FileText, Download, Clock, User, Activity, FileDown, Mail } from 'lu
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
 import type { Database } from '../../../types/supabase';
-import { generateStudentActivityPDF, generateStudentActivityPDFForEmail } from '../../../utils/pdfGenerator';
+import { generateStudentActivityPDF, generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGenerator';
 import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
 import { EmailDebriefModal } from './EmailDebriefModal';
 

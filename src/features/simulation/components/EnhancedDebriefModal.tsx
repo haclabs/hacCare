@@ -12,7 +12,7 @@ import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, 
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
 import { exportDebriefToPdf } from '../../../services/export/debriefPdfExport';
-import { generateStudentActivityPDFForEmail } from '../../../utils/pdfGenerator';
+import { generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGenerator';
 import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
 import { EmailDebriefModal } from './EmailDebriefModal';
 import type { Database } from '../../../types/supabase';
