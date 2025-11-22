@@ -221,6 +221,18 @@ BEGIN
   v_stats := jsonb_set(v_stats, '{wound_assessments_cleared}', to_jsonb(v_count));
   RAISE NOTICE '🗑️  Cleared % wound assessments', v_count;
 
+  -- Clear lab acknowledgement events first (has foreign key to lab_panels)
+  WITH deleted AS (
+    DELETE FROM lab_ack_events 
+    WHERE patient_id IN (
+      SELECT id FROM patients WHERE tenant_id = v_tenant_id
+    )
+    RETURNING 1
+  )
+  SELECT count(*) INTO v_count FROM deleted;
+  v_stats := jsonb_set(v_stats, '{lab_ack_events_cleared}', to_jsonb(v_count));
+  RAISE NOTICE '🗑️  Cleared % lab acknowledgement events', v_count;
+
   -- Clear lab results and panels
   WITH deleted AS (
     DELETE FROM lab_results 

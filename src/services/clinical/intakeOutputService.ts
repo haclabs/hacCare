@@ -112,6 +112,9 @@ export async function createIntakeOutputEvent(
   event: Omit<IntakeOutputInsert, 'id' | 'created_at' | 'updated_at'>
 ): Promise<IntakeOutputEvent> {
   try {
+    console.log('💧 Creating I&O event with data:', event);
+    console.log('💧 Student name being saved:', event.student_name);
+    
     const { data, error } = await supabase
       .from('patient_intake_output_events')
       .insert(event)
@@ -123,6 +126,7 @@ export async function createIntakeOutputEvent(
       throw error;
     }
 
+    console.log('✅ I&O event created successfully:', data);
     return data;
   } catch (error) {
     console.error('Error in createIntakeOutputEvent:', error);

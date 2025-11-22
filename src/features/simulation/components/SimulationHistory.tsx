@@ -12,7 +12,7 @@ import { getSimulationHistory } from '../../../services/simulation/simulationSer
 import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
-import { formatDistanceToNow, differenceInMinutes } from 'date-fns';
+import { formatDistanceToNow, differenceInMinutes, format } from 'date-fns';
 
 const SimulationHistory: React.FC = () => {
   const [history, setHistory] = useState<SimulationHistoryWithDetails[]>([]);
@@ -153,6 +153,16 @@ const SimulationHistory: React.FC = () => {
                       {record.status}
                     </span>
                   </div>
+
+                  {/* Completed Date/Time - Bold and prominent in MST */}
+                  {record.completed_at && (
+                    <div className="mb-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-0.5">COMPLETED (MST)</div>
+                      <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                        {format(new Date(record.completed_at), 'PPP')} at {format(new Date(record.completed_at), 'HH:mm')} MST
+                      </div>
+                    </div>
+                  )}
 
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Template: {record.template?.name}

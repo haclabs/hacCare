@@ -68,7 +68,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       if (historyRecord.student_activities && Array.isArray(historyRecord.student_activities)) {
         activities = historyRecord.student_activities as StudentActivity[];
       } else {
-        activities = await getStudentActivitiesBySimulation(historyRecord.id);
+        // Use simulation_id not history record id!
+        activities = await getStudentActivitiesBySimulation(historyRecord.simulation_id);
       }
       
       const deduped = deduplicateStudentActivities(activities);
@@ -84,7 +85,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     const studentMap = new Map<string, StudentActivity>();
     
     activities.forEach((activity) => {
-      const normalizedName = activity.studentName.trim();
+      const normalizedName = activity.studentName.trim().toLowerCase();
       const existing = studentMap.get(normalizedName);
       
       if (existing) {
@@ -95,6 +96,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.doctorsOrders.push(...activity.activities.doctorsOrders);
         existing.activities.patientNotes.push(...activity.activities.patientNotes);
         existing.activities.handoverNotes.push(...activity.activities.handoverNotes);
+        existing.activities.advancedDirectives.push(...activity.activities.advancedDirectives);
         existing.activities.hacmapDevices.push(...activity.activities.hacmapDevices);
         existing.activities.hacmapWounds.push(...activity.activities.hacmapWounds);
         existing.activities.deviceAssessments.push(...activity.activities.deviceAssessments);
@@ -104,7 +106,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.totalEntries += activity.totalEntries;
       } else {
         const cloned = JSON.parse(JSON.stringify(activity));
-        cloned.studentName = normalizedName;
+        cloned.studentName = activity.studentName.trim();
         studentMap.set(normalizedName, cloned);
       }
     });
@@ -849,6 +851,7 @@ const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded
     { key: 'intakeOutput', title: 'Intake & Output', items: student.activities.intakeOutput || [], color: 'cyan', icon: '💧' },
     { key: 'patientNotes', title: 'Patient Notes', items: student.activities.patientNotes || [], color: 'yellow', icon: '📝' },
     { key: 'handoverNotes', title: 'Handover Notes', items: student.activities.handoverNotes || [], color: 'orange', icon: '🤝' },
+    { key: 'advancedDirectives', title: 'Advanced Directives', items: student.activities.advancedDirectives || [], color: 'red', icon: '⚕️' },
     { key: 'hacmapDevices', title: 'hacMap - Add Device', items: student.activities.hacmapDevices || [], color: 'emerald', icon: '🔧' },
     { key: 'hacmapWounds', title: 'hacMap - Add Wound', items: student.activities.hacmapWounds || [], color: 'rose', icon: '🩹' },
     { key: 'deviceAssessments', title: 'Device Assessments', items: student.activities.deviceAssessments || [], color: 'indigo', icon: '🩺' },
@@ -924,6 +927,7 @@ const ActivitySection: React.FC<{
     blue: 'bg-blue-50 border-blue-200 text-blue-700',
     purple: 'bg-purple-50 border-purple-200 text-purple-700',
     pink: 'bg-pink-50 border-pink-200 text-pink-700',
+    red: 'bg-red-50 border-red-200 text-red-700',
     teal: 'bg-teal-50 border-teal-200 text-teal-700',
     green: 'bg-green-50 border-green-200 text-green-700',
     cyan: 'bg-cyan-50 border-cyan-200 text-cyan-700',
@@ -931,7 +935,9 @@ const ActivitySection: React.FC<{
     orange: 'bg-orange-50 border-orange-200 text-orange-700',
     emerald: 'bg-emerald-50 border-emerald-200 text-emerald-700',
     rose: 'bg-rose-50 border-rose-200 text-rose-700',
-    amber: 'bg-amber-50 border-amber-200 text-amber-700'
+    amber: 'bg-amber-50 border-amber-200 text-amber-700',
+    indigo: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+    fuchsia: 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700'
   };
 
   return (
@@ -1014,6 +1020,11 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                 <span className="text-xs text-gray-600">Witnessed by: {item.witness_name}</span>
               )}
             </div>
+            {item.notes && (
+              <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs text-gray-700">
+                <span className="font-semibold">Note:</span> {item.notes}
+              </div>
+            )}
           </div>
         );
       case 'doctorsOrders':
@@ -1068,6 +1079,11 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                 <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded">⚠ ABNORMAL</span>
               )}
             </div>
+            {item.note && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-gray-700">
+                <span className="font-semibold">Note:</span> {item.note}
+              </div>
+            )}
           </div>
         );
       case 'hacmapDevices':
@@ -1208,6 +1224,20 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                   <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">✓ Acknowledged by: {item.student_name}</span>
                 </div>
               )}
+            </div>
+          </div>
+        );
+      case 'advancedDirectives':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">⚕️ ADVANCED DIRECTIVE UPDATED</p>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+              {item.dnr_status && <span>DNR Status: {item.dnr_status}</span>}
+              {item.living_will_status && <span>Living Will: {item.living_will_status}</span>}
+              {item.healthcare_proxy_name && <span>Healthcare Proxy: {item.healthcare_proxy_name}</span>}
+              {item.organ_donation_status !== null && <span>Organ Donation: {item.organ_donation_status ? 'Yes' : 'No'}</span>}
+              {item.special_instructions && <span className="col-span-2">Instructions: {item.special_instructions}</span>}
             </div>
           </div>
         );

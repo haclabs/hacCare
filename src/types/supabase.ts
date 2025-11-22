@@ -765,6 +765,7 @@ export type Database = {
           note: string | null
           panel_id: string
           patient_id: string
+          student_name: string | null
           tenant_id: string
         }
         Insert: {
@@ -777,6 +778,7 @@ export type Database = {
           note?: string | null
           panel_id: string
           patient_id: string
+          student_name?: string | null
           tenant_id: string
         }
         Update: {
@@ -789,6 +791,7 @@ export type Database = {
           note?: string | null
           panel_id?: string
           patient_id?: string
+          student_name?: string | null
           tenant_id?: string
         }
         Relationships: [
@@ -1050,6 +1053,7 @@ export type Database = {
           entered_by: string | null
           flag: Database["public"]["Enums"]["lab_flag"] | null
           id: string
+          note: string | null
           panel_id: string
           patient_id: string
           ref_high: number | null
@@ -1076,6 +1080,7 @@ export type Database = {
           entered_by?: string | null
           flag?: Database["public"]["Enums"]["lab_flag"] | null
           id?: string
+          note?: string | null
           panel_id: string
           patient_id: string
           ref_high?: number | null
@@ -1097,6 +1102,7 @@ export type Database = {
           comments?: string | null
           created_at?: string | null
           critical_high?: number | null
+          note?: string | null
           critical_low?: number | null
           entered_at?: string | null
           entered_by?: string | null
@@ -1405,6 +1411,7 @@ export type Database = {
           patient_id: string
           religious_preference: string | null
           special_instructions: string | null
+          student_name: string | null
           tenant_id: string | null
           updated_at: string | null
         }
@@ -1423,6 +1430,7 @@ export type Database = {
           patient_id: string
           religious_preference?: string | null
           special_instructions?: string | null
+          student_name?: string | null
           tenant_id?: string | null
           updated_at?: string | null
         }
@@ -1441,6 +1449,7 @@ export type Database = {
           patient_id?: string
           religious_preference?: string | null
           special_instructions?: string | null
+          student_name?: string | null
           tenant_id?: string | null
           updated_at?: string | null
         }

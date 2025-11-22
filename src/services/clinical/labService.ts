@@ -615,31 +615,39 @@ export async function acknowledgeLabs(
       flag: r.flag,
     })) || [];
 
-  // Update results
+  // Update results with note
   const resultIds = results?.map(r => r.id) || [];
+  
   const { error: updateError } = await supabase
     .from('lab_results')
     .update({
       ack_by: userId,
       acknowledged_by_student: studentName || null,
       ack_at: new Date().toISOString(),
+      note: input.note || null, // 🆕 Save note to lab_results (for debrief)
     })
     .in('id', resultIds);
 
   if (updateError) return { error: updateError };
 
   // Log acknowledgement event
+  const ackEventData = {
+    tenant_id: tenantId,
+    patient_id: patientId,
+    panel_id: input.panel_id,
+    ack_scope: input.scope,
+    ack_by: userId,
+    student_name: studentName || null, // 🆕 Track student name for debrief
+    abnormal_summary: abnormal_summary.length > 0 ? abnormal_summary : null,
+    note: input.note,
+  };
+  
+  console.log('🔍 Lab ack event data being inserted:', ackEventData);
+  console.log('🔍 input.note value:', input.note);
+  
   const { error: logError } = await supabase
     .from('lab_ack_events')
-    .insert({
-      tenant_id: tenantId,
-      patient_id: patientId,
-      panel_id: input.panel_id,
-      ack_scope: input.scope,
-      ack_by: userId,
-      abnormal_summary: abnormal_summary.length > 0 ? abnormal_summary : null,
-      note: input.note,
-    });
+    .insert(ackEventData);
 
   if (logError) return { error: logError };
 

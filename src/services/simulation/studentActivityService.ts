@@ -25,6 +25,7 @@ export interface StudentActivity {
     woundAssessments: WoundAssessmentEntry[]; // ✅ NEW: hacMap v2
     bowelAssessments: BowelAssessmentEntry[];
     intakeOutput: IntakeOutputEntry[];
+    advancedDirectives: AdvancedDirectiveEntry[]; // 🆕 NEW
   };
 }
 
@@ -70,6 +71,7 @@ interface LabAcknowledgementEntry {
   test_name: string;
   result_value: string;
   abnormal_flag: boolean;
+  note?: string | null; // 🆕 Added for notes
 }
 
 interface DoctorsOrderEntry {
@@ -174,6 +176,16 @@ interface IntakeOutputEntry {
   amount_ml: number;
 }
 
+interface AdvancedDirectiveEntry {
+  id: string;
+  created_at: string;
+  dnr_status: string | null;
+  living_will_status: string | null;
+  healthcare_proxy_name: string | null;
+  organ_donation_status: string | null;
+  special_instructions: string | null;
+}
+
 /**
  * Get all activities for a specific simulation grouped by student
  */
@@ -268,6 +280,7 @@ export async function getStudentActivitiesBySimulation(
       deviceAssessmentsData, // ✅ NEW: hacMap v2
       woundAssessmentsData, // ✅ NEW: hacMap v2
       intakeOutputData,
+      advancedDirectivesData, // 🆕 NEW: Advanced Directives
     ] = await Promise.all([
       // Vitals
       supabase
@@ -307,15 +320,23 @@ export async function getStudentActivitiesBySimulation(
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
-      // Lab Acknowledgements  
+      // Lab Acknowledgements - get from lab_ack_events where student_name and note are stored
+      // Note: Don't filter by time - lab_ack_events should be cleared by reset, so any existing records are valid
       supabase
-        .from('lab_results')
+        .from('lab_ack_events')
         .select('*')
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
-        .not('acknowledged_by_student', 'is', null)
-        .gte('ack_at', simulationStartTime || '1970-01-01')
-        .order('ack_at', { ascending: false }),
+        .not('student_name', 'is', null)
+        .order('ack_at', { ascending: false})
+        .then(result => {
+          console.log('🧪 Lab Ack Events query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            data: result.data
+          });
+          return result;
+        }),
 
       // Doctor's Orders Acknowledgements (with full order details)
       supabase
@@ -429,14 +450,43 @@ export async function getStudentActivitiesBySimulation(
         }),
 
       // Intake & Output Events
+      // NOTE: No timestamp filter because I&O events can be backdated by students
       supabase
         .from('patient_intake_output_events')
         .select('*')
         .eq('tenant_id', tenantId)
         .eq('patient_id', patientId)
         .not('student_name', 'is', null)
-        .gte('event_timestamp', simulationStartTime || '1970-01-01')
-        .order('event_timestamp', { ascending: false }),
+        .order('event_timestamp', { ascending: false })
+        .then(result => {
+          console.log('💧 I&O Events query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            tenantId,
+            patientId,
+            simulationStartTime,
+            data: result.data
+          });
+          return result;
+        }),
+
+      // Advanced Directives - 🆕 NEW
+      supabase
+        .from('patient_advanced_directives')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
+        .order('created_at', { ascending: false })
+        .then(result => {
+          console.log('📜 Advanced Directives query result:', {
+            count: result.data?.length || 0,
+            error: result.error,
+            data: result.data
+          });
+          return result;
+        }),
     ]);
 
     // Group all activities by student name
@@ -462,6 +512,7 @@ export async function getStudentActivitiesBySimulation(
             woundAssessments: [], // ✅ NEW: hacMap v2
             bowelAssessments: [],
             intakeOutput: [],
+            advancedDirectives: [], // 🆕 NEW
           },
         });
       }
@@ -487,8 +538,15 @@ export async function getStudentActivitiesBySimulation(
 
     // Process medication administrations (BCMA)
     console.log('💊 Processing medications:', medicationsData.data?.length || 0);
+    console.log('💊 ALL medication data:', medicationsData.data);
     medicationsData.data?.forEach((med: any) => {
-      console.log('💊 Med student_name:', med.student_name, 'medication:', med.medication_name);
+      console.log('💊 Med details:', {
+        id: med.id,
+        student_name: med.student_name,
+        medication_name: med.medication_name,
+        notes: med.notes,
+        timestamp: med.timestamp
+      });
       if (!med.student_name) {
         console.warn('⚠️ Medication missing student_name:', med);
         return;
@@ -526,18 +584,52 @@ export async function getStudentActivitiesBySimulation(
       student.totalEntries++;
     });
 
-    // Process lab acknowledgements
-    labAcksData.data?.forEach((lab: any) => {
-      if (!lab.acknowledged_by_student) return; // Skip if no student name
-      const student = getOrCreateStudent(lab.acknowledged_by_student);
-      student.activities.labAcknowledgements.push({
-        id: lab.id,
-        acknowledged_at: lab.ack_at,
-        test_name: lab.test_name,
-        result_value: lab.value + (lab.units ? ' ' + lab.units : ''),
-        abnormal_flag: lab.flag?.includes('abnormal') || lab.flag?.includes('critical') || false,
+    // Process lab acknowledgements from lab_ack_events (has student_name and note)
+    console.log('🧪 Processing lab ack events:', labAcksData.data?.length || 0);
+    labAcksData.data?.forEach((ackEvent: any) => {
+      console.log('🧪 Lab ack event:', {
+        id: ackEvent.id,
+        student_name: ackEvent.student_name,
+        note: ackEvent.note,
+        abnormal_summary: ackEvent.abnormal_summary,
+        ack_at: ackEvent.ack_at
       });
-      student.totalEntries++;
+      
+      if (!ackEvent.student_name) {
+        console.warn('⚠️ Lab ack event missing student_name:', ackEvent);
+        return;
+      }
+      
+      const student = getOrCreateStudent(ackEvent.student_name);
+      
+      // Parse abnormal_summary to get lab details
+      const abnormalTests = ackEvent.abnormal_summary || [];
+      console.log('🧪 Abnormal tests array:', abnormalTests);
+      
+      if (Array.isArray(abnormalTests) && abnormalTests.length > 0) {
+        abnormalTests.forEach((test: any) => {
+          const value = test.value !== null && test.value !== undefined ? test.value : '-';
+          const units = test.units ? ' ' + test.units : '';
+          
+          console.log('🧪 Adding lab ack entry:', {
+            test_name: test.test_name || test.test_code,
+            result_value: value + units,
+            note: ackEvent.note
+          });
+          
+          student.activities.labAcknowledgements.push({
+            id: ackEvent.id,
+            acknowledged_at: ackEvent.ack_at,
+            test_name: test.test_name || test.test_code,
+            result_value: value + units,
+            abnormal_flag: test.flag?.includes('abnormal') || test.flag?.includes('high') || test.flag?.includes('low') || false,
+            note: ackEvent.note || null, // 🆕 Note from lab_ack_events
+          });
+          student.totalEntries++;
+        });
+      } else {
+        console.warn('⚠️ No abnormal tests in abnormal_summary for ack event:', ackEvent.id);
+      }
     });
 
     // Process doctor's orders acknowledgements
@@ -684,8 +776,23 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process intake & output events
+    console.log('💧 Processing intake/output:', intakeOutputData.data?.length || 0);
+    console.log('💧 ALL I&O data:', intakeOutputData.data);
     intakeOutputData.data?.forEach((io: any) => {
+      console.log('💧 I&O entry:', {
+        id: io.id,
+        student_name: io.student_name,
+        direction: io.direction,
+        category: io.category,
+        amount_ml: io.amount_ml,
+        event_timestamp: io.event_timestamp
+      });
+      if (!io.student_name) {
+        console.warn('⚠️ I&O entry missing student_name:', io);
+        return; // Skip entries without student_name
+      }
       const student = getOrCreateStudent(io.student_name);
+      console.log('💧 Adding I&O entry to student:', student.studentName);
       student.activities.intakeOutput.push({
         id: io.id,
         event_timestamp: io.event_timestamp,
@@ -698,8 +805,50 @@ export async function getStudentActivitiesBySimulation(
       student.totalEntries++;
     });
 
+    // Process advanced directives - 🆕 NEW
+    advancedDirectivesData.data?.forEach((directive: any) => {
+      const student = getOrCreateStudent(directive.student_name);
+      student.activities.advancedDirectives.push({
+        id: directive.id,
+        created_at: directive.created_at,
+        dnr_status: directive.dnr_status,
+        living_will_status: directive.living_will_status,
+        healthcare_proxy_name: directive.healthcare_proxy_name,
+        organ_donation_status: directive.organ_donation_status,
+        special_instructions: directive.special_instructions,
+      });
+      student.totalEntries++;
+    });
+
     // Convert map to array and sort by total entries
-    return Array.from(studentMap.values()).sort((a, b) => b.totalEntries - a.totalEntries);
+    const result = Array.from(studentMap.values()).sort((a, b) => b.totalEntries - a.totalEntries);
+    
+    console.log('📊 FINAL RESULT - Total students:', result.length);
+    result.forEach((student, index) => {
+      console.log(`👤 Student ${index + 1}:`, {
+        name: student.studentName,
+        totalEntries: student.totalEntries,
+        vitals: student.activities.vitals.length,
+        medications: student.activities.medications.length,
+        labOrders: student.activities.labOrders.length,
+        labAcknowledgements: student.activities.labAcknowledgements.length,
+        doctorsOrders: student.activities.doctorsOrders.length,
+        patientNotes: student.activities.patientNotes.length,
+        handoverNotes: student.activities.handoverNotes.length,
+        advancedDirectives: student.activities.advancedDirectives.length,
+      });
+      
+      // Debug: Show lab acknowledgement details with notes
+      if (student.activities.labAcknowledgements.length > 0) {
+        console.log(`🔬 Lab Acknowledgements for ${student.studentName}:`, student.activities.labAcknowledgements);
+      }
+    });
+    
+    if (result.length === 0) {
+      console.warn('⚠️ NO STUDENTS FOUND - Check if any activities have student_name set');
+    }
+    
+    return result;
   } catch (error: any) {
     console.error('Error fetching student activities:', error);
     throw error;
