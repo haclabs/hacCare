@@ -12,7 +12,9 @@ interface StudentAcknowledgeModalProps {
   title: string;
   message: string;
   actionText?: string;
-  onConfirm: (studentName: string) => Promise<void>;
+  includeNote?: boolean;
+  notePlaceholder?: string;
+  onConfirm: (studentName: string, note?: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -20,10 +22,13 @@ export const StudentAcknowledgeModal: React.FC<StudentAcknowledgeModalProps> = (
   title,
   message,
   actionText = 'Acknowledge',
+  includeNote = false,
+  notePlaceholder = 'Add optional notes...',
   onConfirm,
   onCancel
 }) => {
   const [studentName, setStudentName] = useState('');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,7 +49,7 @@ export const StudentAcknowledgeModal: React.FC<StudentAcknowledgeModalProps> = (
     setError('');
 
     try {
-      await onConfirm(studentName.trim());
+      await onConfirm(studentName.trim(), note.trim() || undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to acknowledge');
       setLoading(false);
@@ -98,6 +103,21 @@ export const StudentAcknowledgeModal: React.FC<StudentAcknowledgeModalProps> = (
                 By entering your name, you verify that you reviewed and acknowledge this action.
               </p>
             </div>
+
+            {includeNote && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  placeholder={notePlaceholder}
+                  rows={3}
+                />
+              </div>
+            )}
           </div>
 
           {/* Actions */}

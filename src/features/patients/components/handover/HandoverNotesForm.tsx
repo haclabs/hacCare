@@ -64,10 +64,11 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
 
     setLoading(true);
     try {
+      const { studentName, ...rest } = formData;
       await onSave({
         patient_id: patientId,
-        ...formData,
-        student_name: formData.studentName,
+        ...rest,
+        student_name: studentName,
         created_by: currentUser.id,
         created_by_name: currentUser.name,
         created_by_role: currentUser.role

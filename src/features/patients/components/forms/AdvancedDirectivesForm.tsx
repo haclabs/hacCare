@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
 import { usePatients } from '../../hooks/usePatients';
-import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives'; 
+import { supabase } from '../../../../lib/api/supabase';
+import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
   patientName?: string;
   onClose: () => void;
   onSave?: () => void;
-}
-
-export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
+}export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
   patientId,
   patientName,
   onClose,
@@ -32,6 +31,7 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       // Always start with a completely empty form
       const emptyDirective: AdvancedDirective = {
         patient_id: patientId,
+        student_name: '', // Will be filled by student manually
         living_will_exists: false,
         living_will_status: '',
         living_will_date: '',
@@ -62,6 +62,12 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
       setError('');
       
       // Make sure required fields are filled
+      if (!formData.student_name?.trim()) {
+        setError('Please enter your full name to verify this action');
+        setSaving(false);
+        return;
+      }
+      
       const requiredFields = ['living_will_status', 'dnr_status'];
       const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
       
@@ -328,6 +334,24 @@ export const AdvancedDirectivesForm: React.FC<AdvancedDirectivesFormProps> = ({
               <li>• Patient competency should be assessed before making changes</li>
               <li>• Copies of all documents should be maintained in the medical record</li>
             </ul>
+          </div>
+
+          {/* Student Name - Required for Verification */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+            <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">
+              Student Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.student_name || ''}
+              onChange={(e) => updateField('student_name', e.target.value)}
+              className="w-full px-3 py-2 border border-yellow-300 dark:border-yellow-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Enter your full name"
+              required
+            />
+            <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
+              By entering your name, you verify that you reviewed and acknowledge this action.
+            </p>
           </div>
 
           {/* Form Actions */}

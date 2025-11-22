@@ -27,7 +27,6 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
   const { currentTenant } = useTenant();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [note, setNote] = useState('');
   const [showStudentModal, setShowStudentModal] = useState(false);
 
   // Filter unacknowledged results
@@ -40,10 +39,12 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
     setShowStudentModal(true);
   };
 
-  const confirmAcknowledge = async (studentName: string) => {
+  const confirmAcknowledge = async (studentName: string, noteFromModal?: string) => {
     if (!currentTenant) {
       throw new Error('No tenant selected');
     }
+
+    console.log('🔍 LabAcknowledgeModal - note from modal:', noteFromModal);
 
     setLoading(true);
     setError('');
@@ -52,7 +53,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
       {
         panel_id: panel.id,
         scope: 'panel',
-        note: note || undefined,
+        note: noteFromModal || undefined,
       },
       patientId,
       currentTenant.id,
@@ -218,20 +219,6 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
             </div>
           </div>
 
-          {/* Note */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note (Optional)
-            </label>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={2}
-              placeholder="Add any notes about this acknowledgement..."
-            />
-          </div>
-
           {/* Confirmation */}
           {abnormalResults.length > 0 && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
@@ -271,6 +258,8 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
           title="Acknowledge Lab Results"
           message="Please enter your name to acknowledge that you have reviewed these lab results and any abnormal values."
           actionText="Acknowledge Labs"
+          includeNote={true}
+          notePlaceholder="Add your notes about these lab results..."
           onConfirm={confirmAcknowledge}
           onCancel={() => setShowStudentModal(false)}
         />

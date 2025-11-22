@@ -46,7 +46,7 @@ BEGIN
   FROM simulation_participants sp
   WHERE sp.simulation_id = p_simulation_id;
   
-  -- Activity summary
+  -- Activity summary (deprecated - keep for backward compatibility)
   v_activity_summary := jsonb_build_object(
     'total_activities', jsonb_array_length(p_activities),
     'activities', p_activities
@@ -64,6 +64,7 @@ BEGIN
     completed_at,
     participants,
     activity_summary,
+    student_activities,
     created_by,
     primary_categories,
     sub_categories
@@ -79,6 +80,7 @@ BEGIN
     NOW(),
     v_participants,
     v_activity_summary,
+    p_activities,
     v_simulation.created_by,
     v_simulation.primary_categories,
     v_simulation.sub_categories

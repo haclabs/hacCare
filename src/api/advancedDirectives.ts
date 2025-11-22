@@ -3,6 +3,7 @@ import { supabase } from '../lib/api/supabase';
 export interface AdvancedDirective {
   id?: string;
   patient_id: string;
+  student_name?: string; // 🆕 Track which student filled this out
   dnr_status: boolean | string; // Now accepts string values (R1, R2, R3, M1, M2, C1, C2)
   dnr_date?: string;
   dnr_physician?: string;
