@@ -648,6 +648,10 @@ export async function getSimulationHistory(
       query = query.eq('created_by', filters.created_by);
     }
 
+    // Filter by archived status (defaults to showing non-archived only)
+    const showArchived = filters?.archived ?? false;
+    query = query.eq('archived', showArchived);
+
     const { data: historyData, error } = await query;
     if (error) throw error;
     if (!historyData) return [];
@@ -823,5 +827,67 @@ export async function getUserAccessibleSimulations(): Promise<SimulationActiveWi
   } catch (error: any) {
     console.error('Error fetching user accessible simulations:', error);
     return [];
+  }
+}
+
+/**
+ * Archive a simulation history record
+ */
+export async function archiveSimulationHistory(historyId: string): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('simulation_history')
+      .update({
+        archived: true,
+        archived_at: new Date().toISOString(),
+        archived_by: user.id
+      })
+      .eq('id', historyId);
+
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error archiving simulation history:', error);
+    throw error;
+  }
+}
+
+/**
+ * Unarchive a simulation history record
+ */
+export async function unarchiveSimulationHistory(historyId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('simulation_history')
+      .update({
+        archived: false,
+        archived_at: null,
+        archived_by: null
+      })
+      .eq('id', historyId);
+
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error unarchiving simulation history:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a simulation history record permanently
+ */
+export async function deleteSimulationHistory(historyId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('simulation_history')
+      .delete()
+      .eq('id', historyId);
+
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error deleting simulation history:', error);
+    throw error;
   }
 }
