@@ -195,6 +195,7 @@ export interface SimulationHistoryFilters {
   search?: string;
   primary_categories?: string[];
   sub_categories?: string[];
+  archived?: boolean;
 }
 
 // Category configuration

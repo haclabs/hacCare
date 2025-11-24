@@ -7,31 +7,87 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { History, FileText, Clock, Users, TrendingUp } from 'lucide-react';
-import { getSimulationHistory } from '../../../services/simulation/simulationService';
+import { History, FileText, Clock, Users, TrendingUp, Archive, ArchiveRestore, Trash2, Search } from 'lucide-react';
+import { getSimulationHistory, archiveSimulationHistory, unarchiveSimulationHistory, deleteSimulationHistory } from '../../../services/simulation/simulationService';
 import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
 import { formatDistanceToNow, differenceInMinutes, format } from 'date-fns';
+
+type TabType = 'active' | 'archived';
 
 const SimulationHistory: React.FC = () => {
   const [history, setHistory] = useState<SimulationHistoryWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedHistory, setSelectedHistory] = useState<SimulationHistoryWithDetails | null>(null);
   const [showDebriefModal, setShowDebriefModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('active');
+  const [archiving, setArchiving] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [activeTab]);
 
   const loadHistory = async () => {
     try {
-      const data = await getSimulationHistory();
+      setLoading(true);
+      const data = await getSimulationHistory({ archived: activeTab === 'archived' });
       setHistory(data);
     } catch (error) {
       console.error('Error loading history:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleArchive = async (historyId: string) => {
+    try {
+      setArchiving(historyId);
+      await archiveSimulationHistory(historyId);
+      // Reload the current tab's data
+      await loadHistory();
+    } catch (error) {
+      console.error('Error archiving simulation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to archive simulation';
+      alert(`Failed to archive simulation: ${errorMessage}`);
+    } finally {
+      setArchiving(null);
+    }
+  };
+
+  const handleUnarchive = async (historyId: string) => {
+    try {
+      setArchiving(historyId);
+      await unarchiveSimulationHistory(historyId);
+      // Reload the current tab's data
+      await loadHistory();
+    } catch (error) {
+      console.error('Error unarchiving simulation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to restore simulation';
+      alert(`Failed to restore simulation: ${errorMessage}`);
+    } finally {
+      setArchiving(null);
+    }
+  };
+
+  const handleDelete = async (historyId: string, simulationName: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${simulationName}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeleting(historyId);
+      await deleteSimulationHistory(historyId);
+      // Reload the current tab's data
+      await loadHistory();
+    } catch (error) {
+      console.error('Error deleting simulation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete simulation';
+      alert(`Failed to delete simulation: ${errorMessage}`);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -89,27 +145,12 @@ const SimulationHistory: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (history.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <History className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-          No History Yet
-        </h3>
-        <p className="text-slate-600 dark:text-slate-400">
-          Completed simulations will appear here
-        </p>
-      </div>
-    );
-  }
+  // Filter history based on search query
+  const filteredHistory = history.filter(record => {
+    if (!searchQuery.trim()) return true;
+    const participantNames = getParticipantNames(record).toLowerCase();
+    return participantNames.includes(searchQuery.toLowerCase());
+  });
 
   return (
     <>
@@ -125,9 +166,72 @@ const SimulationHistory: React.FC = () => {
             </p>
           </div>
 
+          {/* Tab Navigation */}
+          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-4 py-2 font-medium text-sm transition-colors relative ${
+                activeTab === 'active'
+                  ? 'text-purple-600 dark:text-purple-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Active
+              {activeTab === 'active' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('archived')}
+              className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-2 ${
+                activeTab === 'archived'
+                  ? 'text-purple-600 dark:text-purple-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Archive className="h-4 w-4" />
+              Archived
+              {activeTab === 'archived' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400" />
+              )}
+            </button>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by participant name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+            />
+          </div>
+
           {/* History List */}
-          <div className="space-y-3">
-          {history.map((record) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : filteredHistory.length === 0 ? (
+            <div className="text-center py-12">
+              <History className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                {searchQuery ? 'No Matching Simulations' : activeTab === 'archived' ? 'No Archived Simulations' : 'No History Yet'}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                {searchQuery 
+                  ? 'Try a different participant name'
+                  : activeTab === 'archived' 
+                    ? 'Archived simulations will appear here'
+                    : 'Completed simulations will appear here'
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+            {filteredHistory.map((record) => (
             <div
               key={record.id}
               className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6"
@@ -223,18 +327,64 @@ const SimulationHistory: React.FC = () => {
                   )}
                 </div>
 
-                {/* Debrief Button */}
-                <button
-                  onClick={() => handleViewDebrief(record)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md"
-                >
-                  <FileText className="h-4 w-4" />
-                  View Debrief
-                </button>
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => handleViewDebrief(record)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View Debrief
+                  </button>
+                  
+                  <div className="flex gap-2">
+                    {activeTab === 'active' ? (
+                      <button
+                        onClick={() => handleArchive(record.id)}
+                        disabled={archiving === record.id}
+                        title="Archive this simulation"
+                        className="flex items-center justify-center p-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {archiving === record.id ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600 dark:border-slate-300" />
+                        ) : (
+                          <Archive className="h-5 w-5" />
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnarchive(record.id)}
+                        disabled={archiving === record.id}
+                        title="Restore to active"
+                        className="flex items-center justify-center p-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {archiving === record.id ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600 dark:border-slate-300" />
+                        ) : (
+                          <ArchiveRestore className="h-5 w-5" />
+                        )}
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => handleDelete(record.id, record.name)}
+                      disabled={deleting === record.id}
+                      title="Delete permanently"
+                      className="flex items-center justify-center p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deleting === record.id ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600 dark:border-red-400" />
+                      ) : (
+                        <Trash2 className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Instructor Guide */}
