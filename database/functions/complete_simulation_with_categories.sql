@@ -4,6 +4,11 @@
 -- Updates the complete_simulation RPC function to handle category fields
 -- ============================================================================
 
+-- Drop existing function variations to avoid conflicts
+DROP FUNCTION IF EXISTS complete_simulation(UUID);
+DROP FUNCTION IF EXISTS complete_simulation(UUID, JSONB);
+DROP FUNCTION IF EXISTS complete_simulation(UUID, JSONB, TEXT);
+
 CREATE OR REPLACE FUNCTION complete_simulation(
   p_simulation_id UUID,
   p_activities JSONB DEFAULT '[]'::jsonb,
