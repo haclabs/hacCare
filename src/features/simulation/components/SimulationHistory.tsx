@@ -297,7 +297,7 @@ const SimulationHistory: React.FC = () => {
 
                   {/* Completed Date/Time - Bold and prominent in MST */}
                   {record.completed_at && (
-                    <div className="mb-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="mb-3 inline-block px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-0.5">COMPLETED (MST)</div>
                       <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
                         {format(new Date(record.completed_at), 'PPP')} at {format(new Date(record.completed_at), 'HH:mm')} MST
