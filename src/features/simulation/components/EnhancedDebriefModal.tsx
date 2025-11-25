@@ -1090,15 +1090,42 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
-            <p className="text-gray-900 mt-1 font-medium">{item.type?.toUpperCase().replace(/-/g, ' ')}</p>
-            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
-              {item.placement_date && <span>Placed: {item.placement_date}</span>}
-              {item.inserted_by && <span>By: {item.inserted_by}</span>}
-              {item.location && <span>Location: {item.location}</span>}
-              {item.tube_size_fr && <span>Size: {item.tube_size_fr} Fr</span>}
-              {item.reservoir_type && <span>Reservoir: {item.reservoir_type}</span>}
+            <p className="text-gray-900 mt-1 font-medium">🔧 {item.type?.toUpperCase().replace(/-/g, ' ')}</p>
+            <div className="mt-2 space-y-1 text-xs text-gray-600">
+              {item.placement_date && (
+                <div><span className="font-semibold">Placement Date:</span> {item.placement_date}</div>
+              )}
+              {item.inserted_by && (
+                <div><span className="font-semibold">Inserted By:</span> {item.inserted_by}</div>
+              )}
+              {item.location && (
+                <div><span className="font-semibold">Location:</span> {item.location}</div>
+              )}
+              {item.tube_number && (
+                <div><span className="font-semibold">Tube #:</span> {item.tube_number}</div>
+              )}
+              {item.tube_size_fr && (
+                <div><span className="font-semibold">Size:</span> {item.tube_size_fr} Fr</div>
+              )}
               {item.orientation && item.orientation.length > 0 && (
-                <span>Orientation: {item.orientation.join(', ')}</span>
+                <div><span className="font-semibold">Orientation:</span> {item.orientation.join(', ')}</div>
+              )}
+              {item.number_of_sutures_placed && (
+                <div><span className="font-semibold">Sutures:</span> {item.number_of_sutures_placed}</div>
+              )}
+              {item.reservoir_type && (
+                <div><span className="font-semibold">Reservoir:</span> {item.reservoir_type} {item.reservoir_size_ml ? `(${item.reservoir_size_ml} mL)` : ''}</div>
+              )}
+              {item.securement_method && item.securement_method.length > 0 && (
+                <div><span className="font-semibold">Securement:</span> {item.securement_method.join(', ')}</div>
+              )}
+              {item.patient_tolerance && (
+                <div><span className="font-semibold">Patient Tolerance:</span> {item.patient_tolerance}</div>
+              )}
+              {item.site && (
+                <div className="mt-1 p-2 bg-emerald-50 border border-emerald-200 rounded">
+                  <span className="font-semibold">Notes:</span> {item.site}
+                </div>
               )}
             </div>
           </div>
@@ -1107,16 +1134,33 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
-            <p className="text-gray-900 mt-1 font-medium">{item.wound_type?.toUpperCase().replace(/-/g, ' ')}</p>
-            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
-              {item.location && <span>Location: {item.location}</span>}
-              {item.wound_length_cm && item.wound_width_cm && (
-                <span>Size: {item.wound_length_cm} × {item.wound_width_cm} cm</span>
+            <p className="text-gray-900 mt-1 font-medium">🩹 {item.wound_type?.toUpperCase().replace(/-/g, ' ')}</p>
+            <div className="mt-2 space-y-1 text-xs text-gray-600">
+              {item.location && (
+                <div><span className="font-semibold">Location:</span> {item.location}</div>
               )}
-              {item.wound_depth_cm && <span>Depth: {item.wound_depth_cm} cm</span>}
-              {item.wound_stage && <span>Stage: {item.wound_stage}</span>}
-              {item.drainage_amount && <span>Drainage: {item.drainage_amount}</span>}
-              {item.wound_description && <span className="col-span-2">{item.wound_description}</span>}
+              {(item.wound_length_cm || item.wound_width_cm || item.wound_depth_cm) && (
+                <div>
+                  <span className="font-semibold">Measurements:</span> L: {item.wound_length_cm || 'N/A'} × W: {item.wound_width_cm || 'N/A'} × D: {item.wound_depth_cm || 'N/A'} cm
+                </div>
+              )}
+              {item.wound_stage && (
+                <div><span className="font-semibold">Stage:</span> {item.wound_stage}</div>
+              )}
+              {item.wound_appearance && (
+                <div><span className="font-semibold">Appearance:</span> {Array.isArray(item.wound_appearance) ? item.wound_appearance.join(', ') : item.wound_appearance}</div>
+              )}
+              {item.drainage_type && item.drainage_type.length > 0 && (
+                <div><span className="font-semibold">Drainage Type:</span> {Array.isArray(item.drainage_type) ? item.drainage_type.join(', ') : item.drainage_type}</div>
+              )}
+              {item.drainage_amount && (
+                <div><span className="font-semibold">Drainage Amount:</span> {item.drainage_amount}</div>
+              )}
+              {item.wound_description && (
+                <div className="mt-1 p-2 bg-rose-50 border border-rose-200 rounded">
+                  <span className="font-semibold">Description:</span> {item.wound_description}
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1186,15 +1230,33 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.assessed_at ? format(new Date(item.assessed_at), 'PPp') : 'N/A'}</p>
             <p className="text-gray-900 mt-1 font-medium">🔍 WOUND ASSESSMENT</p>
-            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
-              {item.site_condition && <span>Site: {item.site_condition}</span>}
-              {item.pain_level !== null && <span>Pain: {item.pain_level}/10</span>}
-              {item.wound_appearance && <span>Appearance: {item.wound_appearance}</span>}
-              {item.drainage_type && <span>Drainage: {item.drainage_type}</span>}
-              {item.drainage_amount && <span>Amount: {item.drainage_amount}</span>}
-              {item.treatment_applied && <span>Treatment: {item.treatment_applied}</span>}
-              {item.dressing_type && <span>Dressing: {item.dressing_type}</span>}
-              {item.notes && <span className="col-span-2">Notes: {item.notes}</span>}
+            <div className="mt-2 space-y-1 text-xs text-gray-600">
+              {item.site_condition && (
+                <div><span className="font-semibold">Surrounding Skin:</span> {Array.isArray(item.site_condition) ? item.site_condition.join(', ') : item.site_condition}</div>
+              )}
+              {item.pain_level !== null && (
+                <div><span className="font-semibold">Pain Level:</span> {item.pain_level}/10</div>
+              )}
+              {item.wound_appearance && (
+                <div><span className="font-semibold">Wound Appearance:</span> {Array.isArray(item.wound_appearance) ? item.wound_appearance.join(', ') : item.wound_appearance}</div>
+              )}
+              {item.drainage_type && (
+                <div><span className="font-semibold">Drainage Type:</span> {Array.isArray(item.drainage_type) ? item.drainage_type.join(', ') : item.drainage_type}</div>
+              )}
+              {item.drainage_amount && (
+                <div><span className="font-semibold">Drainage Amount:</span> {item.drainage_amount}</div>
+              )}
+              {item.treatment_applied && (
+                <div><span className="font-semibold">Treatment Applied:</span> {item.treatment_applied}</div>
+              )}
+              {item.dressing_type && (
+                <div><span className="font-semibold">Dressing Type:</span> {item.dressing_type}</div>
+              )}
+              {item.notes && (
+                <div className="mt-1 p-2 bg-fuchsia-50 border border-fuchsia-200 rounded">
+                  <span className="font-semibold">Assessment Notes:</span> {item.notes}
+                </div>
+              )}
             </div>
           </div>
         );
