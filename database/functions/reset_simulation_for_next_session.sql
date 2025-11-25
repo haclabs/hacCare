@@ -86,6 +86,13 @@ BEGIN
   -- DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
   RAISE NOTICE '💊 Preserving medications (like patients) - UUIDs and barcodes stay consistent';
   
+  -- 🔄 Reset medication administration timing (for back-to-back sessions)
+  UPDATE patient_medications
+  SET last_administered = NULL
+  WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🔄 Reset % medication administration times for new session', v_count;
+  
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % vitals', v_count;
