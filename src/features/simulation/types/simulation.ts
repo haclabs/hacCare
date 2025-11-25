@@ -196,6 +196,7 @@ export interface SimulationHistoryFilters {
   primary_categories?: string[];
   sub_categories?: string[];
   archived?: boolean;
+  instructor_name?: string;
 }
 
 // Category configuration
