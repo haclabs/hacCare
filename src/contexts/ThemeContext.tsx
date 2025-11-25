@@ -2,14 +2,15 @@ import React, { createContext, useState, useEffect } from 'react';
 
 /**
  * Theme Context Interface
- * Manages theme state throughout the application (light/dark/halloween)
+ * Manages theme state throughout the application (light/dark/halloween/christmas)
  */
-type Theme = 'light' | 'dark' | 'halloween';
+type Theme = 'light' | 'dark' | 'halloween' | 'christmas';
 
 interface ThemeContextType {
   theme: Theme;
   isDarkMode: boolean;
   isHalloweenMode: boolean;
+  isChristmasMode: boolean;
   setTheme: (theme: Theme) => void;
   toggleDarkMode: () => void;
   setDarkMode: (isDark: boolean) => void;
@@ -36,7 +37,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     // Check localStorage first
     const savedTheme = localStorage.getItem('haccare-theme') as Theme;
-    if (savedTheme && ['light', 'dark', 'halloween'].includes(savedTheme)) {
+    if (savedTheme && ['light', 'dark', 'halloween', 'christmas'].includes(savedTheme)) {
       return savedTheme;
     }
     
@@ -46,6 +47,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isDarkMode = theme === 'dark';
   const isHalloweenMode = theme === 'halloween';
+  const isChristmasMode = theme === 'christmas';
 
   /**
    * Apply theme classes to document
@@ -55,13 +57,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const root = document.documentElement;
     
     // Remove all theme classes first
-    root.classList.remove('dark', 'halloween');
+    root.classList.remove('dark', 'halloween', 'christmas');
     
     // Apply the current theme class
     if (theme === 'dark') {
       root.classList.add('dark');
     } else if (theme === 'halloween') {
       root.classList.add('halloween');
+    } else if (theme === 'christmas') {
+      root.classList.add('christmas');
     }
     
     // Save to localStorage
@@ -102,6 +106,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     theme,
     isDarkMode,
     isHalloweenMode,
+    isChristmasMode,
     setTheme,
     toggleDarkMode,
     setDarkMode

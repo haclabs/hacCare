@@ -14,6 +14,10 @@ interface LabOrderCardProps {
 }
 
 export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick }) => {
+  const handleClick = () => {
+    onClick?.();
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -35,8 +39,15 @@ export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick }) =>
 
   return (
     <div
-      onClick={onClick}
-      className="p-6 hover:bg-gray-50 transition-colors cursor-pointer border-l-4 border-green-500"
+      onClick={handleClick}
+      className="p-6 hover:bg-blue-50 hover:shadow-md transition-all cursor-pointer border-l-4 border-green-500"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleClick();
+        }
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
@@ -52,12 +63,20 @@ export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick }) =>
             >
               {getStatusLabel(order.status)}
             </span>
-            {order.label_printed && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                Label Printed
+            {order.status === 'pending' && (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                Order Submitted
               </span>
             )}
           </div>
+
+          {order.status === 'pending' && (
+            <p className="text-sm text-blue-600 font-medium mt-2 flex items-center gap-1">
+              <FileText className="w-4 h-4" />
+              Click to view specimen label
+            </p>
+          )}
+
 
           <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mt-3">
             <div>

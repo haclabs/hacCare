@@ -83,7 +83,7 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 0.1in;
+              padding: 0.08in;
               background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             }
             .patient-name {
@@ -110,17 +110,17 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               border-radius: 2px;
             }
             .barcode-area {
-              width: 0.9in;
+              width: 0.99in;
               display: flex;
               justify-content: center;
               align-items: center;
               background: #ffffff;
-              padding: 0.05in;
+              padding: 0.05in 0.1in 0.05in 0.05in;
               border-left: 1px solid #e0e0e0;
             }
             .barcode-canvas {
-              max-width: 0.8in;
-              max-height: 0.9in;
+              max-width: 0.89in;
+              max-height: 0.85in;
             }
             @media print {
               .label {
