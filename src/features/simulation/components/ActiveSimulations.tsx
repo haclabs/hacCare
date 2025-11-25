@@ -103,6 +103,16 @@ const ActiveSimulations: React.FC = () => {
     try {
       const result = await resetSimulationForNextSession(id);
       console.log('✅ Simulation reset successfully:', result);
+      
+      // Log detailed restore information
+      if (result.restore_details) {
+        console.log('📊 Restore Details:', result.restore_details);
+        const details = result.restore_details;
+        if (details.restored_counts) {
+          console.log('📈 Records Restored:', details.restored_counts);
+        }
+      }
+      
       alert('Simulation reset successfully! Status set to "Ready to Start". Click Play when ready to begin. Patient and medication IDs have been preserved.');
       await loadSimulations();
     } catch (error) {
@@ -340,7 +350,7 @@ const ActiveSimulations: React.FC = () => {
                         : sim.status === 'pending'
                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                         : sim.status === 'completed'
-                        ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                        ? 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400'
                         : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400'
                     }
                   `}
@@ -348,7 +358,7 @@ const ActiveSimulations: React.FC = () => {
                   {sim.status}
                 </span>
                 {sim.status === 'completed' && (
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
                     Needs Reset
                   </span>
@@ -437,12 +447,12 @@ const ActiveSimulations: React.FC = () => {
                 >
                   <Pause className="h-4 w-4" />
                 </button>
-              ) : (sim.status === 'pending' || sim.status === 'paused') && (
+              ) : (
                 <button
                   onClick={() => handleResume(sim.id, false)}
                   disabled={actionLoading === sim.id}
                   className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 disabled:opacity-50"
-                  title={sim.status === 'pending' ? 'Start simulation' : 'Resume simulation'}
+                  title={sim.status === 'pending' ? 'Start simulation' : sim.status === 'paused' ? 'Resume simulation' : 'Start simulation'}
                 >
                   <Play className="h-4 w-4" />
                 </button>

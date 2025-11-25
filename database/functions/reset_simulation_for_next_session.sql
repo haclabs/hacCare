@@ -222,13 +222,16 @@ BEGIN
 
   RAISE NOTICE '🎉 Session reset complete! Simulation ready to start.';
   
-  -- Return success with pending status message
+  -- Return success with pending status message and detailed restore info
   RETURN jsonb_build_object(
     'success', true,
     'simulation_id', p_simulation_id,
     'status', 'pending',
     'message', 'Simulation reset successfully. Click Play to start when ready.',
-    'restore_details', v_result
+    'restore_details', v_result,
+    'restored_counts', COALESCE(v_result->'restored_counts', '{}'::jsonb),
+    'patients_preserved', (SELECT COUNT(*) FROM patients WHERE tenant_id = v_tenant_id),
+    'medications_preserved', (SELECT COUNT(*) FROM patient_medications WHERE tenant_id = v_tenant_id)
   );
 
 EXCEPTION WHEN OTHERS THEN
