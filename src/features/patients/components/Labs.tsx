@@ -19,6 +19,7 @@ import { LabPanelDetail } from './LabPanelDetail';
 import { CreateLabPanelModal } from './CreateLabPanelModal';
 import { LabOrderEntryForm } from './LabOrderEntryForm';
 import { LabOrderCard } from './LabOrderCard';
+import { LabOrderLabelModal } from './LabOrderLabelModal';
 import { format24HourDateTime } from '../../../utils/time';
 
 interface LabsProps {
@@ -36,6 +37,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   const [panels, setPanels] = useState<LabPanel[]>([]);
   const [labOrders, setLabOrders] = useState<LabOrder[]>([]);
   const [selectedPanel, setSelectedPanel] = useState<LabPanel | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -250,6 +252,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
                     <LabOrderCard
                       key={order.id}
                       order={order}
+                      onClick={() => setSelectedOrder(order)}
                     />
                   ))}
                 </div>
@@ -289,6 +292,17 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
           patientId={patientId}
           onClose={() => setShowCreateModal(false)}
           onSuccess={handlePanelCreated}
+        />
+      )}
+
+      {/* Lab Order Label Modal */}
+      {selectedOrder && (
+        <LabOrderLabelModal
+          order={selectedOrder}
+          patientName={patientName || 'Unknown Patient'}
+          patientNumber={patientNumber || patientId}
+          patientDOB={patientDOB || ''}
+          onClose={() => setSelectedOrder(null)}
         />
       )}
     </div>
