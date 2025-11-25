@@ -140,6 +140,7 @@ const ActiveSimulations: React.FC = () => {
     } catch (error) {
       console.error('Error resetting simulation:', error);
       alert('Failed to reset simulation');
+    } finally {
       setActionLoading(null);
     }
   };
