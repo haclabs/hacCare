@@ -14,6 +14,7 @@ import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
+import { supabase } from '../../../lib/supabase';
 import { supabase } from '../../../lib/api/supabase';
 
 const ActiveSimulations: React.FC = () => {
@@ -76,9 +77,31 @@ const ActiveSimulations: React.FC = () => {
         // Reload data instead of hard refresh
         await loadSimulations();
       } else {
-        // If just paused, simply resume
-        console.log('▶️ Resuming paused simulation...');
-        await updateSimulationStatus(id, 'running');
+        // Get the simulation to check if it's pending (needs timer setup) or just paused
+        const sim = simulations.find(s => s.id === id);
+        
+        if (sim?.status === 'pending') {
+          // Starting a pending simulation - need to set timer
+          console.log('▶️ Starting pending simulation with timer...');
+          const now = new Date();
+          const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
+          
+          const { error } = await supabase
+            .from('simulation_active')
+            .update({
+              status: 'running',
+              starts_at: now.toISOString(),
+              ends_at: endsAt.toISOString()
+            })
+            .eq('id', id);
+            
+          if (error) throw error;
+        } else {
+          // If just paused, simply resume (timer already set)
+          console.log('▶️ Resuming paused simulation...');
+          await updateSimulationStatus(id, 'running');
+        }
+        
         await loadSimulations();
       }
     } catch (error) {
