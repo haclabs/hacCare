@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { History, FileText, Clock, Users, TrendingUp, Archive, ArchiveRestore, Trash2, Search } from 'lucide-react';
+import { History, FileText, Clock, Users, TrendingUp, Archive, ArchiveRestore, Trash2, Search, UserCheck } from 'lucide-react';
 import { getSimulationHistory, archiveSimulationHistory, unarchiveSimulationHistory, deleteSimulationHistory } from '../../../services/simulation/simulationService';
 import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
@@ -351,6 +351,13 @@ const SimulationHistory: React.FC = () => {
                       <span className="text-slate-500 dark:text-slate-500">Students:</span>
                       <span className="text-slate-700 dark:text-slate-300 font-medium">{getParticipantNames(record)}</span>
                     </div>
+                    {record.instructor_name && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <UserCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        <span className="text-slate-500 dark:text-slate-500">Instructor:</span>
+                        <span className="text-purple-700 dark:text-purple-300 font-semibold">{record.instructor_name}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Metrics Summary */}
