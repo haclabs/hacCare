@@ -103,11 +103,8 @@ const ActiveSimulations: React.FC = () => {
     try {
       const result = await resetSimulationForNextSession(id);
       console.log('✅ Simulation reset successfully:', result);
-      alert('Simulation reset successfully! Patient and medication IDs have been preserved. Page will refresh to show updated data.');
+      alert('Simulation reset successfully! Status set to "Ready to Start". Click Play when ready to begin. Patient and medication IDs have been preserved.');
       await loadSimulations();
-      
-      // Hard reload with cache bypass - add timestamp to force fresh data
-      window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
     } catch (error) {
       console.error('Error resetting simulation:', error);
       alert('Failed to reset simulation');
@@ -340,12 +337,28 @@ const ActiveSimulations: React.FC = () => {
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                         : sim.status === 'paused'
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : sim.status === 'pending'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                        : sim.status === 'completed'
+                        ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
                         : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400'
                     }
                   `}
                 >
                   {sim.status}
                 </span>
+                {sim.status === 'completed' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Needs Reset
+                  </span>
+                )}
+                {sim.status === 'pending' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Ready to Start
+                  </span>
+                )}
                 {sim.is_expired && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
@@ -414,6 +427,7 @@ const ActiveSimulations: React.FC = () => {
               >
                 <Printer className="h-4 w-4" />
               </button>
+              {/* Play/Pause Button - Show based on status */}
               {sim.status === 'running' ? (
                 <button
                   onClick={() => handlePause(sim.id)}
@@ -423,32 +437,38 @@ const ActiveSimulations: React.FC = () => {
                 >
                   <Pause className="h-4 w-4" />
                 </button>
-              ) : (
+              ) : (sim.status === 'pending' || sim.status === 'paused') && (
                 <button
-                  onClick={() => handleResume(sim.id, sim.status === 'completed')}
+                  onClick={() => handleResume(sim.id, false)}
                   disabled={actionLoading === sim.id}
                   className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 disabled:opacity-50"
-                  title={sim.status === 'completed' ? 'Restart simulation with fresh timer' : 'Resume simulation'}
+                  title={sim.status === 'pending' ? 'Start simulation' : 'Resume simulation'}
                 >
                   <Play className="h-4 w-4" />
                 </button>
               )}
-              <button
-                onClick={() => handleReset(sim.id)}
-                disabled={actionLoading === sim.id}
-                className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 disabled:opacity-50"
-                title="Reset to template snapshot"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleComplete(sim)}
-                disabled={actionLoading === sim.id}
-                className="p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 disabled:opacity-50"
-                title="Complete simulation"
-              >
-                <CheckCircle className="h-4 w-4" />
-              </button>
+              {/* Reset Button - Only show if simulation has been used */}
+              {(sim.status === 'running' || sim.status === 'paused' || sim.status === 'completed') && (
+                <button
+                  onClick={() => handleReset(sim.id)}
+                  disabled={actionLoading === sim.id}
+                  className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 disabled:opacity-50"
+                  title="Reset simulation data and set to ready state"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              )}
+              {/* Complete Button - Only show if simulation is running or paused */}
+              {(sim.status === 'running' || sim.status === 'paused') && (
+                <button
+                  onClick={() => handleComplete(sim)}
+                  disabled={actionLoading === sim.id}
+                  className="p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 disabled:opacity-50"
+                  title="Complete simulation and create debrief"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                </button>
+              )}
               <button
                 onClick={() => handleDelete(sim.id)}
                 disabled={actionLoading === sim.id}
@@ -544,13 +564,13 @@ const ActiveSimulations: React.FC = () => {
                 Click when students finish their work. This will:
               </p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <li>Prompt for instructor name</li>
                 <li>Save all student activities</li>
                 <li>Generate debrief report</li>
-                <li>Move to Debrief Reports tab</li>
-                <li>Preserve data for review</li>
+                <li>Set status to "Needs Reset"</li>
               </ul>
               <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded text-xs text-emerald-800 dark:text-emerald-200">
-                💡 Complete first before resetting for next group
+                💡 Complete first, then Reset for next group
               </div>
             </div>
 
@@ -566,9 +586,12 @@ const ActiveSimulations: React.FC = () => {
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
                 <li>Restores baseline data</li>
                 <li>Clears student work</li>
-                <li>Resets timer</li>
+                <li>Sets status to "Ready to Start"</li>
                 <li>Preserves patient barcodes</li>
               </ul>
+              <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded text-xs text-blue-800 dark:text-blue-200">
+                ✅ After reset, click <strong>Play</strong> to start when ready
+              </div>
               <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-800 dark:text-red-200">
                 ⚠️ <strong>Warning:</strong> Previous work is permanently deleted
               </div>
