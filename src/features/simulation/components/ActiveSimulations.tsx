@@ -548,11 +548,55 @@ const ActiveSimulations: React.FC = () => {
           </div>
 
           <div className="space-y-4 text-sm">
+            {/* Workflow Steps */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg p-4">
+              <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">Session Workflow</h4>
+              <div className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Print Labels</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Patient & medication barcodes</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Play to Start</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Timer begins, students can access</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">3</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Complete</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Enter instructor name, creates debrief</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Reset</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Clears data, status → "Ready to Start"</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Play (Next Group)</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Starts fresh timer for new students</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Print Labels */}
             <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-700 rounded-lg p-4">
               <h4 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</div>
                 <Printer className="h-4 w-4" />
                 Print Labels
+                <span className="text-xs font-normal text-indigo-600 dark:text-indigo-400 ml-auto">(Optional if not pre-printed)</span>
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
                 Print patient and medication barcode labels for BCMA scanning.
@@ -568,23 +612,23 @@ const ActiveSimulations: React.FC = () => {
             </div>
 
             {/* Start/Pause */}
-            <div className="bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-900/20 dark:to-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-900/20 dark:to-yellow-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4">
               <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</div>
                 <Play className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <Pause className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                Start / Pause
+                Play to Start
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
-                Control simulation flow during the session:
+                Click Play when ready to begin:
               </p>
               <ul className="space-y-1 text-slate-600 dark:text-slate-400 ml-2">
                 <li className="flex items-start gap-2">
                   <Play className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
-                  <span><strong>Start:</strong> Begins timer countdown and enables student access</span>
+                  <span><strong>Play:</strong> Starts timer and enables student access</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Pause className="h-3 w-3 text-yellow-600 mt-1 flex-shrink-0" />
-                  <span><strong>Pause:</strong> Freezes timer, students can still document</span>
+                  <span><strong>Pause:</strong> Freezes timer if needed</span>
                 </li>
               </ul>
             </div>
@@ -592,26 +636,25 @@ const ActiveSimulations: React.FC = () => {
             {/* Complete */}
             <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
               <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">3</div>
                 <CheckCircle className="h-4 w-4" />
                 Complete Simulation
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
-                Click when students finish their work. This will:
+                Click when students finish their work:
               </p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
-                <li>Prompt for instructor name</li>
-                <li>Save all student activities</li>
-                <li>Generate debrief report</li>
-                <li>Set status to "Needs Reset"</li>
+                <li>Enter instructor name in popup</li>
+                <li>Saves all student activities</li>
+                <li>Generates debrief report</li>
+                <li>Shows red "Needs Reset" badge</li>
               </ul>
-              <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded text-xs text-emerald-800 dark:text-emerald-200">
-                💡 Complete first, then Reset for next group
-              </div>
             </div>
 
             {/* Reset */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-4">
               <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</div>
                 <RotateCcw className="h-4 w-4" />
                 Reset for Next Group
               </h4>
@@ -619,13 +662,13 @@ const ActiveSimulations: React.FC = () => {
                 Prepares simulation for new students:
               </p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <li>Clears all student work</li>
                 <li>Restores baseline data</li>
-                <li>Clears student work</li>
-                <li>Sets status to "Ready to Start"</li>
-                <li>Preserves patient barcodes</li>
+                <li>Shows green "Ready to Start" badge</li>
+                <li>Preserves patient barcodes (no reprinting!)</li>
               </ul>
               <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded text-xs text-blue-800 dark:text-blue-200">
-                ✅ After reset, click <strong>Play</strong> to start when ready
+                ✅ After reset, go to step 2: Click <strong>Play</strong> when ready
               </div>
               <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-800 dark:text-red-200">
                 ⚠️ <strong>Warning:</strong> Previous work is permanently deleted
@@ -635,12 +678,16 @@ const ActiveSimulations: React.FC = () => {
             {/* Delete */}
             <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-700 rounded-lg p-4">
               <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">6</div>
                 <Trash2 className="h-4 w-4" />
                 Delete Simulation
               </h4>
               <p className="text-slate-600 dark:text-slate-400 text-xs">
                 Permanently removes the entire simulation session. Use only if simulation won't be needed again.
               </p>
+              <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-800 dark:text-red-200">
+                ⚠️ Always Complete before Delete to save debrief reports in History
+              </div>
             </div>
 
             {/* Timer Status */}
