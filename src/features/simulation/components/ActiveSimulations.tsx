@@ -36,9 +36,9 @@ const ActiveSimulations: React.FC = () => {
 
   const loadSimulations = async () => {
     try {
-      // Show running, paused, and completed simulations - completed ones can be restarted
+      // Show pending, running, paused, and completed simulations
       const data = await getActiveSimulations({
-        status: ['running', 'paused', 'completed']
+        status: ['pending', 'running', 'paused', 'completed']
       });
       setSimulations(data);
     } catch (error) {
