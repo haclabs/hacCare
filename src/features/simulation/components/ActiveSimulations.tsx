@@ -15,7 +15,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
 import { supabase } from '../../../lib/supabase';
-import { supabase } from '../../../lib/api/supabase';
 
 const ActiveSimulations: React.FC = () => {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
