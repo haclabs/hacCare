@@ -212,10 +212,10 @@ export interface Assessment {
   wound_length_cm?: number;
   wound_width_cm?: number;
   wound_depth_cm?: number;
-  wound_appearance?: string;
+  wound_appearance?: string[];
   drainage_type?: string[];
   drainage_amount?: string;
-  surrounding_skin?: string;
+  surrounding_skin?: string[];
   
   // Treatment
   treatment_applied?: string;
@@ -394,10 +394,10 @@ export interface CreateAssessmentInput {
   wound_length_cm?: number;
   wound_width_cm?: number;
   wound_depth_cm?: number;
-  wound_appearance?: string;
+  wound_appearance?: string[];
   drainage_type?: string[];
   drainage_amount?: string;
-  surrounding_skin?: string;
+  surrounding_skin?: string[];
   treatment_applied?: string;
   dressing_type?: string;
   device_functioning?: boolean;
@@ -413,10 +413,10 @@ export interface UpdateAssessmentInput {
   wound_length_cm?: number;
   wound_width_cm?: number;
   wound_depth_cm?: number;
-  wound_appearance?: string;
+  wound_appearance?: string[];
   drainage_type?: string[];
   drainage_amount?: string;
-  surrounding_skin?: string;
+  surrounding_skin?: string[];
   treatment_applied?: string;
   dressing_type?: string;
   device_functioning?: boolean;
