@@ -467,12 +467,14 @@ export async function resetSimulation(
  */
 export async function completeSimulation(
   simulationId: string,
-  activities: any[] = []
+  activities: any[] = [],
+  instructorName?: string
 ): Promise<SimulationFunctionResult> {
   try {
     const { data, error } = await supabase.rpc('complete_simulation', {
       p_simulation_id: simulationId,
       p_activities: activities,
+      p_instructor_name: instructorName || null,
     });
 
     if (error) throw error;
@@ -651,6 +653,11 @@ export async function getSimulationHistory(
     // Filter by archived status (defaults to showing non-archived only)
     const showArchived = filters?.archived ?? false;
     query = query.eq('archived', showArchived);
+
+    // Filter by instructor name
+    if (filters?.instructor_name) {
+      query = query.eq('instructor_name', filters.instructor_name);
+    }
 
     const { data: historyData, error } = await query;
     if (error) throw error;

@@ -13,6 +13,7 @@ import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
+import { InstructorNameModal } from './InstructorNameModal';
 import { supabase } from '../../../lib/api/supabase';
 
 const ActiveSimulations: React.FC = () => {
@@ -24,6 +25,7 @@ const ActiveSimulations: React.FC = () => {
   const [selectedPrimaryCategories, setSelectedPrimaryCategories] = useState<string[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [editCategoriesModal, setEditCategoriesModal] = useState<{ sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null>(null);
+  const [completingSimulation, setCompletingSimulation] = useState<SimulationActiveWithDetails | null>(null);
 
   useEffect(() => {
     loadSimulations();
@@ -113,12 +115,19 @@ const ActiveSimulations: React.FC = () => {
     }
   };
 
-  const handleComplete = async (id: string) => {
-    if (!confirm('Complete this simulation? Student activity report will be generated and saved to History.')) {
-      return;
-    }
-    console.log('🎯 handleComplete called for:', id);
+  const handleComplete = async (sim: SimulationActiveWithDetails) => {
+    // Show instructor name modal
+    setCompletingSimulation(sim);
+  };
+
+  const handleCompleteWithInstructor = async (instructorName: string) => {
+    if (!completingSimulation) return;
+    
+    const id = completingSimulation.id;
+    console.log('🎯 handleComplete called for:', id, 'Instructor:', instructorName);
     setActionLoading(id);
+    setCompletingSimulation(null);
+    
     try {
       // First, get student activities BEFORE completing
       console.log('📊 Generating student activity report...');
@@ -126,13 +135,13 @@ const ActiveSimulations: React.FC = () => {
       const activities = await getStudentActivitiesBySimulation(id);
       console.log('✅ Student activities captured:', activities.length, 'students');
       
-      // Now complete the simulation WITH the activities snapshot
-      const result = await completeSimulation(id, activities);
+      // Now complete the simulation WITH the activities snapshot and instructor name
+      const result = await completeSimulation(id, activities, instructorName);
       console.log('✅ Complete simulation result:', result);
       
       // Show success message
       const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
-      alert(`Simulation completed!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
+      alert(`Simulation completed by ${instructorName}!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
       
       await loadSimulations();
     } catch (error) {
@@ -433,7 +442,7 @@ const ActiveSimulations: React.FC = () => {
                 <RotateCcw className="h-4 w-4" />
               </button>
               <button
-                onClick={() => handleComplete(sim.id)}
+                onClick={() => handleComplete(sim)}
                 disabled={actionLoading === sim.id}
                 className="p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 disabled:opacity-50"
                 title="Complete simulation"
@@ -810,6 +819,15 @@ const ActiveSimulations: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Instructor Name Modal */}
+      {completingSimulation && (
+        <InstructorNameModal
+          simulationName={completingSimulation.name}
+          onConfirm={handleCompleteWithInstructor}
+          onCancel={() => setCompletingSimulation(null)}
+        />
       )}
       </div>
     </div>

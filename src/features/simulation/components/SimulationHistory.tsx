@@ -25,6 +25,7 @@ const SimulationHistory: React.FC = () => {
   const [archiving, setArchiving] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [instructorFilter, setInstructorFilter] = useState<string>('');
 
   useEffect(() => {
     loadHistory();
@@ -145,11 +146,31 @@ const SimulationHistory: React.FC = () => {
     }
   };
 
-  // Filter history based on search query
+  // Get unique instructor names for filter dropdown
+  const uniqueInstructors = React.useMemo(() => {
+    const instructors = new Set<string>();
+    history.forEach(record => {
+      if (record.instructor_name) {
+        instructors.add(record.instructor_name);
+      }
+    });
+    return Array.from(instructors).sort();
+  }, [history]);
+
+  // Filter history based on search query and instructor filter
   const filteredHistory = history.filter(record => {
-    if (!searchQuery.trim()) return true;
-    const participantNames = getParticipantNames(record).toLowerCase();
-    return participantNames.includes(searchQuery.toLowerCase());
+    // Search filter
+    if (searchQuery.trim()) {
+      const participantNames = getParticipantNames(record).toLowerCase();
+      if (!participantNames.includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+    }
+    // Instructor filter
+    if (instructorFilter && record.instructor_name !== instructorFilter) {
+      return false;
+    }
+    return true;
   });
 
   return (
@@ -197,16 +218,32 @@ const SimulationHistory: React.FC = () => {
             </button>
           </div>
 
-          {/* Search Box */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by participant name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
-            />
+          {/* Search and Filter Controls */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search by participant name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+              />
+            </div>
+            {uniqueInstructors.length > 0 && (
+              <select
+                value={instructorFilter}
+                onChange={(e) => setInstructorFilter(e.target.value)}
+                className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 min-w-[200px]"
+              >
+                <option value="">All Instructors</option>
+                {uniqueInstructors.map(instructor => (
+                  <option key={instructor} value={instructor}>
+                    {instructor}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* History List */}
