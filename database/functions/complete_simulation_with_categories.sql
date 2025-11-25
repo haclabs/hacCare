@@ -58,6 +58,24 @@ BEGIN
     'activities', p_activities
   );
   
+  -- Check if already completed (prevent duplicates)
+  IF v_simulation.status = 'completed' THEN
+    -- Already completed, return existing history entry
+    SELECT id INTO v_history_id
+    FROM simulation_history
+    WHERE simulation_id = p_simulation_id
+    ORDER BY completed_at DESC
+    LIMIT 1;
+    
+    v_result := json_build_object(
+      'success', true,
+      'history_id', v_history_id,
+      'message', 'Simulation already completed (duplicate call prevented)'
+    );
+    
+    RETURN v_result;
+  END IF;
+
   -- Insert into history with categories and instructor name
   INSERT INTO simulation_history (
     simulation_id,
