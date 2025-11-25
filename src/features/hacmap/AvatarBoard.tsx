@@ -984,15 +984,33 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                         </div>
                       )}
                       
+                      {selectedWoundAssessment.wound_appearance && selectedWoundAssessment.wound_appearance.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Wound Appearance
+                          </label>
+                          <p className="text-gray-900 capitalize">
+                            {selectedWoundAssessment.wound_appearance.join(', ')}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedWoundAssessment.surrounding_skin && selectedWoundAssessment.surrounding_skin.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Surrounding Skin
+                          </label>
+                          <p className="text-gray-900 capitalize">
+                            {selectedWoundAssessment.surrounding_skin.map(s => 
+                              s === 'erythema' ? 'Erythema (Redness)' :
+                              s === 'edema' ? 'Edema (Swelling)' :
+                              s.charAt(0).toUpperCase() + s.slice(1)
+                            ).join(', ')}
+                          </p>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-2 gap-4">
-                        {selectedWoundAssessment.wound_appearance && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Wound Appearance
-                            </label>
-                            <p className="text-gray-900 capitalize">{selectedWoundAssessment.wound_appearance}</p>
-                          </div>
-                        )}
                         {selectedWoundAssessment.drainage_amount && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1001,18 +1019,17 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                             <p className="text-gray-900 capitalize">{selectedWoundAssessment.drainage_amount}</p>
                           </div>
                         )}
+                        {selectedWoundAssessment.drainage_type && selectedWoundAssessment.drainage_type.length > 0 && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Drainage Type
+                            </label>
+                            <p className="text-gray-900 capitalize">
+                              {selectedWoundAssessment.drainage_type.join(', ')}
+                            </p>
+                          </div>
+                        )}
                       </div>
-
-                      {selectedWoundAssessment.drainage_type && selectedWoundAssessment.drainage_type.length > 0 && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Drainage Type
-                          </label>
-                          <p className="text-gray-900 capitalize">
-                            {selectedWoundAssessment.drainage_type.join(', ')}
-                          </p>
-                        </div>
-                      )}
 
                       <div className="grid grid-cols-2 gap-4">
                         {selectedWoundAssessment.treatment_applied && (

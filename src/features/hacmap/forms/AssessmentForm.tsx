@@ -36,10 +36,10 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
     wound_length_cm: undefined,
     wound_width_cm: undefined,
     wound_depth_cm: undefined,
-    wound_appearance: '',
+    wound_appearance: [],
     drainage_type: [],
     drainage_amount: '',
-    surrounding_skin: '',
+    surrounding_skin: [],
     treatment_applied: '',
     dressing_type: '',
     // Device-specific
@@ -58,10 +58,10 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         wound_length_cm: assessment.wound_length_cm,
         wound_width_cm: assessment.wound_width_cm,
         wound_depth_cm: assessment.wound_depth_cm,
-        wound_appearance: assessment.wound_appearance || '',
+        wound_appearance: assessment.wound_appearance || [],
         drainage_type: assessment.drainage_type || [],
         drainage_amount: assessment.drainage_amount || '',
-        surrounding_skin: assessment.surrounding_skin || '',
+        surrounding_skin: assessment.surrounding_skin || [],
         treatment_applied: assessment.treatment_applied || '',
         dressing_type: assessment.dressing_type || '',
         device_functioning: assessment.device_functioning,
@@ -118,6 +118,22 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
     setFormData({ ...formData, drainage_type: newTypes });
   };
 
+  const handleSurroundingSkinToggle = (condition: string) => {
+    const current = formData.surrounding_skin || [];
+    const newConditions = current.includes(condition)
+      ? current.filter(c => c !== condition)
+      : [...current, condition];
+    setFormData({ ...formData, surrounding_skin: newConditions });
+  };
+
+  const handleWoundAppearanceToggle = (appearance: string) => {
+    const current = formData.wound_appearance || [];
+    const newAppearances = current.includes(appearance)
+      ? current.filter(a => a !== appearance)
+      : [...current, appearance];
+    setFormData({ ...formData, wound_appearance: newAppearances });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Info Banner */}
@@ -144,26 +160,43 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
       {/* Common Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Site Condition */}
+        {/* Site Condition / Surrounding Skin */}
         <div>
-          <label htmlFor="siteCondition" className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             {recordType === 'device' ? 'Site Condition' : 'Surrounding Skin'}
           </label>
-          <select
-            id="siteCondition"
-            value={formData.site_condition}
-            onChange={(e) => setFormData({ ...formData, site_condition: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-          >
-            <option value="">Select condition...</option>
-            <option value="intact">Intact</option>
-            <option value="erythema">Erythema (Redness)</option>
-            <option value="edema">Edema (Swelling)</option>
-            <option value="purulent">Purulent</option>
-            <option value="dry">Dry</option>
-            <option value="macerated">Macerated</option>
-            <option value="other">Other</option>
-          </select>
+          {recordType === 'wound' ? (
+            <div className="flex flex-wrap gap-2">
+              {['intact', 'erythema', 'edema', 'purulent', 'dry', 'macerated', 'other'].map(condition => (
+                <label key={condition} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.surrounding_skin?.includes(condition) || false}
+                    onChange={() => handleSurroundingSkinToggle(condition)}
+                    className="mr-2"
+                  />
+                  {condition === 'erythema' ? 'Erythema (Redness)' :
+                   condition === 'edema' ? 'Edema (Swelling)' :
+                   condition.charAt(0).toUpperCase() + condition.slice(1)}
+                </label>
+              ))}
+            </div>
+          ) : (
+            <select
+              value={formData.site_condition}
+              onChange={(e) => setFormData({ ...formData, site_condition: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            >
+              <option value="">Select condition...</option>
+              <option value="intact">Intact</option>
+              <option value="erythema">Erythema (Redness)</option>
+              <option value="edema">Edema (Swelling)</option>
+              <option value="purulent">Purulent</option>
+              <option value="dry">Dry</option>
+              <option value="macerated">Macerated</option>
+              <option value="other">Other</option>
+            </select>
+          )}
         </div>
 
         {/* Pain Level */}
@@ -289,24 +322,22 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
           {/* Wound Appearance */}
           <div>
-            <label htmlFor="appearance" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Wound Appearance
             </label>
-            <select
-              id="appearance"
-              value={formData.wound_appearance}
-              onChange={(e) => setFormData({ ...formData, wound_appearance: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="">Select appearance...</option>
-              <option value="clean">Clean</option>
-              <option value="granulating">Granulating</option>
-              <option value="epithelializing">Epithelializing</option>
-              <option value="slough">Slough</option>
-              <option value="eschar">Eschar</option>
-              <option value="necrotic">Necrotic</option>
-              <option value="infected">Infected</option>
-            </select>
+            <div className="flex flex-wrap gap-2">
+              {['clean', 'granulating', 'epithelializing', 'slough', 'eschar', 'necrotic', 'infected'].map(appearance => (
+                <label key={appearance} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.wound_appearance?.includes(appearance) || false}
+                    onChange={() => handleWoundAppearanceToggle(appearance)}
+                    className="mr-2"
+                  />
+                  {appearance.charAt(0).toUpperCase() + appearance.slice(1)}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Drainage Type (Multi-select) */}
