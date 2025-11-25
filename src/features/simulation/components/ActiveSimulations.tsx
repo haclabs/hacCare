@@ -13,6 +13,7 @@ import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
+import { InstructorNameModal } from './InstructorNameModal';
 import { supabase } from '../../../lib/api/supabase';
 
 const ActiveSimulations: React.FC = () => {
@@ -24,6 +25,7 @@ const ActiveSimulations: React.FC = () => {
   const [selectedPrimaryCategories, setSelectedPrimaryCategories] = useState<string[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [editCategoriesModal, setEditCategoriesModal] = useState<{ sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null>(null);
+  const [completingSimulation, setCompletingSimulation] = useState<SimulationActiveWithDetails | null>(null);
 
   useEffect(() => {
     loadSimulations();
@@ -34,9 +36,9 @@ const ActiveSimulations: React.FC = () => {
 
   const loadSimulations = async () => {
     try {
-      // Show running, paused, and completed simulations - completed ones can be restarted
+      // Show pending, running, paused, and completed simulations
       const data = await getActiveSimulations({
-        status: ['running', 'paused', 'completed']
+        status: ['pending', 'running', 'paused', 'completed']
       });
       setSimulations(data);
     } catch (error) {
@@ -74,9 +76,31 @@ const ActiveSimulations: React.FC = () => {
         // Reload data instead of hard refresh
         await loadSimulations();
       } else {
-        // If just paused, simply resume
-        console.log('▶️ Resuming paused simulation...');
-        await updateSimulationStatus(id, 'running');
+        // Get the simulation to check if it's pending (needs timer setup) or just paused
+        const sim = simulations.find(s => s.id === id);
+        
+        if (sim?.status === 'pending') {
+          // Starting a pending simulation - need to set timer
+          console.log('▶️ Starting pending simulation with timer...');
+          const now = new Date();
+          const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
+          
+          const { error } = await supabase
+            .from('simulation_active')
+            .update({
+              status: 'running',
+              starts_at: now.toISOString(),
+              ends_at: endsAt.toISOString()
+            })
+            .eq('id', id);
+            
+          if (error) throw error;
+        } else {
+          // If just paused, simply resume (timer already set)
+          console.log('▶️ Resuming paused simulation...');
+          await updateSimulationStatus(id, 'running');
+        }
+        
         await loadSimulations();
       }
     } catch (error) {
@@ -101,24 +125,39 @@ const ActiveSimulations: React.FC = () => {
     try {
       const result = await resetSimulationForNextSession(id);
       console.log('✅ Simulation reset successfully:', result);
-      alert('Simulation reset successfully! Patient and medication IDs have been preserved. Page will refresh to show updated data.');
-      await loadSimulations();
       
-      // Hard reload with cache bypass - add timestamp to force fresh data
-      window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+      // Log detailed restore information
+      if (result.restore_details) {
+        console.log('📊 Restore Details:', result.restore_details);
+        const details = result.restore_details;
+        if (details.restored_counts) {
+          console.log('📈 Records Restored:', details.restored_counts);
+        }
+      }
+      
+      alert('Simulation reset successfully! Status set to "Ready to Start". Click Play when ready to begin. Patient and medication IDs have been preserved.');
+      await loadSimulations();
     } catch (error) {
       console.error('Error resetting simulation:', error);
       alert('Failed to reset simulation');
+    } finally {
       setActionLoading(null);
     }
   };
 
-  const handleComplete = async (id: string) => {
-    if (!confirm('Complete this simulation? Student activity report will be generated and saved to History.')) {
-      return;
-    }
-    console.log('🎯 handleComplete called for:', id);
+  const handleComplete = async (sim: SimulationActiveWithDetails) => {
+    // Show instructor name modal
+    setCompletingSimulation(sim);
+  };
+
+  const handleCompleteWithInstructor = async (instructorName: string) => {
+    if (!completingSimulation) return;
+    
+    const id = completingSimulation.id;
+    console.log('🎯 handleComplete called for:', id, 'Instructor:', instructorName);
     setActionLoading(id);
+    setCompletingSimulation(null);
+    
     try {
       // First, get student activities BEFORE completing
       console.log('📊 Generating student activity report...');
@@ -126,13 +165,13 @@ const ActiveSimulations: React.FC = () => {
       const activities = await getStudentActivitiesBySimulation(id);
       console.log('✅ Student activities captured:', activities.length, 'students');
       
-      // Now complete the simulation WITH the activities snapshot
-      const result = await completeSimulation(id, activities);
+      // Now complete the simulation WITH the activities snapshot and instructor name
+      const result = await completeSimulation(id, activities, instructorName);
       console.log('✅ Complete simulation result:', result);
       
       // Show success message
       const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
-      alert(`Simulation completed!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
+      alert(`Simulation completed by ${instructorName}!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
       
       await loadSimulations();
     } catch (error) {
@@ -331,12 +370,28 @@ const ActiveSimulations: React.FC = () => {
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                         : sim.status === 'paused'
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : sim.status === 'pending'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                        : sim.status === 'completed'
+                        ? 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400'
                         : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400'
                     }
                   `}
                 >
                   {sim.status}
                 </span>
+                {sim.status === 'completed' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Needs Reset
+                  </span>
+                )}
+                {sim.status === 'pending' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Ready to Start
+                  </span>
+                )}
                 {sim.is_expired && (
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
@@ -383,9 +438,11 @@ const ActiveSimulations: React.FC = () => {
                       : 'Time expired'}
                   </span>
                 </div>
-                <div className="text-xs">
-                  Started {formatDistanceToNow(new Date(sim.starts_at), { addSuffix: true })}
-                </div>
+                {sim.starts_at && (
+                  <div className="text-xs">
+                    Started {formatDistanceToNow(new Date(sim.starts_at), { addSuffix: true })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -405,6 +462,7 @@ const ActiveSimulations: React.FC = () => {
               >
                 <Printer className="h-4 w-4" />
               </button>
+              {/* Play/Pause Button - Show based on status */}
               {sim.status === 'running' ? (
                 <button
                   onClick={() => handlePause(sim.id)}
@@ -416,30 +474,36 @@ const ActiveSimulations: React.FC = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => handleResume(sim.id, sim.status === 'completed')}
+                  onClick={() => handleResume(sim.id, false)}
                   disabled={actionLoading === sim.id}
                   className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 disabled:opacity-50"
-                  title={sim.status === 'completed' ? 'Restart simulation with fresh timer' : 'Resume simulation'}
+                  title={sim.status === 'pending' ? 'Start simulation' : sim.status === 'paused' ? 'Resume simulation' : 'Start simulation'}
                 >
                   <Play className="h-4 w-4" />
                 </button>
               )}
-              <button
-                onClick={() => handleReset(sim.id)}
-                disabled={actionLoading === sim.id}
-                className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 disabled:opacity-50"
-                title="Reset to template snapshot"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleComplete(sim.id)}
-                disabled={actionLoading === sim.id}
-                className="p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 disabled:opacity-50"
-                title="Complete simulation"
-              >
-                <CheckCircle className="h-4 w-4" />
-              </button>
+              {/* Reset Button - Only show if simulation has been used */}
+              {(sim.status === 'running' || sim.status === 'paused' || sim.status === 'completed') && (
+                <button
+                  onClick={() => handleReset(sim.id)}
+                  disabled={actionLoading === sim.id}
+                  className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 disabled:opacity-50"
+                  title="Reset simulation data and set to ready state"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              )}
+              {/* Complete Button - Only show if simulation is running or paused */}
+              {(sim.status === 'running' || sim.status === 'paused') && (
+                <button
+                  onClick={() => handleComplete(sim)}
+                  disabled={actionLoading === sim.id}
+                  className="p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 disabled:opacity-50"
+                  title="Complete simulation and create debrief"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                </button>
+              )}
               <button
                 onClick={() => handleDelete(sim.id)}
                 disabled={actionLoading === sim.id}
@@ -484,11 +548,55 @@ const ActiveSimulations: React.FC = () => {
           </div>
 
           <div className="space-y-4 text-sm">
+            {/* Workflow Steps */}
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg p-4">
+              <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">Session Workflow</h4>
+              <div className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Print Labels</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Patient & medication barcodes</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Play to Start</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Timer begins, students can access</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">3</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Complete</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Enter instructor name, creates debrief</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Reset</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Clears data, status → "Ready to Start"</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">5</div>
+                  <div>
+                    <div className="font-semibold text-slate-800 dark:text-slate-200">Click Play (Next Group)</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">Starts fresh timer for new students</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Print Labels */}
             <div className="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-700 rounded-lg p-4">
               <h4 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</div>
                 <Printer className="h-4 w-4" />
                 Print Labels
+                <span className="text-xs font-normal text-indigo-600 dark:text-indigo-400 ml-auto">(Optional if not pre-printed)</span>
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
                 Print patient and medication barcode labels for BCMA scanning.
@@ -504,23 +612,23 @@ const ActiveSimulations: React.FC = () => {
             </div>
 
             {/* Start/Pause */}
-            <div className="bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-900/20 dark:to-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-900/20 dark:to-yellow-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4">
               <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</div>
                 <Play className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <Pause className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                Start / Pause
+                Play to Start
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
-                Control simulation flow during the session:
+                Click Play when ready to begin:
               </p>
               <ul className="space-y-1 text-slate-600 dark:text-slate-400 ml-2">
                 <li className="flex items-start gap-2">
                   <Play className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
-                  <span><strong>Start:</strong> Begins timer countdown and enables student access</span>
+                  <span><strong>Play:</strong> Starts timer and enables student access</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Pause className="h-3 w-3 text-yellow-600 mt-1 flex-shrink-0" />
-                  <span><strong>Pause:</strong> Freezes timer, students can still document</span>
+                  <span><strong>Pause:</strong> Freezes timer if needed</span>
                 </li>
               </ul>
             </div>
@@ -528,26 +636,25 @@ const ActiveSimulations: React.FC = () => {
             {/* Complete */}
             <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
               <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">3</div>
                 <CheckCircle className="h-4 w-4" />
                 Complete Simulation
               </h4>
               <p className="text-slate-700 dark:text-slate-300 mb-2">
-                Click when students finish their work. This will:
+                Click when students finish their work:
               </p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
-                <li>Save all student activities</li>
-                <li>Generate debrief report</li>
-                <li>Move to Debrief Reports tab</li>
-                <li>Preserve data for review</li>
+                <li>Enter instructor name in popup</li>
+                <li>Saves all student activities</li>
+                <li>Generates debrief report</li>
+                <li>Shows red "Needs Reset" badge</li>
               </ul>
-              <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded text-xs text-emerald-800 dark:text-emerald-200">
-                💡 Complete first before resetting for next group
-              </div>
             </div>
 
             {/* Reset */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-4">
               <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">4</div>
                 <RotateCcw className="h-4 w-4" />
                 Reset for Next Group
               </h4>
@@ -555,11 +662,14 @@ const ActiveSimulations: React.FC = () => {
                 Prepares simulation for new students:
               </p>
               <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <li>Clears all student work</li>
                 <li>Restores baseline data</li>
-                <li>Clears student work</li>
-                <li>Resets timer</li>
-                <li>Preserves patient barcodes</li>
+                <li>Shows green "Ready to Start" badge</li>
+                <li>Preserves patient barcodes (no reprinting!)</li>
               </ul>
+              <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900/30 rounded text-xs text-blue-800 dark:text-blue-200">
+                ✅ After reset, go to step 2: Click <strong>Play</strong> when ready
+              </div>
               <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-800 dark:text-red-200">
                 ⚠️ <strong>Warning:</strong> Previous work is permanently deleted
               </div>
@@ -568,12 +678,16 @@ const ActiveSimulations: React.FC = () => {
             {/* Delete */}
             <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-700 rounded-lg p-4">
               <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold">6</div>
                 <Trash2 className="h-4 w-4" />
                 Delete Simulation
               </h4>
               <p className="text-slate-600 dark:text-slate-400 text-xs">
                 Permanently removes the entire simulation session. Use only if simulation won't be needed again.
               </p>
+              <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-800 dark:text-red-200">
+                ⚠️ Always Complete before Delete to save debrief reports in History
+              </div>
             </div>
 
             {/* Timer Status */}
@@ -810,6 +924,15 @@ const ActiveSimulations: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Instructor Name Modal */}
+      {completingSimulation && (
+        <InstructorNameModal
+          simulationName={completingSimulation.name}
+          onConfirm={handleCompleteWithInstructor}
+          onCancel={() => setCompletingSimulation(null)}
+        />
       )}
       </div>
     </div>

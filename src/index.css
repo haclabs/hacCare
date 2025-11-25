@@ -226,6 +226,418 @@
       opacity: 0;
     }
   }
+
+  /* 🎄 CHRISTMAS FESTIVE THEME - HAPPY HOLIDAYS! ❄️ */
+  .christmas body {
+    background: linear-gradient(180deg, #0a1929 0%, #1a3a52 50%, #0a1929 100%) !important;
+    color: #e8f5e9 !important;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Falling snowflakes - creating a beautiful snow effect */
+  .christmas::before {
+    content: '❄️';
+    position: fixed;
+    font-size: 25px;
+    top: -50px;
+    left: 15%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall-1 12s linear infinite;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  }
+  
+  .christmas::after {
+    content: '⛄';
+    position: fixed;
+    font-size: 30px;
+    top: -50px;
+    right: 25%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall-2 15s linear infinite 2s;
+  }
+  
+  .christmas body::before {
+    content: '🎄';
+    position: fixed;
+    font-size: 35px;
+    top: -50px;
+    left: 65%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall-3 18s linear infinite 4s;
+    filter: drop-shadow(0 0 10px rgba(76, 175, 80, 0.6));
+  }
+  
+  .christmas body::after {
+    content: '🎁';
+    position: fixed;
+    font-size: 28px;
+    top: -50px;
+    right: 45%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall-4 14s linear infinite 6s;
+  }
+
+  /* Christmas string lights along the top */
+  .christmas header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background-image: 
+      radial-gradient(circle at 5% 50%, #ff0000 3px, transparent 3px),
+      radial-gradient(circle at 15% 50%, #ffd700 3px, transparent 3px),
+      radial-gradient(circle at 25% 50%, #00ff00 3px, transparent 3px),
+      radial-gradient(circle at 35% 50%, #0099ff 3px, transparent 3px),
+      radial-gradient(circle at 45% 50%, #ff0000 3px, transparent 3px),
+      radial-gradient(circle at 55% 50%, #ffd700 3px, transparent 3px),
+      radial-gradient(circle at 65% 50%, #00ff00 3px, transparent 3px),
+      radial-gradient(circle at 75% 50%, #0099ff 3px, transparent 3px),
+      radial-gradient(circle at 85% 50%, #ff0000 3px, transparent 3px),
+      radial-gradient(circle at 95% 50%, #ffd700 3px, transparent 3px);
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 1000;
+    animation: christmas-lights-blink 2s ease-in-out infinite;
+  }
+
+  /* Festive Headers with Christmas glow */
+  .christmas h1, .christmas h2, .christmas h3, .christmas h4 {
+    color: #ffffff !important;
+    text-shadow: 
+      0 0 10px #4caf50,
+      0 0 20px #4caf50,
+      0 0 30px rgba(255, 215, 0, 0.5) !important;
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+  
+  /* Winter Wonderland Cards */
+  .christmas .bg-white {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(76, 175, 80, 0.5) !important;
+    box-shadow: 
+      0 8px 32px rgba(76, 175, 80, 0.2),
+      0 0 20px rgba(255, 215, 0, 0.1),
+      inset 0 0 30px rgba(255, 255, 255, 0.05) !important;
+    position: relative;
+  }
+
+  /* Add a subtle frost effect to cards */
+  .christmas .bg-white::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    pointer-events: none;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  
+  .christmas .bg-gray-50 {
+    background: rgba(26, 58, 82, 0.3) !important;
+    border: 1px solid rgba(76, 175, 80, 0.3) !important;
+    backdrop-filter: blur(5px);
+  }
+  
+  .christmas .bg-gray-100 {
+    background: rgba(10, 25, 41, 0.5) !important;
+  }
+  
+  /* Festive Green and Gold Text */
+  .christmas .text-gray-900 {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  }
+  
+  /* Holly Berry Red Text */
+  .christmas .text-gray-600, .christmas .text-gray-500 {
+    color: #c8e6c9 !important;
+  }
+  
+  .christmas .text-blue-600 {
+    color: #4caf50 !important;
+    text-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+  }
+  
+  /* Christmas Ornament Buttons */
+  .christmas .bg-blue-600, .christmas button {
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important;
+    color: #ffffff !important;
+    border: 2px solid #4caf50 !important;
+    box-shadow: 
+      0 0 15px rgba(76, 175, 80, 0.4),
+      0 4px 15px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    transition: all 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Button shine effect */
+  .christmas button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  .christmas button:hover {
+    background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%) !important;
+    box-shadow: 
+      0 0 25px rgba(76, 175, 80, 0.6),
+      0 6px 20px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px) scale(1.02) !important;
+  }
+
+  .christmas button:hover::before {
+    left: 100%;
+  }
+  
+  /* Frosted Header with Christmas lights */
+  .christmas header {
+    background: linear-gradient(180deg, rgba(10, 25, 41, 0.95) 0%, rgba(26, 58, 82, 0.9) 100%) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(76, 175, 80, 0.5) !important;
+    box-shadow: 
+      0 4px 20px rgba(76, 175, 80, 0.2),
+      0 0 40px rgba(255, 215, 0, 0.1) !important;
+    position: relative;
+    overflow: visible;
+  }
+  
+  /* Snowy Sidebar */
+  .christmas aside {
+    background: linear-gradient(180deg, rgba(10, 25, 41, 0.95) 0%, rgba(15, 30, 50, 0.95) 100%) !important;
+    backdrop-filter: blur(10px);
+    border-right: 2px solid rgba(76, 175, 80, 0.3) !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Frosted Input Fields */
+  .christmas input, .christmas select, .christmas textarea {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(76, 175, 80, 0.4) !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .christmas input::placeholder,
+  .christmas select::placeholder,
+  .christmas textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+  
+  .christmas input:focus, .christmas select:focus, .christmas textarea:focus {
+    border-color: #4caf50 !important;
+    box-shadow: 
+      0 0 15px rgba(76, 175, 80, 0.4),
+      inset 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+    outline: none;
+  }
+  
+  /* Icy Borders */
+  .christmas .border-gray-200, .christmas .border-gray-300, .christmas .border {
+    border-color: rgba(76, 175, 80, 0.3) !important;
+  }
+  
+  /* Christmas Ornament Badges */
+  .christmas .rounded-full {
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
+    border: 1px solid rgba(76, 175, 80, 0.6) !important;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  }
+  
+  /* Active States with Holiday Cheer */
+  .christmas .bg-blue-50, .christmas .bg-blue-100 {
+    background: rgba(76, 175, 80, 0.15) !important;
+    border: 1px solid rgba(76, 175, 80, 0.4) !important;
+    box-shadow: inset 0 0 20px rgba(76, 175, 80, 0.1);
+  }
+
+  /* Snowfall animations - gentle falling motion */
+  @keyframes snowfall-1 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(30px) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes snowfall-2 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(-20px) rotate(-180deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes snowfall-3 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg) scale(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(50vh) translateX(-40px) rotate(180deg) scale(1.1);
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(-60px) rotate(360deg) scale(0.9);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes snowfall-4 {
+    0% {
+      transform: translateY(-50px) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(50px) rotate(180deg);
+      opacity: 0;
+    }
+  }
+
+  /* Christmas lights blinking animation */
+  @keyframes christmas-lights-blink {
+    0%, 100% {
+      opacity: 1;
+      filter: brightness(1) drop-shadow(0 0 3px currentColor);
+    }
+    25% {
+      opacity: 0.6;
+      filter: brightness(0.8) drop-shadow(0 0 2px currentColor);
+    }
+    50% {
+      opacity: 1;
+      filter: brightness(1.2) drop-shadow(0 0 5px currentColor);
+    }
+    75% {
+      opacity: 0.7;
+      filter: brightness(0.9) drop-shadow(0 0 2px currentColor);
+    }
+  }
+
+  /* Glow pulse for headers */
+  @keyframes glow-pulse {
+    0%, 100% {
+      text-shadow: 
+        0 0 10px #4caf50,
+        0 0 20px #4caf50,
+        0 0 30px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+      text-shadow: 
+        0 0 15px #4caf50,
+        0 0 30px #4caf50,
+        0 0 45px rgba(255, 215, 0, 0.7);
+    }
+  }
+
+  /* Shimmer effect for frost */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Additional floating snowflakes using pseudo-elements */
+  .christmas nav::before {
+    content: '❄️';
+    position: fixed;
+    font-size: 20px;
+    top: -50px;
+    left: 35%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall-1 13s linear infinite 1s;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  }
+
+  .christmas main::before {
+    content: '⭐';
+    position: fixed;
+    font-size: 22px;
+    top: -50px;
+    left: 85%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall-2 16s linear infinite 3s;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
+  }
+
+  /* String lights on sidebar */
+  .christmas aside::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 15px;
+    background-image: 
+      radial-gradient(circle at 10% 50%, #ff0000 2px, transparent 2px),
+      radial-gradient(circle at 30% 50%, #00ff00 2px, transparent 2px),
+      radial-gradient(circle at 50% 50%, #ffd700 2px, transparent 2px),
+      radial-gradient(circle at 70% 50%, #0099ff 2px, transparent 2px),
+      radial-gradient(circle at 90% 50%, #ff0000 2px, transparent 2px);
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 1000;
+    animation: christmas-lights-blink 2s ease-in-out infinite 0.5s;
+  }
+
+  /* Position sidebar properly for lights */
+  .christmas aside {
+    position: relative;
+    overflow: visible;
+  }
 }
 
 @layer components {

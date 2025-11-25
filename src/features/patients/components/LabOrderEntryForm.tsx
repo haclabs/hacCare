@@ -101,10 +101,6 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
 
     if (data) {
       setSuccess('Lab order created successfully!');
-      // Generate and print label
-      printLabel(data.id);
-      // Mark as printed
-      await markLabelPrinted(data.id);
       
       setTimeout(() => {
         onSuccess?.();
@@ -407,7 +403,7 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
             disabled={loading}
             className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            {loading ? 'Creating Order...' : 'Create Order & Print Label'}
+            {loading ? 'Creating Order...' : 'Generate Order'}
           </button>
         </div>
       </form>

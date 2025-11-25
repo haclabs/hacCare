@@ -4,9 +4,15 @@
 -- Updates the complete_simulation RPC function to handle category fields
 -- ============================================================================
 
+-- Drop existing function variations to avoid conflicts
+DROP FUNCTION IF EXISTS complete_simulation(UUID);
+DROP FUNCTION IF EXISTS complete_simulation(UUID, JSONB);
+DROP FUNCTION IF EXISTS complete_simulation(UUID, JSONB, TEXT);
+
 CREATE OR REPLACE FUNCTION complete_simulation(
   p_simulation_id UUID,
-  p_activities JSONB DEFAULT '[]'::jsonb
+  p_activities JSONB DEFAULT '[]'::jsonb,
+  p_instructor_name TEXT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -52,7 +58,7 @@ BEGIN
     'activities', p_activities
   );
   
-  -- Insert into history with categories
+  -- Insert into history with categories and instructor name
   INSERT INTO simulation_history (
     simulation_id,
     template_id,
@@ -67,7 +73,8 @@ BEGIN
     student_activities,
     created_by,
     primary_categories,
-    sub_categories
+    sub_categories,
+    instructor_name
   )
   VALUES (
     v_simulation.id,
@@ -83,7 +90,8 @@ BEGIN
     p_activities,
     v_simulation.created_by,
     v_simulation.primary_categories,
-    v_simulation.sub_categories
+    v_simulation.sub_categories,
+    p_instructor_name
   )
   RETURNING id INTO v_history_id;
   

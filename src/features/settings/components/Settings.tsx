@@ -216,8 +216,8 @@ export const Settings: React.FC = () => {
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setDarkMode(systemDark);
       localStorage.setItem('haccare-theme', 'system');
-    } else if (['light', 'dark', 'halloween'].includes(newTheme)) {
-      setTheme(newTheme as 'light' | 'dark' | 'halloween');
+    } else if (['light', 'dark', 'halloween', 'christmas'].includes(newTheme)) {
+      setTheme(newTheme as 'light' | 'dark' | 'halloween' | 'christmas');
     } else {
       const isDark = newTheme === 'dark';
       setDarkMode(isDark);
@@ -376,6 +376,33 @@ export const Settings: React.FC = () => {
                         </span>
                         <div className="text-sm font-medium text-gray-900 dark:text-white" style={getCurrentTheme() === 'halloween' ? { color: '#ff6b00', textShadow: '0 0 5px #ff6b00' } : {}}>
                           Halloween 👻
+                        </div>
+                      </button>
+
+                      {/* Christmas Mode 🎄 */}
+                      <button
+                        onClick={() => handleThemeChange('christmas')}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          getCurrentTheme() === 'christmas'
+                            ? 'border-green-500 bg-red-900 text-white'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                        }`}
+                        style={getCurrentTheme() === 'christmas' ? {
+                          background: 'linear-gradient(135deg, #1b5e20 0%, #0d3818 100%)',
+                          boxShadow: '0 0 20px rgba(76, 175, 80, 0.6)'
+                        } : {}}
+                      >
+                        <span className="text-3xl mx-auto mb-1 block" style={getCurrentTheme() === 'christmas' ? { 
+                          textShadow: '0 0 15px rgba(76, 175, 80, 0.8)',
+                          filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))'
+                        } : {}}>
+                          🎄
+                        </span>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white" style={getCurrentTheme() === 'christmas' ? { 
+                          color: '#ffffff', 
+                          textShadow: '0 0 10px rgba(76, 175, 80, 0.8)' 
+                        } : {}}>
+                          Christmas ❄️
                         </div>
                       </button>
 
