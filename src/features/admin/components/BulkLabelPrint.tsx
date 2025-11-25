@@ -115,12 +115,12 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               justify-content: center;
               align-items: center;
               background: #ffffff;
-              padding: 0.05in;
+              padding: 0.05in 0.1in 0.05in 0.05in;
               border-left: 1px solid #e0e0e0;
             }
             .barcode-canvas {
               max-width: 0.8in;
-              max-height: 0.9in;
+              max-height: 0.85in;
             }
             @media print {
               .label {
