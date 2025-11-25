@@ -438,9 +438,11 @@ const ActiveSimulations: React.FC = () => {
                       : 'Time expired'}
                   </span>
                 </div>
-                <div className="text-xs">
-                  Started {formatDistanceToNow(new Date(sim.starts_at), { addSuffix: true })}
-                </div>
+                {sim.starts_at && (
+                  <div className="text-xs">
+                    Started {formatDistanceToNow(new Date(sim.starts_at), { addSuffix: true })}
+                  </div>
+                )}
               </div>
             </div>
 
