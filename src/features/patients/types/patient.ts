@@ -27,6 +27,7 @@ export interface Patient {
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
   assigned_nurse: string;
+  avatar_id?: string; // Patient avatar identifier (avatar-1 through avatar-10)
   vitals: VitalSigns[];
   medications?: Medication[]; // Optional since medications are loaded separately
   notes: PatientNote[];

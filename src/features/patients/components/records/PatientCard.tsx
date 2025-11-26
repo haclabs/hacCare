@@ -2,6 +2,7 @@ import React from 'react';
 import { Patient } from '../../../../types';
 import { User, MapPin, Calendar, AlertTriangle, QrCode } from 'lucide-react';
 import { format, isValid } from 'date-fns';
+import { PATIENT_AVATARS, getAvatarById } from '../../../../data/patientAvatars';
 
 /**
  * Patient Card Component
@@ -78,8 +79,14 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
       {/* Patient Header with Enhanced Avatar */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className={`p-3 rounded-full shadow-lg ${getAvatarColor(patient.condition)}`}>
-            <User className="h-6 w-6" />
+          <div className={`rounded-full shadow-lg overflow-hidden ${getAvatarColor(patient.condition)}`} style={{ width: '56px', height: '56px' }}>
+            {patient.avatar_id && getAvatarById(patient.avatar_id) ? (
+              <div dangerouslySetInnerHTML={{ __html: getAvatarById(patient.avatar_id)!.svg }} />
+            ) : (
+              <div className="p-3">
+                <User className="h-6 w-6" />
+              </div>
+            )}
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
