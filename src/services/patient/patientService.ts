@@ -31,6 +31,7 @@ export interface DatabasePatient {
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
   assigned_nurse: string;
+  avatar_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +99,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
     diagnosis: dbPatient.diagnosis,
     allergies: dbPatient.allergies || [],
     blood_type: dbPatient.blood_type,
+    avatar_id: dbPatient.avatar_id,
     emergency_contact_name: dbPatient.emergency_contact_name,
     emergency_contact_relationship: dbPatient.emergency_contact_relationship,
     emergency_contact_phone: dbPatient.emergency_contact_phone,
