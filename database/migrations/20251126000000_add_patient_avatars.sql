@@ -41,10 +41,14 @@ BEGIN
   RAISE NOTICE '✅ Avatars assigned to all existing patients';
 END $$;
 
--- Verify assignment
+-- Verify assignment (view results in output)
+DO $$
+BEGIN
+  RAISE NOTICE '🎨 Patient avatar system initialized successfully';
+  RAISE NOTICE 'Avatar distribution:';
+END $$;
+
 SELECT avatar_id, COUNT(*) as count
 FROM patients
 GROUP BY avatar_id
 ORDER BY avatar_id;
-
-RAISE NOTICE '🎨 Patient avatar system initialized successfully';
