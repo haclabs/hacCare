@@ -39,10 +39,15 @@ export function usePatients() {
         console.warn('usePatients: received non-array data:', patients);
         return [];
       }
+      console.log('usePatients select - before sort, first patient:', patients[0]);
+      console.log('usePatients select - has avatar_id?', patients[0]?.avatar_id);
       // Sort patients by admission date (newest first)
-      return patients.sort((a, b) => 
+      const sorted = patients.sort((a, b) => 
         new Date(b.admission_date).getTime() - new Date(a.admission_date).getTime()
       );
+      console.log('usePatients select - after sort, first patient:', sorted[0]);
+      console.log('usePatients select - still has avatar_id?', sorted[0]?.avatar_id);
+      return sorted;
     },
   });
 }
