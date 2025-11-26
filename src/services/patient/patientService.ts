@@ -130,7 +130,8 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
     emergency_contact_name: patient.emergency_contact_name,
     emergency_contact_relationship: patient.emergency_contact_relationship,
     emergency_contact_phone: patient.emergency_contact_phone,
-    assigned_nurse: patient.assigned_nurse
+    assigned_nurse: patient.assigned_nurse,
+    avatar_id: patient.avatar_id
   };
 };
 
@@ -162,6 +163,7 @@ const convertSimulationPatient = (simulationPatient: SimulationPatient): Patient
     emergency_contact_relationship: simulationPatient.emergency_contact_relationship || '',
     emergency_contact_phone: simulationPatient.emergency_contact_phone || '',
     assigned_nurse: simulationPatient.assigned_nurse || '',
+    avatar_id: undefined, // Simulation patients don't have avatars yet
     vitals: [], // Will be populated from simulation_patient_vitals
     medications: [], // Will be populated from simulation_patient_medications  
     notes: [] // Will be populated from simulation_patient_notes
