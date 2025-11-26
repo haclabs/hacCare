@@ -33,8 +33,6 @@ export const PatientManagement: React.FC = () => {
   const { data: patients = [], isLoading: loading, error, refetch: refreshPatients } = usePatients();
   
   console.log('📊 Patient data:', { patients, loading, error });
-  console.log('🔍 PatientManagement - First patient:', patients[0]);
-  console.log('🔍 PatientManagement - First patient avatar_id:', patients[0]?.avatar_id);
   
   // Mutation hooks for patient operations
   const createPatientMutation = useCreatePatient();

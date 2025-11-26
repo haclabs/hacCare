@@ -71,13 +71,6 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
   const admissionDate = new Date(patient.admission_date);
   const formattedAdmissionDate = isValid(admissionDate) ? format(admissionDate, 'MMM dd') : 'N/A';
 
-  // Debug logging
-  console.log('PatientCard rendering:', {
-    name: `${patient.first_name} ${patient.last_name}`,
-    avatar_id: patient.avatar_id,
-    hasAvatar: !!patient.avatar_id
-  });
-
   return (
     <div 
       className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:shadow-blue-100/50 transition-all duration-300 cursor-pointer transform hover:-translate-y-1 ${getCardAccent(patient.condition)}`}

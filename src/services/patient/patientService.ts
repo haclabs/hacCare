@@ -234,8 +234,6 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
     }
 
     console.log(`Found ${patients.length} patients`);
-    console.log('First patient from DB:', patients[0]);
-    console.log('First patient has avatar_id?', patients[0]?.avatar_id);
 
     // Fetch vitals for all patients
     const { data: allVitals, error: vitalsError } = await supabase
@@ -260,9 +258,6 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
     const patientsWithVitals = patients.map(patient => 
       convertDatabasePatient(patient, vitalsByPatient[patient.id] || [])
     );
-    
-    console.log('After conversion, first patient:', patientsWithVitals[0]);
-    console.log('After conversion, has avatar_id?', patientsWithVitals[0]?.avatar_id);
 
     console.log('Patients converted successfully');
     return patientsWithVitals;
