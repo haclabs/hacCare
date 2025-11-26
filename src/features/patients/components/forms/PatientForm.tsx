@@ -180,6 +180,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
         emergency_contact_relationship: formData.emergency_contact_relationship!,
         emergency_contact_phone: formData.emergency_contact_phone!,
         assigned_nurse: formData.assigned_nurse!,
+        avatar_id: formData.avatar_id,
         vitals: formData.vitals || [],
         medications: formData.medications || [],
         notes: formData.notes || []
