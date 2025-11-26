@@ -31,6 +31,7 @@ export interface DatabasePatient {
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
   assigned_nurse: string;
+  avatar_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +99,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
     diagnosis: dbPatient.diagnosis,
     allergies: dbPatient.allergies || [],
     blood_type: dbPatient.blood_type,
+    avatar_id: dbPatient.avatar_id,
     emergency_contact_name: dbPatient.emergency_contact_name,
     emergency_contact_relationship: dbPatient.emergency_contact_relationship,
     emergency_contact_phone: dbPatient.emergency_contact_phone,
@@ -128,7 +130,8 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
     emergency_contact_name: patient.emergency_contact_name,
     emergency_contact_relationship: patient.emergency_contact_relationship,
     emergency_contact_phone: patient.emergency_contact_phone,
-    assigned_nurse: patient.assigned_nurse
+    assigned_nurse: patient.assigned_nurse,
+    avatar_id: patient.avatar_id
   };
 };
 
@@ -160,6 +163,7 @@ const convertSimulationPatient = (simulationPatient: SimulationPatient): Patient
     emergency_contact_relationship: simulationPatient.emergency_contact_relationship || '',
     emergency_contact_phone: simulationPatient.emergency_contact_phone || '',
     assigned_nurse: simulationPatient.assigned_nurse || '',
+    avatar_id: undefined, // Simulation patients don't have avatars yet
     vitals: [], // Will be populated from simulation_patient_vitals
     medications: [], // Will be populated from simulation_patient_medications  
     notes: [] // Will be populated from simulation_patient_notes

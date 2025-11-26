@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, User, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAlertContext } from '../../hooks/useAlertContext';
@@ -15,7 +15,16 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
   const { unreadCount, loading: alertsLoading } = useAlertContext();
-  const currentTime = format(new Date(), 'MMM dd, yyyy - HH:mm');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const getRoleLabel = (role: string) => {
     switch (role) {
@@ -35,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
             src={logo} 
             alt="HacCare Logo" 
             className="h-auto w-auto"
-            style={{ height: '50px' }}
+            style={{ height: '65px' }}
           />
         </div>
 
@@ -68,9 +77,16 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
             </div>
           )}
           
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            <Clock className="h-4 w-4" />
-            <span>{currentTime}</span>
+          <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+            <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-bold text-gray-900 dark:text-gray-100 tracking-tight font-mono">
+                {format(currentTime, 'HH:mm:ss')}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                {format(currentTime, 'MMM dd, yyyy')}
+              </span>
+            </div>
           </div>
 
           {/* Tenant Switcher for Super Admins */}

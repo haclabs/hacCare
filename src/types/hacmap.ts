@@ -44,6 +44,7 @@ export type ReservoirType =
   | 'jackson-pratt'
   | 'hemovac'
   | 'penrose'
+  | 'urinary-drainage-bag'
   | 'other';
 
 export type Orientation =
@@ -442,6 +443,7 @@ export const RESERVOIR_TYPE_LABELS: Record<ReservoirType, string> = {
   'jackson-pratt': 'Jackson-Pratt',
   'hemovac': 'Hemovac',
   'penrose': 'Penrose',
+  'urinary-drainage-bag': 'Urinary Drainage Bag',
   'other': 'Other'
 };
 

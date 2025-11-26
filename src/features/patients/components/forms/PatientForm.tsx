@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Patient } from '../../../../types';
 import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
+import { PATIENT_AVATARS, getRandomAvatarId, getAvatarById } from '../../../../data/patientAvatars';
 
 /**
  * Patient Form Component
@@ -40,6 +41,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
     emergency_contact_relationship: patient?.emergency_contact_relationship || '',
     emergency_contact_phone: patient?.emergency_contact_phone || '',
     assigned_nurse: patient?.assigned_nurse || '',
+    avatar_id: patient?.avatar_id || getRandomAvatarId(), // Assign random avatar for new patients
     vitals: patient?.vitals || [],
     medications: patient?.medications || [],
     notes: patient?.notes || []
@@ -178,6 +180,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
         emergency_contact_relationship: formData.emergency_contact_relationship!,
         emergency_contact_phone: formData.emergency_contact_phone!,
         assigned_nurse: formData.assigned_nurse!,
+        avatar_id: formData.avatar_id,
         vitals: formData.vitals || [],
         medications: formData.medications || [],
         notes: formData.notes || []
@@ -319,6 +322,33 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
                   <option value="O-">O-</option>
                 </select>
               </div>
+            </div>
+
+            {/* Avatar Selection */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Patient Avatar
+              </label>
+              <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
+                {PATIENT_AVATARS.map((avatar) => (
+                  <button
+                    key={avatar.id}
+                    type="button"
+                    onClick={() => updateField('avatar_id', avatar.id)}
+                    className={`relative rounded-lg overflow-hidden transition-all duration-200 hover:scale-110 hover:shadow-lg ${
+                      formData.avatar_id === avatar.id
+                        ? 'ring-4 ring-blue-500 ring-offset-2 scale-105 shadow-lg'
+                        : 'ring-1 ring-gray-300 dark:ring-gray-600 hover:ring-blue-300'
+                    }`}
+                    title={avatar.name}
+                  >
+                    <div className="aspect-square" dangerouslySetInnerHTML={{ __html: avatar.svg }} />
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Select an avatar to represent this patient on their card
+              </p>
             </div>
           </div>
 
