@@ -79,11 +79,15 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
       {/* Patient Header with Enhanced Avatar */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className={`rounded-full shadow-lg overflow-hidden ${getAvatarColor(patient.condition)}`} style={{ width: '56px', height: '56px' }}>
-            {patient.avatar_id && getAvatarById(patient.avatar_id) ? (
-              <div dangerouslySetInnerHTML={{ __html: getAvatarById(patient.avatar_id)!.svg }} />
+          <div className="rounded-full shadow-lg overflow-hidden bg-white" style={{ width: '56px', height: '56px', flexShrink: 0 }}>
+            {patient.avatar_id ? (
+              <div 
+                className="w-full h-full"
+                dangerouslySetInnerHTML={{ __html: getAvatarById(patient.avatar_id)?.svg || '' }} 
+                title={`Avatar: ${patient.avatar_id}`}
+              />
             ) : (
-              <div className="p-3">
+              <div className={`w-full h-full flex items-center justify-center ${getAvatarColor(patient.condition)}`}>
                 <User className="h-6 w-6" />
               </div>
             )}
