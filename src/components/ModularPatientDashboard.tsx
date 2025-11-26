@@ -45,6 +45,7 @@ import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
 import StudentQuickIntro from './StudentQuickIntro';
 import { AvatarBoard } from '../features/hacmap/AvatarBoard';
+import { getAvatarById } from '../data/patientAvatars';
 import { AdvancedDirectivesForm } from '../features/patients/components/forms/AdvancedDirectivesForm';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
@@ -1711,8 +1712,17 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <User className="h-8 w-8 text-white" />
+              <div className="w-16 h-16 rounded-full overflow-hidden shadow-lg bg-white">
+                {patient.avatar_id ? (
+                  <div 
+                    className="w-full h-full"
+                    dangerouslySetInnerHTML={{ __html: getAvatarById(patient.avatar_id)?.svg || '' }} 
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                    <User className="h-8 w-8 text-white" />
+                  </div>
+                )}
               </div>
               <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${patientStatus.color === 'green' ? 'bg-green-500' : 'bg-yellow-500'} rounded-full border-2 border-white flex items-center justify-center`}>
                 {patientStatus.color === 'green' ? (
