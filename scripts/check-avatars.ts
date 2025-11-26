@@ -15,7 +15,7 @@ async function checkAvatars() {
   // Check if avatar_id column exists and has values
   const { data: patients, error } = await supabase
     .from('patients')
-    .select('id, patient_id, first_name, last_name, avatar_id')
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(10);
 
