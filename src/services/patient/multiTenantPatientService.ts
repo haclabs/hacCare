@@ -25,6 +25,7 @@ export interface DatabasePatient {
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
   assigned_nurse: string;
+  avatar_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -405,6 +406,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: any[]): Pat
     emergency_contact_relationship: dbPatient.emergency_contact_relationship,
     emergency_contact_phone: dbPatient.emergency_contact_phone,
     assigned_nurse: dbPatient.assigned_nurse,
+    avatar_id: dbPatient.avatar_id,
     vitals: vitals ? convertDatabaseVitals(vitals) : [],
     medications: [], // Always initialize as empty array - medications loaded separately
     notes: [] // Will be loaded separately
