@@ -75,13 +75,13 @@ const SimulationPortal: React.FC = () => {
       
       if (rpcError) {
         console.error('❌ RPC error details:', rpcError);
-        // Show helpful error message
+        // Show helpful error message with refresh suggestion
         if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
-          setError('Database function missing. Please deploy get_user_simulation_assignments.sql');
+          setError('Database function missing. Please deploy get_user_simulation_assignments.sql in Supabase. Try refreshing the page.');
         } else if (rpcError.message?.includes('timeout')) {
-          setError('Database timeout. Please ensure get_user_simulation_assignments.sql is deployed in Supabase.');
+          setError('Connection timeout. The database may be slow. Try refreshing the page (F5).');
         } else {
-          setError(`Error: ${rpcError.message}`);
+          setError(`Error: ${rpcError.message}. Try refreshing the page.`);
         }
         setAssignments([]);
         setLoading(false);
