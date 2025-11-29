@@ -1,6 +1,9 @@
 -- Function to update user profile (bypasses RLS for admins)
 -- This allows admins to set first_name, last_name, and other fields when creating users
 
+-- Drop old version if exists (without simulation_only parameter)
+DROP FUNCTION IF EXISTS public.update_user_profile_admin(uuid, text, text, text, text, text, text, boolean);
+
 CREATE OR REPLACE FUNCTION public.update_user_profile_admin(
   p_user_id uuid,
   p_first_name text,

@@ -22,6 +22,9 @@ export const LoginForm: React.FC = () => {
       // Check if user is simulation_only - redirect to simulation lobby
       if (profile.simulation_only) {
         console.log('🎯 Simulation-only user detected, redirecting to lobby...');
+        // Clear any old simulation tenant from localStorage
+        localStorage.removeItem('currentSimulationTenant');
+        localStorage.removeItem('simulationTenantName');
         navigate('/app/simulation-portal');
       } else {
         // Regular user - go to main app
