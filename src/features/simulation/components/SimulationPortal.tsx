@@ -240,29 +240,7 @@ const SimulationPortal: React.FC = () => {
     );
   }
 
-  // Auto-routing to single simulation (only for non-simulation_only users)
-  if (assignments.length === 1 && !profile?.simulation_only) {
-    const assignment = assignments[0];
-    return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full flex items-center justify-center py-12">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-600 rounded-full animate-pulse">
-              <Monitor className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Entering Simulation</h2>
-          <p className="text-gray-600 mb-4">{assignment.simulation.name}</p>
-          <div className="flex items-center justify-center text-sm text-gray-500">
-            <ArrowRight className="h-4 w-4 mr-2 animate-pulse" />
-            Redirecting you now...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Instructor view or multiple simulations
+  // Always show selection screen - no auto-routing for anyone
   const isInstructor = profile?.role === 'admin' || profile?.role === 'instructor';
 
   return (
