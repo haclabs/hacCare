@@ -37,8 +37,12 @@ export const SimulationIndicator: React.FC = () => {
       try {
         setIsExiting(true);
         await exitSimulationTenant();
-        // Force a full page reload to ensure clean tenant switch
-        window.location.href = '/app';
+        // Navigate to simulation portal for simulation_only users, otherwise home
+        if (profile?.simulation_only) {
+          window.location.href = '/app/simulation-portal';
+        } else {
+          window.location.href = '/app';
+        }
       } catch (error) {
         console.error('Error exiting simulation:', error);
         alert('Failed to exit simulation. Please try again.');
@@ -147,6 +151,7 @@ export const SimulationIndicator: React.FC = () => {
       if (diff <= 0) {
         // Grace period expired - kick back to lobby
         setGraceTimeRemaining('Redirecting...');
+        setIsExiting(true);
         // Exit simulation and redirect to lobby
         exitSimulationTenant().then(() => {
           navigate('/app/simulation-portal');

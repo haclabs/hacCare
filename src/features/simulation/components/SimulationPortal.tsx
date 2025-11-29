@@ -9,10 +9,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2, BookOpen } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import { supabase } from '../../../lib/api/supabase';
+import StudentQuickIntro from '../../../components/StudentQuickIntro';
 
 interface SimulationAssignment {
   id: string;
@@ -40,6 +41,7 @@ const SimulationPortal: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enteringSimulation, setEnteringSimulation] = useState(false);
+  const [showQuickIntro, setShowQuickIntro] = useState(false);
 
   useEffect(() => {
     console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
@@ -189,42 +191,23 @@ const SimulationPortal: React.FC = () => {
           <p className="text-xl text-gray-600">
             {isInstructor ? 'Manage and launch simulations' : 'Your active simulations'}
           </p>
+          
+          {/* Quick Intro Button - Only show for simulation_only users */}
+          {profile?.simulation_only && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setShowQuickIntro(true)}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+                title="Student Quick Introduction Guide"
+              >
+                <BookOpen className="h-5 w-5 mr-2" />
+                Quick Intro
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Quick Start Guide - Only show for simulation_only users */}
-        {profile?.simulation_only && (
-          <div className="max-w-4xl mx-auto mb-8">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <Monitor className="h-6 w-6 mr-2" />
-                Quick Start Guide
-              </h2>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start">
-                  <span className="font-bold mr-2">1.</span>
-                  <p>Wait for your instructor to launch a simulation. This page refreshes automatically every 15 seconds.</p>
-                </div>
-                <div className="flex items-start">
-                  <span className="font-bold mr-2">2.</span>
-                  <p>When a simulation appears below, click <strong>"Enter Simulation"</strong> to join.</p>
-                </div>
-                <div className="flex items-start">
-                  <span className="font-bold mr-2">3.</span>
-                  <p>Once inside, complete your clinical tasks. The simulation timer appears in the sidebar.</p>
-                </div>
-                <div className="flex items-start">
-                  <span className="font-bold mr-2">4.</span>
-                  <p>When the simulation ends, you'll be automatically returned here after 15 minutes.</p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-white/20">
-                <p className="text-xs opacity-90">
-                  💡 <strong>Tip:</strong> Keep this tab open to see new simulations as they launch. No need to refresh manually!
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Error Message */}
         {error && (
@@ -359,6 +342,11 @@ const SimulationPortal: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Student Quick Intro Modal */}
+      {showQuickIntro && (
+        <StudentQuickIntro onClose={() => setShowQuickIntro(false)} />
+      )}
     </div>
   );
 };

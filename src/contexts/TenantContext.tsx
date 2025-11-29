@@ -302,15 +302,23 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       localStorage.removeItem('current_simulation_tenant');
       console.log('🧹 Cleared simulation tenant from localStorage');
 
-      // Reload user's home tenant
-      if (user) {
-        const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
-        if (tenantError) {
-          throw new Error(tenantError.message);
+      // For simulation_only users, redirect to portal instead of loading home tenant
+      if (profile?.simulation_only) {
+        console.log('🎯 Simulation-only user exiting, redirecting to portal');
+        setCurrentTenant(null);
+        setSelectedTenantId(null);
+        // Navigation will be handled by the calling component
+      } else {
+        // Reload user's home tenant for regular users
+        if (user) {
+          const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
+          if (tenantError) {
+            throw new Error(tenantError.message);
+          }
+          setCurrentTenant(tenant);
+          setSelectedTenantId(tenant?.id || null);
+          console.log('✅ Returned to home tenant:', tenant?.name);
         }
-        setCurrentTenant(tenant);
-        setSelectedTenantId(tenant?.id || null);
-        console.log('✅ Returned to home tenant:', tenant?.name);
       }
     } catch (err) {
       console.error('Error exiting simulation:', err);
