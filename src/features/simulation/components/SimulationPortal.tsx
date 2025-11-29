@@ -71,7 +71,17 @@ const SimulationPortal: React.FC = () => {
       setLoading(true);
       setError(null);
       console.log('📡 loadAssignments: Calling getUserSimulationAssignments...');
-      const data = await getUserSimulationAssignments(user.id);
+      
+      // Add timeout to prevent infinite hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
+      );
+      
+      const data = await Promise.race([
+        getUserSimulationAssignments(user.id),
+        timeoutPromise
+      ]) as any[];
+      
       console.log('✅ loadAssignments: Received', data.length, 'assignments');
       setAssignments(data);
 
