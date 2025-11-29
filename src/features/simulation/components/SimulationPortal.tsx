@@ -72,16 +72,16 @@ const SimulationPortal: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('📡 loadAssignments: Using RPC function to bypass RLS...');
       
-      // Use RPC function with timeout to bypass RLS for simulation_only users
+      // Use RPC function with 3-second timeout (fast fail for better UX)
+      console.log('📡 loadAssignments: Calling RPC function...');
       const rpcCall = supabase.rpc(
         'get_user_simulation_assignments',
         { p_user_id: user.id }
       );
       
       const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
-        setTimeout(() => reject(new Error('RPC call timeout after 10 seconds')), 10000)
+        setTimeout(() => reject(new Error('Request timeout - database function may not be deployed')), 3000)
       );
       
       const { data: rpcData, error: rpcError } = await Promise.race([
@@ -94,11 +94,13 @@ const SimulationPortal: React.FC = () => {
       
       if (rpcError) {
         console.error('❌ RPC error details:', rpcError);
-        // If RPC function doesn't exist, show helpful message
+        // Show helpful error message
         if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
-          setError('Database function not deployed. Please run get_user_simulation_assignments.sql in Supabase SQL Editor.');
+          setError('Database function missing. Please deploy get_user_simulation_assignments.sql');
+        } else if (rpcError.message?.includes('timeout')) {
+          setError('Database timeout. Please ensure get_user_simulation_assignments.sql is deployed in Supabase.');
         } else {
-          setError(`Error loading simulations: ${rpcError.message}`);
+          setError(`Error: ${rpcError.message}`);
         }
         setAssignments([]);
         setLoading(false);
@@ -141,9 +143,9 @@ const SimulationPortal: React.FC = () => {
       // Navigate to dashboard which will now show simulation patients
       // Force a full page reload to ensure all contexts refresh with new tenant
       window.location.href = '/app';
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error entering simulation:', err);
-      setError(err.message || 'Failed to enter simulation');
+      setError(err instanceof Error ? err.message : 'Failed to enter simulation');
       setEnteringSimulation(false);
     }
   };
