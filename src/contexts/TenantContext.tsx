@@ -90,6 +90,14 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
+    // Skip tenant loading for simulation_only users - they should only get tenant when entering a simulation
+    if (profile?.simulation_only) {
+      console.log('🎯 Simulation-only user detected, skipping automatic tenant load');
+      setCurrentTenant(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
