@@ -43,56 +43,75 @@ const SimulationPortal: React.FC = () => {
   const [enteringSimulation, setEnteringSimulation] = useState(false);
   const [showQuickIntro, setShowQuickIntro] = useState(false);
 
-  const loadAssignments = React.useCallback(async (retryCount = 0) => {
+  const loadAssignments = React.useCallback(async (retryCount = 0, isBackgroundRefresh = false) => {
     if (!user) {
       console.log('⚠️ loadAssignments: No user, skipping');
       return;
     }
 
-    console.log(`📡 loadAssignments: Starting fetch for user: ${user.id} (attempt ${retryCount + 1}/3)`);
+    console.log(`📡 loadAssignments: Starting fetch for user: ${user.id} (attempt ${retryCount + 1}/3)${isBackgroundRefresh ? ' [background]' : ''}`);
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not background refreshes
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
       setError(null);
       
-      // Use RPC function with 5-second timeout per attempt
-      console.log('📡 loadAssignments: Calling RPC function...');
+      // Use RPC function with longer timeout for initial load (cold start can be slow)
+      // Background refreshes use shorter timeout since function should be warm
+      const timeoutDuration = isBackgroundRefresh ? 5000 : 15000;
+      console.log(`📡 loadAssignments: Calling RPC function (${timeoutDuration/1000}s timeout)...`);
       const rpcCall = supabase.rpc(
         'get_user_simulation_assignments',
         { p_user_id: user.id }
       );
       
       const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
-        setTimeout(() => reject(new Error('timeout')), 5000)
+        setTimeout(() => reject(new Error('timeout')), timeoutDuration)
       );
       
       const { data: rpcData, error: rpcError } = await Promise.race([
         rpcCall,
         timeoutPromise
       ]).catch((error) => {
-        console.error('📡 RPC call failed or timed out:', error);
+        // Only log errors for initial load, not background refreshes
+        if (!isBackgroundRefresh) {
+          console.error('📡 RPC call failed or timed out:', error);
+        }
         return { data: null, error };
       });
       
       if (rpcError) {
-        console.error(`❌ RPC error details (attempt ${retryCount + 1}):`, rpcError);
+        // Only log detailed errors for initial load
+        if (!isBackgroundRefresh) {
+          console.error(`❌ RPC error details (attempt ${retryCount + 1}):`, rpcError);
+        }
         
-        // Retry on timeout (cold start issue), max 2 retries
-        if (rpcError.message?.includes('timeout') && retryCount < 2) {
+        // Retry on timeout (cold start issue), max 2 retries - but only on initial load
+        if (rpcError.message?.includes('timeout') && retryCount < 2 && !isBackgroundRefresh) {
           console.log(`🔄 Retrying... (${retryCount + 1}/2)`);
           // Wait a bit before retry
           await new Promise(resolve => setTimeout(resolve, 500));
-          return loadAssignments(retryCount + 1);
+          return loadAssignments(retryCount + 1, isBackgroundRefresh);
         }
         
-        // Show error only after all retries exhausted
-        if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
-          setError('Unable to load simulations. Please contact your administrator.');
-        } else if (rpcError.message?.includes('timeout')) {
-          setError('Connection is slow. Please refresh the page or try again later.');
+        // Show error only on initial load failures, silently fail background refreshes
+        if (!isBackgroundRefresh) {
+          if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
+            setError('Unable to load simulations. Please contact your administrator.');
+          } else if (rpcError.message?.includes('timeout')) {
+            setError('Connection is slow. Please refresh the page or try again later.');
+          } else {
+            setError('Unable to load simulations. Please try again.');
+          }
         } else {
-          setError('Unable to load simulations. Please try again.');
+          console.log('⚠️ Background refresh failed silently, keeping existing data');
         }
-        setAssignments([]);
+        
+        // Only clear assignments on initial load failure, keep existing data on background refresh failure
+        if (!isBackgroundRefresh) {
+          setAssignments([]);
+        }
         setLoading(false);
         return;
       }
@@ -125,21 +144,52 @@ const SimulationPortal: React.FC = () => {
   useEffect(() => {
     console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
     if (!authLoading && user) {
-      console.log('✅ Conditions met, waiting for auth session to stabilize...');
-      // Small delay to ensure Supabase auth session is fully established
-      // This prevents race condition where user exists but session token isn't ready for RPC calls
-      const initialLoadTimer = setTimeout(() => {
-        console.log('✅ Auth session ready, loading assignments...');
-        loadAssignments();
-      }, 100);
+      console.log('✅ Conditions met, waiting for Supabase session to be ready...');
+      
+      let isMounted = true;
+      let sessionCheckAttempts = 0;
+      const maxSessionAttempts = 10; // Max 5 seconds of checking
+      
+      // Wait for Supabase session to be fully established before making RPC calls
+      // This prevents race condition where user exists but session token isn't ready
+      const waitForSession = async () => {
+        if (!isMounted) return;
+        
+        try {
+          sessionCheckAttempts++;
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            console.log('✅ Supabase session confirmed, loading assignments...');
+            // Give it a tiny bit more time to fully propagate
+            setTimeout(() => {
+              if (isMounted) loadAssignments();
+            }, 200);
+          } else if (sessionCheckAttempts < maxSessionAttempts) {
+            console.warn(`⚠️ No session found, retrying (${sessionCheckAttempts}/${maxSessionAttempts})...`);
+            setTimeout(waitForSession, 500);
+          } else {
+            console.error('❌ Session never established after', maxSessionAttempts, 'attempts');
+            setError('Unable to establish connection. Please refresh the page.');
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error('❌ Error checking session:', error);
+          if (sessionCheckAttempts < maxSessionAttempts) {
+            setTimeout(waitForSession, 500);
+          }
+        }
+      };
+      
+      waitForSession();
       
       // Auto-refresh every 15 seconds to show newly launched simulations
       const refreshInterval = setInterval(() => {
-        loadAssignments();
+        loadAssignments(0, true); // Background refresh - fail silently
       }, 15000);
       
       return () => {
-        clearTimeout(initialLoadTimer);
+        isMounted = false;
         clearInterval(refreshInterval);
       };
     } else if (!authLoading && !user) {

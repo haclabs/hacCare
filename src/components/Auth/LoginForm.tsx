@@ -24,9 +24,10 @@ export const LoginForm: React.FC = () => {
         console.log('🎯 Simulation-only user detected, redirecting to lobby...');
         // Clear any old simulation tenant from localStorage (use correct key)
         localStorage.removeItem('current_simulation_tenant');
-        // Use setTimeout to ensure cleanup completes before navigation
+        // Use full page reload to ensure Supabase session is properly established
+        // This prevents auth race conditions where session token isn't ready for RPC calls
         setTimeout(() => {
-          navigate('/app/simulation-portal');
+          window.location.href = '/app/simulation-portal';
         }, 100);
       } else {
         // Regular user - go to main app
