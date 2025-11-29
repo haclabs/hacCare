@@ -43,26 +43,7 @@ const SimulationPortal: React.FC = () => {
   const [enteringSimulation, setEnteringSimulation] = useState(false);
   const [showQuickIntro, setShowQuickIntro] = useState(false);
 
-  useEffect(() => {
-    console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
-    if (!authLoading && user) {
-      console.log('✅ Conditions met, loading assignments...');
-      loadAssignments();
-      // Auto-refresh every 15 seconds to show newly launched simulations
-      const refreshInterval = setInterval(() => {
-        loadAssignments();
-      }, 15000);
-      return () => clearInterval(refreshInterval);
-    } else if (!authLoading && !user) {
-      // Redirect to login if not authenticated
-      console.log('🔒 No user, redirecting to login');
-      navigate('/login?redirect=/simulation-portal');
-    } else {
-      console.log('⏳ Still loading auth...');
-    }
-  }, [user, authLoading, navigate]);
-
-  const loadAssignments = async () => {
+  const loadAssignments = React.useCallback(async () => {
     if (!user) {
       console.log('⚠️ loadAssignments: No user, skipping');
       return;
@@ -111,16 +92,14 @@ const SimulationPortal: React.FC = () => {
       console.log('✅ loadAssignments: Received', data.length, 'assignments', data);
       setAssignments(data);
 
-      // Auto-routing logic - disabled for simulation_only users as instructors launch multiple sims
-      // and we want students to manually select which one to join
-      if (data.length === 1 && !profile?.simulation_only) {
-        // Single simulation: Auto-redirect (only for non-simulation_only users)
-        const assignment = data[0];
-        console.log('🎯 Auto-routing to single simulation:', assignment.simulation.name);
-        setTimeout(async () => {
-          await enterSimulation(assignment.simulation.tenant_id, assignment.simulation.name);
-        }, 1500); // Give user brief moment to see the portal
-      } else if (data.length === 0 && profile?.role !== 'admin' && profile?.role !== 'instructor') {
+      // DISABLED: Auto-routing is completely disabled to prevent unwanted redirects
+      // Students must manually click to join simulations
+      // This prevents issues where:
+      // 1. Background refreshes trigger unwanted navigation
+      // 2. Pending/resetting simulations auto-join before they're ready
+      // 3. Students get forced into simulations they didn't choose
+      
+      if (data.length === 0 && profile?.role !== 'admin' && profile?.role !== 'instructor') {
         // No assignments for non-instructor: Show message
         console.log('ℹ️ No simulation assignments found');
       }
@@ -132,7 +111,26 @@ const SimulationPortal: React.FC = () => {
       console.log('🏁 loadAssignments: Complete, setting loading to false');
       setLoading(false);
     }
-  };
+  }, [user, profile]);
+
+  useEffect(() => {
+    console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
+    if (!authLoading && user) {
+      console.log('✅ Conditions met, loading assignments...');
+      loadAssignments();
+      // Auto-refresh every 15 seconds to show newly launched simulations
+      const refreshInterval = setInterval(() => {
+        loadAssignments();
+      }, 15000);
+      return () => clearInterval(refreshInterval);
+    } else if (!authLoading && !user) {
+      // Redirect to login if not authenticated
+      console.log('🔒 No user, redirecting to login');
+      navigate('/login?redirect=/simulation-portal');
+    } else {
+      console.log('⏳ Still loading auth...');
+    }
+  }, [user, authLoading, navigate, loadAssignments]);
 
   const enterSimulation = async (tenantId: string, simulationName: string) => {
     try {

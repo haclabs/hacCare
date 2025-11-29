@@ -43,6 +43,7 @@ BEGIN
     JOIN simulation_active sa ON sa.id = sp.simulation_id
     WHERE sp.user_id = p_user_id
       AND sa.status = 'running'
+      AND sa.ends_at > NOW()  -- Exclude expired simulations (even if in grace period)
     ORDER BY sp.granted_at DESC
   ) t;
 
