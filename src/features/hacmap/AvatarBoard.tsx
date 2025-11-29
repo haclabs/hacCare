@@ -599,7 +599,9 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                   <button
                     onClick={() => setPlacementMode(placementMode === 'device' ? null : 'device')}
                     className={`w-full px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
-                      placementMode === 'device'
+                      pendingMarker?.kind === 'device'
+                        ? 'bg-orange-500 text-white shadow-lg hover:bg-orange-600 ring-4 ring-orange-200 animate-pulse'
+                        : placementMode === 'device'
                         ? 'bg-green-600 text-white shadow-lg hover:bg-green-700 ring-4 ring-green-200'
                         : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
                     }`}
@@ -608,18 +610,32 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                       <rect x="7" y="2" width="2" height="12" rx="1" />
                       <rect x="2" y="7" width="12" height="2" rx="1" />
                     </svg>
-                    <span>{placementMode === 'device' ? '✓ Device Mode Active - Click to Cancel' : 'Add Device'}</span>
+                    <span>
+                      {pendingMarker?.kind === 'device' 
+                        ? '📝 Complete Device Form' 
+                        : placementMode === 'device' 
+                        ? '✓ Device Mode Active - Click to Cancel' 
+                        : 'Add Device'}
+                    </span>
                   </button>
                   <button
                     onClick={() => setPlacementMode(placementMode === 'wound' ? null : 'wound')}
                     className={`w-full px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
-                      placementMode === 'wound'
+                      pendingMarker?.kind === 'wound'
+                        ? 'bg-orange-500 text-white shadow-lg hover:bg-orange-600 ring-4 ring-orange-200 animate-pulse'
+                        : placementMode === 'wound'
                         ? 'bg-pink-600 text-white shadow-lg hover:bg-pink-700 ring-4 ring-pink-200'
                         : 'bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100'
                     }`}
                   >
                     <div className="w-4 h-4 rounded-full border-2 border-current"></div>
-                    <span>{placementMode === 'wound' ? '✓ Wound Mode Active - Click to Cancel' : 'Add Wound'}</span>
+                    <span>
+                      {pendingMarker?.kind === 'wound' 
+                        ? '📝 Complete Wound Form' 
+                        : placementMode === 'wound' 
+                        ? '✓ Wound Mode Active - Click to Cancel' 
+                        : 'Add Wound'}
+                    </span>
                   </button>
                 </div>
               </div>
