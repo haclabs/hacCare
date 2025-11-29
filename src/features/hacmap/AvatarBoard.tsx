@@ -443,6 +443,41 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
         </p>
       </div>
 
+      {/* Quick Start Guide */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-bold">?</span>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Quick Start Guide</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex items-start gap-2">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                <div>
+                  <p className="text-xs font-medium text-gray-900">Select Type</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Click "Add Device" or "Add Wound" button below</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                <div>
+                  <p className="text-xs font-medium text-gray-900">Place Marker</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Click on the body avatar where item is located</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                <div>
+                  <p className="text-xs font-medium text-gray-900">Fill Form</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Complete details in the form panel and save</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Chips */}
       <div className="flex items-center space-x-2">
         <Filter className="h-4 w-4 text-gray-500" />
@@ -487,14 +522,40 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
             {/* Right sidebar with buttons and info */}
             <div className="flex flex-col space-y-4 w-80 flex-shrink-0">
               {/* Quick Add Buttons */}
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+              <div className={`rounded-xl shadow-lg border-2 p-4 transition-all ${
+                placementMode 
+                  ? (placementMode === 'device' ? 'bg-green-50 border-green-400' : 'bg-pink-50 border-pink-400')
+                  : 'bg-white border-gray-200'
+              }`}>
                 <div className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Quick Add</div>
+                
+                {/* Active Mode Indicator */}
+                {placementMode && (
+                  <div className={`mb-3 p-3 rounded-lg border-2 ${
+                    placementMode === 'device' 
+                      ? 'bg-green-100 border-green-400 animate-pulse'
+                      : 'bg-pink-100 border-pink-400 animate-pulse'
+                  }`}>
+                    <div className="flex items-center gap-2 text-sm font-bold">
+                      <div className={`w-3 h-3 rounded-full ${
+                        placementMode === 'device' ? 'bg-green-600' : 'bg-pink-600'
+                      } animate-ping absolute`}></div>
+                      <div className={`w-3 h-3 rounded-full ${
+                        placementMode === 'device' ? 'bg-green-600' : 'bg-pink-600'
+                      }`}></div>
+                      <span className={placementMode === 'device' ? 'text-green-900' : 'text-pink-900'}>
+                        ACTIVE: Click body to place {placementMode}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <button
                     onClick={() => setPlacementMode(placementMode === 'device' ? null : 'device')}
                     className={`w-full px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
                       placementMode === 'device'
-                        ? 'bg-green-500 text-white shadow-md hover:bg-green-600'
+                        ? 'bg-green-600 text-white shadow-lg hover:bg-green-700 ring-4 ring-green-200'
                         : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
                     }`}
                   >
@@ -502,18 +563,18 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                       <rect x="7" y="2" width="2" height="12" rx="1" />
                       <rect x="2" y="7" width="12" height="2" rx="1" />
                     </svg>
-                    <span>{placementMode === 'device' ? 'Cancel' : 'Add Device'}</span>
+                    <span>{placementMode === 'device' ? '✓ Device Mode Active - Click to Cancel' : 'Add Device'}</span>
                   </button>
                   <button
                     onClick={() => setPlacementMode(placementMode === 'wound' ? null : 'wound')}
                     className={`w-full px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center space-x-2 ${
                       placementMode === 'wound'
-                        ? 'bg-pink-500 text-white shadow-md hover:bg-pink-600'
+                        ? 'bg-pink-600 text-white shadow-lg hover:bg-pink-700 ring-4 ring-pink-200'
                         : 'bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100'
                     }`}
                   >
                     <div className="w-4 h-4 rounded-full border-2 border-current"></div>
-                    <span>{placementMode === 'wound' ? 'Cancel' : 'Add Wound'}</span>
+                    <span>{placementMode === 'wound' ? '✓ Wound Mode Active - Click to Cancel' : 'Add Wound'}</span>
                   </button>
                 </div>
               </div>
