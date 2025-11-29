@@ -68,6 +68,15 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Pending marker state (visible before form is saved)
+  const [pendingMarker, setPendingMarker] = useState<{ 
+    kind: 'device' | 'wound'; 
+    regionKey: RegionKey; 
+    x: number; 
+    y: number;
+    view: 'front' | 'back';
+  } | null>(null);
+  
   // Panel state
   const [panelMode, setPanelMode] = useState<PanelMode>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
@@ -122,31 +131,25 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
     }
   };
 
-  // Handle avatar click - create new location
+  // Handle avatar click - show pending marker and open form
   const handleCreateAt = async (regionKey: RegionKey, coords: Coordinates) => {
     if (!user?.id || !tenantId) {
       alert('Authentication error. Please log in again.');
       return;
     }
 
-    try {
-      const location = await createAvatarLocation({
-        tenant_id: tenantId,
-        patient_id: patientId,
-        region_key: regionKey,
-        x_percent: coords.x,
-        y_percent: coords.y,
-        body_view: coords.view, // Track which view marker was placed on
-        created_by: user.id
-      });
+    // Set pending marker (will be visible on canvas)
+    setPendingMarker({
+      kind: placementMode as 'device' | 'wound',
+      regionKey,
+      x: coords.x,
+      y: coords.y,
+      view: coords.view || 'front'
+    });
 
-      setSelectedLocationId(location.id);
-      setPanelMode(placementMode === 'device' ? 'create-device' : 'create-wound');
-      setPlacementMode(null); // Exit placement mode after creating
-    } catch (err) {
-      console.error('Error creating location:', err);
-      alert('Failed to create location. Please try again.');
-    }
+    // Open the form panel
+    setPanelMode(placementMode === 'device' ? 'create-device' : 'create-wound');
+    setPlacementMode(null); // Exit placement mode
   };
 
   // Handle marker click - edit existing
@@ -207,12 +210,32 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
 
     try {
       if (panelMode === 'create-device') {
+        // If there's a pending marker, create the location first
+        let locationId = selectedLocationId;
+        
+        if (pendingMarker) {
+          const location = await createAvatarLocation({
+            tenant_id: tenantId,
+            patient_id: patientId,
+            region_key: pendingMarker.regionKey,
+            x_percent: pendingMarker.x,
+            y_percent: pendingMarker.y,
+            body_view: pendingMarker.view,
+            created_by: user.id
+          });
+          locationId = location.id;
+        }
+        
         await createDevice({
           ...data as CreateDeviceInput,
+          location_id: locationId!,
           tenant_id: tenantId,
           patient_id: patientId,
           created_by: user.id
         });
+        
+        // Clear pending marker after successful save
+        setPendingMarker(null);
       } else if (selectedDevice) {
         await updateDevice(selectedDevice.id, data as UpdateDeviceInput);
       }
@@ -247,12 +270,32 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
 
     try {
       if (panelMode === 'create-wound') {
+        // If there's a pending marker, create the location first
+        let locationId = selectedLocationId;
+        
+        if (pendingMarker) {
+          const location = await createAvatarLocation({
+            tenant_id: tenantId,
+            patient_id: patientId,
+            region_key: pendingMarker.regionKey,
+            x_percent: pendingMarker.x,
+            y_percent: pendingMarker.y,
+            body_view: pendingMarker.view,
+            created_by: user.id
+          });
+          locationId = location.id;
+        }
+        
         await createWound({
           ...data as CreateWoundInput,
+          location_id: locationId!,
           tenant_id: tenantId,
           patient_id: patientId,
           created_by: user.id
         });
+        
+        // Clear pending marker after successful save
+        setPendingMarker(null);
       } else if (selectedWound) {
         await updateWound(selectedWound.id, data as UpdateWoundInput);
       }
@@ -287,6 +330,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
     setSelectedRecordType(null);
     setDeviceAssessments([]);
     setWoundAssessments([]);
+    setPendingMarker(null); // Clear pending marker on cancel
   };
 
   // Handle record selection for assessment
@@ -513,6 +557,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
             <AvatarCanvas
               mode={placementMode}
               markers={filteredMarkers}
+              pendingMarker={pendingMarker}
               onCreateAt={placementMode ? handleCreateAt : undefined}
               onMarkerClick={handleMarkerClick}
               onMarkerMove={handleMarkerMove}

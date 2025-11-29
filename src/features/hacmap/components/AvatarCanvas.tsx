@@ -9,6 +9,13 @@ import type { Marker, Coordinates, RegionKey } from '../../../types/hacmap';
 interface AvatarCanvasProps {
   mode: 'device' | 'wound' | null;
   markers: Marker[];
+  pendingMarker?: { 
+    kind: 'device' | 'wound'; 
+    regionKey: RegionKey; 
+    x: number; 
+    y: number;
+    view: 'front' | 'back';
+  } | null;
   onCreateAt?: (regionKey: RegionKey, coords: Coordinates) => void;
   onMarkerClick: (id: string, kind: 'device' | 'wound') => void;
   onMarkerMove?: (id: string, regionKey: RegionKey, coords: Coordinates) => void;
@@ -61,6 +68,7 @@ const REGIONS: Record<RegionKey, { x: [number, number]; y: [number, number]; vie
 export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
   mode,
   markers,
+  pendingMarker,
   onCreateAt,
   onMarkerClick,
   onMarkerMove,
@@ -391,8 +399,73 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
           </g>
         ))}
 
-        {/* Ghost marker preview when in placement mode */}
-        {mode && ghostMarker && (
+        {/* Pending marker - shown after click, before save */}
+        {pendingMarker && pendingMarker.view === view && (
+          <g
+            className="animate-pulse"
+            transform={`translate(${pendingMarker.x * 2}, ${pendingMarker.y * 4})`}
+            pointerEvents="none"
+          >
+            {/* Pulsing glow */}
+            <circle
+              cx="0"
+              cy="0"
+              r="24"
+              fill={pendingMarker.kind === 'device' ? '#10b981' : '#ec4899'}
+              opacity="0.3"
+              className="animate-ping"
+            />
+            
+            {/* Pin shadow/glow base */}
+            <circle
+              cx="0"
+              cy="0"
+              r="16"
+              fill={pendingMarker.kind === 'device' ? '#10b981' : '#ec4899'}
+              opacity="0.4"
+            />
+            
+            {/* Main pin button - dashed border to show it's pending */}
+            <circle
+              cx="0"
+              cy="0"
+              r="12"
+              fill={pendingMarker.kind === 'device' ? '#10b981' : '#ec4899'}
+              stroke="white"
+              strokeWidth="3"
+              strokeDasharray="4,2"
+            />
+            
+            {/* Icon */}
+            {pendingMarker.kind === 'device' ? (
+              <g fill="white" stroke="none">
+                <rect x="-1" y="-6" width="2" height="12" rx="1" />
+                <rect x="-6" y="-1" width="12" height="2" rx="1" />
+              </g>
+            ) : (
+              <g>
+                <circle cx="0" cy="0" r="3.5" fill="white" opacity="0.9" />
+                <circle cx="0" cy="0" r="2" fill="white" />
+              </g>
+            )}
+            
+            {/* Label below */}
+            <text
+              x="0"
+              y="32"
+              textAnchor="middle"
+              fill={pendingMarker.kind === 'device' ? '#10b981' : '#ec4899'}
+              fontSize="11"
+              fontWeight="bold"
+              className="select-none"
+            >
+              Fill form to save
+            </text>
+          </g>
+        )}
+
+        {/* Ghost marker preview when in placement mode (follows cursor) */}
+        {mode && ghostMarker && !pendingMarker && (
           <g
             className="animate-pulse opacity-60"
             transform={`translate(${ghostMarker.x * 2}, ${ghostMarker.y * 4})`}
