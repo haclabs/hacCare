@@ -74,19 +74,39 @@ const SimulationPortal: React.FC = () => {
       setError(null);
       console.log('📡 loadAssignments: Using RPC function to bypass RLS...');
       
-      // Use RPC function to bypass RLS for simulation_only users
-      const { data: rpcData, error: rpcError } = await supabase.rpc(
+      // Use RPC function with timeout to bypass RLS for simulation_only users
+      const rpcCall = supabase.rpc(
         'get_user_simulation_assignments',
         { p_user_id: user.id }
       );
       
+      const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
+        setTimeout(() => reject(new Error('RPC call timeout after 10 seconds')), 10000)
+      );
+      
+      const { data: rpcData, error: rpcError } = await Promise.race([
+        rpcCall,
+        timeoutPromise
+      ]).catch((error) => {
+        console.error('📡 RPC call failed or timed out:', error);
+        return { data: null, error };
+      });
+      
       if (rpcError) {
-        console.error('RPC error:', rpcError);
-        throw rpcError;
+        console.error('❌ RPC error details:', rpcError);
+        // If RPC function doesn't exist, show helpful message
+        if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
+          setError('Database function not deployed. Please run get_user_simulation_assignments.sql in Supabase SQL Editor.');
+        } else {
+          setError(`Error loading simulations: ${rpcError.message}`);
+        }
+        setAssignments([]);
+        setLoading(false);
+        return;
       }
       
       const data = rpcData || [];
-      console.log('✅ loadAssignments: Received', data.length, 'assignments');
+      console.log('✅ loadAssignments: Received', data.length, 'assignments', data);
       setAssignments(data);
 
       // Auto-routing logic - disabled for simulation_only users as instructors launch multiple sims
@@ -102,10 +122,9 @@ const SimulationPortal: React.FC = () => {
         // No assignments for non-instructor: Show message
         console.log('ℹ️ No simulation assignments found');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('❌ Error loading simulation assignments:', err);
-      // Don't show error for timeouts - just show empty state
-      // This is expected for simulation_only users not currently in a simulation
+      setError(err instanceof Error ? err.message : 'Failed to load simulations');
       setAssignments([]);
     } finally {
       console.log('🏁 loadAssignments: Complete, setting loading to false');
