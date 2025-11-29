@@ -14,14 +14,21 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
-  const { signIn, user } = useAuth();
+  const { signIn, user, profile } = useAuth();
 
-  // Redirect to app if already logged in
+  // Redirect based on user type after login
   useEffect(() => {
-    if (user) {
-      navigate('/app');
+    if (user && profile) {
+      // Check if user is simulation_only - redirect to simulation lobby
+      if (profile.simulation_only) {
+        console.log('🎯 Simulation-only user detected, redirecting to lobby...');
+        navigate('/app/simulation-portal');
+      } else {
+        // Regular user - go to main app
+        navigate('/app');
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +50,8 @@ export const LoginForm: React.FC = () => {
         setError(parseAuthError(error));
         setLoading(false); // Only set loading to false on error
       } else {
-        console.log('✅ Sign in successful, refreshing page for full state sync...');
-        // TEMPORARY FIX FOR DEMO: Refresh page after login to ensure all state is synced
-        // TODO: Fix the direct fetch state propagation issue
-        setTimeout(() => {
-          window.location.href = '/app';
-        }, 500);
+        console.log('✅ Sign in successful, useEffect will handle redirect based on user type...');
+        // Navigation handled by useEffect above based on simulation_only flag
       }
     } catch (error: unknown) {
       console.error('Login error:', error);
