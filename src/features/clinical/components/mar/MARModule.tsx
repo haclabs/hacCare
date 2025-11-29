@@ -15,7 +15,7 @@ import { schemaEngine } from '../../../../lib/infrastructure/schemaEngine';
 import { medicationAdministrationSchema } from '../../../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../../../types';
 import { ValidationResult } from '../../types/schema';
-import { createMedication, updateMedication, deleteMedication } from '../../../../services/clinical/medicationService';
+import { createMedication, updateMedication, deleteMedication, fetchPatientMedications } from '../../../../services/clinical/medicationService';
 import { formatLocalTime } from '../../../../utils/time';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/BarcodeGenerator';
@@ -104,14 +104,17 @@ export const MARModule: React.FC<MARModuleProps> = ({
       console.log('BCMA administration completed:', log);
       
       // Refresh medications to reflect changes
-      if (typeof onMedicationUpdate === 'function') {
-        console.log('Triggering medication refresh after BCMA completion');
-        try {
-          await onMedicationUpdate(medications);
+      console.log('Fetching fresh medication data after BCMA completion');
+      try {
+        const freshMedications = await fetchPatientMedications(patient.id);
+        console.log('Fresh medications fetched:', freshMedications.length, 'medications');
+        
+        if (typeof onMedicationUpdate === 'function') {
+          await onMedicationUpdate(freshMedications);
           console.log('Medication list refreshed successfully');
-        } catch (error) {
-          console.error('Error refreshing medications:', error);
         }
+      } catch (error) {
+        console.error('Error refreshing medications:', error);
       }
     }
     
@@ -840,7 +843,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
               {medication.last_administered && (
                 <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 bg-blue-100 text-blue-800">
                   <CheckCircle className="h-3 w-3" />
-                  <span>Last: {formatLocalTime(new Date(medication.last_administered), 'HH:mm')}</span>
+                  <span>Last Given: {formatLocalTime(new Date(medication.last_administered), 'HH:mm')}</span>
                 </span>
               )}
             </div>
