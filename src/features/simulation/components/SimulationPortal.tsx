@@ -125,13 +125,23 @@ const SimulationPortal: React.FC = () => {
   useEffect(() => {
     console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
     if (!authLoading && user) {
-      console.log('✅ Conditions met, loading assignments...');
-      loadAssignments();
+      console.log('✅ Conditions met, waiting for auth session to stabilize...');
+      // Small delay to ensure Supabase auth session is fully established
+      // This prevents race condition where user exists but session token isn't ready for RPC calls
+      const initialLoadTimer = setTimeout(() => {
+        console.log('✅ Auth session ready, loading assignments...');
+        loadAssignments();
+      }, 100);
+      
       // Auto-refresh every 15 seconds to show newly launched simulations
       const refreshInterval = setInterval(() => {
         loadAssignments();
       }, 15000);
-      return () => clearInterval(refreshInterval);
+      
+      return () => {
+        clearTimeout(initialLoadTimer);
+        clearInterval(refreshInterval);
+      };
     } else if (!authLoading && !user) {
       // Redirect to login if not authenticated
       console.log('🔒 No user, redirecting to login');
