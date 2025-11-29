@@ -90,21 +90,21 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // Skip tenant loading for simulation_only users (but not for super admins)
-    // They should only get tenant when entering a simulation
-    if (profile?.simulation_only && profile?.role !== 'super_admin') {
-      console.log('🎯 Simulation-only user detected, skipping automatic tenant load');
-      setCurrentTenant(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
       // Check if user was in a simulation (survives refresh)
       const simulationTenantId = localStorage.getItem('current_simulation_tenant');
+      
+      // Skip tenant loading for simulation_only users (but not for super admins)
+      // UNLESS they have an active simulation tenant
+      if (profile?.simulation_only && profile?.role !== 'super_admin' && !simulationTenantId) {
+        console.log('🎯 Simulation-only user detected with no active simulation, skipping automatic tenant load');
+        setCurrentTenant(null);
+        setLoading(false);
+        return;
+      }
       if (simulationTenantId) {
         console.log('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
         const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
