@@ -92,3 +92,37 @@ GRANT DELETE ON system_logs TO authenticated;
 
 -- Comment
 COMMENT ON TABLE system_logs IS 'Comprehensive system logging for super admin monitoring and troubleshooting. Tracks errors, user actions, and system events with full context.';
+
+-- ============================================================================
+-- AUTO-PRUNING: Delete logs older than 24 hours
+-- ============================================================================
+-- This function runs daily to keep the database clean and performant
+
+CREATE OR REPLACE FUNCTION prune_system_logs()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM system_logs
+  WHERE timestamp < NOW() - INTERVAL '24 hours';
+  
+  RAISE NOTICE 'System logs older than 24 hours have been pruned';
+END;
+$$;
+
+-- Create a cron job to run the pruning function daily
+-- Note: Requires pg_cron extension (available in Supabase)
+-- Run this after enabling pg_cron in your database
+
+-- Enable pg_cron extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Schedule the pruning job to run daily at 2 AM UTC
+SELECT cron.schedule(
+  'prune-system-logs-daily',
+  '0 2 * * *', -- Every day at 2 AM UTC
+  'SELECT prune_system_logs();'
+);
+
+COMMENT ON FUNCTION prune_system_logs IS 'Automatically deletes system logs older than 24 hours to prevent database bloat. Runs daily at 2 AM UTC.';

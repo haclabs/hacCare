@@ -94,7 +94,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const userDropdownItems = [
     { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
     ...(hasRole('super_admin') ? [
-      { id: 'admin', label: 'Admin', icon: Shield, color: 'text-amber-600' }
+      { id: 'admin', label: 'Admin', icon: Shield, color: 'text-amber-600' },
+      { id: 'syslogs', label: 'SysLogs', icon: FileText, color: 'text-red-600' }
     ] : []),
   ];
   return (
