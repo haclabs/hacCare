@@ -25,7 +25,10 @@ export const LoginForm: React.FC = () => {
         // Clear any old simulation tenant from localStorage
         localStorage.removeItem('currentSimulationTenant');
         localStorage.removeItem('simulationTenantName');
-        navigate('/app/simulation-portal');
+        // Use setTimeout to ensure cleanup completes before navigation
+        setTimeout(() => {
+          navigate('/app/simulation-portal');
+        }, 100);
       } else {
         // Regular user - go to main app
         navigate('/app');
