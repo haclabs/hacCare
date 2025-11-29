@@ -43,18 +43,18 @@ const SimulationPortal: React.FC = () => {
   const [enteringSimulation, setEnteringSimulation] = useState(false);
   const [showQuickIntro, setShowQuickIntro] = useState(false);
 
-  const loadAssignments = React.useCallback(async () => {
+  const loadAssignments = React.useCallback(async (retryCount = 0) => {
     if (!user) {
       console.log('⚠️ loadAssignments: No user, skipping');
       return;
     }
 
-    console.log('📡 loadAssignments: Starting fetch for user:', user.id);
+    console.log(`📡 loadAssignments: Starting fetch for user: ${user.id} (attempt ${retryCount + 1}/3)`);
     try {
       setLoading(true);
       setError(null);
       
-      // Use RPC function with 3-second timeout (fast fail for better UX)
+      // Use RPC function with 5-second timeout per attempt
       console.log('📡 loadAssignments: Calling RPC function...');
       const rpcCall = supabase.rpc(
         'get_user_simulation_assignments',
@@ -62,7 +62,7 @@ const SimulationPortal: React.FC = () => {
       );
       
       const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout - database function may not be deployed')), 3000)
+        setTimeout(() => reject(new Error('timeout')), 5000)
       );
       
       const { data: rpcData, error: rpcError } = await Promise.race([
@@ -74,14 +74,23 @@ const SimulationPortal: React.FC = () => {
       });
       
       if (rpcError) {
-        console.error('❌ RPC error details:', rpcError);
-        // Show helpful error message with refresh suggestion
+        console.error(`❌ RPC error details (attempt ${retryCount + 1}):`, rpcError);
+        
+        // Retry on timeout (cold start issue), max 2 retries
+        if (rpcError.message?.includes('timeout') && retryCount < 2) {
+          console.log(`🔄 Retrying... (${retryCount + 1}/2)`);
+          // Wait a bit before retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return loadAssignments(retryCount + 1);
+        }
+        
+        // Show error only after all retries exhausted
         if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
-          setError('Database function missing. Please deploy get_user_simulation_assignments.sql in Supabase. Try refreshing the page.');
+          setError('Unable to load simulations. Please contact your administrator.');
         } else if (rpcError.message?.includes('timeout')) {
-          setError('Connection timeout. The database may be slow. Try refreshing the page (F5).');
+          setError('Connection is slow. Please refresh the page or try again later.');
         } else {
-          setError(`Error: ${rpcError.message}. Try refreshing the page.`);
+          setError('Unable to load simulations. Please try again.');
         }
         setAssignments([]);
         setLoading(false);
