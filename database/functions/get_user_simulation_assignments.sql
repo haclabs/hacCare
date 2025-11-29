@@ -13,13 +13,15 @@ DECLARE
   v_result json;
 BEGIN
   -- Get simulation assignments for the user
-  SELECT json_agg(
-    json_build_object(
-      'id', sp.id,
-      'simulation_id', sp.simulation_id,
-      'role', sp.role,
-      'granted_at', sp.granted_at,
-      'simulation', json_build_object(
+  SELECT COALESCE(json_agg(row_to_json(t)), '[]'::json)
+  INTO v_result
+  FROM (
+    SELECT 
+      sp.id,
+      sp.simulation_id,
+      sp.role,
+      sp.granted_at,
+      json_build_object(
         'id', sa.id,
         'name', sa.name,
         'status', sa.status,
@@ -30,17 +32,15 @@ BEGIN
           FROM simulation_templates st
           WHERE st.id = sa.template_id
         )
-      )
-    )
-  )
-  INTO v_result
-  FROM simulation_participants sp
-  JOIN simulation_active sa ON sa.id = sp.simulation_id
-  WHERE sp.user_id = p_user_id
-    AND sa.status = 'running'
-  ORDER BY sp.granted_at DESC;
+      ) as simulation
+    FROM simulation_participants sp
+    JOIN simulation_active sa ON sa.id = sp.simulation_id
+    WHERE sp.user_id = p_user_id
+      AND sa.status = 'running'
+    ORDER BY sp.granted_at DESC
+  ) t;
 
-  RETURN COALESCE(v_result, '[]'::json);
+  RETURN v_result;
 END;
 $$;
 
