@@ -14,6 +14,13 @@ DECLARE
 BEGIN
   -- Security check: Users can only query their own assignments
   -- (auth.uid() returns the currently authenticated user's ID)
+  -- Temporarily log for debugging
+  RAISE NOTICE 'RPC called with p_user_id=%, auth.uid()=%', p_user_id, auth.uid();
+  
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required: auth.uid() is NULL';
+  END IF;
+  
   IF p_user_id != auth.uid() THEN
     RAISE EXCEPTION 'Access denied: You can only query your own simulation assignments';
   END IF;
