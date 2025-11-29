@@ -19,22 +19,26 @@ export const LoginForm: React.FC = () => {
   // Redirect based on user type after login
   useEffect(() => {
     if (user && profile) {
-      // Check if user is simulation_only - redirect to simulation lobby
+      // Use full page reload for ALL users to ensure Supabase session is properly established
+      // This prevents auth race conditions where session token isn't ready for API calls
+      // Without this, tenant switching and logout don't work until manual refresh
+      
       if (profile.simulation_only) {
         console.log('🎯 Simulation-only user detected, redirecting to lobby...');
-        // Clear any old simulation tenant from localStorage (use correct key)
+        // Clear any old simulation tenant from localStorage
         localStorage.removeItem('current_simulation_tenant');
-        // Use full page reload to ensure Supabase session is properly established
-        // This prevents auth race conditions where session token isn't ready for RPC calls
         setTimeout(() => {
           window.location.href = '/app/simulation-portal';
         }, 100);
       } else {
-        // Regular user - go to main app
-        navigate('/app');
+        // Regular user - go to main app with full page reload
+        console.log('🎯 Regular user detected, redirecting to app...');
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 100);
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
