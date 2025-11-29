@@ -26,6 +26,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     license_number: user?.license_number || '',
     phone: user?.phone || '',
     is_active: user?.is_active ?? true,
+    simulation_only: user?.simulation_only ?? false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,6 +44,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         license_number: user.license_number || '',
         phone: user.phone || '',
         is_active: user.is_active ?? true,
+        simulation_only: user.simulation_only ?? false,
       });
     }
   }, [user]);
@@ -110,6 +112,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             license_number: formData.license_number,
             phone: formData.phone,
             is_active: formData.is_active,
+            simulation_only: formData.simulation_only,
           })
           .eq('id', user.id);
 
@@ -211,7 +214,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               p_department: formData.department || null,
               p_license_number: formData.license_number || null,
               p_phone: formData.phone || null,
-              p_is_active: formData.is_active
+              p_is_active: formData.is_active,
+              p_simulation_only: formData.simulation_only
             });
 
           console.log('RPC update result:', { data: rpcResult, error: rpcError });
@@ -445,6 +449,20 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
                 placeholder="(555) 123-4567"
               />
             </div>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="simulation_only"
+              checked={formData.simulation_only}
+              onChange={(e) => setFormData({ ...formData, simulation_only: e.target.checked })}
+              className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+            />
+            <label htmlFor="simulation_only" className="ml-2 block text-sm text-gray-900">
+              Simulation-Only User
+              <span className="ml-1 text-xs text-gray-500">(Auto-routes to simulation lobby on login)</span>
+            </label>
           </div>
 
           <div className="flex items-center">
