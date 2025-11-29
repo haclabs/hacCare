@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
-import { getUserSimulationAssignments } from '../../../services/simulation/simulationService';
+import { supabase } from '../../../lib/api/supabase';
 
 interface SimulationAssignment {
   id: string;
@@ -70,24 +70,27 @@ const SimulationPortal: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('📡 loadAssignments: Calling getUserSimulationAssignments...');
+      console.log('📡 loadAssignments: Using RPC function to bypass RLS...');
       
-      // Add timeout to prevent infinite hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      // Use RPC function to bypass RLS for simulation_only users
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'get_user_simulation_assignments',
+        { p_user_id: user.id }
       );
       
-      const data = await Promise.race([
-        getUserSimulationAssignments(user.id),
-        timeoutPromise
-      ]) as any[];
+      if (rpcError) {
+        console.error('RPC error:', rpcError);
+        throw rpcError;
+      }
       
+      const data = rpcData || [];
       console.log('✅ loadAssignments: Received', data.length, 'assignments');
       setAssignments(data);
 
-      // Auto-routing logic
-      if (data.length === 1) {
-        // Single simulation: Auto-redirect
+      // Auto-routing logic - disabled for simulation_only users as instructors launch multiple sims
+      // and we want students to manually select which one to join
+      if (data.length === 1 && !profile?.simulation_only) {
+        // Single simulation: Auto-redirect (only for non-simulation_only users)
         const assignment = data[0];
         console.log('🎯 Auto-routing to single simulation:', assignment.simulation.name);
         setTimeout(async () => {
