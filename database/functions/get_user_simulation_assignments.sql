@@ -12,6 +12,12 @@ AS $$
 DECLARE
   v_result json;
 BEGIN
+  -- Security check: Users can only query their own assignments
+  -- (auth.uid() returns the currently authenticated user's ID)
+  IF p_user_id != auth.uid() THEN
+    RAISE EXCEPTION 'Access denied: You can only query your own simulation assignments';
+  END IF;
+
   -- Get simulation assignments for the user
   SELECT COALESCE(json_agg(row_to_json(t)), '[]'::json)
   INTO v_result
