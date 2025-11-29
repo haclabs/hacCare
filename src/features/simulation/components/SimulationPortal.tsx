@@ -150,8 +150,8 @@ const SimulationPortal: React.FC = () => {
     );
   }
 
-  // Auto-routing to single simulation
-  if (assignments.length === 1) {
+  // Auto-routing to single simulation (only for non-simulation_only users)
+  if (assignments.length === 1 && !profile?.simulation_only) {
     const assignment = assignments[0];
     return (
       <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full flex items-center justify-center py-12">
