@@ -42,7 +42,9 @@ const SimulationPortal: React.FC = () => {
   const [enteringSimulation, setEnteringSimulation] = useState(false);
 
   useEffect(() => {
+    console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
     if (!authLoading && user) {
+      console.log('✅ Conditions met, loading assignments...');
       loadAssignments();
       // Auto-refresh every 15 seconds to show newly launched simulations
       const refreshInterval = setInterval(() => {
@@ -51,17 +53,26 @@ const SimulationPortal: React.FC = () => {
       return () => clearInterval(refreshInterval);
     } else if (!authLoading && !user) {
       // Redirect to login if not authenticated
+      console.log('🔒 No user, redirecting to login');
       navigate('/login?redirect=/simulation-portal');
+    } else {
+      console.log('⏳ Still loading auth...');
     }
   }, [user, authLoading, navigate]);
 
   const loadAssignments = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('⚠️ loadAssignments: No user, skipping');
+      return;
+    }
 
+    console.log('📡 loadAssignments: Starting fetch for user:', user.id);
     try {
       setLoading(true);
       setError(null);
+      console.log('📡 loadAssignments: Calling getUserSimulationAssignments...');
       const data = await getUserSimulationAssignments(user.id);
+      console.log('✅ loadAssignments: Received', data.length, 'assignments');
       setAssignments(data);
 
       // Auto-routing logic
@@ -77,9 +88,10 @@ const SimulationPortal: React.FC = () => {
         console.log('ℹ️ No simulation assignments found');
       }
     } catch (err: any) {
-      console.error('Error loading simulation assignments:', err);
+      console.error('❌ Error loading simulation assignments:', err);
       setError(err.message || 'Failed to load simulation assignments');
     } finally {
+      console.log('🏁 loadAssignments: Complete, setting loading to false');
       setLoading(false);
     }
   };
