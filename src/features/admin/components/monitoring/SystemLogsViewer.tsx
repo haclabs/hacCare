@@ -7,8 +7,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Download, Trash2, AlertCircle, Activity, Navigation, Lock, X, RefreshCw } from 'lucide-react';
-import { supabase } from '../../../lib/api/supabase';
-import { formatLocalTime } from '../../../utils/time';
+import { supabase } from '../../../../lib/api/supabase';
+import { formatLocalTime } from '../../../../utils/time';
 
 interface SystemLog {
   id: string;
