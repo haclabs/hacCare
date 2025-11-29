@@ -696,20 +696,20 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4">
-                {(panelMode === 'create-device' || panelMode === 'edit-device') && selectedLocationId && (
+                {(panelMode === 'create-device' || panelMode === 'edit-device') && (panelMode === 'create-device' ? pendingMarker : selectedLocationId) && (
                   <DeviceForm
                     device={selectedDevice || undefined}
-                    locationId={selectedLocationId}
+                    locationId={selectedLocationId || 'pending'}
                     onSave={handleSaveDevice}
                     onDelete={panelMode === 'edit-device' ? handleDeleteDevice : undefined}
                     onCancel={handleClosePanel}
                   />
                 )}
                 
-                {(panelMode === 'create-wound' || panelMode === 'edit-wound') && selectedLocationId && (
+                {(panelMode === 'create-wound' || panelMode === 'edit-wound') && (panelMode === 'create-wound' ? pendingMarker : selectedLocationId) && (
                   <WoundForm
                     wound={selectedWound || undefined}
-                    locationId={selectedLocationId}
+                    locationId={selectedLocationId || 'pending'}
                     onSave={handleSaveWound}
                     onDelete={panelMode === 'edit-wound' ? handleDeleteWound : undefined}
                     onCancel={handleClosePanel}
