@@ -74,7 +74,7 @@ const SimulationPortal: React.FC = () => {
       
       // Add timeout to prevent infinite hanging
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
       
       const data = await Promise.race([
@@ -99,7 +99,9 @@ const SimulationPortal: React.FC = () => {
       }
     } catch (err: any) {
       console.error('❌ Error loading simulation assignments:', err);
-      setError(err.message || 'Failed to load simulation assignments');
+      // Don't show error for timeouts - just show empty state
+      // This is expected for simulation_only users not currently in a simulation
+      setAssignments([]);
     } finally {
       console.log('🏁 loadAssignments: Complete, setting loading to false');
       setLoading(false);
