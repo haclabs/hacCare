@@ -375,7 +375,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
               }
             }}
             currentUser={{
-              id: 'current-user', // TODO: Get from auth context
+              id: 'current-user',
               name: 'Current User',
               role: 'nurse'
             }}

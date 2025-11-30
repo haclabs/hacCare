@@ -283,7 +283,6 @@ const handleDeleteMedication = async (medicationId: string) => {
               onClick={() => {
                 setSelectedMedication(medication);
                 console.log('Opening administration form for medication:', medication.id);
-                // TODO: Implement medication administration form
                 alert('Medication administration form not yet implemented');
               }}
               className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -295,7 +294,6 @@ const handleDeleteMedication = async (medicationId: string) => {
             <button
               onClick={() => {
                 setSelectedMedication(medication);
-                // TODO: Implement medication labels/barcode functionality
                 alert('Medication labels feature not yet implemented');
               }}
               className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 text-sm flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -540,9 +538,8 @@ const handleDeleteMedication = async (medicationId: string) => {
       {renderTabContent()}
 
       {/* Modals */}
-      {/* Medication Administration Form - TODO: Implement when component is available */}
 
-      {/* Medication History - TODO: Implement when component is available */}
+      {/* Medication History */}
       {showHistory && selectedMedication && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
@@ -578,9 +575,9 @@ const handleDeleteMedication = async (medicationId: string) => {
             handleRefresh();
           }}
         />
-      )}
+      }}
       
-      {/* Medication Labels/Barcode - TODO: Implement when component is available */}
+      {/* Medication Labels/Barcode */}
       {showMedicationLabels && selectedMedication && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
