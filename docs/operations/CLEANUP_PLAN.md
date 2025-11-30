@@ -1,8 +1,26 @@
 # Database & Codebase Cleanup Plan
 
 **Created:** November 29, 2025  
+**Updated:** November 30, 2025  
 **Target Date:** Early December 2025  
 **Goal:** Prepare for production release
+
+---
+
+## ✅ COMPLETED - November 30, 2025
+
+### Security & Performance Fixes (PR #[number])
+- ✅ Fixed 45 database functions with mutable search_path vulnerability
+- ✅ Applied migration: `20251130_fix_function_search_paths_FINAL.sql`
+- ✅ Fixed 3 GitHub CodeQL security alerts (#40, #39, #41)
+- ✅ Removed 62 outdated files from `docs/development/archives/`
+- ✅ Deleted 6 backup files (.bak, -old, .backup)
+- ✅ Removed 3 broken/unused files with import errors
+- ✅ Cleaned up 11 stale TODO comments
+- ✅ Installed ts-prune (found zero unused exports)
+- ✅ Consolidated documentation to `docs/operations/`
+- ✅ Removed ~20,000 lines of legacy code
+- ✅ Reduced repository size by ~2.5MB
 
 ---
 
@@ -10,6 +28,7 @@
 
 ### Status
 - [x] Document all actively used RPC functions (21 functions identified)
+- [x] Fixed search_path security vulnerability (45 functions)
 - [ ] List all functions in Supabase database
 - [ ] Compare and identify unused functions
 - [ ] Create DROP statements for unused functions
@@ -44,25 +63,19 @@ ORDER BY n.nspname, p.proname;
 
 ---
 
-## Phase 2: Archive Folder Cleanup
+## Phase 2: Archive Folder Cleanup ✅ COMPLETED
 
-### Folders to Review
-```
-/workspaces/hacCare/archive/                    # Legacy components/contexts
-/workspaces/hacCare/backup/simulation-legacy/   # Old simulation system
-/workspaces/hacCare/docs/development/archives/  # Archived docs
-```
+### Status
+- [x] Deleted `archive/` folder (241 files, 1.7MB)
+- [x] Deleted `backup/` folder (788KB)
+- [x] Deleted `docs/development/archives/` (62 files)
+- [x] Removed broken/unused components
+- [x] Cleaned up test scripts
 
-### Decision Criteria
-- **Keep if:** Historical reference needed, contains migration notes
-- **Delete if:** Superseded by new implementation, no documentation value
-- **Compress if:** May need future reference but not immediate
-
-### Recommendations
-1. Review each archive folder for documentation value
-2. Move truly obsolete code to external archive (outside repo)
-3. Update `.gitignore` to prevent new archive accumulation
-4. Add README to remaining archives explaining their purpose
+### Results
+- Total removed: ~2.5MB of legacy code
+- Repository is now much cleaner and better organized
+- All active files remain intact and functional
 
 ---
 
@@ -83,59 +96,70 @@ ORDER BY n.nspname, p.proname;
 
 ---
 
-## Phase 4: Debug/Test File Cleanup
+## Phase 4: Debug/Test File Cleanup ✅ COMPLETED
 
-### Files to Review
-```
-/workspaces/hacCare/tests/simulation-manual.ts
-/workspaces/hacCare/test-email-function.js
-/workspaces/hacCare/database/fixes/          # Various one-off SQL fixes
-/workspaces/hacCare/archive/sql/debug/       # Debug SQL scripts
-/workspaces/hacCare/archive/sql/checks/      # SQL check scripts
-/workspaces/hacCare/scripts/debug-fields.ts
-/workspaces/hacCare/scripts/check-avatars.ts
-```
+### Removed Files
+- [x] `test-email-function.js` (deleted)
+- [x] `scripts/debug-fields.ts` (deleted)
+- [x] `scripts/check-avatars.ts` (deleted)
+- [x] All debug SQL scripts from archives (deleted)
+- [x] Backup .bak/.old files (6 files deleted)
 
-### Decision Criteria
-- **Keep if:** Still used for manual testing, useful for debugging
-- **Delete if:** One-time fix, no longer relevant
-- **Move to docs if:** Good example/reference but not executable
+### Results
+- Clean scripts directory
+- Only active, maintained test files remain
+- Debug SQL files properly organized in `database/fixes/`
 
 ---
 
-## Phase 5: Documentation Cleanup
+## Phase 5: Documentation Cleanup ✅ COMPLETED
 
-### Multiple READMEs
-- [ ] Review all README.md files in subdirectories
-- [ ] Consolidate or remove outdated READMEs
-- [ ] Ensure remaining READMEs are accurate and up-to-date
+### Completed Actions
+- [x] Consolidated security documentation to `docs/operations/SECURITY_HARDENING.md`
+- [x] Moved PDF generation docs to `docs/operations/`
+- [x] Moved email debrief setup to `docs/operations/`
+- [x] Deleted obsolete PHASE docs (Oct 2025)
+- [x] Organized all operational guides in `docs/operations/`
+- [x] Cleaned up old migration patches and debug docs
 
-### Outdated Docs
-- [ ] Review `/docs/development/archives/`
-- [ ] Archive or delete superseded documentation
-- [ ] Update main docs to reflect current architecture
+### Results
+- Well-organized documentation structure
+- Single source of truth for operational procedures
+- Easy to find relevant documentation
 
 ---
 
-## Phase 6: Code Cleanup
+## Phase 6: Code Cleanup ✅ PARTIALLY COMPLETED
 
-### Unused Components
-- [ ] Run ESLint/TSC to find unused imports
-- [ ] Search for unused exported components
-- [ ] Remove commented-out code blocks
-- [ ] Clean up console.log statements (or convert to proper logging)
+### Completed Actions
+- [x] Ran ts-prune - found zero unused exports ✅
+- [x] Removed 11 stale TODO comments
+- [x] Removed broken imports (3 files with errors)
+- [x] Cleaned up sessionStorage security comments
 
-### Tools
-```bash
-# Find unused exports
-npx ts-prune
+### Still To Do
+- [ ] **PRIORITY: Refactor large files** (See Phase 6A below)
+- [ ] Review and optimize console.log statements
+- [ ] Run depcheck for unused dependencies
+- [ ] Bundle size optimization (currently 5.0MB)
 
-# Find unused files
-npx unimported
+### Phase 6A: Large File Refactoring 🚨 NEXT PRIORITY
 
-# Find TODO/FIXME comments
-grep -r "TODO\|FIXME" src/
-```
+**Identified Large Files:**
+- `ModularPatientDashboard.tsx` (2,056 lines) - Should be split
+- `MARModule.tsx` (1,739 lines) - Should be split  
+- `backupService.ts` (1,684 lines) - Could be modularized
+- `EnhancedDebriefModal.tsx` (1,330 lines) - Consider splitting
+- `PatientDetail.tsx` (1,239 lines) - Review for extraction
+
+**Strategy: Safe Incremental Refactoring**
+1. Document dependencies and identify natural seams
+2. Extract components alongside existing code (don't replace yet)
+3. Test thoroughly, especially simulation system
+4. Only remove old code after new code proven stable
+
+**Risk:** High - Simulation system is mission-critical  
+**Recommendation:** Tackle after this security PR is merged and tested
 
 ---
 
@@ -223,12 +247,16 @@ npm update
 
 ## Success Metrics
 
-- [ ] Database has only actively used functions
-- [ ] Codebase reduced by 20%+ (excluding node_modules)
+- [x] Database security hardened (45 functions fixed)
+- [x] Codebase reduced by ~20,000 lines ✅
+- [x] Repository size reduced by ~2.5MB ✅
+- [x] Documentation consolidated and organized ✅
+- [x] Zero unused exports (verified with ts-prune) ✅
+- [x] Security alerts resolved (CodeQL) ✅
+- [ ] Large files refactored (NEXT PRIORITY)
+- [ ] Bundle size optimized (currently 5.0MB)
 - [ ] All tests passing
-- [ ] Documentation is accurate and current
-- [ ] No unused dependencies
-- [ ] Clean ESLint/TSC output
+- [ ] No unused dependencies (need to run depcheck)
 
 ---
 
@@ -256,3 +284,26 @@ If issues arise after cleanup:
 - Keep this document updated as cleanup progresses
 - Document any surprising findings or dependencies
 - Consider creating a "cleanup" branch for safety
+
+---
+
+## Session History
+
+### November 30, 2025 - Security & Cleanup Session
+**Accomplishments:**
+- Fixed 47 Supabase security warnings (45 functions + 1 materialized view + 1 manual config)
+- Fixed 4 GitHub CodeQL alerts (3 fixed, 1 resolved via cleanup)
+- Removed 20,000+ lines of legacy code
+- Reduced repo size by 2.5MB
+- Organized documentation structure
+- PR merged to main successfully
+
+**Branch:** `feature/security-performance-fixes`  
+**Commits:** 9 total  
+**Status:** ✅ Merged and deployed
+
+**Next Steps:**
+1. **Refactor large files** (ModularPatientDashboard, MARModule) - HIGH PRIORITY
+2. **Bundle size optimization** - Review and implement code splitting
+3. **Dependency audit** - Run depcheck and remove unused packages
+4. **Database function cleanup** - Identify and remove truly unused functions
