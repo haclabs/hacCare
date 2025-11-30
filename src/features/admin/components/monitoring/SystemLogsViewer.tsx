@@ -81,7 +81,19 @@ export const SystemLogsViewer: React.FC = () => {
 
       let query = supabase
         .from('system_logs')
-        .select('*')
+        .select(`
+          *,
+          user_profile:user_id (
+            first_name,
+            last_name,
+            email,
+            role
+          ),
+          tenant:tenant_id (
+            name,
+            subdomain
+          )
+        `)
         .gte('timestamp', threshold)
         .order('timestamp', { ascending: false })
         .limit(500);
