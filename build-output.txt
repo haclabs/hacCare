@@ -1,0 +1,38 @@
+
+> haccare@5.2.0-rc4 build
+> ./node_modules/.bin/vite build
+
+vite v7.2.4 building client environment for production...
+transforming...
+✓ 2914 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /workspaces/hacCare/src/lib/api/supabase.ts is dynamically imported by /workspaces/hacCare/src/contexts/auth/SimulationAwareAuthProvider.tsx but also statically imported by /workspaces/hacCare/src/api/advancedDirectives.ts, /workspaces/hacCare/src/components/Auth/AuthCallback.tsx, /workspaces/hacCare/src/components/Auth/LoginForm.tsx, /workspaces/hacCare/src/components/Auth/ProtectedRoute.tsx, /workspaces/hacCare/src/components/ModularPatientDashboard.tsx, /workspaces/hacCare/src/contexts/AlertContext.tsx, /workspaces/hacCare/src/contexts/PatientContext.tsx, /workspaces/hacCare/src/contexts/auth/AuthContext.tsx, /workspaces/hacCare/src/contexts/auth/SimulationAwareAuthProvider.tsx, /workspaces/hacCare/src/features/admin/components/management/ManagementDashboard.tsx, /workspaces/hacCare/src/features/admin/components/monitoring/SystemLogsViewer.tsx, /workspaces/hacCare/src/features/admin/components/users/UserForm.tsx, /workspaces/hacCare/src/features/admin/components/users/UserManagement.tsx, /workspaces/hacCare/src/features/admin/hooks/useTenantNurses.ts, /workspaces/hacCare/src/features/clinical/components/intake-output/AddIntakeOutputModal.tsx, /workspaces/hacCare/src/features/hacmap/api.ts, /workspaces/hacCare/src/features/settings/components/NetlifySecurityDiagnostics.tsx, /workspaces/hacCare/src/features/settings/components/SecuritySettings.tsx, /workspaces/hacCare/src/features/settings/components/Settings.tsx, /workspaces/hacCare/src/features/simulation/components/ActiveSimulations.tsx, /workspaces/hacCare/src/features/simulation/components/LaunchSimulationModal.tsx, /workspaces/hacCare/src/features/simulation/components/SimulationIndicator.tsx, /workspaces/hacCare/src/features/simulation/components/SimulationPortal.tsx, /workspaces/hacCare/src/features/simulation/services/templateExportService.ts, /workspaces/hacCare/src/features/simulation/services/templateImportService.ts, /workspaces/hacCare/src/lib/infrastructure/connectionTest.ts, /workspaces/hacCare/src/main.tsx, /workspaces/hacCare/src/services/admin/adminService.ts, /workspaces/hacCare/src/services/admin/superAdminTenantService.ts, /workspaces/hacCare/src/services/admin/tenantService.ts, /workspaces/hacCare/src/services/auth/authPersistence.ts, /workspaces/hacCare/src/services/clinical/bowelRecordService.ts, /workspaces/hacCare/src/services/clinical/diabeticRecordService.ts, /workspaces/hacCare/src/services/clinical/doctorsOrdersService.ts, /workspaces/hacCare/src/services/clinical/intakeOutputService.ts, /workspaces/hacCare/src/services/clinical/labOrderService.ts, /workspaces/hacCare/src/services/clinical/labService.ts, /workspaces/hacCare/src/services/clinical/medicationService.ts, /workspaces/hacCare/src/services/contact/contactService.ts, /workspaces/hacCare/src/services/hacmap/assessmentService.ts, /workspaces/hacCare/src/services/hacmap/deviceAssessmentService.ts, /workspaces/hacCare/src/services/monitoring/systemLogger.ts, /workspaces/hacCare/src/services/operations/alertService.ts, /workspaces/hacCare/src/services/operations/auditService.ts, /workspaces/hacCare/src/services/operations/backupService.ts, /workspaces/hacCare/src/services/operations/bulkLabelService.ts, /workspaces/hacCare/src/services/operations/fileUploadService.ts, /workspaces/hacCare/src/services/patient/admissionService.ts, /workspaces/hacCare/src/services/patient/assessmentService.ts, /workspaces/hacCare/src/services/patient/handoverService.ts, /workspaces/hacCare/src/services/patient/multiTenantPatientService.ts, /workspaces/hacCare/src/services/patient/patientService.ts, /workspaces/hacCare/src/services/patient/patientTransferService.ts, /workspaces/hacCare/src/services/simulation/debriefEmailService.ts, /workspaces/hacCare/src/services/simulation/simulationService.ts, /workspaces/hacCare/src/services/simulation/studentActivityService.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) /workspaces/hacCare/src/services/simulation/studentActivityService.ts is dynamically imported by /workspaces/hacCare/src/features/simulation/components/ActiveSimulations.tsx but also statically imported by /workspaces/hacCare/src/features/simulation/components/EnhancedDebriefModal.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/index.html                                    3.82 kB │ gzip:   1.02 kB
+dist/assets/logo-cj4wE8KE.png                     14.84 kB
+dist/assets/main-cnR4rpUM.css                    127.43 kB │ gzip:  17.57 kB
+dist/assets/batchOperations-BASGOLtS.js            0.77 kB │ gzip:   0.42 kB
+dist/assets/vendor-query-DJ3yT-G-.js              36.28 kB │ gzip:  10.33 kB
+dist/assets/vendor-ui-m5l_Xk0i.js                 46.50 kB │ gzip:  15.51 kB
+dist/assets/feature-settings-docs-DYldRyrv.js     78.48 kB │ gzip:  18.23 kB
+dist/assets/feature-hacmap-CMrmu4_B.js           118.75 kB │ gzip:  20.68 kB
+dist/assets/vendor-supabase-DrMSwVeH.js          162.51 kB │ gzip:  39.53 kB
+dist/assets/feature-clinical-Cn2C1Ar7.js         163.76 kB │ gzip:  34.73 kB
+dist/assets/feature-admin-CJ8JY7eL.js            197.42 kB │ gzip:  40.77 kB
+dist/assets/feature-patients-B6Ck1cxj.js         198.28 kB │ gzip:  38.49 kB
+dist/assets/main-CWK5ReoD.js                     208.47 kB │ gzip:  43.74 kB
+dist/assets/feature-simulation-Ki3_qBwi.js       284.71 kB │ gzip:  68.91 kB
+dist/assets/vendor-pdf-B4JbD3Hv.js               534.81 kB │ gzip: 153.32 kB
+dist/assets/vendor-react-BCwUe8CF.js             991.26 kB │ gzip: 277.28 kB
+dist/assets/vendor-misc-CGuRiXXr.js            1,059.28 kB │ gzip: 381.16 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 42.26s
