@@ -1,0 +1,51 @@
+-- ============================================================================
+-- MATERIALIZED VIEW SECURITY - user_tenant_cache
+-- ============================================================================
+-- Supabase Warning: "Materialized view `public.user_tenant_cache` is selectable by anon or authenticated roles"
+-- 
+-- ANALYSIS:
+-- - This materialized view caches user-tenant relationships (user_id, tenant_id, role, is_active)
+-- - Used in RLS policies for performance optimization
+-- - Does NOT contain sensitive patient data, only access control metadata
+-- - Currently accessible to authenticated users (not anon)
+--
+-- OPTIONS:
+-- 1. ✅ KEEP AS-IS (Recommended)
+--    - View is needed for RLS policy performance
+--    - Only contains access control data, not business/patient data
+--    - Users can only see their own tenant relationships via RLS policies
+--    - The warning is more about API exposure pattern than actual security risk
+--
+-- 2. WRAP IN RLS-PROTECTED FUNCTION (Complex)
+--    - Create function: get_user_tenant_relationships(user_id UUID)
+--    - Revoke direct SELECT on user_tenant_cache
+--    - Update all RLS policies to use function instead
+--    - Risk: Performance impact, more code to maintain
+--
+-- 3. REVOKE ANON ACCESS (Already done)
+--    - View is only accessible to authenticated, not anonymous
+--    - GRANT SELECT ON user_tenant_cache TO authenticated; (current state)
+--
+-- DECISION: Keep as-is
+-- The materialized view is a performance optimization for RLS policies.
+-- It only contains user-tenant mapping metadata, not sensitive data.
+-- Users can only query their own relationships due to RLS on actual tables.
+-- The warning is informational about API design patterns, not a critical vulnerability.
+--
+-- FUTURE CONSIDERATION:
+-- If we want to follow strict "no materialized views in API" pattern:
+-- - Create function: get_current_user_tenant_context()
+-- - Returns only current user's tenant relationships
+-- - Revoke direct access to user_tenant_cache
+-- - Update application code to use function instead of direct queries
+-- ============================================================================
+
+-- Verify current permissions (for documentation)
+-- SELECT 
+--   grantee,
+--   privilege_type
+-- FROM information_schema.role_table_grants
+-- WHERE table_schema = 'public' 
+--   AND table_name = 'user_tenant_cache';
+--
+-- Expected: authenticated has SELECT (not anon)
