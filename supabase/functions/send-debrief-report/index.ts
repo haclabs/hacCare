@@ -267,15 +267,17 @@ This email was sent from hacCare Simulation Training System.
     }
 
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error('=== ERROR in send-debrief-report ===')
     console.error('Error:', error)
     console.error('Error message:', error instanceof Error ? error.message : String(error))
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     
+    // Return sanitized error to client (no stack traces or sensitive details)
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to send debrief report', 
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to send debrief report',
+        message: 'An error occurred while processing your request. Please try again or contact support.'
       }),
       {
         status: 500,
