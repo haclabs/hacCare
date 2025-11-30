@@ -74,10 +74,11 @@ class SystemLogger {
   }
 
   /**
-   * Generate unique session ID
+   * Generate unique session ID using cryptographically secure random values
    */
   private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Use crypto.randomUUID() for cryptographically secure session IDs
+    return `${Date.now()}-${crypto.randomUUID()}`;
   }
 
   /**
