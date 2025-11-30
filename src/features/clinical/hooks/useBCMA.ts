@@ -53,18 +53,12 @@ export const useBCMA = () => {
   }, []);
 
   const handleBarcodeScanned = useCallback((barcode: string) => {
-    console.log('🔵 useBCMA: Barcode received:', barcode);
-    console.log('🔵 useBCMA: Current state:', state);
-    console.log('🔵 useBCMA: Global BCMA active:', isBCMACurrentlyActive());
-    
     // Don't process if BCMAAdministration component is active
     if (isBCMACurrentlyActive() && !state.isActive) {
-      console.log('🔵 useBCMA: BCMAAdministration is active, skipping useBCMA processing');
       return;
     }
     
     if (!state.isActive || !state.currentPatient || !state.currentMedication) {
-      console.log('🔵 useBCMA: Not active or missing patient/medication');
       return;
     }
 
@@ -73,17 +67,12 @@ export const useBCMA = () => {
     // New format: M + letter + 5 digits (e.g., MA26325) OR legacy MED format
     const isMedicationBarcode = barcode.startsWith('MED') || /^M[A-Z]\d{5}$/.test(barcode);
 
-    console.log('🔵 useBCMA: Is patient barcode:', isPatientBarcode);
-    console.log('🔵 useBCMA: Is medication barcode:', isMedicationBarcode);
-
     if (isPatientBarcode && !state.scannedPatientId) {
-      console.log('🔵 useBCMA: Setting scanned patient ID');
       setState(prev => ({
         ...prev,
         scannedPatientId: barcode
       }));
     } else if (isMedicationBarcode && !state.scannedMedicationId) {
-      console.log('🔵 useBCMA: Setting scanned medication ID');
       const newState = {
         ...state,
         scannedMedicationId: barcode
@@ -91,7 +80,6 @@ export const useBCMA = () => {
 
       // If we have both scans, validate
       if (state.scannedPatientId) {
-        console.log('🔵 useBCMA: Both barcodes scanned, validating...');
         const validation = bcmaService.validateBarcodes(
           state.scannedPatientId,
           barcode,

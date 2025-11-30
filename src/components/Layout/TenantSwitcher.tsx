@@ -50,6 +50,39 @@ export const TenantSwitcher: React.FC = () => {
     loadTenants();
   }, [isMultiTenantAdmin, isAnonymous]);
 
+  // Group tenants by type (using tenant name patterns) - must be before any conditional returns
+  const groupedTenants = useMemo(() => {
+    const regular: typeof availableTenants = [];
+    const activeSimulations: typeof availableTenants = [];
+    const templates: typeof availableTenants = [];
+
+    availableTenants.forEach((tenant) => {
+      const tenantName = tenant.name.toLowerCase();
+      
+      // Check if tenant name contains "template" - it's a simulation template
+      if (tenantName.includes('template')) {
+        templates.push(tenant);
+      }
+      // Check if tenant name contains "sim" or "sim_" - it's an active simulation
+      else if (tenantName.includes('sim_active') || tenantName.startsWith('sim_')) {
+        activeSimulations.push(tenant);
+      }
+      // Otherwise it's a regular tenant
+      else {
+        regular.push(tenant);
+      }
+    });
+
+    return { regular, activeSimulations, templates };
+  }, [availableTenants]);
+
+  const getCurrentDisplayName = () => {
+    if (selectedTenantId === 'all') {
+      return 'All Tenants';
+    }
+    return currentTenant?.name || 'Select Tenant';
+  };
+
   // Don't show for anonymous users or non-admins (after all hooks are called)
   if (isAnonymous || !isMultiTenantAdmin) {
     return null;
@@ -80,39 +113,6 @@ export const TenantSwitcher: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const getCurrentDisplayName = () => {
-    if (selectedTenantId === 'all') {
-      return 'All Tenants';
-    }
-    return currentTenant?.name || 'Select Tenant';
-  };
-
-  // Group tenants by type (using tenant name patterns)
-  const groupedTenants = useMemo(() => {
-    const regular: typeof availableTenants = [];
-    const activeSimulations: typeof availableTenants = [];
-    const templates: typeof availableTenants = [];
-
-    availableTenants.forEach((tenant) => {
-      const tenantName = tenant.name.toLowerCase();
-      
-      // Check if tenant name contains "template" - it's a simulation template
-      if (tenantName.includes('template')) {
-        templates.push(tenant);
-      }
-      // Check if tenant name contains "sim" or "sim_" - it's an active simulation
-      else if (tenantName.includes('sim_active') || tenantName.startsWith('sim_')) {
-        activeSimulations.push(tenant);
-      }
-      // Otherwise it's a regular tenant
-      else {
-        regular.push(tenant);
-      }
-    });
-
-    return { regular, activeSimulations, templates };
-  }, [availableTenants]);
 
   return (
     <div className="relative">
