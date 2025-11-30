@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
+import { systemLogger } from '../../services/monitoring/systemLogger';
 import { AvatarCanvas } from './components/AvatarCanvas';
 import { DeviceForm } from './forms/DeviceForm';
 import { WoundForm } from './forms/WoundForm';
@@ -244,6 +245,15 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
       handleClosePanel();
     } catch (err) {
       console.error('Error saving device:', err);
+      systemLogger.logError(err as Error, {
+        component: 'AvatarBoard',
+        action: panelMode === 'create-device' ? 'create_device' : 'update_device',
+        metadata: {
+          device_type: (data as CreateDeviceInput).type,
+          reservoir_type: (data as CreateDeviceInput).reservoir_type,
+          patient_id: patientId
+        }
+      });
       throw err;
     }
   };
@@ -304,6 +314,14 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
       handleClosePanel();
     } catch (err) {
       console.error('Error saving wound:', err);
+      systemLogger.logError(err as Error, {
+        component: 'AvatarBoard',
+        action: panelMode === 'create-wound' ? 'create_wound' : 'update_wound',
+        metadata: {
+          wound_type: (data as CreateWoundInput).wound_type,
+          patient_id: patientId
+        }
+      });
       throw err;
     }
   };

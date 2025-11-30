@@ -5,22 +5,20 @@ This document guides you through applying security fixes for the 47 warnings fro
 
 ## ✅ COMPLETED: Function Search Path Fixes (45 warnings)
 
-**Migration Created:** `supabase/migrations/20251130000000_fix_function_search_paths.sql`
+**Migration Created:** `database/migrations/20251130_fix_function_search_paths_FINAL.sql`
 
 **What it does:**
-- Sets `search_path = public` on all 45 database functions
+- Sets `search_path = public` on all 45 database functions with correct signatures
 - Prevents potential search path injection attacks
 - Uses safe `ALTER FUNCTION` approach (no function recreation needed)
 
 **To Apply:**
 ```bash
-# Option 1: Push migration to Supabase (Recommended)
-npx supabase db push
-
-# Option 2: Apply via Supabase Dashboard
+# Apply via Supabase Dashboard (Required - uses correct signatures from your DB)
 # 1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql
-# 2. Copy contents of: supabase/migrations/20251130000000_fix_function_search_paths.sql
+# 2. Copy contents of: database/migrations/20251130_fix_function_search_paths_FINAL.sql
 # 3. Click "Run" to execute
+# 4. Verify success message: "✅ Functions fixed: 45"
 ```
 
 **Verification:**

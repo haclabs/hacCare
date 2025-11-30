@@ -5,11 +5,12 @@
 Created comprehensive fixes for **47 Supabase security warnings**:
 
 ### ✅ Created Migration: Function Search Path Fixes (45 warnings)
-- **File:** `supabase/migrations/20251130000000_fix_function_search_paths.sql`
+- **File:** `database/migrations/20251130_fix_function_search_paths.sql`
 - **What:** Sets `search_path = public` on all 45 database functions
 - **Why:** Prevents search path injection attacks (PostgreSQL security best practice)
 - **How:** Safe `ALTER FUNCTION` approach - no function recreation
 - **Risk:** LOW - Only adds security constraint, no breaking changes
+- **Status:** Ready to run in Supabase SQL Editor
 
 ### ⚠️ Documented Decision: Materialized View (1 warning)
 - **File:** `docs/database/security/user_tenant_cache_analysis.sql`
@@ -26,14 +27,15 @@ Created comprehensive fixes for **47 Supabase security warnings**:
 ## To Apply
 
 ### Step 1: Apply Function Fixes (2 minutes)
-```bash
-npx supabase db push
-```
 
-Or via Supabase Dashboard:
-1. Go to SQL Editor
-2. Copy `supabase/migrations/20251130000000_fix_function_search_paths.sql`
-3. Click "Run"
+**Via Supabase Dashboard (Recommended):**
+1. Go to: Supabase Dashboard > SQL Editor > New Query
+2. Copy the entire contents of: `database/migrations/20251130_fix_function_search_paths_FINAL.sql`
+3. Paste into SQL Editor
+4. Click "Run"
+5. Verify success message shows "✅ Functions fixed: 45"
+
+The script uses correct function signatures queried from your actual database.
 
 ### Step 2: Enable Password Protection (1 minute)
 1. Go to: Supabase Dashboard > Authentication > Settings
