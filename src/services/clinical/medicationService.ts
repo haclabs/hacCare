@@ -19,8 +19,7 @@ import { Medication, MedicationAdministration } from '../../types';
       .eq('id', administration.medication_id)
       .single();
 
-    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
-    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs like "PT25379"
+    // Audit logging temporarily disabled for patient IDs
     /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(
@@ -207,8 +206,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       status: data.status || 'Active'
     };
 
-    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
-    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs
+    // Audit logging temporarily disabled for patient IDs
     /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(
@@ -364,8 +362,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       status: data.status || 'Active' // Use 'status' column directly
     };
 
-    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
-    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs
+    // Audit logging temporarily disabled for patient IDs
     /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(
@@ -581,8 +578,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       .single();
     */
 
-    // Log the action (temporarily disabled due to UUID constraint on audit_logs.target_id)
-    // TODO: Fix audit_logs table to use TEXT for target_id to support patient IDs like "PT25379"
+    // Audit logging temporarily disabled for patient IDs
     /*
     const user = (await supabase.auth.getUser()).data.user;
     await logAction(

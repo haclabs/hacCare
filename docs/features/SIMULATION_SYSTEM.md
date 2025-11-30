@@ -294,6 +294,54 @@ Check form code doesn't reference `student_name` for these tables.
 - `/docs/development/simulation-v2/` - Development work
 - `/archive/` - Old component versions
 
+## Reset Workflow Changes
+
+**Last Updated:** November 30, 2025
+
+### Current Behavior (As of November 2025)
+1. Complete Simulation → Creates debrief → Auto-resets → Auto-starts simulation
+2. Reset button → Resets data → Auto-starts simulation
+3. Play button → Starts simulation AND adds instructor as participant
+
+### Desired Future Behavior
+1. Complete Simulation → Creates debrief → Shows "Needs Reset" indicator
+2. Reset button → Resets data → Sets status to 'pending' (does NOT auto-start)
+3. Play button → Starts simulation WITHOUT adding instructor as participant
+
+### Required Changes for Future Implementation
+
+#### 1. Database Function: `reset_simulation_for_next_session`
+Set `status = 'pending'` instead of `'running'` after reset:
+```sql
+UPDATE simulation_active
+SET 
+  status = 'pending',
+  starts_at = NULL,
+  updated_at = NOW()
+WHERE id = p_simulation_id;
+```
+
+#### 2. Component Updates: `ActiveSimulations.tsx`
+Add status indicators and update button logic:
+- **Reset button**: Only show if status is 'completed', 'running', or 'paused'
+- **Play button**: Only show if status is 'pending' or 'paused'
+- **Complete button**: Only show if status is 'running' or 'paused'
+- Remove auto-add instructor logic from handleResume function
+
+#### 3. Status Visual Indicators
+```tsx
+{sim.status === 'completed' && <Badge>Needs Reset</Badge>}
+{sim.status === 'pending' && <Badge>Ready to Start</Badge>}
+{sim.status === 'running' && <Badge>Running</Badge>}
+```
+
+### Testing Checklist
+- [ ] Complete simulation → Status shows "Needs Reset"
+- [ ] Click Reset → Status changes to "Ready to Start" (NOT running)
+- [ ] Click Play → Simulation starts WITHOUT adding instructor
+- [ ] Instructor can manually join if desired
+- [ ] Can launch multiple simulations without being added to each one
+
 ## Making Changes
 
 1. **Database changes:** Create new migration in `/supabase/migrations/`
