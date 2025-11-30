@@ -178,3 +178,5 @@ See LICENSE file for details.
 ## Support
 
 For issues, questions, or contributions, please use the GitHub issue tracker.
+
+Built with ❤️ by the hacCare Team | A haclabs product
