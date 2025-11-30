@@ -9,10 +9,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2, BookOpen } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
-import { getUserSimulationAssignments } from '../../../services/simulation/simulationService';
+import { supabase } from '../../../lib/api/supabase';
+import StudentQuickIntro from '../../../components/StudentQuickIntro';
 
 interface SimulationAssignment {
   id: string;
@@ -40,44 +41,165 @@ const SimulationPortal: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enteringSimulation, setEnteringSimulation] = useState(false);
+  const [showQuickIntro, setShowQuickIntro] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      loadAssignments();
-    } else if (!authLoading && !user) {
-      // Redirect to login if not authenticated
-      navigate('/login?redirect=/simulation-portal');
+  const loadAssignments = React.useCallback(async (retryCount = 0, isBackgroundRefresh = false) => {
+    if (!user) {
+      console.log('⚠️ loadAssignments: No user, skipping');
+      return;
     }
-  }, [user, authLoading, navigate]);
 
-  const loadAssignments = async () => {
-    if (!user) return;
-
+    console.log(`📡 loadAssignments: Starting fetch for user: ${user.id} (attempt ${retryCount + 1}/3)${isBackgroundRefresh ? ' [background]' : ''}`);
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load, not background refreshes
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
       setError(null);
-      const data = await getUserSimulationAssignments(user.id);
+      
+      // Use RPC function with longer timeout for initial load (cold start can be slow)
+      // Background refreshes use shorter timeout since function should be warm
+      const timeoutDuration = isBackgroundRefresh ? 5000 : 15000;
+      console.log(`📡 loadAssignments: Calling RPC function (${timeoutDuration/1000}s timeout)...`);
+      const rpcCall = supabase.rpc(
+        'get_user_simulation_assignments',
+        { p_user_id: user.id }
+      );
+      
+      const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), timeoutDuration)
+      );
+      
+      const { data: rpcData, error: rpcError } = await Promise.race([
+        rpcCall,
+        timeoutPromise
+      ]).catch((error) => {
+        // Only log errors for initial load, not background refreshes
+        if (!isBackgroundRefresh) {
+          console.error('📡 RPC call failed or timed out:', error);
+        }
+        return { data: null, error };
+      });
+      
+      if (rpcError) {
+        // Only log detailed errors for initial load
+        if (!isBackgroundRefresh) {
+          console.error(`❌ RPC error details (attempt ${retryCount + 1}):`, rpcError);
+        }
+        
+        // Retry on timeout (cold start issue), max 2 retries - but only on initial load
+        if (rpcError.message?.includes('timeout') && retryCount < 2 && !isBackgroundRefresh) {
+          console.log(`🔄 Retrying... (${retryCount + 1}/2)`);
+          // Wait a bit before retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return loadAssignments(retryCount + 1, isBackgroundRefresh);
+        }
+        
+        // Show error only on initial load failures, silently fail background refreshes
+        if (!isBackgroundRefresh) {
+          if (rpcError.message?.includes('function') || rpcError.message?.includes('does not exist')) {
+            setError('Unable to load simulations. Please contact your administrator.');
+          } else if (rpcError.message?.includes('timeout')) {
+            setError('Connection is slow. Please refresh the page or try again later.');
+          } else {
+            setError('Unable to load simulations. Please try again.');
+          }
+        } else {
+          console.log('⚠️ Background refresh failed silently, keeping existing data');
+        }
+        
+        // Only clear assignments on initial load failure, keep existing data on background refresh failure
+        if (!isBackgroundRefresh) {
+          setAssignments([]);
+        }
+        setLoading(false);
+        return;
+      }
+      
+      const data = rpcData || [];
+      console.log('✅ loadAssignments: Received', data.length, 'assignments', data);
       setAssignments(data);
 
-      // Auto-routing logic
-      if (data.length === 1) {
-        // Single simulation: Auto-redirect
-        const assignment = data[0];
-        console.log('🎯 Auto-routing to single simulation:', assignment.simulation.name);
-        setTimeout(async () => {
-          await enterSimulation(assignment.simulation.tenant_id, assignment.simulation.name);
-        }, 1500); // Give user brief moment to see the portal
-      } else if (data.length === 0 && profile?.role !== 'admin' && profile?.role !== 'instructor') {
+      // DISABLED: Auto-routing is completely disabled to prevent unwanted redirects
+      // Students must manually click to join simulations
+      // This prevents issues where:
+      // 1. Background refreshes trigger unwanted navigation
+      // 2. Pending/resetting simulations auto-join before they're ready
+      // 3. Students get forced into simulations they didn't choose
+      
+      if (data.length === 0 && profile?.role !== 'admin' && profile?.role !== 'instructor') {
         // No assignments for non-instructor: Show message
         console.log('ℹ️ No simulation assignments found');
       }
-    } catch (err: any) {
-      console.error('Error loading simulation assignments:', err);
-      setError(err.message || 'Failed to load simulation assignments');
+    } catch (err) {
+      console.error('❌ Error loading simulation assignments:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load simulations');
+      setAssignments([]);
     } finally {
+      console.log('🏁 loadAssignments: Complete, setting loading to false');
       setLoading(false);
     }
-  };
+  }, [user, profile]);
+
+  useEffect(() => {
+    console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
+    if (!authLoading && user) {
+      console.log('✅ Conditions met, waiting for Supabase session to be ready...');
+      
+      let isMounted = true;
+      let sessionCheckAttempts = 0;
+      const maxSessionAttempts = 10; // Max 5 seconds of checking
+      
+      // Wait for Supabase session to be fully established before making RPC calls
+      // This prevents race condition where user exists but session token isn't ready
+      const waitForSession = async () => {
+        if (!isMounted) return;
+        
+        try {
+          sessionCheckAttempts++;
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            console.log('✅ Supabase session confirmed, loading assignments...');
+            // Give it a tiny bit more time to fully propagate
+            setTimeout(() => {
+              if (isMounted) loadAssignments();
+            }, 200);
+          } else if (sessionCheckAttempts < maxSessionAttempts) {
+            console.warn(`⚠️ No session found, retrying (${sessionCheckAttempts}/${maxSessionAttempts})...`);
+            setTimeout(waitForSession, 500);
+          } else {
+            console.error('❌ Session never established after', maxSessionAttempts, 'attempts');
+            setError('Unable to establish connection. Please refresh the page.');
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error('❌ Error checking session:', error);
+          if (sessionCheckAttempts < maxSessionAttempts) {
+            setTimeout(waitForSession, 500);
+          }
+        }
+      };
+      
+      waitForSession();
+      
+      // Auto-refresh every 15 seconds to show newly launched simulations
+      const refreshInterval = setInterval(() => {
+        loadAssignments(0, true); // Background refresh - fail silently
+      }, 15000);
+      
+      return () => {
+        isMounted = false;
+        clearInterval(refreshInterval);
+      };
+    } else if (!authLoading && !user) {
+      // Redirect to login if not authenticated
+      console.log('🔒 No user, redirecting to login');
+      navigate('/login?redirect=/simulation-portal');
+    } else {
+      console.log('⏳ Still loading auth...');
+    }
+  }, [user, authLoading, navigate, loadAssignments]);
 
   const enterSimulation = async (tenantId: string, simulationName: string) => {
     try {
@@ -88,9 +210,9 @@ const SimulationPortal: React.FC = () => {
       // Navigate to dashboard which will now show simulation patients
       // Force a full page reload to ensure all contexts refresh with new tenant
       window.location.href = '/app';
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error entering simulation:', err);
-      setError(err.message || 'Failed to enter simulation');
+      setError(err instanceof Error ? err.message : 'Failed to enter simulation');
       setEnteringSimulation(false);
     }
   };
@@ -118,29 +240,7 @@ const SimulationPortal: React.FC = () => {
     );
   }
 
-  // Auto-routing to single simulation
-  if (assignments.length === 1) {
-    const assignment = assignments[0];
-    return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full flex items-center justify-center py-12">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-600 rounded-full animate-pulse">
-              <Monitor className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Entering Simulation</h2>
-          <p className="text-gray-600 mb-4">{assignment.simulation.name}</p>
-          <div className="flex items-center justify-center text-sm text-gray-500">
-            <ArrowRight className="h-4 w-4 mr-2 animate-pulse" />
-            Redirecting you now...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Instructor view or multiple simulations
+  // Always show selection screen - no auto-routing for anyone
   const isInstructor = profile?.role === 'admin' || profile?.role === 'instructor';
 
   return (
@@ -157,7 +257,23 @@ const SimulationPortal: React.FC = () => {
           <p className="text-xl text-gray-600">
             {isInstructor ? 'Manage and launch simulations' : 'Your active simulations'}
           </p>
+          
+          {/* Quick Intro Button - Only show for simulation_only users */}
+          {profile?.simulation_only && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setShowQuickIntro(true)}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+                title="Student Quick Introduction Guide"
+              >
+                <BookOpen className="h-5 w-5 mr-2" />
+                Quick Intro
+              </button>
+            </div>
+          )}
         </div>
+
+
 
         {/* Error Message */}
         {error && (
@@ -292,6 +408,11 @@ const SimulationPortal: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Student Quick Intro Modal */}
+      {showQuickIntro && (
+        <StudentQuickIntro onClose={() => setShowQuickIntro(false)} />
+      )}
     </div>
   );
 };

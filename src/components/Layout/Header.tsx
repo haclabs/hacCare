@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
             </div>
           )}
           
-          <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+          <div className="flex items-center space-x-3 px-2">
             <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <div className="flex flex-col leading-none">
               <span className="text-base font-bold text-gray-900 dark:text-gray-100 tracking-tight font-mono">

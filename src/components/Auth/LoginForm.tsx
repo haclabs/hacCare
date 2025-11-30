@@ -14,14 +14,31 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
-  const { signIn, user } = useAuth();
+  const { signIn, user, profile } = useAuth();
 
-  // Redirect to app if already logged in
+  // Redirect based on user type after login
   useEffect(() => {
-    if (user) {
-      navigate('/app');
+    if (user && profile) {
+      // Use full page reload for ALL users to ensure Supabase session is properly established
+      // This prevents auth race conditions where session token isn't ready for API calls
+      // Without this, tenant switching and logout don't work until manual refresh
+      
+      if (profile.simulation_only) {
+        console.log('🎯 Simulation-only user detected, redirecting to lobby...');
+        // Clear any old simulation tenant from localStorage
+        localStorage.removeItem('current_simulation_tenant');
+        setTimeout(() => {
+          window.location.href = '/app/simulation-portal';
+        }, 100);
+      } else {
+        // Regular user - go to main app with full page reload
+        console.log('🎯 Regular user detected, redirecting to app...');
+        setTimeout(() => {
+          window.location.href = '/app';
+        }, 100);
+      }
     }
-  }, [user, navigate]);
+  }, [user, profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +60,8 @@ export const LoginForm: React.FC = () => {
         setError(parseAuthError(error));
         setLoading(false); // Only set loading to false on error
       } else {
-        console.log('✅ Sign in successful, refreshing page for full state sync...');
-        // TEMPORARY FIX FOR DEMO: Refresh page after login to ensure all state is synced
-        // TODO: Fix the direct fetch state propagation issue
-        setTimeout(() => {
-          window.location.href = '/app';
-        }, 500);
+        console.log('✅ Sign in successful, useEffect will handle redirect based on user type...');
+        // Navigation handled by useEffect above based on simulation_only flag
       }
     } catch (error: unknown) {
       console.error('Login error:', error);

@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { Monitor, Clock, AlertCircle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../hooks/useAuth';
 import { supabase } from '../../../lib/api/supabase';
 
 interface SimulationInfo {
@@ -22,19 +23,26 @@ interface SimulationInfo {
 
 export const SimulationIndicator: React.FC = () => {
   const { currentTenant, exitSimulationTenant } = useTenant();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const [simulation, setSimulation] = useState<SimulationInfo | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [isExpiringSoon, setIsExpiringSoon] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [gracePeriodEnd, setGracePeriodEnd] = useState<number | null>(null);
+  const [graceTimeRemaining, setGraceTimeRemaining] = useState<string>('');
 
   const handleExitSimulation = async () => {
     if (window.confirm('Are you sure you want to exit this simulation?')) {
       try {
         setIsExiting(true);
         await exitSimulationTenant();
-        // Force a full page reload to ensure clean tenant switch
-        window.location.href = '/app';
+        // Navigate to simulation portal for simulation_only users, otherwise home
+        if (profile?.simulation_only) {
+          window.location.href = '/app/simulation-portal';
+        } else {
+          window.location.href = '/app';
+        }
       } catch (error) {
         console.error('Error exiting simulation:', error);
         alert('Failed to exit simulation. Please try again.');
@@ -99,6 +107,12 @@ export const SimulationIndicator: React.FC = () => {
       if (diff <= 0) {
         setTimeRemaining('Ended');
         setIsExpiringSoon(false);
+        
+        // Start grace period for simulation_only users (15 minutes)
+        if (profile?.simulation_only && gracePeriodEnd === null) {
+          const graceEnd = now + (15 * 60 * 1000); // 15 minutes from now
+          setGracePeriodEnd(graceEnd);
+        }
         return;
       }
 
@@ -121,7 +135,43 @@ export const SimulationIndicator: React.FC = () => {
     updateTimeRemaining();
     const interval = setInterval(updateTimeRemaining, 1000);
     return () => clearInterval(interval);
-  }, [simulation?.ends_at]);
+  }, [simulation?.ends_at, profile?.simulation_only, gracePeriodEnd]);
+
+  // Grace period countdown and auto-kick
+  useEffect(() => {
+    if (!gracePeriodEnd || !profile?.simulation_only) {
+      setGraceTimeRemaining('');
+      return;
+    }
+
+    const updateGraceTimer = () => {
+      const now = new Date().getTime();
+      const diff = gracePeriodEnd - now;
+
+      if (diff <= 0) {
+        // Grace period expired - kick back to lobby
+        setGraceTimeRemaining('Redirecting...');
+        setIsExiting(true);
+        // Exit simulation and redirect to lobby
+        exitSimulationTenant().then(() => {
+          navigate('/app/simulation-portal');
+        }).catch((error) => {
+          console.error('Error exiting simulation during auto-kick:', error);
+          // Force navigation even if exit fails
+          navigate('/app/simulation-portal');
+        });
+        return;
+      }
+
+      const minutes = Math.floor(diff / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setGraceTimeRemaining(`${minutes}m ${seconds}s`);
+    };
+
+    updateGraceTimer();
+    const interval = setInterval(updateGraceTimer, 1000);
+    return () => clearInterval(interval);
+  }, [gracePeriodEnd, profile?.simulation_only, exitSimulationTenant, navigate]);
 
   if (!simulation) {
     return null;
@@ -194,6 +244,23 @@ export const SimulationIndicator: React.FC = () => {
             <p className="text-xs text-red-700 dark:text-red-300 font-medium">
               ⚠️ Simulation ending soon!
             </p>
+          </div>
+        )}
+
+        {/* Grace Period Warning - Only for simulation_only users */}
+        {timeRemaining === 'Ended' && gracePeriodEnd && graceTimeRemaining && profile?.simulation_only && (
+          <div className="mt-2 pt-2 border-t border-orange-300 dark:border-orange-700">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 animate-pulse flex-shrink-0" />
+              <div>
+                <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">
+                  ⚠️ Simulation ended - Returning to lobby in:
+                </p>
+                <p className="text-sm font-bold text-orange-900 dark:text-orange-200 mt-0.5 tabular-nums">
+                  {graceTimeRemaining}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

@@ -29,6 +29,7 @@ const ManagementDashboard = lazy(() => import('./features/admin/components/manag
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./features/settings/components/Settings'));
+const SystemLogsViewer = lazy(() => import('./features/admin/components/monitoring/SystemLogsViewer').then(module => ({ default: module.SystemLogsViewer })));
 
 /**
  * Main Application Component
@@ -600,6 +601,13 @@ function App() {
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <Settings />
+          </Suspense>
+        );
+      
+      case 'syslogs':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <SystemLogsViewer />
           </Suspense>
         );
       

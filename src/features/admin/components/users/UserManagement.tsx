@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../../../lib/api/supabase';
 import { useAuth } from '../../../../hooks/useAuth';
 import { UserForm } from './UserForm';
@@ -240,6 +240,12 @@ export const UserManagement: React.FC = () => {
                         {user.first_name} {user.last_name}
                         {!user.is_active && (
                           <span className="ml-2 text-xs text-red-600 font-normal">(Inactive)</span>
+                        )}
+                        {user.simulation_only && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            <Monitor className="h-3 w-3 mr-1" />
+                            Sim Only
+                          </span>
                         )}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>

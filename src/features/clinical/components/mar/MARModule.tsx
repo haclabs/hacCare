@@ -15,7 +15,7 @@ import { schemaEngine } from '../../../../lib/infrastructure/schemaEngine';
 import { medicationAdministrationSchema } from '../../../../schemas/medicationSchemas';
 import { Patient, Medication } from '../../../../types';
 import { ValidationResult } from '../../types/schema';
-import { createMedication, updateMedication, deleteMedication } from '../../../../services/clinical/medicationService';
+import { createMedication, updateMedication, deleteMedication, fetchPatientMedications } from '../../../../services/clinical/medicationService';
 import { formatLocalTime } from '../../../../utils/time';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/BarcodeGenerator';
@@ -104,8 +104,17 @@ export const MARModule: React.FC<MARModuleProps> = ({
       console.log('BCMA administration completed:', log);
       
       // Refresh medications to reflect changes
-      if (typeof onMedicationUpdate === 'function') {
-        console.log('Triggering medication refresh after BCMA completion');
+      console.log('Fetching fresh medication data after BCMA completion');
+      try {
+        const freshMedications = await fetchPatientMedications(patient.id);
+        console.log('Fresh medications fetched:', freshMedications.length, 'medications');
+        
+        if (typeof onMedicationUpdate === 'function') {
+          await onMedicationUpdate(freshMedications);
+          console.log('Medication list refreshed successfully');
+        }
+      } catch (error) {
+        console.error('Error refreshing medications:', error);
       }
     }
     
@@ -793,12 +802,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
   // Render individual medication item
   const renderMedicationItem = (medication: Medication, category: string) => {
     const isDue = medication.next_due && new Date(medication.next_due) <= new Date();
-    // Don't show overdue for continuous/IV medications - they run continuously
-    const isOverdue = category !== 'continuous' && medication.next_due && new Date(medication.next_due) < new Date(Date.now() - 30 * 60 * 1000); // 30 min overdue
     
     // Determine alert level based on category
     const shouldAlert = category === 'scheduled' || category === 'continuous' || category === 'diabetic';
-    const alertLevel = category === 'continuous' ? 'critical' : 'standard';
     
     return (
       <div
@@ -825,17 +831,19 @@ export const MARModule: React.FC<MARModuleProps> = ({
                  category}
               </span>
               {shouldAlert && isDue && (
-                <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1 ${
-                  isOverdue && alertLevel === 'critical' 
-                    ? 'bg-red-100 text-red-700 font-bold' 
-                    : isOverdue 
-                    ? 'bg-red-100 text-red-700 font-bold'
-                    : category === 'continuous'
+                <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
+                    category === 'continuous'
                     ? 'bg-green-100 text-green-800'
                     : 'bg-yellow-100 text-yellow-800'
                 }`}>
-                  <AlertTriangle className={`h-3 w-3 ${isOverdue ? 'text-red-700' : ''}`} />
-                  <span className={isOverdue ? 'text-red-700 font-bold' : ''}>{isOverdue ? 'OVERDUE' : category === 'continuous' ? 'RUNNING' : 'DUE'}</span>
+                  <Clock className="h-3 w-3" />
+                  <span>{category === 'continuous' ? 'RUNNING' : 'DUE'}</span>
+                </span>
+              )}
+              {medication.last_administered && (
+                <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 bg-blue-100 text-blue-800">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>Last Given: {formatLocalTime(new Date(medication.last_administered), 'HH:mm')}</span>
                 </span>
               )}
             </div>
@@ -844,9 +852,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
             </p>
             {medication.next_due && category !== 'prn' && (
               <p className="text-sm text-gray-500 mt-1">
-                Next due: {category === 'continuous' 
-                  ? 'Continuous' 
-                  : formatLocalTime(new Date(medication.next_due), 'dd MMM yyyy - HH:mm')}
+                {category === 'continuous' 
+                  ? 'Continuous infusion' 
+                  : `Due at: ${formatLocalTime(new Date(medication.next_due), 'HH:mm')}`}
               </p>
             )}
           </div>
@@ -877,9 +885,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 }}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1 ${
                   shouldAlert && isDue 
-                    ? (isOverdue && alertLevel === 'critical' 
-                        ? 'bg-red-600 text-white hover:bg-red-700' 
-                        : 'bg-orange-500 text-white hover:bg-orange-600')
+                    ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                     : category === 'prn'
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-green-600 text-white hover:bg-green-700'
