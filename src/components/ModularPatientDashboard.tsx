@@ -1787,17 +1787,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         </div>
 
         {/* Info Cards Row */}
-        <div className="grid grid-cols-4 gap-3 mb-5">
-          {/* Days Admitted */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Admitted</span>
-            </div>
-            <div className="text-2xl font-bold text-blue-900">Day {admittedDays}</div>
-            <div className="text-xs text-blue-700 mt-0.5">{new Date(patient.admission_date).toLocaleDateString()}</div>
-          </div>
-
+        <div className="grid grid-cols-3 gap-3 mb-5">
           {/* Allergies */}
           <div className={`${allergiesCount > 0 ? 'bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200' : 'bg-gradient-to-br from-gray-50 to-gray-100/50 border-gray-200'} border rounded-lg p-3`}>
             <div className="flex items-center justify-between mb-1">

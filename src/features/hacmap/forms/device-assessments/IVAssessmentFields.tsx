@@ -97,7 +97,7 @@ export const IVAssessmentFields: React.FC<IVAssessmentFieldsProps> = ({ device, 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Local Site Assessment</label>
         <div className="grid grid-cols-3 gap-2">
-          {['Redness', 'Swelling', 'Pain', 'Warmth', 'Coolness', 'Induration'].map((finding) => (
+          {['Healthy', 'Redness', 'Swelling', 'Pain', 'Warmth', 'Coolness', 'Induration'].map((finding) => (
             <label key={finding} className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="checkbox"
