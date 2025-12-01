@@ -838,23 +838,59 @@ export async function getUserAccessibleSimulations(): Promise<SimulationActiveWi
 }
 
 /**
- * Archive a simulation history record
+ * Archive a simulation history record with folder structure
+ * Creates folder path: InstructorName/CompletedDate/
  */
 export async function archiveSimulationHistory(historyId: string): Promise<void> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    // First, get the history record to extract instructor name and completed date
+    const { data: historyRecord, error: fetchError } = await supabase
+      .from('simulation_history')
+      .select('instructor_name, completed_at')
+      .eq('id', historyId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!historyRecord) throw new Error('History record not found');
+
+    // Build folder path: InstructorName/YYYY-MM-DD/
+    // Use local date formatting to match what the UI displays
+    const instructorName = historyRecord.instructor_name || 'Unknown Instructor';
+    let completedDate: string;
+    
+    if (historyRecord.completed_at) {
+      const date = new Date(historyRecord.completed_at);
+      // Format as YYYY-MM-DD in local timezone
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      completedDate = `${year}-${month}-${day}`;
+    } else {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      completedDate = `${year}-${month}-${day}`;
+    }
+    
+    const archiveFolder = `${instructorName}/${completedDate}`;
+
     const { error } = await supabase
       .from('simulation_history')
       .update({
         archived: true,
         archived_at: new Date().toISOString(),
-        archived_by: user.id
+        archived_by: user.id,
+        archive_folder: archiveFolder
       })
       .eq('id', historyId);
 
     if (error) throw error;
+    
+    console.log(`📁 Archived to folder: ${archiveFolder}`);
   } catch (error: any) {
     console.error('Error archiving simulation history:', error);
     throw error;

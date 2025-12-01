@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { History, FileText, Clock, Users, TrendingUp, Archive, ArchiveRestore, Trash2, Search, UserCheck } from 'lucide-react';
+import { History, FileText, Clock, Users, TrendingUp, Archive, ArchiveRestore, Trash2, Search, UserCheck, Calendar } from 'lucide-react';
 import { getSimulationHistory, archiveSimulationHistory, unarchiveSimulationHistory, deleteSimulationHistory } from '../../../services/simulation/simulationService';
 import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
@@ -26,6 +26,8 @@ const SimulationHistory: React.FC = () => {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [instructorFilter, setInstructorFilter] = useState<string>('');
+  const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => {
     loadHistory();
@@ -68,6 +70,44 @@ const SimulationHistory: React.FC = () => {
       console.error('Error unarchiving simulation:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to restore simulation';
       alert(`Failed to restore simulation: ${errorMessage}`);
+    } finally {
+      setArchiving(null);
+    }
+  };
+
+  const handleArchiveAll = async () => {
+    if (!window.confirm(`Archive all ${filteredHistory.length} active simulation${filteredHistory.length !== 1 ? 's' : ''}?\n\nThis will move them to the Archived tab organized by instructor and date.`)) {
+      return;
+    }
+
+    try {
+      setArchiving('bulk');
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Archive all filtered history items
+      for (const record of filteredHistory) {
+        try {
+          await archiveSimulationHistory(record.id);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to archive ${record.name}:`, error);
+          errorCount++;
+        }
+      }
+
+      // Show result
+      if (errorCount === 0) {
+        alert(`✅ Successfully archived ${successCount} simulation${successCount !== 1 ? 's' : ''}!`);
+      } else {
+        alert(`Archived ${successCount} simulation${successCount !== 1 ? 's' : ''}, but ${errorCount} failed.\n\nCheck console for details.`);
+      }
+
+      // Reload the list
+      await loadHistory();
+    } catch (error) {
+      console.error('Error in bulk archive:', error);
+      alert('Failed to complete bulk archive operation.');
     } finally {
       setArchiving(null);
     }
@@ -157,8 +197,42 @@ const SimulationHistory: React.FC = () => {
     return Array.from(instructors).sort();
   }, [history]);
 
-  // Filter history based on search query and instructor filter
+  // Get folder structure for archived simulations
+  const folderStructure = React.useMemo(() => {
+    if (activeTab !== 'archived') return {};
+    
+    const structure: Record<string, Set<string>> = {};
+    history.forEach(record => {
+      if (record.archive_folder) {
+        const [instructor, date] = record.archive_folder.split('/');
+        if (!structure[instructor]) {
+          structure[instructor] = new Set();
+        }
+        structure[instructor].add(date);
+      }
+    });
+    
+    // Convert Sets to sorted arrays
+    const result: Record<string, string[]> = {};
+    Object.keys(structure).sort().forEach(instructor => {
+      result[instructor] = Array.from(structure[instructor]).sort().reverse(); // Most recent first
+    });
+    return result;
+  }, [history, activeTab]);
+
+  // Filter history based on search query, instructor filter, and folder navigation
   const filteredHistory = history.filter(record => {
+    // Folder navigation filter (for archived tab)
+    if (activeTab === 'archived' && selectedInstructor) {
+      if (record.instructor_name !== selectedInstructor) return false;
+      if (selectedDate) {
+        const recordDate = record.completed_at 
+          ? new Date(record.completed_at).toISOString().split('T')[0]
+          : null;
+        if (recordDate !== selectedDate) return false;
+      }
+    }
+    
     // Search filter
     if (searchQuery.trim()) {
       const participantNames = getParticipantNames(record).toLowerCase();
@@ -166,7 +240,7 @@ const SimulationHistory: React.FC = () => {
         return false;
       }
     }
-    // Instructor filter
+    // Instructor filter (for active tab)
     if (instructorFilter && record.instructor_name !== instructorFilter) {
       return false;
     }
@@ -187,10 +261,24 @@ const SimulationHistory: React.FC = () => {
             </p>
           </div>
 
+          {/* Auto-Archive Notice - Only on Active Tab */}
+          {activeTab === 'active' && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start gap-2">
+              <Archive className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> Reports are automatically moved to the Archived tab after 24 hours and organized by instructor and date.
+              </p>
+            </div>
+          )}
+
           {/* Tab Navigation */}
           <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
             <button
-              onClick={() => setActiveTab('active')}
+              onClick={() => {
+                setActiveTab('active');
+                setSelectedInstructor(null);
+                setSelectedDate(null);
+              }}
               className={`px-4 py-2 font-medium text-sm transition-colors relative ${
                 activeTab === 'active'
                   ? 'text-purple-600 dark:text-purple-400'
@@ -203,7 +291,11 @@ const SimulationHistory: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('archived')}
+              onClick={() => {
+                setActiveTab('archived');
+                setSelectedInstructor(null);
+                setSelectedDate(null);
+              }}
               className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-2 ${
                 activeTab === 'archived'
                   ? 'text-purple-600 dark:text-purple-400'
@@ -244,7 +336,185 @@ const SimulationHistory: React.FC = () => {
                 ))}
               </select>
             )}
+            {activeTab === 'active' && filteredHistory.length > 0 && (
+              <button
+                onClick={handleArchiveAll}
+                disabled={archiving === 'bulk'}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg transition-colors font-medium text-sm shadow-sm disabled:cursor-not-allowed"
+                title="Archive all visible simulations"
+              >
+                {archiving === 'bulk' ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    <span>Archiving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Archive className="h-4 w-4" />
+                    <span>Archive All ({filteredHistory.length})</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
+
+          {/* Folder Browser for Archived Tab */}
+          {activeTab === 'archived' && Object.keys(folderStructure).length > 0 && (
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Archive className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">
+                    Browse by Instructor
+                  </h3>
+                </div>
+                {(selectedInstructor || selectedDate) && (
+                  <button
+                    onClick={() => {
+                      setSelectedInstructor(null);
+                      setSelectedDate(null);
+                    }}
+                    className="text-xs px-3 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors font-medium"
+                  >
+                    ← Back to All
+                  </button>
+                )}
+              </div>
+
+              {/* Breadcrumb Navigation */}
+              {(selectedInstructor || selectedDate) && (
+                <div className="flex items-center gap-2 text-sm mb-3 px-3 py-2 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                  <Archive className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <button
+                    onClick={() => {
+                      setSelectedInstructor(null);
+                      setSelectedDate(null);
+                    }}
+                    className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium"
+                  >
+                    Archives
+                  </button>
+                  {selectedInstructor && (
+                    <>
+                      <span className="text-slate-400">/</span>
+                      <button
+                        onClick={() => setSelectedDate(null)}
+                        className="text-emerald-700 dark:text-emerald-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold"
+                      >
+                        {selectedInstructor}
+                      </button>
+                    </>
+                  )}
+                  {selectedDate && (
+                    <>
+                      <span className="text-slate-400">/</span>
+                      <span className="text-emerald-800 dark:text-emerald-200 font-bold">
+                        {format(new Date(selectedDate), 'MMM dd, yyyy')}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Quick Stats */}
+              {!selectedInstructor && !selectedDate && (
+                <div className="mb-3 text-xs text-emerald-700 dark:text-emerald-300 bg-white/60 dark:bg-slate-800/60 px-3 py-2 rounded-lg">
+                  📂 {Object.keys(folderStructure).length} instructor{Object.keys(folderStructure).length !== 1 ? 's' : ''} with archived reports
+                </div>
+              )}
+
+              {/* Folder View */}
+              <div className={`grid gap-2 ${!selectedInstructor ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                {!selectedInstructor ? (
+                  // Show instructor folders - List view with search
+                  <>
+                    {Object.keys(folderStructure).length > 5 && (
+                      <div className="mb-2">
+                        <input
+                          type="text"
+                          placeholder="Search instructors..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                      {Object.entries(folderStructure)
+                        .filter(([instructor]) => 
+                          !searchQuery || instructor.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .map(([instructor, dates]) => {
+                          const totalReports = dates.reduce((sum, date) => {
+                            return sum + history.filter(r => 
+                              r.instructor_name === instructor && 
+                              r.completed_at && 
+                              new Date(r.completed_at).toISOString().split('T')[0] === date
+                            ).length;
+                          }, 0);
+                          
+                          return (
+                            <button
+                              key={instructor}
+                              onClick={() => {
+                                setSelectedInstructor(instructor);
+                                setSearchQuery(''); // Clear search when selecting
+                              }}
+                              className="w-full flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all text-left group shadow-sm hover:shadow"
+                            >
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800/50 transition-colors">
+                                  <UserCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-semibold text-slate-900 dark:text-white truncate">{instructor}</div>
+                                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                                    {dates.length} {dates.length === 1 ? 'session date' : 'session dates'}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full font-semibold">
+                                  {totalReports} {totalReports === 1 ? 'report' : 'reports'}
+                                </span>
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">→ Open</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </>
+                ) : (
+                  // Show date folders for selected instructor
+                  folderStructure[selectedInstructor]?.map((date) => {
+                    const simCount = history.filter(r => 
+                      r.instructor_name === selectedInstructor && 
+                      r.completed_at && 
+                      new Date(r.completed_at).toISOString().split('T')[0] === date
+                    ).length;
+                    
+                    return (
+                      <button
+                        key={date}
+                        onClick={() => setSelectedDate(date)}
+                        className="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all text-left group shadow-sm hover:shadow"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            {format(new Date(date), 'MMM dd, yyyy')}
+                          </span>
+                        </div>
+                        <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full flex-shrink-0 font-semibold">
+                          {simCount}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
 
           {/* History List */}
           {loading ? (
@@ -356,6 +626,13 @@ const SimulationHistory: React.FC = () => {
                         <UserCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                         <span className="text-slate-500 dark:text-slate-500">Instructor:</span>
                         <span className="text-purple-700 dark:text-purple-300 font-semibold">{record.instructor_name}</span>
+                      </div>
+                    )}
+                    {activeTab === 'archived' && record.archive_folder && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Archive className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-slate-500 dark:text-slate-500">Archive Folder:</span>
+                        <span className="text-emerald-700 dark:text-emerald-300 font-mono text-xs bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded">{record.archive_folder}</span>
                       </div>
                     )}
                   </div>

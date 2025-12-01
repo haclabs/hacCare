@@ -99,16 +99,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     ] : []),
   ];
   return (
-    <aside className="bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen transition-colors flex flex-col">
+    <aside className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-64 min-h-screen transition-colors flex flex-col">
       {/* Simulation Indicator - Shows when in active simulation */}
       <div className="pt-4">
         <SimulationIndicator />
       </div>
 
-      <nav className="p-4 flex-1 relative" ref={navContainerRef}>
+      <nav className="p-5 flex-1 relative" ref={navContainerRef}>
         {/* Animated Active Indicator */}
         <div 
-          className="absolute left-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-r-full transition-all duration-300 ease-out dark:from-blue-400 dark:to-blue-500"
+          className="absolute left-0 w-1 bg-gradient-to-b from-blue-500 to-blue-600 rounded-r-full transition-all duration-300 ease-out dark:from-blue-400 dark:to-blue-500 shadow-sm"
           style={{
             top: `${activeItemTop}px`,
             height: `${activeItemHeight}px`,
@@ -116,9 +116,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           }}
         />
         {/* Workspace Section */}
-        <div className="mb-6">
-          <div className="px-4 mb-2">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">
+        <div className="mb-8">
+          <div className="px-3 mb-3">
+            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide dark:text-gray-400">
               Workspace
             </span>
           </div>
@@ -143,18 +143,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       }
                     }}
                     data-active-item={isActive}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all duration-200 group ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
                       isActive
-                        ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                        ? 'bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/30 dark:text-blue-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                     }`}
                   >
-                    <Icon className={`h-4 w-4 transition-transform duration-200 ${
+                    <Icon className={`h-5 w-5 transition-transform duration-200 ${
                       isActive 
                         ? 'text-blue-600 dark:text-blue-400' 
                         : item.color + ' dark:text-gray-400 group-hover:scale-110'
                     }`} />
-                    <span className="text-sm">{item.label}</span>
+                    <span className="text-[15px] font-medium">{item.label}</span>
                   </button>
                 </li>
               );
@@ -164,13 +164,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
         {/* Admin Section - Only for Super Admins */}
         {adminItems.length > 0 && (
-          <div className="mb-6">
-            <div className="my-6 border-t border-gray-200 dark:border-gray-700" />
-            <div className="px-4 mb-2 flex items-center gap-2">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">
+          <div className="mb-8">
+            <div className="my-6 border-t border-gray-200 dark:border-gray-800" />
+            <div className="px-3 mb-3 flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide dark:text-gray-400">
                 Admin
               </span>
-              <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-50 dark:bg-orange-900/20 rounded text-orange-600 dark:text-orange-400">
                 <Lock size={10} />
                 <span className="text-[9px] font-semibold">Super Admin</span>
               </div>
@@ -196,18 +196,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                         }
                       }}
                       data-active-item={isActive}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-all duration-200 group ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
                         isActive
-                          ? 'bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70'
+                          ? 'bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/30 dark:text-blue-300'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                       }`}
                     >
-                      <Icon className={`h-4 w-4 transition-transform duration-200 ${
+                      <Icon className={`h-5 w-5 transition-transform duration-200 ${
                         isActive 
                           ? 'text-blue-600 dark:text-blue-400' 
                           : item.color + ' dark:text-gray-400 group-hover:scale-110'
                       }`} />
-                      <span className="text-sm">{item.label}</span>
+                      <span className="text-[15px] font-medium">{item.label}</span>
                     </button>
                   </li>
                 );
@@ -217,20 +217,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         )}
 
         {/* User Profile Dropdown */}
-        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700 px-1">
+        <div className="mt-auto pt-5 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-all duration-200 group"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-all duration-200 group"
           >
             <div className="relative flex-shrink-0">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-md">
                 {getUserInitials()}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full" />
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{getDisplayName()}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{getRoleDisplay()}</div>
+              <div className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate">{getDisplayName()}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 capitalize font-medium">{getRoleDisplay()}</div>
             </div>
             <ChevronDown 
               size={16} 
@@ -242,7 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
           {/* Dropdown Menu */}
           {isUserMenuOpen && (
-            <div className="mt-2 py-1 space-y-0.5">
+            <div className="mt-2 py-1 space-y-1">
               {userDropdownItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -255,18 +255,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       onTabChange(item.id);
                       navigate('/app', { replace: false });
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 group ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150 group ${
                       isActive
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                        ? 'bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/30 dark:text-blue-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                     }`}
                   >
-                    <Icon className={`h-3.5 w-3.5 transition-transform duration-150 group-hover:scale-110 ${
+                    <Icon className={`h-4 w-4 transition-transform duration-150 group-hover:scale-110 ${
                       isActive 
                         ? 'text-blue-600 dark:text-blue-400' 
                         : item.color + ' dark:text-gray-400'
                     }`} />
-                    <span className="text-xs">{item.label}</span>
+                    <span className="text-[13px] font-medium">{item.label}</span>
                   </button>
                 );
               })}

@@ -141,29 +141,16 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
       </div>
 
       {/* Clean Info Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-5 relative">
-        {/* Location Card */}
-        <div className="flex items-center space-x-3 p-3.5 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-          <div className="p-2 bg-blue-500 rounded-lg">
-            <MapPin className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Location</p>
-            <p className="text-sm font-bold text-gray-900">
-              Room {patient.room_number}{patient.bed_number}
-            </p>
-          </div>
+      {/* Location Card */}
+      <div className="flex items-center space-x-3 p-3.5 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors mb-5">
+        <div className="p-2 bg-blue-500 rounded-lg">
+          <MapPin className="h-4 w-4 text-white" />
         </div>
-
-        {/* Admission Card */}
-        <div className="flex items-center space-x-3 p-3.5 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-          <div className="p-2 bg-purple-500 rounded-lg">
-            <Calendar className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Admitted</p>
-            <p className="text-sm font-bold text-gray-900">{formattedAdmissionDate}</p>
-          </div>
+        <div>
+          <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Location</p>
+          <p className="text-sm font-bold text-gray-900">
+            Room {patient.room_number}{patient.bed_number}
+          </p>
         </div>
       </div>
 
@@ -191,13 +178,6 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
             </div>
           </div>
 
-          {/* Right: Days Counter */}
-          <div className="text-right">
-            <div className="text-xs text-gray-500 font-medium">Day</div>
-            <div className="text-2xl font-bold text-gray-900 leading-none">
-              {Math.ceil((Date.now() - new Date(patient.admission_date).getTime()) / (1000 * 60 * 60 * 24))}
-            </div>
-          </div>
         </div>
 
         {/* Tap to open indicator */}
