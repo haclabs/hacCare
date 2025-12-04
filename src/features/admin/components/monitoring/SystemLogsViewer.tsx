@@ -79,21 +79,11 @@ export const SystemLogsViewer: React.FC = () => {
       const hoursBack = timeThresholds[timeRange] || 1;
       const threshold = new Date(now.getTime() - hoursBack * 60 * 60 * 1000).toISOString();
 
+      // Query system_logs without joins - we'll fetch related data separately
+      // The user_id references auth.users, not user_profiles directly
       let query = supabase
         .from('system_logs')
-        .select(`
-          *,
-          user_profiles!system_logs_user_id_fkey (
-            first_name,
-            last_name,
-            email,
-            role
-          ),
-          tenants!system_logs_tenant_id_fkey (
-            name,
-            subdomain
-          )
-        `)
+        .select('*')
         .gte('timestamp', threshold)
         .order('timestamp', { ascending: false })
         .limit(500);
@@ -110,7 +100,49 @@ export const SystemLogsViewer: React.FC = () => {
 
       if (error) throw error;
 
-      setLogs(data || []);
+      if (!data || data.length === 0) {
+        setLogs([]);
+        return;
+      }
+
+      // Fetch related user_profiles and tenants data
+      const userIds = [...new Set(data.map(log => log.user_id).filter(Boolean))];
+      const tenantIds = [...new Set(data.map(log => log.tenant_id).filter(Boolean))];
+
+      // Fetch user profiles
+      const userProfilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('id, first_name, last_name, email, role')
+          .in('id', userIds);
+        
+        profiles?.forEach(profile => {
+          userProfilesMap.set(profile.id, profile);
+        });
+      }
+
+      // Fetch tenants
+      const tenantsMap = new Map();
+      if (tenantIds.length > 0) {
+        const { data: tenants } = await supabase
+          .from('tenants')
+          .select('id, name, subdomain')
+          .in('id', tenantIds);
+        
+        tenants?.forEach(tenant => {
+          tenantsMap.set(tenant.id, tenant);
+        });
+      }
+
+      // Combine the data
+      const enrichedLogs = data.map(log => ({
+        ...log,
+        user_profiles: log.user_id ? userProfilesMap.get(log.user_id) : null,
+        tenants: log.tenant_id ? tenantsMap.get(log.tenant_id) : null
+      }));
+
+      setLogs(enrichedLogs);
     } catch (error) {
       console.error('Error fetching system logs:', error);
     } finally {
@@ -179,7 +211,7 @@ export const SystemLogsViewer: React.FC = () => {
       log.error_message?.toLowerCase().includes(search) ||
       log.action?.toLowerCase().includes(search) ||
       log.component?.toLowerCase().includes(search) ||
-      log.user_profile?.email?.toLowerCase().includes(search) ||
+      log.user_profiles?.email?.toLowerCase().includes(search) ||
       log.current_url?.toLowerCase().includes(search)
     );
   });
