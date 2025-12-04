@@ -60,11 +60,16 @@ class SystemLogger {
 
       // Get tenant from user profile
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('user_profiles')
           .select('tenant_id')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+        
+        if (error) {
+          console.warn('System logger: Could not fetch user tenant_id:', error.message);
+          return;
+        }
         
         this.tenant_id = profile?.tenant_id;
       }
