@@ -30,16 +30,16 @@ interface SystemLog {
   current_url: string | null;
   previous_url: string | null;
   metadata: any;
-  user_profile?: {
+  user_profiles?: {
     first_name: string;
     last_name: string;
     email: string;
     role: string;
-  };
-  tenant?: {
+  } | null;
+  tenants?: {
     name: string;
     subdomain: string;
-  };
+  } | null;
 }
 
 export const SystemLogsViewer: React.FC = () => {
@@ -83,13 +83,13 @@ export const SystemLogsViewer: React.FC = () => {
         .from('system_logs')
         .select(`
           *,
-          user_profile:user_id (
+          user_profiles!system_logs_user_id_fkey (
             first_name,
             last_name,
             email,
             role
           ),
-          tenant:tenant_id (
+          tenants!system_logs_tenant_id_fkey (
             name,
             subdomain
           )
@@ -155,8 +155,8 @@ export const SystemLogsViewer: React.FC = () => {
         log.timestamp,
         log.log_level,
         log.log_type,
-        log.user_profile ? `${log.user_profile.first_name} ${log.user_profile.last_name}` : 'Anonymous',
-        log.tenant?.name || 'N/A',
+        log.user_profiles ? `${log.user_profiles.first_name} ${log.user_profiles.last_name}` : 'Anonymous',
+        log.tenants?.name || 'N/A',
         log.component || '',
         log.action || '',
         log.error_message || '',
@@ -385,10 +385,10 @@ export const SystemLogsViewer: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {log.user_profile ? (
+                      {log.user_profiles ? (
                         <div>
-                          <div className="font-medium">{log.user_profile.first_name} {log.user_profile.last_name}</div>
-                          <div className="text-xs text-gray-500">{log.user_profile.role}</div>
+                          <div className="font-medium">{log.user_profiles.first_name} {log.user_profiles.last_name}</div>
+                          <div className="text-xs text-gray-500">{log.user_profiles.role}</div>
                         </div>
                       ) : (
                         <span className="text-gray-400">Anonymous</span>
@@ -462,21 +462,21 @@ export const SystemLogsViewer: React.FC = () => {
                   </div>
                 </div>
 
-                {selectedLog.user_profile && (
+                {selectedLog.user_profiles && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">User</label>
                     <div className="mt-1 text-sm text-gray-900">
-                      <div>{selectedLog.user_profile.first_name} {selectedLog.user_profile.last_name}</div>
-                      <div className="text-xs text-gray-500">{selectedLog.user_profile.email}</div>
-                      <div className="text-xs text-gray-500">Role: {selectedLog.user_profile.role}</div>
+                      <div>{selectedLog.user_profiles.first_name} {selectedLog.user_profiles.last_name}</div>
+                      <div className="text-xs text-gray-500">{selectedLog.user_profiles.email}</div>
+                      <div className="text-xs text-gray-500">Role: {selectedLog.user_profiles.role}</div>
                     </div>
                   </div>
                 )}
 
-                {selectedLog.tenant && (
+                {selectedLog.tenants && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">Tenant</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedLog.tenant.name} ({selectedLog.tenant.subdomain})</p>
+                    <p className="mt-1 text-sm text-gray-900">{selectedLog.tenants.name} ({selectedLog.tenants.subdomain})</p>
                   </div>
                 )}
 
