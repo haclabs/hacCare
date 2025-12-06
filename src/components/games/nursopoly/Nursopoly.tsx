@@ -672,6 +672,7 @@ export const Nursopoly: React.FC = () => {
   const SPACE_WIDTH = 90; // px
   const SPACE_HEIGHT = 140; // px for horizontal spaces
   const BOARD_SIZE = 800; // total board size
+  const CENTER_MARGIN = 10; // px margin from spaces
 
   // Helper function to get space position for board layout
   const getSpaceStyle = (index: number): React.CSSProperties => {
@@ -804,10 +805,11 @@ export const Nursopoly: React.FC = () => {
                     {/* Space Content */}
                     <div className="flex-1 flex flex-col items-center justify-center p-2 bg-amber-50">
                       <div 
-                        className="font-bold text-gray-900 text-center leading-tight uppercase"
+                        className="font-black text-gray-900 text-center leading-tight uppercase tracking-tight"
                         style={{ 
-                          fontSize: isCorner ? '11px' : '9px',
-                          fontFamily: 'system-ui, -apple-system, sans-serif'
+                          fontSize: isCorner ? '10px' : '8.5px',
+                          fontFamily: '"Helvetica Neue", "Arial", sans-serif',
+                          fontWeight: 900
                         }}
                       >
                         {space.name}
@@ -835,17 +837,17 @@ export const Nursopoly: React.FC = () => {
               <div 
                 className="absolute bg-gradient-to-br from-teal-700 via-teal-800 to-teal-900 rounded-2xl shadow-2xl border-4 border-amber-900"
                 style={{
-                  top: `${CORNER_SIZE}px`,
-                  left: `${CORNER_SIZE}px`,
-                  width: `${BOARD_SIZE - CORNER_SIZE * 2}px`,
-                  height: `${BOARD_SIZE - CORNER_SIZE * 2}px`,
+                  top: `${SPACE_HEIGHT + CENTER_MARGIN}px`,
+                  left: `${SPACE_HEIGHT + CENTER_MARGIN}px`,
+                  width: `${BOARD_SIZE - (SPACE_HEIGHT + CENTER_MARGIN) * 2}px`,
+                  height: `${BOARD_SIZE - (SPACE_HEIGHT + CENTER_MARGIN) * 2}px`,
                 }}
               >
-                <div className="w-full h-full p-8 flex flex-col items-center justify-center">
+                <div className="w-full h-full p-6 flex flex-col items-center justify-center">
                   {/* Title */}
-                  <div className="text-center mb-8">
+                  <div className="text-center mb-6">
                     <h2 
-                      className="text-5xl font-bold text-amber-300 mb-2 tracking-wider"
+                      className="text-4xl font-bold text-amber-300 mb-2 tracking-wider"
                       style={{ 
                         fontFamily: 'Georgia, serif',
                         textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
@@ -853,19 +855,19 @@ export const Nursopoly: React.FC = () => {
                     >
                       NURSOPOLY
                     </h2>
-                    <p className="text-amber-100 text-base font-medium">Nursing Board Game</p>
+                    <p className="text-amber-100 text-sm font-medium">Nursing Board Game</p>
                   </div>
 
                   {/* Current Player */}
-                  <div className="bg-amber-900/40 rounded-xl p-5 mb-6 w-full max-w-sm backdrop-blur-sm">
-                    <div className="text-amber-200 text-xs font-bold mb-3 text-center tracking-wide">CURRENT PLAYER</div>
-                    <div className="flex items-center justify-center gap-4">
-                      <div className={`w-16 h-16 ${currentPlayer?.color} rounded-full border-4 border-amber-900 shadow-2xl flex items-center justify-center`}>
-                        <span className="text-white text-2xl font-bold">{currentPlayer?.name[0]}</span>
+                  <div className="bg-amber-900/40 rounded-xl p-4 mb-5 w-full max-w-xs backdrop-blur-sm">
+                    <div className="text-amber-200 text-xs font-bold mb-2 text-center tracking-wide">CURRENT PLAYER</div>
+                    <div className="flex items-center justify-center gap-3">
+                      <div className={`w-14 h-14 ${currentPlayer?.color} rounded-full border-4 border-amber-900 shadow-2xl flex items-center justify-center`}>
+                        <span className="text-white text-xl font-bold">{currentPlayer?.name[0]}</span>
                       </div>
                       <div className="text-white">
-                        <div className="font-bold text-xl">{currentPlayer?.name}</div>
-                        <div className="text-amber-200 text-base">Score: {currentPlayer?.score}</div>
+                        <div className="font-bold text-lg">{currentPlayer?.name}</div>
+                        <div className="text-amber-200 text-sm">Score: {currentPlayer?.score}</div>
                       </div>
                     </div>
                   </div>
@@ -874,19 +876,19 @@ export const Nursopoly: React.FC = () => {
                   <button
                     onClick={rollDice}
                     disabled={diceAnimation.isRolling}
-                    className="w-full max-w-sm bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold py-5 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl disabled:cursor-not-allowed border-3 border-amber-900"
+                    className="w-full max-w-xs bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl disabled:cursor-not-allowed border-3 border-amber-900"
                     style={{
                       boxShadow: '0 10px 25px rgba(0,0,0,0.3), 0 0 0 3px #78350f'
                     }}
                   >
-                    <Dices className={`w-10 h-10 ${diceAnimation.isRolling ? 'animate-spin' : ''}`} />
-                    <span className="text-2xl font-extrabold">
+                    <Dices className={`w-8 h-8 ${diceAnimation.isRolling ? 'animate-spin' : ''}`} />
+                    <span className="text-xl font-extrabold">
                       {diceAnimation.isRolling ? 'Rolling...' : diceAnimation.result ? `Rolled ${diceAnimation.result}` : 'Roll Dice'}
                     </span>
                   </button>
 
                   {/* Lap Progress */}
-                  <div className="mt-6 text-center text-amber-200 text-base font-semibold">
+                  <div className="mt-4 text-center text-amber-200 text-sm font-semibold">
                     Lap {currentPlayer?.lapsCompleted + 1} of {gameState.settings.lapsToWin}
                   </div>
                 </div>
