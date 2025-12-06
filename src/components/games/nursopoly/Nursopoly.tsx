@@ -948,27 +948,27 @@ export const Nursopoly: React.FC = () => {
             </h3>
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-blue-500 rounded border border-gray-700"></div>
+                <div className="w-4 h-4 bg-cyan-500 rounded border border-gray-700"></div>
                 <span className="text-gray-800 font-medium">Med-Surg</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-pink-500 rounded border border-gray-700"></div>
+                <div className="w-4 h-4 bg-rose-300 rounded border border-gray-700"></div>
                 <span className="text-gray-800 font-medium">Pediatrics</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-purple-500 rounded border border-gray-700"></div>
+                <div className="w-4 h-4 bg-purple-400 rounded border border-gray-700"></div>
                 <span className="text-gray-800 font-medium">Mental Health</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-500 rounded border border-gray-700"></div>
+                <div className="w-4 h-4 bg-rose-300 rounded border border-gray-700"></div>
                 <span className="text-gray-800 font-medium">Maternal-Newborn</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-orange-500 rounded border border-gray-700"></div>
+                <div className="w-4 h-4 bg-purple-400 rounded border border-gray-700"></div>
                 <span className="text-gray-800 font-medium">Community</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-red-500 rounded border border-gray-700"></div>
+                <div className="w-4 h-4 bg-rose-400 rounded border border-gray-700"></div>
                 <span className="text-gray-800 font-medium">Critical Care</span>
               </div>
             </div>

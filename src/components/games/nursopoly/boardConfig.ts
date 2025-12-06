@@ -12,7 +12,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'start',
     name: 'START',
     description: 'Begin your nursing journey! Collect 200 points each time you pass.',
-    color: 'bg-gradient-to-br from-green-500 to-green-600',
+    color: 'bg-teal-500',
     icon: '🏥',
   },
   
@@ -23,7 +23,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'medical-surgical',
     name: 'Med-Surg Ward',
     description: 'Answer a Medical-Surgical nursing question',
-    color: 'bg-blue-500',
+    color: 'bg-cyan-500',
     icon: '🏥',
   },
   {
@@ -32,7 +32,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'pediatrics',
     name: 'Pediatric Unit',
     description: 'Answer a Pediatrics nursing question',
-    color: 'bg-pink-500',
+    color: 'bg-purple-400',
     icon: '👶',
   },
   {
@@ -40,7 +40,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'stat',
     name: 'STAT!',
     description: 'Urgent care! Answer correctly for double points!',
-    color: 'bg-red-600',
+    color: 'bg-rose-400',
     icon: '🚨',
   },
   {
@@ -49,7 +49,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'medical-surgical',
     name: 'Surgical Floor',
     description: 'Answer a Medical-Surgical nursing question',
-    color: 'bg-blue-500',
+    color: 'bg-cyan-500',
     icon: '💉',
   },
   {
@@ -58,7 +58,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'community-health',
     name: 'Community Clinic',
     description: 'Answer a Community Health question',
-    color: 'bg-orange-500',
+    color: 'bg-purple-400',
     icon: '🏘️',
   },
   {
@@ -66,7 +66,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'break-room',
     name: 'Break Room',
     description: 'Mandatory rest break. Lose a turn.',
-    color: 'bg-gray-500',
+    color: 'bg-slate-400',
     icon: '☕',
   },
   {
@@ -75,7 +75,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'pediatrics',
     name: 'NICU',
     description: 'Answer a Pediatrics nursing question',
-    color: 'bg-pink-500',
+    color: 'bg-rose-300',
     icon: '👼',
   },
   
@@ -85,7 +85,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'clinical-rotation',
     name: 'Clinical Rotation',
     description: 'Choose any discipline to advance to!',
-    color: 'bg-gradient-to-br from-purple-500 to-purple-600',
+    color: 'bg-cyan-500',
     icon: '🔄',
   },
   
@@ -96,7 +96,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'mental-health',
     name: 'Psych Ward',
     description: 'Answer a Mental Health nursing question',
-    color: 'bg-purple-500',
+    color: 'bg-purple-400',
     icon: '🧠',
   },
   {
@@ -105,7 +105,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'critical-care',
     name: 'ICU',
     description: 'Answer a Critical Care question',
-    color: 'bg-red-500',
+    color: 'bg-rose-400',
     icon: '❤️‍🩹',
   },
   {
@@ -114,7 +114,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'mental-health',
     name: 'Mental Health Unit',
     description: 'Answer a Mental Health nursing question',
-    color: 'bg-purple-500',
+    color: 'bg-purple-400',
     icon: '💭',
   },
   {
@@ -131,7 +131,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'critical-care',
     name: 'Trauma Bay',
     description: 'Answer a Critical Care question',
-    color: 'bg-red-500',
+    color: 'bg-rose-400',
     icon: '🚑',
   },
   {
@@ -140,7 +140,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'maternal-newborn',
     name: 'Labor & Delivery',
     description: 'Answer a Maternal-Newborn question',
-    color: 'bg-green-500',
+    color: 'bg-cyan-500',
     icon: '🤰',
   },
   {
@@ -148,7 +148,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'stat',
     name: 'STAT!',
     description: 'Urgent care! Answer correctly for double points!',
-    color: 'bg-red-600',
+    color: 'bg-rose-400',
     icon: '🚨',
   },
   
@@ -158,7 +158,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'preceptor-review',
     name: 'Preceptor Review',
     description: 'Answer 3 quick questions!',
-    color: 'bg-gradient-to-br from-indigo-500 to-indigo-600',
+    color: 'bg-cyan-500',
     icon: '👨‍⚕️',
   },
   
@@ -169,7 +169,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'maternal-newborn',
     name: 'Postpartum Unit',
     description: 'Answer a Maternal-Newborn question',
-    color: 'bg-green-500',
+    color: 'bg-rose-300',
     icon: '👶',
   },
   {
@@ -178,7 +178,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'community-health',
     name: 'Public Health',
     description: 'Answer a Community Health question',
-    color: 'bg-orange-500',
+    color: 'bg-purple-400',
     icon: '🌍',
   },
   {
@@ -187,7 +187,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'medical-surgical',
     name: 'Med-Surg Floor',
     description: 'Answer a Medical-Surgical nursing question',
-    color: 'bg-blue-500',
+    color: 'bg-cyan-500',
     icon: '🏥',
   },
   {
@@ -195,7 +195,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'break-room',
     name: 'Break Room',
     description: 'Mandatory rest break. Lose a turn.',
-    color: 'bg-gray-500',
+    color: 'bg-slate-400',
     icon: '☕',
   },
   {
@@ -204,7 +204,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'pediatrics',
     name: 'Pediatric ER',
     description: 'Answer a Pediatrics nursing question',
-    color: 'bg-pink-500',
+    color: 'bg-rose-300',
     icon: '🚑',
   },
   {
@@ -213,7 +213,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'community-health',
     name: 'Home Care',
     description: 'Answer a Community Health question',
-    color: 'bg-orange-500',
+    color: 'bg-purple-400',
     icon: '🏠',
   },
   {
@@ -221,7 +221,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     type: 'stat',
     name: 'STAT!',
     description: 'Urgent care! Answer correctly for double points!',
-    color: 'bg-red-600',
+    color: 'bg-rose-400',
     icon: '🚨',
   },
   
@@ -242,7 +242,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'critical-care',
     name: 'CCU',
     description: 'Answer a Critical Care question',
-    color: 'bg-red-500',
+    color: 'bg-rose-400',
     icon: '💓',
   },
   {
@@ -251,7 +251,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'mental-health',
     name: 'Crisis Intervention',
     description: 'Answer a Mental Health nursing question',
-    color: 'bg-purple-500',
+    color: 'bg-purple-400',
     icon: '🆘',
   },
   {
@@ -260,7 +260,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'maternal-newborn',
     name: 'Antepartum Care',
     description: 'Answer a Maternal-Newborn question',
-    color: 'bg-green-500',
+    color: 'bg-rose-300',
     icon: '🤰',
   },
   {
@@ -269,7 +269,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'pediatrics',
     name: 'Pediatric Oncology',
     description: 'Answer a Pediatrics nursing question',
-    color: 'bg-pink-500',
+    color: 'bg-rose-300',
     icon: '🎗️',
   },
   {
@@ -278,7 +278,7 @@ export const BOARD_SPACES: BoardSpace[] = [
     discipline: 'medical-surgical',
     name: 'Telemetry Unit',
     description: 'Answer a Medical-Surgical nursing question',
-    color: 'bg-blue-500',
+    color: 'bg-cyan-500',
     icon: '📊',
   },
 ];
