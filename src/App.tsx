@@ -30,6 +30,7 @@ const Documentation = lazy(() => import('./components/Documentation/Documentatio
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./features/settings/components/Settings'));
 const SystemLogsViewer = lazy(() => import('./features/admin/components/monitoring/SystemLogsViewer').then(module => ({ default: module.SystemLogsViewer })));
+const Nursopoly = lazy(() => import('./components/games/nursopoly/Nursopoly'));
 
 /**
  * Main Application Component
@@ -643,6 +644,11 @@ function App() {
               <Route path="simulation-portal" element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <SimulationRouter />
+                </Suspense>
+              } />
+              <Route path="nursopoly" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Nursopoly />
                 </Suspense>
               } />
               <Route path="patient/:id" element={

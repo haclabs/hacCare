@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, Lock, Brain } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, Lock, Brain, Dices } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
 import { MedMathMiniGame } from '../training/MedMathMiniGame';
@@ -73,6 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
+    { id: 'nursopoly', label: '🎲 Nursopoly', icon: Dices, color: 'text-purple-600', route: '/nursopoly' },
     ...(hasRole(['admin', 'super_admin']) ? [
       { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600' }
     ] : []),
@@ -187,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        if ('route' in item && item.route) {
+                        if ('route' in item && item.route && typeof item.route === 'string') {
                           const appRoute = item.route.startsWith('/') 
                             ? `/app${item.route}` 
                             : `/app/${item.route}`;
