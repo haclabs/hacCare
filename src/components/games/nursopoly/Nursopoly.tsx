@@ -667,63 +667,91 @@ export const Nursopoly: React.FC = () => {
   // RENDER: GAME BOARD
   // ============================================================================
 
+  // Helper function to get space position for board layout
+  const getSpaceStyle = (index: number) => {
+    // Bottom row (0-7): left to right
+    if (index <= 7) {
+      return { bottom: 0, left: `${index * 12.5}%`, width: '12.5%', height: '16.66%' };
+    }
+    // Right column (8-15): bottom to top
+    if (index <= 15) {
+      const position = index - 8;
+      return { right: 0, bottom: `${(position + 1) * 12.5}%`, width: '12.5%', height: '12.5%' };
+    }
+    // Top row (16-23): right to left
+    if (index <= 23) {
+      const position = 23 - index;
+      return { top: 0, left: `${position * 12.5}%`, width: '12.5%', height: '16.66%' };
+    }
+    // Left column (24-29): top to bottom
+    const position = index - 24;
+    return { left: 0, top: `${(position + 1) * 12.5}%`, width: '12.5%', height: '12.5%' };
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-900 via-teal-800 to-slate-900 p-4">
       {/* Top Bar */}
       <div className="max-w-7xl mx-auto mb-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Dices className="w-6 h-6 text-purple-400" />
-            Nursopoly
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2" style={{ fontFamily: 'serif' }}>
+            <Dices className="w-8 h-8 text-amber-400" />
+            NURSOPOLY
           </h1>
-          <div className="text-sm text-slate-400">
-            Lap {currentPlayer?.lapsCompleted + 1} of {gameState.settings.lapsToWin}
+          <div className="text-sm text-amber-200 font-medium">
+            Nursing Board Game
           </div>
         </div>
         <button
           onClick={resetGame}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
           New Game
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Board */}
-        <div className="lg:col-span-3 bg-slate-800 rounded-2xl p-6 border border-slate-700">
-          <div className="aspect-square max-w-3xl mx-auto relative bg-slate-900/50 rounded-xl p-4">
+        <div className="lg:col-span-3">
+          <div className="aspect-square max-w-3xl mx-auto relative bg-gradient-to-br from-amber-100 to-amber-50 rounded-3xl p-6 shadow-2xl border-8 border-amber-900">
             {/* Board Spaces */}
-            <div className="absolute inset-4 grid grid-cols-8 grid-rows-8 gap-1">
+            <div className="absolute inset-0 p-3">
               {BOARD_SPACES.map((space, index) => {
                 const playersOnSpace = gameState.players.filter(p => p.position === index);
+                const isCorner = index === 0 || index === 8 || index === 16 || index === 24;
+                const style = getSpaceStyle(index);
                 
                 return (
                   <div
                     key={space.id}
-                    className={`${space.color} rounded-lg p-2 flex flex-col items-center justify-center text-center relative overflow-hidden`}
+                    className="absolute border-2 border-amber-900 bg-amber-50"
                     style={{
-                      gridColumn: index === 0 ? '1 / 3' : index <= 7 ? index + 1 : index === 8 ? '8 / 9' : 
-                                 index <= 15 ? 8 : index === 16 ? '8 / 9' : 
-                                 index <= 23 ? 9 - (index - 16) : index === 24 ? '1 / 2' : 2 - (index - 24),
-                      gridRow: index === 0 ? '1 / 3' : index <= 7 ? 1 : index === 8 ? '1 / 3' : 
-                              index <= 15 ? index - 7 : index === 16 ? '8 / 9' : 
-                              index <= 23 ? 8 : index === 24 ? '8 / 9' : 9 - (index - 24),
+                      ...style,
+                      ...(isCorner && { width: '16.66%', height: '16.66%' }),
                     }}
                   >
-                    <div className="text-lg mb-1">{space.icon}</div>
-                    <div className="text-[10px] font-semibold text-white leading-tight">
-                      {space.name}
+                    {/* Space Header with Discipline Color */}
+                    <div className={`${space.color} h-8 flex items-center justify-center border-b-2 border-amber-900`}>
+                      <span className="text-lg">{space.icon}</span>
+                    </div>
+                    
+                    {/* Space Content */}
+                    <div className="p-1 bg-amber-50 flex-1 flex flex-col items-center justify-center">
+                      <div className="text-[10px] font-bold text-gray-900 text-center leading-tight uppercase" style={{ fontFamily: 'sans-serif' }}>
+                        {space.name}
+                      </div>
                     </div>
                     
                     {/* Players on this space */}
                     {playersOnSpace.length > 0 && (
-                      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1 z-10">
                         {playersOnSpace.map(player => (
                           <div
                             key={player.id}
-                            className={`w-4 h-4 ${player.color} rounded-full border-2 border-white shadow-lg`}
-                          />
+                            className={`w-6 h-6 ${player.color} rounded-full border-3 border-amber-900 shadow-lg flex items-center justify-center`}
+                          >
+                            <span className="text-white text-xs font-bold">{player.name[0]}</span>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -731,84 +759,126 @@ export const Nursopoly: React.FC = () => {
                 );
               })}
             </div>
-          </div>
 
-          {/* Dice and Controls */}
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <button
-              onClick={rollDice}
-              disabled={diceAnimation.isRolling}
-              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-lg disabled:cursor-not-allowed"
-            >
-              <Dices className={`w-6 h-6 ${diceAnimation.isRolling ? 'animate-spin' : ''}`} />
-              {diceAnimation.isRolling ? 'Rolling...' : diceAnimation.result ? `Rolled ${diceAnimation.result}` : 'Roll Dice'}
-            </button>
+            {/* Center Area - Game Info */}
+            <div className="absolute inset-0 m-auto" style={{ width: '62.5%', height: '62.5%', top: '18.75%', left: '18.75%' }}>
+              <div className="w-full h-full bg-gradient-to-br from-teal-700 to-teal-800 rounded-2xl shadow-inner p-6 flex flex-col items-center justify-center border-4 border-amber-900">
+                {/* Title */}
+                <div className="text-center mb-6">
+                  <h2 className="text-4xl font-bold text-amber-300 mb-2" style={{ fontFamily: 'serif' }}>
+                    NURSOPOLY
+                  </h2>
+                  <p className="text-amber-100 text-sm">Nursing Board Game</p>
+                </div>
+
+                {/* Current Player */}
+                <div className="bg-amber-900/30 rounded-xl p-4 mb-4 w-full">
+                  <div className="text-amber-200 text-xs font-semibold mb-2 text-center">CURRENT PLAYER</div>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className={`w-12 h-12 ${currentPlayer?.color} rounded-full border-4 border-amber-900 shadow-lg flex items-center justify-center`}>
+                      <span className="text-white text-xl font-bold">{currentPlayer?.name[0]}</span>
+                    </div>
+                    <div className="text-white">
+                      <div className="font-bold text-lg">{currentPlayer?.name}</div>
+                      <div className="text-amber-200 text-sm">Score: {currentPlayer?.score}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dice Roll Button */}
+                <button
+                  onClick={rollDice}
+                  disabled={diceAnimation.isRolling}
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-xl disabled:cursor-not-allowed border-2 border-amber-900"
+                >
+                  <Dices className={`w-8 h-8 ${diceAnimation.isRolling ? 'animate-spin' : ''}`} />
+                  <span className="text-xl">
+                    {diceAnimation.isRolling ? 'Rolling...' : diceAnimation.result ? `Rolled ${diceAnimation.result}` : 'Roll Dice'}
+                  </span>
+                </button>
+
+                {/* Lap Progress */}
+                <div className="mt-4 text-center text-amber-200 text-sm">
+                  Lap {currentPlayer?.lapsCompleted + 1} of {gameState.settings.lapsToWin}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Scoreboard */}
         <div className="lg:col-span-1 space-y-4">
-          {gameState.players.map((player, index) => (
-            <div
-              key={player.id}
-              className={`bg-slate-800 rounded-xl p-4 border-2 transition-all ${
-                player.isActive ? 'border-purple-500 shadow-lg shadow-purple-500/20' : 'border-slate-700'
-              }`}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-12 h-12 ${player.color} rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg`}>
-                  {player.name[0]}
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-white">{player.name}</div>
-                  <div className="text-sm text-slate-400">
-                    Space {player.position}
+          {/* Players List */}
+          <div className="bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl p-4 border-4 border-amber-900 shadow-xl">
+            <h3 className="text-lg font-bold text-amber-900 mb-3 text-center" style={{ fontFamily: 'serif' }}>
+              PLAYERS
+            </h3>
+            <div className="space-y-3">
+              {gameState.players.map((player, index) => (
+                <div
+                  key={player.id}
+                  className={`bg-white rounded-xl p-3 border-2 transition-all ${
+                    player.isActive ? 'border-amber-600 shadow-lg ring-2 ring-amber-400' : 'border-amber-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-10 h-10 ${player.color} rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md border-2 border-amber-900`}>
+                      {player.name[0]}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-900">{player.name}</div>
+                      <div className="text-xs text-gray-600">
+                        Space {player.position}
+                      </div>
+                    </div>
+                    {player.isActive && (
+                      <Trophy className="w-5 h-5 text-amber-600 animate-pulse" />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-amber-50 rounded p-2 text-center border border-amber-200">
+                      <div className="text-gray-600">Score</div>
+                      <div className="text-gray-900 font-bold text-base">{player.score}</div>
+                    </div>
+                    <div className="bg-amber-50 rounded p-2 text-center border border-amber-200">
+                      <div className="text-gray-600">Laps</div>
+                      <div className="text-gray-900 font-bold text-base">{player.lapsCompleted}</div>
+                    </div>
                   </div>
                 </div>
-                {player.isActive && (
-                  <ArrowRight className="w-5 h-5 text-purple-400 animate-pulse" />
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-slate-400 text-xs">Score</div>
-                  <div className="text-white font-bold text-lg">{player.score}</div>
-                </div>
-                <div className="bg-slate-700/50 rounded p-2">
-                  <div className="text-slate-400 text-xs">Laps</div>
-                  <div className="text-white font-bold text-lg">{player.lapsCompleted}</div>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
 
           {/* Legend */}
-          <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-            <h3 className="text-sm font-semibold text-white mb-3">Legend</h3>
+          <div className="bg-gradient-to-br from-amber-100 to-amber-50 rounded-2xl p-4 border-4 border-amber-900 shadow-xl">
+            <h3 className="text-sm font-bold text-amber-900 mb-3 text-center" style={{ fontFamily: 'serif' }}>
+              DISCIPLINES
+            </h3>
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                <span className="text-slate-300">Med-Surg</span>
+                <div className="w-4 h-4 bg-blue-500 rounded border border-gray-700"></div>
+                <span className="text-gray-800 font-medium">Med-Surg</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-pink-500 rounded"></div>
-                <span className="text-slate-300">Pediatrics</span>
+                <div className="w-4 h-4 bg-pink-500 rounded border border-gray-700"></div>
+                <span className="text-gray-800 font-medium">Pediatrics</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                <span className="text-slate-300">Mental Health</span>
+                <div className="w-4 h-4 bg-purple-500 rounded border border-gray-700"></div>
+                <span className="text-gray-800 font-medium">Mental Health</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded"></div>
-                <span className="text-slate-300">Maternal-Newborn</span>
+                <div className="w-4 h-4 bg-green-500 rounded border border-gray-700"></div>
+                <span className="text-gray-800 font-medium">Maternal-Newborn</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                <span className="text-slate-300">Community</span>
+                <div className="w-4 h-4 bg-orange-500 rounded border border-gray-700"></div>
+                <span className="text-gray-800 font-medium">Community</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded"></div>
-                <span className="text-slate-300">Critical Care</span>
+                <div className="w-4 h-4 bg-red-500 rounded border border-gray-700"></div>
+                <span className="text-gray-800 font-medium">Critical Care</span>
               </div>
             </div>
           </div>
