@@ -667,25 +667,78 @@ export const Nursopoly: React.FC = () => {
   // RENDER: GAME BOARD
   // ============================================================================
 
+  // Board dimensions - static for perfect alignment
+  const CORNER_SIZE = 120; // px
+  const SPACE_WIDTH = 90; // px
+  const SPACE_HEIGHT = 140; // px for horizontal spaces
+  const BOARD_SIZE = 800; // total board size
+
   // Helper function to get space position for board layout
-  const getSpaceStyle = (index: number) => {
-    // Bottom row (0-7): left to right
-    if (index <= 7) {
-      return { bottom: 0, left: `${index * 12.5}%`, width: '12.5%', height: '16.66%' };
+  const getSpaceStyle = (index: number): React.CSSProperties => {
+    const spaceW = SPACE_WIDTH;
+    const spaceH = SPACE_HEIGHT;
+    const corner = CORNER_SIZE;
+
+    // BOTTOM ROW (0-7): Left to Right
+    if (index === 0) {
+      // Bottom-left corner (START)
+      return { bottom: 0, left: 0, width: corner, height: corner };
     }
-    // Right column (8-15): bottom to top
-    if (index <= 15) {
-      const position = index - 8;
-      return { right: 0, bottom: `${(position + 1) * 12.5}%`, width: '12.5%', height: '12.5%' };
+    if (index >= 1 && index <= 7) {
+      return { 
+        bottom: 0, 
+        left: corner + (index - 1) * spaceW, 
+        width: spaceW, 
+        height: spaceH 
+      };
     }
-    // Top row (16-23): right to left
-    if (index <= 23) {
-      const position = 23 - index;
-      return { top: 0, left: `${position * 12.5}%`, width: '12.5%', height: '16.66%' };
+
+    // RIGHT COLUMN (8-15): Bottom to Top
+    if (index === 8) {
+      // Bottom-right corner
+      return { bottom: 0, right: 0, width: corner, height: corner };
     }
-    // Left column (24-29): top to bottom
-    const position = index - 24;
-    return { left: 0, top: `${(position + 1) * 12.5}%`, width: '12.5%', height: '12.5%' };
+    if (index >= 9 && index <= 15) {
+      const pos = index - 9;
+      return { 
+        right: 0, 
+        bottom: corner + pos * spaceW, 
+        width: spaceH, 
+        height: spaceW 
+      };
+    }
+
+    // TOP ROW (16-23): Right to Left
+    if (index === 16) {
+      // Top-right corner
+      return { top: 0, right: 0, width: corner, height: corner };
+    }
+    if (index >= 17 && index <= 23) {
+      const pos = index - 17;
+      return { 
+        top: 0, 
+        right: corner + pos * spaceW, 
+        width: spaceW, 
+        height: spaceH 
+      };
+    }
+
+    // LEFT COLUMN (24-29): Top to Bottom
+    if (index === 24) {
+      // Top-left corner
+      return { top: 0, left: 0, width: corner, height: corner };
+    }
+    if (index >= 25 && index <= 29) {
+      const pos = index - 25;
+      return { 
+        left: 0, 
+        top: corner + pos * spaceW, 
+        width: spaceH, 
+        height: spaceW 
+      };
+    }
+
+    return {};
   };
 
   return (
@@ -713,42 +766,61 @@ export const Nursopoly: React.FC = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Board */}
         <div className="lg:col-span-3">
-          <div className="aspect-square max-w-3xl mx-auto relative bg-gradient-to-br from-amber-100 to-amber-50 rounded-3xl p-6 shadow-2xl border-8 border-amber-900">
-            {/* Board Spaces */}
-            <div className="absolute inset-0 p-3">
+          <div className="w-full max-w-[900px] mx-auto">
+            <div 
+              className="relative bg-gradient-to-br from-amber-100 via-amber-50 to-amber-100 rounded-3xl shadow-2xl"
+              style={{ 
+                width: `${BOARD_SIZE}px`, 
+                height: `${BOARD_SIZE}px`,
+                margin: '0 auto',
+                border: '12px solid #78350f', // amber-900
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.06)'
+              }}
+            >
+              {/* Board Spaces */}
               {BOARD_SPACES.map((space, index) => {
                 const playersOnSpace = gameState.players.filter(p => p.position === index);
                 const isCorner = index === 0 || index === 8 || index === 16 || index === 24;
                 const style = getSpaceStyle(index);
+                const isHorizontal = index >= 1 && index <= 7 || index >= 17 && index <= 23;
                 
                 return (
                   <div
                     key={space.id}
-                    className="absolute border-2 border-amber-900 bg-amber-50"
+                    className="absolute bg-amber-50"
                     style={{
                       ...style,
-                      ...(isCorner && { width: '16.66%', height: '16.66%' }),
+                      border: '2px solid #78350f',
                     }}
                   >
                     {/* Space Header with Discipline Color */}
-                    <div className={`${space.color} h-8 flex items-center justify-center border-b-2 border-amber-900`}>
-                      <span className="text-lg">{space.icon}</span>
+                    <div 
+                      className={`${space.color} flex items-center justify-center border-b-2 border-amber-900`}
+                      style={{ height: isCorner ? '40px' : '35px' }}
+                    >
+                      <span className="text-2xl">{space.icon}</span>
                     </div>
                     
                     {/* Space Content */}
-                    <div className="p-1 bg-amber-50 flex-1 flex flex-col items-center justify-center">
-                      <div className="text-[10px] font-bold text-gray-900 text-center leading-tight uppercase" style={{ fontFamily: 'sans-serif' }}>
+                    <div className="flex-1 flex flex-col items-center justify-center p-2 bg-amber-50">
+                      <div 
+                        className="font-bold text-gray-900 text-center leading-tight uppercase"
+                        style={{ 
+                          fontSize: isCorner ? '11px' : '9px',
+                          fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }}
+                      >
                         {space.name}
                       </div>
                     </div>
                     
                     {/* Players on this space */}
                     {playersOnSpace.length > 0 && (
-                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1 z-10">
+                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1 z-20">
                         {playersOnSpace.map(player => (
                           <div
                             key={player.id}
-                            className={`w-6 h-6 ${player.color} rounded-full border-3 border-amber-900 shadow-lg flex items-center justify-center`}
+                            className={`w-7 h-7 ${player.color} rounded-full border-2 border-amber-900 shadow-xl flex items-center justify-center`}
                           >
                             <span className="text-white text-xs font-bold">{player.name[0]}</span>
                           </div>
@@ -758,48 +830,65 @@ export const Nursopoly: React.FC = () => {
                   </div>
                 );
               })}
-            </div>
 
-            {/* Center Area - Game Info */}
-            <div className="absolute inset-0 m-auto" style={{ width: '62.5%', height: '62.5%', top: '18.75%', left: '18.75%' }}>
-              <div className="w-full h-full bg-gradient-to-br from-teal-700 to-teal-800 rounded-2xl shadow-inner p-6 flex flex-col items-center justify-center border-4 border-amber-900">
-                {/* Title */}
-                <div className="text-center mb-6">
-                  <h2 className="text-4xl font-bold text-amber-300 mb-2" style={{ fontFamily: 'serif' }}>
-                    NURSOPOLY
-                  </h2>
-                  <p className="text-amber-100 text-sm">Nursing Board Game</p>
-                </div>
+              {/* Center Area - Game Info */}
+              <div 
+                className="absolute bg-gradient-to-br from-teal-700 via-teal-800 to-teal-900 rounded-2xl shadow-2xl border-4 border-amber-900"
+                style={{
+                  top: `${CORNER_SIZE}px`,
+                  left: `${CORNER_SIZE}px`,
+                  width: `${BOARD_SIZE - CORNER_SIZE * 2}px`,
+                  height: `${BOARD_SIZE - CORNER_SIZE * 2}px`,
+                }}
+              >
+                <div className="w-full h-full p-8 flex flex-col items-center justify-center">
+                  {/* Title */}
+                  <div className="text-center mb-8">
+                    <h2 
+                      className="text-5xl font-bold text-amber-300 mb-2 tracking-wider"
+                      style={{ 
+                        fontFamily: 'Georgia, serif',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+                      }}
+                    >
+                      NURSOPOLY
+                    </h2>
+                    <p className="text-amber-100 text-base font-medium">Nursing Board Game</p>
+                  </div>
 
-                {/* Current Player */}
-                <div className="bg-amber-900/30 rounded-xl p-4 mb-4 w-full">
-                  <div className="text-amber-200 text-xs font-semibold mb-2 text-center">CURRENT PLAYER</div>
-                  <div className="flex items-center justify-center gap-3">
-                    <div className={`w-12 h-12 ${currentPlayer?.color} rounded-full border-4 border-amber-900 shadow-lg flex items-center justify-center`}>
-                      <span className="text-white text-xl font-bold">{currentPlayer?.name[0]}</span>
-                    </div>
-                    <div className="text-white">
-                      <div className="font-bold text-lg">{currentPlayer?.name}</div>
-                      <div className="text-amber-200 text-sm">Score: {currentPlayer?.score}</div>
+                  {/* Current Player */}
+                  <div className="bg-amber-900/40 rounded-xl p-5 mb-6 w-full max-w-sm backdrop-blur-sm">
+                    <div className="text-amber-200 text-xs font-bold mb-3 text-center tracking-wide">CURRENT PLAYER</div>
+                    <div className="flex items-center justify-center gap-4">
+                      <div className={`w-16 h-16 ${currentPlayer?.color} rounded-full border-4 border-amber-900 shadow-2xl flex items-center justify-center`}>
+                        <span className="text-white text-2xl font-bold">{currentPlayer?.name[0]}</span>
+                      </div>
+                      <div className="text-white">
+                        <div className="font-bold text-xl">{currentPlayer?.name}</div>
+                        <div className="text-amber-200 text-base">Score: {currentPlayer?.score}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Dice Roll Button */}
-                <button
-                  onClick={rollDice}
-                  disabled={diceAnimation.isRolling}
-                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold py-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-xl disabled:cursor-not-allowed border-2 border-amber-900"
-                >
-                  <Dices className={`w-8 h-8 ${diceAnimation.isRolling ? 'animate-spin' : ''}`} />
-                  <span className="text-xl">
-                    {diceAnimation.isRolling ? 'Rolling...' : diceAnimation.result ? `Rolled ${diceAnimation.result}` : 'Roll Dice'}
-                  </span>
-                </button>
+                  {/* Dice Roll Button */}
+                  <button
+                    onClick={rollDice}
+                    disabled={diceAnimation.isRolling}
+                    className="w-full max-w-sm bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-600 hover:via-amber-700 hover:to-amber-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-bold py-5 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl disabled:cursor-not-allowed border-3 border-amber-900"
+                    style={{
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.3), 0 0 0 3px #78350f'
+                    }}
+                  >
+                    <Dices className={`w-10 h-10 ${diceAnimation.isRolling ? 'animate-spin' : ''}`} />
+                    <span className="text-2xl font-extrabold">
+                      {diceAnimation.isRolling ? 'Rolling...' : diceAnimation.result ? `Rolled ${diceAnimation.result}` : 'Roll Dice'}
+                    </span>
+                  </button>
 
-                {/* Lap Progress */}
-                <div className="mt-4 text-center text-amber-200 text-sm">
-                  Lap {currentPlayer?.lapsCompleted + 1} of {gameState.settings.lapsToWin}
+                  {/* Lap Progress */}
+                  <div className="mt-6 text-center text-amber-200 text-base font-semibold">
+                    Lap {currentPlayer?.lapsCompleted + 1} of {gameState.settings.lapsToWin}
+                  </div>
                 </div>
               </div>
             </div>
