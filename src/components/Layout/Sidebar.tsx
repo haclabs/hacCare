@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, Lock } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, Lock, Brain } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
+import { MedMathMiniGame } from '../training/MedMathMiniGame';
 
 /**
  * Sidebar Navigation Component
@@ -33,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const [activeItemTop, setActiveItemTop] = useState(0);
   const [activeItemHeight, setActiveItemHeight] = useState(0);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [showMedMath, setShowMedMath] = useState(false);
   const navContainerRef = useRef<HTMLDivElement>(null);
 
   // Update active indicator position when activeTab changes
@@ -274,6 +276,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           )}
         </div>
       </nav>
+
+      {/* Med Math Mini-Game Button - Fixed at bottom */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+        <button
+          onClick={() => setShowMedMath(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 group"
+        >
+          <Brain className="h-5 w-5 group-hover:scale-110 transition-transform" />
+          <span className="text-[15px]">🎯 Med Math</span>
+        </button>
+        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+          Quick practice break
+        </p>
+      </div>
+
+      {/* Med Math Mini-Game Modal */}
+      {showMedMath && (
+        <MedMathMiniGame
+          numQuestions={5}
+          allowedDifficulties={['easy', 'medium']}
+          onClose={() => setShowMedMath(false)}
+        />
+      )}
     </aside>
   );
 };
