@@ -57,6 +57,20 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showAlerts, setShowAlerts] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar-collapsed') === 'true';
+  });
+
+  // Listen for sidebar toggle events
+  useEffect(() => {
+    const handleSidebarToggle = (e: CustomEvent) => {
+      setSidebarCollapsed(e.detail.collapsed);
+    };
+    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    return () => {
+      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    };
+  }, []);
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Detect simulation subdomain and redirect to simulation portal
@@ -618,25 +632,27 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
-      {/* Simulation Mode Banner */}
-      <SimulationBanner />
-      
-      {/* Application Header */}
-      <Header 
-        onAlertsClick={() => setShowAlerts(true)}
-        onBarcodeScan={handleBarcodeScan}
+      {/* Sidebar Navigation - Fixed full height */}
+      <Sidebar 
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
       
-      {/* Main Layout */}
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <Sidebar 
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
+      {/* Main Layout - Offset by sidebar width */}
+      <div className={`transition-all duration-300 ${ 
+        sidebarCollapsed ? 'ml-20' : 'ml-64'
+      }`}>
+        {/* Simulation Mode Banner */}
+        <SimulationBanner />
+        
+        {/* Application Header */}
+        <Header 
+          onAlertsClick={() => setShowAlerts(true)}
+          onBarcodeScan={handleBarcodeScan}
         />
         
         {/* Main Content Area */}
-        <main className="flex-1 p-8">
+        <main className="p-8 pl-16">
             <Routes>
               <Route index element={renderContent()} />
               <Route path="auth/callback" element={<AuthCallback />} />
