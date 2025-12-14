@@ -1786,44 +1786,107 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           </div>
         </div>
 
-        {/* Info Cards Row */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          {/* Allergies */}
-          <div className={`${allergiesCount > 0 ? 'bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200' : 'bg-gradient-to-br from-gray-50 to-gray-100/50 border-gray-200'} border rounded-lg p-3`}>
-            <div className="flex items-center justify-between mb-1">
-              <AlertTriangle className={`h-4 w-4 ${allergiesCount > 0 ? 'text-amber-600' : 'text-gray-400'}`} />
-              <span className={`text-xs font-semibold uppercase tracking-wide ${allergiesCount > 0 ? 'text-amber-600' : 'text-gray-500'}`}>Allergies</span>
-            </div>
-            <div className={`text-2xl font-bold ${allergiesCount > 0 ? 'text-amber-900' : 'text-gray-500'}`}>
-              {allergiesCount}
-            </div>
-            <div className={`text-xs mt-0.5 ${allergiesCount > 0 ? 'text-amber-700' : 'text-gray-500'}`}>
-              {allergiesCount === 0 ? 'No known allergies' : allergiesCount === 1 ? '1 allergy' : `${allergiesCount} allergies`}
-            </div>
-          </div>
+        {/* Floating Action Bar */}
+        <div className="mt-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div className="flex items-center justify-between gap-3">
+              {/* Chart Review */}
+              <button 
+                onClick={handlePrintRecord}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 group"
+              >
+                <FileText className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600">Chart</span>
+              </button>
 
-          {/* Vitals Status */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Activity className="h-4 w-4 text-purple-600" />
-              <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Vitals</span>
-            </div>
-            <div className="text-2xl font-bold text-purple-900">
-              {patient.vitals && patient.vitals.length > 0 ? patient.vitals.length : '0'}
-            </div>
-            <div className="text-xs text-purple-700 mt-0.5">Recorded</div>
-          </div>
+              {/* Vitals */}
+              <button 
+                onClick={() => setActiveModule('vitals')}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 group relative"
+              >
+                <Activity className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-600">Vitals</span>
+                {patient.vitals && patient.vitals.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {patient.vitals.length}
+                  </span>
+                )}
+              </button>
 
-          {/* Medications */}
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Pill className="h-4 w-4 text-emerald-600" />
-              <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Active Meds</span>
+              {/* Medications */}
+              <button 
+                onClick={() => setActiveModule('medications')}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 group relative"
+              >
+                <Pill className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">Meds</span>
+                {patient.medications && patient.medications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                    {patient.medications.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Labs */}
+              <button 
+                onClick={() => setShowLabs(true)}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all duration-200 group relative"
+              >
+                <FlaskConical className="h-5 w-5 text-cyan-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-cyan-600">Labs</span>
+                {unacknowledgedLabsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full shadow-sm animate-pulse">
+                    NEW
+                  </span>
+                )}
+              </button>
+
+              {/* Orders */}
+              <button 
+                onClick={() => setShowDoctorsOrders(true)}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200 group relative"
+              >
+                <FileCheck className="h-5 w-5 text-orange-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-orange-600">Orders</span>
+                {unacknowledgedCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full shadow-sm animate-pulse">
+                    NEW
+                  </span>
+                )}
+              </button>
+
+              {/* HacMap */}
+              <button 
+                onClick={() => setActiveModule('hacmap')}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all duration-200 group"
+              >
+                <MapPin className="h-5 w-5 text-rose-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-rose-600">HacMap</span>
+              </button>
+
+              {/* I&O */}
+              <button 
+                onClick={() => setActiveModule('intake-output')}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 group"
+              >
+                <Droplets className="h-5 w-5 text-indigo-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600">I&O</span>
+              </button>
+
+              {/* Notes/Handover */}
+              <button 
+                onClick={() => setActiveModule('handover')}
+                className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all duration-200 group relative"
+              >
+                <MessageSquare className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-amber-600">Notes</span>
+                {unacknowledgedHandoverCount > 0 && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full shadow-sm animate-pulse">
+                    NEW
+                  </span>
+                )}
+              </button>
             </div>
-            <div className="text-2xl font-bold text-emerald-900">
-              {patient.medications?.length || 0}
-            </div>
-            <div className="text-xs text-emerald-700 mt-0.5">Current orders</div>
           </div>
         </div>
 
