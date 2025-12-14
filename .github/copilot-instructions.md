@@ -1,0 +1,204 @@
+# hacCare AI Development Guide
+
+## System Overview
+hacCare is a **multi-tenant healthcare simulation platform** for clinical education. React 19 + TypeScript + Supabase (PostgreSQL 15) with strict Row-Level Security (RLS) for HIPAA compliance.
+
+### Architecture Highlights
+- **Multi-tenant isolation**: Every table has `tenant_id UUID NOT NULL` with RLS policies enforcing tenant isolation
+- **Simulation system**: Template-based scenarios with snapshot/restore, running in dedicated tenant environments (uses same codebase as production)
+- **BCMA (Barcode Medication Administration)**: Five Rights verification with patient/medication barcode dual-scan workflow
+- **Role hierarchy**: `super_admin` (cross-tenant access) → `admin` → `instructor` → `nurse` (simulation-only)
+
+### 🧹 CRITICAL: Cleanup Priority
+**Tech debt reduction is a TOP PRIORITY**. When working on features:
+- **Remove unused code aggressively** - if it's not actively used, delete it
+- **Consolidate duplicates** - `src/featuresexplicit tenant filtering is the standard pattern
+- **Look for abandoned patterns** - old simulation code, unused services, deprecated components
+- **Document what you remove** - add entries to CHANGELOG.md for significant cleanup
+
+## Critical Developer Patterns
+
+### Multi-Tenant Database Access
+**ALWAYS include `tenant_id` in queries** - RLS policies expect `app.current_tenant_id` but most components use explicit tenant filtering:
+
+```typescript
+// ✅ Correct - explicit tenant filtering
+const { data } = await supabase
+  .from('patient_medications')
+  .select('*')
+  .eq('tenant_id', currentTenant.id)
+  .eq('patient_id', patientId);
+
+// ❌ Wrong - missing tenant_id causes RLS policy violations
+const { data } = await supabase
+  .from('patient_medications')
+  .select('*')
+  .eq('patient_id', patientId);
+```
+
+See [src/features/patients/hooks/useMultiTenantPatients.ts](../src/features/patients/hooks/useMultiTenantPatients.ts) for the canonical pattern.
+
+### State Management Architecture
+- **React Query (TanStack)**: All server state via `useQuery`/`useMutation` with centralized keys in [src/lib/api/queryClient.ts](../src/lib/api/queryClient.ts)
+- **Context providers**: `AuthContext` → `TenantContext` → `AlertContext` (hierarchical dependency order)
+- **NO localStorage/sessionStorage for data** - only Supabase manages persistence
+
+```typescript
+// Standard query pattern
+export function usePatientMedications(patientId: string) {
+  const { currentTenant } = useTenant();
+  return useQuery({
+    queryKey: ['medications', patientId, currentTenant?.id],
+    queryFn: () => fetchMedications(patientId, currentTenant!.id),
+    enabled: !!currentTenant && !!patientId,
+  });
+}
+```
+
+### Database Functions (SECURITY DEFINER)
+Use `SECURITY DEFINER` functions for cross-table operations that need to bypass RLS:
+- `launch_simulation(p_template_id, p_user_id)` - creates tenant, copies template data
+- `complete_simulation(p_simulation_id)` - marks complete, generates debrief
+- `reset_simulation_for_next_session(p_simulation_id)` - preserves barcodes, resets clinical data
+
+Located in [database/functions/](../database/functions/). Call via `supabase.rpc('function_name', params)`.
+
+### Alert System Deduplication
+Alerts use **smart deduplication** to prevent spam:
+```typescript
+// Medication alerts: dedupe by (patient_id, medication_id, alert_type)
+// Vital signs alerts: dedupe by (patient_id, alert_type, message hash)
+// Check src/services/operations/alertService.ts for the logic
+```
+
+## Development Commands
+
+```bash
+# Development
+npm run dev                    # Vite dev server on http://localhost:5173
+npm run build                  # Production build with Terser minification
+npm run preview                # Preview production build
+
+# Code Quality
+npm run lint                   # ESLint (no auto-fix)
+npm run lint:fix               # ESLint with --fix
+npm run type-check             # TypeScript compilation check (no emit)
+
+# Testing
+npm run test                   # Vitest unit tests
+npm run test:coverage          # Coverage report
+
+# Database
+npm run supabase:types         # Regenerate TypeScript types from Supabase schema
+```
+
+**Database migrations**: Never run `supabase migration` command (PREFERRED LOCATION)
+│   ├── components/   # UI components
+│   ├── hooks/        # React Query hooks (usePatients, useMultiTenantPatients)
+│   └── services/     # API calls (rare - most logic in hooks)
+├── simulation/       # Simulation manager, templates, debrief reports
+├── admin/            # User management, tenant settings, backup/restore
+└── clinical/         # ⚠️ DEPRECATED - Migrate features to patients/ and remove
+```
+
+**🧹 Cleanup Note**: `clinical/` is being phased out. When working on BCMA, wound assessments, or labs:
+1. Check if functionality already exists in `patients/`
+2. Migrate or consolidate into `patients/` feature folder
+3. Delete the old `clinical/` version
+4. Update imports across the codebase patients/         # Patient management & clinical workflows
+│   ├── components/   # UI components
+│   ├── hooks/        # React Query hooks (usePatients, useMultiTenantPatients)
+│   └── services/     # API calls (rare - most logic in hooks)
+├── simulation/       # Simulation manager, templates, debrief reports
+├── admin/     vs Production
+**No special handling needed** - simulations use the same system as production, just in dedicated tenant environments. The only difference:
+- Simulations may run on `simulation.` subdomain (auto-redirects to `/simulation-portal`)
+- Same components, same workflows, same database structure
+- See [src/App.tsx](../src/App.tsx) lines 69-81 for subdomain detection/features/simulation/components/SimulationManager'));
+```
+See [src/App.tsx](../src/App.tsx) lines 17-29 for all lazy-loaded routes.
+
+## Key Gotchas
+
+### Simulation Tenant Detection
+Simulations run on `simulation.` subdomain in production. Check for simulation context:
+```typescript
+const hostname = window.location.hostname;
+const isSimulationSubdomain = hostname.startsWith('simulation.');
+// Auto-redirect to /simulation-portal if on simulation subdomain
+```
+See [src/App.tsx](../src/App.tsx) lines 69-81.
+
+### RLS Infinite Recursion
+**Problem**: RLS policies that query the same table cause infinite recursion.
+**Solution**: Use `SECURITY DEFINER` functions or explicit `security_invoker = false` on policies.
+Example: [database/migrations/20251117022000_emergency_fix_device_assessments_rls.sql](../database/migrations/20251117022000_emergency_fix_device_assessments_rls.sql)
+
+### Patient Creation Race Conditions
+Patient creation across tenants can cause duplicate barcodes. Always use:
+```typescript
+// Generate barcode on server-side or with tenant prefix
+const barcode = `P${Math.floor(10000 + Math.random() * 90000)}`;
+// Then check for uniqueness within tenant
+```
+
+### Barcode Label Reusability
+Patient/medication barcodes persist across simulation resets for semester-long label reuse:
+- Patient barcodes: `P12345` (5 digits)
+- Medication barcodes: `MZ30512` (prefix + 5 digits)
+- Preserved via `reset_simulation_for_next_session()` function
+
+See [docs/features/simulation/REUSABLE_SIMULATION_LABELS_GUIDE.md](../docs/features/simulation/REUSABLE_SIMULATION_LABELS_GUIDE.md).
+
+## File Conventions
+
+- **TSX for React components**, TS for utilities/types/services
+- **Barrel exports**: Use `index.ts` for public API of feature folders
+- **Type imports**: Use `import type { Foo }` for type-only imports to help tree-shaking
+- **Supabase types**: Auto-generated in `src/types/supabase.ts` - never edit manually
+
+## Documentation Locations
+
+- **Architecture**: [docs/architecture/](../docs/architecture/) (security RLS policies, audit analysis)
+- **Features**: [docs/features/](../docs/features/) (bcma/, simulation/, patients/, labs/)
+- **Operations**: [docs/operations/](../docs/operations/) (deployment, troubleshooting, bundle optimization)
+- **Development**: [docs/development/](../docs/development/) (database/, sql/, scripts/)
+
+## When Adding New Features
+### Development Priorities (in order)
+1. **🧹 Cleanup first**: If you see unused code while working, remove it
+2. **🔍 Check for duplicates**: Before implementing, search for existing solutions
+3. **🔐 Tenant isolation**: Most bugs come from missing `tenant_id` in queries
+4. **⚛️ React Query pattern**: Prefer hooks over direct Supabase calls
+5. **📚 Documentation**: Consult `docs/features/` and `docs/architecture/`
+
+### Code Removal Checklist
+Before deleting code, verify it's truly unused:
+```bash
+# Search for imports/usage across codebase
+grep -r "ComponentName" src/
+grep -r "functionName" src/
+
+# Check for route references
+grep -r "/old-route" src/
+
+# Look for commented-out references
+grep -r "TODO.*old" src/
+```
+
+### When You Find Duplicate Code
+1. Identify which version is actively used (check git history, imports)
+2. Consolidate into `src/features/patients/` if clinical-related
+3. Update all imports to point to the consolidated version
+4. Delete the duplicate file/folder
+5. Add cleanup note to CHANGELOG.md
+5. **Lazy load if heavy**: Use `React.lazy()` for routes with large dependencies (PDF, barcode libs)
+6. **Test tenant isolation**: Verify queries include `tenant_id` filter
+
+## AI-Specific Guidance
+
+- **Always check tenant context**: Most bugs come from missing `tenant_id` in queries
+- **Prefer React Query over direct Supabase calls**: Centralized cache invalidation and error handling
+- **Look for existing patterns**: Search `src/features/` for similar features before creating new approaches
+- **Security first**: Every new table requires RLS policies and tenant isolation
+- **Consult docs/**: Most design decisions documented in `docs/features/` or `docs/architecture/`
