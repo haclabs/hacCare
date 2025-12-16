@@ -8,10 +8,9 @@
 
 import React, { useState } from 'react';
 import { BookOpen, Download } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { HACCARE_LOGO_BASE64 } from '../../../utils/logoBase64';
+import { loadPdfLibraries } from '../../../utils/pdfLoader';
 
 const SimulationGuide: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -20,6 +19,9 @@ const SimulationGuide: React.FC = () => {
     setIsGeneratingPdf(true);
     
     try {
+      // Dynamically load PDF libraries only when needed
+      const { jsPDF, html2canvas } = await loadPdfLibraries();
+      
       const element = document.getElementById('instructor-guide-content');
       if (!element) {
         console.error('Guide content element not found');

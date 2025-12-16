@@ -216,8 +216,8 @@ export const Settings: React.FC = () => {
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setDarkMode(systemDark);
       localStorage.setItem('haccare-theme', 'system');
-    } else if (['light', 'dark', 'halloween', 'christmas'].includes(newTheme)) {
-      setTheme(newTheme as 'light' | 'dark' | 'halloween' | 'christmas');
+    } else if (['light', 'dark'].includes(newTheme)) {
+      setTheme(newTheme as 'light' | 'dark');
     } else {
       const isDark = newTheme === 'dark';
       setDarkMode(isDark);
@@ -331,7 +331,7 @@ export const Settings: React.FC = () => {
                       Theme Preference
                     </label>
                     
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {/* Light Mode */}
                       <button
                         onClick={() => handleThemeChange('light')}
@@ -356,67 +356,6 @@ export const Settings: React.FC = () => {
                       >
                         <Moon className="h-6 w-6 mx-auto mb-2 text-blue-500" />
                         <div className="text-sm font-medium text-gray-900 dark:text-white">Dark</div>
-                      </button>
-
-                      {/* Halloween Mode 🎃 */}
-                      <button
-                        onClick={() => handleThemeChange('halloween')}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          getCurrentTheme() === 'halloween'
-                            ? 'border-orange-500 bg-purple-900 text-orange-500'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                        }`}
-                        style={getCurrentTheme() === 'halloween' ? {
-                          background: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b3d 100%)',
-                          boxShadow: '0 0 15px rgba(255, 107, 0, 0.5)'
-                        } : {}}
-                      >
-                        <span className="text-3xl mx-auto mb-1 block" style={getCurrentTheme() === 'halloween' ? { textShadow: '0 0 10px #ff6b00' } : {}}>
-                          🎃
-                        </span>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white" style={getCurrentTheme() === 'halloween' ? { color: '#ff6b00', textShadow: '0 0 5px #ff6b00' } : {}}>
-                          Halloween 👻
-                        </div>
-                      </button>
-
-                      {/* Christmas Mode 🎄 */}
-                      <button
-                        onClick={() => handleThemeChange('christmas')}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          getCurrentTheme() === 'christmas'
-                            ? 'border-green-500 bg-red-900 text-white'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                        }`}
-                        style={getCurrentTheme() === 'christmas' ? {
-                          background: 'linear-gradient(135deg, #1b5e20 0%, #0d3818 100%)',
-                          boxShadow: '0 0 20px rgba(76, 175, 80, 0.6)'
-                        } : {}}
-                      >
-                        <span className="text-3xl mx-auto mb-1 block" style={getCurrentTheme() === 'christmas' ? { 
-                          textShadow: '0 0 15px rgba(76, 175, 80, 0.8)',
-                          filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))'
-                        } : {}}>
-                          🎄
-                        </span>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white" style={getCurrentTheme() === 'christmas' ? { 
-                          color: '#ffffff', 
-                          textShadow: '0 0 10px rgba(76, 175, 80, 0.8)' 
-                        } : {}}>
-                          Christmas ❄️
-                        </div>
-                      </button>
-
-                      {/* System Mode */}
-                      <button
-                        onClick={() => handleThemeChange('system')}
-                        className={`p-3 rounded-lg border-2 transition-all ${
-                          getCurrentTheme() === 'system'
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                        }`}
-                      >
-                        <Monitor className="h-6 w-6 mx-auto mb-2 text-gray-600 dark:text-gray-400" />
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">System</div>
                       </button>
                     </div>
                   </div>

@@ -3,9 +3,8 @@
  * Generates high-quality, print-ready PDFs with preserved styling
  */
 
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
+import { loadPdfLibraries } from '../../utils/pdfLoader';
 
 export interface PdfExportOptions {
   filename?: string;
@@ -31,6 +30,9 @@ export async function exportDebriefToPdf(
   } = options;
 
   try {
+    // Dynamically load PDF libraries only when needed
+    const { jsPDF, html2canvas } = await loadPdfLibraries();
+    
     // Get the element to export
     const element = document.getElementById(elementId);
     if (!element) {

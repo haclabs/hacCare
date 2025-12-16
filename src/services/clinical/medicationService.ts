@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { Medication, MedicationAdministration } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Medication Service
@@ -37,18 +38,12 @@ import { Medication, MedicationAdministration } from '../../types';
     );
     */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
-    console.log('🔍 DEBUGGING: Fetching medications for patient:', patientId);
-    console.log('🔍 DEBUGGING: Current timestamp:', new Date().toISOString());
-    
     // First try standard query
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false });
-
-    console.log('🔍 DEBUGGING: Supabase query response:', { data, error });
-    console.log('🔍 DEBUGGING: Number of medications returned:', data?.length || 0);
 
     // If successful and has data, return it
     if (!error && data && data.length > 0) {
@@ -68,14 +63,11 @@ import { Medication, MedicationAdministration } from '../../types';
         status: dbMed.status || 'Active'
       } as Medication));
 
-      console.log(`✅ Found ${medications.length} medications via standard query`);
       return medications;
     }
 
     // If no data returned or RLS error, try super admin RPC approach
     if (!data || data.length === 0 || error) {
-      console.log('🔐 No medications via standard query, trying super admin approach...');
-      
       // Get patient details first to determine tenant
       const { data: patientData } = await supabase
         .from('patients')
@@ -110,23 +102,20 @@ import { Medication, MedicationAdministration } from '../../types';
               status: 'Active'
             } as Medication));
 
-          console.log(`✅ Found ${patientMeds.length} medications via super admin RPC`);
           return patientMeds;
         }
       }
     }
 
     if (error) {
-      console.error('❌ DEBUGGING: Database error:', error);
+      secureLogger.error('Database error fetching patient medications', error, { patientId });
       throw error;
     }
 
-    console.log('⚠️ DEBUGGING: No medications found for patient:', patientId);
-    console.log('⚠️ DEBUGGING: This could be due to RLS filtering or no medications exist');
     return [];
     
   } catch (error) {
-    console.error('Error fetching patient medications:', error);
+    secureLogger.error('Error fetching patient medications', error, { patientId });
     throw error;
   }
 };
@@ -136,8 +125,6 @@ import { Medication, MedicationAdministration } from '../../types';
  */
 export const createMedication = async (medication: Omit<Medication, 'id'>): Promise<Medication> => {
   try {
-    console.log('Creating medication:', medication);
-    
     // Get the patient's tenant_id to ensure proper tenant association
     const { data: patientData, error: patientError } = await supabase
       .from('patients')
@@ -146,14 +133,11 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       .single();
     
     if (patientError) {
-      console.error('Error fetching patient tenant:', patientError);
+      secureLogger.error('Error fetching patient tenant for medication creation', patientError, {
+        patientId: medication.patient_id
+      });
       throw new Error('Could not determine patient tenant');
     }
-    
-    // Get current user info to help with debugging
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    console.log('🔧 Current user creating medication:', currentUser?.id, currentUser?.email);
-    console.log('🔧 Patient tenant_id:', patientData?.tenant_id);
     
     // Create medication with the actual database columns
     const dbMedication = {
@@ -173,10 +157,6 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       tenant_id: patientData?.tenant_id // Explicitly set tenant_id from patient
     };
     
-    console.log('🔧 Inserting medication with tenant_id:', dbMedication.tenant_id);
-    
-    console.log('Inserting medication with database fields:', dbMedication);
-    
     const { data, error } = await supabase
       .from('patient_medications')
       .insert(dbMedication)
@@ -184,7 +164,10 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       .single();
 
     if (error) {
-      console.error('Error creating medication:', error);
+      secureLogger.error('Error creating medication', error, {
+        patientId: medication.patient_id,
+        medicationName: medication.name
+      });
       throw error;
     }
 
@@ -222,10 +205,12 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
     );
     */
 
-    console.log('Medication created successfully:', createdMedication);
     return createdMedication;
   } catch (error) {
-    console.error('Error creating medication:', error);
+    secureLogger.error('Error in createMedication', error, {
+      patientId: medication.patient_id,
+      medicationName: medication.name
+    });
     throw error;
   }
 };
@@ -235,7 +220,6 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
  */
 export const debugMedication = async (medicationId: string): Promise<void> => {
   try {
-    console.log('🔍 DEBUGGING: Checking medication:', medicationId);
     
     // Check if medication exists
     const { data: med, error: selectError, count } = await supabase

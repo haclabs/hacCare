@@ -31,13 +31,53 @@ interface ChangelogEntry {
  * @returns {JSX.Element} The changelog component
  */
 export const Changelog: React.FC = () => {
-  const [selectedVersion, setSelectedVersion] = useState<string>('5.2.0-rc4');
+  const [selectedVersion, setSelectedVersion] = useState<string>('5.2.0-rc5');
 
   /**
    * Changelog data
    * Contains all version history with categorized changes
    */
   const changelogData: ChangelogEntry[] = [
+    {
+      version: "5.2.0-rc5",
+      codename: "BUGGLER",
+      date: "2025-11-30",
+      isMajor: true,
+      changes: [
+        {
+          type: "improvement",
+          description: "Old Simulation System Removal - Eliminated ~800 lines of unused legacy code (engine/, controllers/, types/)"
+        },
+        {
+          type: "improvement",
+          description: "Debug Log Cleanup - Removed 41 debug console.log statements, replaced with proper secureLogger"
+        },
+        {
+          type: "improvement",
+          description: "Bundle Optimization - Implemented 17-chunk code splitting with lazy-loaded PDFs (535KB saved)"
+        },
+        {
+          type: "improvement",
+          description: "Dependency Cleanup - Removed 57 unused packages (10 direct + 47 sub-dependencies)"
+        },
+        {
+          type: "improvement",
+          description: "Database Function Audit - Cataloged 135 functions, identified 21 for removal with SQL scripts"
+        },
+        {
+          type: "improvement",
+          description: "Documentation Cleanup - Removed 5 test/temporary documentation files"
+        },
+        {
+          type: "security",
+          description: "Error Logging Standardization - Replaced console.error with secureLogger throughout codebase"
+        },
+        {
+          type: "improvement",
+          description: "Code Quality Analysis - Created comprehensive improvement plan for ESLint errors and large files"
+        },
+      ]
+    },
     {
       version: "5.2.0-rc4",
       codename: "OTTO",

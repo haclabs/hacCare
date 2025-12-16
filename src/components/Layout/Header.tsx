@@ -5,7 +5,6 @@ import { useAlertContext } from '../../hooks/useAlertContext';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
 import { TenantSwitcher } from './TenantSwitcher';
-import logo from '../../images/logo.png';
 
 interface HeaderProps {
   onAlertsClick: () => void;
@@ -16,6 +15,20 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
   const { profile, signOut } = useAuth();
   const { unreadCount, loading: alertsLoading } = useAlertContext();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar-collapsed') === 'true';
+  });
+
+  // Listen for sidebar toggle events
+  useEffect(() => {
+    const handleSidebarToggle = (e: CustomEvent) => {
+      setSidebarCollapsed(e.detail.collapsed);
+    };
+    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    return () => {
+      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    };
+  }, []);
 
   // Update time every second
   useEffect(() => {
@@ -36,20 +49,12 @@ export const Header: React.FC<HeaderProps> = ({ onAlertsClick, onBarcodeScan }) 
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-8 xl:px-12 py-4 transition-colors shadow-sm">
+    <header className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 lg:px-8 xl:px-12 py-4 transition-all duration-300 shadow-sm ${ 
+      sidebarCollapsed ? 'ml-20' : 'ml-64'
+    }`}>
       <div className="flex items-center w-full gap-4">
-        {/* Left: Logo */}
-        <div className="flex items-center flex-shrink-0">
-          <img 
-            src={logo} 
-            alt="HacCare Logo" 
-            className="h-auto w-auto"
-            style={{ height: '65px' }}
-          />
-        </div>
-
-        {/* Center: Controls (grows to fill space, centered) */}
-        <div className="flex items-center justify-center flex-1 space-x-3 lg:space-x-6 xl:space-x-8">
+        {/* Left: Controls */}
+        <div className="flex items-center flex-1 space-x-3 lg:space-x-6 xl:space-x-8">
           {/* Barcode Scanner - Compact Icon */}
           {onBarcodeScan && (
             <div className="flex items-center space-x-2">

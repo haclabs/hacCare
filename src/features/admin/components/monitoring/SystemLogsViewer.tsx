@@ -30,16 +30,16 @@ interface SystemLog {
   current_url: string | null;
   previous_url: string | null;
   metadata: any;
-  user_profile?: {
+  user_profiles?: {
     first_name: string;
     last_name: string;
     email: string;
     role: string;
-  };
-  tenant?: {
+  } | null;
+  tenants?: {
     name: string;
     subdomain: string;
-  };
+  } | null;
 }
 
 export const SystemLogsViewer: React.FC = () => {
@@ -79,21 +79,11 @@ export const SystemLogsViewer: React.FC = () => {
       const hoursBack = timeThresholds[timeRange] || 1;
       const threshold = new Date(now.getTime() - hoursBack * 60 * 60 * 1000).toISOString();
 
+      // Query system_logs without joins - we'll fetch related data separately
+      // The user_id references auth.users, not user_profiles directly
       let query = supabase
         .from('system_logs')
-        .select(`
-          *,
-          user_profile:user_id (
-            first_name,
-            last_name,
-            email,
-            role
-          ),
-          tenant:tenant_id (
-            name,
-            subdomain
-          )
-        `)
+        .select('*')
         .gte('timestamp', threshold)
         .order('timestamp', { ascending: false })
         .limit(500);
@@ -110,7 +100,49 @@ export const SystemLogsViewer: React.FC = () => {
 
       if (error) throw error;
 
-      setLogs(data || []);
+      if (!data || data.length === 0) {
+        setLogs([]);
+        return;
+      }
+
+      // Fetch related user_profiles and tenants data
+      const userIds = [...new Set(data.map(log => log.user_id).filter(Boolean))];
+      const tenantIds = [...new Set(data.map(log => log.tenant_id).filter(Boolean))];
+
+      // Fetch user profiles
+      const userProfilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('id, first_name, last_name, email, role')
+          .in('id', userIds);
+        
+        profiles?.forEach(profile => {
+          userProfilesMap.set(profile.id, profile);
+        });
+      }
+
+      // Fetch tenants
+      const tenantsMap = new Map();
+      if (tenantIds.length > 0) {
+        const { data: tenants } = await supabase
+          .from('tenants')
+          .select('id, name, subdomain')
+          .in('id', tenantIds);
+        
+        tenants?.forEach(tenant => {
+          tenantsMap.set(tenant.id, tenant);
+        });
+      }
+
+      // Combine the data
+      const enrichedLogs = data.map(log => ({
+        ...log,
+        user_profiles: log.user_id ? userProfilesMap.get(log.user_id) : null,
+        tenants: log.tenant_id ? tenantsMap.get(log.tenant_id) : null
+      }));
+
+      setLogs(enrichedLogs);
     } catch (error) {
       console.error('Error fetching system logs:', error);
     } finally {
@@ -155,8 +187,8 @@ export const SystemLogsViewer: React.FC = () => {
         log.timestamp,
         log.log_level,
         log.log_type,
-        log.user_profile ? `${log.user_profile.first_name} ${log.user_profile.last_name}` : 'Anonymous',
-        log.tenant?.name || 'N/A',
+        log.user_profiles ? `${log.user_profiles.first_name} ${log.user_profiles.last_name}` : 'Anonymous',
+        log.tenants?.name || 'N/A',
         log.component || '',
         log.action || '',
         log.error_message || '',
@@ -179,7 +211,7 @@ export const SystemLogsViewer: React.FC = () => {
       log.error_message?.toLowerCase().includes(search) ||
       log.action?.toLowerCase().includes(search) ||
       log.component?.toLowerCase().includes(search) ||
-      log.user_profile?.email?.toLowerCase().includes(search) ||
+      log.user_profiles?.email?.toLowerCase().includes(search) ||
       log.current_url?.toLowerCase().includes(search)
     );
   });
@@ -385,10 +417,10 @@ export const SystemLogsViewer: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {log.user_profile ? (
+                      {log.user_profiles ? (
                         <div>
-                          <div className="font-medium">{log.user_profile.first_name} {log.user_profile.last_name}</div>
-                          <div className="text-xs text-gray-500">{log.user_profile.role}</div>
+                          <div className="font-medium">{log.user_profiles.first_name} {log.user_profiles.last_name}</div>
+                          <div className="text-xs text-gray-500">{log.user_profiles.role}</div>
                         </div>
                       ) : (
                         <span className="text-gray-400">Anonymous</span>
@@ -462,21 +494,21 @@ export const SystemLogsViewer: React.FC = () => {
                   </div>
                 </div>
 
-                {selectedLog.user_profile && (
+                {selectedLog.user_profiles && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">User</label>
                     <div className="mt-1 text-sm text-gray-900">
-                      <div>{selectedLog.user_profile.first_name} {selectedLog.user_profile.last_name}</div>
-                      <div className="text-xs text-gray-500">{selectedLog.user_profile.email}</div>
-                      <div className="text-xs text-gray-500">Role: {selectedLog.user_profile.role}</div>
+                      <div>{selectedLog.user_profiles.first_name} {selectedLog.user_profiles.last_name}</div>
+                      <div className="text-xs text-gray-500">{selectedLog.user_profiles.email}</div>
+                      <div className="text-xs text-gray-500">Role: {selectedLog.user_profiles.role}</div>
                     </div>
                   </div>
                 )}
 
-                {selectedLog.tenant && (
+                {selectedLog.tenants && (
                   <div>
                     <label className="text-sm font-medium text-gray-700">Tenant</label>
-                    <p className="mt-1 text-sm text-gray-900">{selectedLog.tenant.name} ({selectedLog.tenant.subdomain})</p>
+                    <p className="mt-1 text-sm text-gray-900">{selectedLog.tenants.name} ({selectedLog.tenants.subdomain})</p>
                   </div>
                 )}
 

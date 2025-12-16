@@ -8,9 +8,8 @@
 
 import React, { useState } from 'react';
 import { BookOpen, Download, X } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { HACCARE_LOGO_BASE64 } from '../utils/logoBase64';
+import { loadPdfLibraries } from '../utils/pdfLoader';
 
 interface StudentQuickIntroProps {
   onClose: () => void;
@@ -23,6 +22,9 @@ const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
     setIsGeneratingPdf(true);
     
     try {
+      // Dynamically load PDF libraries only when needed
+      const { jsPDF, html2canvas } = await loadPdfLibraries();
+      
       const element = document.getElementById('student-guide-content');
       if (!element) {
         console.error('Guide content element not found');

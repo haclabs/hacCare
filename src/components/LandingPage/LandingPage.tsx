@@ -21,9 +21,13 @@ export const LandingPage: React.FC = () => {
 
   // Add structured data for SEO
   useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.text = JSON.stringify({
+    // Update page title and meta description dynamically
+    document.title = 'hacCare - Simulated EMR & Training Environment for Healthcare Education';
+    
+    // Software Application Schema
+    const softwareSchema = document.createElement('script');
+    softwareSchema.type = 'application/ld+json';
+    softwareSchema.text = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "hacCare",
@@ -55,12 +59,75 @@ export const LandingPage: React.FC = () => {
         "ratingCount": "1"
       }
     });
-    document.head.appendChild(script);
+
+    // Organization Schema
+    const orgSchema = document.createElement('script');
+    orgSchema.type = 'application/ld+json';
+    orgSchema.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "halabs",
+      "url": "https://haccare.app",
+      "logo": "https://haccare.app/logo copy.png",
+      "description": "Professional healthcare training software for the next generation of medical professionals",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Lethbridge",
+        "addressRegion": "AB",
+        "addressCountry": "Canada"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@haccare.app",
+        "contactType": "Customer Support",
+        "areaServed": "Worldwide",
+        "availableLanguage": "English"
+      },
+      "sameAs": []
+    });
+
+    // FAQ Schema
+    const faqSchema = document.createElement('script');
+    faqSchema.type = 'application/ld+json';
+    faqSchema.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is hacCare?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "hacCare is a comprehensive EMR training platform built to prepare future healthcare providers. It provides a safe, simulated environment where learners can practice with realistic electronic medical records, BCMA, and clinical workflows."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who can use hacCare?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "hacCare is designed for nursing students, medical students, healthcare educators, and institutions offering healthcare education programs. It's ideal for practicing medication administration, documentation, and clinical decision-making."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does hacCare include barcode medication administration?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! hacCare includes comprehensive BCMA (Barcode Medication Administration) functionality with medication rights verification, real-time status tracking, and PRN medication support."
+          }
+        }
+      ]
+    });
+
+    document.head.appendChild(softwareSchema);
+    document.head.appendChild(orgSchema);
+    document.head.appendChild(faqSchema);
 
     return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
+      if (softwareSchema.parentNode) softwareSchema.parentNode.removeChild(softwareSchema);
+      if (orgSchema.parentNode) orgSchema.parentNode.removeChild(orgSchema);
+      if (faqSchema.parentNode) faqSchema.parentNode.removeChild(faqSchema);
     };
   }, []);
 
@@ -157,11 +224,17 @@ export const LandingPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <img src={logo} alt="HacCare" className="h-12 w-auto" />
+              <img 
+                src={logo} 
+                alt="hacCare - Healthcare EMR Training Platform Logo" 
+                className="h-12 w-auto"
+                width="150"
+                height="48"
+              />
             </div>
 
             {/* Navigation Links */}
@@ -169,18 +242,21 @@ export const LandingPage: React.FC = () => {
               <button
                 onClick={() => scrollToSection('about')}
                 className="text-gray-600 hover:text-blue-600 transition-colors font-medium"
+                aria-label="Navigate to About section"
               >
                 About
               </button>
               <button
                 onClick={() => scrollToSection('features')}
                 className="text-gray-600 hover:text-blue-600 transition-colors font-medium"
+                aria-label="Navigate to Features section"
               >
                 Features
               </button>
               <button
                 onClick={() => scrollToSection('contact')}
                 className="text-gray-600 hover:text-blue-600 transition-colors font-medium"
+                aria-label="Navigate to Contact section"
               >
                 Contact
               </button>
@@ -190,6 +266,7 @@ export const LandingPage: React.FC = () => {
                 style={{ color: '#19ADF2' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = '#1598D6'}
                 onMouseLeave={(e) => e.currentTarget.style.color = '#19ADF2'}
+                aria-label="Go to Login page"
               >
                 Login
               </button>
@@ -199,6 +276,7 @@ export const LandingPage: React.FC = () => {
                 style={{ backgroundColor: '#19ADF2' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+                aria-label="Get started with hacCare"
               >
                 Get Started
               </button>
@@ -212,6 +290,7 @@ export const LandingPage: React.FC = () => {
                 style={{ backgroundColor: '#19ADF2' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+                aria-label="Login to hacCare"
               >
                 Login
               </button>
@@ -221,6 +300,7 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
+      <main>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
@@ -236,6 +316,7 @@ export const LandingPage: React.FC = () => {
               style={{ backgroundColor: '#19ADF2' }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+              aria-label="Start learning with hacCare today"
             >
               Start Learning Today
             </button>
@@ -243,8 +324,11 @@ export const LandingPage: React.FC = () => {
           <div className="relative">
             <img 
               src="/images/barcode-scanning.jpg" 
-              alt="Healthcare professional using barcode scanning with EMR system" 
+              alt="Healthcare professional using barcode scanning medication administration with electronic medical record system on laptop" 
               className="rounded-2xl shadow-2xl w-full"
+              width="600"
+              height="450"
+              loading="eager"
             />
           </div>
         </div>
@@ -273,7 +357,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" className="bg-white py-20">
+      <article id="about" className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
@@ -288,8 +372,11 @@ export const LandingPage: React.FC = () => {
             <div>
               <img 
                 src="/images/nurse-scanning.jpg" 
-                alt="Nurse scanning patient wristband with laptop EMR system" 
+                alt="Nurse scanning patient identification wristband using barcode scanner with laptop electronic medical record system" 
                 className="rounded-2xl shadow-lg w-full"
+                width="600"
+                height="450"
+                loading="lazy"
               />
             </div>
             <div>
@@ -344,7 +431,7 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+      </article>
 
       {/* Features Section */}
       <section id="features" className="py-20">
@@ -414,8 +501,11 @@ export const LandingPage: React.FC = () => {
               <div>
                 <img 
                   src="/images/barcode_med_admin.jpg" 
-                  alt="BCMA Medication Administration Record interface showing scheduled medications" 
+                  alt="BCMA Medication Administration Record interface showing scheduled medications with real-time status tracking" 
                   className="rounded-xl shadow-2xl w-full border-4 border-white"
+                  width="700"
+                  height="500"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -587,13 +677,21 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
-              <img src={logo} alt="HacCare" className="h-10 w-auto mb-4 brightness-0 invert" />
+              <img 
+                src={logo} 
+                alt="hacCare - Healthcare EMR Training Platform" 
+                className="h-10 w-auto mb-4 brightness-0 invert"
+                width="120"
+                height="40"
+                loading="lazy"
+              />
               <p className="text-sm">
                 Professional healthcare training software for the next generation of medical professionals.
               </p>
@@ -631,7 +729,7 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; 2025 hacCare. A halabs product. All rights reserved.</p>
+            <p>&copy; 2025 hacCare. A haclabs product. All rights reserved.</p>
           </div>
         </div>
       </footer>

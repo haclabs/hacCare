@@ -51,17 +51,50 @@ import type {
 } from '../../types/hacmap';
 import { DEVICE_TYPE_LABELS, WOUND_TYPE_LABELS } from '../../types/hacmap';
 import { AlertCircle, Filter, X, FileText, Plus } from 'lucide-react';
+import { PatientActionBar } from '../../components/PatientActionBar';
 
 interface AvatarBoardProps {
   patientId: string;
   patientName: string;
   patientNumber: string;
+  // Navigation handlers
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  // Badge data
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 type PanelMode = 'create-device' | 'create-wound' | 'edit-device' | 'edit-wound' | null;
 type PlacementMode = 'device' | 'wound' | null;
 
-export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName, patientNumber }) => {
+export const AvatarBoard: React.FC<AvatarBoardProps> = ({ 
+  patientId, 
+  patientName, 
+  patientNumber,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false
+}) => {
   const { user } = useAuth();
   const { currentTenant } = useTenant();
   const [placementMode, setPlacementMode] = useState<PlacementMode>(null);
@@ -494,6 +527,24 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({ patientId, patientName
 
   return (
     <div className="h-full flex flex-col space-y-4">
+      {/* Patient Action Bar */}
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="hacmap"
+      />
+
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900">

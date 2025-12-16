@@ -68,6 +68,11 @@ export interface SimulationHistory {
   debrief_summary: any;
   primary_categories: string[];
   sub_categories: string[];
+  instructor_name?: string | null;
+  archived?: boolean;
+  archived_at?: string | null;
+  archived_by?: string | null;
+  archive_folder?: string | null;
 }
 
 export interface SimulationParticipant {

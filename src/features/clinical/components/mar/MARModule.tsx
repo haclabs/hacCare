@@ -22,6 +22,7 @@ import { BarcodeGenerator } from '../../components/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
 import DiabeticRecordModule from '../../../../components/DiabeticRecordModule';
 import { MedicationHistoryView } from './MedicationHistoryView';
+import { PatientActionBar } from '../../../../components/PatientActionBar';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -34,6 +35,21 @@ interface MARModuleProps {
     name: string;
     role: string;
   };
+  // Navigation handlers
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  // Badge data
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 type MARView = 'administration' | 'history' | 'diabetic-record' | 'add-medication';
@@ -42,7 +58,20 @@ export const MARModule: React.FC<MARModuleProps> = ({
   patient,
   medications,
   onMedicationUpdate,
-  currentUser
+  currentUser,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false
 }) => {
   const [activeView, setActiveView] = useState<MARView>('administration');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
@@ -474,7 +503,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
     // For different frequencies, calculate next appropriate time
     switch (frequency) {
-      case 'Once daily':
+      case 'Once daily': {
         const today = new Date(now);
         const todayAdmin = new Date(today);
         todayAdmin.setHours(hours, minutes, 0, 0);
@@ -493,8 +522,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           console.log('- Using tomorrow admin time:', tomorrow.toISOString());
           return tomorrow.toISOString();
         }
+      }
 
-      case 'Once monthly':
+      case 'Once monthly': {
         const monthlyToday = new Date(now);
         const todayMonthlyAdmin = new Date(monthlyToday);
         todayMonthlyAdmin.setHours(hours, minutes, 0, 0);
@@ -508,8 +538,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextMonth.setHours(hours, minutes, 0, 0);
           return nextMonth.toISOString();
         }
+      }
 
-      case 'Twice daily':
+      case 'Twice daily': {
         // 8 AM and 8 PM typically, but use admin time as base
         const firstDose = new Date(now);
         firstDose.setHours(hours, minutes, 0, 0);
@@ -532,8 +563,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextFirstDose.setDate(nextFirstDose.getDate() + 1);
           return nextFirstDose.toISOString();
         }
+      }
 
-      case 'Three times daily':
+      case 'Three times daily': {
         // Every 8 hours starting from admin time
         const times = [];
         for (let i = 0; i < 3; i++) {
@@ -556,8 +588,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextDay.setDate(nextDay.getDate() + 1);
           return nextDay.toISOString();
         }
+      }
 
-      case 'Four times daily':
+      case 'Four times daily': {
         // Every 6 hours starting from admin time
         const fourTimes = [];
         for (let i = 0; i < 4; i++) {
@@ -578,11 +611,12 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextDay.setDate(nextDay.getDate() + 1);
           return nextDay.toISOString();
         }
+      }
 
       case 'Every 4 hours':
       case 'Every 6 hours':
       case 'Every 8 hours':
-      case 'Every 12 hours':
+      case 'Every 12 hours': {
         const intervalHours = parseInt(frequency.match(/\d+/)?.[0] || '24');
         const nextDose = new Date(now);
         nextDose.setHours(hours, minutes, 0, 0);
@@ -593,13 +627,15 @@ export const MARModule: React.FC<MARModuleProps> = ({
         }
         
         return nextDose.toISOString();
+      }
 
-      default:
+      default: {
         // Default to next day at admin time
         const nextDefault = new Date(now);
         nextDefault.setDate(nextDefault.getDate() + 1);
         nextDefault.setHours(hours, minutes, 0, 0);
         return nextDefault.toISOString();
+      }
     }
   };
 
@@ -938,6 +974,24 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Patient Action Bar */}
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="meds"
+      />
+
       {/* Module Header */}
       <div className="flex items-center justify-between">
         <div>
