@@ -7,23 +7,6 @@
     @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
     transition: all 0.3s ease;
   }
-  
-      radial-gradient(circle at 10% 50%, #ff0000 2px, transparent 2px),
-      radial-gradient(circle at 30% 50%, #00ff00 2px, transparent 2px),
-      radial-gradient(circle at 50% 50%, #ffd700 2px, transparent 2px),
-      radial-gradient(circle at 70% 50%, #0099ff 2px, transparent 2px),
-      radial-gradient(circle at 90% 50%, #ff0000 2px, transparent 2px);
-    background-repeat: no-repeat;
-    pointer-events: none;
-    z-index: 1000;
-    animation: christmas-lights-blink 2s ease-in-out infinite 0.5s;
-  }
-
-  /* Position sidebar properly for lights */
-  .christmas aside {
-    position: relative;
-    overflow: visible;
-  }
 }
 
 @layer components {
