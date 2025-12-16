@@ -10,6 +10,7 @@ import { MessageSquare, Plus, RefreshCw } from 'lucide-react';
 import { HandoverNotesForm } from './HandoverNotesForm';
 import { HandoverNotesList } from './HandoverNotesList';
 import { createHandoverNote, CreateHandoverNoteData } from '../../../../services/patient/handoverService';
+import { PatientActionBar } from '../../../../components/PatientActionBar';
 
 interface HandoverNotesProps {
   patientId: string;
@@ -19,12 +20,42 @@ interface HandoverNotesProps {
     name: string;
     role: string;
   };
+  onRefresh?: () => void;
+  // Navigation handlers
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  // Badge data
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 export const HandoverNotes: React.FC<HandoverNotesProps> = ({
   patientId,
   patientName,
-  currentUser
+  currentUser,
+  onRefresh: onParentRefresh,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -33,6 +64,7 @@ export const HandoverNotes: React.FC<HandoverNotesProps> = ({
     try {
       await createHandoverNote(noteData);
       setRefreshKey(prev => prev + 1); // Trigger refresh
+      onParentRefresh?.(); // Call parent refresh
       console.log('✅ Handover note created successfully');
     } catch (error) {
       console.error('Error creating handover note:', error);
@@ -42,10 +74,29 @@ export const HandoverNotes: React.FC<HandoverNotesProps> = ({
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
+    onParentRefresh?.(); // Call parent refresh
   };
 
   return (
     <div className="space-y-6">
+      {/* Patient Action Bar */}
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="notes"
+      />
+
       {/* Header with Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">

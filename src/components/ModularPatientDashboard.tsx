@@ -50,6 +50,7 @@ import { AdvancedDirectivesForm } from '../features/patients/components/forms/Ad
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
 import { IntakeOutputCard } from '../features/clinical/components/intake-output';
+import { PatientActionBar } from './PatientActionBar';
 import { Patient, DoctorsOrder } from '../types';
 import { fetchPatientById, fetchPatientVitals } from '../services/patient/patientService';
 import { fetchPatientMedications } from '../services/clinical/medicationService';
@@ -1966,6 +1967,19 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     setLastUpdated(new Date());
                   }}
                   currentUser={currentUser}
+                  onChartClick={handlePrintRecord}
+                  onVitalsClick={() => setActiveModule('vitals')}
+                  onMedsClick={() => setActiveModule('medications')}
+                  onLabsClick={() => setShowLabs(true)}
+                  onOrdersClick={() => setShowDoctorsOrders(true)}
+                  onHacMapClick={() => setActiveModule('hacmap')}
+                  onIOClick={() => setActiveModule('intake-output')}
+                  onNotesClick={() => setActiveModule('handover')}
+                  vitalsCount={patient.vitals?.length || 0}
+                  medsCount={patient.medications?.length || 0}
+                  hasNewLabs={unacknowledgedLabsCount > 0}
+                  hasNewOrders={unacknowledgedCount > 0}
+                  hasNewNotes={unacknowledgedHandoverCount > 0}
                 />
               )}
 
@@ -1975,6 +1989,19 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   medications={patient.medications || []}
                   onMedicationUpdate={handleMedicationUpdate}
                   currentUser={currentUser}
+                  onChartClick={handlePrintRecord}
+                  onVitalsClick={() => setActiveModule('vitals')}
+                  onMedsClick={() => setActiveModule('medications')}
+                  onLabsClick={() => setShowLabs(true)}
+                  onOrdersClick={() => setShowDoctorsOrders(true)}
+                  onHacMapClick={() => setActiveModule('hacmap')}
+                  onIOClick={() => setActiveModule('intake-output')}
+                  onNotesClick={() => setActiveModule('handover')}
+                  vitalsCount={patient.vitals?.length || 0}
+                  medsCount={patient.medications?.length || 0}
+                  hasNewLabs={unacknowledgedLabsCount > 0}
+                  hasNewOrders={unacknowledgedCount > 0}
+                  hasNewNotes={unacknowledgedHandoverCount > 0}
                 />
               )}
 
@@ -1999,6 +2026,19 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     refreshHandoverCount();
                     handleHandoverChange();
                   }}
+                  onChartClick={handlePrintRecord}
+                  onVitalsClick={() => setActiveModule('vitals')}
+                  onMedsClick={() => setActiveModule('medications')}
+                  onLabsClick={() => setShowLabs(true)}
+                  onOrdersClick={() => setShowDoctorsOrders(true)}
+                  onHacMapClick={() => setActiveModule('hacmap')}
+                  onIOClick={() => setActiveModule('intake-output')}
+                  onNotesClick={() => setActiveModule('handover')}
+                  vitalsCount={patient.vitals?.length || 0}
+                  medsCount={patient.medications?.length || 0}
+                  hasNewLabs={unacknowledgedLabsCount > 0}
+                  hasNewOrders={unacknowledgedCount > 0}
+                  hasNewNotes={unacknowledgedHandoverCount > 0}
                 />
               )}
 
@@ -2028,6 +2068,19 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     patientId={patient.id}
                     patientName={`${patient.first_name} ${patient.last_name}`}
                     onRefresh={() => setLastUpdated(new Date())}
+                    onChartClick={handlePrintRecord}
+                    onVitalsClick={() => setActiveModule('vitals')}
+                    onMedsClick={() => setActiveModule('medications')}
+                    onLabsClick={() => setShowLabs(true)}
+                    onOrdersClick={() => setShowDoctorsOrders(true)}
+                    onHacMapClick={() => setActiveModule('hacmap')}
+                    onIOClick={() => setActiveModule('intake-output')}
+                    onNotesClick={() => setActiveModule('handover')}
+                    vitalsCount={patient.vitals?.length || 0}
+                    medsCount={patient.medications?.length || 0}
+                    hasNewLabs={unacknowledgedLabsCount > 0}
+                    hasNewOrders={unacknowledgedCount > 0}
+                    hasNewNotes={unacknowledgedHandoverCount > 0}
                   />
                 </div>
               )}
@@ -2038,6 +2091,19 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     patientId={patient.id}
                     patientName={`${patient.first_name} ${patient.last_name}`}
                     patientNumber={patient.patient_id}
+                    onChartClick={handlePrintRecord}
+                    onVitalsClick={() => setActiveModule('vitals')}
+                    onMedsClick={() => setActiveModule('medications')}
+                    onLabsClick={() => setShowLabs(true)}
+                    onOrdersClick={() => setShowDoctorsOrders(true)}
+                    onHacMapClick={() => setActiveModule('hacmap')}
+                    onIOClick={() => setActiveModule('intake-output')}
+                    onNotesClick={() => setActiveModule('handover')}
+                    vitalsCount={patient.vitals?.length || 0}
+                    medsCount={patient.medications?.length || 0}
+                    hasNewLabs={unacknowledgedLabsCount > 0}
+                    hasNewOrders={unacknowledgedCount > 0}
+                    hasNewNotes={unacknowledgedHandoverCount > 0}
                   />
                 </div>
               )}

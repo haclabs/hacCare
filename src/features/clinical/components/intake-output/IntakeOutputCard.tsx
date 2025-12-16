@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Droplets, Plus, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { getIntakeOutputEvents, getIntakeOutputSummary, deleteIntakeOutputEvent } from '../../../../services/clinical/intakeOutputService';
 import type { IntakeOutputSummary as BaseIntakeOutputSummary } from '../../../../services/clinical/intakeOutputService';
+import { PatientActionBar } from '../../../../components/PatientActionBar';
 
 // Extended summary with counts
 interface IntakeOutputSummary extends BaseIntakeOutputSummary {
@@ -24,12 +25,40 @@ interface IntakeOutputCardProps {
   patientId: string;
   patientName: string;
   onRefresh?: () => void;
+  // Navigation handlers
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  // Badge data
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 export const IntakeOutputCard: React.FC<IntakeOutputCardProps> = ({
   patientId,
   patientName,
-  onRefresh
+  onRefresh,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false
 }) => {
   const [summary, setSummary] = useState<IntakeOutputSummary | null>(null);
   const [recentEvents, setRecentEvents] = useState<IntakeOutputEvent[]>([]);
@@ -95,6 +124,24 @@ export const IntakeOutputCard: React.FC<IntakeOutputCardProps> = ({
 
   return (
     <>
+      {/* Patient Action Bar */}
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="io"
+      />
+
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg">
         {/* Header */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">

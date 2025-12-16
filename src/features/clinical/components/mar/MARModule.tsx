@@ -22,6 +22,7 @@ import { BarcodeGenerator } from '../../components/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
 import DiabeticRecordModule from '../../../../components/DiabeticRecordModule';
 import { MedicationHistoryView } from './MedicationHistoryView';
+import { PatientActionBar } from '../../../../components/PatientActionBar';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -34,6 +35,21 @@ interface MARModuleProps {
     name: string;
     role: string;
   };
+  // Navigation handlers
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  // Badge data
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 type MARView = 'administration' | 'history' | 'diabetic-record' | 'add-medication';
@@ -42,7 +58,20 @@ export const MARModule: React.FC<MARModuleProps> = ({
   patient,
   medications,
   onMedicationUpdate,
-  currentUser
+  currentUser,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false
 }) => {
   const [activeView, setActiveView] = useState<MARView>('administration');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
@@ -938,6 +967,24 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Patient Action Bar */}
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="meds"
+      />
+
       {/* Module Header */}
       <div className="flex items-center justify-between">
         <div>
