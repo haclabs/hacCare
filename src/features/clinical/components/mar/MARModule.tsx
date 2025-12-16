@@ -503,7 +503,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
     // For different frequencies, calculate next appropriate time
     switch (frequency) {
-      case 'Once daily':
+      case 'Once daily': {
         const today = new Date(now);
         const todayAdmin = new Date(today);
         todayAdmin.setHours(hours, minutes, 0, 0);
@@ -522,8 +522,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           console.log('- Using tomorrow admin time:', tomorrow.toISOString());
           return tomorrow.toISOString();
         }
+      }
 
-      case 'Once monthly':
+      case 'Once monthly': {
         const monthlyToday = new Date(now);
         const todayMonthlyAdmin = new Date(monthlyToday);
         todayMonthlyAdmin.setHours(hours, minutes, 0, 0);
@@ -537,8 +538,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextMonth.setHours(hours, minutes, 0, 0);
           return nextMonth.toISOString();
         }
+      }
 
-      case 'Twice daily':
+      case 'Twice daily': {
         // 8 AM and 8 PM typically, but use admin time as base
         const firstDose = new Date(now);
         firstDose.setHours(hours, minutes, 0, 0);
@@ -561,8 +563,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextFirstDose.setDate(nextFirstDose.getDate() + 1);
           return nextFirstDose.toISOString();
         }
+      }
 
-      case 'Three times daily':
+      case 'Three times daily': {
         // Every 8 hours starting from admin time
         const times = [];
         for (let i = 0; i < 3; i++) {
@@ -585,8 +588,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextDay.setDate(nextDay.getDate() + 1);
           return nextDay.toISOString();
         }
+      }
 
-      case 'Four times daily':
+      case 'Four times daily': {
         // Every 6 hours starting from admin time
         const fourTimes = [];
         for (let i = 0; i < 4; i++) {
@@ -607,11 +611,12 @@ export const MARModule: React.FC<MARModuleProps> = ({
           nextDay.setDate(nextDay.getDate() + 1);
           return nextDay.toISOString();
         }
+      }
 
       case 'Every 4 hours':
       case 'Every 6 hours':
       case 'Every 8 hours':
-      case 'Every 12 hours':
+      case 'Every 12 hours': {
         const intervalHours = parseInt(frequency.match(/\d+/)?.[0] || '24');
         const nextDose = new Date(now);
         nextDose.setHours(hours, minutes, 0, 0);
@@ -622,13 +627,15 @@ export const MARModule: React.FC<MARModuleProps> = ({
         }
         
         return nextDose.toISOString();
+      }
 
-      default:
+      default: {
         // Default to next day at admin time
         const nextDefault = new Date(now);
         nextDefault.setDate(nextDefault.getDate() + 1);
         nextDefault.setHours(hours, minutes, 0, 0);
         return nextDefault.toISOString();
+      }
     }
   };
 

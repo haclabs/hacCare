@@ -86,7 +86,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
 
     // Calculate next administration time based on frequency
     switch (frequency) {
-      case 'Once daily':
+      case 'Once daily': {
         const today = new Date(now);
         const todayAdmin = setHours(setMinutes(today, minutes), hours);
         
@@ -104,8 +104,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           console.log('- Using tomorrow admin time:', tomorrowAdmin.toISOString());
           return tomorrowAdmin.toISOString();
         }
+      }
         
-      case 'Twice daily':
+      case 'Twice daily': {
         // Use user's admin time and 12 hours later
         const firstTime = setHours(setMinutes(new Date(now), minutes), hours);
         const secondTime = setHours(setMinutes(new Date(now), minutes), (hours + 12) % 24);
@@ -121,8 +122,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           nextDay.setDate(nextDay.getDate() + 1);
           return setHours(setMinutes(nextDay, minutes), hours).toISOString();
         }
+      }
         
-      case 'Three times daily':
+      case 'Three times daily': {
         // Use user's admin time, +8 hours, +16 hours
         const times = [
           setHours(setMinutes(new Date(now), minutes), hours),
@@ -140,11 +142,12 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const nextDay3 = new Date(now);
         nextDay3.setDate(nextDay3.getDate() + 1);
         return setHours(setMinutes(nextDay3, minutes), hours).toISOString();
+      }
         
       case 'Every 4 hours':
         return addHours(now, 4).toISOString();
         
-      case 'Every 6 hours':
+      case 'Every 6 hours': {
         // Calculate from user's admin time in 6-hour intervals
         const userTime = setHours(setMinutes(new Date(now), minutes), hours);
         const intervals = [];
@@ -164,8 +167,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const nextDay6 = new Date(now);
         nextDay6.setDate(nextDay6.getDate() + 1);
         return setHours(setMinutes(nextDay6, minutes), hours).toISOString();
+      }
         
-      case 'Every 8 hours':
+      case 'Every 8 hours': {
         // Calculate from user's admin time in 8-hour intervals
         const intervals8 = [];
         for (let i = 0; i < 3; i++) {
@@ -185,8 +189,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const nextDay8 = new Date(now);
         nextDay8.setDate(nextDay8.getDate() + 1);
         return setHours(setMinutes(nextDay8, minutes), hours).toISOString();
+      }
         
-      case 'Every 12 hours':
+      case 'Every 12 hours': {
         // Use user's admin time and 12 hours later
         const first12 = setHours(setMinutes(new Date(now), minutes), hours);
         const second12 = setHours(setMinutes(new Date(now), minutes), (hours + 12) % 24);
@@ -201,11 +206,12 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           nextDay12.setDate(nextDay12.getDate() + 1);
           return setHours(setMinutes(nextDay12, minutes), hours).toISOString();
         }
+      }
         
       case 'As needed (PRN)':
         return now.toISOString(); // Immediate availability
         
-      default:
+      default: {
         // Default to user's admin time
         const defaultTime = setHours(setMinutes(new Date(now), minutes), hours);
         if (now < defaultTime) {
