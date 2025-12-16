@@ -284,7 +284,7 @@ export const AvatarCanvas: React.FC<AvatarCanvasProps> = ({
 
         {/* Body Image - Front or Back */}
         <image
-          href={view === 'front' ? '/images/body-front.png' : '/images/body-back.png'}
+          href={view === 'front' ? `${import.meta.env.BASE_URL}images/body-front.png` : `${import.meta.env.BASE_URL}images/body-back.png`}
           x="0"
           y="0"
           width="200"

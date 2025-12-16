@@ -18,6 +18,7 @@ import { vitalsEntrySchema, vitalsReviewSchema } from '../../../../schemas/vital
 import { updatePatientVitals } from '../../../../services/patient/patientService';
 import { Patient, VitalSigns } from '../../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
+import { PatientActionBar } from '../../../../components/PatientActionBar';
 
 interface VitalsModuleProps {
   patient: Patient;
@@ -28,6 +29,21 @@ interface VitalsModuleProps {
     name: string;
     role: string;
   };
+  // Navigation handlers
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  // Badge data
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 type VitalsView = 'trends';
@@ -36,7 +52,20 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   patient,
   vitals,
   onVitalsUpdate,
-  currentUser
+  currentUser,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -484,6 +513,24 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Patient Action Bar */}
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="vitals"
+      />
+
       {/* Module Header */}
       <div className="flex items-center justify-between">
         <div>
