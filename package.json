@@ -46,7 +46,7 @@
     "dompurify": "^3.3.1",
     "html2canvas": "^1.4.1",
     "jsbarcode": "^3.12.1",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.561.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
