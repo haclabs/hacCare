@@ -6,6 +6,13 @@
  */
 
 import { format, isValid, parseISO } from 'date-fns';
+import { 
+  calculatePreciseAge, 
+  getVitalRangesForPatient, 
+  getVitalStatusLegacy,
+  type PatientAge,
+  type AgeBandVitalRanges
+} from './vitalRanges';
 
 /**
  * Generate a unique patient ID in PTXXXXX format
@@ -62,6 +69,27 @@ export const calculateAge = (dateOfBirth: string): number => {
   }
   
   return age;
+};
+
+/**
+ * Get precise patient age with days/months/years and age band classification
+ * Uses the new age-based vital ranges system for clinical accuracy
+ * 
+ * @param {string} dateOfBirth - Date of birth in YYYY-MM-DD format
+ * @returns {PatientAge} Detailed age information with age band
+ */
+export const getPatientAge = (dateOfBirth: string): PatientAge => {
+  return calculatePreciseAge(dateOfBirth);
+};
+
+/**
+ * Get age-appropriate vital sign ranges for a patient
+ * 
+ * @param {string} dateOfBirth - Date of birth in YYYY-MM-DD format
+ * @returns {AgeBandVitalRanges} Age-appropriate vital sign reference ranges
+ */
+export const getPatientVitalRanges = (dateOfBirth: string): AgeBandVitalRanges => {
+  return getVitalRangesForPatient(dateOfBirth);
 };
 
 /**
@@ -176,27 +204,15 @@ export const formatTime = (dateValue: string | Date | null): string => {
   }
 };
 
-export const getVitalStatus = (vital: string, value: number) => {
-  switch (vital) {
-    case 'temperature':
-      if (value < 36.0 || value > 38.0) return 'text-red-600 bg-red-50';
-      return 'text-green-600 bg-green-50';
-    case 'heartRate':
-      if (value < 60 || value > 100) return 'text-red-600 bg-red-50';
-      return 'text-green-600 bg-green-50';
-    case 'bloodPressureSystolic':
-      if (value < 90 || value > 140) return 'text-red-600 bg-red-50';
-      return 'text-green-600 bg-green-50';
-    case 'bloodPressureDiastolic':
-      if (value < 60 || value > 90) return 'text-red-600 bg-red-50';
-      return 'text-green-600 bg-green-50';
-    case 'respiratoryRate':
-      if (value < 12 || value > 20) return 'text-red-600 bg-red-50';
-      return 'text-green-600 bg-green-50';
-    case 'oxygenSaturation':
-      if (value < 95) return 'text-red-600 bg-red-50';
-      return 'text-green-600 bg-green-50';
-    default:
-      return 'text-gray-600 bg-gray-50';
-  }
+/**
+ * Get vital status with age-based ranges
+ * Supports both legacy (adult-only) and new age-aware assessment
+ * 
+ * @param {string} vital - Vital sign type
+ * @param {number} value - Vital sign value
+ * @param {string} [dateOfBirth] - Optional date of birth for age-based ranges
+ * @returns {string} CSS classes for status indication
+ */
+export const getVitalStatus = (vital: string, value: number, dateOfBirth?: string) => {
+  return getVitalStatusLegacy(vital, value, dateOfBirth);
 };

@@ -360,11 +360,79 @@ export type Database = {
         }
         Relationships: []
       }
+      device_assessments: {
+        Row: {
+          assessed_at: string
+          assessment_data: Json
+          created_at: string
+          device_id: string
+          device_type: string
+          id: string
+          notes: string | null
+          output_amount_ml: number | null
+          patient_id: string
+          status: string | null
+          student_name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessed_at?: string
+          assessment_data?: Json
+          created_at?: string
+          device_id: string
+          device_type: string
+          id?: string
+          notes?: string | null
+          output_amount_ml?: number | null
+          patient_id: string
+          status?: string | null
+          student_name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessed_at?: string
+          assessment_data?: Json
+          created_at?: string
+          device_id?: string
+          device_type?: string
+          id?: string
+          notes?: string | null
+          output_amount_ml?: number | null
+          patient_id?: string
+          status?: string | null
+          student_name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_assessments_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           created_at: string
           created_by: string
+          external_length_cm: number | null
+          gauge: string | null
           id: string
+          initial_aspirate_appearance: string | null
+          initial_ph: number | null
+          initial_xray_confirmed: boolean | null
           inserted_by: string | null
           location_id: string
           notes: string | null
@@ -373,13 +441,17 @@ export type Database = {
           patient_id: string
           patient_tolerance: string | null
           placed_pre_arrival: string | null
+          placement_confirmed: boolean | null
           placement_date: string | null
           placement_time: string | null
           reservoir_size_ml: number | null
           reservoir_type:
             | Database["public"]["Enums"]["reservoir_type_enum"]
             | null
+          route: string | null
           securement_method: string[] | null
+          site_location: string | null
+          site_side: string | null
           tenant_id: string
           tube_number: number | null
           tube_size_fr: string | null
@@ -389,7 +461,12 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          external_length_cm?: number | null
+          gauge?: string | null
           id?: string
+          initial_aspirate_appearance?: string | null
+          initial_ph?: number | null
+          initial_xray_confirmed?: boolean | null
           inserted_by?: string | null
           location_id: string
           notes?: string | null
@@ -398,13 +475,17 @@ export type Database = {
           patient_id: string
           patient_tolerance?: string | null
           placed_pre_arrival?: string | null
+          placement_confirmed?: boolean | null
           placement_date?: string | null
           placement_time?: string | null
           reservoir_size_ml?: number | null
           reservoir_type?:
             | Database["public"]["Enums"]["reservoir_type_enum"]
             | null
+          route?: string | null
           securement_method?: string[] | null
+          site_location?: string | null
+          site_side?: string | null
           tenant_id: string
           tube_number?: number | null
           tube_size_fr?: string | null
@@ -414,7 +495,12 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          external_length_cm?: number | null
+          gauge?: string | null
           id?: string
+          initial_aspirate_appearance?: string | null
+          initial_ph?: number | null
+          initial_xray_confirmed?: boolean | null
           inserted_by?: string | null
           location_id?: string
           notes?: string | null
@@ -423,13 +509,17 @@ export type Database = {
           patient_id?: string
           patient_tolerance?: string | null
           placed_pre_arrival?: string | null
+          placement_confirmed?: boolean | null
           placement_date?: string | null
           placement_time?: string | null
           reservoir_size_ml?: number | null
           reservoir_type?:
             | Database["public"]["Enums"]["reservoir_type_enum"]
             | null
+          route?: string | null
           securement_method?: string[] | null
+          site_location?: string | null
+          site_side?: string | null
           tenant_id?: string
           tube_number?: number | null
           tube_size_fr?: string | null
@@ -1102,12 +1192,12 @@ export type Database = {
           comments?: string | null
           created_at?: string | null
           critical_high?: number | null
-          note?: string | null
           critical_low?: number | null
           entered_at?: string | null
           entered_by?: string | null
           flag?: Database["public"]["Enums"]["lab_flag"] | null
           id?: string
+          note?: string | null
           panel_id?: string
           patient_id?: string
           ref_high?: number | null
@@ -1191,7 +1281,7 @@ export type Database = {
           route: string | null
           status: string | null
           student_name: string | null
-          tenant_id: string | null
+          tenant_id: string
           timestamp: string
           updated_at: string | null
           witness_name: string | null
@@ -1213,7 +1303,7 @@ export type Database = {
           route?: string | null
           status?: string | null
           student_name?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           timestamp?: string
           updated_at?: string | null
           witness_name?: string | null
@@ -1235,7 +1325,7 @@ export type Database = {
           route?: string | null
           status?: string | null
           student_name?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           timestamp?: string
           updated_at?: string | null
           witness_name?: string | null
@@ -2125,6 +2215,7 @@ export type Database = {
           admission_date: string
           allergies: string[] | null
           assigned_nurse: string
+          avatar_id: string | null
           bed_number: string
           blood_type: string
           condition: string
@@ -2147,6 +2238,7 @@ export type Database = {
           admission_date: string
           allergies?: string[] | null
           assigned_nurse: string
+          avatar_id?: string | null
           bed_number: string
           blood_type: string
           condition: string
@@ -2169,6 +2261,7 @@ export type Database = {
           admission_date?: string
           allergies?: string[] | null
           assigned_nurse?: string
+          avatar_id?: string | null
           bed_number?: string
           blood_type?: string
           condition?: string
@@ -2260,8 +2353,10 @@ export type Database = {
           ends_at: string | null
           id: string
           name: string
+          primary_categories: string[] | null
           starts_at: string | null
           status: Database["public"]["Enums"]["simulation_active_status"] | null
+          sub_categories: string[] | null
           template_id: string
           template_snapshot_version: number
           tenant_id: string
@@ -2277,10 +2372,12 @@ export type Database = {
           ends_at?: string | null
           id?: string
           name: string
+          primary_categories?: string[] | null
           starts_at?: string | null
           status?:
             | Database["public"]["Enums"]["simulation_active_status"]
             | null
+          sub_categories?: string[] | null
           template_id: string
           template_snapshot_version: number
           tenant_id: string
@@ -2296,10 +2393,12 @@ export type Database = {
           ends_at?: string | null
           id?: string
           name?: string
+          primary_categories?: string[] | null
           starts_at?: string | null
           status?:
             | Database["public"]["Enums"]["simulation_active_status"]
             | null
+          sub_categories?: string[] | null
           template_id?: string
           template_snapshot_version?: number
           tenant_id?: string
@@ -2376,7 +2475,10 @@ export type Database = {
       simulation_history: {
         Row: {
           activity_summary: Json | null
+          archive_folder: string | null
+          archived: boolean
           archived_at: string | null
+          archived_by: string | null
           completed_at: string | null
           created_at: string | null
           created_by: string
@@ -2384,19 +2486,25 @@ export type Database = {
           duration_minutes: number
           ended_at: string | null
           id: string
+          instructor_name: string | null
           metrics: Json | null
           name: string
           participants: Json | null
+          primary_categories: string[] | null
           simulation_id: string | null
           started_at: string
           status: Database["public"]["Enums"]["simulation_active_status"]
           student_activities: Json | null
+          sub_categories: string[] | null
           template_id: string
           tenant_id: string | null
         }
         Insert: {
           activity_summary?: Json | null
+          archive_folder?: string | null
+          archived?: boolean
           archived_at?: string | null
+          archived_by?: string | null
           completed_at?: string | null
           created_at?: string | null
           created_by: string
@@ -2404,19 +2512,25 @@ export type Database = {
           duration_minutes: number
           ended_at?: string | null
           id?: string
+          instructor_name?: string | null
           metrics?: Json | null
           name: string
           participants?: Json | null
+          primary_categories?: string[] | null
           simulation_id?: string | null
           started_at: string
           status: Database["public"]["Enums"]["simulation_active_status"]
           student_activities?: Json | null
+          sub_categories?: string[] | null
           template_id: string
           tenant_id?: string | null
         }
         Update: {
           activity_summary?: Json | null
+          archive_folder?: string | null
+          archived?: boolean
           archived_at?: string | null
+          archived_by?: string | null
           completed_at?: string | null
           created_at?: string | null
           created_by?: string
@@ -2424,17 +2538,34 @@ export type Database = {
           duration_minutes?: number
           ended_at?: string | null
           id?: string
+          instructor_name?: string | null
           metrics?: Json | null
           name?: string
           participants?: Json | null
+          primary_categories?: string[] | null
           simulation_id?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["simulation_active_status"]
           student_activities?: Json | null
+          sub_categories?: string[] | null
           template_id?: string
           tenant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "simulation_history_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_history_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "simulation_history_template_id_fkey"
             columns: ["template_id"]
@@ -2592,6 +2723,90 @@ export type Database = {
           },
           {
             foreignKeyName: "simulation_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_logs: {
+        Row: {
+          action: string | null
+          browser_info: Json | null
+          component: string | null
+          created_at: string | null
+          current_url: string | null
+          error_message: string | null
+          error_stack: string | null
+          id: string
+          ip_address: unknown
+          log_level: string
+          log_type: string
+          metadata: Json | null
+          previous_url: string | null
+          request_data: Json | null
+          response_data: Json | null
+          session_id: string | null
+          tenant_id: string | null
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          browser_info?: Json | null
+          component?: string | null
+          created_at?: string | null
+          current_url?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          id?: string
+          ip_address?: unknown
+          log_level: string
+          log_type: string
+          metadata?: Json | null
+          previous_url?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          session_id?: string | null
+          tenant_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          browser_info?: Json | null
+          component?: string | null
+          created_at?: string | null
+          current_url?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          id?: string
+          ip_address?: unknown
+          log_level?: string
+          log_type?: string
+          metadata?: Json | null
+          previous_url?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          session_id?: string | null
+          tenant_id?: string | null
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_logs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2863,84 +3078,145 @@ export type Database = {
       }
       wound_assessments: {
         Row: {
-          assessment_date: string
-          assessment_notes: string
-          assessor_id: string
-          assessor_name: string
+          assessed_at: string | null
+          assessment_data: Json | null
+          assessment_date: string | null
+          assessment_notes: string | null
+          assessor_id: string | null
+          assessor_name: string | null
           created_at: string | null
-          depth_cm: number
-          exudate_amount: string
-          exudate_type: string
+          depth_cm: number | null
+          device_functioning: boolean | null
+          device_id: string | null
+          device_type: string | null
+          drainage_amount: string | null
+          drainage_type: string[] | null
+          dressing_type: string | null
+          exudate_amount: string | null
+          exudate_type: string | null
           id: string
-          length_cm: number
-          odor: string
-          pain_level: number
+          length_cm: number | null
+          notes: string | null
+          odor: string | null
+          output_amount_ml: number | null
+          pain_level: number | null
           patient_id: string
-          periwound_condition: string
+          periwound_condition: string | null
           photos: string[] | null
-          signs_of_infection: string
+          signs_of_infection: string | null
+          site_condition: string | null
           stage: string | null
           student_name: string | null
+          surrounding_skin: string | null
           tenant_id: string
+          treatment_applied: string | null
           updated_at: string | null
-          width_cm: number
-          wound_bed: string
-          wound_location: string
-          wound_type: string
+          width_cm: number | null
+          wound_appearance: string | null
+          wound_bed: string | null
+          wound_depth_cm: number | null
+          wound_id: string | null
+          wound_length_cm: number | null
+          wound_location: string | null
+          wound_type: string | null
+          wound_width_cm: number | null
         }
         Insert: {
-          assessment_date?: string
-          assessment_notes: string
-          assessor_id: string
-          assessor_name: string
+          assessed_at?: string | null
+          assessment_data?: Json | null
+          assessment_date?: string | null
+          assessment_notes?: string | null
+          assessor_id?: string | null
+          assessor_name?: string | null
           created_at?: string | null
-          depth_cm?: number
-          exudate_amount: string
-          exudate_type: string
+          depth_cm?: number | null
+          device_functioning?: boolean | null
+          device_id?: string | null
+          device_type?: string | null
+          drainage_amount?: string | null
+          drainage_type?: string[] | null
+          dressing_type?: string | null
+          exudate_amount?: string | null
+          exudate_type?: string | null
           id?: string
-          length_cm?: number
-          odor: string
-          pain_level: number
+          length_cm?: number | null
+          notes?: string | null
+          odor?: string | null
+          output_amount_ml?: number | null
+          pain_level?: number | null
           patient_id: string
-          periwound_condition: string
+          periwound_condition?: string | null
           photos?: string[] | null
-          signs_of_infection: string
+          signs_of_infection?: string | null
+          site_condition?: string | null
           stage?: string | null
           student_name?: string | null
+          surrounding_skin?: string | null
           tenant_id: string
+          treatment_applied?: string | null
           updated_at?: string | null
-          width_cm?: number
-          wound_bed: string
-          wound_location: string
-          wound_type: string
+          width_cm?: number | null
+          wound_appearance?: string | null
+          wound_bed?: string | null
+          wound_depth_cm?: number | null
+          wound_id?: string | null
+          wound_length_cm?: number | null
+          wound_location?: string | null
+          wound_type?: string | null
+          wound_width_cm?: number | null
         }
         Update: {
-          assessment_date?: string
-          assessment_notes?: string
-          assessor_id?: string
-          assessor_name?: string
+          assessed_at?: string | null
+          assessment_data?: Json | null
+          assessment_date?: string | null
+          assessment_notes?: string | null
+          assessor_id?: string | null
+          assessor_name?: string | null
           created_at?: string | null
-          depth_cm?: number
-          exudate_amount?: string
-          exudate_type?: string
+          depth_cm?: number | null
+          device_functioning?: boolean | null
+          device_id?: string | null
+          device_type?: string | null
+          drainage_amount?: string | null
+          drainage_type?: string[] | null
+          dressing_type?: string | null
+          exudate_amount?: string | null
+          exudate_type?: string | null
           id?: string
-          length_cm?: number
-          odor?: string
-          pain_level?: number
+          length_cm?: number | null
+          notes?: string | null
+          odor?: string | null
+          output_amount_ml?: number | null
+          pain_level?: number | null
           patient_id?: string
-          periwound_condition?: string
+          periwound_condition?: string | null
           photos?: string[] | null
-          signs_of_infection?: string
+          signs_of_infection?: string | null
+          site_condition?: string | null
           stage?: string | null
           student_name?: string | null
+          surrounding_skin?: string | null
           tenant_id?: string
+          treatment_applied?: string | null
           updated_at?: string | null
-          width_cm?: number
-          wound_bed?: string
-          wound_location?: string
-          wound_type?: string
+          width_cm?: number | null
+          wound_appearance?: string | null
+          wound_bed?: string | null
+          wound_depth_cm?: number | null
+          wound_id?: string | null
+          wound_length_cm?: number | null
+          wound_location?: string | null
+          wound_type?: string | null
+          wound_width_cm?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "wound_assessments_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "wound_assessments_patient_id_fkey"
             columns: ["patient_id"]
@@ -2960,6 +3236,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wound_assessments_wound_id_fkey"
+            columns: ["wound_id"]
+            isOneToOne: false
+            referencedRelation: "wounds"
             referencedColumns: ["id"]
           },
         ]
@@ -3387,13 +3670,16 @@ export type Database = {
       cleanup_backup_audit_logs: { Args: never; Returns: number }
       cleanup_expired_simulations: { Args: never; Returns: number }
       cleanup_old_sessions: { Args: never; Returns: number }
+      cleanup_old_user_sessions: { Args: never; Returns: undefined }
       cleanup_orphaned_users: { Args: never; Returns: number }
-      complete_simulation:
-        | { Args: { p_simulation_id: string }; Returns: Json }
-        | {
-            Args: { p_activities?: Json; p_simulation_id: string }
-            Returns: Json
-          }
+      complete_simulation: {
+        Args: {
+          p_activities?: Json
+          p_instructor_name?: string
+          p_simulation_id: string
+        }
+        Returns: Json
+      }
       confirm_user_email: { Args: { target_user_id: string }; Returns: boolean }
       create_alert_for_tenant: {
         Args: {
@@ -3599,24 +3885,6 @@ export type Database = {
       }
       current_user_is_super_admin: { Args: never; Returns: boolean }
       deactivate_user: { Args: { target_user_id: string }; Returns: string }
-      debug_vitals_restoration: {
-        Args: { p_simulation_id: string }
-        Returns: Json
-      }
-      debug_vitals_restoration_fixed: {
-        Args: { _template_id: string }
-        Returns: {
-          action_taken: string
-          details: string
-          sample_error: string
-          vitals_in_snapshot: number
-          vitals_restored: number
-        }[]
-      }
-      debug_vitals_restoration_only: {
-        Args: { p_simulation_id: string }
-        Returns: Json
-      }
       delete_medication_super_admin: {
         Args: { p_medication_id: string }
         Returns: boolean
@@ -3632,16 +3900,6 @@ export type Database = {
       delete_simulation: {
         Args: { p_archive_to_history?: boolean; p_simulation_id: string }
         Returns: Json
-      }
-      delete_simulation_run: { Args: { p_run_id: string }; Returns: Json }
-      delete_simulation_run_safe: { Args: { p_run_id: string }; Returns: Json }
-      delete_simulation_tenant_safe: {
-        Args: { p_tenant_id: string }
-        Returns: undefined
-      }
-      delete_simulation_users_for_tenant: {
-        Args: { p_tenant_id: string }
-        Returns: undefined
       }
       delete_tenant_secure: {
         Args: { target_tenant_id: string }
@@ -3660,6 +3918,8 @@ export type Database = {
           p_include_doctors_orders?: boolean
           p_include_hacmap?: boolean
           p_include_handover_notes?: boolean
+          p_include_intake_output?: boolean
+          p_include_labs?: boolean
           p_include_medications?: boolean
           p_include_vitals?: boolean
           p_include_wound_care?: boolean
@@ -3793,21 +4053,6 @@ export type Database = {
           user_role: string
         }[]
       }
-      get_user_assigned_simulations: {
-        Args: { p_user_id?: string }
-        Returns: {
-          assigned_at: string
-          assignment_role: string
-          assignment_status: string
-          run_description: string
-          run_id: string
-          run_name: string
-          run_status: string
-          started_at: string
-          template_name: string
-          template_specialty: string
-        }[]
-      }
       get_user_current_tenant: {
         Args: { target_user_id: string }
         Returns: {
@@ -3817,10 +4062,14 @@ export type Database = {
         }[]
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
+      get_user_simulation_assignments: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       get_user_simulation_tenant_access: { Args: never; Returns: string }
       get_user_tenant:
-        | { Args: { user_uuid: string }; Returns: string }
         | { Args: never; Returns: string }
+        | { Args: { user_uuid: string }; Returns: string }
       get_user_tenant_assignments: {
         Args: { target_user_id: string }
         Returns: {
@@ -3845,10 +4094,6 @@ export type Database = {
         Args: { tenant_uuid: string; user_uuid?: string }
         Returns: boolean
       }
-      join_simulation_lobby: {
-        Args: { p_simulation_id: string; p_user_id: string }
-        Returns: Json
-      }
       launch_run: {
         Args: { p_run_name: string; p_snapshot_id: string }
         Returns: string
@@ -3859,9 +4104,15 @@ export type Database = {
           p_name: string
           p_participant_roles?: string[]
           p_participant_user_ids: string[]
+          p_primary_categories?: string[]
+          p_sub_categories?: string[]
           p_template_id: string
         }
-        Returns: Json
+        Returns: {
+          message: string
+          simulation_id: string
+          tenant_id: string
+        }[]
       }
       launch_simulation_instance: {
         Args: {
@@ -3875,16 +4126,16 @@ export type Database = {
       mark_expired_backups: { Args: never; Returns: number }
       move_patient_to_tenant:
         | {
+            Args: { p_patient_id: string; p_target_tenant_id: string }
+            Returns: boolean
+          }
+        | {
             Args: { p_source_patient_id: string; p_target_tenant_id: string }
             Returns: {
               patient_id: string
               patient_identifier: string
               records_updated: Json
             }[]
-          }
-        | {
-            Args: { p_patient_id: string; p_target_tenant_id: string }
-            Returns: boolean
           }
       reactivate_user: { Args: { target_user_id: string }; Returns: string }
       record_simulation_activity: {
@@ -3902,6 +4153,10 @@ export type Database = {
         Returns: boolean
       }
       reset_run: { Args: { p_run_id: string }; Returns: Json }
+      reset_simulation_for_next_session: {
+        Args: { p_simulation_id: string }
+        Returns: Json
+      }
       reset_simulation_for_next_session_v2: {
         Args: { p_simulation_id: string }
         Returns: Json
@@ -3914,10 +4169,12 @@ export type Database = {
         Args: {
           p_barcode_mappings?: Json
           p_id_mappings?: Json
+          p_preserve_barcodes?: boolean
+          p_skip_patients?: boolean
           p_snapshot: Json
           p_tenant_id: string
         }
-        Returns: undefined
+        Returns: Json
       }
       restore_snapshot_to_tenant_v2: {
         Args: { p_snapshot: Json; p_tenant_id: string }
@@ -3930,20 +4187,6 @@ export type Database = {
       set_super_admin_tenant_context: {
         Args: { target_tenant_id: string }
         Returns: undefined
-      }
-      start_simulation: {
-        Args: { p_instructor_id: string; p_simulation_id: string }
-        Returns: boolean
-      }
-      start_simulation_run: { Args: { p_run_id: string }; Returns: Json }
-      stop_simulation_run: { Args: { p_run_id: string }; Returns: Json }
-      test_tenant_assignment: {
-        Args: never
-        Returns: {
-          details: string
-          result: boolean
-          test_name: string
-        }[]
       }
       update_medication_super_admin: {
         Args: { p_medication_id: string; p_updates: Json }
@@ -3973,6 +4216,22 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      update_simulation_categories: {
+        Args: {
+          p_primary_categories?: string[]
+          p_simulation_id: string
+          p_sub_categories?: string[]
+        }
+        Returns: boolean
+      }
+      update_simulation_history_categories: {
+        Args: {
+          p_primary_categories?: string[]
+          p_simulation_id: string
+          p_sub_categories?: string[]
+        }
+        Returns: boolean
+      }
       update_user_profile_admin: {
         Args: {
           p_department?: string
@@ -3982,6 +4241,7 @@ export type Database = {
           p_license_number?: string
           p_phone?: string
           p_role: string
+          p_simulation_only?: boolean
           p_user_id: string
         }
         Returns: Json
@@ -4024,6 +4284,7 @@ export type Database = {
         | "iv-picc"
         | "iv-port"
         | "other"
+        | "feeding-tube"
       lab_category: "chemistry" | "abg" | "hematology"
       lab_flag:
         | "normal"
@@ -4040,7 +4301,12 @@ export type Database = {
         | "anterior"
         | "posterior"
       ref_operator: "between" | ">=" | "<=" | "sex-specific"
-      reservoir_type_enum: "jackson-pratt" | "hemovac" | "penrose" | "other"
+      reservoir_type_enum:
+        | "jackson-pratt"
+        | "hemovac"
+        | "penrose"
+        | "other"
+        | "urinary-drainage-bag"
       simulation_active_status:
         | "pending"
         | "running"
@@ -4206,6 +4472,7 @@ export const Constants = {
         "iv-picc",
         "iv-port",
         "other",
+        "feeding-tube",
       ],
       lab_category: ["chemistry", "abg", "hematology"],
       lab_flag: [
@@ -4225,7 +4492,13 @@ export const Constants = {
         "posterior",
       ],
       ref_operator: ["between", ">=", "<=", "sex-specific"],
-      reservoir_type_enum: ["jackson-pratt", "hemovac", "penrose", "other"],
+      reservoir_type_enum: [
+        "jackson-pratt",
+        "hemovac",
+        "penrose",
+        "other",
+        "urinary-drainage-bag",
+      ],
       simulation_active_status: [
         "pending",
         "running",

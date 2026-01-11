@@ -7,6 +7,43 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.0] - 2026-01-11 - AGE-BASED VITAL SIGNS REFERENCE RANGES
+===============================================================================
+
+CLINICAL ACCURACY ENHANCEMENT
+------------------------------
+
+* Age-Based Vital Signs Reference Ranges
+  - NEW: Pediatric reference values for accurate vital signs assessment
+  - Precise age calculation: days for newborns (0-28 days), months for infants (1-12 months), years for older patients
+  - Seven age bands: NEWBORN, INFANT, TODDLER, PRESCHOOL, SCHOOL_AGE, ADOLESCENT, ADULT
+  - Age-appropriate normal ranges for: temperature, heart rate, blood pressure, respiratory rate, oxygen saturation
+  - Visual indicators automatically adjust to patient age (green/yellow/red status)
+  - Backward compatible: adult ranges used when date of birth not provided
+  
+  Files Added:
+  - src/utils/vitalRanges.ts (new utility module with all age band logic)
+  
+  Files Modified:
+  - src/utils/patientUtils.ts (enhanced with age band classification functions)
+  - src/components/forms/fields/VitalSignsField.tsx (age-aware assessment and display)
+  
+  Clinical Standards:
+  - Newborn (0-28 days): HR 120-160, BP 60-90/30-60, RR 30-60
+  - Infant (1-12 months): HR 100-150, BP 70-100/35-65, RR 25-50
+  - Toddler (1-3 years): HR 90-140, BP 80-110/40-70, RR 20-40
+  - Preschool (3-5 years): HR 80-120, BP 85-115/45-75, RR 20-30
+  - School Age (6-12 years): HR 70-110, BP 90-120/50-80, RR 18-25
+  - Adolescent (13-18 years): HR 60-100, BP 95-130/55-85, RR 12-20
+  - Adult (18+ years): HR 60-100, BP 90-140/60-90, RR 12-20
+  
+  Benefits:
+  - Clinically accurate assessment for pediatric simulations
+  - Educational value: students learn age-appropriate norms
+  - Prevents false alarms on pediatric patients using adult ranges
+  - Supports simulation scenarios across all age groups
+
+===============================================================================
 [5.2.0-rc5] - 2025-11-30 - BUGGLER RELEASE CANDIDATE 5 - CLEANUP & OPTIMIZATION
 ===============================================================================
 

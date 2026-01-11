@@ -3,11 +3,13 @@
  * 
  * Specialized form field for collecting vital signs data with healthcare-specific
  * validation, normal ranges, and clinical alerts.
+ * Supports age-based reference ranges for pediatric and adult patients.
  */
 
 import React, { useState } from 'react';
 import { Thermometer, Heart, Activity, Droplets, Wind, AlertTriangle, Info } from 'lucide-react';
 import { FieldError, FieldWarning } from '../../../types/schema';
+import { getVitalRangesForPatient, assessVitalSign, type AgeBandVitalRanges } from '../../../utils/vitalRanges';
 
 interface ProcessedField {
   name: string;
@@ -27,6 +29,7 @@ interface VitalSignsFieldProps {
   warning?: FieldWarning;
   disabled?: boolean;
   required?: boolean;
+  patientDateOfBirth?: string; // Optional: Enable age-based ranges
 }
 
 interface VitalSignsData {
@@ -49,9 +52,15 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
   error,
   warning,
   disabled = false,
-  required = false
+  required = false,
+  patientDateOfBirth
 }) => {
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  
+  // Get age-appropriate vital ranges if date of birth is provided
+  const ageBasedRanges: AgeBandVitalRanges | null = patientDateOfBirth 
+    ? getVitalRangesForPatient(patientDateOfBirth)
+    : null;
 
   const handleVitalChange = (vitalType: keyof VitalSignsData, newValue: any) => {
     const updatedValue = { ...value, [vitalType]: newValue };
@@ -60,10 +69,41 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
 
   const handleBloodPressureChange = (type: 'systolic' | 'diastolic', newValue: number) => {
     const updatedBP = { 
-      ...value.bloodPressure, 
-      [type]: newValue 
+      ...value.bloodPressure, vitalType?: string) => {
+    if (!currentValue) return 'normal';
+    
+    // Use age-based assessment if available
+    if (patientDateOfBirth && vitalType && ageBasedRanges) {
+      const vitalTypeMap: Record<string, keyof Omit<AgeBandVitalRanges, 'ageBand' | 'ageDescription'>> = {
+        'temperature': 'temperature',
+        'heartRate': 'heartRate',
+        'systolic': 'systolic',
+        'diastolic': 'diastolic',
+        'respiratoryRate': 'respiratoryRate',
+        'oxygenSaturation': 'oxygenSaturation'
+      };
+      
+      const mappedType = vitalTypeMap[vitalType];
+      if (mappedType) {
+        const assessment = assessVitalSign(mappedType, currentValue, patientDateOfBirth);
+        return assessment.status;
+      }
+    }
+    
+    // Fallback to legacy ranges for backward compatibility
+    const ranges = {
+      temperature: { min: 36.1, max: 37.2, critical: { low: 35, high: 40 } },
+      heartRate: { min: 60, max: 100, critical: { low: 40, high: 150 } },
+      systolic: { min: 90, max: 140, critical: { low: 70, high: 180 } },
+      diastolic: { min: 60, max: 90, critical: { low: 40, high: 110 } },
+      respiratoryRate: { min: 12, max: 20, critical: { low: 8, high: 30 } },
+      oxygenSaturation: { min: 95, max: 100, critical: { low: 90, high: 100 } }
     };
-    handleVitalChange('bloodPressure', updatedBP);
+    
+    const range = vitalType ? ranges[vitalType as keyof typeof ranges] : null;
+    if (!range) return 'normal';
+    
+    const { min, max, critical } = rangedatedBP);
   };
 
   const getFieldStatus = (currentValue: number, ranges?: any) => {
@@ -114,17 +154,24 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          {field.title}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-        {field.description && (
-          <div className="relative group">
-            <Info className="h-4 w-4 text-gray-400 cursor-help" />
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-              {field.description}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {field.title}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          {field.description && (
+            <div className="relative group">
+              <Info className="h-4 w-4 text-gray-400 cursor-help" />
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                {field.description}
+              </div>
             </div>
+          )}
+        </div>
+        {ageBasedRanges && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 italic">
+            {ageBasedRanges.ageDescription}
           </div>
         )}
       </div>
@@ -135,7 +182,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           <div className="flex items-center space-x-2">
             <Thermometer className="h-4 w-4 text-red-500" />
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Temperature (°C)</label>
-            {getStatusIcon(getFieldStatus(value.temperature, ranges.temperature))}
+            {getStatusIcon(getFieldStatus(value.temperature, 'temperature'))}
           </div>
           <input
             type="number"
@@ -148,12 +195,14 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
             className={`w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              getStatusColor(getFieldStatus(value.temperature, ranges.temperature))
+              getStatusColor(getFieldStatus(value.temperature, 'temperature'))
             }`}
             placeholder="37.0"
           />
           {focusedField === 'temperature' && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 36.1-37.2°C</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Normal: {ageBasedRanges ? `${ageBasedRanges.temperature.min}-${ageBasedRanges.temperature.max}` : '36.1-37.2'}°C
+            </p>
           )}
         </div>
 
@@ -162,7 +211,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           <div className="flex items-center space-x-2">
             <Heart className="h-4 w-4 text-red-500" />
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Heart Rate (BPM)</label>
-            {getStatusIcon(getFieldStatus(value.heartRate, ranges.heartRate))}
+            {getStatusIcon(getFieldStatus(value.heartRate, 'heartRate'))}
           </div>
           <input
             type="number"
@@ -174,12 +223,14 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
             className={`w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              getStatusColor(getFieldStatus(value.heartRate, ranges.heartRate))
+              getStatusColor(getFieldStatus(value.heartRate, 'heartRate'))
             }`}
             placeholder="72"
           />
           {focusedField === 'heartRate' && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 60-100 BPM</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Normal: {ageBasedRanges ? `${ageBasedRanges.heartRate.min}-${ageBasedRanges.heartRate.max}` : '60-100'} BPM
+            </p>
           )}
         </div>
 
@@ -188,7 +239,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           <div className="flex items-center space-x-2">
             <Droplets className="h-4 w-4 text-blue-500" />
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">O2 Saturation (%)</label>
-            {getStatusIcon(getFieldStatus(value.oxygenSaturation, ranges.oxygenSaturation))}
+            {getStatusIcon(getFieldStatus(value.oxygenSaturation, 'oxygenSaturation'))}
           </div>
           <input
             type="number"
@@ -200,12 +251,14 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
             className={`w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              getStatusColor(getFieldStatus(value.oxygenSaturation, ranges.oxygenSaturation))
+              getStatusColor(getFieldStatus(value.oxygenSaturation, 'oxygenSaturation'))
             }`}
             placeholder="98"
           />
           {focusedField === 'oxygenSaturation' && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 95-100%</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Normal: {ageBasedRanges ? `${ageBasedRanges.oxygenSaturation.min}-${ageBasedRanges.oxygenSaturation.max}` : '95-100'}%
+            </p>
           )}
         </div>
 
@@ -241,8 +294,8 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         <div className="flex items-center space-x-2">
           <Activity className="h-4 w-4 text-green-500" />
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Blood Pressure (mmHg)</label>
-          {(getStatusIcon(getFieldStatus(value.bloodPressure?.systolic, ranges.systolic)) ||
-            getStatusIcon(getFieldStatus(value.bloodPressure?.diastolic, ranges.diastolic)))}
+          {(getStatusIcon(getFieldStatus(value.bloodPressure?.systolic, 'systolic')) ||
+            getStatusIcon(getFieldStatus(value.bloodPressure?.diastolic, 'diastolic')))}
         </div>
         <div className="flex items-center space-x-2">
           <input
@@ -255,7 +308,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
             className={`w-24 px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              getStatusColor(getFieldStatus(value.bloodPressure?.systolic, ranges.systolic))
+              getStatusColor(getFieldStatus(value.bloodPressure?.systolic, 'systolic'))
             }`}
             placeholder="120"
           />
@@ -270,12 +323,14 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
             className={`w-24 px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              getStatusColor(getFieldStatus(value.bloodPressure?.diastolic, ranges.diastolic))
+              getStatusColor(getFieldStatus(value.bloodPressure?.diastolic, 'diastolic'))
             }`}
             placeholder="80"
           />
           {(focusedField === 'systolic' || focusedField === 'diastolic') && (
-            <p className="text-xs text-gray-600 dark:text-gray-400 ml-2">Normal: 90-140/60-90 mmHg</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 ml-2">
+              Normal: {ageBasedRanges ? `${ageBasedRanges.systolic.min}-${ageBasedRanges.systolic.max}/${ageBasedRanges.diastolic.min}-${ageBasedRanges.diastolic.max}` : '90-140/60-90'} mmHg
+            </p>
           )}
         </div>
       </div>
@@ -286,7 +341,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           <div className="flex items-center space-x-2">
             <Wind className="h-4 w-4 text-purple-500" />
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Respiratory Rate (/min)</label>
-            {getStatusIcon(getFieldStatus(value.respiratoryRate, ranges.respiratoryRate))}
+            {getStatusIcon(getFieldStatus(value.respiratoryRate, 'respiratoryRate'))}
           </div>
           <input
             type="number"
@@ -298,12 +353,14 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             onBlur={() => setFocusedField(null)}
             disabled={disabled}
             className={`w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              getStatusColor(getFieldStatus(value.respiratoryRate, ranges.respiratoryRate))
+              getStatusColor(getFieldStatus(value.respiratoryRate, 'respiratoryRate'))
             }`}
             placeholder="16"
           />
           {focusedField === 'respiratoryRate' && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">Normal: 12-20 /min</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Normal: {ageBasedRanges ? `${ageBasedRanges.respiratoryRate.min}-${ageBasedRanges.respiratoryRate.max}` : '12-20'} /min
+            </p>
           )}
         </div>
 
