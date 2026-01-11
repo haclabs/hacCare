@@ -69,7 +69,13 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
 
   const handleBloodPressureChange = (type: 'systolic' | 'diastolic', newValue: number) => {
     const updatedBP = { 
-      ...value.bloodPressure, vitalType?: string) => {
+      ...value.bloodPressure, 
+      [type]: newValue 
+    };
+    handleVitalChange('bloodPressure', updatedBP);
+  };
+
+  const getFieldStatus = (currentValue: number, vitalType?: string) => {
     if (!currentValue) return 'normal';
     
     // Use age-based assessment if available
@@ -103,13 +109,7 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
     const range = vitalType ? ranges[vitalType as keyof typeof ranges] : null;
     if (!range) return 'normal';
     
-    const { min, max, critical } = rangedatedBP);
-  };
-
-  const getFieldStatus = (currentValue: number, ranges?: any) => {
-    if (!ranges || !currentValue) return 'normal';
-    
-    const { min, max, critical } = ranges;
+    const { min, max, critical } = range;
     
     if (critical && (currentValue <= critical.low || currentValue >= critical.high)) {
       return 'critical';
@@ -140,16 +140,6 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
       default:
         return null;
     }
-  };
-
-  // Define normal ranges (these would typically come from field configuration)
-  const ranges = {
-    temperature: { min: 36.1, max: 37.2, critical: { low: 35, high: 40 } },
-    heartRate: { min: 60, max: 100, critical: { low: 40, high: 150 } },
-    systolic: { min: 90, max: 140, critical: { low: 70, high: 180 } },
-    diastolic: { min: 60, max: 90, critical: { low: 40, high: 110 } },
-    respiratoryRate: { min: 12, max: 20, critical: { low: 8, high: 30 } },
-    oxygenSaturation: { min: 95, max: 100, critical: { low: 90, high: 100 } }
   };
 
   return (
