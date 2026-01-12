@@ -42,6 +42,7 @@ interface VitalSignsData {
   respiratoryRate?: number;
   oxygenSaturation?: number;
   oxygenDelivery?: string;
+  oxygenFlowRate?: string;
   painScale?: number;
 }
 
@@ -266,15 +267,57 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
             disabled={disabled}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="Room Air">Room Air (RA)</option>
-            {Array.from({ length: 15 }, (_, i) => i + 1).map(flow => (
-              <option key={flow} value={`O2 ${flow} L/min`}>
-                O2 {flow} L/min
-              </option>
-            ))}
+            <option value="Room Air">Room Air</option>
+            <option value="Nasal Prongs">Nasal Prongs</option>
+            <option value="Simple Mask">Simple Mask</option>
+            <option value="Non-Rebreather">Non-Rebreather</option>
+            <option value="Partial Rebreather">Partial Rebreather</option>
+            <option value="High Flow">High Flow</option>
+            <option value="BiPAP">BiPAP</option>
+            <option value="Bag Valve Mask">Bag Valve Mask</option>
+            <option value="Tracheostomy">Tracheostomy</option>
+            <option value="Aerosol Mask">Aerosol Mask</option>
           </select>
           {focusedField === 'oxygenDelivery' && (
             <p className="text-xs text-gray-600 dark:text-gray-400">Select oxygen delivery method</p>
+          )}
+        </div>
+
+        {/* Flow Rate */}
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Activity className="h-4 w-4 text-cyan-500" />
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Flow Rate</label>
+          </div>
+          <select
+            value={value.oxygenFlowRate || 'N/A'}
+            onChange={(e) => handleVitalChange('oxygenFlowRate', e.target.value)}
+            onFocus={() => setFocusedField('oxygenFlowRate')}
+            onBlur={() => setFocusedField(null)}
+            disabled={disabled}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="N/A">N/A</option>
+            <option value="<1L">&lt;1L</option>
+            <option value="1L">1L</option>
+            <option value="2L">2L</option>
+            <option value="3L">3L</option>
+            <option value="4L">4L</option>
+            <option value="5L">5L</option>
+            <option value="6L">6L</option>
+            <option value="7L">7L</option>
+            <option value="8L">8L</option>
+            <option value="9L">9L</option>
+            <option value="10L">10L</option>
+            <option value="11L">11L</option>
+            <option value="12L">12L</option>
+            <option value="13L">13L</option>
+            <option value="14L">14L</option>
+            <option value="15L">15L</option>
+            <option value=">15L">&gt;15L</option>
+          </select>
+          {focusedField === 'oxygenFlowRate' && (
+            <p className="text-xs text-gray-600 dark:text-gray-400">Select flow rate in liters per minute</p>
           )}
         </div>
       </div>
