@@ -20,72 +20,158 @@ The hacCare system now supports **age-appropriate vital signs assessment** with 
 
 ### Temperature (°C)
 
-| Age Band | Normal Range | Critical Low | Critical High |
-|----------|--------------|--------------|---------------|
-| Newborn | 36.5-37.5 | <36.0 | >38.0 |
-| Infant | 36.5-37.5 | <36.0 | >38.5 |
-| Toddler | 36.5-37.5 | <36.0 | >39.0 |
-| Preschool | 36.5-37.5 | <36.0 | >39.5 |
-| School Age | 36.5-37.5 | <36.0 | >39.5 |
-| Adolescent | 36.1-37.2 | <35.5 | >39.5 |
-| Adult | 36.1-37.2 | <35.0 | >40.0 |
+| Age Band | Normal Range (Green) | Abnormal Range (Yellow) | Critical Range (Red) |
+|----------|----------------------|-------------------------|----------------------|
+| Newborn | 36.5-37.5 | 36.0-36.4, 37.6-38.0 | <36.0, >38.0 |
+| Infant | 36.5-37.5 | 36.0-36.4, 37.6-38.5 | <36.0, >38.5 |
+| Toddler | 36.5-37.5 | 36.0-36.4, 37.6-39.0 | <36.0, >39.0 |
+| Preschool | 36.5-37.5 | 36.0-36.4, 37.6-39.5 | <36.0, >39.5 |
+| School Age | 36.5-37.5 | 36.0-36.4, 37.6-39.5 | <36.0, >39.5 |
+| Adolescent | 36.1-37.2 | 35.5-36.0, 37.3-39.5 | <35.5, >39.5 |
+| Adult | 36.1-37.2 | 35.0-36.0, 37.3-40.0 | <35.0, >40.0 |
 
 ### Heart Rate (BPM)
 
-| Age Band | Normal Range | Critical Low | Critical High |
-|----------|--------------|--------------|---------------|
-| Newborn | 120-160 | <100 | >180 |
-| Infant | 100-150 | <80 | >170 |
-| Toddler | 90-140 | <70 | >160 |
-| Preschool | 80-120 | <65 | >140 |
-| School Age | 70-110 | <55 | >130 |
-| Adolescent | 60-100 | <50 | >120 |
-| Adult | 60-100 | <40 | >150 |
+| Age Band | Normal Range (Green) | Abnormal Range (Yellow) | Critical Range (Red) |
+|----------|----------------------|-------------------------|----------------------|
+| Newborn | 120-160 | 100-119, 161-180 | <100, >180 |
+| Infant | 100-150 | 80-99, 151-170 | <80, >170 |
+| Toddler | 90-140 | 70-89, 141-160 | <70, >160 |
+| Preschool | 80-120 | 65-79, 121-140 | <65, >140 |
+| School Age | 70-110 | 55-69, 111-130 | <55, >130 |
+| Adolescent | 60-100 | 50-59, 101-120 | <50, >120 |
+| Adult | 60-100 | 40-59, 101-150 | <40, >150 |
 
 ### Blood Pressure (mmHg)
 
 #### Systolic
 
-| Age Band | Normal Range | Critical Low | Critical High |
-|----------|--------------|--------------|---------------|
-| Newborn | 60-90 | <50 | >100 |
-| Infant | 70-100 | <60 | >110 |
-| Toddler | 80-110 | <70 | >120 |
-| Preschool | 85-115 | <75 | >125 |
-| School Age | 90-120 | <80 | >135 |
-| Adolescent | 95-130 | <85 | >145 |
-| Adult | 90-140 | <80 | >180 |
+| Age Band | Normal Range (Green) | Abnormal Range (Yellow) | Critical Range (Red) |
+|----------|----------------------|-------------------------|----------------------|
+| Newborn | 60-90 | 50-59, 91-100 | <50, >100 |
+| Infant | 70-100 | 60-69, 101-110 | <60, >110 |
+| Toddler | 80-110 | 70-79, 111-120 | <70, >120 |
+| Preschool | 85-115 | 75-84, 116-125 | <75, >125 |
+| School Age | 90-120 | 80-89, 121-135 | <80, >135 |
+| Adolescent | 95-130 | 85-94, 131-145 | <85, >145 |
+| Adult | 90-140 | 80-89, 141-180 | <80, >180 |
 
 #### Diastolic
 
-| Age Band | Normal Range | Critical Low | Critical High |
-|----------|--------------|--------------|---------------|
-| Newborn | 30-60 | <25 | >70 |
-| Infant | 35-65 | <30 | >75 |
-| Toddler | 40-70 | <35 | >80 |
-| Preschool | 45-75 | <40 | >85 |
-| School Age | 50-80 | <45 | >90 |
-| Adolescent | 55-85 | <50 | >95 |
-| Adult | 60-90 | <50 | >110 |
+| Age Band | Normal Range (Green) | Abnormal Range (Yellow) | Critical Range (Red) |
+|----------|----------------------|-------------------------|----------------------|
+| Newborn | 30-60 | 25-29, 61-70 | <25, >70 |
+| Infant | 35-65 | 30-34, 66-75 | <30, >75 |
+| Toddler | 40-70 | 35-39, 71-80 | <35, >80 |
+| Preschool | 45-75 | 40-44, 76-85 | <40, >85 |
+| School Age | 50-80 | 45-49, 81-90 | <45, >90 |
+| Adolescent | 55-85 | 50-54, 86-95 | <50, >95 |
+| Adult | 60-90 | 50-59, 91-110 | <50, >110 |
 
 ### Respiratory Rate (breaths/min)
 
-| Age Band | Normal Range | Critical Low | Critical High |
-|----------|--------------|--------------|---------------|
-| Newborn | 30-60 | <25 | >70 |
-| Infant | 25-50 | <20 | >60 |
-| Toddler | 20-40 | <15 | >50 |
-| Preschool | 20-30 | <15 | >40 |
-| School Age | 18-25 | <12 | >35 |
-| Adolescent | 12-20 | <10 | >30 |
-| Adult | 12-20 | <8 | >30 |
+| Age Band | Normal Range (Green) | Abnormal Range (Yellow) | Critical Range (Red) |
+|----------|----------------------|-------------------------|----------------------|
+| Newborn | 30-60 | 25-29, 61-70 | <25, >70 |
+| Infant | 25-50 | 20-24, 51-60 | <20, >60 |
+| Toddler | 20-40 | 15-19, 41-50 | <15, >50 |
+| Preschool | 20-30 | 15-19, 31-40 | <15, >40 |
+| School Age | 18-25 | 12-17, 26-35 | <12, >35 |
+| Adolescent | 12-20 | 10-11, 21-30 | <10, >30 |
+| Adult | 12-20 | 8-11, 21-30 | <8, >30 |
 
 ### Oxygen Saturation (%)
 
 All age bands use the same range:
-- **Normal:** 95-100%
-- **Critical Low:** <90%
-- **Critical High:** 100% (ceiling)
+
+| Status | Range | Color |
+|--------|-------|-------|
+| Normal | 95-100% | Green |
+| Abnormal | 90-94% | Yellow |
+| Critical | <90% | Red |
+
+**Note:** Oxygen saturation should always be documented with delivery method (see below).
+
+### Oxygen Delivery Method
+
+The `VitalSigns` interface includes an optional `oxygenDelivery` field to document oxygen supplementation:
+
+```typescript
+interface VitalSigns {
+  oxygenSaturation: number;
+  oxygenDelivery?: string;  // Document oxygen supplementation
+}
+```
+
+**Common Values:**
+- **Room Air** (RA) - No supplemental oxygen
+- **Nasal Cannula** - 1-6 L/min (low flow)
+- **Simple Face Mask** - 6-10 L/min
+- **Non-Rebreather Mask** - 10-15 L/min (high flow)
+- **CPAP/BiPAP** - Continuous/Bilevel Positive Airway Pressure
+- **Ventilator** - Mechanical ventilation with specific settings
+
+**Clinical Significance:**
+- SpO2 95% on Room Air is very different from SpO2 95% on 10L Non-Rebreather
+- Always document delivery method to assess true oxygenation status
+- Trend oxygen requirements over time (escalating needs = deterioration)
+
+**Example Documentation:**
+```typescript
+const vitals: VitalSigns = {
+  oxygenSaturation: 96,
+  oxygenDelivery: 'Nasal Cannula 2 L/min'
+};
+```
+
+### Additional Vital Sign Calculations
+
+#### Mean Arterial Pressure (MAP)
+
+MAP represents average blood pressure during one cardiac cycle and is critical for assessing organ perfusion.
+
+**Formula:**
+```
+MAP = (Systolic + 2 × Diastolic) / 3
+```
+
+**Normal Ranges by Age:**
+- **Newborn:** 40-60 mmHg
+- **Infant:** 45-65 mmHg
+- **Toddler:** 50-70 mmHg
+- **Preschool:** 55-75 mmHg
+- **School Age:** 60-80 mmHg
+- **Adolescent/Adult:** 65-110 mmHg (target >65 for perfusion)
+
+**Clinical Significance:**
+- MAP <65 mmHg (adults) → Risk of inadequate organ perfusion
+- MAP >110 mmHg → Risk of vascular damage
+- More reliable than systolic alone for perfusion assessment
+
+**Implementation Example:**
+```typescript
+function calculateMAP(systolic: number, diastolic: number): number {
+  return Math.round((systolic + 2 * diastolic) / 3);
+}
+
+// Usage
+const map = calculateMAP(120, 80); // Returns: 93 mmHg
+```
+
+#### Pulse Pressure
+
+Difference between systolic and diastolic pressure, indicates arterial compliance.
+
+**Formula:**
+```
+Pulse Pressure = Systolic - Diastolic
+```
+
+**Normal Range:** 30-50 mmHg (all ages)
+
+**Clinical Significance:**
+- Narrow (<25 mmHg) → Shock, aortic stenosis, heart failure
+- Wide (>60 mmHg) → Aortic regurgitation, hyperthyroidism, arterial stiffness
 
 ## Usage
 
@@ -283,12 +369,33 @@ interface AgeBandVitalRanges {
 
 Potential future improvements:
 
-1. **Database Storage**: Move reference ranges to database for configurability
-2. **Custom Ranges**: Allow institutions to define their own reference values
-3. **Alert Thresholds**: Integrate with alert system for automated notifications
-4. **Trending Analysis**: Compare current vs. historical vitals with age context
-5. **Additional Age Bands**: Support geriatric ranges (65+, 75+, 85+)
-6. **Condition-Specific Ranges**: Adjust ranges for specific diagnoses
+1. **Pain Assessment (6th Vital Sign)**: Add age-appropriate pain scales
+   - FLACC Scale (Face, Legs, Activity, Cry, Consolability) for ages 0-3
+   - Wong-Baker FACES Pain Rating Scale for ages 3-7
+   - Numeric Rating Scale (0-10) for ages 8+
+   - Visual Analog Scale (VAS) for adolescents/adults
+   - CPOT/BPS scales for non-verbal or sedated patients
+
+2. **Database Storage**: Move reference ranges to database for configurability
+
+3. **Custom Ranges**: Allow institutions to define their own reference values
+
+4. **Alert Thresholds**: Integrate with alert system for automated notifications
+
+5. **Trending Analysis**: Compare current vs. historical vitals with age context
+
+6. **Additional Age Bands**: Support geriatric ranges (65+, 75+, 85+)
+
+7. **Condition-Specific Ranges**: Adjust ranges for specific diagnoses
+
+8. **Blood Glucose Monitoring**: Add age-appropriate glucose reference ranges
+   - Newborn: 45-90 mg/dL (first 24 hours)
+   - Infant/Child: 70-100 mg/dL (fasting)
+   - Adolescent/Adult: 70-100 mg/dL (fasting), <140 mg/dL (post-meal)
+
+9. **Level of Consciousness Assessment**: Integrate Glasgow Coma Scale or AVPU tracking
+
+10. **Automated MAP/Pulse Pressure Calculation**: Calculate and display derived metrics automatically
 
 ## References
 
@@ -318,5 +425,5 @@ const status = getVitalStatus('heartRate', patient.vitals.heartRate, patient.dat
 
 ---
 
-**Last Updated**: January 11, 2026  
+**Last Updated**: January 12, 2026  
 **Version**: 5.3.0
