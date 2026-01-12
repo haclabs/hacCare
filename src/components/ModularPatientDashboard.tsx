@@ -1758,11 +1758,23 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   <MapPin className="h-4 w-4 text-gray-500" />
                   <span className="font-medium">Room {patient.room_number || 'Unassigned'}</span>
                 </span>
-                {patient.date_of_birth && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                    {calculatePreciseAge(patient.date_of_birth).ageDescription}
-                  </span>
-                )}
+                {patient.date_of_birth && (() => {
+                  const ageInfo = calculatePreciseAge(patient.date_of_birth);
+                  const ageBandLabels: Record<string, string> = {
+                    'NEWBORN': 'Newborn (0-28 days)',
+                    'INFANT': 'Infant (1-12 months)',
+                    'TODDLER': 'Toddler (1-3 years)',
+                    'PRESCHOOL': 'Preschool (3-5 years)',
+                    'SCHOOL_AGE': 'School Age (6-12 years)',
+                    'ADOLESCENT': 'Adolescent (13-18 years)',
+                    'ADULT': 'Adult (18+ years)'
+                  };
+                  return (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-300">
+                      {ageBandLabels[ageInfo.ageBand]}
+                    </span>
+                  );
+                })()}
               </div>
               <div className="flex items-center space-x-1.5 text-xs text-gray-500 font-mono">
                 <Badge className="h-3.5 w-3.5" />

@@ -202,6 +202,20 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       };
     }
   };
+  
+  // Get age band label for display
+  const getAgeBandLabel = (ageBand: string): string => {
+    const labels: Record<string, string> = {
+      'NEWBORN': 'Newborn (0-28 days)',
+      'INFANT': 'Infant (1-12 months)',
+      'TODDLER': 'Toddler (1-3 years)',
+      'PRESCHOOL': 'Preschool (3-5 years)',
+      'SCHOOL_AGE': 'School Age (6-12 years)',
+      'ADOLESCENT': 'Adolescent (13-18 years)',
+      'ADULT': 'Adult (18+ years)'
+    };
+    return labels[ageBand] || 'Adult (18+ years)';
+  };
 
   // Age-based vitals analysis using new utility
   const getVitalStatus = (vitalType: string, value: number, dateOfBirth: string) => {
@@ -350,7 +364,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
-              <p className="text-sm text-blue-600 font-medium mt-1">{patientAgeInfo.ageDescription}</p>
+              <p className="text-sm text-blue-600 font-medium mt-1">{getAgeBandLabel(patientAgeInfo.ageBand)}</p>
             </div>
             <div className="flex items-center space-x-3">
               <button

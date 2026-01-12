@@ -27,6 +27,20 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
   
   // Calculate age band if DOB provided
   const ageInfo = patientDateOfBirth ? calculatePreciseAge(patientDateOfBirth) : null;
+  
+  // Get age band label
+  const getAgeBandLabel = (ageBand: string): string => {
+    const labels: Record<string, string> = {
+      'NEWBORN': 'Newborn (0-28 days)',
+      'INFANT': 'Infant (1-12 months)',
+      'TODDLER': 'Toddler (1-3 years)',
+      'PRESCHOOL': 'Preschool (3-5 years)',
+      'SCHOOL_AGE': 'School Age (6-12 years)',
+      'ADOLESCENT': 'Adolescent (13-18 years)',
+      'ADULT': 'Adult (18+ years)'
+    };
+    return labels[ageBand] || 'Adult (18+ years)';
+  };
 
   const handleVitalsUpdate = async () => {
     if (!patientId) return;
@@ -58,7 +72,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
           {ageInfo && (
-            <p className="text-sm text-blue-600 font-medium mt-1">{ageInfo.ageDescription}</p>
+            <p className="text-sm text-blue-600 font-medium mt-1">{getAgeBandLabel(ageInfo.ageBand)}</p>
           )}
         </div>
         <div className="flex space-x-3">
