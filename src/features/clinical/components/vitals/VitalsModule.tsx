@@ -19,6 +19,7 @@ import { updatePatientVitals } from '../../../../services/patient/patientService
 import { Patient, VitalSigns } from '../../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
+import { calculatePreciseAge, getVitalRangesForAgeBand, assessVitalSign } from '../../../../utils/vitalRanges';
 
 interface VitalsModuleProps {
   patient: Patient;
@@ -184,37 +185,45 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     }
   };
 
-  // Calculate age from birth date
-  const calculateAge = (birthDate: string): number => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+  // Calculate precise age with age band classification
+  const getPatientAgeInfo = (birthDate: string) => {
+    try {
+      return calculatePreciseAge(birthDate);
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      // Fallback to adult age band
+      return {
+        years: 25,
+        months: 0,
+        days: 0,
+        totalDays: 9125,
+        ageBand: 'ADULT' as const,
+        displayString: 'Adult'
+      };
     }
-    
-    return age;
   };
 
-  // Vitals analysis functions
-  const getVitalStatus = (vitalType: string, value: number, age: number) => {
-    const ranges: Record<string, { normal: number[], warning: number[] }> = {
-      heartRate: age >= 18 ? { normal: [60, 100], warning: [50, 120] } : { normal: [70, 130], warning: [60, 140] },
-      temperature: { normal: [36.1, 37.2], warning: [35.5, 38.5] },
-      systolic: age >= 18 ? { normal: [90, 140], warning: [80, 160] } : { normal: [95, 120], warning: [85, 130] },
-      diastolic: age >= 18 ? { normal: [60, 90], warning: [50, 100] } : { normal: [55, 80], warning: [45, 90] },
-      oxygenSaturation: { normal: [95, 100], warning: [90, 94] },
-      respiratoryRate: age >= 18 ? { normal: [12, 20], warning: [8, 30] } : { normal: [16, 24], warning: [12, 32] }
+  // Age-based vitals analysis using new utility
+  const getVitalStatus = (vitalType: string, value: number, dateOfBirth: string) => {
+    // Map vital type names to assessment function parameter names
+    const vitalTypeMap: Record<string, 'temperature' | 'heartRate' | 'systolic' | 'diastolic' | 'respiratoryRate' | 'oxygenSaturation'> = {
+      'temperature': 'temperature',
+      'heartRate': 'heartRate',
+      'systolic': 'systolic',
+      'diastolic': 'diastolic',
+      'oxygenSaturation': 'oxygenSaturation',
+      'respiratoryRate': 'respiratoryRate'
     };
-
-    const range = ranges[vitalType];
-    if (!range) return { status: 'normal', color: 'text-gray-600', bgColor: 'bg-gray-50' };
-
-    if (value >= range.normal[0] && value <= range.normal[1]) {
+    
+    const mappedType = vitalTypeMap[vitalType];
+    if (!mappedType) return { status: 'normal', color: 'text-gray-600', bgColor: 'bg-gray-50' };
+    
+    const assessment = assessVitalSign(mappedType, value, dateOfBirth);
+    
+    // Convert assessment status to display properties
+    if (assessment.status === 'normal') {
       return { status: 'normal', color: 'text-green-600', bgColor: 'bg-green-50' };
-    } else if (value >= range.warning[0] && value <= range.warning[1]) {
+    } else if (assessment.status === 'abnormal') {
       return { status: 'warning', color: 'text-yellow-600', bgColor: 'bg-yellow-50' };
     } else {
       return { status: 'critical', color: 'text-red-600', bgColor: 'bg-red-50' };
@@ -296,7 +305,8 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
 
     const latestVitals = vitals[0];
     const previousVitals = vitals.length > 1 ? vitals[1] : undefined;
-    const patientAge = calculateAge(patient.date_of_birth || '1990-01-01');
+    const patientAgeInfo = getPatientAgeInfo(patient.date_of_birth || '1990-01-01');
+    const patientDOB = patient.date_of_birth || '1990-01-01';
     const hrv = calculateHeartRateVariability(vitals);
 
     const vitalItems = [
@@ -338,7 +348,10 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         {/* Main Vitals Grid */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Latest Vital Signs</h3>
+              <p className="text-sm text-blue-600 font-medium mt-1">{patientAgeInfo.ageDescription}</p>
+            </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setShowTrendsDetail(true)}
@@ -355,7 +368,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {vitalItems.map((vital) => {
-              const status = getVitalStatus(vital.type, vital.rawValue, patientAge);
+              const status = getVitalStatus(vital.type, vital.rawValue, patientDOB);
               const trend = getTrendDirection(latestVitals, previousVitals, vital.type);
               const TrendIcon = trend.icon;
 
