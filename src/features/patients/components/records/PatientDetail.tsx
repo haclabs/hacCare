@@ -341,6 +341,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 patientName={`${patient.first_name} ${patient.last_name}`}
                 vitals={vitals}
                 onVitalsUpdated={(updatedVitals) => setVitals(updatedVitals)}
+                patientDateOfBirth={patient.date_of_birth}
               />
             )}
             {activeSubTab === 'notes' && (

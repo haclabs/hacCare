@@ -4,23 +4,43 @@ import { VitalSigns } from '../../../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { fetchPatientVitals } from '../../../../services/patient/patientService';
+import { calculatePreciseAge } from '../../../../utils/vitalRanges';
 
 interface VitalsContentProps {
   patientId: string;
   patientName: string;
   vitals: VitalSigns[];
   onVitalsUpdated: (vitals: VitalSigns[]) => void;
+  patientDateOfBirth?: string; // Optional for age band display
 }
 
 export const VitalsContent: React.FC<VitalsContentProps> = ({
   patientId,
   patientName,
   vitals,
-  onVitalsUpdated
+  onVitalsUpdated,
+  patientDateOfBirth
 }) => {
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
   const [refreshingVitals, setRefreshingVitals] = useState(false);
+  
+  // Calculate age band if DOB provided
+  const ageInfo = patientDateOfBirth ? calculatePreciseAge(patientDateOfBirth) : null;
+  
+  // Get age band label
+  const getAgeBandLabel = (ageBand: string): string => {
+    const labels: Record<string, string> = {
+      'NEWBORN': 'Newborn (0-28 days)',
+      'INFANT': 'Infant (1-12 months)',
+      'TODDLER': 'Toddler (1-3 years)',
+      'PRESCHOOL': 'Preschool (3-5 years)',
+      'SCHOOL_AGE': 'School Age (6-12 years)',
+      'ADOLESCENT': 'Adolescent (13-18 years)',
+      'ADULT': 'Adult (18+ years)'
+    };
+    return labels[ageBand] || 'Adult (18+ years)';
+  };
 
   const handleVitalsUpdate = async () => {
     if (!patientId) return;
@@ -49,7 +69,12 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
+          {ageInfo && (
+            <p className="text-sm text-blue-600 font-medium mt-1">{getAgeBandLabel(ageInfo.ageBand)}</p>
+          )}
+        </div>
         <div className="flex space-x-3">
           <button
             onClick={() => setShowVitalsTrends(true)}
@@ -140,7 +165,12 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
                 <span className="text-sm font-medium text-gray-600">Oxygen Delivery</span>
               </div>
             </div>
-            <p className="text-xl font-bold text-gray-900 mt-2">{vitals[0]?.oxygenDelivery || 'Room Air'}</p>
+            <p className="text-xl font-bold text-gray-900 mt-2">
+              {vitals[0]?.oxygenDelivery || 'Room Air'}
+              {vitals[0]?.oxygenFlowRate && vitals[0]?.oxygenFlowRate !== 'N/A' && (
+                <span className="text-sm font-medium text-cyan-600 ml-2">@ {vitals[0].oxygenFlowRate.replace('L', ' L/min')}</span>
+              )}
+            </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
           </div>
         </div>

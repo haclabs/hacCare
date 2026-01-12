@@ -414,6 +414,223 @@ export const PATIENT_AVATARS: AvatarOption[] = [
       <!-- Stubble -->
       <ellipse cx="60" cy="93" rx="14" ry="7" fill="#2C2820" opacity="0.12"/>
     </svg>`
+  },
+  {
+    id: 'avatar-newborn',
+    name: 'Newborn (0-28 days)',
+    svg: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Newborn baby -->
+      <circle cx="60" cy="60" r="58" fill="#FFF8F0"/>
+      <!-- Body/Blanket -->
+      <ellipse cx="60" cy="100" rx="35" ry="20" fill="#C8E6F5"/>
+      <!-- Small swaddled body -->
+      <ellipse cx="60" cy="95" rx="28" ry="25" fill="#E3F2FD"/>
+      <!-- Head (larger proportion for newborn) -->
+      <circle cx="60" cy="55" r="32" fill="#FFE4D6"/>
+      <!-- Baby hat -->
+      <path d="M 28 48 Q 28 30 60 28 Q 92 30 92 48 L 92 52 L 28 52 Z" fill="#C8E6F5"/>
+      <rect x="28" y="48" width="64" height="4" fill="#A3D5F0"/>
+      <!-- Tiny ears -->
+      <ellipse cx="28" cy="58" rx="4" ry="6" fill="#FFD4C6"/>
+      <ellipse cx="92" cy="58" rx="4" ry="6" fill="#FFD4C6"/>
+      <!-- Closed peaceful eyes -->
+      <path d="M 44 58 Q 48 60 52 58" stroke="#8B7355" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M 68 58 Q 72 60 76 58" stroke="#8B7355" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Small nose -->
+      <circle cx="60" cy="64" r="2.5" fill="#FFD4C6"/>
+      <!-- Small mouth (peaceful) -->
+      <ellipse cx="60" cy="72" rx="6" ry="3" fill="#FFB3B3" opacity="0.5"/>
+      <!-- Rosy cheeks -->
+      <circle cx="45" cy="64" r="6" fill="#FFB3B3" opacity="0.3"/>
+      <circle cx="75" cy="64" r="6" fill="#FFB3B3" opacity="0.3"/>
+    </svg>`
+  },
+  {
+    id: 'avatar-infant',
+    name: 'Infant (1-12 months)',
+    svg: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Infant baby -->
+      <circle cx="60" cy="60" r="58" fill="#FFF5E6"/>
+      <!-- Onesie body -->
+      <ellipse cx="60" cy="100" rx="30" ry="20" fill="#FFE4B5"/>
+      <path d="M 30 90 L 30 110 L 50 110 L 50 105 Q 55 103 60 103 Q 65 103 70 105 L 70 110 L 90 110 L 90 90" fill="#FFE4B5"/>
+      <!-- Head -->
+      <circle cx="60" cy="58" r="28" fill="#FFE4D6"/>
+      <!-- Little hair tuft -->
+      <path d="M 50 32 Q 60 28 70 32" fill="#8B6914" opacity="0.6"/>
+      <!-- Ears -->
+      <ellipse cx="32" cy="60" rx="5" ry="8" fill="#FFD4C6"/>
+      <ellipse cx="88" cy="60" rx="5" ry="8" fill="#FFD4C6"/>
+      <!-- Big curious eyes -->
+      <ellipse cx="48" cy="56" rx="6" ry="7" fill="white"/>
+      <circle cx="49" cy="57" r="4" fill="#4A6A7C"/>
+      <circle cx="49" cy="56" r="2" fill="white"/>
+      <ellipse cx="72" cy="56" rx="6" ry="7" fill="white"/>
+      <circle cx="73" cy="57" r="4" fill="#4A6A7C"/>
+      <circle cx="73" cy="56" r="2" fill="white"/>
+      <!-- Eyebrows (thin baby brows) -->
+      <path d="M 42 48 Q 48 46 54 48" stroke="#B8956A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M 66 48 Q 72 46 78 48" stroke="#B8956A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- Button nose -->
+      <circle cx="60" cy="64" r="3" fill="#FFD4C6"/>
+      <!-- Happy baby smile -->
+      <path d="M 50 72 Q 60 76 70 72" stroke="#FFB3B3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Rosy cheeks -->
+      <circle cx="42" cy="64" r="7" fill="#FFB3B3" opacity="0.3"/>
+      <circle cx="78" cy="64" r="7" fill="#FFB3B3" opacity="0.3"/>
+    </svg>`
+  },
+  {
+    id: 'avatar-toddler',
+    name: 'Toddler (1-3 years)',
+    svg: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Toddler -->
+      <circle cx="60" cy="60" r="58" fill="#FFF9E6"/>
+      <!-- T-shirt body -->
+      <path d="M 35 95 L 40 115 L 55 115 L 55 105 Q 60 103 60 103 Q 60 103 65 105 L 65 115 L 80 115 L 85 95" fill="#FF6B9D"/>
+      <rect x="40" y="90" width="40" height="15" fill="#FF6B9D"/>
+      <!-- Neck -->
+      <rect x="52" y="85" width="16" height="10" fill="#FFE4D6"/>
+      <!-- Head -->
+      <ellipse cx="60" cy="62" rx="24" ry="26" fill="#FFE4D6"/>
+      <!-- Messy toddler hair -->
+      <path d="M 36 42 Q 36 32 60 30 Q 84 32 84 42 L 84 52 Q 80 48 72 48 Q 64 50 60 52 Q 56 50 48 48 Q 40 48 36 52 Z" fill="#F4A460"/>
+      <!-- Ears -->
+      <ellipse cx="36" cy="64" rx="5" ry="8" fill="#FFD4C6"/>
+      <ellipse cx="84" cy="64" rx="5" ry="8" fill="#FFD4C6"/>
+      <!-- Big toddler eyes -->
+      <ellipse cx="48" cy="60" rx="6" ry="7" fill="white"/>
+      <circle cx="49" cy="61" r="4" fill="#654321"/>
+      <circle cx="49" cy="60" r="2" fill="white"/>
+      <ellipse cx="72" cy="60" rx="6" ry="7" fill="white"/>
+      <circle cx="73" cy="61" r="4" fill="#654321"/>
+      <circle cx="73" cy="60" r="2" fill="white"/>
+      <!-- Eyebrows -->
+      <path d="M 42 52 Q 48 50 54 52" stroke="#C68642" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M 66 52 Q 72 50 78 52" stroke="#C68642" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Button nose -->
+      <circle cx="60" cy="68" r="3" fill="#FFD4C6"/>
+      <!-- Big toddler smile -->
+      <path d="M 48 76 Q 60 80 72 76" stroke="#D27979" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Chubby cheeks -->
+      <circle cx="42" cy="68" r="8" fill="#FFB3B3" opacity="0.3"/>
+      <circle cx="78" cy="68" r="8" fill="#FFB3B3" opacity="0.3"/>
+    </svg>`
+  },
+  {
+    id: 'avatar-preschool',
+    name: 'Preschool (3-5 years)',
+    svg: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Preschool child -->
+      <circle cx="60" cy="60" r="58" fill="#FFF5F0"/>
+      <!-- Shirt -->
+      <path d="M 35 100 L 40 118 L 55 118 L 55 105 L 65 105 L 65 118 L 80 118 L 85 100" fill="#FFD700"/>
+      <rect x="42" y="95" width="36" height="12" fill="#FFD700"/>
+      <!-- Neck -->
+      <rect x="52" y="88" width="16" height="10" fill="#F5D5B8"/>
+      <!-- Head -->
+      <ellipse cx="60" cy="64" rx="23" ry="25" fill="#F5D5B8"/>
+      <!-- Playful hair with ponytail/pigtails style -->
+      <path d="M 37 44 Q 37 34 60 32 Q 83 34 83 44 L 83 50 Q 78 46 70 46 Q 62 48 60 50 Q 58 48 50 46 Q 42 46 37 50 Z" fill="#2C1810"/>
+      <!-- Hair accessories (bow) -->
+      <path d="M 35 48 L 30 50 L 35 52" fill="#FF69B4"/>
+      <path d="M 85 48 L 90 50 L 85 52" fill="#FF69B4"/>
+      <!-- Ears -->
+      <ellipse cx="37" cy="66" rx="5" ry="8" fill="#E5C5A8"/>
+      <ellipse cx="83" cy="66" rx="5" ry="8" fill="#E5C5A8"/>
+      <!-- Bright eyes -->
+      <ellipse cx="49" cy="62" rx="5" ry="6" fill="white"/>
+      <circle cx="50" cy="63" r="3.5" fill="#6B4423"/>
+      <circle cx="50" cy="62" r="1.5" fill="white"/>
+      <ellipse cx="71" cy="62" rx="5" ry="6" fill="white"/>
+      <circle cx="72" cy="63" r="3.5" fill="#6B4423"/>
+      <circle cx="72" cy="62" r="1.5" fill="white"/>
+      <!-- Eyebrows -->
+      <path d="M 43 55 Q 49 53 55 55" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M 65 55 Q 71 53 77 55" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Nose -->
+      <path d="M 60 66 L 58 72" stroke="#D5B598" stroke-width="1.5" fill="none"/>
+      <path d="M 58 72 Q 60 73 62 72" stroke="#D5B598" stroke-width="1.5" fill="none"/>
+      <!-- Happy smile -->
+      <path d="M 49 80 Q 60 84 71 80" stroke="#B8675A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>`
+  },
+  {
+    id: 'avatar-schoolage',
+    name: 'School Age (6-12 years)',
+    svg: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- School age child -->
+      <circle cx="60" cy="60" r="58" fill="#F0F8FF"/>
+      <!-- Hoodie/casual shirt -->
+      <path d="M 35 102 L 38 118 L 55 118 L 55 108 L 65 108 L 65 118 L 82 118 L 85 102" fill="#4169E1"/>
+      <rect x="40" y="98" width="40" height="12" fill="#4169E1"/>
+      <!-- Hood outline -->
+      <path d="M 40 98 Q 38 94 40 90 L 45 90 M 80 98 Q 82 94 80 90 L 75 90" stroke="#2F4F7F" stroke-width="2" fill="none"/>
+      <!-- Neck -->
+      <rect x="52" y="90" width="16" height="10" fill="#D4A574"/>
+      <!-- Head -->
+      <ellipse cx="60" cy="66" rx="22" ry="24" fill="#D4A574"/>
+      <!-- School-age hair (neat, styled) -->
+      <path d="M 38 46 Q 38 36 60 34 Q 82 36 82 46 L 82 54 Q 78 50 70 50 Q 62 52 60 54 Q 58 52 50 50 Q 42 50 38 54 Z" fill="#4A3728"/>
+      <!-- Ears -->
+      <ellipse cx="38" cy="68" rx="5" ry="9" fill="#C9956F"/>
+      <ellipse cx="82" cy="68" rx="5" ry="9" fill="#C9956F"/>
+      <!-- Eyes (alert, curious) -->
+      <ellipse cx="49" cy="64" rx="5" ry="6" fill="white"/>
+      <circle cx="50" cy="65" r="3" fill="#3D2817"/>
+      <circle cx="50" cy="64" r="1.5" fill="white"/>
+      <ellipse cx="71" cy="64" rx="5" ry="6" fill="white"/>
+      <circle cx="72" cy="65" r="3" fill="#3D2817"/>
+      <circle cx="72" cy="64" r="1.5" fill="white"/>
+      <!-- Eyebrows -->
+      <path d="M 43 57 Q 49 55 55 57" stroke="#3D2817" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M 65 57 Q 71 55 77 57" stroke="#3D2817" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Nose -->
+      <path d="M 60 68 L 58 74 M 60 68 L 62 74" stroke="#B8956A" stroke-width="1.5" fill="none"/>
+      <path d="M 58 74 Q 60 76 62 74" stroke="#B8956A" stroke-width="1.5" fill="none"/>
+      <!-- Friendly smile -->
+      <path d="M 50 82 Q 60 86 70 82" stroke="#8B6F47" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>`
+  },
+  {
+    id: 'avatar-adolescent',
+    name: 'Adolescent (13-18 years)',
+    svg: `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Adolescent/Teen -->
+      <circle cx="60" cy="60" r="58" fill="#E8F4F8"/>
+      <!-- Hoodie -->
+      <path d="M 35 105 L 38 120 L 55 120 L 55 110 L 65 110 L 65 120 L 82 120 L 85 105" fill="#2C3E50"/>
+      <rect x="40" y="100" width="40" height="12" fill="#2C3E50"/>
+      <!-- Hood -->
+      <path d="M 35 100 Q 32 95 35 88 L 42 88 Q 45 92 48 95" stroke="#1A252F" stroke-width="2" fill="#34495E"/>
+      <path d="M 85 100 Q 88 95 85 88 L 78 88 Q 75 92 72 95" stroke="#1A252F" stroke-width="2" fill="#34495E"/>
+      <!-- Neck -->
+      <rect x="52" y="92" width="16" height="12" fill="#C9A882"/>
+      <!-- Head (more defined features) -->
+      <ellipse cx="60" cy="68" rx="22" ry="26" fill="#C9A882"/>
+      <!-- Teen hair (longer, more styled) -->
+      <path d="M 38 48 Q 38 34 60 32 Q 82 34 82 48 L 82 58 Q 78 52 68 50 Q 60 52 60 54 Q 58 52 52 50 Q 42 52 38 58 Z" fill="#3A2A1A"/>
+      <!-- Side swept fringe -->
+      <path d="M 38 48 Q 42 42 50 40 Q 58 40 65 42" fill="#3A2A1A"/>
+      <!-- Ears -->
+      <ellipse cx="38" cy="70" rx="5" ry="9" fill="#B8956A"/>
+      <ellipse cx="82" cy="70" rx="5" ry="9" fill="#B8956A"/>
+      <!-- Eyes (more mature, slightly narrower) -->
+      <ellipse cx="49" cy="66" rx="5" ry="5" fill="white"/>
+      <circle cx="50" cy="67" r="3" fill="#2C1810"/>
+      <circle cx="50" cy="66" r="1.5" fill="white"/>
+      <ellipse cx="71" cy="66" rx="5" ry="5" fill="white"/>
+      <circle cx="72" cy="67" r="3" fill="#2C1810"/>
+      <circle cx="72" cy="66" r="1.5" fill="white"/>
+      <!-- Eyebrows (more defined) -->
+      <path d="M 42 60 Q 49 58 56 60" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M 64 60 Q 71 58 78 60" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Nose (more defined) -->
+      <path d="M 60 70 L 58 78 M 60 70 L 62 78" stroke="#A87A54" stroke-width="1.8" fill="none"/>
+      <path d="M 57 78 Q 60 80 63 78" stroke="#A87A54" stroke-width="1.8" fill="none"/>
+      <!-- Mouth (subtle smile) -->
+      <path d="M 51 86 Q 60 88 69 86" stroke="#7A5C42" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>`
   }
 ];
 

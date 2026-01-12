@@ -253,6 +253,8 @@ export async function addVitalsWithTenant(
       heart_rate: vitals.heartRate,
       respiratory_rate: vitals.respiratoryRate,
       oxygen_saturation: vitals.oxygenSaturation,
+      oxygen_delivery: vitals.oxygenDelivery || 'Room Air',
+      oxygen_flow_rate: vitals.oxygenFlowRate || 'N/A',
       recorded_at: vitals.recorded_at || new Date().toISOString()
     };
 
@@ -277,6 +279,8 @@ export async function addVitalsWithTenant(
       heartRate: newVitals.heart_rate,
       respiratoryRate: newVitals.respiratory_rate,
       oxygenSaturation: newVitals.oxygen_saturation,
+      oxygenDelivery: newVitals.oxygen_delivery || 'Room Air',
+      oxygenFlowRate: newVitals.oxygen_flow_rate || 'N/A',
       recorded_at: newVitals.recorded_at,
       lastUpdated: newVitals.recorded_at
     };

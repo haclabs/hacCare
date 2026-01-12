@@ -22,6 +22,7 @@ const defaultVitals: VitalSigns = {
   respiratoryRate: 16,
   oxygenSaturation: 98,
   oxygenDelivery: 'Room Air',
+  oxygenFlowRate: 'N/A',
   lastUpdated: new Date().toISOString()
 };
 
@@ -216,12 +217,48 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                 className="w-full px-3 py-2 border border-cyan-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white"
                 required
               >
-                <option value="Room Air">Room Air (RA)</option>
-                {Array.from({ length: 15 }, (_, i) => i + 1).map(flow => (
-                  <option key={flow} value={`O2 ${flow} L/min`}>
-                    O2 {flow} L/min
-                  </option>
-                ))}
+                <option value="Room Air">Room Air</option>
+                <option value="Nasal Prongs">Nasal Prongs</option>
+                <option value="Simple Mask">Simple Mask</option>
+                <option value="Non-Rebreather">Non-Rebreather</option>
+                <option value="Partial Rebreather">Partial Rebreather</option>
+                <option value="High Flow">High Flow</option>
+                <option value="BiPAP">BiPAP</option>
+                <option value="Bag Valve Mask">Bag Valve Mask</option>
+                <option value="Tracheostomy">Tracheostomy</option>
+                <option value="Aerosol Mask">Aerosol Mask</option>
+              </select>
+            </div>
+
+            {/* Flow Rate */}
+            <div className="bg-cyan-50 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <Activity className="h-5 w-5 text-cyan-600" />
+                <label className="text-sm font-medium text-cyan-900">Flow Rate</label>
+              </div>
+              <select
+                value={editedVitals.oxygenFlowRate || 'N/A'}
+                onChange={(e) => updateVital('oxygenFlowRate', e.target.value)}
+                className="w-full px-3 py-2 border border-cyan-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white"
+              >
+                <option value="N/A">N/A</option>
+                <option value="<1L">&lt;1L</option>
+                <option value="1L">1L</option>
+                <option value="2L">2L</option>
+                <option value="3L">3L</option>
+                <option value="4L">4L</option>
+                <option value="5L">5L</option>
+                <option value="6L">6L</option>
+                <option value="7L">7L</option>
+                <option value="8L">8L</option>
+                <option value="9L">9L</option>
+                <option value="10L">10L</option>
+                <option value="11L">11L</option>
+                <option value="12L">12L</option>
+                <option value="13L">13L</option>
+                <option value="14L">14L</option>
+                <option value="15L">15L</option>
+                <option value=">15L">&gt;15L</option>
               </select>
             </div>
 

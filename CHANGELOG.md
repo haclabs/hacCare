@@ -7,6 +7,126 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.0] - 2026-01-11 - AGE-BASED VITAL SIGNS REFERENCE RANGES
+===============================================================================
+
+CLINICAL ACCURACY ENHANCEMENT
+------------------------------
+
+* Age-Based Vital Signs Reference Ranges
+  - NEW: Pediatric reference values for accurate vital signs assessment
+  - Precise age calculation: days for newborns (0-28 days), months for infants (1-12 months), years for older patients
+  - Seven age bands: NEWBORN, INFANT, TODDLER, PRESCHOOL, SCHOOL_AGE, ADOLESCENT, ADULT
+  - Age-appropriate normal ranges for: temperature, heart rate, blood pressure, respiratory rate, oxygen saturation
+  - Visual indicators automatically adjust to patient age (green/yellow/red status)
+  - Backward compatible: adult ranges used when date of birth not provided
+  
+  Files Added:
+  - src/utils/vitalRanges.ts (new utility module with all age band logic)
+  - docs/features/vitals/AGE_BASED_VITAL_RANGES.md (comprehensive feature documentation)
+  
+  Files Modified:
+  - src/utils/patientUtils.ts (enhanced with age band classification functions)
+  - src/components/forms/fields/VitalSignsField.tsx (age-aware assessment and display)
+  - src/features/clinical/components/vitals/VitalsModule.tsx (age band display in vitals header)
+  - src/features/clinical/components/mar/MARModule.tsx (age band badge in MAR header)
+  - src/features/patients/components/vitals/VitalsContent.tsx (age band in vitals tab)
+  - src/components/ModularPatientDashboard.tsx (age band in patient overview header)
+  - src/features/patients/components/records/PatientDetail.tsx (pass DOB to VitalsContent)
+  - src/features/patients/components/records/legacy/PatientDetail.legacy.tsx (pass DOB to VitalsContent)
+  
+  Age Band Display Locations:
+  - Patient Overview: Blue badge next to age/gender info on main landing page
+  - Vitals Module: Blue text below "Latest Vital Signs" header
+  - MAR Module: Blue rounded badge next to patient name in header
+  - VitalsContent: Blue text below "Vital Signs" title in Assessment tab
+  
+  Clinical Standards:
+  - Newborn (0-28 days): HR 120-160, BP 60-90/30-60, RR 30-60
+  - Infant (1-12 months): HR 100-150, BP 70-100/35-65, RR 25-50
+  - Toddler (1-3 years): HR 90-140, BP 80-110/40-70, RR 20-40
+  - Preschool (3-5 years): HR 80-120, BP 85-115/45-75, RR 20-30
+  - School Age (6-12 years): HR 70-110, BP 90-120/50-80, RR 18-25
+  - Adolescent (13-18 years): HR 60-100, BP 95-130/55-85, RR 12-20
+
+* Age-Appropriate Patient Avatars
+  - NEW: Added 6 pediatric avatars to complement age-based vital signs feature
+  - Each age band now has a visually distinct avatar representation:
+    * avatar-newborn: Peaceful newborn with hat and swaddle (0-28 days)
+    * avatar-infant: Sitting baby with big curious eyes (1-12 months)
+    * avatar-toddler: Young child with messy hair and chubby cheeks (1-3 years)
+    * avatar-preschool: Preschooler with neat hair and accessories (3-5 years)
+    * avatar-schoolage: School-aged child in casual hoodie (6-12 years)
+    * avatar-adolescent: Teen with mature features and styled hair (13-18 years)
+  - Avatars use age-appropriate proportions (larger heads for infants, more defined features for teens)
+  - Maintains consistent 120x120 SVG format with existing adult avatars
+  - Improves visual identification of patient age categories in simulations
+  
+  Files Modified:
+  - src/data/patientAvatars.ts (added 6 new avatar definitions)
+
+* Mean Arterial Pressure (MAP) and Pulse Pressure Calculations
+  - NEW: Clinical utility functions for derived vital sign metrics
+  - calculateMAP(systolic, diastolic): Returns Mean Arterial Pressure
+  - assessMAP(systolic, diastolic, dateOfBirth): Age-aware MAP assessment
+    * Newborn: 40-60 mmHg | Infant: 45-65 mmHg | Toddler: 50-70 mmHg
+    * Preschool: 55-75 mmHg | School Age: 60-80 mmHg | Adolescent/Adult: 65-110 mmHg
+    * MAP <65 mmHg (adults) indicates risk of inadequate organ perfusion
+  - calculatePulsePressure(systolic, diastolic): Returns pulse pressure (systolic - diastolic)
+  - assessPulsePressure(systolic, diastolic): Clinical interpretation
+    * Normal: 30-50 mmHg (all ages)
+    * Narrow (<25 mmHg): Shock, aortic stenosis, heart failure
+    * Wide (>60 mmHg): Aortic regurgitation, hyperthyroidism, arterial stiffness
+  - Fully typed with TypeScript, includes color-coded status indicators
+  
+  Files Modified:
+  - src/utils/vitalRanges.ts (added MAP and pulse pressure functions)
+
+* Documentation Enhancements
+  - UPDATED: Comprehensive AGE_BASED_VITAL_RANGES.md documentation
+  - Added "Abnormal Range (Yellow)" columns to all vital sign tables
+    * Clarifies three-tier assessment: Green (normal), Yellow (abnormal), Red (critical)
+    * Shows exact thresholds between normal and critical status
+  - Documented oxygen delivery method field (oxygenDelivery)
+    * Room Air, Nasal Cannula, Face Masks, CPAP/BiPAP, Ventilator options
+    * Clinical significance: SpO2 context depends on delivery method
+  - Added MAP and Pulse Pressure calculation examples
+  - Expanded Future Enhancements section:
+    * Pain assessment scales (FLACC, Wong-Baker FACES, Numeric Rating)
+    * Blood glucose monitoring with age-appropriate ranges
+    * Level of Consciousness assessment (GCS/AVPU)
+  
+  Files Modified:
+  - docs/features/vitals/AGE_BASED_VITAL_RANGES.md (major update)
+
+BUG FIXES
+---------
+
+* Fixed VitalsModule ReferenceError
+  - FIXED: Replaced undefined calculateAge() with calculatePreciseAge().years
+  - Resolved blank page error when accessing vital sign entry page
+  - Error occurred at line 90 in generateFormContext() function
+  
+  Files Modified:
+  - src/features/clinical/components/vitals/VitalsModule.tsx
+
+TECHNICAL DETAILS
+-----------------
+  - Avatars use age-appropriate proportions (larger heads for infants, more defined features for teens)
+  - Maintains consistent 120x120 SVG format with existing adult avatars
+  - Improves visual identification of patient age categories in simulations
+  
+  Files Modified:
+  - src/data/patientAvatars.ts (added 6 new avatar definitions)
+  - Adult (18+ years): HR 60-100, BP 90-140/60-90, RR 12-20
+  
+  Benefits:
+  - Clinically accurate assessment for pediatric simulations
+  - Educational value: students learn age-appropriate norms
+  - Prevents false alarms on pediatric patients using adult ranges
+  - Supports simulation scenarios across all age groups
+
+===============================================================================
 [5.2.0-rc5] - 2025-11-30 - BUGGLER RELEASE CANDIDATE 5 - CLEANUP & OPTIMIZATION
 ===============================================================================
 

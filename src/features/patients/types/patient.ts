@@ -47,7 +47,8 @@ export interface VitalSigns {
   heartRate: number;
   respiratoryRate: number;
   oxygenSaturation: number;
-  oxygenDelivery?: string; // Room Air, O2 1 L/min, O2 2 L/min, etc.
+  oxygenDelivery?: string; // Room Air, Nasal Prongs, Simple Mask, Non-Rebreather, etc.
+  oxygenFlowRate?: string; // N/A, <1L, 1L-15L, >15L
   lastUpdated?: string;
   recorded_at?: string;
 }

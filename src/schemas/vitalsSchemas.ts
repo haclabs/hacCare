@@ -16,8 +16,9 @@ export const vitalsEntrySchema: VitalsSchema = {
     patientId: {
       type: 'string',
       title: 'Patient ID',
-      description: 'Enter patient ID (PT12345 or P94558)',
+      description: 'Patient record number (auto-filled)',
       required: true,
+      disabled: true,
       validation: {
         pattern: '^P(T)?\\d{4,5}$',
         custom: 'patient_id'
@@ -120,7 +121,7 @@ export const vitalsEntrySchema: VitalsSchema = {
       {
         id: 'vitals',
         title: 'Vital Signs',
-        fields: ['vitalSigns', 'painScale']
+        fields: ['vitalSigns']
       },
       {
         id: 'notes',
