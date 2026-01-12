@@ -29,6 +29,17 @@ CLINICAL ACCURACY ENHANCEMENT
   - src/utils/patientUtils.ts (enhanced with age band classification functions)
   - src/components/forms/fields/VitalSignsField.tsx (age-aware assessment and display)
   - src/features/clinical/components/vitals/VitalsModule.tsx (age band display in vitals header)
+  - src/features/clinical/components/mar/MARModule.tsx (age band badge in MAR header)
+  - src/features/patients/components/vitals/VitalsContent.tsx (age band in vitals tab)
+  - src/components/ModularPatientDashboard.tsx (age band in patient overview header)
+  - src/features/patients/components/records/PatientDetail.tsx (pass DOB to VitalsContent)
+  - src/features/patients/components/records/legacy/PatientDetail.legacy.tsx (pass DOB to VitalsContent)
+  
+  Age Band Display Locations:
+  - Patient Overview: Blue badge next to age/gender info on main landing page
+  - Vitals Module: Blue text below "Latest Vital Signs" header
+  - MAR Module: Blue rounded badge next to patient name in header
+  - VitalsContent: Blue text below "Vital Signs" title in Assessment tab
   
   Clinical Standards:
   - Newborn (0-28 days): HR 120-160, BP 60-90/30-60, RR 30-60
