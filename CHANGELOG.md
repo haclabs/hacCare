@@ -23,10 +23,12 @@ CLINICAL ACCURACY ENHANCEMENT
   
   Files Added:
   - src/utils/vitalRanges.ts (new utility module with all age band logic)
+  - docs/features/vitals/AGE_BASED_VITAL_RANGES.md (comprehensive feature documentation)
   
   Files Modified:
   - src/utils/patientUtils.ts (enhanced with age band classification functions)
   - src/components/forms/fields/VitalSignsField.tsx (age-aware assessment and display)
+  - src/features/clinical/components/vitals/VitalsModule.tsx (age band display in vitals header)
   
   Clinical Standards:
   - Newborn (0-28 days): HR 120-160, BP 60-90/30-60, RR 30-60
