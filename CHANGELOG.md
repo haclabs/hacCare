@@ -64,6 +64,60 @@ CLINICAL ACCURACY ENHANCEMENT
   
   Files Modified:
   - src/data/patientAvatars.ts (added 6 new avatar definitions)
+
+* Mean Arterial Pressure (MAP) and Pulse Pressure Calculations
+  - NEW: Clinical utility functions for derived vital sign metrics
+  - calculateMAP(systolic, diastolic): Returns Mean Arterial Pressure
+  - assessMAP(systolic, diastolic, dateOfBirth): Age-aware MAP assessment
+    * Newborn: 40-60 mmHg | Infant: 45-65 mmHg | Toddler: 50-70 mmHg
+    * Preschool: 55-75 mmHg | School Age: 60-80 mmHg | Adolescent/Adult: 65-110 mmHg
+    * MAP <65 mmHg (adults) indicates risk of inadequate organ perfusion
+  - calculatePulsePressure(systolic, diastolic): Returns pulse pressure (systolic - diastolic)
+  - assessPulsePressure(systolic, diastolic): Clinical interpretation
+    * Normal: 30-50 mmHg (all ages)
+    * Narrow (<25 mmHg): Shock, aortic stenosis, heart failure
+    * Wide (>60 mmHg): Aortic regurgitation, hyperthyroidism, arterial stiffness
+  - Fully typed with TypeScript, includes color-coded status indicators
+  
+  Files Modified:
+  - src/utils/vitalRanges.ts (added MAP and pulse pressure functions)
+
+* Documentation Enhancements
+  - UPDATED: Comprehensive AGE_BASED_VITAL_RANGES.md documentation
+  - Added "Abnormal Range (Yellow)" columns to all vital sign tables
+    * Clarifies three-tier assessment: Green (normal), Yellow (abnormal), Red (critical)
+    * Shows exact thresholds between normal and critical status
+  - Documented oxygen delivery method field (oxygenDelivery)
+    * Room Air, Nasal Cannula, Face Masks, CPAP/BiPAP, Ventilator options
+    * Clinical significance: SpO2 context depends on delivery method
+  - Added MAP and Pulse Pressure calculation examples
+  - Expanded Future Enhancements section:
+    * Pain assessment scales (FLACC, Wong-Baker FACES, Numeric Rating)
+    * Blood glucose monitoring with age-appropriate ranges
+    * Level of Consciousness assessment (GCS/AVPU)
+  
+  Files Modified:
+  - docs/features/vitals/AGE_BASED_VITAL_RANGES.md (major update)
+
+BUG FIXES
+---------
+
+* Fixed VitalsModule ReferenceError
+  - FIXED: Replaced undefined calculateAge() with calculatePreciseAge().years
+  - Resolved blank page error when accessing vital sign entry page
+  - Error occurred at line 90 in generateFormContext() function
+  
+  Files Modified:
+  - src/features/clinical/components/vitals/VitalsModule.tsx
+
+TECHNICAL DETAILS
+-----------------
+  - Avatars use age-appropriate proportions (larger heads for infants, more defined features for teens)
+  - Maintains consistent 120x120 SVG format with existing adult avatars
+  - Improves visual identification of patient age categories in simulations
+  
+  Files Modified:
+  - src/data/patientAvatars.ts (added 6 new avatar definitions)
   - Adult (18+ years): HR 60-100, BP 90-140/60-90, RR 12-20
   
   Benefits:
