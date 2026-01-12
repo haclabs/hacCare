@@ -64,6 +64,7 @@ import { getLabPanels, getLabResults, hasUnacknowledgedLabs } from '../services/
 import type { LabPanel, LabResult } from '../features/clinical/types/labs';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
+import { calculatePreciseAge } from '../utils/vitalRanges';
 
 interface ModularPatientDashboardProps {
   onShowBracelet?: (patient: Patient) => void;
@@ -1757,6 +1758,11 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   <MapPin className="h-4 w-4 text-gray-500" />
                   <span className="font-medium">Room {patient.room_number || 'Unassigned'}</span>
                 </span>
+                {patient.date_of_birth && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                    {calculatePreciseAge(patient.date_of_birth).ageDescription}
+                  </span>
+                )}
               </div>
               <div className="flex items-center space-x-1.5 text-xs text-gray-500 font-mono">
                 <Badge className="h-3.5 w-3.5" />
