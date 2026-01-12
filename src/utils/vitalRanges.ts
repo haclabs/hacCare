@@ -371,3 +371,173 @@ export function getAllAgeBands(): Array<{ id: AgeBand; description: string }> {
     { id: 'ADULT', description: 'Adult (18+ years)' }
   ];
 }
+
+/**
+ * Calculate Mean Arterial Pressure (MAP)
+ * 
+ * MAP represents average blood pressure during one cardiac cycle.
+ * Formula: MAP = (Systolic + 2 × Diastolic) / 3
+ * 
+ * @param systolic - Systolic blood pressure in mmHg
+ * @param diastolic - Diastolic blood pressure in mmHg
+ * @returns MAP value in mmHg (rounded to nearest integer)
+ * 
+ * @example
+ * const map = calculateMAP(120, 80); // Returns: 93 mmHg
+ */
+export function calculateMAP(systolic: number, diastolic: number): number {
+  return Math.round((systolic + 2 * diastolic) / 3);
+}
+
+/**
+ * Assess Mean Arterial Pressure with age-appropriate ranges
+ * 
+ * Normal MAP ranges by age:
+ * - Newborn: 40-60 mmHg
+ * - Infant: 45-65 mmHg
+ * - Toddler: 50-70 mmHg
+ * - Preschool: 55-75 mmHg
+ * - School Age: 60-80 mmHg
+ * - Adolescent/Adult: 65-110 mmHg (target >65 for perfusion)
+ * 
+ * @param systolic - Systolic blood pressure in mmHg
+ * @param diastolic - Diastolic blood pressure in mmHg
+ * @param dateOfBirth - Patient's date of birth for age-appropriate assessment
+ * @returns Assessment object with MAP value and status
+ */
+export function assessMAP(systolic: number, diastolic: number, dateOfBirth: string): {
+  map: number;
+  status: VitalStatus;
+  message: string;
+  color: string;
+  bgColor: string;
+  ageBand: AgeBand;
+} {
+  const map = calculateMAP(systolic, diastolic);
+  const age = calculatePreciseAge(dateOfBirth);
+  
+  // Age-appropriate MAP ranges
+  const mapRanges: Record<AgeBand, { min: number; max: number; criticalLow: number; criticalHigh: number }> = {
+    NEWBORN: { min: 40, max: 60, criticalLow: 35, criticalHigh: 70 },
+    INFANT: { min: 45, max: 65, criticalLow: 40, criticalHigh: 75 },
+    TODDLER: { min: 50, max: 70, criticalLow: 45, criticalHigh: 80 },
+    PRESCHOOL: { min: 55, max: 75, criticalLow: 50, criticalHigh: 85 },
+    SCHOOL_AGE: { min: 60, max: 80, criticalLow: 55, criticalHigh: 90 },
+    ADOLESCENT: { min: 65, max: 110, criticalLow: 60, criticalHigh: 120 },
+    ADULT: { min: 65, max: 110, criticalLow: 60, criticalHigh: 120 }
+  };
+  
+  const range = mapRanges[age.ageBand];
+  
+  let status: VitalStatus;
+  let message: string;
+  let color: string;
+  let bgColor: string;
+  
+  // Critical ranges
+  if (map <= range.criticalLow || map >= range.criticalHigh) {
+    status = 'critical';
+    message = map <= range.criticalLow ? 'Critically Low - Risk of inadequate perfusion' : 'Critically High - Risk of vascular damage';
+    color = 'text-red-600';
+    bgColor = 'bg-red-50';
+  }
+  // Abnormal but not critical
+  else if (map < range.min || map > range.max) {
+    status = 'abnormal';
+    message = map < range.min ? 'Below Normal' : 'Above Normal';
+    color = 'text-yellow-600';
+    bgColor = 'bg-yellow-50';
+  }
+  // Normal range
+  else {
+    status = 'normal';
+    message = 'Normal';
+    color = 'text-green-600';
+    bgColor = 'bg-green-50';
+  }
+  
+  return {
+    map,
+    status,
+    message,
+    color,
+    bgColor,
+    ageBand: age.ageBand
+  };
+}
+
+/**
+ * Calculate Pulse Pressure
+ * 
+ * Pulse pressure is the difference between systolic and diastolic pressure.
+ * It indicates arterial compliance and stroke volume.
+ * Formula: Pulse Pressure = Systolic - Diastolic
+ * 
+ * Normal range: 30-50 mmHg (all ages)
+ * Narrow (<25 mmHg): Shock, aortic stenosis, heart failure
+ * Wide (>60 mmHg): Aortic regurgitation, hyperthyroidism, arterial stiffness
+ * 
+ * @param systolic - Systolic blood pressure in mmHg
+ * @param diastolic - Diastolic blood pressure in mmHg
+ * @returns Pulse pressure value in mmHg
+ * 
+ * @example
+ * const pp = calculatePulsePressure(120, 80); // Returns: 40 mmHg
+ */
+export function calculatePulsePressure(systolic: number, diastolic: number): number {
+  return systolic - diastolic;
+}
+
+/**
+ * Assess Pulse Pressure
+ * 
+ * @param systolic - Systolic blood pressure in mmHg
+ * @param diastolic - Diastolic blood pressure in mmHg
+ * @returns Assessment object with pulse pressure and clinical interpretation
+ */
+export function assessPulsePressure(systolic: number, diastolic: number): {
+  pulsePressure: number;
+  status: VitalStatus;
+  message: string;
+  color: string;
+  bgColor: string;
+} {
+  const pp = calculatePulsePressure(systolic, diastolic);
+  
+  let status: VitalStatus;
+  let message: string;
+  let color: string;
+  let bgColor: string;
+  
+  // Critical ranges
+  if (pp < 20 || pp > 70) {
+    status = 'critical';
+    message = pp < 20 
+      ? 'Critically Narrow - Possible shock or heart failure'
+      : 'Critically Wide - Possible aortic regurgitation or arterial stiffness';
+    color = 'text-red-600';
+    bgColor = 'bg-red-50';
+  }
+  // Abnormal but not critical
+  else if (pp < 30 || pp > 50) {
+    status = 'abnormal';
+    message = pp < 30 ? 'Narrow - Monitor closely' : 'Wide - Monitor closely';
+    color = 'text-yellow-600';
+    bgColor = 'bg-yellow-50';
+  }
+  // Normal range (30-50 mmHg)
+  else {
+    status = 'normal';
+    message = 'Normal';
+    color = 'text-green-600';
+    bgColor = 'bg-green-50';
+  }
+  
+  return {
+    pulsePressure: pp,
+    status,
+    message,
+    color,
+    bgColor
+  };
+}
