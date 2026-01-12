@@ -130,6 +130,8 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         heartRate: data.vitalSigns.heartRate,
         respiratoryRate: data.vitalSigns.respiratoryRate,
         oxygenSaturation: data.vitalSigns.oxygenSaturation,
+        oxygenDelivery: data.vitalSigns.oxygenDelivery || 'Room Air',
+        oxygenFlowRate: data.vitalSigns.oxygenFlowRate || 'N/A',
         lastUpdated: new Date().toISOString()
       };
 
@@ -345,7 +347,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       {
         label: 'O2 Saturation',
         value: `${latestVitals.oxygenSaturation}%`,
-        subtitle: latestVitals.oxygenDelivery || 'Room Air',
+        subtitle: latestVitals.oxygenFlowRate && latestVitals.oxygenFlowRate !== 'N/A'
+          ? `${latestVitals.oxygenDelivery || 'Room Air'} @ ${latestVitals.oxygenFlowRate.replace('L', ' L/min')}`
+          : latestVitals.oxygenDelivery || 'Room Air',
         rawValue: latestVitals.oxygenSaturation,
         type: 'oxygenSaturation'
       },

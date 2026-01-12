@@ -46,6 +46,7 @@ export interface DatabaseVitals {
   respiratory_rate: number; 
   oxygen_saturation: number;
   oxygen_delivery?: string;
+  oxygen_flow_rate?: string;
   recorded_at: string;
 }
 
@@ -75,6 +76,7 @@ const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
     respiratoryRate: vital.respiratory_rate,
     oxygenSaturation: vital.oxygen_saturation,
     oxygenDelivery: vital.oxygen_delivery || 'Room Air',
+    oxygenFlowRate: vital.oxygen_flow_rate || 'N/A',
     recorded_at: vital.recorded_at,
     lastUpdated: vital.recorded_at
   }));
@@ -667,6 +669,8 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
   try {
     console.log('Inserting vitals for patient:', patientId, vitals);
     console.log('Storing temperature in Celsius:', vitals.temperature);
+    console.log('🩺 Oxygen delivery:', vitals.oxygenDelivery);
+    console.log('💨 Flow rate:', vitals.oxygenFlowRate);
     
     // Get the patient's tenant_id first for proper tenant support
     const { data: patient, error: patientError } = await supabase
@@ -692,6 +696,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
         respiratory_rate: vitals.respiratoryRate,
         oxygen_saturation: vitals.oxygenSaturation,
         oxygen_delivery: vitals.oxygenDelivery || 'Room Air', // Add oxygen delivery field
+        oxygen_flow_rate: vitals.oxygenFlowRate || 'N/A', // Add oxygen flow rate field
         recorded_at: new Date().toISOString(), // Add the recorded_at timestamp
         student_name: studentName || null // Add student name if provided
       });

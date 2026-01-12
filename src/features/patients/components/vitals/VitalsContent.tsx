@@ -168,7 +168,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
             <p className="text-xl font-bold text-gray-900 mt-2">
               {vitals[0]?.oxygenDelivery || 'Room Air'}
               {vitals[0]?.oxygenFlowRate && vitals[0]?.oxygenFlowRate !== 'N/A' && (
-                <span className="text-sm font-medium text-cyan-600 ml-2">@ {vitals[0].oxygenFlowRate}</span>
+                <span className="text-sm font-medium text-cyan-600 ml-2">@ {vitals[0].oxygenFlowRate.replace('L', ' L/min')}</span>
               )}
             </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
