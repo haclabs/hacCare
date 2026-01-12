@@ -48,6 +48,22 @@ CLINICAL ACCURACY ENHANCEMENT
   - Preschool (3-5 years): HR 80-120, BP 85-115/45-75, RR 20-30
   - School Age (6-12 years): HR 70-110, BP 90-120/50-80, RR 18-25
   - Adolescent (13-18 years): HR 60-100, BP 95-130/55-85, RR 12-20
+
+* Age-Appropriate Patient Avatars
+  - NEW: Added 6 pediatric avatars to complement age-based vital signs feature
+  - Each age band now has a visually distinct avatar representation:
+    * avatar-newborn: Peaceful newborn with hat and swaddle (0-28 days)
+    * avatar-infant: Sitting baby with big curious eyes (1-12 months)
+    * avatar-toddler: Young child with messy hair and chubby cheeks (1-3 years)
+    * avatar-preschool: Preschooler with neat hair and accessories (3-5 years)
+    * avatar-schoolage: School-aged child in casual hoodie (6-12 years)
+    * avatar-adolescent: Teen with mature features and styled hair (13-18 years)
+  - Avatars use age-appropriate proportions (larger heads for infants, more defined features for teens)
+  - Maintains consistent 120x120 SVG format with existing adult avatars
+  - Improves visual identification of patient age categories in simulations
+  
+  Files Modified:
+  - src/data/patientAvatars.ts (added 6 new avatar definitions)
   - Adult (18+ years): HR 60-100, BP 90-140/60-90, RR 12-20
   
   Benefits:

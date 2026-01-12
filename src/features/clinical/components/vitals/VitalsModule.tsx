@@ -87,7 +87,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     return {
       patient: {
         id: patient.id,
-        age: calculateAge(patient.date_of_birth),
+        age: calculatePreciseAge(patient.date_of_birth).years,
         gender: patient.gender,
         allergies: patient.allergies,
         currentMedications: patient.medications?.map(m => m.name) || [],
