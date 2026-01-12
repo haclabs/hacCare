@@ -4,23 +4,29 @@ import { VitalSigns } from '../../../../types';
 import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { fetchPatientVitals } from '../../../../services/patient/patientService';
+import { calculatePreciseAge } from '../../../../utils/vitalRanges';
 
 interface VitalsContentProps {
   patientId: string;
   patientName: string;
   vitals: VitalSigns[];
   onVitalsUpdated: (vitals: VitalSigns[]) => void;
+  patientDateOfBirth?: string; // Optional for age band display
 }
 
 export const VitalsContent: React.FC<VitalsContentProps> = ({
   patientId,
   patientName,
   vitals,
-  onVitalsUpdated
+  onVitalsUpdated,
+  patientDateOfBirth
 }) => {
   const [showVitalsEditor, setShowVitalsEditor] = useState(false);
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
   const [refreshingVitals, setRefreshingVitals] = useState(false);
+  
+  // Calculate age band if DOB provided
+  const ageInfo = patientDateOfBirth ? calculatePreciseAge(patientDateOfBirth) : null;
 
   const handleVitalsUpdate = async () => {
     if (!patientId) return;
@@ -49,7 +55,12 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Vital Signs</h3>
+          {ageInfo && (
+            <p className="text-sm text-blue-600 font-medium mt-1">{ageInfo.ageDescription}</p>
+          )}
+        </div>
         <div className="flex space-x-3">
           <button
             onClick={() => setShowVitalsTrends(true)}

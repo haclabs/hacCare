@@ -23,6 +23,7 @@ import { useBCMA } from '../../hooks/useBCMA';
 import DiabeticRecordModule from '../../../../components/DiabeticRecordModule';
 import { MedicationHistoryView } from './MedicationHistoryView';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
+import { calculatePreciseAge } from '../../../../utils/vitalRanges';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -996,7 +997,14 @@ export const MARModule: React.FC<MARModuleProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Medication Administration Record</h2>
-          <p className="text-gray-600">Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})</p>
+          <div className="flex items-center gap-3">
+            <p className="text-gray-600">Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})</p>
+            {patient.date_of_birth && (
+              <span className="text-sm text-blue-600 font-medium px-3 py-1 bg-blue-50 rounded-full">
+                {calculatePreciseAge(patient.date_of_birth).ageDescription}
+              </span>
+            )}
+          </div>
         </div>
         
         {/* View Toggle */}
