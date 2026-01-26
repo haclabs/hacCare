@@ -17,7 +17,6 @@ import TemplateImportModal from './TemplateImportModal';
 import { formatDistanceToNow } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { useNavigate } from 'react-router-dom';
-import { useTenant } from '../../../contexts/TenantContext';
 
 const SimulationTemplates: React.FC = () => {
   const [templates, setTemplates] = useState<SimulationTemplateWithDetails[]>([]);
@@ -26,7 +25,6 @@ const SimulationTemplates: React.FC = () => {
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const navigate = useNavigate();
-  const { setCurrentTenant } = useTenant();
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -85,15 +83,20 @@ const SimulationTemplates: React.FC = () => {
 
   const handleEditTemplate = async (template: SimulationTemplateWithDetails) => {
     // Store the template being edited in session storage
-    sessionStorage.setItem('editing_template', JSON.stringify({
+    console.log('🎨 Edit Template clicked:', template.name, template.id);
+    
+    // Store the template being edited in session storage
+    const editInfo = {
       template_id: template.id,
       template_name: template.name,
       tenant_id: template.tenant_id
-    }));
+    };
+    console.log('💾 Storing edit info:', editInfo);
+    sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
 
     // Navigate to patients page - we'll show template data there
     // (Template data lives in snapshot_data, not a separate tenant)
-    navigate('/app');
+    console.log('🚀 Navigating to /app');
   };
   
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
