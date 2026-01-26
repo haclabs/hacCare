@@ -38,11 +38,24 @@ import { secureLogger } from '../../lib/security/secureLogger';
     );
     */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
-    // First try standard query
+    // Get patient details first to determine tenant
+    const { data: patientData, error: patientError } = await supabase
+      .from('patients')
+      .select('tenant_id')
+      .eq('id', patientId)
+      .single();
+
+    if (patientError || !patientData) {
+      console.error('Error fetching patient for medications:', patientError);
+      return [];
+    }
+
+    // Query with tenant_id filter (CRITICAL for RLS)
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')
       .eq('patient_id', patientId)
+      .eq('tenant_id', patientData.tenant_id)
       .order('created_at', { ascending: false });
 
     // If successful and has data, return it
