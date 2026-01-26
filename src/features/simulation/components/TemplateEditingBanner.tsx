@@ -20,11 +20,31 @@ export const TemplateEditingBanner: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we're editing a template
-    const stored = sessionStorage.getItem('editing_template');
-    if (stored) {
-      setEditingInfo(JSON.parse(stored));
-    }
+    // Check if we're editing a template on mount
+    const checkEditingState = () => {
+      const stored = sessionStorage.getItem('editing_template');
+      console.log('🔍 Checking editing state:', stored);
+      if (stored) {
+        setEditingInfo(JSON.parse(stored));
+      } else {
+        setEditingInfo(null);
+      }
+    };
+
+    // Check on mount
+    checkEditingState();
+
+    // Listen for custom event when editing starts
+    const handleEditStart = (e: CustomEvent) => {
+      console.log('📢 Received template-edit-start event:', e.detail);
+      setEditingInfo(e.detail);
+    };
+
+    window.addEventListener('template-edit-start', handleEditStart as EventListener);
+
+    return () => {
+      window.removeEventListener('template-edit-start', handleEditStart as EventListener);
+    };
   }, []);
 
   const handleExitTemplate = async () => {
