@@ -94,9 +94,13 @@ const SimulationTemplates: React.FC = () => {
     console.log('💾 Storing edit info:', editInfo);
     sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
 
-    // Navigate to patients page - template data is in the template's tenant
-    // The TemplateEditingBanner will show the purple banner
-    console.log('🚀 Navigating to /app');
+    // Navigate to patients page and trigger template edit mode
+    console.log('🚀 Navigating to /app and triggering template-edit-change event');
+    
+    // Dispatch event to notify App.tsx and TemplateEditingBanner
+    window.dispatchEvent(new Event('template-edit-change'));
+    
+    // Navigate to main app view
     navigate('/app');
   };
   

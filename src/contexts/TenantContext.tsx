@@ -357,10 +357,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setSelectedTenantId(tenantId);
       setCurrentTenant(tenant);
       
-      // Persist template tenant to sessionStorage (not localStorage, since it's temporary)
-      sessionStorage.setItem('current_template_tenant', tenantId);
-      console.log('💾 Template tenant saved to sessionStorage');
-      
+      // Note: We don't persist to sessionStorage - the editing_template flag drives everything
       console.log('✅ Successfully entered template tenant:', tenant.name);
     } catch (err) {
       console.error('Error entering template tenant:', err);
@@ -381,9 +378,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       console.log('🚪 Exiting template tenant...');
       
-      // Clear template tenant from sessionStorage
-      sessionStorage.removeItem('current_template_tenant');
-      console.log('🧹 Cleared template tenant from sessionStorage');
+      // No need to clear sessionStorage - we don't persist it anymore
 
       // Reload user's home tenant
       if (user) {

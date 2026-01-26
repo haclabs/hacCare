@@ -68,6 +68,7 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
         
         // Clear template editing state on logout
         sessionStorage.removeItem('editing_template');
+        sessionStorage.removeItem('current_template_tenant');
         console.log('🧹 Cleared template editing state on logout');
         
         // End session tracking on logout
