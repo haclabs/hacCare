@@ -95,15 +95,15 @@ const SimulationTemplates: React.FC = () => {
     sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
 
     // Navigate to patients page and trigger template edit mode
-    console.log('🚀 Navigating to /app and triggering template-edit-start event');
+    console.log('🚀 Navigating to patients view and triggering template-edit-start event');
     
     // Dispatch event to notify TemplateEditingBanner with the template info
     window.dispatchEvent(new CustomEvent('template-edit-start', { detail: editInfo }));
     
-    // Also dispatch to App.tsx for state updates
-    window.dispatchEvent(new Event('template-edit-change'));
+    // Change to patients tab
+    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'patients' } }));
     
-    // Navigate to main app view (will trigger on page refresh if needed)
+    // Navigate to main app view
     navigate('/app');
   };
   
