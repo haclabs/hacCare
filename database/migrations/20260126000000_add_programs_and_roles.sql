@@ -7,13 +7,33 @@
 -- ============================================================================
 
 -- ============================================================================
--- 1. ADD NEW USER ROLES TO ENUM
+-- 1. ADD NEW USER ROLES TO ENUM (Must be in separate transaction)
 -- ============================================================================
+-- Note: This must be run FIRST and COMMITTED before running the rest
+-- If running manually, execute this section separately, then run the rest
 
--- Add 'coordinator' and 'instructor' to user_role enum
-ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'coordinator';
-ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'instructor';
+DO $$
+BEGIN
+    -- Check if 'coordinator' exists before adding
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'coordinator' AND enumtypid = 'user_role'::regtype) THEN
+        ALTER TYPE user_role ADD VALUE 'coordinator';
+        RAISE NOTICE '✅ Added coordinator role';
+    ELSE
+        RAISE NOTICE '⚠️ coordinator role already exists';
+    END IF;
 
+    -- Check if 'instructor' exists before adding
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'instructor' AND enumtypid = 'user_role'::regtype) THEN
+        ALTER TYPE user_role ADD VALUE 'instructor';
+        RAISE NOTICE '✅ Added instructor role';
+    ELSE
+        RAISE NOTICE '⚠️ instructor role already exists';
+    END IF;
+END $$;
+
+COMMIT;
+
+-- Add comment after commit
 COMMENT ON TYPE user_role IS 'User roles: super_admin (cross-tenant), coordinator (tenant-wide), admin (tenant admin), instructor (program-scoped), nurse (clinical staff)';
 
 -- ============================================================================
