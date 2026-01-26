@@ -139,7 +139,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             first_name: formData.first_name,
             last_name: formData.last_name,
             role: formData.role,
-            department: formData.department,
+            // Note: department field removed - now using user_programs junction table
             license_number: formData.license_number,
             phone: formData.phone,
             is_active: formData.is_active,

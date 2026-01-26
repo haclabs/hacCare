@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION public.update_user_profile_admin(
   p_first_name text,
   p_last_name text,
   p_role text,
-  p_department text DEFAULT NULL,
+  p_department text DEFAULT NULL, -- DEPRECATED: kept for backwards compatibility, maps to primary_program
   p_license_number text DEFAULT NULL,
   p_phone text DEFAULT NULL,
   p_is_active boolean DEFAULT true,
@@ -24,12 +24,14 @@ DECLARE
   v_result json;
 BEGIN
   -- Update the user profile
+  -- Note: department parameter is deprecated but kept for backwards compatibility
+  -- Now using user_programs junction table for program assignments
   UPDATE user_profiles
   SET 
     first_name = p_first_name,
     last_name = p_last_name,
     role = p_role::user_role,
-    department = p_department,
+    primary_program = p_department, -- Maps old department param to primary_program column
     license_number = p_license_number,
     phone = p_phone,
     is_active = p_is_active,
@@ -54,4 +56,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.update_user_profile_admin TO authenticated;
 
 COMMENT ON FUNCTION public.update_user_profile_admin IS 
-'Allows admins to update user profiles, bypassing RLS restrictions. Includes simulation_only flag for auto-routing users to simulation lobby.';
+'Allows admins to update user profiles, bypassing RLS restrictions. Includes simulation_only flag for auto-routing users to simulation lobby. Note: p_department parameter is deprecated, now using user_programs junction table.';
