@@ -39,10 +39,10 @@ BEGIN
   WHERE user_profiles.id = auth.uid();
   
   -- Get user's home tenant_id from user_tenant_access
-  SELECT user_tenant_access.tenant_id INTO v_home_tenant_id
-  FROM user_tenant_access
-  WHERE user_tenant_access.user_id = auth.uid()
-    AND user_tenant_access.is_active = true
+  SELECT uta.tenant_id INTO v_home_tenant_id
+  FROM user_tenant_access uta
+  WHERE uta.user_id = auth.uid()
+    AND uta.is_active = true
   LIMIT 1;
   
   -- Super admins without tenant: use first non-simulation tenant
@@ -141,6 +141,7 @@ BEGIN
   IF p_participant_user_ids IS NOT NULL AND array_length(p_participant_user_ids, 1) > 0 THEN
     FOR i IN 1..array_length(p_participant_user_ids, 1)
     LOOP
+      -- Add to simulation_participants table
       INSERT INTO simulation_participants (
         simulation_id,
         user_id,
@@ -153,9 +154,33 @@ BEGIN
         COALESCE(p_participant_roles[i], 'student')::simulation_role,
         auth.uid()
       );
+      
+      -- Add to tenant_users for RLS access to simulation tenant data
+      -- This is CRITICAL - without this, participants can't see medications, patients, etc.
+      -- Map simulation roles to valid tenant_users roles: instructor→admin, student→nurse
+      BEGIN
+        INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
+        VALUES (
+          p_participant_user_ids[i], 
+          v_simulation_tenant_id, 
+          true,
+          CASE COALESCE(p_participant_roles[i], 'student')
+            WHEN 'instructor' THEN 'admin'
+            WHEN 'student' THEN 'nurse'
+            ELSE 'nurse'
+          END
+        );
+      EXCEPTION
+        WHEN unique_violation THEN
+          -- User already in tenant_users, update to active
+          UPDATE tenant_users 
+          SET is_active = true
+          WHERE user_id = p_participant_user_ids[i] 
+            AND tenant_id = v_simulation_tenant_id;
+      END;
     END LOOP;
     
-    RAISE NOTICE '✅ Added % participants to simulation', array_length(p_participant_user_ids, 1);
+    RAISE NOTICE '✅ Added % participants to simulation with tenant access', array_length(p_participant_user_ids, 1);
   END IF;
 
   RETURN QUERY SELECT 

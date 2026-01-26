@@ -15,6 +15,7 @@ import LaunchSimulationModal from './LaunchSimulationModal';
 import TemplateExportButton from './TemplateExportButton';
 import TemplateImportModal from './TemplateImportModal';
 import { formatDistanceToNow } from 'date-fns';
+import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 
 const SimulationTemplates: React.FC = () => {
   const [templates, setTemplates] = useState<SimulationTemplateWithDetails[]>([]);
@@ -24,6 +25,9 @@ const SimulationTemplates: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Get user's program access
+  const { filterByPrograms, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
 
   useEffect(() => {
     loadTemplates();
@@ -118,26 +122,34 @@ const SimulationTemplates: React.FC = () => {
           </div>
         </div>
 
-        {/* Templates Grid */}
-        {templates.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-              No Templates Yet
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Create your first simulation template to get started
-            </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Create Template
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
+        {/* Templates Grid - Filter by user program access */}
+        {(() => {
+          // Apply program filtering
+          const filteredTemplates = filterByPrograms(templates);
+          
+          return filteredTemplates.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                {isInstructor ? 'No Templates in Your Program' : 'No Templates Yet'}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                {isInstructor 
+                  ? 'Templates must be tagged with your program to appear here'
+                  : 'Create your first simulation template to get started'}
+              </p>
+              {canSeeAllPrograms && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Create Template
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTemplates.map((template) => (
               <div
                 key={template.id}
                 className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6 hover:shadow-lg transition-shadow"
@@ -217,7 +229,8 @@ const SimulationTemplates: React.FC = () => {
               </div>
             ))}
           </div>
-        )}
+          );
+        })()}
 
         {/* How To Guide */}
         <div className="mt-8 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">

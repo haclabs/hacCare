@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Phone, Building, CreditCard, Users } from 'lucide-react';
+import { X, User, Mail, Phone, Building, CreditCard, Users, Tag } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../../../lib/api/supabase';
 import { parseAuthError } from '../../../../utils/authErrorParser';
 import { useAuth } from '../../../../hooks/useAuth';
 import { getAllTenants } from '../../../../services/admin/tenantService';
+import { getPrograms, getUserPrograms, bulkAssignUserToPrograms, type Program } from '../../../../services/admin/programService';
 import { Tenant } from '../../../../types';
 
 interface UserFormProps {
@@ -16,6 +17,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
   const { hasRole } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('');
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     email: user?.email || '',
     password: '',
@@ -55,6 +58,20 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
       loadTenants();
     }
   }, [hasRole]);
+
+  // Load programs when tenant is selected or when editing user
+  useEffect(() => {
+    if (selectedTenantId) {
+      loadPrograms(selectedTenantId);
+    }
+  }, [selectedTenantId]);
+
+  // Load user's existing programs when editing
+  useEffect(() => {
+    if (user?.id) {
+      loadUserPrograms(user.id);
+    }
+  }, [user]);
 
   // Initialize selected tenant when user changes
   useEffect(() => {
@@ -252,6 +269,17 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         }
       }
 
+      // Handle program assignments for instructors and coordinators
+      const userId = user?.id || authData?.user?.id;
+      if (userId && (formData.role === 'instructor' || formData.role === 'coordinator') && selectedProgramIds.length > 0) {
+        const { error: programError } = await bulkAssignUserToPrograms(userId, selectedProgramIds);
+        if (programError) {
+          console.error('Error assigning programs:', programError);
+          setError('User saved but failed to assign programs: ' + parseAuthError(programError));
+          return;
+        }
+      }
+
       onSuccess();
     } catch (error: any) {
       setError(parseAuthError(error));
@@ -359,10 +387,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
               disabled={!canEditRole}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
             >
               <option value="nurse">Nurse</option>
+              {hasRole(['admin', 'super_admin', 'coordinator']) && <option value="instructor">Instructor</option>}
               {hasRole(['admin', 'super_admin']) && <option value="admin">Admin</option>}
+              {hasRole(['super_admin', 'coordinator']) && <option value="coordinator">Coordinator</option>}
               {hasRole('super_admin') && <option value="super_admin">Super Admin</option>}
             </select>
           </div>
@@ -398,6 +428,42 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
                   Changing tenant will reassign the user
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Program Assignment for Instructors and Coordinators */}
+          {(formData.role === 'instructor' || formData.role === 'coordinator') && programs.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Tag className="inline h-4 w-4 mr-1" />
+                Assigned Programs
+              </label>
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 space-y-2">
+                {programs.map((program) => (
+                  <label key={program.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedProgramIds.includes(program.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProgramIds([...selectedProgramIds, program.id]);
+                        } else {
+                          setSelectedProgramIds(selectedProgramIds.filter(id => id !== program.id));
+                        }
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm">
+                      <span className="font-medium text-blue-600">{program.code}</span> - {program.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.role === 'instructor' 
+                  ? 'Instructors will only see simulations and templates for their assigned programs'
+                  : 'Coordinators can see all programs but filter views by these programs'}
+              </p>
             </div>
           )}
 

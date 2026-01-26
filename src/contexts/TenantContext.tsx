@@ -71,8 +71,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const { user, profile, loading: authLoading } = useAuth();
 
-  // Check if user is a multi-tenant admin (system admin)
-  const isMultiTenantAdmin = profile?.role === 'super_admin';
+  // Check if user is a multi-tenant admin (system admin or coordinator)
+  const isMultiTenantAdmin = profile?.role === 'super_admin' || profile?.role === 'coordinator';
 
   /**
    * Load current user's tenant or super admin selected tenant

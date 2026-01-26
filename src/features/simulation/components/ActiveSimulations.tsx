@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
 import { supabase } from '../../../lib/api/supabase';
+import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 
 const ActiveSimulations: React.FC = () => {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
@@ -26,6 +27,9 @@ const ActiveSimulations: React.FC = () => {
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [editCategoriesModal, setEditCategoriesModal] = useState<{ sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null>(null);
   const [completingSimulation, setCompletingSimulation] = useState<SimulationActiveWithDetails | null>(null);
+  
+  // Get user's program access
+  const { filterByPrograms, canSeeAllPrograms, programCodes, isInstructor } = useUserProgramAccess();
 
   useEffect(() => {
     loadSimulations();
@@ -241,8 +245,20 @@ const ActiveSimulations: React.FC = () => {
     );
   }
 
-  // Filter simulations based on selected categories
+  // Filter simulations based on selected categories AND user program access
   const filteredSimulations = simulations.filter(sim => {
+    // First filter by user's program access (instructors only see their programs)
+    if (!canSeeAllPrograms) {
+      if (!sim.primary_categories || sim.primary_categories.length === 0) {
+        // Uncategorized simulations visible to all
+        return true;
+      }
+      // Check if user has access to at least one of the simulation's programs
+      const hasAccess = sim.primary_categories.some(cat => programCodes.includes(cat));
+      if (!hasAccess) return false;
+    }
+    
+    // Then apply UI filter selections
     const matchesPrimary = selectedPrimaryCategories.length === 0 || 
       (sim.primary_categories && sim.primary_categories.some(cat => selectedPrimaryCategories.includes(cat)));
     const matchesSub = selectedSubCategories.length === 0 || 

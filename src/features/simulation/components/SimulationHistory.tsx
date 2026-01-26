@@ -13,6 +13,7 @@ import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
 import { formatDistanceToNow, differenceInMinutes, format } from 'date-fns';
+import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 
 type TabType = 'active' | 'archived';
 
@@ -28,6 +29,9 @@ const SimulationHistory: React.FC = () => {
   const [instructorFilter, setInstructorFilter] = useState<string>('');
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // Get user's program access
+  const { filterByPrograms, canSeeAllPrograms, programCodes, isInstructor } = useUserProgramAccess();
 
   useEffect(() => {
     loadHistory();
@@ -220,8 +224,19 @@ const SimulationHistory: React.FC = () => {
     return result;
   }, [history, activeTab]);
 
-  // Filter history based on search query, instructor filter, and folder navigation
+  // Filter history based on search query, instructor filter, folder navigation, AND user program access
   const filteredHistory = history.filter(record => {
+    // Program access filter (instructors only see their programs)
+    if (!canSeeAllPrograms) {
+      if (!record.primary_categories || record.primary_categories.length === 0) {
+        // Uncategorized reports visible to all
+        return true;
+      }
+      // Check if user has access to at least one of the simulation's programs
+      const hasAccess = record.primary_categories.some(cat => programCodes.includes(cat));
+      if (!hasAccess) return false;
+    }
+    
     // Folder navigation filter (for archived tab)
     if (activeTab === 'archived' && selectedInstructor) {
       if (record.instructor_name !== selectedInstructor) return false;
