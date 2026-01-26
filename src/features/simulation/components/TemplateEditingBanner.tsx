@@ -17,15 +17,30 @@ interface TemplateEditingInfo {
 
 export const TemplateEditingBanner: React.FC = () => {
   const [editingInfo, setEditingInfo] = useState<TemplateEditingInfo | null>(null);
+  const [originalTenantId, setOriginalTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { currentTenant, switchToTenant, tenants } = useTenant();
 
   useEffect(() => {
     // Check if we're editing a template on mount
-    const checkEditingState = () => {
+    const checkEditingState = async () => {
       const stored = sessionStorage.getItem('editing_template');
       console.log('🔍 Checking editing state:', stored);
       if (stored) {
-        setEditingInfo(JSON.parse(stored));
+        const info: TemplateEditingInfo = JSON.parse(stored);
+        setEditingInfo(info);
+        
+        // Save current tenant to restore later
+        if (currentTenant) {
+          setOriginalTenantId(currentTenant.id);
+          console.log('💾 Saved original tenant:', currentTenant.name);
+        }
+        
+        // Switch to the template's tenant so all queries work naturally
+        if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
+          console.log('🔄 Switching to template tenant:', info.tenant_id);
+          await switchToTenant(info.tenant_id);
+        }
       } else {
         setEditingInfo(null);
       }
@@ -35,9 +50,20 @@ export const TemplateEditingBanner: React.FC = () => {
     checkEditingState();
 
     // Listen for custom event when editing starts
-    const handleEditStart = (e: CustomEvent) => {
+    const handleEditStart = async (e: CustomEvent) => {
       console.log('📢 Received template-edit-start event:', e.detail);
-      setEditingInfo(e.detail);
+      const info = e.detail as TemplateEditingInfo;
+      setEditingInfo(info);
+      
+      // Save current tenant
+      if (currentTenant) {
+        setOriginalTenantId(currentTenant.id);
+      }
+      
+      // Switch to template's tenant
+      if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
+        await switchToTenant(info.tenant_id);
+      }
     };
 
     window.addEventListener('template-edit-start', handleEditStart as EventListener);
@@ -45,7 +71,7 @@ export const TemplateEditingBanner: React.FC = () => {
     return () => {
       window.removeEventListener('template-edit-start', handleEditStart as EventListener);
     };
-  }, []);
+  }, [currentTenant, switchToTenant]);
 
   const handleExitTemplate = async () => {
     if (!editingInfo) return;
@@ -53,6 +79,14 @@ export const TemplateEditingBanner: React.FC = () => {
     // Clear the editing state
     sessionStorage.removeItem('editing_template');
     setEditingInfo(null);
+
+    // Switch back to original tenant if we saved it
+    if (originalTenantId && originalTenantId !== currentTenant?.id) {
+      console.log('🔙 Restoring original tenant:', originalTenantId);
+      await switchToTenant(originalTenantId);
+    }
+    
+    setOriginalTenantId(null);
 
     // Navigate back to simulations/templates tab
     navigate('/app');

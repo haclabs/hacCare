@@ -62,7 +62,6 @@ function App() {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
   const [editingTemplate, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
-  const [templatePatients, setTemplatePatients] = useState<Patient[]>([]);
 
   // Listen for sidebar toggle events
   useEffect(() => {
@@ -75,51 +74,29 @@ function App() {
     };
   }, []);
 
-  // Check for template editing mode and load template patients
+  // Check for template editing mode
   useEffect(() => {
-    const loadTemplatePatients = async () => {
-      const editInfoStr = sessionStorage.getItem('editing_template');
-      if (editInfoStr) {
-        try {
-          const editInfo = JSON.parse(editInfoStr);
-          setEditingTemplate(editInfo);
-          console.log('📝 Template editing mode active:', editInfo);
-          
-          // Import Supabase client dynamically
-          const { supabase } = await import('./lib/supabase');
-          
-          // Load the template snapshot data
-          const { data: template, error } = await supabase
-            .from('simulation_templates')
-            .select('snapshot_data')
-            .eq('id', editInfo.template_id)
-            .single();
-          
-          if (error) {
-            console.error('❌ Error loading template snapshot:', error);
-            return;
-          }
-          
-          if (template?.snapshot_data) {
-            const snapshotData = template.snapshot_data as any;
-            const patients = snapshotData.patients || [];
-            console.log('✅ Loaded template patients:', patients.length);
-            setTemplatePatients(patients);
-          }
-        } catch (error) {
-          console.error('❌ Error parsing editing_template:', error);
-        }
-      } else {
-        setEditingTemplate(null);
-        setTemplatePatients([]);
+    const editInfoStr = sessionStorage.getItem('editing_template');
+    if (editInfoStr) {
+      try {
+        const editInfo = JSON.parse(editInfoStr);
+        setEditingTemplate(editInfo);
+        console.log('📝 Template editing mode active:', editInfo);
+      } catch (error) {
+        console.error('❌ Error parsing editing_template:', error);
       }
-    };
-    
-    loadTemplatePatients();
+    } else {
+      setEditingTemplate(null);
+    }
     
     // Listen for template editing changes
     const handleTemplateEditChange = () => {
-      loadTemplatePatients();
+      const updatedEditInfo = sessionStorage.getItem('editing_template');
+      if (updatedEditInfo) {
+        setEditingTemplate(JSON.parse(updatedEditInfo));
+      } else {
+        setEditingTemplate(null);
+      }
     };
     window.addEventListener('template-edit-change', handleTemplateEditChange);
     return () => {
@@ -146,10 +123,7 @@ function App() {
   }, [location.pathname, navigate]);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
-  const { patients: tenantPatients = [], error: dbError } = useMultiTenantPatients();
-  
-  // Use template patients if in editing mode, otherwise use tenant patients
-  const patients = editingTemplate ? templatePatients : tenantPatients;
+  const { patients = [], error: dbError } = useMultiTenantPatients();
   
   // Get alerts from AlertContext (avoid React Query conflicts)
   const { alerts } = useAlertContext();

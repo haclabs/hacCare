@@ -94,9 +94,10 @@ const SimulationTemplates: React.FC = () => {
     console.log('💾 Storing edit info:', editInfo);
     sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
 
-    // Navigate to patients page - we'll show template data there
-    // (Template data lives in snapshot_data, not a separate tenant)
+    // Navigate to patients page - template data is in the template's tenant
+    // The TemplateEditingBanner will show the purple banner
     console.log('🚀 Navigating to /app');
+    navigate('/app');
   };
   
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
