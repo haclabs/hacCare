@@ -133,6 +133,13 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     try {
       if (user) {
         // Update existing user
+        console.log('Updating user profile:', {
+          userId: user.id,
+          role: formData.role,
+          selectedTenantId,
+          selectedProgramIds
+        });
+
         const { error: updateError } = await supabase
           .from('user_profiles')
           .update({
@@ -148,9 +155,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           .eq('id', user.id);
 
         if (updateError) {
+          console.error('Error updating user profile:', updateError);
           setError(parseAuthError(updateError));
           return;
         }
+
+        console.log('✅ User profile updated successfully');
 
         // Handle tenant assignment for super admin
         if (hasRole('super_admin') && selectedTenantId) {
@@ -285,12 +295,23 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
       // Handle program assignments for instructors and coordinators
       const userId = user?.id || authData?.user?.id;
-      if (userId && (formData.role === 'instructor' || formData.role === 'coordinator') && selectedProgramIds.length > 0) {
+      if (userId && (formData.role === 'instructor' || formData.role === 'coordinator')) {
+        // Always run bulkAssignUserToPrograms - it will clear old assignments if empty
+        console.log('Assigning programs to user:', { userId, programIds: selectedProgramIds });
         const { error: programError } = await bulkAssignUserToPrograms(userId, selectedProgramIds);
         if (programError) {
           console.error('Error assigning programs:', programError);
           setError('User saved but failed to assign programs: ' + parseAuthError(programError));
           return;
+        }
+        console.log('✅ Programs assigned successfully');
+      } else if (userId) {
+        // If changing away from instructor/coordinator, clear all program assignments
+        console.log('Clearing program assignments for non-instructor/coordinator role');
+        const { error: programError } = await bulkAssignUserToPrograms(userId, []);
+        if (programError) {
+          console.error('Error clearing programs:', programError);
+          // Don't fail on this, just log it
         }
       }
 
