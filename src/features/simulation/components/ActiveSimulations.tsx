@@ -249,12 +249,21 @@ const ActiveSimulations: React.FC = () => {
   const filteredSimulations = simulations.filter(sim => {
     // First filter by user's program access (instructors only see their programs)
     if (!canSeeAllPrograms) {
+      console.log('🔍 Filtering simulation for instructor:', {
+        simulationName: sim.name,
+        primaryCategories: sim.primary_categories,
+        userProgramCodes: programCodes,
+        canSeeAllPrograms
+      });
+      
       if (!sim.primary_categories || sim.primary_categories.length === 0) {
         // Uncategorized simulations visible to all
+        console.log('✅ Uncategorized simulation - visible to all');
         return true;
       }
       // Check if user has access to at least one of the simulation's programs
       const hasAccess = sim.primary_categories.some(cat => programCodes.includes(cat));
+      console.log(hasAccess ? '✅ User has access' : '❌ User does NOT have access');
       if (!hasAccess) return false;
     }
     
@@ -264,6 +273,14 @@ const ActiveSimulations: React.FC = () => {
     const matchesSub = selectedSubCategories.length === 0 || 
       (sim.sub_categories && sim.sub_categories.some(cat => selectedSubCategories.includes(cat)));
     return matchesPrimary && matchesSub;
+  });
+
+  console.log('📊 Simulation filtering results:', {
+    totalSimulations: simulations.length,
+    filteredSimulations: filteredSimulations.length,
+    userProgramCodes: programCodes,
+    isInstructor,
+    canSeeAllPrograms
   });
 
   if (simulations.length === 0) {
