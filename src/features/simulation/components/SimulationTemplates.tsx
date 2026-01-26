@@ -196,16 +196,7 @@ const SimulationTemplates: React.FC = () => {
                 </div>
 
                 {template.description && (
-                  <p className="text-sm tEditTemplate(template)}
-                    disabled={actionLoading === template.id}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    title="Edit template patients and data"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleext-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
                     {template.description}
                   </p>
                 )}
@@ -223,6 +214,15 @@ const SimulationTemplates: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleEditTemplate(template)}
+                    disabled={actionLoading === template.id}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    title="Edit template patients and data"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </button>
                   <button
                     onClick={() => handleLaunch(template)}
                     disabled={!template.snapshot_data || actionLoading === template.id}
