@@ -132,7 +132,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
     try {
       if (user) {
-        // Update existing user
+        // Update existing user using RPC to bypass RLS restrictions
         console.log('Updating user profile:', {
           userId: user.id,
           role: formData.role,
@@ -140,19 +140,18 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           selectedProgramIds
         });
 
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            role: formData.role,
-            // Note: department field removed - now using user_programs junction table
-            license_number: formData.license_number,
-            phone: formData.phone,
-            is_active: formData.is_active,
-            simulation_only: formData.simulation_only,
-          })
-          .eq('id', user.id);
+        const { data: rpcResult, error: updateError } = await supabase
+          .rpc('update_user_profile_admin', {
+            p_user_id: user.id,
+            p_first_name: formData.first_name,
+            p_last_name: formData.last_name,
+            p_role: formData.role,
+            p_department: formData.department || null,
+            p_license_number: formData.license_number || null,
+            p_phone: formData.phone || null,
+            p_is_active: formData.is_active,
+            p_simulation_only: formData.simulation_only
+          });
 
         if (updateError) {
           console.error('Error updating user profile:', updateError);
@@ -160,7 +159,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           return;
         }
 
-        console.log('✅ User profile updated successfully');
+        console.log('✅ User profile updated successfully via RPC:', rpcResult);
 
         // Handle tenant assignment for super admin
         if (hasRole('super_admin') && selectedTenantId) {
