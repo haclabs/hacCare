@@ -350,16 +350,16 @@ export const UserManagement: React.FC = () => {
           user={selectedUser}
           onClose={() => {
             setShowForm(false);
-            setSelectasync () => {
+            setSelectedUser(null);
+          }}
+          onSuccess={async () => {
             console.log('✅ User form saved successfully, refreshing user list...');
             setShowForm(false);
             setSelectedUser(null);
             // Small delay to ensure database changes propagate
             await new Promise(resolve => setTimeout(resolve, 500));
             await fetchUsers();
-            console.log('✅ User list refreshed'(false);
-            setSelectedUser(null);
-            fetchUsers();
+            console.log('✅ User list refreshed');
           }}
         />
       )}
