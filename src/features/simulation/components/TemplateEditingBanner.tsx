@@ -12,13 +12,12 @@ import { useTenant } from '../../../contexts/TenantContext';
 interface TemplateEditingInfo {
   template_id: string;
   template_name: string;
-  original_tenant_id: string;
+  tenant_id: string;
 }
 
 export const TemplateEditingBanner: React.FC = () => {
   const [editingInfo, setEditingInfo] = useState<TemplateEditingInfo | null>(null);
   const navigate = useNavigate();
-  const { userTenants, switchToTenant } = useTenant();
 
   useEffect(() => {
     // Check if we're editing a template
@@ -30,13 +29,6 @@ export const TemplateEditingBanner: React.FC = () => {
 
   const handleExitTemplate = async () => {
     if (!editingInfo) return;
-
-    // Find the user's default tenant (not the template tenant)
-    const defaultTenant = userTenants.find(t => t.id !== editingInfo.original_tenant_id);
-    
-    if (defaultTenant) {
-      await switchToTenant(defaultTenant.id);
-    }
 
     // Clear the editing state
     sessionStorage.removeItem('editing_template');

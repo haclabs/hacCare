@@ -84,19 +84,18 @@ const SimulationTemplates: React.FC = () => {
 
 
   const handleEditTemplate = async (template: SimulationTemplateWithDetails) => {
-    // Store the template ID and tenant info in session storage for "Exit Template" button
+    // Store the template being edited in session storage
     sessionStorage.setItem('editing_template', JSON.stringify({
       template_id: template.id,
       template_name: template.name,
-      original_tenant_id: template.tenant_id
+      tenant_id: template.tenant_id
     }));
 
-    // Switch to the template's tenant
-    await switchToTenant(template.tenant_id);
-    
-    // Navigate to the patients page
+    // Navigate to patients page - we'll show template data there
+    // (Template data lives in snapshot_data, not a separate tenant)
     navigate('/app');
   };
+  
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
     setSelectedTemplate(template);
     setShowLaunchModal(true);
