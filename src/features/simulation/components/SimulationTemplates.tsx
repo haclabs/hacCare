@@ -220,46 +220,55 @@ const SimulationTemplates: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleEditTemplate(template)}
-                    disabled={actionLoading === template.id}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    title="Edit template patients and data"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleLaunch(template)}
-                    disabled={!template.snapshot_data || actionLoading === template.id}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    title={!template.snapshot_data ? 'Save snapshot first' : 'Launch simulation'}
-                  >
-                    <Play className="h-4 w-4" />
-                    Launch
-                  </button>
-                  <button
-                    onClick={() => handleSaveSnapshot(template.id)}
-                    disabled={actionLoading === template.id}
-                    className="p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg disabled:opacity-50"
-                    title="Save current state as snapshot"
-                  >
-                    <Save className="h-4 w-4" />
-                  </button>
-                  <TemplateExportButton
-                    templateId={template.id}
-                    templateName={template.name}
-                    disabled={!template.snapshot_data || actionLoading === template.id}
-                  />
-                  <button
-                    onClick={() => handleDelete(template.id)}
-                    disabled={actionLoading === template.id}
-                    className="p-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg disabled:opacity-50"
-                    title="Delete template"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="flex flex-col gap-2">
+                  {/* Primary Actions Row */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditTemplate(template)}
+                      disabled={actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      title="Edit template patients and data"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleLaunch(template)}
+                      disabled={!template.snapshot_data || actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      title={!template.snapshot_data ? 'Save snapshot first' : 'Launch simulation'}
+                    >
+                      <Play className="h-4 w-4" />
+                      <span className="hidden sm:inline">Launch</span>
+                    </button>
+                  </div>
+                  
+                  {/* Secondary Actions Row */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSaveSnapshot(template.id)}
+                      disabled={actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg disabled:opacity-50 text-sm"
+                      title="Save current state as snapshot"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span className="hidden sm:inline">Save</span>
+                    </button>
+                    <TemplateExportButton
+                      templateId={template.id}
+                      templateName={template.name}
+                      disabled={!template.snapshot_data || actionLoading === template.id}
+                    />
+                    <button
+                      onClick={() => handleDelete(template.id)}
+                      disabled={actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg disabled:opacity-50 text-sm"
+                      title="Delete template"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
