@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Play, Save, Trash2, Camera, Upload } from 'lucide-react';
+import { FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate } from '../../../services/simulation/simulationService';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import CreateTemplateModal from './CreateTemplateModal';
@@ -16,6 +16,8 @@ import TemplateExportButton from './TemplateExportButton';
 import TemplateImportModal from './TemplateImportModal';
 import { formatDistanceToNow } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import { useNavigate } from 'react-router-dom';
+import { useTenant } from '../../../contexts/TenantContext';
 
 const SimulationTemplates: React.FC = () => {
   const [templates, setTemplates] = useState<SimulationTemplateWithDetails[]>([]);
@@ -23,6 +25,8 @@ const SimulationTemplates: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const navigate = useNavigate();
+  const { setCurrentTenant } = useTenant();
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -78,6 +82,21 @@ const SimulationTemplates: React.FC = () => {
     }
   };
 
+
+  const handleEditTemplate = async (template: SimulationTemplateWithDetails) => {
+    // Store the template ID and tenant info in session storage for "Exit Template" button
+    sessionStorage.setItem('editing_template', JSON.stringify({
+      template_id: template.id,
+      template_name: template.name,
+      original_tenant_id: template.tenant_id
+    }));
+
+    // Switch to the template's tenant
+    await setCurrentTenant(template.tenant_id);
+    
+    // Navigate to the patients page
+    navigate('/app');
+  };
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
     setSelectedTemplate(template);
     setShowLaunchModal(true);
@@ -177,7 +196,16 @@ const SimulationTemplates: React.FC = () => {
                 </div>
 
                 {template.description && (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
+                  <p className="text-sm tEditTemplate(template)}
+                    disabled={actionLoading === template.id}
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    title="Edit template patients and data"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleext-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
                     {template.description}
                   </p>
                 )}

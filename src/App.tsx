@@ -13,6 +13,7 @@ import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
 import { AuthCallback } from './components/Auth/AuthCallback';
+import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 
 // Lazy-loaded feature components for better code splitting
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
@@ -641,7 +642,10 @@ function App() {
       {/* Main Layout - Offset by sidebar width */}
       <div className={`transition-all duration-300 ${ 
         sidebarCollapsed ? 'ml-20' : 'ml-64'
-      }`}>
+      }`}>Template Editing Banner - Shows when editing a template */}
+        <TemplateEditingBanner />
+        
+        {/* 
         {/* Simulation Mode Banner */}
         <SimulationBanner />
         
