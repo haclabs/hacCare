@@ -111,6 +111,20 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     }
   };
 
+  const loadPrograms = async (tenantId: string) => {
+    const { data, error } = await getPrograms(tenantId);
+    if (!error && data) {
+      setPrograms(data);
+    }
+  };
+
+  const loadUserPrograms = async (userId: string) => {
+    const { data, error } = await getUserPrograms(userId);
+    if (!error && data) {
+      setSelectedProgramIds(data.map(up => up.program_id));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
