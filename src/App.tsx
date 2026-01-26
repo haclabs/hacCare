@@ -642,10 +642,10 @@ function App() {
       {/* Main Layout - Offset by sidebar width */}
       <div className={`transition-all duration-300 ${ 
         sidebarCollapsed ? 'ml-20' : 'ml-64'
-      }`}>Template Editing Banner - Shows when editing a template */}
+      }`}>
+        {/* Template Editing Banner - Shows when editing a template */}
         <TemplateEditingBanner />
         
-        {/* 
         {/* Simulation Mode Banner */}
         <SimulationBanner />
         
