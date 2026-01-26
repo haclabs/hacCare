@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3, Settings, Printer } from 'lucide-react';
+import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3, Settings, Printer, Tag } from 'lucide-react';
 import { Tenant, ManagementDashboardStats, TenantUser } from '../../../../types';
 import { supabase } from '../../../../lib/api/supabase';
 import {
@@ -15,9 +15,10 @@ import { getTenantPatientStats } from '../../../../services/patient/multiTenantP
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 import { TenantSettings } from './TenantSettings';
 import BulkLabelPrint from '../BulkLabelPrint';
+import ProgramManagement from './ProgramManagement';
 
 export const ManagementDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'bulk-print'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'programs' | 'settings' | 'bulk-print'>('overview');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [stats, setStats] = useState<ManagementDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -192,6 +193,19 @@ export const ManagementDashboard: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Building2 className="h-4 w-4" />
               <span>Tenant Overview</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('programs')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'programs'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Tag className="h-4 w-4" />
+              <span>Programs</span>
             </div>
           </button>
           <button
@@ -501,6 +515,9 @@ export const ManagementDashboard: React.FC = () => {
         />
       )}
         </>
+      ) : activeTab === 'programs' ? (
+        /* Program Management Tab */
+        <ProgramManagement />
       ) : activeTab === 'settings' ? (
         /* Tenant Settings Tab */
         <TenantSettings />

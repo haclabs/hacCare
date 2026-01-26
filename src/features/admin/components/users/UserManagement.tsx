@@ -19,6 +19,7 @@ export const UserManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('🔄 Fetching users from database...');
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -27,6 +28,7 @@ export const UserManagement: React.FC = () => {
       if (error) {
         console.error('Error fetching users:', error);
       } else {
+        console.log(`✅ Fetched ${data?.length || 0} users`);
         setUsers(data || []);
       }
     } catch (error) {
@@ -350,10 +352,14 @@ export const UserManagement: React.FC = () => {
             setShowForm(false);
             setSelectedUser(null);
           }}
-          onSuccess={() => {
+          onSuccess={async () => {
+            console.log('✅ User form saved successfully, refreshing user list...');
             setShowForm(false);
             setSelectedUser(null);
-            fetchUsers();
+            // Small delay to ensure database changes propagate
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await fetchUsers();
+            console.log('✅ User list refreshed');
           }}
         />
       )}

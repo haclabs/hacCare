@@ -52,8 +52,8 @@ const SimulationManager: React.FC = () => {
             <div className="flex items-start gap-2">
               <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-900 dark:text-blue-100">
-                <strong>Admin Access:</strong> Only administrators and super admins can access this simulation management interface.
-                Simulation-only users will only see simulations they are assigned to.
+                <strong>Simulation Management:</strong> Admins, coordinators, and instructors can create templates and manage simulations.
+                Instructors see only simulations for their assigned programs.
               </div>
             </div>
           </div>

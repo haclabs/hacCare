@@ -13,6 +13,7 @@ import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
 import { AuthCallback } from './components/Auth/AuthCallback';
+import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 
 // Lazy-loaded feature components for better code splitting
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
@@ -60,6 +61,7 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
+  const [editingTemplate, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
 
   // Listen for sidebar toggle events
   useEffect(() => {
@@ -71,6 +73,50 @@ function App() {
       window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
     };
   }, []);
+
+  // Listen for tab change events
+  useEffect(() => {
+    const handleTabChange = (e: CustomEvent) => {
+      if (e.detail?.tab) {
+        console.log('📍 Tab change event received:', e.detail.tab);
+        setActiveTab(e.detail.tab);
+      }
+    };
+    window.addEventListener('change-tab', handleTabChange as EventListener);
+    return () => {
+      window.removeEventListener('change-tab', handleTabChange as EventListener);
+    };
+  }, []);
+
+  // Check for template editing mode
+  useEffect(() => {
+    const editInfoStr = sessionStorage.getItem('editing_template');
+    if (editInfoStr) {
+      try {
+        const editInfo = JSON.parse(editInfoStr);
+        setEditingTemplate(editInfo);
+        console.log('📝 Template editing mode active:', editInfo);
+      } catch (error) {
+        console.error('❌ Error parsing editing_template:', error);
+      }
+    } else {
+      setEditingTemplate(null);
+    }
+    
+    // Listen for template editing changes
+    const handleTemplateEditChange = () => {
+      const updatedEditInfo = sessionStorage.getItem('editing_template');
+      if (updatedEditInfo) {
+        setEditingTemplate(JSON.parse(updatedEditInfo));
+      } else {
+        setEditingTemplate(null);
+      }
+    };
+    window.addEventListener('template-edit-change', handleTemplateEditChange);
+    return () => {
+      window.removeEventListener('template-edit-change', handleTemplateEditChange);
+    };
+  }, [location.pathname]);
   // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Detect simulation subdomain and redirect to simulation portal
@@ -642,6 +688,9 @@ function App() {
       <div className={`transition-all duration-300 ${ 
         sidebarCollapsed ? 'ml-20' : 'ml-64'
       }`}>
+        {/* Template Editing Banner - Shows when editing a template */}
+        <TemplateEditingBanner />
+        
         {/* Simulation Mode Banner */}
         <SimulationBanner />
         

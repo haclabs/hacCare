@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Play, Save, Trash2, Camera, Upload } from 'lucide-react';
+import { FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate } from '../../../services/simulation/simulationService';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import CreateTemplateModal from './CreateTemplateModal';
@@ -15,6 +15,8 @@ import LaunchSimulationModal from './LaunchSimulationModal';
 import TemplateExportButton from './TemplateExportButton';
 import TemplateImportModal from './TemplateImportModal';
 import { formatDistanceToNow } from 'date-fns';
+import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import { useNavigate } from 'react-router-dom';
 
 const SimulationTemplates: React.FC = () => {
   const [templates, setTemplates] = useState<SimulationTemplateWithDetails[]>([]);
@@ -22,8 +24,12 @@ const SimulationTemplates: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showLaunchModal, setShowLaunchModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Get user's program access
+  const { filterByPrograms, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
 
   useEffect(() => {
     loadTemplates();
@@ -74,6 +80,33 @@ const SimulationTemplates: React.FC = () => {
     }
   };
 
+
+  const handleEditTemplate = async (template: SimulationTemplateWithDetails) => {
+    // Store the template being edited in session storage
+    console.log('🎨 Edit Template clicked:', template.name, template.id);
+    
+    // Store the template being edited in session storage
+    const editInfo = {
+      template_id: template.id,
+      template_name: template.name,
+      tenant_id: template.tenant_id
+    };
+    console.log('💾 Storing edit info:', editInfo);
+    sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
+
+    // Navigate to patients page and trigger template edit mode
+    console.log('🚀 Navigating to patients view and triggering template-edit-start event');
+    
+    // Dispatch event to notify TemplateEditingBanner with the template info
+    window.dispatchEvent(new CustomEvent('template-edit-start', { detail: editInfo }));
+    
+    // Change to patients tab
+    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'patients' } }));
+    
+    // Navigate to main app view
+    navigate('/app');
+  };
+  
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
     setSelectedTemplate(template);
     setShowLaunchModal(true);
@@ -118,26 +151,34 @@ const SimulationTemplates: React.FC = () => {
           </div>
         </div>
 
-        {/* Templates Grid */}
-        {templates.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-              No Templates Yet
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              Create your first simulation template to get started
-            </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Create Template
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
+        {/* Templates Grid - Filter by user program access */}
+        {(() => {
+          // Apply program filtering
+          const filteredTemplates = filterByPrograms(templates);
+          
+          return filteredTemplates.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                {isInstructor ? 'No Templates in Your Program' : 'No Templates Yet'}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                {isInstructor 
+                  ? 'Templates must be tagged with your program to appear here'
+                  : 'Create your first simulation template to get started'}
+              </p>
+              {canSeeAllPrograms && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Create Template
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTemplates.map((template) => (
               <div
                 key={template.id}
                 className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6 hover:shadow-lg transition-shadow"
@@ -182,42 +223,61 @@ const SimulationTemplates: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleLaunch(template)}
-                    disabled={!template.snapshot_data || actionLoading === template.id}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    title={!template.snapshot_data ? 'Save snapshot first' : 'Launch simulation'}
-                  >
-                    <Play className="h-4 w-4" />
-                    Launch
-                  </button>
-                  <button
-                    onClick={() => handleSaveSnapshot(template.id)}
-                    disabled={actionLoading === template.id}
-                    className="p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg disabled:opacity-50"
-                    title="Save current state as snapshot"
-                  >
-                    <Save className="h-4 w-4" />
-                  </button>
-                  <TemplateExportButton
-                    templateId={template.id}
-                    templateName={template.name}
-                    disabled={!template.snapshot_data || actionLoading === template.id}
-                  />
-                  <button
-                    onClick={() => handleDelete(template.id)}
-                    disabled={actionLoading === template.id}
-                    className="p-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg disabled:opacity-50"
-                    title="Delete template"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="flex flex-col gap-2">
+                  {/* Primary Actions Row */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditTemplate(template)}
+                      disabled={actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      title="Edit template patients and data"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleLaunch(template)}
+                      disabled={!template.snapshot_data || actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      title={!template.snapshot_data ? 'Save snapshot first' : 'Launch simulation'}
+                    >
+                      <Play className="h-4 w-4" />
+                      <span className="hidden sm:inline">Launch</span>
+                    </button>
+                  </div>
+                  
+                  {/* Secondary Actions Row */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSaveSnapshot(template.id)}
+                      disabled={actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg disabled:opacity-50 text-sm"
+                      title="Save current state as snapshot"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span className="hidden sm:inline">Save</span>
+                    </button>
+                    <TemplateExportButton
+                      templateId={template.id}
+                      templateName={template.name}
+                      disabled={!template.snapshot_data || actionLoading === template.id}
+                    />
+                    <button
+                      onClick={() => handleDelete(template.id)}
+                      disabled={actionLoading === template.id}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg disabled:opacity-50 text-sm"
+                      title="Delete template"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
+          );
+        })()}
 
         {/* How To Guide */}
         <div className="mt-8 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">

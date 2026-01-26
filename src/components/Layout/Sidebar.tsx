@@ -84,15 +84,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
-    ...(hasRole(['admin', 'super_admin']) ? [
+    ...(hasRole(['admin', 'super_admin', 'coordinator', 'instructor']) ? [
       { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600' }
     ] : []),
   ];
 
   /**
-   * Admin items - only for super admins
+   * Admin items - for super admins and coordinators
    */
-  const adminItems = hasRole('super_admin') ? [
+  const adminItems = hasRole(['super_admin', 'coordinator']) ? [
     { id: 'patient-management', label: 'Patient Templates', icon: UserPlus, color: 'text-purple-600' },
     { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
     { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
