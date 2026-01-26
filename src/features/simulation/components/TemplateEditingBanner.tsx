@@ -19,13 +19,13 @@ export const TemplateEditingBanner: React.FC = () => {
   const [editingInfo, setEditingInfo] = useState<TemplateEditingInfo | null>(null);
   const [originalTenantId, setOriginalTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { currentTenant, switchToTenant, tenants } = useTenant();
+  const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
 
   useEffect(() => {
     // Check if we're editing a template on mount
     const checkEditingState = async () => {
       const stored = sessionStorage.getItem('editing_template');
-      console.log('🔍 Checking editing state:', stored);
+      console.log('🔍 Banner: Checking editing state:', stored);
       if (stored) {
         const info: TemplateEditingInfo = JSON.parse(stored);
         setEditingInfo(info);
@@ -33,16 +33,25 @@ export const TemplateEditingBanner: React.FC = () => {
         // Save current tenant to restore later
         if (currentTenant) {
           setOriginalTenantId(currentTenant.id);
-          console.log('💾 Saved original tenant:', currentTenant.name);
+          console.log('💾 Banner: Saved original tenant:', currentTenant.name, currentTenant.id);
         }
         
         // Switch to the template's tenant so all queries work naturally
+        // Use enterTemplateTenant (available to instructors/admins) for template editing
         if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
-          console.log('🔄 Switching to template tenant:', info.tenant_id);
-          await switchToTenant(info.tenant_id);
+          console.log('🔄 Banner: Switching to template tenant:', info.tenant_id, 'from current:', currentTenant?.id);
+          try {
+            await enterTemplateTenant(info.tenant_id);
+            console.log('✅ Banner: Successfully switched to template tenant');
+          } catch (error) {
+            console.error('❌ Banner: Failed to switch to template tenant:', error);
+          }
+        } else {
+          console.log('ℹ️ Banner: Already in template tenant or tenant_id matches');
         }
       } else {
         setEditingInfo(null);
+        console.log('ℹ️ Banner: No editing_template found in sessionStorage');
       }
     };
 
@@ -51,18 +60,25 @@ export const TemplateEditingBanner: React.FC = () => {
 
     // Listen for custom event when editing starts
     const handleEditStart = async (e: CustomEvent) => {
-      console.log('📢 Received template-edit-start event:', e.detail);
+      console.log('📢 Banner: Received template-edit-start event:', e.detail);
       const info = e.detail as TemplateEditingInfo;
       setEditingInfo(info);
       
       // Save current tenant
       if (currentTenant) {
         setOriginalTenantId(currentTenant.id);
+        console.log('💾 Banner: Saved original tenant (from event):', currentTenant.name);
       }
       
       // Switch to template's tenant
       if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
-        await switchToTenant(info.tenant_id);
+        console.log('🔄 Banner: Switching to template tenant (from event):', info.tenant_id);
+        try {
+          await enterTemplateTenant(info.tenant_id);
+          console.log('✅ Banner: Successfully switched to template tenant (from event)');
+        } catch (error) {
+          console.error('❌ Banner: Failed to switch to template tenant (from event):', error);
+        }
       }
     };
 
@@ -71,19 +87,24 @@ export const TemplateEditingBanner: React.FC = () => {
     return () => {
       window.removeEventListener('template-edit-start', handleEditStart as EventListener);
     };
-  }, [currentTenant, switchToTenant]);
+  }, [currentTenant, enterTemplateTenant]);
 
   const handleExitTemplate = async () => {
     if (!editingInfo) return;
 
+    console.log('🚪 Banner: Exiting template editing mode');
+    
     // Clear the editing state
     sessionStorage.removeItem('editing_template');
     setEditingInfo(null);
 
-    // Switch back to original tenant if we saved it
-    if (originalTenantId && originalTenantId !== currentTenant?.id) {
-      console.log('🔙 Restoring original tenant:', originalTenantId);
-      await switchToTenant(originalTenantId);
+    // Exit template tenant (returns to home tenant)
+    try {
+      console.log('🔙 Banner: Exiting template tenant to restore original tenant');
+      await exitTemplateTenant();
+      console.log('✅ Banner: Successfully exited template tenant');
+    } catch (error) {
+      console.error('❌ Banner: Failed to exit template tenant:', error);
     }
     
     setOriginalTenantId(null);

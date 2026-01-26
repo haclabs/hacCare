@@ -66,6 +66,10 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
       } else if (event === 'SIGNED_OUT') {
         detectUserType();
         
+        // Clear template editing state on logout
+        sessionStorage.removeItem('editing_template');
+        console.log('🧹 Cleared template editing state on logout');
+        
         // End session tracking on logout
         try {
           await endUserSession();

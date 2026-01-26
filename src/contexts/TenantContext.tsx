@@ -31,6 +31,9 @@ interface TenantContextType {
   // Simulation tenant switching (available to all users)
   enterSimulationTenant: (tenantId: string) => Promise<void>;
   exitSimulationTenant: () => Promise<void>;
+  // Template editing tenant switching (available to instructors/admins)
+  enterTemplateTenant: (tenantId: string) => Promise<void>;
+  exitTemplateTenant: () => Promise<void>;
 }
 
 /**
@@ -330,6 +333,78 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   /**
+   * Enter a template's tenant for editing (available to instructors/admins)
+   * This allows instructors to temporarily switch to a template's tenant
+   */
+  const enterTemplateTenant = async (tenantId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('📝 Entering template tenant for editing:', tenantId);
+
+      // Fetch the tenant data
+      const { data: tenant, error: tenantError } = await getTenantById(tenantId);
+      if (tenantError) {
+        throw new Error(tenantError.message);
+      }
+
+      if (!tenant) {
+        throw new Error('Template tenant not found');
+      }
+
+      // Update state to template tenant
+      setSelectedTenantId(tenantId);
+      setCurrentTenant(tenant);
+      
+      // Persist template tenant to sessionStorage (not localStorage, since it's temporary)
+      sessionStorage.setItem('current_template_tenant', tenantId);
+      console.log('💾 Template tenant saved to sessionStorage');
+      
+      console.log('✅ Successfully entered template tenant:', tenant.name);
+    } catch (err) {
+      console.error('Error entering template tenant:', err);
+      setError(err instanceof Error ? err.message : 'Failed to enter template');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Exit template editing and return to user's home tenant
+   */
+  const exitTemplateTenant = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log('🚪 Exiting template tenant...');
+      
+      // Clear template tenant from sessionStorage
+      sessionStorage.removeItem('current_template_tenant');
+      console.log('🧹 Cleared template tenant from sessionStorage');
+
+      // Reload user's home tenant
+      if (user) {
+        const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
+        if (tenantError) {
+          throw new Error(tenantError.message);
+        }
+        setCurrentTenant(tenant);
+        setSelectedTenantId(tenant?.id || null);
+        console.log('✅ Returned to home tenant:', tenant?.name);
+      }
+    } catch (err) {
+      console.error('Error exiting template tenant:', err);
+      setError(err instanceof Error ? err.message : 'Failed to exit template');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
    * Clear tenant selection to view all tenants (super admin only)
    */
   const viewAllTenants = async () => {
@@ -374,7 +449,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     switchToTenant,
     viewAllTenants,
     enterSimulationTenant,
-    exitSimulationTenant
+    exitSimulationTenant,
+    enterTemplateTenant,
+    exitTemplateTenant
   };
 
   return (
