@@ -74,6 +74,20 @@ function App() {
     };
   }, []);
 
+  // Listen for tab change events
+  useEffect(() => {
+    const handleTabChange = (e: CustomEvent) => {
+      if (e.detail?.tab) {
+        console.log('📍 Tab change event received:', e.detail.tab);
+        setActiveTab(e.detail.tab);
+      }
+    };
+    window.addEventListener('change-tab', handleTabChange as EventListener);
+    return () => {
+      window.removeEventListener('change-tab', handleTabChange as EventListener);
+    };
+  }, []);
+
   // Check for template editing mode
   useEffect(() => {
     const editInfoStr = sessionStorage.getItem('editing_template');
