@@ -92,7 +92,7 @@ const SimulationTemplates: React.FC = () => {
     }));
 
     // Switch to the template's tenant
-    await setCurrentTenant(template.tenant_id);
+    await switchToTenant(template.tenant_id);
     
     // Navigate to the patients page
     navigate('/app');

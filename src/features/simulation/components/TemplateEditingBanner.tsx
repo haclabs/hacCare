@@ -18,7 +18,7 @@ interface TemplateEditingInfo {
 export const TemplateEditingBanner: React.FC = () => {
   const [editingInfo, setEditingInfo] = useState<TemplateEditingInfo | null>(null);
   const navigate = useNavigate();
-  const { userTenants, setCurrentTenant } = useTenant();
+  const { userTenants, switchToTenant } = useTenant();
 
   useEffect(() => {
     // Check if we're editing a template
@@ -35,7 +35,7 @@ export const TemplateEditingBanner: React.FC = () => {
     const defaultTenant = userTenants.find(t => t.id !== editingInfo.original_tenant_id);
     
     if (defaultTenant) {
-      await setCurrentTenant(defaultTenant.id);
+      await switchToTenant(defaultTenant.id);
     }
 
     // Clear the editing state
