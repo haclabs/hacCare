@@ -13,6 +13,7 @@ import {
 } from '../services/admin/superAdminTenantService';
 import { getCurrentSubdomain } from '../lib/infrastructure/subdomainService';
 import { useAuth } from './auth/SimulationAwareAuthProvider';
+import { supabase } from '../lib/api/supabase';
 
 /**
  * Tenant Context Interface
@@ -335,6 +336,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   /**
    * Enter a template's tenant for editing (available to instructors/admins)
    * This allows instructors to temporarily switch to a template's tenant
+   * and grants them access via tenant_users if needed
    */
   const enterTemplateTenant = async (tenantId: string) => {
     try {
@@ -342,6 +344,29 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setError(null);
 
       console.log('📝 Entering template tenant for editing:', tenantId);
+
+      // First, ensure the user has access to this tenant
+      // Add them to tenant_users if they're not already there
+      if (user) {
+        console.log('🔐 Ensuring user has access to template tenant...');
+        const { error: accessError } = await supabase
+          .from('tenant_users')
+          .upsert({
+            user_id: user.id,
+            tenant_id: tenantId,
+            is_active: true,
+            role: profile?.role === 'instructor' ? 'admin' : 'admin' // Grant admin role for editing
+          }, {
+            onConflict: 'user_id,tenant_id'
+          });
+
+        if (accessError) {
+          console.warn('⚠️ Could not grant tenant access:', accessError);
+          // Continue anyway - they might already have access
+        } else {
+          console.log('✅ User granted access to template tenant');
+        }
+      }
 
       // Fetch the tenant data
       const { data: tenant, error: tenantError } = await getTenantById(tenantId);

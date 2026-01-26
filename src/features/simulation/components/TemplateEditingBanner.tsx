@@ -36,10 +36,9 @@ export const TemplateEditingBanner: React.FC = () => {
           console.log('💾 Banner: Saved original tenant:', currentTenant.name, currentTenant.id);
         }
         
-        // Switch to the template's tenant so all queries work naturally
-        // Use enterTemplateTenant (available to instructors/admins) for template editing
+        // Switch to the template's tenant and grant instructor access
         if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
-          console.log('🔄 Banner: Switching to template tenant:', info.tenant_id, 'from current:', currentTenant?.id);
+          console.log('🔄 Banner: Switching to template tenant:', info.tenant_id);
           try {
             await enterTemplateTenant(info.tenant_id);
             console.log('✅ Banner: Successfully switched to template tenant');
@@ -47,7 +46,7 @@ export const TemplateEditingBanner: React.FC = () => {
             console.error('❌ Banner: Failed to switch to template tenant:', error);
           }
         } else {
-          console.log('ℹ️ Banner: Already in template tenant or tenant_id matches');
+          console.log('ℹ️ Banner: Already in template tenant');
         }
       } else {
         setEditingInfo(null);
@@ -67,12 +66,10 @@ export const TemplateEditingBanner: React.FC = () => {
       // Save current tenant
       if (currentTenant) {
         setOriginalTenantId(currentTenant.id);
-        console.log('💾 Banner: Saved original tenant (from event):', currentTenant.name);
       }
       
       // Switch to template's tenant
       if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
-        console.log('🔄 Banner: Switching to template tenant (from event):', info.tenant_id);
         try {
           await enterTemplateTenant(info.tenant_id);
           console.log('✅ Banner: Successfully switched to template tenant (from event)');
@@ -100,7 +97,7 @@ export const TemplateEditingBanner: React.FC = () => {
 
     // Exit template tenant (returns to home tenant)
     try {
-      console.log('🔙 Banner: Exiting template tenant to restore original tenant');
+      console.log('🔙 Banner: Exiting template tenant');
       await exitTemplateTenant();
       console.log('✅ Banner: Successfully exited template tenant');
     } catch (error) {
