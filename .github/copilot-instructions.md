@@ -7,7 +7,8 @@ hacCare is a **multi-tenant healthcare simulation platform** for clinical educat
 - **Multi-tenant isolation**: Every table has `tenant_id UUID NOT NULL` with RLS policies enforcing tenant isolation
 - **Simulation system**: Template-based scenarios with snapshot/restore, running in dedicated tenant environments (uses same codebase as production)
 - **BCMA (Barcode Medication Administration)**: Five Rights verification with patient/medication barcode dual-scan workflow
-- **Role hierarchy**: `super_admin` (cross-tenant access) → `admin` → `instructor` → `nurse` (simulation-only)
+- **Role hierarchy**: `super_admin` (cross-tenant access) → `coordinator` (tenant-wide) → `admin` → `instructor` (program-based) → `nurse` (simulation-only)
+- **Program-based permissions**: Instructors are assigned to programs (NESA, PN, SIM Hub, BNAD) and only see templates/simulations tagged with their programs
 
 ### 🧹 CRITICAL: Cleanup Priority
 **Tech debt reduction is a TOP PRIORITY**. When working on features:
@@ -119,6 +120,131 @@ npm run supabase:types         # Regenerate TypeScript types from Supabase schem
 See [src/App.tsx](../src/App.tsx) lines 17-29 for all lazy-loaded routes.
 
 ## Key Gotchas
+
+### Template Editing Workflow (Critical Understanding)
+**Templates ARE real tenant environments with live data**, not just frozen snapshots:
+
+**Architecture:**
+- Each template has its own `tenant_id` and exists as a full tenant in the database
+- Templates contain live patient data, medications, orders, labs, wounds, etc.
+- The `snapshot_data` JSONB column is a frozen copy used for launching simulations
+- Editing a template means temporarily switching to that template's tenant
+
+**Template Editing Flow:**
+1. User clicks "Edit" on template card
+2. `handleEditTemplate()` stores template info in `sessionStorage.editing_template`
+3. Dispatches `CustomEvent('template-edit-start')` with template details
+4. Dispatches `CustomEvent('change-tab', {tab: 'patients'})` to navigate
+5. `TemplateEditingBanner` listens for event, calls `enterTemplateTenant()`
+6. `enterTemplateTenant()` switches `currentTenant` + upserts user into `tenant_users` with admin role
+7. Purple banner displays showing template editing mode
+8. User edits patients, medications, orders, etc. (all standard components work)
+9. User clicks "Save & Exit Editing" to capture snapshot and return to home tenant
+10. `exitTemplateTenant()` calls `save_template_snapshot()` RPC and switches back
+
+**Critical Files:**
+- [src/features/simulation/components/SimulationTemplates.tsx](../src/features/simulation/components/SimulationTemplates.tsx) - Edit button + event dispatching
+- [src/features/simulation/components/TemplateEditingBanner.tsx](../src/features/simulation/components/TemplateEditingBanner.tsx) - Purple banner + tenant switching orchestration
+- [src/contexts/TenantContext.tsx](../src/contexts/TenantContext.tsx) - `enterTemplateTenant()` / `exitTemplateTenant()` functions
+- [src/App.tsx](../src/App.tsx) - `change-tab` event listener for navigation
+
+**RLS Access Requirement:**
+Instructors must be added to `tenant_users` table for the template's tenant to bypass RLS. The `enterTemplateTenant()` function handles this via upsert:
+```sql
+INSERT INTO tenant_users (tenant_id, user_id, role)
+VALUES (template_tenant_id, current_user_id, 'admin')
+ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = 'admin';
+```
+
+**Common Issues:**
+- ❌ Medications not showing → Missing `tenant_id` filter in query (RLS blocks)
+- ❌ "Not authorized" errors → User not in template's `tenant_users` table
+- ❌ Wrong data showing → Didn't actually switch tenant, still on home tenant
+- ❌ Tab not switching → `change-tab` event listener missing in App.tsx
+- ✅ Always include `tenant_id` in ALL queries when in template editing mode
+
+### Program-Based Permissions System
+**Instructors see only simulations/templates tagged with their assigned programs:**
+
+**Database Schema:**
+```sql
+-- programs table (per tenant)
+CREATE TABLE programs (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL,
+  code VARCHAR(10) UNIQUE,  -- e.g., 'NESA', 'PN', 'SIM Hub', 'BNAD'
+  name TEXT,
+  description TEXT,
+  is_active BOOLEAN DEFAULT true
+);
+
+-- user_programs junction table
+CREATE TABLE user_programs (
+  user_id UUID REFERENCES auth.users,
+  program_id UUID REFERENCES programs,
+  assigned_at TIMESTAMP DEFAULT NOW(),
+  assigned_by UUID,
+  PRIMARY KEY (user_id, program_id)
+);
+
+-- Templates and simulations have primary_categories array
+ALTER TABLE simulation_templates ADD COLUMN primary_categories TEXT[];
+ALTER TABLE simulations ADD COLUMN primary_categories TEXT[];
+```
+
+**Role Permissions:**
+- `super_admin` → See everything across all tenants
+- `coordinator` → See all simulations/templates within their primary tenant (no super admin powers)
+- `admin` → See all simulations/templates within their tenant
+- `instructor` → See only simulations/templates tagged with their assigned program(s)
+- `nurse` → Simulation participants only
+
+**Filtering Logic:**
+Located in [src/hooks/useUserProgramAccess.ts](../src/hooks/useUserProgramAccess.ts):
+```typescript
+export function useUserProgramAccess() {
+  const { profile } = useAuth();
+  
+  const isInstructor = profile?.role === 'instructor';
+  const canSeeAllPrograms = ['super_admin', 'admin', 'coordinator'].includes(profile?.role || '');
+  
+  const filterByPrograms = useCallback((items: Array<{primary_categories?: string[]}>) => {
+    if (canSeeAllPrograms) return items; // Admins see everything
+    if (!isInstructor) return items;
+    
+    const userPrograms = await getUserProgramCodes(profile.id);
+    return items.filter(item => 
+      item.primary_categories?.some(cat => userPrograms.includes(cat))
+    );
+  }, [profile, canSeeAllPrograms, isInstructor]);
+  
+  return { filterByPrograms, canSeeAllPrograms, isInstructor };
+}
+```
+
+**Usage in Components:**
+```typescript
+// In SimulationTemplates.tsx, ActiveSimulations.tsx, etc.
+const { filterByPrograms } = useUserProgramAccess();
+const filteredTemplates = filterByPrograms(templates);
+```
+
+**Program Management UI:**
+- Located in [src/features/admin/components/management/ProgramManagement.tsx](../src/features/admin/components/management/ProgramManagement.tsx)
+- Only accessible to `super_admin` and `coordinator` roles
+- Allows creating/editing programs and assigning users to programs
+
+**Critical Files:**
+- [database/migrations/20260126000000_add_programs_and_roles.sql](../database/migrations/20260126000000_add_programs_and_roles.sql) - Initial schema
+- [src/services/admin/programService.ts](../src/services/admin/programService.ts) - CRUD operations
+- [src/features/admin/components/users/UserForm.tsx](../src/features/admin/components/users/UserForm.tsx) - Program assignment checkboxes
+- [database/functions/update_user_profile_admin.sql](../database/functions/update_user_profile_admin.sql) - SECURITY DEFINER function for role updates
+
+**Important Notes:**
+- User role changes require logout/login to take effect (Auth context refresh)
+- Program filtering applies to Active, Templates, and History tabs
+- Programs are tenant-specific (LethPoly has NESA/PN/SIM Hub/BNAD)
+- `get_user_program_codes(user_id)` RPC function returns array of program codes for filtering
 
 ### Simulation Tenant Detection
 Simulations run on `simulation.` subdomain in production. Check for simulation context:
