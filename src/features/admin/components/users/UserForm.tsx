@@ -164,20 +164,24 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         // Handle tenant assignment for super admin
         if (hasRole('super_admin') && selectedTenantId) {
           try {
-            const { error: assignError } = await supabase
-              .rpc('assign_user_to_tenant', {
-                user_id_param: user.id,
-                tenant_id_param: selectedTenantId
+            // Use RPC function to reassign tenant (bypasses RLS)
+            const { data: result, error: reassignError } = await supabase
+              .rpc('reassign_user_tenant', {
+                p_user_id: user.id,
+                p_new_tenant_id: selectedTenantId,
+                p_role: formData.role === 'super_admin' ? 'admin' : formData.role
               });
 
-            if (assignError) {
-              console.error('Error assigning user to tenant:', assignError);
-              setError('User updated but failed to assign to tenant: ' + parseAuthError(assignError));
+            if (reassignError) {
+              console.error('Error reassigning user tenant:', reassignError);
+              setError('User updated but failed to reassign tenant: ' + parseAuthError(reassignError));
               return;
             }
+
+            console.log('✅ Tenant reassignment result:', result);
           } catch (assignError: any) {
-            console.error('Error in tenant assignment:', assignError);
-            setError('User updated but failed to assign to tenant: ' + parseAuthError(assignError));
+            console.error('Error in tenant reassignment:', assignError);
+            setError('User updated but failed to reassign tenant: ' + parseAuthError(assignError));
             return;
           }
         }
@@ -272,10 +276,16 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           const tenantToAssign = hasRole('super_admin') ? selectedTenantId : null;
           if (tenantToAssign) {
             try {
+              // Use upsert in case a trigger already created an entry
               const { error: assignError } = await supabase
-                .rpc('assign_user_to_tenant', {
-                  user_id_param: authData.user.id,
-                  tenant_id_param: tenantToAssign
+                .from('tenant_users')
+                .upsert({
+                  user_id: authData.user.id,
+                  tenant_id: tenantToAssign,
+                  is_active: true,
+                  role: formData.role === 'super_admin' ? 'admin' : formData.role
+                }, {
+                  onConflict: 'user_id,tenant_id'
                 });
 
               if (assignError) {
