@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor, Tag } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../../../lib/api/supabase';
 import { useAuth } from '../../../../hooks/useAuth';
+import { getUserPrograms } from '../../../../services/admin/programService';
 import { UserForm } from './UserForm';
 
 export const UserManagement: React.FC = () => {
@@ -11,6 +12,7 @@ export const UserManagement: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [userPrograms, setUserPrograms] = useState<Record<string, string[]>>({});
   const { hasRole } = useAuth();
 
   useEffect(() => {
@@ -30,6 +32,18 @@ export const UserManagement: React.FC = () => {
       } else {
         console.log(`✅ Fetched ${data?.length || 0} users`);
         setUsers(data || []);
+        
+        // Fetch programs for instructors and coordinators
+        const programsMap: Record<string, string[]> = {};
+        for (const user of data || []) {
+          if (user.role === 'instructor' || user.role === 'coordinator') {
+            const { data: programs } = await getUserPrograms(user.id);
+            if (programs && programs.length > 0) {
+              programsMap[user.id] = programs.map(p => p.program?.code || '').filter(Boolean);
+            }
+          }
+        }
+        setUserPrograms(programsMap);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -218,7 +232,7 @@ export const UserManagement: React.FC = () => {
                   Role
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Department
+                  Programs
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -263,7 +277,16 @@ export const UserManagement: React.FC = () => {
                     </span>
                   </td>
                   <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
-                    {user.department || '-'}
+                    {(user.role === 'instructor' || user.role === 'coordinator') && userPrograms[user.id]?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {userPrograms[user.id].map(code => (
+                          <span key={code} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            <Tag className="h-3 w-3 mr-1" />
+                            {code}
+                          </span>
+                        ))}
+                      </div>
+                    ) : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
