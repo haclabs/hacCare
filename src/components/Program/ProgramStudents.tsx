@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Users, Plus, Search, Upload, Edit2, UserX, BarChart } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
 import { getStudentRoster } from '../../services/admin/programService';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { format } from 'date-fns';
+import AddStudentModal from './AddStudentModal';
+import ImportStudentsModal from './ImportStudentsModal';
 
 /**
  * Program Students Management Page
@@ -13,9 +15,12 @@ import { format } from 'date-fns';
 export const ProgramStudents: React.FC = () => {
   const { currentTenant, programTenants } = useTenant();
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+  const queryClient = useQueryClient();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const pageSize = 50;
 
   // Fetch student roster
@@ -59,11 +64,17 @@ export const ProgramStudents: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors">
+          <button 
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+          >
             <Upload className="h-4 w-4" />
             Import CSV
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-md">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-md"
+          >
             <Plus className="h-4 w-4" />
             Add Student
           </button>
@@ -213,6 +224,32 @@ export const ProgramStudents: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Add Student Modal */}
+      {showAddModal && currentProgram && (
+        <AddStudentModal
+          programId={currentProgram.program_id}
+          programName={currentProgram.program_name}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false);
+            queryClient.invalidateQueries({ queryKey: ['student-roster'] });
+          }}
+        />
+      )}
+
+      {/* Import Students Modal */}
+      {showImportModal && currentProgram && (
+        <ImportStudentsModal
+          programId={currentProgram.program_id}
+          programName={currentProgram.program_name}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => {
+            setShowImportModal(false);
+            queryClient.invalidateQueries({ queryKey: ['student-roster'] });
+          }}
+        />
       )}
     </div>
   );

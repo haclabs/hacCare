@@ -558,6 +558,15 @@ function App() {
   const renderContent = () => {
     // Check if in program workspace - but respect the active tab for program management pages
     if (currentTenant?.tenant_type === 'program') {
+      // Program Home - landing page with calendar and announcements
+      if (activeTab === 'program-home') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramWorkspace />
+          </Suspense>
+        );
+      }
+      
       // Check if user selected a program management page
       if (activeTab === 'program-students') {
         return (
@@ -576,9 +585,19 @@ function App() {
         );
       }
       
-      // If it's a workspace tab (patients, simulations, etc.), fall through to the switch statement below
+      // If activeTab is 'patients' (the default), show program workspace landing page
+      // Program tenants don't have patients - they're instructor workspaces
+      if (activeTab === 'patients') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramWorkspace />
+          </Suspense>
+        );
+      }
+      
+      // If it's a workspace tab (simulations, schedule, etc.), fall through to the switch statement below
       // Only default to program workspace for unrecognized tabs
-      if (!['patients', 'simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'backup-management', 'admin', 'documentation', 'changelog', 'syslogs'].includes(activeTab)) {
+      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'backup-management', 'admin', 'documentation', 'changelog', 'syslogs'].includes(activeTab)) {
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <ProgramWorkspace />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
@@ -84,9 +84,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
   /**
    * Workspace items - available to all users
+   * Note: Patients is hidden in program tenants since they're instructor workspaces without patient data
    */
   const workspaceItems = [
-    { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
+    // Only show Patients when NOT in a program tenant (program tenants are instructor workspaces)
+    ...(currentTenant?.tenant_type !== 'program' ? [
+      { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' }
+    ] : []),
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
     ...(hasRole(['admin', 'super_admin', 'coordinator', 'instructor']) ? [
@@ -98,6 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
    * Program Management items - only show in program tenants for instructors/coordinators/super_admins
    */
   const programItems = (currentProgram && hasRole(['instructor', 'coordinator', 'super_admin'])) ? [
+    { id: 'program-home', label: 'Home', icon: Home, color: 'text-blue-600' },
     { id: 'program-students', label: 'Students', icon: Users, color: 'text-purple-600' },
     { id: 'program-settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
   ] : [];

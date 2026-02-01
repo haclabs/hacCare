@@ -1,47 +1,141 @@
-import React, { useMemo } from 'react';
-import { Bell, Plus, Pin, Calendar, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, Pin, Calendar, AlertCircle, BookOpen, Users, FileText, Plus, Edit2, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTenant } from '../../contexts/TenantContext';
+import { useAuth } from '../../hooks/useAuth';
+import {
+  getProgramAnnouncements,
+  createProgramAnnouncement,
+  updateProgramAnnouncement,
+  deleteProgramAnnouncement,
+  type ProgramAnnouncement
+} from '../../services/admin/programService';
+import AnnouncementModal, { type AnnouncementData } from './AnnouncementModal';
 
 /**
  * Program Announcements Component
- * Displays recent announcements and updates for the program
- * TODO: Connect to announcements table when created
+ * Displays program-wide announcements feed with CRUD operations
  */
-
-// Fixed timestamp for mock data (avoids Date.now() in render)
-const MOCK_NOW = new Date('2025-01-27T14:00:00Z').getTime();
-
 export const ProgramAnnouncements: React.FC = () => {
-  // Mock data - will be replaced with real data from database
-  const mockAnnouncements = useMemo(() => [
-    {
-      id: '1',
-      title: 'New Simulation Template Available',
-      content: 'A new cardiac emergency simulation template has been added to the library. Check it out in the Templates section!',
-      author: 'Dr. Sarah Johnson',
-      createdAt: new Date(MOCK_NOW - 2 * 60 * 60 * 1000), // 2 hours ago
-      isPinned: true,
-      category: 'Templates'
+  const { currentTenant, programTenants } = useTenant();
+  const { hasRole } = useAuth();
+  const queryClient = useQueryClient();
+  const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<ProgramAnnouncement | null>(null);
+
+  // Check if user can manage announcements (instructors, coordinators, admins)
+  const canManage = hasRole(['instructor', 'coordinator', 'admin', 'super_admin']);
+
+  // Load announcements
+  const { data: announcements = [], isLoading } = useQuery({
+    queryKey: ['programAnnouncements', currentProgram?.program_id],
+    queryFn: async () => {
+      if (!currentProgram?.program_id) return [];
+      const { data, error } = await getProgramAnnouncements(currentProgram.program_id);
+      if (error) throw error;
+      return data || [];
     },
-    {
-      id: '2',
-      title: 'Upcoming Training Session',
-      content: 'Join us for a hands-on training session on advanced BCMA workflows next Tuesday at 2 PM in the Simulation Lab.',
-      author: 'Melissa Schalk',
-      createdAt: new Date(MOCK_NOW - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-      isPinned: false,
-      category: 'Training'
-    },
-    {
-      id: '3',
-      title: 'Student Roster Updated',
-      content: '15 new students have been added to the program. Please review the student roster and verify cohort assignments.',
-      author: 'Admin Team',
-      createdAt: new Date(MOCK_NOW - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-      isPinned: false,
-      category: 'Students'
-    },
-  ], []);
+    enabled: !!currentProgram?.program_id
+  });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: createProgramAnnouncement,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['programAnnouncements'] });
+    }
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<ProgramAnnouncement> }) =>
+      updateProgramAnnouncement(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['programAnnouncements'] });
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteProgramAnnouncement,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['programAnnouncements'] });
+    }
+  });
+
+  const handleSaveAnnouncement = async (announcementData: AnnouncementData) => {
+    if (editingAnnouncement) {
+      // Update existing
+      await updateMutation.mutateAsync({
+        id: editingAnnouncement.id,
+        updates: announcementData
+      });
+    } else {
+      // Create new
+      await createMutation.mutateAsync(announcementData);
+    }
+    setShowModal(false);
+    setEditingAnnouncement(null);
+  };
+
+  const handleEditAnnouncement = (announcement: ProgramAnnouncement) => {
+    setEditingAnnouncement(announcement);
+    setShowModal(true);
+  };
+
+  const handleDeleteAnnouncement = async (announcementId: string) => {
+    if (confirm('Are you sure you want to delete this announcement?')) {
+      await deleteMutation.mutateAsync(announcementId);
+    }
+  };
+
+  const handleNewAnnouncement = () => {
+    setEditingAnnouncement(null);
+    setShowModal(true);
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Templates':
+        return FileText;
+      case 'Training':
+        return BookOpen;
+      case 'Students':
+        return Users;
+      case 'Important':
+        return AlertCircle;
+      case 'Reminder':
+        return Calendar;
+      default:
+        return Bell;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'Templates':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'Training':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+      case 'Students':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'Important':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      case 'Reminder':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+    }
+  };
+
+  // Filter out expired announcements
+  const visibleAnnouncements = announcements.filter(announcement => {
+    if (!announcement.expires_at) return true;
+    return new Date(announcement.expires_at) > new Date();
+  });
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden h-full flex flex-col">
@@ -49,85 +143,139 @@ export const ProgramAnnouncements: React.FC = () => {
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-800 dark:to-pink-800 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Bell className="h-6 w-6 text-white" />
-            <h2 className="text-xl font-bold text-white">Announcements</h2>
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Bell className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Announcements</h3>
+              <p className="text-sm text-purple-100">
+                {visibleAnnouncements.length} active announcement{visibleAnnouncements.length !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
-          <button className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-            <Plus className="h-5 w-5 text-white" />
-          </button>
+          {canManage && (
+            <button
+              onClick={handleNewAnnouncement}
+              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-white font-medium text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">New</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Announcements Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {mockAnnouncements.map((announcement) => (
-          <div
-            key={announcement.id}
-            className={`relative group rounded-lg border transition-all hover:shadow-md ${
-              announcement.isPinned
-                ? 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-amber-200 dark:border-amber-800'
-                : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700'
-            }`}
-          >
-            {/* Pinned Indicator */}
-            {announcement.isPinned && (
-              <div className="absolute -top-2 -right-2 p-1.5 bg-amber-500 rounded-full shadow-lg">
-                <Pin className="h-3 w-3 text-white" />
-              </div>
-            )}
-
-            <div className="p-4">
-              {/* Category Badge */}
-              <div className="flex items-center justify-between mb-2">
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                  announcement.category === 'Templates' 
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                    : announcement.category === 'Training'
-                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                }`}>
-                  {announcement.category}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {formatDistanceToNow(announcement.createdAt, { addSuffix: true })}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h3 className="font-bold text-gray-900 dark:text-white mb-2">
-                {announcement.title}
-              </h3>
-
-              {/* Content */}
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                {announcement.content}
-              </p>
-
-              {/* Author */}
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <User className="h-3 w-3" />
-                <span>Posted by <strong>{announcement.author}</strong></span>
-              </div>
-            </div>
+      {/* Announcements List */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
           </div>
-        ))}
+        ) : visibleAnnouncements.length === 0 ? (
+          <div className="text-center py-12">
+            <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-600 dark:text-gray-400">No announcements yet</p>
+            {canManage && (
+              <button
+                onClick={handleNewAnnouncement}
+                className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+              >
+                Create First Announcement
+              </button>
+            )}
+          </div>
+        ) : (
+          visibleAnnouncements.map((announcement) => {
+            const CategoryIcon = getCategoryIcon(announcement.category);
+            const categoryColor = getCategoryColor(announcement.category);
+
+            return (
+              <div
+                key={announcement.id}
+                className={`group relative p-4 rounded-lg border transition-all ${
+                  announcement.is_pinned
+                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                    : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:shadow-md'
+                }`}
+              >
+                {/* Edit/Delete Actions - Visible on Hover */}
+                {canManage && (
+                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEditAnnouncement(announcement)}
+                      className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      title="Edit announcement"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAnnouncement(announcement.id)}
+                      className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      title="Delete announcement"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div className={`p-2 rounded-lg ${categoryColor} flex-shrink-0`}>
+                    <CategoryIcon className="h-4 w-4" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-2 mb-1">
+                      {announcement.is_pinned && (
+                        <Pin className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      )}
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        {announcement.title}
+                      </h4>
+                    </div>
+
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 whitespace-pre-wrap">
+                      {announcement.content}
+                    </p>
+
+                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <CategoryIcon className="h-3 w-3" />
+                        {announcement.category}
+                      </span>
+                      <span>•</span>
+                      <span>{announcement.author_name || 'Unknown'}</span>
+                      <span>•</span>
+                      <span>{formatDistanceToNow(new Date(announcement.created_at), { addSuffix: true })}</span>
+                      {announcement.expires_at && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <Calendar className="h-3 w-3" />
+                            Expires {formatDistanceToNow(new Date(announcement.expires_at), { addSuffix: true })}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50">
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all shadow-md text-sm font-medium">
-          <Plus className="h-4 w-4" />
-          Post Announcement
-        </button>
-      </div>
-
-      {/* Coming Soon Note */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 bg-purple-50 dark:bg-purple-900/20">
-        <p className="text-xs text-purple-800 dark:text-purple-200 text-center">
-          📢 <strong>Coming Soon:</strong> Rich text editor, file attachments, @mentions, and email notifications
-        </p>
-      </div>
+      {/* Modal */}
+      <AnnouncementModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingAnnouncement(null);
+        }}
+        onSave={handleSaveAnnouncement}
+        existingAnnouncement={editingAnnouncement}
+      />
     </div>
   );
 };

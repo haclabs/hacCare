@@ -497,18 +497,15 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       console.log('🚪 Exiting template tenant...');
       
-      // No need to clear sessionStorage - we don't persist it anymore
-
-      // Reload user's home tenant
-      if (user) {
-        const { data: tenant, error: tenantError } = await getCurrentUserTenant(user.id);
-        if (tenantError) {
-          throw new Error(tenantError.message);
-        }
-        setCurrentTenant(tenant);
-        setSelectedTenantId(tenant?.id || null);
-        console.log('✅ Returned to home tenant:', tenant?.name);
-      }
+      // Clear template editing flag
+      sessionStorage.removeItem('editing_template');
+      
+      // Simply reload the tenant context to restore home tenant
+      // This avoids RPC permission issues when calling from template tenant
+      console.log('🔄 Reloading tenant context to restore home tenant...');
+      await loadCurrentTenant();
+      
+      console.log('✅ Returned to home tenant');
     } catch (err) {
       console.error('Error exiting template tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to exit template');

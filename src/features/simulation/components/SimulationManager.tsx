@@ -9,7 +9,8 @@
  * ===========================================================================
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Beaker, FileText, History, AlertCircle, BookOpen } from 'lucide-react';
 import ActiveSimulations from './ActiveSimulations';
 import SimulationTemplates from './SimulationTemplates';
@@ -19,7 +20,17 @@ import SimulationGuide from './SimulationGuide';
 type TabType = 'active' | 'templates' | 'history' | 'guide';
 
 const SimulationManager: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('active');
+  const location = useLocation();
+  // Check if a specific tab was requested via state
+  const initialTab = (location.state as any)?.initialTab || 'active';
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+  
+  // Update tab when location state changes
+  useEffect(() => {
+    if ((location.state as any)?.initialTab) {
+      setActiveTab((location.state as any).initialTab);
+    }
+  }, [location.state]);
 
   const tabs = [
     { id: 'active' as TabType, label: 'Active', icon: Beaker },

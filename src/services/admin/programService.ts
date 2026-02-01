@@ -104,6 +104,23 @@ export interface ScheduledSimulation {
 }
 
 /**
+ * Program Announcements Type Definitions
+ */
+export interface ProgramAnnouncement {
+  id: string;
+  program_id: string;
+  title: string;
+  content: string;
+  category: 'General' | 'Templates' | 'Training' | 'Students' | 'Important' | 'Reminder';
+  is_pinned: boolean;
+  author_id: string;
+  author_name: string | null;
+  created_at: string;
+  updated_at: string;
+  expires_at: string | null;
+}
+
+/**
  * Create a program tenant for a program
  */
 export async function createProgramTenant(
@@ -505,16 +522,8 @@ export async function getStudentRoster(
   try {
     const offset = page * pageSize;
     let query = supabase
-      .from('student_roster')
-      .select(`
-        *,
-        user_profile:user_profiles!student_roster_user_id_fkey (
-          email,
-          first_name,
-          last_name,
-          role
-        )
-      `, { count: 'exact' })
+      .from('student_roster_with_profiles')
+      .select('*', { count: 'exact' })
       .eq('program_id', programId)
       .eq('is_active', true)
       .order('student_number', { ascending: true })
@@ -522,13 +531,35 @@ export async function getStudentRoster(
 
     // Add search filter if provided
     if (search) {
-      query = query.or(`student_number.ilike.%${search}%,user_profile.first_name.ilike.%${search}%,user_profile.last_name.ilike.%${search}%,user_profile.email.ilike.%${search}%`);
+      query = query.or(`student_number.ilike.%${search}%,user_first_name.ilike.%${search}%,user_last_name.ilike.%${search}%,user_email.ilike.%${search}%`);
     }
 
     const { data, error, count } = await query;
 
     if (error) throw error;
-    return { data: data as StudentRoster[], error: null, count: count || 0 };
+    
+    // Transform view data to match StudentRoster interface
+    const transformedData = data?.map(row => ({
+      id: row.id,
+      user_id: row.user_id,
+      program_id: row.program_id,
+      cohort_id: row.cohort_id,
+      student_number: row.student_number,
+      enrollment_date: row.enrollment_date,
+      is_active: row.is_active,
+      notes: row.notes,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      created_by: row.created_by,
+      user_profile: {
+        email: row.user_email,
+        first_name: row.user_first_name,
+        last_name: row.user_last_name,
+        role: row.user_role
+      }
+    }));
+    
+    return { data: transformedData as StudentRoster[], error: null, count: count || 0 };
   } catch (error) {
     console.error('Error fetching student roster:', error);
     return { data: null, error, count: 0 };
@@ -724,3 +755,92 @@ export async function deleteScheduledSimulation(simulationId: string): Promise<{
     return { error };
   }
 }
+
+// ============================================================================
+// PROGRAM ANNOUNCEMENTS MANAGEMENT
+// ============================================================================
+
+/**
+ * Get program announcements
+ */
+export async function getProgramAnnouncements(
+  programId: string
+): Promise<{ data: ProgramAnnouncement[] | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('program_announcements')
+      .select('*')
+      .eq('program_id', programId)
+      .order('is_pinned', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { data: data as ProgramAnnouncement[], error: null };
+  } catch (error) {
+    console.error('Error fetching program announcements:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Create program announcement
+ */
+export async function createProgramAnnouncement(
+  announcement: Omit<ProgramAnnouncement, 'id' | 'created_at' | 'updated_at'>
+): Promise<{ data: ProgramAnnouncement | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('program_announcements')
+      .insert(announcement)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data: data as ProgramAnnouncement, error: null };
+  } catch (error) {
+    console.error('Error creating program announcement:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Update program announcement
+ */
+export async function updateProgramAnnouncement(
+  announcementId: string,
+  updates: Partial<ProgramAnnouncement>
+): Promise<{ data: ProgramAnnouncement | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('program_announcements')
+      .update(updates)
+      .eq('id', announcementId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data: data as ProgramAnnouncement, error: null };
+  } catch (error) {
+    console.error('Error updating program announcement:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Delete program announcement
+ */
+export async function deleteProgramAnnouncement(announcementId: string): Promise<{ error: any }> {
+  try {
+    const { error } = await supabase
+      .from('program_announcements')
+      .delete()
+      .eq('id', announcementId);
+
+    if (error) throw error;
+    return { error: null };
+  } catch (error) {
+    console.error('Error deleting program announcement:', error);
+    return { error };
+  }
+}
+

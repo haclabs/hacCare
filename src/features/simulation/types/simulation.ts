@@ -143,6 +143,7 @@ export interface CreateTemplateParams {
   name: string;
   description?: string;
   default_duration_minutes?: number;
+  primary_categories?: string[];
 }
 
 export interface LaunchSimulationParams {

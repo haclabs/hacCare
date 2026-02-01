@@ -6,16 +6,28 @@
  * ===========================================================================
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 
 const SimulationBanner: React.FC = () => {
   const { currentTenant } = useTenant();
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false);
 
-  // Only show banner if current tenant name indicates it's a simulation
-  // (simulation tenants have names like "SIM-templatename-timestamp")
-  if (!currentTenant || !currentTenant.name.startsWith('SIM-')) {
+  // Check if we're in template editing mode
+  useEffect(() => {
+    const editInfoStr = sessionStorage.getItem('editing_template');
+    setIsEditingTemplate(!!editInfoStr);
+  }, [currentTenant]);
+
+  // Don't show if editing a template - TemplateEditingBanner will handle that
+  if (isEditingTemplate) {
+    return null;
+  }
+
+  // Only show banner for active simulations (tenant_type = 'simulation_active')
+  // Don't show for simulation templates
+  if (!currentTenant || currentTenant.tenant_type !== 'simulation_active') {
     return null;
   }
 

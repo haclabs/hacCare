@@ -1,18 +1,28 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
 import { supabase } from '../../lib/api/supabase';
+import { 
+  createScheduledSimulation, 
+  updateScheduledSimulation, 
+  deleteScheduledSimulation 
+} from '../../services/admin/programService';
+import CalendarEventModal, { ScheduledSimulationData } from './CalendarEventModal';
 
 interface ScheduledSimulation {
   id: string;
+  template_id: string;
   name: string;
+  description: string | null;
   scheduled_start: string;
   scheduled_end: string;
   status: 'scheduled' | 'launched' | 'completed' | 'cancelled';
   student_count: number;
   room_location: string | null;
+  instructor_id: string;
+  notes: string | null;
 }
 
 /**
@@ -21,8 +31,14 @@ interface ScheduledSimulation {
  */
 export const ProgramCalendar: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [editingEvent, setEditingEvent] = useState<ScheduledSimulation | null>(null);
+  const [selectedEventForAction, setSelectedEventForAction] = useState<ScheduledSimulation | null>(null);
+  
   const { currentTenant, programTenants } = useTenant();
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+  const queryClient = useQueryClient();
 
   const monthStart = useMemo(() => startOfMonth(currentDate), [currentDate]);
   const monthEnd = useMemo(() => endOfMonth(currentDate), [currentDate]);
@@ -35,7 +51,7 @@ export const ProgramCalendar: React.FC = () => {
       
       const { data, error } = await supabase
         .from('scheduled_simulations')
-        .select('id, name, scheduled_start, scheduled_end, status, student_count, room_location')
+        .select('id, template_id, name, description, scheduled_start, scheduled_end, status, student_count, room_location, instructor_id, notes')
         .eq('program_id', currentProgram.program_id)
         .gte('scheduled_start', monthStart.toISOString())
         .lte('scheduled_start', monthEnd.toISOString())
@@ -71,6 +87,63 @@ export const ProgramCalendar: React.FC = () => {
 
   const goToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const goToNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: (data: ScheduledSimulationData) => createScheduledSimulation(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduled-simulations'] });
+      setShowEventModal(false);
+      setEditingEvent(null);
+    }
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<ScheduledSimulationData> }) => 
+      updateScheduledSimulation(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduled-simulations'] });
+      setShowEventModal(false);
+      setEditingEvent(null);
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteScheduledSimulation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduled-simulations'] });
+      setSelectedEventForAction(null);
+    }
+  });
+
+  const handleSaveEvent = async (eventData: ScheduledSimulationData) => {
+    if (editingEvent?.id) {
+      // Update existing
+      await updateMutation.mutateAsync({ id: editingEvent.id, updates: eventData });
+    } else {
+      // Create new
+      await createMutation.mutateAsync(eventData);
+    }
+  };
+
+  const handleEditEvent = (event: ScheduledSimulation) => {
+    setEditingEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleDeleteEvent = async (event: ScheduledSimulation) => {
+    if (confirm(`Delete "${event.name}"? This cannot be undone.`)) {
+      await deleteMutation.mutateAsync(event.id);
+    }
+  };
+
+  const handleDayClick = (day: Date) => {
+    setSelectedDate(day);
+    setEditingEvent(null);
+    setShowEventModal(true);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -135,7 +208,8 @@ export const ProgramCalendar: React.FC = () => {
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[80px] p-2 border border-gray-200 dark:border-gray-700 rounded-lg ${
+                onClick={() => handleDayClick(day)}
+                className={`min-h-[100px] p-2 border border-gray-200 dark:border-gray-700 rounded-lg ${
                   isCurrentDay
                     ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400 dark:ring-blue-600'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -148,18 +222,49 @@ export const ProgramCalendar: React.FC = () => {
                   {daySessions.map(session => (
                     <div
                       key={session.id}
-                      title={`${session.name}${session.room_location ? ` - ${session.room_location}` : ''}\n${session.student_count} students`}
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-medium truncate ${
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEventForAction(session);
+                      }}
+                      className={`group relative px-1.5 py-1 rounded text-[10px] font-medium ${
                         session.status === 'scheduled'
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50'
                           : session.status === 'launched'
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
                           : session.status === 'completed'
-                          ? 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400'
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                          ? 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-900/50'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
                       }`}
                     >
-                      {format(new Date(session.scheduled_start), 'h:mm a')} - {session.name}
+                      <div className="truncate">
+                        {format(new Date(session.scheduled_start), 'h:mm a')} - {session.name}
+                      </div>
+                      {session.room_location && (
+                        <div className="text-[9px] opacity-75 truncate">{session.room_location}</div>
+                      )}
+                      {/* Action buttons on hover */}
+                      <div className="absolute top-0 right-0 hidden group-hover:flex gap-1 p-1 bg-white dark:bg-gray-800 rounded shadow-lg">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditEvent(session);
+                          }}
+                          className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"
+                          title="Edit event"
+                        >
+                          <Edit2 className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEvent(session);
+                          }}
+                          className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
+                          title="Delete event"
+                        >
+                          <Trash2 className="h-3 w-3 text-red-600 dark:text-red-400" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -171,6 +276,11 @@ export const ProgramCalendar: React.FC = () => {
         {/* Action Buttons */}
         <div className="mt-4 flex items-center gap-3">
           <button
+            onClick={() => {
+              setSelectedDate(new Date());
+              setEditingEvent(null);
+              setShowEventModal(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-md transition-all"
           >
             <Plus className="h-4 w-4" />
@@ -178,6 +288,9 @@ export const ProgramCalendar: React.FC = () => {
           </button>
           {isLoading && (
             <span className="text-sm text-gray-500 dark:text-gray-400">Loading sessions...</span>
+          )}
+          {(createMutation.isPending || updateMutation.isPending || deleteMutation.isPending) && (
+            <span className="text-sm text-blue-600 dark:text-blue-400">Saving...</span>
           )}
         </div>
 
@@ -190,6 +303,31 @@ export const ProgramCalendar: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Event Modal */}
+      <CalendarEventModal
+        isOpen={showEventModal}
+        onClose={() => {
+          setShowEventModal(false);
+          setEditingEvent(null);
+        }}
+        onSave={handleSaveEvent}
+        selectedDate={selectedDate}
+        existingEvent={editingEvent ? {
+          id: editingEvent.id,
+          template_id: editingEvent.template_id,
+          program_id: currentProgram?.program_id || '',
+          name: editingEvent.name,
+          description: editingEvent.description || '',
+          scheduled_start: editingEvent.scheduled_start,
+          scheduled_end: editingEvent.scheduled_end,
+          duration_minutes: Math.round((new Date(editingEvent.scheduled_end).getTime() - new Date(editingEvent.scheduled_start).getTime()) / 60000),
+          instructor_id: editingEvent.instructor_id,
+          room_location: editingEvent.room_location || '',
+          status: editingEvent.status,
+          notes: editingEvent.notes || ''
+        } : null}
+      />
     </div>
   );
 };

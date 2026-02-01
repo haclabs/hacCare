@@ -50,6 +50,9 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
     }
   };
 
+  // Check if editing a template
+  const isEditingTemplate = !!sessionStorage.getItem('editing_template');
+
   // Get current context (Program, Simulation, or Tenant)
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
   const contextName = currentProgram 
@@ -58,11 +61,13 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
       ? `Simulation: ${currentTenant.name}`
       : currentTenant?.name || 'Loading...';
 
-  const contextType = currentProgram 
-    ? 'Program Workspace' 
-    : currentTenant?.is_simulation 
-      ? 'Active Simulation'
-      : 'Workspace';
+  const contextType = isEditingTemplate
+    ? 'Editing Template'
+    : currentProgram 
+      ? 'Program Workspace' 
+      : currentTenant?.is_simulation 
+        ? 'Active Simulation'
+        : 'Workspace';
 
   return (
     <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg ${ 

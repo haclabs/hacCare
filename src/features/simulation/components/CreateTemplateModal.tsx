@@ -6,9 +6,12 @@
  * ===========================================================================
  */
 
-import React, { useState } from 'react';
-import { X, FileText, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, FileText, AlertCircle, Tag } from 'lucide-react';
 import { createSimulationTemplate } from '../../../services/simulation/simulationService';
+import { getPrograms, type Program } from '../../../services/admin/programService';
+import { useTenant } from '../../../contexts/TenantContext';
+import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 
 interface CreateTemplateModalProps {
   onClose: () => void;
@@ -16,6 +19,10 @@ interface CreateTemplateModalProps {
 }
 
 const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSuccess }) => {
+  const { currentTenant } = useTenant();
+  const { programCodes, canSeeAllPrograms, isInstructor, isCoordinator } = useUserProgramAccess();
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -24,13 +31,43 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load programs on mount
+  useEffect(() => {
+    loadPrograms();
+  }, [currentTenant]);
+
+  const loadPrograms = async () => {
+    if (!currentTenant?.id) return;
+    
+    const { data, error } = await getPrograms(currentTenant.id);
+    if (!error && data) {
+      setPrograms(data);
+      
+      // For instructors, pre-select their assigned programs
+      if (isInstructor && programCodes && programCodes.length > 0) {
+        const userProgramIds = data
+          .filter(p => programCodes.includes(p.code))
+          .map(p => p.id);
+        setSelectedProgramIds(userProgramIds);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const result = await createSimulationTemplate(formData);
+      // Get selected program codes
+      const selectedPrograms = programs
+        .filter(p => selectedProgramIds.includes(p.id))
+        .map(p => p.code);
+
+      const result = await createSimulationTemplate({
+        ...formData,
+        primary_categories: selectedPrograms.length > 0 ? selectedPrograms : undefined
+      });
       
       if (result.success) {
         alert(`Template created successfully!\n\nTemplate ID: ${result.template_id}\nTenant ID: ${result.tenant_id}\n\nYou can now build your scenario in this template tenant, then save a snapshot.`);
@@ -134,6 +171,65 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
               This is a default value. You can change it when launching each simulation.
             </p>
           </div>
+
+          {/* Program Categories */}
+          {programs.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <Tag className="inline h-4 w-4 mr-1" />
+                Program Categories
+              </label>
+              <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-600 rounded-lg p-4 space-y-2">
+                {programs.map((program) => {
+                  const isUserProgram = programCodes?.includes(program.code);
+                  const isDisabled = isInstructor && !isUserProgram;
+                  
+                  return (
+                    <label
+                      key={program.id}
+                      className={`flex items-center gap-2 ${
+                        isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedProgramIds.includes(program.id)}
+                        disabled={isDisabled}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProgramIds([...selectedProgramIds, program.id]);
+                          } else {
+                            setSelectedProgramIds(selectedProgramIds.filter(id => id !== program.id));
+                          }
+                        }}
+                        className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 disabled:opacity-50"
+                      />
+                      <span className="text-sm">
+                        <span className="font-medium text-purple-600 dark:text-purple-400">{program.code}</span>
+                        {' - '}
+                        {program.name}
+                        {isUserProgram && (
+                          <span className="ml-2 text-xs text-green-600 dark:text-green-400">(Your Program)</span>
+                        )}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {isInstructor
+                  ? 'Templates will only be visible to instructors in the selected programs'
+                  : canSeeAllPrograms
+                  ? 'Select which programs should have access to this template'
+                  : 'Instructors will only see templates for their assigned programs'}
+              </p>
+              {selectedProgramIds.length === 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  ⚠️ No programs selected - template will be visible to ALL instructors
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
