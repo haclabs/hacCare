@@ -4316,7 +4316,7 @@ export type Database = {
         | "cancelled"
       simulation_role: "instructor" | "student"
       simulation_template_status: "draft" | "ready" | "archived"
-      tenant_type: "production" | "simulation_template" | "simulation_active"
+      tenant_type: "production" | "institution" | "hospital" | "clinic" | "simulation_template" | "simulation_active" | "program"
       user_role: "nurse" | "admin" | "super_admin" | "instructor"
       wound_type_enum:
         | "incision"
@@ -4509,7 +4509,7 @@ export const Constants = {
       ],
       simulation_role: ["instructor", "student"],
       simulation_template_status: ["draft", "ready", "archived"],
-      tenant_type: ["production", "simulation_template", "simulation_active"],
+      tenant_type: ["production", "institution", "hospital", "clinic", "simulation_template", "simulation_active", "program"],
       user_role: ["nurse", "admin", "super_admin", "instructor"],
       wound_type_enum: [
         "incision",

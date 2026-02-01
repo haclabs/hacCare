@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Save, X, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Save, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 
@@ -17,7 +17,6 @@ interface TemplateEditingInfo {
 
 export const TemplateEditingBanner: React.FC = () => {
   const [editingInfo, setEditingInfo] = useState<TemplateEditingInfo | null>(null);
-  const [originalTenantId, setOriginalTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
 
@@ -29,12 +28,6 @@ export const TemplateEditingBanner: React.FC = () => {
       if (stored) {
         const info: TemplateEditingInfo = JSON.parse(stored);
         setEditingInfo(info);
-        
-        // Save current tenant to restore later
-        if (currentTenant) {
-          setOriginalTenantId(currentTenant.id);
-          console.log('💾 Banner: Saved original tenant:', currentTenant.name, currentTenant.id);
-        }
         
         // Switch to the template's tenant and grant instructor access
         if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
@@ -58,15 +51,11 @@ export const TemplateEditingBanner: React.FC = () => {
     checkEditingState();
 
     // Listen for custom event when editing starts
-    const handleEditStart = async (e: CustomEvent) => {
-      console.log('📢 Banner: Received template-edit-start event:', e.detail);
-      const info = e.detail as TemplateEditingInfo;
+    const handleEditStart = async (e: Event) => {
+      const customEvent = e as CustomEvent;
+      console.log('📢 Banner: Received template-edit-start event:', customEvent.detail);
+      const info = customEvent.detail as TemplateEditingInfo;
       setEditingInfo(info);
-      
-      // Save current tenant
-      if (currentTenant) {
-        setOriginalTenantId(currentTenant.id);
-      }
       
       // Switch to template's tenant
       if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
@@ -79,10 +68,10 @@ export const TemplateEditingBanner: React.FC = () => {
       }
     };
 
-    window.addEventListener('template-edit-start', handleEditStart as EventListener);
+    window.addEventListener('template-edit-start', handleEditStart);
 
     return () => {
-      window.removeEventListener('template-edit-start', handleEditStart as EventListener);
+      window.removeEventListener('template-edit-start', handleEditStart);
     };
   }, [currentTenant, enterTemplateTenant]);
 
@@ -103,8 +92,6 @@ export const TemplateEditingBanner: React.FC = () => {
     } catch (error) {
       console.error('❌ Banner: Failed to exit template tenant:', error);
     }
-    
-    setOriginalTenantId(null);
 
     // Navigate back to simulations/templates tab
     navigate('/app');

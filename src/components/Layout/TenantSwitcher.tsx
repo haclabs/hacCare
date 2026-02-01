@@ -20,7 +20,7 @@ export const TenantSwitcher: React.FC = () => {
     viewAllTenants 
   } = useTenant();
   
-  const [availableTenants, setAvailableTenants] = useState<Pick<Tenant, 'id' | 'name' | 'status'>[]>([]);
+  const [availableTenants, setAvailableTenants] = useState<Pick<Tenant, 'id' | 'name' | 'status' | 'tenant_type' | 'parent_tenant_id'>[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -50,30 +50,53 @@ export const TenantSwitcher: React.FC = () => {
     loadTenants();
   }, [isMultiTenantAdmin, isAnonymous]);
 
-  // Group tenants by type (using tenant name patterns) - must be before any conditional returns
-  const groupedTenants = useMemo(() => {
-    const regular: typeof availableTenants = [];
+  // Build hierarchical tenant structure - must be before any conditional returns
+  const hierarchicalTenants = useMemo(() => {
+    // Separate parents and children
+    const parents = availableTenants.filter(t => !t.parent_tenant_id);
+    const children = availableTenants.filter(t => t.parent_tenant_id);
+    
+    // Group children by parent ID
+    const childrenByParent = children.reduce((acc, child) => {
+      const parentId = child.parent_tenant_id!;
+      if (!acc[parentId]) acc[parentId] = [];
+      acc[parentId].push(child);
+      return acc;
+    }, {} as Record<string, typeof children>);
+    
+    // Categorize tenants by type
+    const institutions: typeof availableTenants = [];
+    const programTenants: typeof availableTenants = [];
     const activeSimulations: typeof availableTenants = [];
     const templates: typeof availableTenants = [];
-
-    availableTenants.forEach((tenant) => {
-      const tenantName = tenant.name.toLowerCase();
-      
-      // Check if tenant name contains "template" - it's a simulation template
-      if (tenantName.includes('template')) {
+    
+    parents.forEach(tenant => {
+      if (tenant.tenant_type === 'institution' || tenant.tenant_type === 'production') {
+        institutions.push(tenant);
+      } else if (tenant.tenant_type === 'simulation_template') {
         templates.push(tenant);
-      }
-      // Check if tenant name contains "sim" or "sim_" - it's an active simulation
-      else if (tenantName.includes('sim_active') || tenantName.startsWith('sim_')) {
+      } else if (tenant.tenant_type === 'simulation_active') {
         activeSimulations.push(tenant);
       }
-      // Otherwise it's a regular tenant
-      else {
-        regular.push(tenant);
+    });
+    
+    children.forEach(tenant => {
+      if (tenant.tenant_type === 'program') {
+        programTenants.push(tenant);
+      } else if (tenant.tenant_type === 'simulation_template') {
+        templates.push(tenant);
+      } else if (tenant.tenant_type === 'simulation_active') {
+        activeSimulations.push(tenant);
       }
     });
-
-    return { regular, activeSimulations, templates };
+    
+    return { 
+      institutions, 
+      programTenants, 
+      childrenByParent, 
+      activeSimulations, 
+      templates 
+    };
   }, [availableTenants]);
 
   const getCurrentDisplayName = () => {
@@ -142,36 +165,55 @@ export const TenantSwitcher: React.FC = () => {
               )}
             </button>
 
-            {/* Regular Tenants */}
-            {groupedTenants.regular.length > 0 && (
+            {/* Institutions with Program Hierarchy */}
+            {hierarchicalTenants.institutions.length > 0 && (
               <div className="border-t border-gray-100">
                 <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  📋 Regular Tenants
+                  🏢 Organizations
                 </div>
-                {groupedTenants.regular.map((tenant) => (
-                  <button
-                    key={tenant.id}
-                    onClick={() => handleTenantSwitch(tenant.id)}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2"
-                    disabled={loading}
-                  >
-                    <Building className="w-4 h-4 text-blue-600" />
-                    <span>{tenant.name}</span>
-                    {selectedTenantId === tenant.id && (
-                      <span className="ml-auto text-blue-600">✓</span>
-                    )}
-                  </button>
+                {hierarchicalTenants.institutions.map((institution) => (
+                  <React.Fragment key={institution.id}>
+                    {/* Parent Institution */}
+                    <button
+                      onClick={() => handleTenantSwitch(institution.id)}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2 font-medium"
+                      disabled={loading}
+                    >
+                      <Building className="w-4 h-4 text-blue-600" />
+                      <span>{institution.name}</span>
+                      {selectedTenantId === institution.id && (
+                        <span className="ml-auto text-blue-600">✓</span>
+                      )}
+                    </button>
+                    
+                    {/* Child Program Tenants */}
+                    {hierarchicalTenants.childrenByParent[institution.id]?.filter(c => c.tenant_type === 'program').map((program) => (
+                      <button
+                        key={program.id}
+                        onClick={() => handleTenantSwitch(program.id)}
+                        className="w-full text-left pl-12 pr-4 py-2 text-sm text-gray-600 hover:bg-purple-50 flex items-center gap-2"
+                        disabled={loading}
+                      >
+                        <span className="text-gray-400">└─</span>
+                        <span className="text-purple-600">📚</span>
+                        <span>{program.name}</span>
+                        {selectedTenantId === program.id && (
+                          <span className="ml-auto text-purple-600">✓</span>
+                        )}
+                      </button>
+                    ))}
+                  </React.Fragment>
                 ))}
               </div>
             )}
 
             {/* Active Simulations */}
-            {groupedTenants.activeSimulations.length > 0 && (
+            {hierarchicalTenants.activeSimulations.length > 0 && (
               <div className="border-t border-gray-100">
                 <div className="px-4 py-2 text-xs font-semibold text-green-600 uppercase tracking-wider">
                   🎮 Active Simulations
                 </div>
-                {groupedTenants.activeSimulations.map((tenant) => (
+                {hierarchicalTenants.activeSimulations.map((tenant) => (
                   <button
                     key={tenant.id}
                     onClick={() => handleTenantSwitch(tenant.id)}
@@ -189,22 +231,22 @@ export const TenantSwitcher: React.FC = () => {
             )}
 
             {/* Simulation Templates */}
-            {groupedTenants.templates.length > 0 && (
+            {hierarchicalTenants.templates.length > 0 && (
               <div className="border-t border-gray-100">
-                <div className="px-4 py-2 text-xs font-semibold text-purple-600 uppercase tracking-wider">
+                <div className="px-4 py-2 text-xs font-semibold text-amber-600 uppercase tracking-wider">
                   📝 Simulation Templates
                 </div>
-                {groupedTenants.templates.map((tenant) => (
+                {hierarchicalTenants.templates.map((tenant) => (
                   <button
                     key={tenant.id}
                     onClick={() => handleTenantSwitch(tenant.id)}
-                    className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 flex items-center gap-2"
                     disabled={loading}
                   >
-                    <FileText className="w-4 h-4 text-purple-600" />
+                    <FileText className="w-4 h-4 text-amber-600" />
                     <span>{tenant.name}</span>
                     {selectedTenantId === tenant.id && (
-                      <span className="ml-auto text-purple-600">✓</span>
+                      <span className="ml-auto text-amber-600">✓</span>
                     )}
                   </button>
                 ))}

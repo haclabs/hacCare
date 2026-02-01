@@ -5,6 +5,7 @@ import {
   getTenantById,
   getTenantBySubdomain
 } from '../services/admin/tenantService';
+import { getUserProgramTenants, type ProgramTenant } from '../services/admin/programService';
 import { 
   superAdminTenantService,
   initializeSuperAdminAccess,
@@ -35,6 +36,18 @@ interface TenantContextType {
   // Template editing tenant switching (available to instructors/admins)
   enterTemplateTenant: (tenantId: string) => Promise<void>;
   exitTemplateTenant: () => Promise<void>;
+  // Program tenant access
+  programTenants: ProgramTenant[];
+  loadProgramTenants: () => Promise<void>;
+}
+
+interface ProgramTenant {
+  tenant_id: string;
+  tenant_name: string;
+  program_id: string;
+  program_code: string;
+  program_name: string;
+  subdomain: string;
 }
 
 /**
@@ -73,10 +86,38 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [programTenants, setProgramTenants] = useState<ProgramTenant[]>([]);
   const { user, profile, loading: authLoading } = useAuth();
 
   // Check if user is a multi-tenant admin (system admin or coordinator)
   const isMultiTenantAdmin = profile?.role === 'super_admin' || profile?.role === 'coordinator';
+
+  /**
+   * Load user's program tenants
+   */
+  const loadProgramTenants = async (): Promise<ProgramTenant[]> => {
+    if (!user?.id) {
+      setProgramTenants([]);
+      return [];
+    }
+
+    try {
+      const { data, error } = await getUserProgramTenants(user.id);
+      if (error) {
+        console.error('Error loading program tenants:', error);
+        setProgramTenants([]);
+        return [];
+      } else {
+        setProgramTenants(data || []);
+        console.log('📚 Loaded', data?.length || 0, 'program tenants');
+        return data || [];
+      }
+    } catch (error) {
+      console.error('Error loading program tenants:', error);
+      setProgramTenants([]);
+      return [];
+    }
+  };
 
   /**
    * Load current user's tenant or super admin selected tenant
@@ -108,6 +149,14 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setCurrentTenant(null);
         setLoading(false);
         return;
+      }
+      
+      // Load program tenants for instructors FIRST (before any other logic)
+      let loadedProgramTenants: ProgramTenant[] = [];
+      if (profile?.role === 'instructor' || profile?.role === 'coordinator') {
+        console.log('👨‍🏫 Loading program tenants for instructor/coordinator...');
+        loadedProgramTenants = await loadProgramTenants();
+        console.log('👨‍🏫 Program tenants loaded:', loadedProgramTenants.length);
       }
       if (simulationTenantId) {
         console.log('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
@@ -175,6 +224,51 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Regular user - load their assigned tenant
         console.log('🏢 TENANT CONTEXT: Loading tenant for regular user:', user.id);
         const startTime = Date.now();
+        
+        // Check if instructor with program tenant
+        if (profile?.role === 'instructor' && loadedProgramTenants.length > 0) {
+          console.log('👨‍🏫 INSTRUCTOR: Found', loadedProgramTenants.length, 'program tenants');
+          
+          // Check for saved program tenant preference
+          const savedProgramTenantId = localStorage.getItem('current_program_tenant');
+          
+          if (savedProgramTenantId) {
+            // Restore previous program tenant
+            const savedTenant = loadedProgramTenants.find(pt => pt.tenant_id === savedProgramTenantId);
+            if (savedTenant) {
+              console.log('✅ Restoring program tenant:', savedTenant.program_name);
+              const { data: tenant, error: tenantError } = await getTenantById(savedTenant.tenant_id);
+              if (!tenantError && tenant) {
+                setCurrentTenant(tenant);
+                setSelectedTenantId(tenant.id);
+                setLoading(false);
+                return;
+              }
+            }
+            // If restoration failed, clear saved preference
+            localStorage.removeItem('current_program_tenant');
+          }
+          
+          // Auto-login to first program tenant if they have only one
+          if (loadedProgramTenants.length === 1) {
+            console.log('✅ Auto-login to single program tenant:', loadedProgramTenants[0].program_name);
+            const { data: tenant, error: tenantError } = await getTenantById(loadedProgramTenants[0].tenant_id);
+            if (!tenantError && tenant) {
+              setCurrentTenant(tenant);
+              setSelectedTenantId(tenant.id);
+              localStorage.setItem('current_program_tenant', tenant.id);
+              setLoading(false);
+              return;
+            }
+          } else {
+            // Multiple programs - let ProgramSelectorModal handle it
+            console.log('🎯 Multiple program tenants - showing selector');
+            setCurrentTenant(null);
+            setSelectedTenantId(null);
+            setLoading(false);
+            return;
+          }
+        }
         
         // Add timeout to tenant fetch (15 seconds)
         const tenantResult = await Promise.race([
@@ -471,7 +565,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     enterSimulationTenant,
     exitSimulationTenant,
     enterTemplateTenant,
-    exitTemplateTenant
+    exitTemplateTenant,
+    programTenants,
+    loadProgramTenants
   };
 
   return (
