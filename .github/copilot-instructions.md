@@ -5,10 +5,12 @@ hacCare is a **multi-tenant healthcare simulation platform** for clinical educat
 
 ### Architecture Highlights
 - **Multi-tenant isolation**: Every table has `tenant_id UUID NOT NULL` with RLS policies enforcing tenant isolation
+- **Hierarchical tenant structure**: Institutions → Programs (workspaces for instructors without patient data)
 - **Simulation system**: Template-based scenarios with snapshot/restore, running in dedicated tenant environments (uses same codebase as production)
 - **BCMA (Barcode Medication Administration)**: Five Rights verification with patient/medication barcode dual-scan workflow
 - **Role hierarchy**: `super_admin` (cross-tenant access) → `coordinator` (tenant-wide) → `admin` → `instructor` (program-based) → `nurse` (simulation-only)
 - **Program-based permissions**: Instructors are assigned to programs (NESA, PN, SIM Hub, BNAD) and only see templates/simulations tagged with their programs
+- **Program tenants**: Empty workspaces where instructors land on login (no patients, just simulation/template management)
 
 ### 🧹 CRITICAL: Cleanup Priority
 **Tech debt reduction is a TOP PRIORITY**. When working on features:
@@ -120,6 +122,97 @@ npm run supabase:types         # Regenerate TypeScript types from Supabase schem
 See [src/App.tsx](../src/App.tsx) lines 17-29 for all lazy-loaded routes.
 
 ## Key Gotchas
+
+### Program Tenant System (Instructor Workspaces)
+**Program tenants are isolated workspaces for instructors to manage simulations and templates WITHOUT patient data:**
+
+**Architecture:**
+- `tenant_type` enum includes: `'production'`, `'institution'`, `'hospital'`, `'clinic'`, `'simulation_template'`, `'simulation_active'`, `'program'`
+- Program tenants have `parent_tenant_id` pointing to their institution (e.g., LethPoly)
+- Programs table stores metadata (code, name, description) - tenants table stores actual tenant
+- Automatic trigger creates program tenant when program is created: `trigger_create_program_tenant`
+
+**Database Schema:**
+```sql
+-- tenants table
+ALTER TABLE tenants ADD COLUMN program_id UUID REFERENCES programs(id);
+ALTER TABLE tenants ADD COLUMN parent_tenant_id UUID REFERENCES tenants(id);
+
+-- programs table
+CREATE TABLE programs (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  code TEXT UNIQUE,  -- e.g., 'NESA', 'PN', 'SIM Hub', 'BNAD'
+  name TEXT,
+  ...
+);
+
+-- Trigger auto-creates program tenant
+CREATE TRIGGER trigger_create_program_tenant
+  AFTER INSERT ON programs
+  FOR EACH ROW
+  EXECUTE FUNCTION create_program_tenant_trigger();
+```
+
+**Instructor Login Flow:**
+1. Instructor logs in
+2. `TenantContext.loadCurrentTenant()` runs
+3. Checks if instructor has program tenants via `getUserProgramTenants(user_id)`
+4. **Single program**: Auto-switches to that program tenant (stored in `localStorage.current_program_tenant`)
+5. **Multiple programs**: Shows `ProgramSelectorModal` to choose
+6. Tenant context switches to program tenant (appears in `currentTenant`)
+7. `ProgramWorkspace` component renders (empty workspace - no patients)
+8. `ProgramContextBanner` displays at top showing current program
+
+**Key Functions:**
+- `create_program_tenant(p_program_id, p_parent_tenant_id)` - RPC function (SECURITY DEFINER)
+- `get_user_program_tenants(p_user_id)` - Returns array of program tenants user has access to
+- Result format: `[{tenant_id, tenant_name, program_id, program_code, program_name, subdomain}]`
+
+**RLS Policies:**
+```sql
+-- Instructors can see program tenants they're assigned to
+CREATE POLICY tenants_instructors_see_program_tenants
+  ON tenants FOR SELECT TO authenticated
+  USING (
+    tenant_type = 'program' AND
+    program_id IN (
+      SELECT program_id FROM user_programs WHERE user_id = auth.uid()
+    )
+  );
+```
+
+**UI Components:**
+- [src/components/Program/ProgramWorkspace.tsx](../src/components/Program/ProgramWorkspace.tsx) - Main program workspace UI
+- [src/components/Program/ProgramSelectorModal.tsx](../src/components/Program/ProgramSelectorModal.tsx) - Modal for multi-program instructors
+- [src/components/Program/ProgramContextBanner.tsx](../src/components/Program/ProgramContextBanner.tsx) - Shows current program context
+- [src/components/Layout/TenantSwitcher.tsx](../src/components/Layout/TenantSwitcher.tsx) - Hierarchical display with parent institutions and nested programs
+
+**TenantSwitcher Hierarchy Display:**
+```tsx
+// Shows tree structure:
+// 🏢 Organizations
+//   LethPoly (parent institution - bold blue)
+//     └─ 📚 BNAD (program - indented purple)
+//     └─ 📚 NESA
+//     └─ 📚 Practical Nursing
+//     └─ 📚 Simulation Hub
+// 🎮 Active Simulations (green)
+// 📝 Simulation Templates (amber)
+```
+
+**Critical Files:**
+- [database/migrations/20260127000000_implement_program_tenants.sql](../database/migrations/20260127000000_implement_program_tenants.sql) - Full migration
+- [src/contexts/TenantContext.tsx](../src/contexts/TenantContext.tsx) - Program tenant switching logic
+- [src/services/admin/programService.ts](../src/services/admin/programService.ts) - `getUserProgramTenants()`, `createProgramTenant()`
+- [src/hooks/useUserProgramAccess.ts](../src/hooks/useUserProgramAccess.ts) - Program filtering logic
+
+**Common Issues:**
+- ❌ Program tenant showing patients → Program tenants should be empty, check tenant_type
+- ❌ Instructor can't see program → Check `user_programs` junction table assignment
+- ❌ RLS policy infinite recursion → Use simple policies, avoid recursive lookups on tenants table
+- ❌ CHECK constraint violation → Ensure tenant_type enum includes 'program' value
+- ✅ Always test with fresh browser (localStorage persists program tenant selection)
 
 ### Template Editing Workflow (Critical Understanding)
 **Templates ARE real tenant environments with live data**, not just frozen snapshots:

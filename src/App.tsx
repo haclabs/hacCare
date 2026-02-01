@@ -8,6 +8,7 @@ import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './features/patients/hooks/useMultiTenantPatients';
 import { useAlertContext } from './hooks/useAlertContext';
+import { useTenant } from './contexts/TenantContext';
 import { getPatientByMedicationId } from './services/clinical/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
@@ -31,6 +32,10 @@ const Documentation = lazy(() => import('./components/Documentation/Documentatio
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./features/settings/components/Settings'));
 const SystemLogsViewer = lazy(() => import('./features/admin/components/monitoring/SystemLogsViewer').then(module => ({ default: module.SystemLogsViewer })));
+// Program components
+const ProgramWorkspace = lazy(() => import('./components/Program/ProgramWorkspace'));
+const ProgramSelectorModal = lazy(() => import('./components/Program/ProgramSelectorModal'));
+const ProgramStudents = lazy(() => import('./components/Program/ProgramStudents'));
 
 /**
  * Main Application Component
@@ -51,6 +56,7 @@ const SystemLogsViewer = lazy(() => import('./features/admin/components/monitori
 function App() {
   // Authentication and simulation detection
   const { user, profile } = useAuth();
+  const { currentTenant } = useTenant();
 
   // Application state management
   const [activeTab, setActiveTab] = useState('patients');
@@ -550,6 +556,57 @@ function App() {
    * @returns {JSX.Element} The content for the current active tab
    */
   const renderContent = () => {
+    // Check if in program workspace - but respect the active tab for program management pages
+    if (currentTenant?.tenant_type === 'program') {
+      // Program Home - landing page with calendar and announcements
+      if (activeTab === 'program-home') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramWorkspace />
+          </Suspense>
+        );
+      }
+      
+      // Check if user selected a program management page
+      if (activeTab === 'program-students') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramStudents />
+          </Suspense>
+        );
+      }
+      
+      if (activeTab === 'program-settings') {
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Program Settings</h2>
+            <p className="text-gray-600 dark:text-gray-400">Program configuration and settings coming soon...</p>
+          </div>
+        );
+      }
+      
+      // If activeTab is 'patients' (the default), show program workspace landing page
+      // Program tenants don't have patients - they're instructor workspaces
+      if (activeTab === 'patients') {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramWorkspace />
+          </Suspense>
+        );
+      }
+      
+      // If it's a workspace tab (simulations, schedule, etc.), fall through to the switch statement below
+      // Only default to program workspace for unrecognized tabs
+      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'backup-management', 'admin', 'documentation', 'changelog', 'syslogs'].includes(activeTab)) {
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProgramWorkspace />
+          </Suspense>
+        );
+      }
+      // Otherwise, fall through to the switch statement below
+    }
+
     // Route to appropriate content based on active tab
     switch (activeTab) {
       case 'patients':
@@ -696,7 +753,6 @@ function App() {
         
         {/* Application Header */}
         <Header 
-          onAlertsClick={() => setShowAlerts(true)}
           onBarcodeScan={handleBarcodeScan}
         />
         
@@ -733,6 +789,11 @@ function App() {
         isOpen={showAlerts}
         onClose={() => setShowAlerts(false)}
       />
+
+      {/* Program Selector Modal - For instructors with multiple programs */}
+      <Suspense fallback={null}>
+        <ProgramSelectorModal />
+      </Suspense>
 
       {/* Wrap HospitalBracelet in Suspense */}
       {braceletPatient && (

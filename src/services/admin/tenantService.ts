@@ -764,11 +764,11 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 /**
  * Get all tenants for super admin tenant switching
  */
-export async function getTenantsForSwitching(): Promise<{ data: Pick<Tenant, 'id' | 'name' | 'status'>[] | null; error: any }> {
+export async function getTenantsForSwitching(): Promise<{ data: Pick<Tenant, 'id' | 'name' | 'status' | 'tenant_type' | 'parent_tenant_id'>[] | null; error: any }> {
   try {
     const { data, error } = await supabase
       .from('tenants')
-      .select('id, name, status')
+      .select('id, name, status, tenant_type, parent_tenant_id')
       .eq('status', 'active')
       .order('name');
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
 import logo from '../../images/logo.png';
 
@@ -29,6 +30,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const { hasRole, profile } = useAuth();
+  const { currentTenant, programTenants } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeItemTop, setActiveItemTop] = useState(0);
@@ -40,6 +42,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     return saved === 'true';
   });
   const navContainerRef = useRef<HTMLDivElement>(null);
+
+  // Get current program info if in program tenant
+  const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
 
   // Save collapsed state to localStorage
   useEffect(() => {
@@ -79,15 +84,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
   /**
    * Workspace items - available to all users
+   * Note: Patients is hidden in program tenants since they're instructor workspaces without patient data
    */
   const workspaceItems = [
-    { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' },
+    // Only show Patients when NOT in a program tenant (program tenants are instructor workspaces)
+    ...(currentTenant?.tenant_type !== 'program' ? [
+      { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' }
+    ] : []),
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
     ...(hasRole(['admin', 'super_admin', 'coordinator', 'instructor']) ? [
-      { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600' }
+      { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600', route: '/simulation-portal' }
     ] : []),
   ];
+
+  /**
+   * Program Management items - only show in program tenants for instructors/coordinators/super_admins
+   */
+  const programItems = (currentProgram && hasRole(['instructor', 'coordinator', 'super_admin'])) ? [
+    { id: 'program-home', label: 'Home', icon: Home, color: 'text-blue-600' },
+    { id: 'program-students', label: 'Students', icon: Users, color: 'text-purple-600' },
+    { id: 'program-settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
+  ] : [];
 
   /**
    * Admin items - for super admins and coordinators
@@ -112,8 +130,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     ] : []),
   ];
   return (
-    <aside className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen fixed top-0 left-0 transition-all duration-300 ease-in-out flex flex-col overflow-y-auto shadow-xl $${
-      isCollapsed ? 'w-18' : 'w-56'
+    <aside className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen fixed top-0 left-0 transition-all duration-300 ease-in-out flex flex-col overflow-y-auto shadow-xl ${
+      isCollapsed ? 'w-20' : 'w-64'
     }`}>
       {/* Logo at top of sidebar - Reduced padding */}
       <div className={`transition-all duration-300 ${
@@ -156,6 +174,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       {!isCollapsed && (
         <div className="px-4 pb-2 pt-1">
           <SimulationIndicator />
+        </div>
+      )}
+
+      {/* Program Context Badge - Shows when in program tenant */}
+      {!isCollapsed && currentProgram && (
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-blue-900 dark:text-blue-100 truncate">
+                {currentProgram.program_name}
+              </div>
+              <div className="text-[10px] text-blue-700 dark:text-blue-300">
+                Program Workspace
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -222,6 +257,76 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                         {item.label}
                         <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
                       </div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Program Management Section - Only in Program Tenants */}
+        {programItems.length > 0 && (
+          <div className="mb-8">
+            <div className="my-6 border-t border-gray-200 dark:border-gray-800" />
+            {!isCollapsed && (
+              <div className="px-3 mb-3 flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide dark:text-gray-400">
+                  Program Management
+                </span>
+                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 dark:bg-purple-900/20 rounded text-purple-600 dark:text-purple-400">
+                  <BookOpen size={10} />
+                  <span className="text-[9px] font-semibold">{currentProgram?.program_code}</span>
+                </div>
+              </div>
+            )}
+            <ul className="space-y-1">
+              {programItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                
+                return (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        onTabChange(item.id);
+                        navigate('/app', { replace: false });
+                      }}
+                      data-active-item={isActive}
+                      title={isCollapsed ? item.label : undefined}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group relative ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/30 dark:text-blue-300'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                      } ${
+                        isCollapsed ? 'justify-center' : ''
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 transition-transform duration-200 flex-shrink-0 ${
+                        isActive 
+                          ? 'text-blue-600 dark:text-blue-400' 
+                          : item.color + ' dark:text-gray-400 group-hover:scale-110'
+                      }`} />
+                      {!isCollapsed && (
+                        <span className="text-[15px] font-medium">{item.label}</span>
+                      )}
+                      {/* Tooltip for collapsed state */}
+                      {isCollapsed && (
+                        <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-lg">
+                          {item.label}
+                          <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
+                        </div>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/*           </div>
                     )}
                   </button>
                 </li>

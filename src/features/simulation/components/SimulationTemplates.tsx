@@ -211,13 +211,33 @@ const SimulationTemplates: React.FC = () => {
                   </p>
                 )}
 
+                {/* Program Category Badges */}
+                {template.primary_categories && template.primary_categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {template.primary_categories.map((category) => (
+                      <span
+                        key={category}
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                      >
+                        📚 {category}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="text-xs text-slate-500 dark:text-slate-500 mb-4 space-y-1">
                   <div>Default duration: {template.default_duration_minutes} minutes</div>
                   <div>Created {formatDistanceToNow(new Date(template.created_at), { addSuffix: true })}</div>
-                  {template.snapshot_data && (
+                  {template.snapshot_data && template.snapshot_taken_at && (
                     <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                       <Camera className="h-3 w-3" />
-                      Snapshot saved
+                      <span>Snapshot saved {formatDistanceToNow(new Date(template.snapshot_taken_at), { addSuffix: true })}</span>
+                    </div>
+                  )}
+                  {template.snapshot_data && !template.snapshot_taken_at && (
+                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                      <Camera className="h-3 w-3" />
+                      <span>Snapshot saved</span>
                     </div>
                   )}
                 </div>

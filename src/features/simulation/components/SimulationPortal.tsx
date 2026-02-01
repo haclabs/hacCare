@@ -222,9 +222,12 @@ const SimulationPortal: React.FC = () => {
   };
 
   const handleManageSimulations = () => {
-    // Stay within /app context - renderContent will handle showing simulations tab
-    navigate('/app');
-    // Note: Consider passing state to set activeTab to 'simulations'
+    // Navigate to main app and trigger tab change to simulations with templates tab
+    // Pass initialTab in state so SimulationManager opens to templates instead of active
+    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'simulations' } }));
+    setTimeout(() => {
+      navigate('/app', { state: { initialTab: 'templates' }, replace: true });
+    }, 0);
   };
 
   if (authLoading || loading || enteringSimulation) {

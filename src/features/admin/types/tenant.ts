@@ -21,9 +21,10 @@ export interface Tenant {
   max_users: number;
   max_patients: number;
   // Simulation fields
-  tenant_type?: 'production' | 'institution' | 'hospital' | 'clinic' | 'simulation_template' | 'simulation_active';
+  tenant_type?: 'production' | 'institution' | 'hospital' | 'clinic' | 'simulation_template' | 'simulation_active' | 'program';
   is_simulation?: boolean;
   parent_tenant_id?: string;
+  program_id?: string; // Links program tenants to their program
   simulation_config?: Record<string, any>;
   auto_cleanup_at?: string;
   simulation_id?: string;

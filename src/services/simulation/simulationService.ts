@@ -41,6 +41,7 @@ export async function createSimulationTemplate(
       p_name: params.name,
       p_description: params.description || null,
       p_default_duration_minutes: params.default_duration_minutes || 120,
+      p_primary_categories: params.primary_categories || null,
     });
 
     if (error) throw error;
