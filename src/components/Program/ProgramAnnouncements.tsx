@@ -23,6 +23,9 @@ export const ProgramAnnouncements: React.FC = () => {
   const queryClient = useQueryClient();
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
 
+  // Get program_id from either programTenants array OR directly from tenant's program_id field
+  const programId = currentProgram?.program_id || currentTenant?.program_id;
+
   const [showModal, setShowModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<ProgramAnnouncement | null>(null);
 
@@ -31,14 +34,14 @@ export const ProgramAnnouncements: React.FC = () => {
 
   // Load announcements
   const { data: announcements = [], isLoading } = useQuery({
-    queryKey: ['programAnnouncements', currentProgram?.program_id],
+    queryKey: ['programAnnouncements', programId],
     queryFn: async () => {
-      if (!currentProgram?.program_id) return [];
-      const { data, error } = await getProgramAnnouncements(currentProgram.program_id);
+      if (!programId) return [];
+      const { data, error } = await getProgramAnnouncements(programId);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!currentProgram?.program_id
+    enabled: !!programId
   });
 
   // Create mutation

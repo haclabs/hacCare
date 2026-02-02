@@ -45,12 +45,15 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   const { programTenants, currentTenant } = useTenant();
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
 
+  // Get program_id from either programTenants array OR directly from tenant's program_id field
+  const programId = currentProgram?.program_id || currentTenant?.program_id || '';
+
   const [formData, setFormData] = useState<Partial<AnnouncementData>>({
     title: '',
     content: '',
     category: 'General',
     is_pinned: false,
-    program_id: currentProgram?.program_id || '',
+    program_id: programId,
     author_id: user?.id || '',
     expires_at: null
   });
@@ -68,12 +71,12 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
         content: '',
         category: 'General',
         is_pinned: false,
-        program_id: currentProgram?.program_id || '',
+        program_id: programId,
         author_id: user?.id || '',
         expires_at: null
       });
     }
-  }, [existingAnnouncement, currentProgram, user]);
+  }, [existingAnnouncement, programId, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,10 +96,26 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
     try {
       const authorName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email : null;
       
+      // Get program_id from multiple sources (formData, programTenants, or currentTenant)
+      const finalProgramId = formData.program_id || currentProgram?.program_id || currentTenant?.program_id;
+      const finalAuthorId = formData.author_id || user?.id;
+      
+      // Validate required UUIDs before saving
+      if (!finalProgramId) {
+        setError('Program ID not found. Please try refreshing the page.');
+        setSaving(false);
+        return;
+      }
+      if (!finalAuthorId) {
+        setError('User ID not found. Please log in again.');
+        setSaving(false);
+        return;
+      }
+      
       await onSave({
         ...formData,
-        program_id: formData.program_id || currentProgram?.program_id || '',
-        author_id: formData.author_id || user?.id || '',
+        program_id: finalProgramId,
+        author_id: finalAuthorId,
         author_name: authorName
       } as AnnouncementData);
       onClose();
