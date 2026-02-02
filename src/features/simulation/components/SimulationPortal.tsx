@@ -221,6 +221,14 @@ const SimulationPortal: React.FC = () => {
     enterSimulation(assignment.simulation.tenant_id, assignment.simulation.name);
   };
 
+  const handleLaunchActiveSimulation = () => {
+    // Navigate to main app and trigger tab change to simulations with active tab
+    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'simulations' } }));
+    setTimeout(() => {
+      navigate('/app', { state: { initialTab: 'active' }, replace: true });
+    }, 0);
+  };
+
   const handleManageSimulations = () => {
     // Navigate to main app and trigger tab change to simulations with templates tab
     // Pass initialTab in state so SimulationManager opens to templates instead of active
@@ -296,22 +304,43 @@ const SimulationPortal: React.FC = () => {
         {/* Instructor Actions */}
         {isInstructor && (
           <div className="mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="flex gap-4">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Launch Active Simulation Card */}
                 <button
-                  onClick={handleManageSimulations}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                  onClick={handleLaunchActiveSimulation}
+                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all p-6 text-left group border-2 border-transparent hover:border-blue-500"
                 >
-                  <Play className="h-5 w-5 mr-2" />
-                  Launch New Simulation
+                  <div className="flex items-start mb-4">
+                    <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-600 transition-colors">
+                      <Play className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    Launch Active Simulation
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Access simulations that are ready to launch. Pre-configured with patients and assigned students - just start when you're ready.
+                  </p>
                 </button>
+
+                {/* Manage Templates Card */}
                 <button
                   onClick={handleManageSimulations}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
+                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all p-6 text-left group border-2 border-transparent hover:border-gray-500"
                 >
-                  <Users className="h-5 w-5 mr-2" />
-                  Manage All Simulations
+                  <div className="flex items-start mb-4">
+                    <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-gray-700 transition-colors">
+                      <Users className="h-6 w-6 text-gray-700 group-hover:text-white transition-colors" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
+                    Manage Simulation Templates
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Create, edit, or launch new simulations from templates. Use this to set up scenarios for upcoming sessions.
+                  </p>
                 </button>
               </div>
             </div>

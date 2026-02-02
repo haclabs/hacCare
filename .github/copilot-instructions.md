@@ -1,5 +1,9 @@
 # hacCare AI Development Guide
 
+**Current Version:** 1.0 (Milestone Release Candidate)  
+**Status:** Production-ready multi-tenant healthcare simulation platform  
+**Last Updated:** February 2, 2026
+
 ## System Overview
 hacCare is a **multi-tenant healthcare simulation platform** for clinical education. React 19 + TypeScript + Supabase (PostgreSQL 15) with strict Row-Level Security (RLS) for HIPAA compliance.
 
@@ -15,9 +19,21 @@ hacCare is a **multi-tenant healthcare simulation platform** for clinical educat
 ### 🧹 CRITICAL: Cleanup Priority
 **Tech debt reduction is a TOP PRIORITY**. When working on features:
 - **Remove unused code aggressively** - if it's not actively used, delete it
-- **Consolidate duplicates** - `src/featuresexplicit tenant filtering is the standard pattern
+- **Consolidate duplicates** - `src/features/clinical/` → `src/features/patients/` migration is ~80% complete
 - **Look for abandoned patterns** - old simulation code, unused services, deprecated components
 - **Document what you remove** - add entries to CHANGELOG.md for significant cleanup
+
+**✅ Recent Consolidation Progress:**
+- ✅ Multi-tenant patient hooks centralized in `useMultiTenantPatients.ts`
+- ✅ Program workspace system fully implemented
+- ✅ Template editing workflow complete with banner/tenant switching
+- ✅ Simulation portal card-based UI improvements
+- 🔄 In Progress: Migrate remaining `clinical/` features to `patients/`
+
+**📊 Code Health Metrics:**
+- Component size limit: **350 lines** (extract to sub-components above this)
+- Feature folder depth: **3 levels max** (features/domain/components/SubComponent.tsx)
+- Database fixes: **Consolidate into migrations quarterly** (don't let fixes/ folder exceed 20 files)
 
 ## Critical Developer Patterns
 
@@ -421,3 +437,251 @@ grep -r "TODO.*old" src/
 - **Look for existing patterns**: Search `src/features/` for similar features before creating new approaches
 - **Security first**: Every new table requires RLS policies and tenant isolation
 - **Consult docs/**: Most design decisions documented in `docs/features/` or `docs/architecture/`
+
+## UI/UX Consistency Guidelines
+
+### Component Design Patterns
+**Card-Based Layouts** - Preferred for feature discovery and actions:
+```tsx
+// ✅ Good - Card with icon, title, description
+<button className="bg-white rounded-lg shadow-md hover:shadow-lg p-6 text-left group border-2">
+  <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-600">
+    <Icon className="h-6 w-6" />
+  </div>
+  <h3 className="text-lg font-semibold">Action Title</h3>
+  <p className="text-sm text-gray-600">Clear description of what this does</p>
+</button>
+
+// ❌ Avoid - Unclear buttons without context
+<button className="bg-blue-600">Do Thing</button>
+```
+
+**Header Elements** - Use white/light backgrounds for visibility:
+```tsx
+// ✅ TenantSwitcher pattern - white box on dark header
+<button className="bg-white text-gray-900 rounded-md border shadow-sm">
+
+// ❌ Dark text on dark background
+<button className="text-gray-600 hover:text-gray-900">
+```
+
+**Color Semantics** - Consistent color meanings:
+- **Blue** (primary): Main actions, navigation, info
+- **Green**: Success, active simulations, safe actions
+- **Amber/Orange**: Templates, warnings, editing mode
+- **Purple**: Program-related, instructor features
+- **Red**: Dangerous actions, alerts, errors
+- **Indigo**: System admin communications
+
+### Announcement Categories
+System supports 7 announcement types for program workspaces:
+1. **General** (gray) - Routine updates
+2. **Templates** (blue) - Simulation template news
+3. **Training** (purple) - Educational content
+4. **Students** (green) - Student-related announcements
+5. **Important** (red) - Critical notifications
+6. **Reminder** (amber) - Upcoming events
+7. **System Admin** (indigo) - Official system-wide messages
+
+See template at [docs/templates/program_workspace_announcement.md](../docs/templates/program_workspace_announcement.md)
+
+## Component Size & Extraction Rules
+
+### When to Extract Components
+
+**Automatic extraction triggers:**
+1. **> 350 lines** - Component too large, split into logical sub-components
+2. **> 3 useState calls** - Consider using reducer or extracting form logic
+3. **Repeated JSX patterns** - Extract to reusable component
+4. **Complex conditional rendering** - Extract to separate components
+
+**Example extraction:**
+```tsx
+// Before (450 lines in SimulationPortal.tsx)
+<div>
+  {/* 100 lines of instructor quick actions */}
+  {/* 200 lines of simulation list */}
+  {/* 150 lines of no-simulations message */}
+</div>
+
+// After - Extract to sub-components
+<InstructorQuickActions />
+<SimulationList assignments={assignments} />
+<NoSimulationsMessage />
+```
+
+### Feature Folder Structure Rules
+```
+src/features/
+├── patients/         # Patient management & clinical workflows
+│   ├── components/   # UI components (max 3 levels deep)
+│   ├── hooks/        # React Query hooks
+│   └── services/     # API calls (rare - logic in hooks preferred)
+├── simulation/       # Simulation manager, templates
+├── admin/            # User/tenant management
+└── program/          # Program workspace features (NEW)
+```
+
+**🚫 DEPRECATED:** `clinical/` folder - migrate remaining to `patients/`
+
+## Database Management Rules
+
+### Migration vs Fix Files
+
+**Use migrations for:**
+- Schema changes (new tables, columns, constraints)
+- New RLS policies
+- New database functions
+- Enum additions (requires separate commit)
+
+**Use database/fixes/ for:**
+- One-time data corrections
+- Emergency hot-fixes in production
+- Temporary debugging scripts
+- **BUT**: Review and consolidate quarterly
+
+**📏 Fix folder limit:** Keep under 20 files. When exceeded:
+1. Create a consolidation migration
+2. Archive old fixes to `database/fixes/archive/`
+3. Document learnings in migration comments
+
+### RLS Policy Patterns
+
+**Standard tenant isolation:**
+```sql
+-- ✅ Simple, performant policy
+CREATE POLICY table_tenant_isolation ON table_name
+  FOR ALL TO authenticated
+  USING (tenant_id = current_setting('app.current_tenant_id', TRUE)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.current_tenant_id', TRUE)::uuid);
+
+-- ❌ Avoid recursive queries (infinite recursion risk)
+CREATE POLICY complex_policy ON table_name
+  USING (tenant_id IN (
+    SELECT tenant_id FROM same_table WHERE ...  -- ⚠️ Recursion!
+  ));
+```
+
+**Super admin bypass:**
+```sql
+-- Allow super_admins to see all data
+CREATE POLICY admin_see_all ON table_name
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles 
+      WHERE id = auth.uid() AND role = 'super_admin'
+    )
+    OR tenant_id = current_setting('app.current_tenant_id', TRUE)::uuid
+  );
+```
+
+## Version Milestones
+
+### v1.0 Milestone Criteria (Current Target)
+- ✅ Multi-tenant architecture stable
+- ✅ Program workspace system operational
+- ✅ Template editing workflow complete
+- ✅ BCMA medication administration functional
+- ✅ Simulation launch/management working
+- ✅ Role-based permissions enforced
+- 🔄 Documentation coverage > 80% (in progress)
+- 🔄 `clinical/` → `patients/` migration complete
+
+### Post-1.0 Refactor Candidates
+**Don't refactor now - flag for v2.0:**
+- `App.tsx` (813 lines) - Extract routing logic
+- Large portal components - Split into feature modules
+- Consolidate database fixes into clean migrations
+- Type safety improvements (reduce `any` usage)
+
+**When to refactor:** When it causes pain, not because it "should" be done.
+
+## Testing Guidelines
+
+### Critical Test Coverage Areas
+1. **Tenant isolation** - Verify RLS policies block cross-tenant access
+2. **Role permissions** - Ensure instructors see only assigned programs
+3. **Barcode scanning** - Patient/medication matching logic
+4. **Simulation lifecycle** - Launch, run, complete, reset flows
+
+### Manual Testing Checklist (Pre-Release)
+```bash
+□ Fresh browser test (clear localStorage)
+□ Instructor with single program - auto-login works
+□ Instructor with multiple programs - selector shows
+□ Template editing - tenant switch + save works
+□ Barcode scan - correct patient/med navigation
+□ Simulation launch - tenant creation + data copy
+□ Program filtering - instructors see only their programs
+```
+
+## Emergency Procedures
+
+### Production Hotfix Protocol
+1. Create branch: `hotfix/description`
+2. Apply minimal fix (avoid refactoring)
+3. Add fix script to `database/fixes/` with date prefix
+4. Test in staging with production data snapshot
+5. Deploy with rollback plan
+6. Schedule consolidation in next sprint
+
+### RLS Policy Deadlock
+If users report "permission denied" or queries hang:
+```sql
+-- Check for recursive policies
+SELECT schemaname, tablename, policyname, qual, with_check
+FROM pg_policies 
+WHERE tablename = 'problem_table';
+
+-- Temporarily disable if needed (EMERGENCY ONLY)
+ALTER TABLE problem_table DISABLE ROW LEVEL SECURITY;
+-- Fix policy, then re-enable
+ALTER TABLE problem_table ENABLE ROW LEVEL SECURITY;
+```
+
+## Performance Optimization
+
+### Query Optimization Patterns
+```typescript
+// ✅ Good - Specific fields, indexed columns
+const { data } = await supabase
+  .from('patients')
+  .select('id, first_name, last_name, patient_id')
+  .eq('tenant_id', tenantId)
+  .eq('is_active', true)
+  .order('last_name');
+
+// ❌ Avoid - SELECT *, unindexed filters
+const { data } = await supabase
+  .from('patients')
+  .select('*')
+  .ilike('notes', '%search%');  // Full table scan!
+```
+
+### React Query Stale Times
+- **Patient data**: 5 minutes (rarely changes mid-session)
+- **Medication lists**: 5 minutes (static during simulation)
+- **Active simulations**: 30 seconds (changes frequently)
+- **User profile**: 10 minutes (only changes on logout)
+
+## Success Metrics
+
+### What "Good" Looks Like
+- ✅ No RLS policy violations in logs
+- ✅ Page load < 2 seconds (first visit)
+- ✅ Component render < 100ms (React DevTools)
+- ✅ Database queries < 50ms p95 (Supabase dashboard)
+- ✅ Bundle size < 1MB (production build)
+- ✅ Zero PropTypes errors (TypeScript strict mode)
+
+### Code Review Checklist
+```
+□ All queries include tenant_id filter
+□ New components < 350 lines
+□ No direct Supabase calls (use React Query)
+□ TypeScript strict mode passes
+□ No console.log in production code
+□ RLS policies defined for new tables
+□ CHANGELOG.md updated for user-facing changes
+```

@@ -963,6 +963,7 @@ const ActiveSimulations: React.FC = () => {
       {completingSimulation && (
         <InstructorNameModal
           simulationName={completingSimulation.name}
+          programCodes={completingSimulation.primary_categories || []}
           onConfirm={handleCompleteWithInstructor}
           onCancel={() => setCompletingSimulation(null)}
         />

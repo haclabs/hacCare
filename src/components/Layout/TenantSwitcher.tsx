@@ -141,7 +141,7 @@ export const TenantSwitcher: React.FC = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+        className="flex items-center gap-2 px-3 py-2 text-sm text-gray-900 dark:text-gray-900 bg-white hover:bg-gray-50 rounded-md transition-colors shadow-sm border border-gray-200"
         disabled={loading}
       >
         <Building className="w-4 h-4" />

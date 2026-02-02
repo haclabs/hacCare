@@ -111,7 +111,7 @@ export interface ProgramAnnouncement {
   program_id: string;
   title: string;
   content: string;
-  category: 'General' | 'Templates' | 'Training' | 'Students' | 'Important' | 'Reminder';
+  category: 'General' | 'Templates' | 'Training' | 'Students' | 'Important' | 'Reminder' | 'System Admin';
   is_pinned: boolean;
   author_id: string;
   author_name: string | null;
