@@ -93,15 +93,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     ] : []),
     { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
-    ...(hasRole(['admin', 'super_admin', 'coordinator', 'instructor']) ? [
-      { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600', route: '/simulation-portal' }
-    ] : []),
+    { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
   ];
 
   /**
-   * Program Management items - only show in program tenants for instructors/coordinators/super_admins
+   * Program Management items - show in program tenants for all roles
+   * Super admins should see program menus when they switch to a program tenant
    */
-  const programItems = (currentProgram && hasRole(['instructor', 'coordinator', 'super_admin'])) ? [
+  const programItems = (currentTenant?.tenant_type === 'program') ? [
     { id: 'program-home', label: 'Home', icon: Home, color: 'text-blue-600' },
     { id: 'program-students', label: 'Students', icon: Users, color: 'text-purple-600' },
     { id: 'program-settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },

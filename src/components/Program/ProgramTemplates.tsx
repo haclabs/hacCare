@@ -3,6 +3,7 @@ import { FileText, Plus, Search, Grid, List, Play, Edit, Copy, Trash2 } from 'lu
 import { useQuery } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
 import { getSimulationTemplates } from '../../services/simulation/simulationService';
+import { supabase } from '../../lib/api/supabase';
 import { useUserProgramAccess } from '../../hooks/useUserProgramAccess';
 import { formatDistanceToNow } from 'date-fns';
 import LoadingSpinner from '../UI/LoadingSpinner';
@@ -23,11 +24,30 @@ interface SimulationTemplate {
  * Manages simulation templates for the program
  */
 export const ProgramTemplates: React.FC = () => {
-  const { programTenants, currentTenant } = useTenant();
-  const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+  const { currentTenant } = useTenant();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { filterByPrograms } = useUserProgramAccess();
+
+  // Get program directly using program_id from current tenant
+  const { data: currentProgram } = useQuery({
+    queryKey: ['program', currentTenant?.program_id],
+    queryFn: async () => {
+      if (!currentTenant?.program_id) return null;
+      const { data, error } = await supabase
+        .from('programs')
+        .select('*')
+        .eq('id', currentTenant.program_id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching program:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!currentTenant?.program_id
+  });
 
   // Load templates
   const { data: templates = [], isLoading } = useQuery({
@@ -46,12 +66,16 @@ export const ProgramTemplates: React.FC = () => {
       )
     : filteredTemplates;
 
-  if (!currentProgram) {
+  if (!currentTenant || currentTenant.tenant_type !== 'program') {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <p className="text-red-800 dark:text-red-200">No program context found</p>
+        <p className="text-red-800 dark:text-red-200">Not in a program workspace</p>
       </div>
     );
+  }
+
+  if (!currentProgram) {
+    return <LoadingSpinner />;
   }
 
   if (isLoading) {
@@ -68,7 +92,7 @@ export const ProgramTemplates: React.FC = () => {
             Simulation Templates
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {currentProgram.program_name} - {searchedTemplates.length} templates available
+            {currentProgram.name} - {searchedTemplates.length} templates available
           </p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md">

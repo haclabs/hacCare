@@ -244,7 +244,8 @@ const SimulationPortal: React.FC = () => {
   }
 
   // Always show selection screen - no auto-routing for anyone
-  const isInstructor = profile?.role === 'admin' || profile?.role === 'instructor';
+  // Check if user can manage simulations (instructors, admins, coordinators, and super admins)
+  const isInstructor = profile?.role === 'admin' || profile?.role === 'instructor' || profile?.role === 'coordinator' || profile?.role === 'super_admin';
 
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">

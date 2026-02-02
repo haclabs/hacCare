@@ -3,6 +3,7 @@ import { Users, Plus, Search, Upload, Edit2, UserX, BarChart } from 'lucide-reac
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
 import { getStudentRoster } from '../../services/admin/programService';
+import { supabase } from '../../lib/api/supabase';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { format } from 'date-fns';
 import AddStudentModal from './AddStudentModal';
@@ -13,8 +14,7 @@ import ImportStudentsModal from './ImportStudentsModal';
  * Full student roster with search, pagination, and management
  */
 export const ProgramStudents: React.FC = () => {
-  const { currentTenant, programTenants } = useTenant();
-  const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+  const { currentTenant } = useTenant();
   const queryClient = useQueryClient();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,14 +23,34 @@ export const ProgramStudents: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const pageSize = 50;
 
+  // Get program directly using program_id from current tenant
+  const { data: currentProgram } = useQuery({
+    queryKey: ['program', currentTenant?.program_id],
+    queryFn: async () => {
+      if (!currentTenant?.program_id) return null;
+      const { data, error } = await supabase
+        .from('programs')
+        .select('*')
+        .eq('id', currentTenant.program_id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching program:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!currentTenant?.program_id
+  });
+
   // Fetch student roster
   const { data: rosterData, isLoading } = useQuery({
-    queryKey: ['student-roster', currentProgram?.program_id, currentPage, searchQuery],
+    queryKey: ['student-roster', currentProgram?.id, currentPage, searchQuery],
     queryFn: async () => {
-      if (!currentProgram?.program_id) return { data: [], count: 0 };
-      return await getStudentRoster(currentProgram.program_id, currentPage, pageSize, searchQuery);
+      if (!currentProgram?.id) return { data: [], count: 0 };
+      return await getStudentRoster(currentProgram.id, currentPage, pageSize, searchQuery);
     },
-    enabled: !!currentProgram?.program_id,
+    enabled: !!currentProgram?.id,
     staleTime: 30000
   });
 
@@ -38,12 +58,16 @@ export const ProgramStudents: React.FC = () => {
   const totalCount = rosterData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  if (!currentProgram) {
+  if (!currentTenant || currentTenant.tenant_type !== 'program') {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-        <p className="text-red-800 dark:text-red-200">No program context found</p>
+        <p className="text-red-800 dark:text-red-200">Not in a program workspace</p>
       </div>
     );
+  }
+
+  if (!currentProgram) {
+    return <LoadingSpinner />;
   }
 
   if (isLoading) {
@@ -60,7 +84,7 @@ export const ProgramStudents: React.FC = () => {
             Student Roster
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {currentProgram.program_name} - {totalCount} enrolled students
+            {currentProgram.name} - {totalCount} enrolled students
           </p>
         </div>
         <div className="flex items-center gap-3">
