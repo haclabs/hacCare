@@ -12,6 +12,7 @@ import { createSimulationTemplate } from '../../../services/simulation/simulatio
 import { getPrograms, type Program } from '../../../services/admin/programService';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import { supabase } from '../../../lib/api/supabase';
 
 interface CreateTemplateModalProps {
   onClose: () => void;
@@ -37,9 +38,27 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
   }, [currentTenant]);
 
   const loadPrograms = async () => {
-    if (!currentTenant?.id) return;
+    if (!currentTenant) return;
     
-    const { data, error } = await getPrograms(currentTenant.id);
+    let data: Program[] | null = null;
+    let error: any = null;
+    
+    // If in a program tenant, get just that program
+    if (currentTenant.program_id) {
+      const result = await supabase
+        .from('programs')
+        .select('*')
+        .eq('id', currentTenant.program_id)
+        .single();
+      data = result.data ? [result.data] : null;
+      error = result.error;
+    } else {
+      // Otherwise, get all programs for the parent tenant
+      const result = await getPrograms(currentTenant.id);
+      data = result.data;
+      error = result.error;
+    }
+    
     if (!error && data) {
       setPrograms(data);
       

@@ -52,7 +52,11 @@ export const ManagementDashboard: React.FC = () => {
         throw new Error(statsResult.error.message);
       }
 
-      setTenants(tenantsResult.data || []);
+      // Filter out program tenants from overview (they appear in Programs tab)
+      const nonProgramTenants = (tenantsResult.data || []).filter(
+        tenant => tenant.tenant_type !== 'program'
+      );
+      setTenants(nonProgramTenants);
       setStats(statsResult.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
@@ -167,12 +171,12 @@ export const ManagementDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Management Dashboard</h1>
-          <p className="text-gray-600">Manage tenants and monitor system health</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Management Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage tenants and monitor system health</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all shadow-md"
         >
           <Plus className="h-5 w-5" />
           Add Tenant
@@ -180,56 +184,56 @@ export const ManagementDashboard: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <nav className="flex space-x-1 p-1">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
               activeTab === 'overview'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
               <Building2 className="h-4 w-4" />
               <span>Tenant Overview</span>
             </div>
           </button>
           <button
             onClick={() => setActiveTab('programs')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
               activeTab === 'programs'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
               <Tag className="h-4 w-4" />
               <span>Programs</span>
             </div>
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
               activeTab === 'settings'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
               <Settings className="h-4 w-4" />
               <span>Tenant Settings</span>
             </div>
           </button>
           <button
             onClick={() => setActiveTab('bulk-print')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
               activeTab === 'bulk-print'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
               <Printer className="h-4 w-4" />
               <span>Bulk Label Print</span>
             </div>
@@ -243,51 +247,73 @@ export const ManagementDashboard: React.FC = () => {
           {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Tenants</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total_tenants}</p>
+          <div className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-blue-600 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Building2 className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tenants</p>
               </div>
-              <Building2 className="h-8 w-8 text-blue-600" />
+              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">{stats.total_tenants}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Tenants</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.active_tenants}</p>
+          <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl shadow-lg border border-green-200 dark:border-green-800 p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-green-600/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-green-600 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Tenants</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.active_tenants}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total_users}</p>
+          <div className="group relative bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl shadow-lg border border-purple-200 dark:border-purple-800 p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-3 bg-purple-600 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Users className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
               </div>
-              <Users className="h-8 w-8 text-purple-600" />
+              <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">{stats.total_users}</p>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">System Health</p>
-                <p className={`text-2xl font-bold ${
-                  stats.system_health === 'healthy' ? 'text-green-600' :
-                  stats.system_health === 'warning' ? 'text-yellow-600' : 'text-red-600'
+          <div className={`group relative rounded-xl shadow-lg border p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 ${
+            stats.system_health === 'healthy'
+              ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800'
+              : stats.system_health === 'warning'
+              ? 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-yellow-200 dark:border-yellow-800'
+              : 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200 dark:border-red-800'
+          }`}>
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500 ${
+              stats.system_health === 'healthy' ? 'bg-green-600/5' :
+              stats.system_health === 'warning' ? 'bg-yellow-600/5' : 'bg-red-600/5'
+            }`} />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-3 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 ${
+                  stats.system_health === 'healthy' ? 'bg-green-600' :
+                  stats.system_health === 'warning' ? 'bg-yellow-600' : 'bg-red-600'
                 }`}>
-                  {stats.system_health}
-                </p>
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">System Health</p>
               </div>
-              <AlertCircle className={`h-8 w-8 ${
-                stats.system_health === 'healthy' ? 'text-green-600' :
-                stats.system_health === 'warning' ? 'text-yellow-600' : 'text-red-600'
-              }`} />
+              <p className={`text-4xl font-bold capitalize ${
+                stats.system_health === 'healthy' ? 'text-green-600 dark:text-green-400' :
+                stats.system_health === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
+                'text-red-600 dark:text-red-400'
+              }`}>
+                {stats.system_health}
+              </p>
             </div>
           </div>
         </div>
@@ -296,30 +322,47 @@ export const ManagementDashboard: React.FC = () => {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Tenants List */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-900">Tenants</h2>
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 p-6">
+            <h2 className="text-xl font-bold text-white">Tenants</h2>
           </div>
-          <div className="divide-y">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {tenants.map((tenant) => (
               <div
                 key={tenant.id}
-                className={`p-6 hover:bg-gray-50 cursor-pointer ${
-                  selectedTenant?.id === tenant.id ? 'bg-blue-50' : ''
+                className={`p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all ${
+                  selectedTenant?.id === tenant.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600' : ''
                 }`}
                 onClick={() => handleSelectTenant(tenant)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
-                      <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Building2 className="h-6 w-6 text-blue-600" />
+                      <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Building2 className="h-6 w-6 text-white" />
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900">{tenant.name}</h3>
-                      <p className="text-sm text-gray-500">{tenant.subdomain}</p>
-                      <p className="text-sm text-gray-500">Plan: {tenant.subscription_plan}</p>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{tenant.name}</h3>
+                        {tenant.tenant_type === 'simulation_template' && (
+                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full shadow-sm">
+                            📝 Template
+                          </span>
+                        )}
+                        {tenant.tenant_type === 'simulation_active' && (
+                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full shadow-sm">
+                            🎮 Active Sim
+                          </span>
+                        )}
+                        {(tenant.tenant_type === 'institution' || tenant.tenant_type === 'production') && (
+                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-sm">
+                            🏢 Organization
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{tenant.subdomain}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">Plan: {tenant.subscription_plan}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -388,9 +431,9 @@ export const ManagementDashboard: React.FC = () => {
         </div>
 
         {/* Tenant Details */}
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-900">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-800 dark:to-pink-800 p-6">
+            <h2 className="text-xl font-bold text-white">
               {selectedTenant ? 'Tenant Details' : 'Select a Tenant'}
             </h2>
           </div>

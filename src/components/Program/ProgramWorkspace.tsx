@@ -2,7 +2,6 @@ import React from 'react';
 import { FileText, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
 import { useQuery } from '@tanstack/react-query';
-import { getPrograms } from '../../services/admin/programService';
 import { getSimulationTemplates } from '../../services/simulation/simulationService';
 import { useUserProgramAccess } from '../../hooks/useUserProgramAccess';
 import { supabase } from '../../lib/api/supabase';
@@ -20,18 +19,27 @@ export const ProgramWorkspace: React.FC = () => {
   // Get the current program info
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
 
-  // Get program ID from programs table
-  const { data: programs } = useQuery({
-    queryKey: ['programs', currentTenant?.id],
+  // Get program directly using program_id from current tenant
+  const { data: program } = useQuery({
+    queryKey: ['program', currentTenant?.program_id],
     queryFn: async () => {
-      if (!currentTenant?.id) return [];
-      const { data } = await getPrograms(currentTenant.id);
-      return data || [];
+      if (!currentTenant?.program_id) return null;
+      const { data, error } = await supabase
+        .from('programs')
+        .select('*')
+        .eq('id', currentTenant.program_id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching program:', error);
+        return null;
+      }
+      return data;
     },
-    enabled: !!currentTenant?.id
+    enabled: !!currentTenant?.program_id
   });
 
-  const programId = programs?.[0]?.id;
+  const programId = program?.id;
 
   // Load real stats
   const { data: templates = [] } = useQuery({

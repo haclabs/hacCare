@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getSimulationTemplates } from '../../services/simulation/simulationService';
-import { getPrograms } from '../../services/admin/programService';
+import { supabase } from '../../lib/api/supabase';
 
 interface CalendarEventModalProps {
   isOpen: boolean;
@@ -80,16 +80,27 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
     }
   }, [existingEvent, selectedDate]);
 
-  // Fetch programs for dropdown
-  const { data: programs = [] } = useQuery({
-    queryKey: ['programs', currentTenant?.id],
+  // Get program directly using program_id from current tenant
+  const { data: program } = useQuery({
+    queryKey: ['program', currentTenant?.program_id],
     queryFn: async () => {
-      if (!currentTenant?.id) return [];
-      const { data } = await getPrograms(currentTenant.id);
-      return data || [];
+      if (!currentTenant?.program_id) return null;
+      const { data, error } = await supabase
+        .from('programs')
+        .select('*')
+        .eq('id', currentTenant.program_id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching program:', error);
+        return null;
+      }
+      return data;
     },
-    enabled: !!currentTenant?.id
+    enabled: !!currentTenant?.program_id
   });
+  
+  const programs = program ? [program] : [];
 
   // Fetch templates for dropdown
   const { data: templates = [] } = useQuery({

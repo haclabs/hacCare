@@ -33,16 +33,19 @@ export const ProgramManagement: React.FC = () => {
   const canManage = hasRole(['super_admin', 'coordinator']);
 
   useEffect(() => {
-    if (currentTenant?.id) {
-      loadPrograms();
-    }
-  }, [currentTenant?.id]);
+    loadPrograms();
+  }, [currentTenant?.id, currentTenant?.parent_tenant_id]);
 
   const loadPrograms = async () => {
-    if (!currentTenant?.id) return;
+    if (!currentTenant) return;
     
     setLoading(true);
-    const { data, error } = await getProgramsWithUserCounts(currentTenant.id);
+    
+    // If in a program tenant, get programs from the parent organization
+    // Otherwise, get programs for the current tenant
+    const tenantIdToQuery = currentTenant.parent_tenant_id || currentTenant.id;
+    
+    const { data, error } = await getProgramsWithUserCounts(tenantIdToQuery);
     
     if (error) {
       setError('Failed to load programs');
@@ -151,6 +154,17 @@ export const ProgramManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Info Banner */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-900 dark:text-blue-100">
+            <p className="font-medium mb-1">About Programs</p>
+            <p>Programs organize instructors, students, and simulations (e.g., NESA, PN, SIM Hub, BNAD). Each program has a dedicated workspace tenant where instructors can manage program-specific content.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
