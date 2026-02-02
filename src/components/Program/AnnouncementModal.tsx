@@ -15,7 +15,7 @@ export interface AnnouncementData {
   program_id: string;
   title: string;
   content: string;
-  category: 'General' | 'Templates' | 'Training' | 'Students' | 'Important' | 'Reminder';
+  category: 'General' | 'Templates' | 'Training' | 'Students' | 'Important' | 'Reminder' | 'System Admin';
   is_pinned: boolean;
   author_id: string;
   author_name?: string | null;
@@ -29,6 +29,7 @@ const categoryOptions = [
   { value: 'Students', label: 'Students', icon: Users, color: 'green' },
   { value: 'Important', label: 'Important', icon: AlertTriangle, color: 'red' },
   { value: 'Reminder', label: 'Reminder', icon: CalendarIcon, color: 'amber' },
+  { value: 'System Admin', label: 'System Admin', icon: AlertTriangle, color: 'indigo' },
 ] as const;
 
 /**
