@@ -4,6 +4,7 @@ import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileT
 import { Patient, VitalSigns, Medication, PatientNote } from '../../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../../services/patient/patientService';
 import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
+import { useTenant } from '../../../../contexts/TenantContext';
 import { fetchAdmissionRecord, fetchAdvancedDirective, type AdmissionRecord, type AdvancedDirective } from '../../../../services/patient/admissionService';
 import { fetchDoctorsOrders } from '../../../../services/clinical/doctorsOrdersService';
 import { DoctorsOrder } from '../../../../types';
@@ -26,6 +27,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentTenant } = useTenant();
   
   const [patient, setPatient] = useState<Patient | null>(null); 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
@@ -84,10 +86,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         setLoading(true);
         console.log('Loading patient data for ID:', id);
         
+        // Get simulation context for proper data fetching
+        const simulationId = currentTenant?.simulation_id;
+        console.log('PatientDetail - Simulation ID:', simulationId);
+        
         const [patientData, vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
-          fetchPatientById(id),
+          fetchPatientById(id, simulationId),
           fetchPatientVitals(id),
-          fetchPatientMedications(id),
+          fetchPatientMedications(id, simulationId),
           fetchPatientNotes(id),
           fetchAdmissionRecord(id),
           fetchAdvancedDirective(id),
@@ -367,7 +373,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
               
               // Also refresh from database to ensure consistency
               try {
-                const freshMedications = await fetchPatientMedications(id!);
+                const simulationId = currentTenant?.simulation_id;
+                const freshMedications = await fetchPatientMedications(id!, simulationId);
                 setMedications(freshMedications);
                 console.log('Medications refreshed from database after update');
               } catch (error) {
@@ -430,9 +437,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const handlePrintRecord = async () => {
     try {
       // Get all patient data for comprehensive record
+      const simulationId = currentTenant?.simulation_id;
       const [vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
         fetchPatientVitals(id!),
-        fetchPatientMedications(id!),
+        fetchPatientMedications(id!, simulationId),
         fetchPatientNotes(id!),
         fetchAdmissionRecord(id!),
         fetchAdvancedDirective(id!),

@@ -88,9 +88,12 @@ export function usePatientNotes(patientId: string | undefined) {
  * Hook to fetch patient medications
  */
 export function usePatientMedications(patientId: string | undefined) {
+  const { currentTenant } = useTenant();
+  const simulationId = currentTenant?.simulation_id;
+  
   return useQuery({
     queryKey: queryKeys.patientMedications(patientId!),
-    queryFn: () => fetchPatientMedications(patientId!),
+    queryFn: () => fetchPatientMedications(patientId!, simulationId),
     enabled: !!patientId,
     staleTime: 2 * 60 * 1000, // Medications are fresh for 2 minutes
   });

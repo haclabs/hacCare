@@ -139,14 +139,6 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
       
-      // Skip tenant loading for simulation_only users (but not for super admins)
-      if (profile?.simulation_only && profile?.role !== 'super_admin') {
-        console.log('🎯 Simulation-only user detected, skipping automatic tenant load');
-        setCurrentTenant(null);
-        setLoading(false);
-        return;
-      }
-      
       // Load program tenants for instructors FIRST (before any other logic)
       let loadedProgramTenants: ProgramTenant[] = [];
       if (profile?.role === 'instructor' || profile?.role === 'coordinator') {
@@ -161,6 +153,55 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const simulationTenantId = localStorage.getItem('current_simulation_tenant');
       const isInSimulationContext = window.location.pathname.includes('/simulation-portal') || 
                                      window.location.pathname === '/app';
+
+      // For simulation-only users, restore simulation tenant if available before skipping tenant load
+      if (profile?.simulation_only && profile?.role !== 'super_admin') {
+        if (simulationTenantId) {
+          console.log('🎮 Simulation-only user restoring simulation tenant:', simulationTenantId);
+          const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
+          if (simulationTenant && !simError) {
+            if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
+              // Ensure user has access via tenant_users table (critical for RLS)
+              if (user) {
+                console.log('🔐 Ensuring simulation-only user has tenant access...');
+                const { error: accessError } = await supabase
+                  .from('tenant_users')
+                  .upsert({
+                    user_id: user.id,
+                    tenant_id: simulationTenantId,
+                    is_active: true,
+                    role: profile?.role || 'nurse'
+                  }, {
+                    onConflict: 'user_id,tenant_id'
+                  });
+
+                if (accessError) {
+                  console.warn('⚠️ Could not grant tenant access:', accessError);
+                } else {
+                  console.log('✅ Simulation-only user granted tenant access');
+                }
+              }
+              
+              setCurrentTenant(simulationTenant);
+              setSelectedTenantId(simulationTenantId);
+              setLoading(false);
+              console.log('✅ Simulation tenant restored for simulation-only user:', simulationTenant.name);
+              return;
+            } else {
+              console.log('⚠️ Stored tenant is no longer a simulation, clearing');
+              localStorage.removeItem('current_simulation_tenant');
+            }
+          } else {
+            console.log('⚠️ Simulation tenant not found, clearing localStorage');
+            localStorage.removeItem('current_simulation_tenant');
+          }
+        }
+
+        console.log('🎯 Simulation-only user detected, skipping automatic tenant load');
+        setCurrentTenant(null);
+        setLoading(false);
+        return;
+      }
       
       if (simulationTenantId && profile?.role !== 'instructor' && profile?.role !== 'coordinator') {
         console.log('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
@@ -168,6 +209,27 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (simulationTenant && !simError) {
           // Verify it's still a simulation tenant
           if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
+            // Ensure user has access via tenant_users table (critical for RLS)
+            if (user) {
+              console.log('🔐 Ensuring user has tenant access on restore...');
+              const { error: accessError } = await supabase
+                .from('tenant_users')
+                .upsert({
+                  user_id: user.id,
+                  tenant_id: simulationTenantId,
+                  is_active: true,
+                  role: profile?.role || 'nurse'
+                }, {
+                  onConflict: 'user_id,tenant_id'
+                });
+
+              if (accessError) {
+                console.warn('⚠️ Could not grant tenant access:', accessError);
+              } else {
+                console.log('✅ User granted tenant access on restore');
+              }
+            }
+            
             setCurrentTenant(simulationTenant);
             setSelectedTenantId(simulationTenantId);
             setLoading(false);
@@ -191,6 +253,27 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
           if (simulationTenant && !simError) {
             if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
+              // Ensure instructor has access via tenant_users table
+              if (user) {
+                console.log('🔐 Ensuring instructor has tenant access...');
+                const { error: accessError } = await supabase
+                  .from('tenant_users')
+                  .upsert({
+                    user_id: user.id,
+                    tenant_id: simulationTenantId,
+                    is_active: true,
+                    role: profile?.role || 'instructor'
+                  }, {
+                    onConflict: 'user_id,tenant_id'
+                  });
+
+                if (accessError) {
+                  console.warn('⚠️ Could not grant tenant access:', accessError);
+                } else {
+                  console.log('✅ Instructor granted tenant access');
+                }
+              }
+              
               setCurrentTenant(simulationTenant);
               setSelectedTenantId(simulationTenantId);
               setLoading(false);
@@ -387,6 +470,29 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setError(null);
 
       console.log('🎮 Entering simulation tenant:', tenantId);
+
+      // First, ensure the user has access to this tenant via tenant_users table
+      // This is critical for RLS policies to grant data access
+      if (user) {
+        console.log('🔐 Ensuring user has access to simulation tenant...');
+        const { error: accessError } = await supabase
+          .from('tenant_users')
+          .upsert({
+            user_id: user.id,
+            tenant_id: tenantId,
+            is_active: true,
+            role: profile?.role || 'nurse' // Use their actual role, default to nurse for sim-only users
+          }, {
+            onConflict: 'user_id,tenant_id'
+          });
+
+        if (accessError) {
+          console.warn('⚠️ Could not grant tenant access:', accessError);
+          // Continue anyway - they might already have access from simulation assignment
+        } else {
+          console.log('✅ User granted access to simulation tenant');
+        }
+      }
 
       // Fetch the tenant data
       const { data: tenant, error: tenantError } = await getTenantById(tenantId);

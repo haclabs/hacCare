@@ -16,6 +16,7 @@ import { medicationAdministrationSchema } from '../../../../schemas/medicationSc
 import { Patient, Medication } from '../../../../types';
 import { ValidationResult } from '../../types/schema';
 import { createMedication, updateMedication, deleteMedication, fetchPatientMedications } from '../../../../services/clinical/medicationService';
+import { useTenant } from '../../../../contexts/TenantContext';
 import { formatLocalTime } from '../../../../utils/time';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/BarcodeGenerator';
@@ -74,6 +75,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   hasNewOrders = false,
   hasNewNotes = false
 }) => {
+  const { currentTenant } = useTenant();
   const [activeView, setActiveView] = useState<MARView>('administration');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(false);
@@ -136,7 +138,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
       // Refresh medications to reflect changes
       console.log('Fetching fresh medication data after BCMA completion');
       try {
-        const freshMedications = await fetchPatientMedications(patient.id);
+        const simulationId = currentTenant?.simulation_id;
+        const freshMedications = await fetchPatientMedications(patient.id, simulationId);
         console.log('Fresh medications fetched:', freshMedications.length, 'medications');
         
         if (typeof onMedicationUpdate === 'function') {
