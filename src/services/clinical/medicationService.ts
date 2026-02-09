@@ -38,28 +38,15 @@ import { secureLogger } from '../../lib/security/secureLogger';
     );
     */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
-    // Get patient details first to determine tenant
-    const { data: patientData, error: patientError } = await supabase
-      .from('patients')
-      .select('tenant_id')
-      .eq('id', patientId)
-      .single();
-
-    if (patientError || !patientData) {
-      console.error('Error fetching patient for medications:', patientError);
-      return [];
-    }
-
-    // Query with tenant_id filter (CRITICAL for RLS)
+    // First try standard query
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')
       .eq('patient_id', patientId)
-      .eq('tenant_id', patientData.tenant_id)
       .order('created_at', { ascending: false });
 
-    // If successful and has data, return it
-    if (!error && data && data.length > 0) {
+    // If successful (even with empty results), return the data
+    if (!error && data) {
       const medications: Medication[] = data.map(dbMed => ({
         id: dbMed.id,
         patient_id: dbMed.patient_id,
@@ -79,52 +66,13 @@ import { secureLogger } from '../../lib/security/secureLogger';
       return medications;
     }
 
-    // If no data returned or RLS error, try super admin RPC approach
-    if (!data || data.length === 0 || error) {
-      // Get patient details first to determine tenant
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('tenant_id')
-        .eq('id', patientId)
-        .single();
-
-      if (patientData?.tenant_id) {
-        // Try using the super admin medication fetch RPC
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('fetch_medications_for_tenant', { 
-            target_tenant_id: patientData.tenant_id 
-          });
-
-        if (!rpcError && rpcData) {
-          // Filter for this specific patient
-          const patientMeds = rpcData
-            .filter((med: any) => med.patient_id === patientId)
-            .map((med: any) => ({
-              id: med.medication_id,
-              patient_id: med.patient_id,
-              name: med.name,
-              category: 'scheduled',
-              dosage: med.dosage,
-              frequency: med.frequency,
-              route: med.route,
-              start_date: med.start_date,
-              end_date: med.end_date,
-              prescribed_by: med.prescribed_by || '',
-              last_administered: undefined,
-              next_due: new Date().toISOString(),
-              status: 'Active'
-            } as Medication));
-
-          return patientMeds;
-        }
-      }
-    }
-
+    // If there was an error, log it and throw
     if (error) {
       secureLogger.error('Database error fetching patient medications', error, { patientId });
       throw error;
     }
 
+    // If we get here, data was null (shouldn't happen, but handle it)
     return [];
     
   } catch (error) {

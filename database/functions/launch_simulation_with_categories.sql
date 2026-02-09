@@ -32,11 +32,12 @@ DECLARE
   v_simulation_id UUID;
   v_snapshot JSONB;
   v_patient_count INTEGER;
+  v_template_snapshot_version INTEGER;
 BEGIN
   -- Get user's role from user_profiles
-  SELECT user_profiles.role INTO v_user_role
-  FROM user_profiles
-  WHERE user_profiles.id = auth.uid();
+  SELECT up.role INTO v_user_role
+  FROM user_profiles up
+  WHERE up.id = auth.uid();
   
   -- Get user's home tenant_id from user_tenant_access
   SELECT uta.tenant_id INTO v_home_tenant_id
@@ -47,17 +48,18 @@ BEGIN
   
   -- Super admins without tenant: use first non-simulation tenant
   IF v_home_tenant_id IS NULL AND v_user_role = 'super_admin' THEN
-    SELECT tenants.id INTO v_home_tenant_id
-    FROM tenants
-    WHERE tenants.is_simulation = false
-    ORDER BY tenants.created_at ASC
+    SELECT t.id INTO v_home_tenant_id
+    FROM tenants t
+    WHERE t.is_simulation = false
+    ORDER BY t.created_at ASC
     LIMIT 1;
   END IF;
 
-  -- Fetch the template snapshot
-  SELECT simulation_templates.snapshot_data INTO v_snapshot
-  FROM simulation_templates
-  WHERE simulation_templates.id = p_template_id;
+  -- Fetch the template snapshot AND current version
+  SELECT st.snapshot_data, st.snapshot_version
+  INTO v_snapshot, v_template_snapshot_version
+  FROM simulation_templates st
+  WHERE st.id = p_template_id;
 
   IF v_snapshot IS NULL THEN
     RAISE EXCEPTION 'Template not found: %', p_template_id;
@@ -99,8 +101,8 @@ BEGIN
 
   -- Count patients created
   SELECT COUNT(*) INTO v_patient_count
-  FROM patients
-  WHERE patients.tenant_id = v_simulation_tenant_id;
+  FROM patients p
+  WHERE p.tenant_id = v_simulation_tenant_id;
 
   -- Create simulation_active record with categories
   INSERT INTO simulation_active (
@@ -114,6 +116,7 @@ BEGIN
     created_by,
     status,
     template_snapshot_version,
+    template_snapshot_version_synced,
     primary_categories,
     sub_categories
   )
@@ -127,7 +130,8 @@ BEGIN
     NOW() + (p_duration_minutes || ' minutes')::INTERVAL,
     auth.uid(),
     'running',
-    1,
+    v_template_snapshot_version,
+    v_template_snapshot_version,  -- Launched at current template version
     p_primary_categories,
     p_sub_categories
   );
@@ -173,10 +177,10 @@ BEGIN
       EXCEPTION
         WHEN unique_violation THEN
           -- User already in tenant_users, update to active
-          UPDATE tenant_users 
+          UPDATE tenant_users tu
           SET is_active = true
-          WHERE user_id = p_participant_user_ids[i] 
-            AND tenant_id = v_simulation_tenant_id;
+          WHERE tu.user_id = p_participant_user_ids[i] 
+            AND tu.tenant_id = v_simulation_tenant_id;
       END;
     END LOOP;
     
@@ -184,9 +188,9 @@ BEGIN
   END IF;
 
   RETURN QUERY SELECT 
-    v_simulation_id,
-    v_simulation_tenant_id,
-    'Simulation launched successfully'::TEXT;
+    v_simulation_id AS simulation_id,
+    v_simulation_tenant_id AS tenant_id,
+    'Simulation launched successfully'::TEXT AS message;
 END;
 $$;
 

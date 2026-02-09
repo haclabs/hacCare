@@ -138,14 +138,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       setLoading(true);
       setError(null);
-
-      // Check if user was in a simulation (survives refresh)
-      const simulationTenantId = localStorage.getItem('current_simulation_tenant');
       
       // Skip tenant loading for simulation_only users (but not for super admins)
-      // UNLESS they have an active simulation tenant
-      if (profile?.simulation_only && profile?.role !== 'super_admin' && !simulationTenantId) {
-        console.log('🎯 Simulation-only user detected with no active simulation, skipping automatic tenant load');
+      if (profile?.simulation_only && profile?.role !== 'super_admin') {
+        console.log('🎯 Simulation-only user detected, skipping automatic tenant load');
         setCurrentTenant(null);
         setLoading(false);
         return;
@@ -158,7 +154,15 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loadedProgramTenants = await loadProgramTenants();
         console.log('👨‍🏫 Program tenants loaded:', loadedProgramTenants.length);
       }
-      if (simulationTenantId) {
+      
+      // Check if user was in a simulation (survives refresh)
+      // BUT: Instructors should NOT auto-restore simulations ON LOGIN - they go to program workspace first
+      // EXCEPTION: If they're currently in simulation portal or actively in simulation, DO restore it
+      const simulationTenantId = localStorage.getItem('current_simulation_tenant');
+      const isInSimulationContext = window.location.pathname.includes('/simulation-portal') || 
+                                     window.location.pathname === '/app';
+      
+      if (simulationTenantId && profile?.role !== 'instructor' && profile?.role !== 'coordinator') {
         console.log('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
         const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
         if (simulationTenant && !simError) {
@@ -177,6 +181,32 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } else {
           // Tenant no longer exists, clear localStorage
           console.log('⚠️ Simulation tenant not found, clearing localStorage');
+          localStorage.removeItem('current_simulation_tenant');
+        }
+      } else if (simulationTenantId && (profile?.role === 'instructor' || profile?.role === 'coordinator')) {
+        // For instructors/coordinators: Check if they're actively IN a simulation
+        if (isInSimulationContext) {
+          // They're in simulation context - restore the simulation tenant
+          console.log('🎮 Instructor in simulation context - restoring simulation tenant');
+          const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
+          if (simulationTenant && !simError) {
+            if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
+              setCurrentTenant(simulationTenant);
+              setSelectedTenantId(simulationTenantId);
+              setLoading(false);
+              console.log('✅ Simulation tenant restored for instructor:', simulationTenant.name);
+              return;
+            } else {
+              console.log('⚠️ Stored tenant is no longer a simulation, clearing');
+              localStorage.removeItem('current_simulation_tenant');
+            }
+          } else {
+            console.log('⚠️ Simulation tenant not found, clearing localStorage');
+            localStorage.removeItem('current_simulation_tenant');
+          }
+        } else {
+          // They're logging in fresh - clear simulation tenant and route to program workspace
+          console.log('🧹 Clearing simulation tenant for instructor/coordinator - routing to program workspace');
           localStorage.removeItem('current_simulation_tenant');
         }
       }
