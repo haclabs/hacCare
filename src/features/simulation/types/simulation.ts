@@ -43,6 +43,8 @@ export interface SimulationActive {
   ends_at: string | null;
   completed_at: string | null;
   template_snapshot_version: number;
+  template_snapshot_version_launched?: number; // Version when originally launched
+  template_snapshot_version_synced?: number; // Version last synced to (null if never synced)
   allow_late_join: boolean | null;
   auto_cleanup: boolean | null;
   created_by: string;
@@ -93,6 +95,54 @@ export interface SimulationActivityLog {
   activity_type: string;
   activity_data: any;
   timestamp: string;
+}
+
+export interface SimulationTemplateVersion {
+  id: string;
+  template_id: string;
+  version: number;
+  snapshot_data: any;
+  saved_at: string;
+  saved_by: string | null;
+  change_notes: string | null;
+  patient_count: number | null;
+  medication_count: number | null;
+  order_count: number | null;
+  wound_count: number | null;
+  device_count: number | null;
+}
+
+export interface SimulationTemplateVersionWithDetails extends SimulationTemplateVersion {
+  user_profiles?: {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+}
+
+export interface PatientListComparison {
+  simulation_id: string;
+  simulation_patient_count: number;
+  template_patient_count: number;
+  patients_unchanged: Array<{
+    first_name: string;
+    last_name: string;
+    dob: string;
+  }>;
+  patients_added: Array<{
+    first_name: string;
+    last_name: string;
+    dob: string;
+  }>;
+  patients_removed: Array<{
+    first_name: string;
+    last_name: string;
+    dob: string;
+  }>;
+  patient_list_identical: boolean;
+  barcodes_can_preserve: boolean;
+  requires_relaunch: boolean;
 }
 
 // Enhanced interfaces with relationships

@@ -7,15 +7,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, FileText, Filter, X, Tag } from 'lucide-react';
-import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, completeSimulation, deleteSimulation } from '../../../services/simulation/simulationService';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, FileText, Filter, X, Tag, Package } from 'lucide-react';
+import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
+import VersionComparisonModal from './VersionComparisonModal';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import type { PatientListComparison } from '../types/simulation';
 
 const ActiveSimulations: React.FC = () => {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
@@ -27,6 +29,10 @@ const ActiveSimulations: React.FC = () => {
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [editCategoriesModal, setEditCategoriesModal] = useState<{ sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null>(null);
   const [completingSimulation, setCompletingSimulation] = useState<SimulationActiveWithDetails | null>(null);
+  const [versionComparisonModal, setVersionComparisonModal] = useState<{
+    simulation: SimulationActiveWithDetails;
+    patientComparison: PatientListComparison | null;
+  } | null>(null);
   
   // Get user's program access
   const { filterByPrograms, canSeeAllPrograms, programCodes, isInstructor } = useUserProgramAccess();
@@ -147,6 +153,63 @@ const ActiveSimulations: React.FC = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleViewTemplateChanges = async (sim: SimulationActiveWithDetails) => {
+    try {
+      setActionLoading(sim.id);
+      const patientComparison = await compareSimulationTemplatePatients(sim.id);
+      setVersionComparisonModal({
+        simulation: sim,
+        patientComparison,
+      });
+    } catch (error) {
+      console.error('Error comparing patient lists:', error);
+      alert('Failed to load template comparison');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSyncWithTemplateUpdates = async () => {
+    if (!versionComparisonModal) return;
+    
+    const sim = versionComparisonModal.simulation;
+    setVersionComparisonModal(null);
+    setActionLoading(sim.id);
+    
+    try {
+      console.log('🚀 Starting sync for simulation:', sim.id);
+      const result = await resetSimulationWithTemplateUpdates(sim.id);
+      console.log('✅ Simulation synced with template:', result);
+      
+      // Show detailed results
+      const medsAddedText = result.medications_added > 0 
+        ? `${result.medications_added} new medication(s) added.`
+        : 'No new medications to add.';
+      
+      alert(`Simulation synced to template v${result.template_version_synced}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
+      await loadSimulations();
+    } catch (error: any) {
+      console.error('❌ Error syncing simulation:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        fullError: error
+      });
+      if (error.message?.includes('PATIENT_LIST_CHANGED') || error.message?.includes('patient list')) {
+        alert('Cannot sync - patient list has changed in template. You must delete this simulation and launch a new one with fresh barcodes.');
+      } else {
+        alert('Failed to sync simulation: ' + error.message);
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRelaunchRequired = () => {
+    setVersionComparisonModal(null);
+    alert('To update this simulation with the new patient list, you must:\n\n1. Delete this simulation\n2. Launch a new simulation from the updated template\n3. Print new barcode labels for all patients and medications');
   };
 
   const handleComplete = async (sim: SimulationActiveWithDetails) => {
@@ -566,6 +629,31 @@ const ActiveSimulations: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Template Update Banner */}
+          {(sim as any).template_updated && (
+            <div className="mt-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded">
+              <div className="flex items-start gap-3">
+                <Package className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                    Template Updated
+                  </h4>
+                  <p className="text-sm text-amber-800 dark:text-amber-200 mb-2">
+                    Template has been updated to v{(sim as any).template_current_version}. 
+                    Running v{(sim as any).template_running_version}.
+                  </p>
+                  <button
+                    onClick={() => handleViewTemplateChanges(sim)}
+                    disabled={actionLoading === sim.id}
+                    className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline disabled:opacity-50"
+                  >
+                    View Changes & Sync →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ))}
       </div>
@@ -966,6 +1054,20 @@ const ActiveSimulations: React.FC = () => {
           programCodes={completingSimulation.primary_categories || []}
           onConfirm={handleCompleteWithInstructor}
           onCancel={() => setCompletingSimulation(null)}
+        />
+      )}
+
+      {/* Version Comparison Modal */}
+      {versionComparisonModal && (
+        <VersionComparisonModal
+          templateId={versionComparisonModal.simulation.template_id}
+          versionOld={(versionComparisonModal.simulation as any).template_running_version || 1}
+          versionNew={(versionComparisonModal.simulation as any).template_current_version || 1}
+          simulationId={versionComparisonModal.simulation.id}
+          patientComparison={versionComparisonModal.patientComparison}
+          onClose={() => setVersionComparisonModal(null)}
+          onSyncWithPreservation={handleSyncWithTemplateUpdates}
+          onRelaunchRequired={handleRelaunchRequired}
         />
       )}
       </div>

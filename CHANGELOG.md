@@ -7,6 +7,50 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.1] - 2026-01-23 - SIMULATION PARTICIPANT ACCESS FIX
+===============================================================================
+
+CRITICAL BUGFIXES
+-----------------
+
+* Fixed Simulation Participant Access to Medications and Patients
+  - ISSUE 1: Non-super_admin users (admin, instructor, nurse, student) could not
+    see medications, patients, or other data when participating in simulations
+  - ROOT CAUSE: Participants were only added to simulation_participants table,
+    not the tenant_users table that RLS policies check for access
+  - SOLUTION: Updated launch_simulation function to add participants to BOTH
+    simulation_participants AND tenant_users tables
+    
+* Fixed 400 Bad Request Error on Medication Fetch
+  - ISSUE 2: Console showing "400 Bad Request" for fetch_medications_for_tenant
+  - ROOT CAUSE: Code tried non-existent RPC fallback even when patient had 0 meds
+  - SOLUTION: Removed unnecessary fallback logic; primary query now handles empty
+    results correctly (0 medications is a valid state, not an error)
+  - IMPACT: Eliminated console errors and simplified medication fetching logic
+  
+  Files Modified:
+  - database/functions/launch_simulation_with_categories.sql (added tenant_users insert)
+  - src/services/clinical/medicationService.ts (removed RPC fallback, fixed empty data handling)
+  
+  Files Added:
+  - database/migrations/20260123_fix_simulation_participant_tenant_access.sql (migration)
+  - docs/fixes/SIMULATION_PARTICIPANT_ACCESS_FIX.md (original documentation)
+  - docs/fixes/SIMULATION_MEDICATION_ACCESS_COMPLETE_FIX.md (complete fix guide)
+  
+  Technical Details:
+  - Participants now receive proper tenant_users entry with is_active=true
+  - Handles unique_violation exception (updates existing entry to active)
+  - RLS policies now correctly grant access to simulation tenant data
+  - Empty medication arrays no longer trigger error fallback logic
+  - Applies to all future simulation launches (existing simulations need relaunch)
+  
+  Testing:
+  - Verified with student and instructor roles
+  - Confirmed access to patients, medications, vitals, and alerts
+  - Validated RLS policies grant appropriate access
+  - No more 400 errors for patients with 0 medications
+
+===============================================================================
 [5.3.0] - 2026-01-11 - AGE-BASED VITAL SIGNS REFERENCE RANGES
 ===============================================================================
 

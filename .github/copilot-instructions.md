@@ -230,6 +230,59 @@ CREATE POLICY tenants_instructors_see_program_tenants
 - ❌ CHECK constraint violation → Ensure tenant_type enum includes 'program' value
 - ✅ Always test with fresh browser (localStorage persists program tenant selection)
 
+### ⚠️ CRITICAL: Patient/Medication UUID Mapping Across Tenants
+**UUIDs and barcodes DO NOT persist across template → simulation boundaries:**
+
+**The Problem:**
+- Template has patient with UUID `abc-123` and barcode `P91543`
+- Simulation launch creates NEW patient with UUID `def-456` and barcode `P58763`
+- Same patient, different UUIDs, different barcodes
+- **NEVER match by UUID or barcode** when syncing template → simulation
+
+**Correct Pattern (Match by Demographics):**
+```typescript
+// ❌ WRONG - Barcode matching fails
+const simPatient = await supabase
+  .from('patients')
+  .select('id')
+  .eq('tenant_id', simulationTenantId)
+  .eq('patient_id', templatePatientBarcode)  // P91543 ≠ P58763 = NO MATCH!
+  .single();
+
+// ✅ CORRECT - Demographics matching works
+const simPatient = await supabase
+  .from('patients')
+  .select('id')
+  .eq('tenant_id', simulationTenantId)
+  .eq('first_name', templatePatient.first_name)
+  .eq('last_name', templatePatient.last_name)
+  .eq('date_of_birth', templatePatient.date_of_birth)
+  .single();
+```
+
+**Why This Matters:**
+- Simulation launch creates fresh UUIDs for ALL entities (patients, medications, orders, etc.)
+- Patient barcodes are randomly generated on creation (P + 5 random digits)
+- Template snapshot contains OLD UUIDs that don't exist in simulation tenant
+- Syncing template updates requires mapping by immutable properties (name, DOB)
+
+**Real Bug Example (Feb 5, 2026):**
+- `reset_simulation_with_template_updates()` was matching patients by barcode
+- Template patient barcode: `P91543`
+- Simulation patient barcode: `P58763`
+- Result: `patient_id` lookup returned NULL, skipped all medications
+- FIX: Changed to demographics matching (lines 142-157 of function)
+
+**Immutable Properties for Matching:**
+- **Patients**: `first_name`, `last_name`, `date_of_birth`
+- **Medications**: `name`, `dosage`, `route` (+ patient match)
+- **Orders**: `order_text`, `category` (+ patient match)
+- **Labs**: `test_name`, `panel_name` (+ patient match)
+
+**Critical Files:**
+- [database/functions/reset_simulation_with_template_updates.sql](../database/functions/reset_simulation_with_template_updates.sql) - Medication sync example
+- [database/functions/compare_simulation_template_patients.sql](../database/functions/compare_simulation_template_patients.sql) - Patient comparison pattern
+
 ### Template Editing Workflow (Critical Understanding)
 **Templates ARE real tenant environments with live data**, not just frozen snapshots:
 
