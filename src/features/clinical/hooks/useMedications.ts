@@ -12,6 +12,7 @@ import {
 } from '../../../services/clinical/medicationService';
 import { Medication, MedicationAdministration } from '../../../types';
 import { queryKeys } from '../../../lib/api/queryClient';
+import { useTenant } from '../../../contexts/TenantContext';
 
 // ========================================
 // 💊 MEDICATION QUERY HOOKS
@@ -22,9 +23,12 @@ import { queryKeys } from '../../../lib/api/queryClient';
  * Replaces manual medication fetching from components
  */
 export function usePatientMedications(patientId: string) {
+  const { currentTenant } = useTenant();
+  const simulationId = currentTenant?.simulation_id;
+  
   return useQuery({
     queryKey: queryKeys.patientMedications(patientId),
-    queryFn: () => fetchPatientMedications(patientId),
+    queryFn: () => fetchPatientMedications(patientId, simulationId),
     staleTime: 2 * 60 * 1000, // 2 minutes - medication data needs regular updates
     gcTime: 5 * 60 * 1000, // 5 minutes in cache
     enabled: !!patientId,

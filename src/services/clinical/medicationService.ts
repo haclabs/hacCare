@@ -36,9 +36,44 @@ import { secureLogger } from '../../lib/security/secureLogger';
         timestamp: cleanAdministration.timestamp
       }
     );
-    */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
+    */export const fetchPatientMedications = async (patientId: string, simulationId?: string): Promise<Medication[]> => {
   try {
-    // First try standard query
+    // If simulation mode, fetch from simulation_patient_medications
+    if (simulationId) {
+      console.log('Fetching simulation medications for patient:', patientId, 'simulation:', simulationId);
+      
+      const { data: simData, error: simError } = await supabase
+        .from('simulation_patient_medications')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+
+      if (simError) {
+        console.error('Error fetching simulation medications:', simError);
+        throw simError;
+      }
+
+      const medications: Medication[] = (simData || []).map(dbMed => ({
+        id: dbMed.id,
+        patient_id: dbMed.patient_id,
+        name: dbMed.name,
+        category: dbMed.category || 'scheduled',
+        dosage: dbMed.dosage,
+        frequency: dbMed.frequency,
+        route: dbMed.route,
+        start_date: dbMed.start_date,
+        end_date: dbMed.end_date,
+        prescribed_by: dbMed.prescribed_by || '',
+        last_administered: dbMed.last_administered,
+        next_due: dbMed.next_due || new Date().toISOString(),
+        status: dbMed.status || 'Active'
+      } as Medication));
+
+      console.log('Found', medications.length, 'simulation medications');
+      return medications;
+    }
+    
+    // Standard query for non-simulation mode
     const { data, error } = await supabase
       .from('patient_medications')
       .select('*')
