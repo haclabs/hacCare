@@ -112,9 +112,11 @@ export async function getSimulationTemplate(
  * Save snapshot of template (V2 - Config-driven)
  * Uses save_template_snapshot_v2 which automatically captures all tables
  * from simulation_table_config (18 patient tables)
+ * Automatically archives previous version for history
  */
 export async function saveTemplateSnapshot(
-  templateId: string
+  templateId: string,
+  changeNotes?: string
 ): Promise<SimulationFunctionResult> {
   try {
     // Ensure templateId is a valid UUID string (trim whitespace, etc)
@@ -122,6 +124,7 @@ export async function saveTemplateSnapshot(
     
     console.log('Calling save_template_snapshot_v2 with ID:', cleanId);
     
+    // First, save the snapshot
     const { data, error } = await supabase.rpc('save_template_snapshot_v2', {
       p_template_id: cleanId,
     });
@@ -132,9 +135,182 @@ export async function saveTemplateSnapshot(
     }
     
     console.log('Snapshot saved (V2):', data);
+    
+    // Then archive the version (with the newly saved snapshot)
+    if (data.success && data.snapshot_data) {
+      try {
+        console.log('Archiving template version...');
+        await supabase.rpc('save_template_version', {
+          p_template_id: cleanId,
+          p_new_snapshot: data.snapshot_data,
+          p_change_notes: changeNotes || 'Snapshot saved',
+          p_user_id: null, // Will use auth.uid() in function
+        });
+        console.log('Version archived successfully');
+      } catch (versionError) {
+        // Don't fail the save if versioning fails, just log it
+        console.error('Failed to archive version (non-critical):', versionError);
+      }
+    }
+    
     return data as SimulationFunctionResult;
   } catch (error: any) {
     console.error('Error saving template snapshot:', error);
+    throw error;
+  }
+}
+
+/**
+ * Save template snapshot with version archiving
+ * Archives current version before saving new snapshot
+ */
+export async function saveTemplateSnapshotWithVersion(
+  templateId: string,
+  changeNotes?: string
+): Promise<SimulationFunctionResult> {
+  try {
+    const cleanId = templateId.trim();
+    
+    console.log('Saving template with version archiving:', cleanId);
+    
+    // First save the snapshot using existing function
+    const snapshotResult = await saveTemplateSnapshot(cleanId);
+    
+    if (!snapshotResult.success) {
+      throw new Error('Failed to save template snapshot');
+    }
+    
+    // Then archive the version
+    const { data, error } = await supabase.rpc('save_template_version', {
+      p_template_id: cleanId,
+      p_new_snapshot: snapshotResult.snapshot_data,
+      p_change_notes: changeNotes || null,
+      p_user_id: null, // Will use auth.uid() in function
+    });
+
+    if (error) {
+      console.error('RPC Error archiving version:', error);
+      throw error;
+    }
+    
+    console.log('Template version archived:', data);
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    console.error('Error saving template with version:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get template version history
+ */
+export async function getTemplateVersions(
+  templateId: string
+): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('simulation_template_versions')
+      .select(`
+        *,
+        user_profiles!saved_by(
+          id,
+          email,
+          first_name,
+          last_name
+        )
+      `)
+      .eq('template_id', templateId)
+      .order('version', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error('Error fetching template versions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Compare two template versions
+ */
+export async function compareTemplateVersions(
+  templateId: string,
+  versionOld: number,
+  versionNew: number
+): Promise<any> {
+  try {
+    const { data, error } = await supabase.rpc('compare_template_versions', {
+      p_template_id: templateId,
+      p_version_old: versionOld,
+      p_version_new: versionNew,
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error comparing template versions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Restore a previous template version
+ */
+export async function restoreTemplateVersion(
+  templateId: string,
+  versionToRestore: number,
+  restoreNotes?: string
+): Promise<SimulationFunctionResult> {
+  try {
+    const { data, error } = await supabase.rpc('restore_template_version', {
+      p_template_id: templateId,
+      p_version_to_restore: versionToRestore,
+      p_user_id: null,
+      p_restore_notes: restoreNotes || null,
+    });
+
+    if (error) throw error;
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    console.error('Error restoring template version:', error);
+    throw error;
+  }
+}
+
+/**
+ * Compare simulation's patient list with template
+ */
+export async function compareSimulationTemplatePatients(
+  simulationId: string
+): Promise<any> {
+  try {
+    const { data, error } = await supabase.rpc('compare_simulation_template_patients', {
+      p_simulation_id: simulationId,
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error comparing patient lists:', error);
+    throw error;
+  }
+}
+
+/**
+ * Compare active simulation data vs current template
+ */
+export async function compareSimulationVsTemplate(
+  simulationId: string
+): Promise<any> {
+  try {
+    const { data, error } = await supabase.rpc('compare_simulation_vs_template', {
+      p_simulation_id: simulationId,
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error comparing simulation vs template:', error);
     throw error;
   }
 }
@@ -231,7 +407,7 @@ export async function getActiveSimulations(
       .from('simulation_active')
       .select(`
         *,
-        template:simulation_templates(id, name, description),
+        template:simulation_templates(id, name, description, snapshot_version),
         tenant:tenants(id, name),
         participants:simulation_participants(
           id,
@@ -294,12 +470,21 @@ export async function getActiveSimulations(
         user_profiles: userProfiles[p.user_id] || null,
       })) || [];
 
+      // Check if template has been updated since launch/sync
+      const launchedVersion = sim.template_snapshot_version_launched || sim.template_snapshot_version || 1;
+      const syncedVersion = sim.template_snapshot_version_synced || launchedVersion;
+      const currentTemplateVersion = sim.template?.snapshot_version || 1;
+      const templateUpdated = currentTemplateVersion > syncedVersion;
+
       return {
         ...sim,
         participants: participantsWithProfiles,
         time_remaining_minutes: timeRemainingMinutes,
         is_expired: timeRemainingMinutes === 0 && sim.status === 'running',
         participant_count: sim.participants?.length || 0,
+        template_updated: templateUpdated,
+        template_current_version: currentTemplateVersion,
+        template_running_version: syncedVersion,
       };
     });
 
@@ -461,6 +646,58 @@ export async function resetSimulation(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   return resetSimulationForNextSession(simulationId);
+}
+
+/**
+ * Reset simulation with template updates (sync to latest template)
+ * Pulls CURRENT template snapshot instead of frozen original
+ * Requires patient lists to match (no adds/removes)
+ */
+export async function resetSimulationWithTemplateUpdates(
+  simulationId: string
+): Promise<SimulationFunctionResult> {
+  try {
+    console.log('🔄 Resetting simulation with template updates:', simulationId);
+    
+    const { data, error } = await supabase.rpc('reset_simulation_with_template_updates', {
+      p_simulation_id: simulationId,
+    });
+
+    console.log('📦 Raw RPC response:', { data, error });
+
+    if (error) {
+      // Check if error is due to patient list mismatch
+      if (error.message?.includes('PATIENT_LIST_CHANGED')) {
+        console.error('❌ Patient list changed - cannot preserve barcodes:', error);
+        throw new Error('Patient list in template has changed. Delete and relaunch simulation to get new barcodes.');
+      }
+      console.error('Error in reset_simulation_with_template_updates:', error);
+      throw error;
+    }
+    
+    if (!data) {
+      console.error('❌ No data returned from function');
+      throw new Error('No response from reset function');
+    }
+    
+    if (!data.success) {
+      console.error('Reset with updates failed:', data);
+      throw new Error(data.error || 'Reset operation failed');
+    }
+    
+    console.log('✅ Reset with template updates completed:', data);
+    console.log('📊 Medication sync details:', {
+      template_meds: data.template_medication_count,
+      sim_meds_before: data.simulation_medication_count_before,
+      sim_meds_after: data.simulation_medication_count_after,
+      meds_added: data.medications_added
+    });
+    
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    console.error('Error resetting simulation with template updates:', error);
+    throw error;
+  }
 }
 
 /**

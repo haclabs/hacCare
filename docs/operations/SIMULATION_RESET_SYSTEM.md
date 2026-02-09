@@ -14,7 +14,7 @@ Simulation reset was duplicating patients and data because:
 ### Key Database Functions
 
 #### 1. `restore_snapshot_to_tenant()`
-**Location**: `/workspaces/hacCare/database/fix_restore_snapshot_SCHEMA_AGNOSTIC.sql`
+**Location**: Database function (created via migrations, see database/functions/launch_simulation_with_categories.sql line 94 for usage)
 
 **Parameters**:
 - `p_tenant_id` - The simulation tenant to restore to
@@ -26,7 +26,27 @@ Simulation reset was duplicating patients and data because:
 
 **Behavior**:
 
-When `p_preserve_barcodes = true` (RESET MODE):
+**When to Use Each Mode:**
+
+**Launch Mode** (`p_preserve_barcodes = false`):
+- New simulation from template
+- Creates fresh tenant, fresh barcodes
+- Students get new printed labels
+
+**Reset Mode** (`p_preserve_barcodes = true`):
+- Resetting existing simulation for next session
+- Same template snapshot as original launch
+- Preserves all barcodes
+
+**🆕 Update Mode** (`p_preserve_barcodes = true` + fetch latest snapshot):
+- Syncing simulation with updated template
+- Template was edited to add Week 2 content
+- Preserves barcodes, pulls latest clinical data
+- See "Template Updates & Reset" section below
+
+**Technical Behavior:**
+
+When `p_preserve_barcodes = true` (RESET/UPDATE MODE):
 - Maps snapshot patient IDs to EXISTING tenant patient IDs
 - Does NOT create new patient records
 - Does NOT change patient barcode IDs
@@ -157,18 +177,189 @@ From the template's `snapshot_data` JSONB:
 - `patients` - Uses existing patients
 - `medication_administrations` - Student work only, never in snapshot
 
+### Why Medications Are Preserved (Like Patients)
+
+**Critical for Barcode Reusability**:
+- Medication barcodes = `M{FirstLetter}{5-digit-hash}` based on UUID
+- Barcodes printed on physical labels (semester-long reuse)
+- Changing UUID = different hash = new barcode = labels unusable
+- Therefore: Medications preserved across resets (DELETE student work, KEEP meds)
+
+**What Happens on Reset**:
+- `medication_administrations` deleted (student work)
+- `patient_medications` table preserved (baseline + UUIDs)
+- `last_administered` timestamp cleared (fresh session)
+- Barcode labels still scan correctly
+
+## Template Updates & Reset (Feb 2026)
+
+### The Problem
+
+Instructors need to update templates mid-semester (add Week 2 medications, new orders) without:
+- Deleting the active simulation
+- Generating new patient/medication barcodes
+- Requiring students to get new printed labels
+
+### Current Workaround
+
+1. Edit template → Save snapshot (updates template's snapshot_data)
+2. Delete active simulation
+3. Launch new simulation → **NEW BARCODES** ❌
+4. Print new labels for all patients & meds ❌
+
+### Solution: Smart Reset with Template Sync
+
+**New Function**: `reset_simulation_with_template_updates(p_simulation_id)`
+**New Helper**: `compare_simulation_template_patients(p_simulation_id)`
+**New Table**: `simulation_template_versions` - Archives every template change
+
+**How It Works**:
+1. Check if template has newer snapshot version
+2. **Validate patient lists match** (critical safety check)
+3. Save existing patient/medication barcode IDs (like current reset)
+4. Delete student work (like current reset)
+5. Fetch template's **CURRENT** snapshot (not simulation's frozen snapshot)
+6. Restore with barcode preservation
+7. Update simulation's `template_snapshot_version_synced`
+
+**Key Difference from Standard Reset**:
+```sql
+-- Standard reset (current)
+SELECT template_snapshot INTO v_snapshot 
+FROM simulation_active WHERE id = p_simulation_id;
+
+-- Update reset (new)
+SELECT st.snapshot_data INTO v_snapshot
+FROM simulation_active sa
+JOIN simulation_templates st ON st.id = sa.template_id
+WHERE sa.id = p_simulation_id;
+```
+
+**Database Changes**:
+- ✅ Added `template_snapshot_version_launched` column to `simulation_active`
+- ✅ Added `template_snapshot_version_synced` column to `simulation_active`
+- ✅ Created `simulation_template_versions` table for version archiving
+- ✅ Created `compare_simulation_template_patients()` function
+- ✅ Created `reset_simulation_with_template_updates()` function
+- ✅ Created `save_template_version()` function for auto-archiving
+- ✅ Created `restore_template_version()` function for rollback
+- ✅ Created `compare_template_versions()` function for diff views
+
+**UI Changes** (In Progress):
+- 🔄 Amber banner on Active Simulations: "📦 Template updated!"
+- 🔄 Button text: "Reset & Sync Template" vs "Reset for Next Session"
+- 🔄 Confirmation modal explaining what gets updated
+- 🔄 Template editing banner shows affected simulations
+- ✅ Version comparison modal component created
+
+**Safety Checks**:
+- ✅ Abort if patient list changed (can't preserve barcodes)
+- ✅ Require patients to match by demographics (name + DOB)
+- ✅ Log sync events in simulation history
+- ✅ Instructor can choose to ignore updates (keep old version)
+- ✅ Warning modal if patients added/removed (must relaunch)
+
+### Patient List Changes - Smart Warnings
+
+When template patient list changes (patients added/removed):
+
+**Detection**:
+- `compare_simulation_template_patients()` returns diff analysis
+- Shows: unchanged patients, added patients, removed patients
+- `barcodes_can_preserve` flag indicates if sync is possible
+
+**UI Warning Modal**:
+```
+⚠️ Template Patient List Changed
+
+Current simulation has: 2 patients
+Updated template has: 3 patients
+
+Changes detected:
+✅ Unchanged: Sarah Johnson, Michael Chen
+➕ Added: Emma Rodriguez
+
+⚠️ IMPACT:
+- All patients will get NEW barcodes
+- All medications will get NEW barcodes
+- You must print new labels for everyone
+- Existing printed labels will NOT work
+
+This is equivalent to deleting and relaunching.
+
+[Cancel - Keep Current] [Delete & Relaunch with New Barcodes]
+```
+
+**Three Possible Outcomes**:
+1. **No patient changes** → Standard sync (preserve barcodes) ✅
+2. **Patients added/removed** → Warning + offer relaunch with new barcodes ⚠️
+3. **Patient demographics changed** → Warning + offer relaunch ⚠️
+
+### Template Versioning System
+
+**Purpose**: Archive every template edit with notes for rollback and comparison
+
+**Database Schema**:
+```sql
+-- simulation_template_versions table
+CREATE TABLE simulation_template_versions (
+  id UUID PRIMARY KEY,
+  template_id UUID NOT NULL,
+  version INT NOT NULL,
+  snapshot_data JSONB NOT NULL,
+  saved_at TIMESTAMP DEFAULT NOW(),
+  saved_by UUID REFERENCES auth.users(id),
+  change_notes TEXT,
+  patient_count INT,
+  medication_count INT,
+  order_count INT,
+  wound_count INT,
+  device_count INT
+);
+```
+
+**Automatic Archiving**:
+- Every `save_template_snapshot_v2()` call auto-archives previous version
+- Function: `save_template_version(p_template_id, p_new_snapshot, p_change_notes)`
+- Instructor can add change notes: "Added Week 2 medications and wound care orders"
+
+**Version Comparison**:
+- Function: `compare_template_versions(p_template_id, v_old, v_new)`
+- Returns: patient/medication/order/wound/device count diffs
+- UI shows color-coded changes (added/removed)
+
+**Rollback Support**:
+- Function: `restore_template_version(p_template_id, p_version_to_restore)`
+- Creates new version entry (doesn't delete history)
+- Instructor can undo mistakes: "Restore v4" after bad v5 edit
+
+**Benefits**:
+- ✅ **Undo mistakes** - Accidentally deleted wound → Restore v4
+- ✅ **See what changed** - Compare v5 vs v4
+- ✅ **Audit trail** - HIPAA compliance, show who changed what
+- ✅ **A/B testing** - Run two groups with different template versions
+- ✅ **Week-by-week versions** - v1 = Week 1, v2 = Week 2, etc.
+- ✅ **Selective updates** - Sync to v4, skip v5
+
+**Implementation Status**: ✅ Database layer complete, 🔄 UI in progress
+
 ## Critical Rules
 
 ### ✅ DO:
 - Always call `reset_simulation_for_next_session()` for reset operations
+- Use `reset_simulation_with_template_updates()` when template has been edited
+- Validate patient lists match before syncing template updates
 - Let the database function handle all deletion and restoration
 - Trust that patient barcodes will be preserved
+- Archive template versions with descriptive change notes
 
 ### ❌ DON'T:
 - Never call `restore_snapshot_to_tenant()` directly for reset
 - Never manually delete patients during reset
 - Never create new patients during reset
 - Never change patient barcode IDs after launch
+- Don't sync template updates if patients were added/removed
+- Don't assume template snapshot is unchanged - always check version
 
 ## Testing Reset
 
@@ -307,6 +498,41 @@ deviceAssessmentsData.data?.forEach((assessment: any) => {
 **CRITICAL**: `student_name` is **required** in device_assessments schema. Without it, assessments won't appear in debrief!
 
 ## History
+
+- **Feb 5, 2026 (Evening)**: Fixed critical medication sync bug in `reset_simulation_with_template_updates()`
+  - **BUG**: Function was matching patients by **barcode** instead of demographics
+  - **PROBLEM**: Template patient barcode (P91543) ≠ Simulation patient barcode (P58763)
+  - **SYMPTOM**: New medications from template wouldn't sync to simulations (0 added despite template having them)
+  - **ROOT CAUSE**: Lines 147-151 searched for simulation patient by `patient_id` (barcode), but barcodes are regenerated on simulation launch
+  - **FIX**: Changed patient matching to use **demographics** (first_name, last_name, date_of_birth) instead of barcode
+  - **NEW FEATURE**: Added medication removal - deletes medications removed from template during sync
+  - **IMPACT**: Template sync now correctly adds/removes medications even when patient barcodes differ
+  - **CRITICAL LESSON**: Never assume UUIDs or barcodes stay consistent across template → simulation. Always match by immutable properties.
+  - Updated function signature added: `v_first_name`, `v_last_name`, `v_dob` variables
+  - Updated return object: Added `medications_removed` count
+  - Updated activity log: Now shows "X added, Y removed" format
+  - Files modified:
+    * `/database/functions/reset_simulation_with_template_updates.sql` (lines 130-169, 238-269, 310-332)
+
+- **Feb 5, 2026**: Implemented Template Update Sync System
+  - Added template versioning with automatic archiving
+  - Created `simulation_template_versions` table for version history
+  - Added `template_snapshot_version_launched` and `template_snapshot_version_synced` tracking columns
+  - Implemented `compare_simulation_template_patients()` for patient list validation
+  - Created `reset_simulation_with_template_updates()` for syncing simulations to updated templates
+  - Added `save_template_version()`, `restore_template_version()`, `compare_template_versions()` functions
+  - Patient list change detection with smart warnings
+  - Barcode preservation when patient lists match
+  - Version comparison UI component created
+  - Solves instructor workflow: Edit template → Sync simulation (no delete/relaunch)
+  - Rollback support: Restore previous template versions
+  - Audit trail: Track who changed what and when
+  - Files added:
+    * `/database/migrations/20260205000000_add_template_versioning.sql`
+    * `/database/functions/compare_simulation_template_patients.sql`
+    * `/database/functions/reset_simulation_with_template_updates.sql`
+    * `/src/features/simulation/components/VersionComparisonModal.tsx`
+    * Updated `/src/services/simulation/simulationService.ts` with version functions
 
 - **Nov 20, 2025**: Added simulation category tag system
   - Added `primary_categories` TEXT[] and `sub_categories` TEXT[] columns to both `simulation_active` and `simulation_history` tables

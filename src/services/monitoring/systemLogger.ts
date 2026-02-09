@@ -58,12 +58,15 @@ class SystemLogger {
       const { data: { user } } = await supabase.auth.getUser();
       this.user_id = user?.id;
 
-      // Get tenant from user profile
+      // Get tenant from tenant_users table (not user_profiles)
       if (user) {
-        const { data: profile, error } = await supabase
-          .from('user_profiles')
+        const { data: tenantUser, error } = await supabase
+          .from('tenant_users')
           .select('tenant_id')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
         
         if (error) {
@@ -71,7 +74,7 @@ class SystemLogger {
           return;
         }
         
-        this.tenant_id = profile?.tenant_id;
+        this.tenant_id = tenantUser?.tenant_id;
       }
     } catch (error) {
       console.error('Failed to initialize system logger user context:', error);
