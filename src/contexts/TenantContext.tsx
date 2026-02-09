@@ -255,9 +255,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('🏢 TENANT CONTEXT: Loading tenant for regular user:', user.id);
         const startTime = Date.now();
         
-        // Check if instructor with program tenant
-        if (profile?.role === 'instructor' && loadedProgramTenants.length > 0) {
-          console.log('👨‍🏫 INSTRUCTOR: Found', loadedProgramTenants.length, 'program tenants');
+        // Check if instructor or coordinator with program tenant
+        if ((profile?.role === 'instructor' || profile?.role === 'coordinator') && loadedProgramTenants.length > 0) {
+          console.log('👨‍🏫 INSTRUCTOR/COORDINATOR: Found', loadedProgramTenants.length, 'program tenants');
           
           // Check for saved program tenant preference
           const savedProgramTenantId = localStorage.getItem('current_program_tenant');
