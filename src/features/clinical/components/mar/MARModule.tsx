@@ -164,10 +164,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
     };
 
     // Listen for barcode events from your existing scanning infrastructure
-    document.addEventListener('barcodescanned', handleGlobalBarcodeScanned as EventListener);
+    document.addEventListener('barcodescanned', handleGlobalBarcodeScanned as any);
 
     return () => {
-      document.removeEventListener('barcodescanned', handleGlobalBarcodeScanned as EventListener);
+      document.removeEventListener('barcodescanned', handleGlobalBarcodeScanned as any);
     };
   }, [bcma]);
 

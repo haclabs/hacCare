@@ -41,15 +41,6 @@ interface TenantContextType {
   loadProgramTenants: () => Promise<void>;
 }
 
-interface ProgramTenant {
-  tenant_id: string;
-  tenant_name: string;
-  program_id: string;
-  program_code: string;
-  program_name: string;
-  subdomain: string;
-}
-
 /**
  * Tenant Context
  * React context for managing current tenant state throughout the application

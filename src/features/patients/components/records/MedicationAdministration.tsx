@@ -578,7 +578,7 @@ const handleDeleteMedication = async (medicationId: string) => {
             handleRefresh();
           }}
         />
-      </div>
+      )}
       
       {/* Medication Labels/Barcode */}
       {showMedicationLabels && selectedMedication && (
