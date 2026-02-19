@@ -77,7 +77,7 @@
     "npm-check-updates": "^19.3.2",
     "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^6.0.5",
-    "supabase": "^2.76.4",
+    "supabase": "^2.76.11",
     "tailwindcss": "^4.1.18",
     "terser": "^5.46.0",
     "ts-prune": "^0.10.3",
