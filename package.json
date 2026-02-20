@@ -46,7 +46,7 @@
     "dompurify": "^3.3.1",
     "html2canvas": "^1.4.1",
     "jsbarcode": "^3.12.3",
-    "jspdf": "^4.1.0",
+    "jspdf": "^4.2.0",
     "lucide-react": "^0.563.0",
     "papaparse": "^5.5.3",
     "react": "^19.2.4",
