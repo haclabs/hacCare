@@ -1,10 +1,12 @@
 # hacCare
 
-A comprehensive healthcare simulation and training platform for clinical education. Built with React, TypeScript, and Supabase.
+Version 5.3.0
+
+A multi-tenant healthcare simulation platform for clinical education. Built with React, TypeScript, and Supabase.
 
 ## Overview
 
-hacCare is a simulated Electronic Medical Record (EMR) system designed for healthcare education and clinical training. It provides realistic patient care workflows with features including barcode medication administration (BCMA), vital signs monitoring, clinical documentation, and multi-tenant simulation management.
+hacCare is a simulated Electronic Medical Record (EMR) system designed for healthcare education and clinical training. It provides realistic patient care workflows including barcode medication administration (BCMA), vital signs monitoring, clinical documentation, and simulation management with role-based access control.
 
 ## Core Features
 
@@ -45,86 +47,49 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 - Schema-agnostic design for automatic database adaptation
 
 ### Security & Compliance
-- Role-based access control (Nurse, Admin, Super Admin)
+- Role-based access control (Student, Instructor, Coordinator, Admin, Super Admin)
 - HIPAA-compliant data handling with encryption
 - Comprehensive audit trails for all actions
 - Secure session management with automatic timeout
-- Multi-tenant isolation for data security
+- Multi-tenant isolation with Row Level Security
 
-## Technical Stack
-
-- React 18.2 with TypeScript 5.3
-- Vite 7.1 for build tooling
+## Techni9.2 with TypeScript 5.3
+- Vite 7.3 for build tooling
 - Supabase (PostgreSQL 15) with Row Level Security
-- Tailwind CSS 3.4 for responsive design
-- TanStack Query 5.17 for data synchronization
-- React Router 6.26 for navigation
+- Tailwind CSS 4.2 for responsive design
+- TanStack Query 5.90 for data synchronization
+- React Router 7.13 for navigation
 
 ## Version History
 
-### 5.2.0-rc5 (November 2025)
-- Patient creation tenant race condition fix
-- RLS infinite recursion resolution in simulation system
-- Enhanced troubleshooting documentation
-- Browser cache debugging improvements
+### 5.3.0 (March 2026)
+- Made assigned nurse field optional for simulation workflows
+- Fixed all security vulnerabilities (7 high/moderate issues resolved)
+- Updated Supabase SDK to 2.99.0 for improved API compatibility
+- Updated React, Vite, Tailwind, and build tooling to latest versions
+- Improved multi-role support for students, instructors, and coordinators
 
-### 5.2.0-rc4 (November 2025)
+### 5.2.0 (February 2026)
+- Template versioning system with smart simulation sync
+- Program-based instructor permissions
+- Student management improvements
+- Enhanced simulation portal with card-based UI
+- Coordinator auto-login fix for program tenants
 - Lab orders system with specimen tracking
-- Body mapping system for device and wound tracking
-- Simulation integration for clinical features
-- Patient duplication across tenants
+- Body mapping for device and wound tracking
+- BCMA Five Rights verification with barcode scanning
 
-### 5.2.0-rc3 (October 2025)
-- Diabetic record management system
-- Enhanced glucose monitoring and insulin tracking
-- Time-in-range analysis
-- MAR integration improvements
-
-### 5.2.0-rc2 (October 2025)
-- BCMA Five Rights verification
-- Advanced barcode scanning with multi-format support
-- Patient identification workflow
-- Medication safety checks
-
-### 5.2.0-rc1 (October 2025)
-- Enhanced security diagnostics
-- AI-powered threat detection
-- Secure logging service with PHI redaction
-- Real-time security monitoring
-
-### 5.1.0 (October 2025)
+### 5.1.0 (January 2026)
 - Alert system with smart deduplication
 - Priority classification and escalation
-- Acknowledgment workflow
 - Real-time notifications
+- Enhanced security diagnostics
 
-### 5.0.0 (September 2025)
+### 5.0.0 (December 2025)
 - New simulation system architecture
 - Template management and reusable scenarios
 - Student activity tracking
-- Debrief report generation
-
-### 4.0.0 (September 2025)
-- Complete UI modernization
-- Patient profile enhancements
-- Vital signs monitoring improvements
-- Clinical assessment tools
-
-### 3.0.0 (August 2025)
-- Multi-tenant architecture
-- Role-based access control
-- Session management
-- Audit logging
-
-### 2.0.0 (July 2025)
-- Medication administration tracking
-- Patient notes system
-- Laboratory results management
-- Clinical workflows
-
-### 1.0.0 (June 2025)
-- Initial release
-- Basic patient management
+- Multi-tenant isolation improvementsement
 - Vital signs tracking
 - User authentication
 
