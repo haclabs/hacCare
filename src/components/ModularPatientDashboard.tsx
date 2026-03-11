@@ -611,7 +611,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                   </div>
                   <div class="info-row">
                     <span class="info-label">Assigned Nurse:</span>
-                    <span class="info-value">${patient.assigned_nurse}</span>
+                    <span class="info-value">${patient.assigned_nurse || 'No nurse assigned'}</span>
                   </div>
                 </div>
               </div>

@@ -502,7 +502,7 @@ export const PatientManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {patient.assigned_nurse}
+                      {patient.assigned_nurse || <span className="text-gray-400 dark:text-gray-500 italic">No nurse assigned</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
