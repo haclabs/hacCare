@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Patient } from '../../../../types';
 import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
-import { PATIENT_AVATARS, getRandomAvatarId, getAvatarById } from '../../../../data/patientAvatars';
+import { PATIENT_AVATARS, getRandomAvatarId } from '../../../../data/patientAvatars';
 
 /**
  * Patient Form Component
