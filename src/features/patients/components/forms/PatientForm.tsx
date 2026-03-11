@@ -111,11 +111,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
     if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required';
     if (!formData.room_number?.trim()) newErrors.room_number = 'Room number is required';
     if (!formData.diagnosis?.trim()) newErrors.diagnosis = 'Diagnosis is required';
-    if (!formData.assigned_nurse?.trim()) {
-      newErrors.assigned_nurse = nurses.length === 0 
-        ? 'No nurses available for this tenant. Contact your administrator.'
-        : 'Assigned nurse is required';
-    }
+    // Note: assigned_nurse is now optional (not required for simulation workflows)
 
     // Emergency contact validation
     if (!formData.emergency_contact_name?.trim()) {
@@ -427,7 +423,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Assigned Nurse *
+                  Assigned Nurse (Optional)
                 </label>
                 <div className="relative">
                   <select
@@ -436,11 +432,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white appearance-none pr-10 ${
                       errors.assigned_nurse ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
-                    required
                     disabled={nursesLoading}
                   >
                     <option value="">
-                      {nursesLoading ? 'Loading nurses...' : 'Select a nurse'}
+                      {nursesLoading ? 'Loading nurses...' : 'No nurse assigned (optional)'}
                     </option>
                     
                     {/* Show current assigned nurse if not in the list (for backward compatibility) */}

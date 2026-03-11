@@ -24,7 +24,7 @@ export interface DatabasePatient {
   emergency_contact_name: string;
   emergency_contact_relationship: string;
   emergency_contact_phone: string;
-  assigned_nurse: string;
+  assigned_nurse?: string;
   avatar_id?: string;
   created_at: string;
   updated_at: string;

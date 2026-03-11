@@ -7,6 +7,80 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.2] - 2026-02-09 - SIMULATION-ONLY USER DATA ACCESS FIX
+===============================================================================
+
+CRITICAL BUGFIXES
+-----------------
+
+* Fixed Simulation-Only User Tenant Context and Data Access
+  - ISSUE: Users with simulation_only=true (student nurses) experienced infinite
+    "Workspace Loading..." state and couldn't see patient data after joining simulations
+  - ROOT CAUSE 1: TenantContext had early return for simulation_only users BEFORE
+    checking localStorage for active simulation context, preventing tenant restoration
+  - ROOT CAUSE 2: Missing tenant_users table entries for simulation-only users when
+    entering simulation tenants (RLS policies require tenant_users for data access)
+  - SOLUTION 1: Moved simulation_only user check after localStorage restoration logic
+  - SOLUTION 2: Added tenant_users table upserts in all simulation tenant entry points:
+    * enterSimulationTenant() - when entering simulation manually
+    * Simulation-only user restoration path
+    * Regular user restoration path
+    * Instructor restoration path
+  - IMPACT: Simulation-only users now properly restore their simulation context on
+    login/refresh and can access all patient data (medications, vitals, labs, orders)
+    
+* Fixed Medication Loading for Simulation Participants  
+  - ISSUE: Patient medications, vitals, labs were empty despite patient list showing
+    (only doctor's notes visible)
+  - ROOT CAUSE: Medication service and components weren't passing simulationId parameter,
+    causing queries to hit wrong tables (patient_medications vs simulation_patient_medications)
+  - SOLUTION: Added simulationId parameter throughout medication service chain:
+    * medicationService.fetchPatientMedications() - added simulationId param
+    * PatientDetail.tsx - extracts and passes simulationId from currentTenant
+    * MedicationAdministration.tsx - passes simulationId to medication refresh
+    * MARModule.tsx - passes simulationId after BCMA completion
+    * usePatients.ts - extracts simulationId from tenant context
+    * useMedications.ts - extracts simulationId from tenant context
+  - IMPACT: All simulation data now loads correctly for simulation-only users
+  
+* Fixed ESLint Errors for CI/CD Checks
+  - Removed duplicate ProgramTenant interface declaration (already imported)
+  - Fixed MedicationAdministration.tsx parsing error (extra closing div)
+  - Fixed EventListener type errors in MARModule.tsx (changed to 'any' cast)
+  - RESULT: Reduced ESLint errors from 2 to 0 (7 warnings remain, pre-existing)
+  
+* Synced Dependencies with Main Branch
+  - ISSUE: CI failing with "lock file's supabase@2.74.5 does not satisfy supabase@2.76.4"
+  - SOLUTION: Merged main branch to sync package.json and package-lock.json
+  - Updated supabase CLI from 2.67.1 → 2.76.4
+  - Updated 20+ other dependencies (React, TypeScript, Vite, ESLint, etc.)
+  
+  Files Modified:
+  - src/contexts/TenantContext.tsx (restoration logic + tenant_users upserts)
+  - src/services/clinical/medicationService.ts (added simulationId parameter)
+  - src/features/patients/components/records/PatientDetail.tsx (pass simulationId)
+  - src/features/patients/components/records/MedicationAdministration.tsx (pass simulationId)
+  - src/features/clinical/components/mar/MARModule.tsx (pass simulationId + EventListener fix)
+  - src/hooks/usePatients.ts (extract simulationId from tenant)
+  - src/hooks/useMedications.ts (extract simulationId from tenant)
+  - package.json (dependency updates from main)
+  - package-lock.json (synchronized with main)
+  
+  Technical Details:
+  - TenantContext now checks localStorage.simulation_tenant BEFORE returning early
+  - tenant_users upsert uses ON CONFLICT to handle existing entries
+  - Simulation data queries now correctly target simulation_patient_medications table
+  - RLS policies properly grant access via tenant_users table membership
+  - All restoration paths (auto-login, manual login, refresh) now consistent
+  
+  Testing:
+  - Verified with hofnurse@lethpolytech.ca (simulation_only=true student nurse)
+  - Confirmed patient list loads immediately after login
+  - Confirmed medications, vitals, labs, orders all visible
+  - Validated no infinite loading states
+  - Verified RLS policies grant appropriate access to simulation tenant data
+
+===============================================================================
 [5.3.1] - 2026-01-23 - SIMULATION PARTICIPANT ACCESS FIX
 ===============================================================================
 

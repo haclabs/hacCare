@@ -252,7 +252,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Assigned Nurse:</span>
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{patient.assigned_nurse}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{patient.assigned_nurse || 'No nurse assigned'}</span>
                   </div>
                 </div>
               </div>
