@@ -33,7 +33,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const initializationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const mounted = useRef(true);
+
+  // Security: Auto-logout after 8 hours of inactivity
+  const INACTIVITY_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
   const fetchUserProfile = async (userId: string): Promise<void> => {
     if (!userId || !mounted.current) {
@@ -279,14 +283,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       mounted.current = false;
       
-      // Security: Clean up timeout on unmount
+      // Security: Clean up timeouts on unmount
       if (initializationTimeoutRef.current) {
         clearTimeout(initializationTimeoutRef.current);
+      }
+      
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
       }
       
       subscription.unsubscribe();
     };
   }, []);
+
+  // Security: Inactivity timeout - auto-logout after 8 hours of no activity
+  useEffect(() => {
+    if (!user) {
+      // Clear timeout if user is not logged in
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    console.log('⏱️ Starting 8-hour inactivity monitor');
+
+    const resetInactivityTimer = () => {
+      // Clear existing timeout
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+
+      // Set new timeout for 8 hours
+      inactivityTimeoutRef.current = setTimeout(async () => {
+        console.log('⏰ 8-hour inactivity timeout reached - auto-logging out');
+        await signOut();
+        // Optional: Show a message to the user
+        if (mounted.current) {
+          console.log('👋 Session expired due to inactivity');
+        }
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Events that indicate user activity
+    const activityEvents = [
+      'mousedown',
+      'mousemove',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click'
+    ];
+
+    // Add event listeners for user activity
+    activityEvents.forEach(event => {
+      document.addEventListener(event, resetInactivityTimer, { passive: true });
+    });
+
+    // Start the initial timer
+    resetInactivityTimer();
+
+    // Cleanup
+    return () => {
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+      
+      activityEvents.forEach(event => {
+        document.removeEventListener(event, resetInactivityTimer);
+      });
+      
+      console.log('🧹 Inactivity monitor cleaned up');
+    };
+  }, [user]); // Re-run when user changes (login/logout)
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -323,6 +394,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       console.log('🚪 Signing out...');
+      
+      // Clear inactivity timeout on manual logout
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+      
       await supabase.auth.signOut();
       
       // Security: Explicitly clear all state
