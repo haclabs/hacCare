@@ -53,7 +53,9 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 - Secure session management with automatic timeout
 - Multi-tenant isolation with Row Level Security
 
-## Techni9.2 with TypeScript 5.3
+## Technical Stack
+
+- React 19.2 with TypeScript 5.3
 - Vite 7.3 for build tooling
 - Supabase (PostgreSQL 15) with Row Level Security
 - Tailwind CSS 4.2 for responsive design

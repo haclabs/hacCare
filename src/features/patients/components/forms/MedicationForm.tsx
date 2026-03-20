@@ -221,6 +221,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           nextDayDefault.setDate(nextDayDefault.getDate() + 1);
           return setHours(setMinutes(nextDayDefault, minutes), hours).toISOString();
         }
+      }
     }
   };
 
