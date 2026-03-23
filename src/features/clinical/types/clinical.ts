@@ -10,7 +10,7 @@ export interface Medication {
   id: string;
   patient_id?: string;
   name: string;
-  category?: 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic';
+  category?: 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic' | 'stat';
   dosage: string;
   frequency: string;
   route: string;

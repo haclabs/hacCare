@@ -139,7 +139,7 @@ export function useDueMedications(patientId: string) {
 /**
  * Get overdue medications for a patient
  * Critical for patient safety alerts
- * Excludes PRN medications as they are given only as needed
+ * Excludes PRN and STAT medications as they are given only as needed/one-time
  */
 export function useOverdueMedications(patientId: string) {
   const { data: medications = [] } = usePatientMedications(patientId);
@@ -148,7 +148,8 @@ export function useOverdueMedications(patientId: string) {
     if (!med.next_due || med.status !== 'Active') return false;
     
     // PRN medications are never overdue since they're given only as needed
-    if (med.category === 'prn') return false;
+    // STAT medications are one-time administration, not scheduled
+    if (med.category === 'prn' || med.category === 'stat') return false;
     
     try {
       const now = new Date();
@@ -181,6 +182,7 @@ export function useMedicationsByCategory(patientId: string, category?: 'schedule
     scheduled: medications.filter(m => m.category === 'scheduled' && m.status === 'Active').length,
     prn: medications.filter(m => m.category === 'prn' && m.status === 'Active').length,
     continuous: medications.filter(m => m.category === 'continuous' && m.status === 'Active').length,
+    stat: medications.filter(m => m.category === 'stat' && m.status === 'Active').length,
     total: medications.length,
   };
   

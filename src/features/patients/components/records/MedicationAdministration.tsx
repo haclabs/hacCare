@@ -26,6 +26,7 @@ const countMedicationsByCategory = (medications: Medication[]) => {
     scheduled: medications.filter(med => med.category === 'scheduled' && med.status === 'Active').length,
     prn: medications.filter(med => med.category === 'prn' && med.status === 'Active').length,
     continuous: medications.filter(med => med.category === 'continuous' && med.status === 'Active').length,
+    stat: medications.filter(med => med.category === 'stat' && med.status === 'Active').length,
     overview: medications.length,
   };
 };
@@ -130,7 +131,8 @@ const handleDeleteMedication = async (medicationId: string) => {
         if (!med.next_due) return false;
         
         // PRN medications are never "due" since they're given only as needed, not on schedule
-        if (med.category === 'prn') return false;
+        // STAT medications are one-time administration, not scheduled
+        if (med.category === 'prn' || med.category === 'stat') return false;
         
         const dueTime = parseISO(med.next_due); 
         // Due medications are those due within the next hour but not overdue
@@ -164,7 +166,8 @@ const handleDeleteMedication = async (medicationId: string) => {
         if (!med.next_due) return false;
         
         // PRN medications are never overdue since they're given only as needed
-        if (med.category === 'prn') return false;
+        // STAT medications are one-time administration, not scheduled
+        if (med.category === 'prn' || med.category === 'stat') return false;
         
         const dueTime = parseISO(med.next_due); 
         // Overdue medications are those whose due time has passed
@@ -259,7 +262,7 @@ const handleDeleteMedication = async (medicationId: string) => {
                   <span className="font-semibold text-gray-700 dark:text-gray-300 min-w-16">Freq:</span>
                   <span className="text-gray-900 dark:text-gray-100">{medication.frequency}</span>
                 </div>
-                {medication.next_due && (
+                {medication.next_due && medication.category !== 'prn' && medication.category !== 'stat' && (
                   <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <span className="font-semibold text-gray-700 dark:text-gray-300 min-w-16">Next:</span>
                     <span className="text-gray-900 dark:text-gray-100 text-xs">
@@ -498,7 +501,8 @@ const handleDeleteMedication = async (medicationId: string) => {
             { key: 'overview', label: 'Overview', icon: Activity, gradient: 'from-purple-500 to-purple-600' },
             { key: 'scheduled', label: 'Scheduled', icon: Calendar, count: medCounts.scheduled, gradient: 'from-blue-500 to-blue-600' },
             { key: 'prn', label: 'PRN', icon: CalendarDays, count: medCounts.prn, gradient: 'from-green-500 to-green-600' },
-            { key: 'continuous', label: 'IV/Continuous', icon: Activity, count: medCounts.continuous, gradient: 'from-orange-500 to-orange-600' }
+            { key: 'continuous', label: 'IV/Continuous', icon: Activity, count: medCounts.continuous, gradient: 'from-orange-500 to-orange-600' },
+            { key: 'stat', label: 'STAT', icon: Clock, count: medCounts.stat, gradient: 'from-red-500 to-red-600' }
           ].map(({ key, label, icon: Icon, count, gradient }) => {
             const isActive = activeTab === key;
             return (

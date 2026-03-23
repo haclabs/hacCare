@@ -210,6 +210,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         
       case 'As needed (PRN)':
         return now.toISOString(); // Immediate availability
+      
+      case 'One Time Admin (Now)':
+        return now.toISOString(); // Immediate one-time administration
         
       default: {
         // Default to user's admin time
@@ -287,7 +290,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const medicationData = {
           patient_id: patientId,
           name: formData.name,
-          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic',
+          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic' | 'stat',
           dosage: formData.dosage,
           frequency: formData.frequency,
           route: formData.route,
@@ -309,7 +312,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const medicationData: Omit<Medication, 'id'> = {
           patient_id: patientId,
           name: formData.name,
-          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic',
+          category: formData.category as 'scheduled' | 'unscheduled' | 'prn' | 'continuous' | 'diabetic' | 'stat',
           dosage: formData.dosage,
           frequency: formData.frequency,
           route: formData.route,
@@ -462,6 +465,21 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                     </div>
                     <p className="text-xs text-gray-500">Requires blood glucose readings before administration</p>
                   </div>
+                  
+                  <div
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                      formData.category === 'stat' 
+                        ? 'border-red-500 bg-red-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => updateField('category', 'stat')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-900">STAT</span>
+                      {formData.category === 'stat' && <CheckCircle className="h-4 w-4 text-red-500" />}
+                    </div>
+                    <p className="text-xs text-gray-500">One-time administration, no alerts</p>
+                  </div>
                 </div>
               </div>
 
@@ -535,6 +553,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
                   <option value="4 times daily">4 times daily</option>
                   <option value="Every 4 hours">Every 4 hours</option>
                   <option value="As needed (PRN)">As needed (PRN)</option>
+                  <option value="One Time Admin (Now)">One Time Admin (Now)</option>
                   <option value="Once weekly">Once weekly</option>
                   <option value="Once monthly">Once monthly</option>
                   <option value="At bedtime">At bedtime (HS)</option>
@@ -544,7 +563,7 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
               </div>
 
               {/* Administration Times */}
-              {(formData.frequency.includes('time') && !formData.frequency.includes('PRN')) && (
+              {(formData.frequency.includes('time') && !formData.frequency.includes('PRN') && !formData.frequency.includes('One Time Admin')) && (
                 <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
                   <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
                     ⏰ Administration Times *
