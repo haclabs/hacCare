@@ -221,6 +221,11 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
 
   // Age-based vitals analysis using new utility
   const getVitalStatus = (vitalType: string, value: number, dateOfBirth: string) => {
+    // If value is null/undefined, return gray (no data)
+    if (value == null) {
+      return { status: 'no-data', color: 'text-gray-400', bgColor: 'bg-gray-50' };
+    }
+    
     // Map vital type names to assessment function parameter names
     const vitalTypeMap: Record<string, 'temperature' | 'heartRate' | 'systolic' | 'diastolic' | 'respiratoryRate' | 'oxygenSaturation'> = {
       'temperature': 'temperature',
@@ -249,7 +254,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const getTrendDirection = (currentVital: VitalSigns, previousVital: VitalSigns | undefined, vitalType: string) => {
     if (!previousVital) return { icon: Minus, color: 'text-gray-400', trend: 'no-data' };
 
-    let current: number, previous: number;
+    let current: number | undefined, previous: number | undefined;
     
     switch (vitalType) {
       case 'heartRate':
@@ -257,16 +262,16 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         previous = previousVital.heartRate;
         break;
       case 'temperature':
-        current = currentVital.temperature || 0;
-        previous = previousVital.temperature || 0;
+        current = currentVital.temperature;
+        previous = previousVital.temperature;
         break;
       case 'systolic':
-        current = currentVital.bloodPressure.systolic;
-        previous = previousVital.bloodPressure.systolic;
+        current = currentVital.bloodPressure?.systolic;
+        previous = previousVital.bloodPressure?.systolic;
         break;
       case 'diastolic':
-        current = currentVital.bloodPressure.diastolic;
-        previous = previousVital.bloodPressure.diastolic;
+        current = currentVital.bloodPressure?.diastolic;
+        previous = previousVital.bloodPressure?.diastolic;
         break;
       case 'oxygenSaturation':
         current = currentVital.oxygenSaturation;
@@ -278,6 +283,11 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         break;
       default:
         return { icon: Minus, color: 'text-gray-400', trend: 'stable' };
+    }
+
+    // If either current or previous value is missing, return no trend
+    if (current == null || previous == null) {
+      return { icon: Minus, color: 'text-gray-400', trend: 'no-data' };
     }
 
     const difference = current - previous;
@@ -407,9 +417,10 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
                   <div className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${
                     status.status === 'normal' ? 'bg-green-100 text-green-700' :
                     status.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                    status.status === 'no-data' ? 'bg-gray-100 text-gray-600' :
                     'bg-red-100 text-red-700'
                   }`}>
-                    {status.status.toUpperCase()}
+                    {status.status === 'no-data' ? 'NOT RECORDED' : status.status.toUpperCase()}
                   </div>
                 </div>
               );
