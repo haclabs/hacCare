@@ -378,8 +378,8 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           </div>
           <input
             type="number"
-            min="8"
-            max="40"
+            min="5"
+            max="80"
             value={value.respiratoryRate || ''}
             onChange={(e) => handleVitalChange('respiratoryRate', parseInt(e.target.value) || null)}
             onFocus={() => setFocusedField('respiratoryRate')}
