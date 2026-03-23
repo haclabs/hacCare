@@ -7,6 +7,32 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.3] - 2026-03-23 - OPTIONAL VITAL SIGNS SUPPORT
+===============================================================================
+
+NEW FEATURES
+-----------------
+
+* Added Optional/Partial Vital Signs Entry
+  - CLINICAL NEED: Support scenarios where not all vital signs can be obtained
+    (e.g., newborns without BP readings, equipment limitations, patient refusal)
+  - CHANGES:
+    * Made all vital sign fields optional (temperature, heart_rate, BP, respiratory_rate, O2 sat)
+    * Added database constraint: at least ONE vital sign must be present per entry
+    * Added blood pressure pairing validation (both systolic/diastolic or neither)
+    * Updated service layer to use dynamic field building (no explicit NULL insertion)
+    * Expanded respiratory rate range to 5-80 bpm (was 8-40) for newborn critical scenarios
+  - MIGRATION: database/migrations/20260323000000_make_patient_vitals_nullable.sql
+  - AFFECTED COMPONENTS:
+    * VitalSignsField.tsx - Conditional BP object creation, updated input limits
+    * VitalsModule.tsx - Conditional BP object creation
+    * patientService.ts - Dynamic field building (~30 lines)
+    * multiTenantPatientService.ts - Identical multi-tenant support
+    * vitalsSchemas.ts - Form validation updates (allowPartial: true)
+  - COMPATIBILITY: Works across production patients, simulation templates, and active simulations
+  - IMPACT: Instructors can now record realistic partial vitals without system errors
+
+===============================================================================
 [5.3.2] - 2026-02-09 - SIMULATION-ONLY USER DATA ACCESS FIX
 ===============================================================================
 

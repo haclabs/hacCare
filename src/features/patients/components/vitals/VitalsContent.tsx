@@ -110,7 +110,9 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
                 <span className="text-sm font-medium text-gray-600">Temperature</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.temperature?.toFixed(1)}°C</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">
+              {vitals[0]?.temperature != null ? `${vitals[0].temperature.toFixed(1)}°C` : '-'}
+            </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
           </div>
 
@@ -121,7 +123,9 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
                 <span className="text-sm font-medium text-gray-600">Heart Rate</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.heartRate} bpm</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">
+              {vitals[0]?.heartRate != null ? `${vitals[0].heartRate} bpm` : '-'}
+            </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
           </div>
 
@@ -132,7 +136,11 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
                 <span className="text-sm font-medium text-gray-600">Blood Pressure</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.bloodPressure?.systolic}/{vitals[0]?.bloodPressure?.diastolic} mmHg</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">
+              {vitals[0]?.bloodPressure?.systolic != null && vitals[0]?.bloodPressure?.diastolic != null 
+                ? `${vitals[0].bloodPressure.systolic}/${vitals[0].bloodPressure.diastolic} mmHg` 
+                : '-'}
+            </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
           </div>
 
@@ -143,7 +151,9 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
                 <span className="text-sm font-medium text-gray-600">Oxygen Saturation</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.oxygenSaturation}%</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">
+              {vitals[0]?.oxygenSaturation != null ? `${vitals[0].oxygenSaturation}%` : '-'}
+            </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.oxygenDelivery || 'Room Air'}</p>
           </div>
 
@@ -154,7 +164,9 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
                 <span className="text-sm font-medium text-gray-600">Respiratory Rate</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{vitals[0]?.respiratoryRate}/min</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">
+              {vitals[0]?.respiratoryRate != null ? `${vitals[0].respiratoryRate}/min` : '-'}
+            </p>
             <p className="text-xs text-gray-500 mt-1">{vitals[0]?.lastUpdated ? new Date(vitals[0].lastUpdated).toLocaleTimeString() : 'N/A'}</p>
           </div>
 

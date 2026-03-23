@@ -2017,45 +2017,48 @@ export type Database = {
       }
       patient_vitals: {
         Row: {
-          blood_pressure_diastolic: number
-          blood_pressure_systolic: number
-          heart_rate: number
+          blood_pressure_diastolic: number | null
+          blood_pressure_systolic: number | null
+          heart_rate: number | null
           id: string
           oxygen_delivery: string | null
+          oxygen_flow_rate: string | null
           oxygen_saturation: number
           patient_id: string | null
           recorded_at: string | null
-          respiratory_rate: number
+          respiratory_rate: number | null
           student_name: string | null
-          temperature: number
+          temperature: number | null
           tenant_id: string | null
         }
         Insert: {
-          blood_pressure_diastolic: number
-          blood_pressure_systolic: number
-          heart_rate: number
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          heart_rate?: number | null
           id?: string
           oxygen_delivery?: string | null
+          oxygen_flow_rate?: string | null
           oxygen_saturation: number
           patient_id?: string | null
           recorded_at?: string | null
-          respiratory_rate: number
+          respiratory_rate?: number | null
           student_name?: string | null
-          temperature: number
+          temperature?: number | null
           tenant_id?: string | null
         }
         Update: {
-          blood_pressure_diastolic?: number
-          blood_pressure_systolic?: number
-          heart_rate?: number
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          heart_rate?: number | null
           id?: string
           oxygen_delivery?: string | null
+          oxygen_flow_rate?: string | null
           oxygen_saturation?: number
           patient_id?: string | null
           recorded_at?: string | null
-          respiratory_rate?: number
+          respiratory_rate?: number | null
           student_name?: string | null
-          temperature?: number
+          temperature?: number | null
           tenant_id?: string | null
         }
         Relationships: [
@@ -2214,7 +2217,7 @@ export type Database = {
         Row: {
           admission_date: string
           allergies: string[] | null
-          assigned_nurse: string
+          assigned_nurse: string | null
           avatar_id: string | null
           bed_number: string
           blood_type: string
@@ -2237,7 +2240,7 @@ export type Database = {
         Insert: {
           admission_date: string
           allergies?: string[] | null
-          assigned_nurse: string
+          assigned_nurse?: string | null
           avatar_id?: string | null
           bed_number: string
           blood_type: string
@@ -2260,7 +2263,7 @@ export type Database = {
         Update: {
           admission_date?: string
           allergies?: string[] | null
-          assigned_nurse?: string
+          assigned_nurse?: string | null
           avatar_id?: string | null
           bed_number?: string
           blood_type?: string
@@ -2342,6 +2345,195 @@ export type Database = {
         }
         Relationships: []
       }
+      program_announcements: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          category: string | null
+          content: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_pinned: boolean | null
+          program_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          category?: string | null
+          content: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          program_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          program_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_announcements_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programs: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_simulations: {
+        Row: {
+          cohort_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          instructor_id: string
+          launched_simulation_id: string | null
+          name: string
+          notes: string | null
+          program_id: string
+          recurrence_rule: string | null
+          room_location: string | null
+          scheduled_end: string
+          scheduled_start: string
+          status: string | null
+          student_count: number | null
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cohort_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes: number
+          id?: string
+          instructor_id: string
+          launched_simulation_id?: string | null
+          name: string
+          notes?: string | null
+          program_id: string
+          recurrence_rule?: string | null
+          room_location?: string | null
+          scheduled_end: string
+          scheduled_start: string
+          status?: string | null
+          student_count?: number | null
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cohort_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          instructor_id?: string
+          launched_simulation_id?: string | null
+          name?: string
+          notes?: string | null
+          program_id?: string
+          recurrence_rule?: string | null
+          room_location?: string | null
+          scheduled_end?: string
+          scheduled_start?: string
+          status?: string | null
+          student_count?: number | null
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_simulations_launched_simulation_id_fkey"
+            columns: ["launched_simulation_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_active"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_simulations_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_simulations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       simulation_active: {
         Row: {
           allow_late_join: boolean | null
@@ -2359,6 +2551,8 @@ export type Database = {
           sub_categories: string[] | null
           template_id: string
           template_snapshot_version: number
+          template_snapshot_version_launched: number | null
+          template_snapshot_version_synced: number | null
           tenant_id: string
           updated_at: string | null
         }
@@ -2380,6 +2574,8 @@ export type Database = {
           sub_categories?: string[] | null
           template_id: string
           template_snapshot_version: number
+          template_snapshot_version_launched?: number | null
+          template_snapshot_version_synced?: number | null
           tenant_id: string
           updated_at?: string | null
         }
@@ -2401,6 +2597,8 @@ export type Database = {
           sub_categories?: string[] | null
           template_id?: string
           template_snapshot_version?: number
+          template_snapshot_version_launched?: number | null
+          template_snapshot_version_synced?: number | null
           tenant_id?: string
           updated_at?: string | null
         }
@@ -2661,6 +2859,59 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_template_versions: {
+        Row: {
+          change_notes: string | null
+          device_count: number | null
+          id: string
+          medication_count: number | null
+          order_count: number | null
+          patient_count: number | null
+          saved_at: string | null
+          saved_by: string | null
+          snapshot_data: Json
+          template_id: string
+          version: number
+          wound_count: number | null
+        }
+        Insert: {
+          change_notes?: string | null
+          device_count?: number | null
+          id?: string
+          medication_count?: number | null
+          order_count?: number | null
+          patient_count?: number | null
+          saved_at?: string | null
+          saved_by?: string | null
+          snapshot_data: Json
+          template_id: string
+          version: number
+          wound_count?: number | null
+        }
+        Update: {
+          change_notes?: string | null
+          device_count?: number | null
+          id?: string
+          medication_count?: number | null
+          order_count?: number | null
+          patient_count?: number | null
+          saved_at?: string | null
+          saved_by?: string | null
+          snapshot_data?: Json
+          template_id?: string
+          version?: number
+          wound_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       simulation_templates: {
         Row: {
           auto_cleanup_after_hours: number | null
@@ -2670,12 +2921,14 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          primary_categories: string[] | null
           snapshot_data: Json | null
           snapshot_taken_at: string | null
           snapshot_version: number | null
           status:
             | Database["public"]["Enums"]["simulation_template_status"]
             | null
+          sub_categories: string[] | null
           tenant_id: string
           updated_at: string | null
         }
@@ -2687,12 +2940,14 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          primary_categories?: string[] | null
           snapshot_data?: Json | null
           snapshot_taken_at?: string | null
           snapshot_version?: number | null
           status?:
             | Database["public"]["Enums"]["simulation_template_status"]
             | null
+          sub_categories?: string[] | null
           tenant_id: string
           updated_at?: string | null
         }
@@ -2704,12 +2959,14 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          primary_categories?: string[] | null
           snapshot_data?: Json | null
           snapshot_taken_at?: string | null
           snapshot_version?: number | null
           status?:
             | Database["public"]["Enums"]["simulation_template_status"]
             | null
+          sub_categories?: string[] | null
           tenant_id?: string
           updated_at?: string | null
         }
@@ -2726,6 +2983,56 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_roster: {
+        Row: {
+          cohort_id: string | null
+          created_at: string | null
+          created_by: string | null
+          enrollment_date: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          program_id: string
+          student_number: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cohort_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          enrollment_date?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          program_id: string
+          student_number: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cohort_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          enrollment_date?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          program_id?: string
+          student_number?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_roster_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -2889,6 +3196,7 @@ export type Database = {
           name: string
           parent_tenant_id: string | null
           primary_color: string | null
+          program_id: string | null
           settings: Json
           simulation_config: Json | null
           simulation_id: string | null
@@ -2910,6 +3218,7 @@ export type Database = {
           name: string
           parent_tenant_id?: string | null
           primary_color?: string | null
+          program_id?: string | null
           settings?: Json
           simulation_config?: Json | null
           simulation_id?: string | null
@@ -2931,6 +3240,7 @@ export type Database = {
           name?: string
           parent_tenant_id?: string | null
           primary_color?: string | null
+          program_id?: string | null
           settings?: Json
           simulation_config?: Json | null
           simulation_id?: string | null
@@ -2969,12 +3279,19 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tenants_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_profiles: {
         Row: {
           created_at: string | null
-          department: string | null
+          default_tenant_id: string | null
           email: string
           first_name: string
           id: string
@@ -2982,13 +3299,14 @@ export type Database = {
           last_name: string
           license_number: string | null
           phone: string | null
+          primary_program: string | null
           role: Database["public"]["Enums"]["user_role"]
           simulation_only: boolean | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          department?: string | null
+          default_tenant_id?: string | null
           email: string
           first_name?: string
           id: string
@@ -2996,13 +3314,14 @@ export type Database = {
           last_name?: string
           license_number?: string | null
           phone?: string | null
+          primary_program?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           simulation_only?: boolean | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          department?: string | null
+          default_tenant_id?: string | null
           email?: string
           first_name?: string
           id?: string
@@ -3010,11 +3329,59 @@ export type Database = {
           last_name?: string
           license_number?: string | null
           phone?: string | null
+          primary_program?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           simulation_only?: boolean | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_default_tenant_id_fkey"
+            columns: ["default_tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_default_tenant_id_fkey"
+            columns: ["default_tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_programs: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          program_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          program_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          program_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_sessions: {
         Row: {
@@ -3503,6 +3870,36 @@ export type Database = {
         }
         Relationships: []
       }
+      student_roster_with_profiles: {
+        Row: {
+          cohort_id: string | null
+          created_at: string | null
+          created_by: string | null
+          enrollment_date: string | null
+          id: string | null
+          is_active: boolean | null
+          notes: string | null
+          program_id: string | null
+          student_number: string | null
+          updated_at: string | null
+          user_email: string | null
+          user_first_name: string | null
+          user_id: string | null
+          user_last_name: string | null
+          user_phone: string | null
+          user_role: Database["public"]["Enums"]["user_role"] | null
+          user_simulation_only: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_roster_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_statistics: {
         Row: {
           created_at: string | null
@@ -3662,6 +4059,18 @@ export type Database = {
           username: string
         }[]
       }
+      bulk_assign_students_to_simulation: {
+        Args: {
+          p_role?: string
+          p_simulation_id: string
+          p_student_user_ids: string[]
+        }
+        Returns: Json
+      }
+      bulk_create_students: {
+        Args: { p_program_id: string; p_students: Json }
+        Returns: Json
+      }
       calculate_simulation_metrics: {
         Args: { p_simulation_id: string }
         Returns: Json
@@ -3672,6 +4081,22 @@ export type Database = {
       cleanup_old_sessions: { Args: never; Returns: number }
       cleanup_old_user_sessions: { Args: never; Returns: undefined }
       cleanup_orphaned_users: { Args: never; Returns: number }
+      compare_simulation_template_patients: {
+        Args: { p_simulation_id: string }
+        Returns: Json
+      }
+      compare_simulation_vs_template: {
+        Args: { p_simulation_id: string }
+        Returns: Json
+      }
+      compare_template_versions: {
+        Args: {
+          p_template_id: string
+          p_version_new: number
+          p_version_old: number
+        }
+        Returns: Json
+      }
       complete_simulation: {
         Args: {
           p_activities?: Json
@@ -3817,6 +4242,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_program_tenant: {
+        Args: { p_parent_tenant_id: string; p_program_id: string }
+        Returns: Json
+      }
       create_simulation_snapshot: {
         Args: {
           p_description?: string
@@ -3836,9 +4265,10 @@ export type Database = {
       }
       create_simulation_template: {
         Args: {
-          p_default_duration_minutes?: number
-          p_description?: string
+          p_default_duration_minutes: number
+          p_description: string
           p_name: string
+          p_primary_categories?: string[]
         }
         Returns: Json
       }
@@ -3856,7 +4286,7 @@ export type Database = {
         }
         Returns: {
           created_at: string | null
-          department: string | null
+          default_tenant_id: string | null
           email: string
           first_name: string
           id: string
@@ -3864,6 +4294,7 @@ export type Database = {
           last_name: string
           license_number: string | null
           phone: string | null
+          primary_program: string | null
           role: Database["public"]["Enums"]["user_role"]
           simulation_only: boolean | null
           updated_at: string | null
@@ -3899,6 +4330,14 @@ export type Database = {
       }
       delete_simulation: {
         Args: { p_archive_to_history?: boolean; p_simulation_id: string }
+        Returns: Json
+      }
+      delete_simulation_history: {
+        Args: { p_history_id: string }
+        Returns: Json
+      }
+      delete_simulation_template: {
+        Args: { p_template_id: string }
         Returns: Json
       }
       delete_tenant_secure: {
@@ -3940,7 +4379,7 @@ export type Database = {
         Args: { user_email: string; user_id: string }
         Returns: {
           created_at: string | null
-          department: string | null
+          default_tenant_id: string | null
           email: string
           first_name: string
           id: string
@@ -3948,6 +4387,7 @@ export type Database = {
           last_name: string
           license_number: string | null
           phone: string | null
+          primary_program: string | null
           role: Database["public"]["Enums"]["user_role"]
           simulation_only: boolean | null
           updated_at: string | null
@@ -4009,6 +4449,18 @@ export type Database = {
         }[]
       }
       get_backup_statistics: { Args: never; Returns: Json }
+      get_cohort_students: {
+        Args: { p_cohort_id: string }
+        Returns: {
+          email: string
+          first_name: string
+          last_name: string
+          program_code: string
+          program_id: string
+          student_number: string
+          user_id: string
+        }[]
+      }
       get_current_user_tenant_id: { Args: never; Returns: string }
       get_secure_alerts: {
         Args: never
@@ -4031,6 +4483,19 @@ export type Database = {
         Args: { p_session_number: number; p_template_id: string }
         Returns: Json
       }
+      get_simulation_students: {
+        Args: { p_simulation_id: string }
+        Returns: {
+          email: string
+          first_name: string
+          granted_at: string
+          last_accessed_at: string
+          last_name: string
+          role: Database["public"]["Enums"]["simulation_role"]
+          student_number: string
+          user_id: string
+        }[]
+      }
       get_super_admin_tenant_context: { Args: never; Returns: string }
       get_tenant_users: {
         Args: { target_tenant_id: string }
@@ -4043,6 +4508,17 @@ export type Database = {
           role: string
           tenant_id: string
           user_id: string
+        }[]
+      }
+      get_user_accessible_simulations: {
+        Args: { p_user_id: string }
+        Returns: {
+          access_reason: string
+          categories: string[]
+          simulation_id: string
+          simulation_name: string
+          template_id: string
+          template_name: string
         }[]
       }
       get_user_active_tenants: {
@@ -4059,6 +4535,18 @@ export type Database = {
           is_active: boolean
           role: string
           tenant_id: string
+        }[]
+      }
+      get_user_program_codes: { Args: { p_user_id: string }; Returns: string[] }
+      get_user_program_tenants: {
+        Args: { p_user_id: string }
+        Returns: {
+          program_code: string
+          program_id: string
+          program_name: string
+          subdomain: string
+          tenant_id: string
+          tenant_name: string
         }[]
       }
       get_user_role: { Args: { user_id: string }; Returns: string }
@@ -4138,6 +4626,10 @@ export type Database = {
             }[]
           }
       reactivate_user: { Args: { target_user_id: string }; Returns: string }
+      reassign_user_tenant: {
+        Args: { p_new_tenant_id: string; p_role?: string; p_user_id: string }
+        Returns: Json
+      }
       record_simulation_activity: {
         Args: {
           p_action_data: Json
@@ -4165,6 +4657,10 @@ export type Database = {
         Args: { p_instance_id: string; p_user_id: string }
         Returns: boolean
       }
+      reset_simulation_with_template_updates: {
+        Args: { p_simulation_id: string }
+        Returns: Json
+      }
       restore_snapshot_to_tenant: {
         Args: {
           p_barcode_mappings?: Json
@@ -4180,8 +4676,26 @@ export type Database = {
         Args: { p_snapshot: Json; p_tenant_id: string }
         Returns: Json
       }
+      restore_template_version: {
+        Args: {
+          p_restore_notes?: string
+          p_template_id: string
+          p_user_id?: string
+          p_version_to_restore: number
+        }
+        Returns: Json
+      }
       save_template_snapshot_v2: {
         Args: { p_template_id: string }
+        Returns: Json
+      }
+      save_template_version: {
+        Args: {
+          p_change_notes?: string
+          p_new_snapshot: Json
+          p_template_id: string
+          p_user_id?: string
+        }
         Returns: Json
       }
       set_super_admin_tenant_context: {
@@ -4258,6 +4772,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_program_access: {
+        Args: { p_program_code: string; p_user_id: string }
+        Returns: boolean
+      }
       user_has_tenant_access:
         | { Args: never; Returns: boolean }
         | { Args: { tenant_uuid: string; user_uuid: string }; Returns: boolean }
@@ -4316,8 +4834,18 @@ export type Database = {
         | "cancelled"
       simulation_role: "instructor" | "student"
       simulation_template_status: "draft" | "ready" | "archived"
-      tenant_type: "production" | "institution" | "hospital" | "clinic" | "simulation_template" | "simulation_active" | "program"
-      user_role: "nurse" | "admin" | "super_admin" | "instructor"
+      tenant_type:
+        | "production"
+        | "simulation_template"
+        | "simulation_active"
+        | "program"
+      user_role:
+        | "nurse"
+        | "admin"
+        | "super_admin"
+        | "instructor"
+        | "coordinator"
+        | "student"
       wound_type_enum:
         | "incision"
         | "laceration"
@@ -4509,8 +5037,20 @@ export const Constants = {
       ],
       simulation_role: ["instructor", "student"],
       simulation_template_status: ["draft", "ready", "archived"],
-      tenant_type: ["production", "institution", "hospital", "clinic", "simulation_template", "simulation_active", "program"],
-      user_role: ["nurse", "admin", "super_admin", "instructor"],
+      tenant_type: [
+        "production",
+        "simulation_template",
+        "simulation_active",
+        "program",
+      ],
+      user_role: [
+        "nurse",
+        "admin",
+        "super_admin",
+        "instructor",
+        "coordinator",
+        "student",
+      ],
       wound_type_enum: [
         "incision",
         "laceration",

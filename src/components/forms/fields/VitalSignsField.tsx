@@ -167,6 +167,12 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
         )}
       </div>
 
+      {/* Optional fields notice */}
+      <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
+        <Info className="h-3.5 w-3.5 flex-shrink-0" />
+        <p>Enter available vitals only - not all measurements are required</p>
+      </div>
+
       {/* Temperature */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="space-y-2">
@@ -378,8 +384,8 @@ export const VitalSignsField: React.FC<VitalSignsFieldProps> = ({
           </div>
           <input
             type="number"
-            min="8"
-            max="40"
+            min="5"
+            max="80"
             value={value.respiratoryRate || ''}
             onChange={(e) => handleVitalChange('respiratoryRate', parseInt(e.target.value) || null)}
             onFocus={() => setFocusedField('respiratoryRate')}

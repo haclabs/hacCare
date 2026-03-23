@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Patient } from '../../../../types';
 import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
-import { PATIENT_AVATARS, getRandomAvatarId, getAvatarById } from '../../../../data/patientAvatars';
+import { PATIENT_AVATARS, getRandomAvatarId } from '../../../../data/patientAvatars';
 
 /**
  * Patient Form Component
@@ -52,16 +52,9 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
   const [newAllergy, setNewAllergy] = useState('');
 
   /**
-   * Generate a cryptographically secure patient ID
-   * DEPRECATED: Use generateSecurePatientId from utils/secureRandom.ts instead
-   */
-  function generatePatientId(): string {
-    // Replaced with secure implementation
-    return generateSecurePatientId();
-  }  /**
    * Update form field value
    */
-  const updateField = (field: keyof Patient, value: any) => {
+  const updateField = (field: keyof Patient, value: Patient[keyof Patient]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
