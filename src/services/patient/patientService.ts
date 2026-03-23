@@ -684,41 +684,77 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
       throw patientError;
     }
     
+    // Build insert object dynamically - only include fields that have values
+    // This supports partial vitals entry (e.g., newborns without BP readings)
+    const vitalRecord: any = {
+      patient_id: patientId,
+      tenant_id: patient?.tenant_id,
+      recorded_at: new Date().toISOString(),
+      oxygen_delivery: vitals.oxygenDelivery || 'Room Air',
+      oxygen_flow_rate: vitals.oxygenFlowRate || 'N/A',
+      student_name: studentName || null
+    };
+
+    // Only include vitals that were actually measured
+    if (vitals.temperature != null) {
+      vitalRecord.temperature = vitals.temperature;
+    }
+    if (vitals.heartRate != null) {
+      vitalRecord.heart_rate = vitals.heartRate;
+    }
+    if (vitals.respiratoryRate != null) {
+      vitalRecord.respiratory_rate = vitals.respiratoryRate;
+    }
+    if (vitals.oxygenSaturation != null) {
+      vitalRecord.oxygen_saturation = vitals.oxygenSaturation;
+    }
+    
+    // Blood pressure: include both or neither (must be a pair)
+    if (vitals.bloodPressure?.systolic != null && vitals.bloodPressure?.diastolic != null) {
+      vitalRecord.blood_pressure_systolic = vitals.bloodPressure.systolic;
+      vitalRecord.blood_pressure_diastolic = vitals.bloodPressure.diastolic;
+    }
+
+    // Validate: at least one vital sign must be present
+    const hasAtLeastOneVital = 
+      vitalRecord.temperature != null ||
+      vitalRecord.heart_rate != null ||
+      vitalRecord.respiratory_rate != null ||
+      vitalRecord.oxygen_saturation != null ||
+      vitalRecord.blood_pressure_systolic != null;
+
+    if (!hasAtLeastOneVital) {
+      throw new Error('At least one vital sign measurement must be provided');
+    }
+
+    console.log('📊 Recording partial vitals:', Object.keys(vitalRecord).filter(k => k.includes('_') && vitalRecord[k] != null));
+
     const { error } = await supabase
       .from('patient_vitals')
-      .insert({
-        patient_id: patientId,
-        tenant_id: patient?.tenant_id, // Include tenant_id for multi-tenant support
-        temperature: vitals.temperature, // Store as Celsius
-        blood_pressure_systolic: vitals.bloodPressure.systolic,
-        blood_pressure_diastolic: vitals.bloodPressure.diastolic,
-        heart_rate: vitals.heartRate,
-        respiratory_rate: vitals.respiratoryRate,
-        oxygen_saturation: vitals.oxygenSaturation,
-        oxygen_delivery: vitals.oxygenDelivery || 'Room Air', // Add oxygen delivery field
-        oxygen_flow_rate: vitals.oxygenFlowRate || 'N/A', // Add oxygen flow rate field
-        recorded_at: new Date().toISOString(), // Add the recorded_at timestamp
-        student_name: studentName || null // Add student name if provided
-      });
+      .insert(vitalRecord);
 
     if (error) {
       console.error('Database error inserting vitals:', error);
       throw error;
     }
 
-    // Log the action
+    // Log the action (only log vitals that were actually recorded)
     const user = (await supabase.auth.getUser()).data.user;
+    const logData: any = {};
+    if (vitals.temperature != null) logData.temperature = vitals.temperature;
+    if (vitals.heartRate != null) logData.heart_rate = vitals.heartRate;
+    if (vitals.respiratoryRate != null) logData.respiratory_rate = vitals.respiratoryRate;
+    if (vitals.oxygenSaturation != null) logData.oxygen_saturation = vitals.oxygenSaturation;
+    if (vitals.bloodPressure?.systolic != null && vitals.bloodPressure?.diastolic != null) {
+      logData.blood_pressure = `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic}`;
+    }
+    
     await logAction(
       user,
       'recorded_vitals',
       patientId,
       'patient',
-      {
-        temperature: vitals.temperature,
-        blood_pressure: `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic}`,
-        heart_rate: vitals.heartRate,
-        oxygen_saturation: vitals.oxygenSaturation
-      }
+      logData
     );
 
     console.log('Vitals inserted successfully');
