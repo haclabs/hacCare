@@ -321,7 +321,8 @@ export const admissionAssessmentSchema: AssessmentSchema = {
     vitalSigns: {
       type: 'vital-signs',
       title: 'Admission Vital Signs',
-      required: true
+      description: 'Record available vital signs at admission',
+      required: false
     },
     orientation: {
       type: 'select',
