@@ -339,13 +339,13 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       {
         label: 'Temperature',
         value: latestVitals.temperature != null ? `${latestVitals.temperature.toFixed(1)}°C` : '-',
-        rawValue: latestVitals.temperature || 0,
+        rawValue: latestVitals.temperature ?? null,
         type: 'temperature'
       },
       {
         label: 'Heart Rate',
         value: latestVitals.heartRate != null ? `${latestVitals.heartRate} BPM` : '-',
-        rawValue: latestVitals.heartRate || 0,
+        rawValue: latestVitals.heartRate ?? null,
         type: 'heartRate'
       },
       {
@@ -353,7 +353,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         value: latestVitals.bloodPressure?.systolic != null && latestVitals.bloodPressure?.diastolic != null 
           ? `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}` 
           : '-',
-        rawValue: latestVitals.bloodPressure?.systolic || 0,
+        rawValue: latestVitals.bloodPressure?.systolic ?? null,
         type: 'systolic'
       },
       {
@@ -362,13 +362,13 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         subtitle: latestVitals.oxygenFlowRate && latestVitals.oxygenFlowRate !== 'N/A'
           ? `${latestVitals.oxygenDelivery || 'Room Air'} @ ${latestVitals.oxygenFlowRate.replace('L', ' L/min')}`
           : latestVitals.oxygenDelivery || 'Room Air',
-        rawValue: latestVitals.oxygenSaturation || 0,
+        rawValue: latestVitals.oxygenSaturation ?? null,
         type: 'oxygenSaturation'
       },
       {
         label: 'Respiratory Rate',
         value: latestVitals.respiratoryRate != null ? `${latestVitals.respiratoryRate}/min` : '-',
-        rawValue: latestVitals.respiratoryRate || 0,
+        rawValue: latestVitals.respiratoryRate ?? null,
         type: 'respiratoryRate'
       }
     ];
