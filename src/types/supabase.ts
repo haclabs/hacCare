@@ -2023,7 +2023,7 @@ export type Database = {
           id: string
           oxygen_delivery: string | null
           oxygen_flow_rate: string | null
-          oxygen_saturation: number
+          oxygen_saturation: number | null
           patient_id: string | null
           recorded_at: string | null
           respiratory_rate: number | null

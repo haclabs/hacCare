@@ -7,6 +7,7 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.4] - 2026-03-23 - STAT MEDICATIONS + EMPTY ARRAY BUGFIX
 [5.3.3] - 2026-03-23 - OPTIONAL VITAL SIGNS SUPPORT
 ===============================================================================
 

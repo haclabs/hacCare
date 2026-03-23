@@ -404,7 +404,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
         prescribed_by: newMedicationForm.prescribed_by,
         start_date: newMedicationForm.start_date,
         end_date: newMedicationForm.end_date || undefined,
-        next_due: newMedicationForm.category === 'prn' ? new Date().toISOString() : calculateNextDue(newMedicationForm.frequency, newMedicationForm.start_date, newMedicationForm.admin_time, newMedicationForm.admin_times),
+        next_due: (newMedicationForm.category === 'prn' || newMedicationForm.category === 'stat') ? new Date().toISOString() : calculateNextDue(newMedicationForm.frequency, newMedicationForm.start_date, newMedicationForm.admin_time, newMedicationForm.admin_times),
         last_administered: undefined,
         admin_time: newMedicationForm.admin_time,
         admin_times: newMedicationForm.admin_times.length > 1 ? newMedicationForm.admin_times : null
@@ -678,7 +678,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
       prn: filteredMedications.filter(med => med.category === 'prn'),
       scheduled: filteredMedications.filter(med => med.category === 'scheduled'),
       diabetic: filteredMedications.filter(med => med.category === 'diabetic'),
-      continuous: filteredMedications.filter(med => med.category === 'continuous')
+      continuous: filteredMedications.filter(med => med.category === 'continuous'),
+      stat: filteredMedications.filter(med => med.category === 'stat')
     };
 
     return (
@@ -686,7 +687,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
         {/* Category Filter Tabs */}
         <div className="flex flex-wrap items-center justify-between">
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {(['All', 'prn', 'scheduled', 'scheduled_diabetic', 'continuous'] as const).map((category) => (
+            {(['All', 'prn', 'scheduled', 'scheduled_diabetic', 'continuous', 'stat'] as const).map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategoryFilter(category as any)}
@@ -700,11 +701,14 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 {category === 'scheduled' && <Calendar className="h-4 w-4" />}
                 {category === 'scheduled_diabetic' && <span className="text-orange-500">💉</span>}
                 {category === 'continuous' && <Syringe className="h-4 w-4" />}
+                {category === 'stat' && <span className="text-red-500">⚡</span>}
                 <span>
                   {category === 'All' ? 'All' : 
                    category === 'prn' ? 'PRN (As Needed)' :
                    category === 'scheduled' ? 'Scheduled' :
                    category === 'scheduled_diabetic' ? 'Diabetic' :
+                   category === 'continuous' ? 'IV/Continuous' :
+                   category === 'stat' ? 'STAT' :
                    'IV/Continuous'}
                 </span>
                 <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs">
@@ -783,6 +787,14 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   description: 'Blood glucose management - time-based alerts enabled',
                   bgColor: 'bg-orange-50',
                   borderColor: 'border-orange-200'
+                },
+                stat: { 
+                  title: 'STAT Medications', 
+                  icon: Clock, 
+                  color: 'red',
+                  description: 'One-time administration - no alerts',
+                  bgColor: 'bg-red-50',
+                  borderColor: 'border-red-200'
                 }
               };
               
@@ -862,12 +874,14 @@ export const MARModule: React.FC<MARModuleProps> = ({
                 category === 'scheduled' ? 'bg-green-100 text-green-800' :
                 medication.category === 'diabetic' ? 'bg-orange-100 text-orange-800' :
                 category === 'continuous' ? 'bg-purple-100 text-purple-800' :
+                category === 'stat' ? 'bg-red-100 text-red-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
                 {category === 'prn' ? 'PRN' : 
                  category === 'scheduled' ? 'Scheduled' : 
                  medication.category === 'diabetic' ? '💉 Diabetic' :
                  category === 'continuous' ? 'IV/Continuous' :
+                 category === 'stat' ? 'STAT' :
                  category}
               </span>
               {shouldAlert && isDue && (
@@ -890,7 +904,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
             <p className="text-gray-600 mt-1">
               {medication.dosage} • {medication.route} • {medication.frequency}
             </p>
-            {medication.next_due && category !== 'prn' && (
+            {medication.next_due && category !== 'prn' && category !== 'stat' && (
               <p className="text-sm text-gray-500 mt-1">
                 {category === 'continuous' 
                   ? 'Continuous infusion' 
@@ -1180,6 +1194,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     <option value="prn">PRN (As Needed) - No alerts</option>
                     <option value="scheduled">Scheduled - Time-based alerts</option>
                     <option value="continuous">IV/Continuous - Critical alerts</option>
+                    <option value="stat">STAT (No Alert)</option>
                     <option value="diabetic" className="text-orange-600">🩸 Diabetic - Glucose monitoring</option>
                   </select>
                 </div>
@@ -1236,12 +1251,13 @@ export const MARModule: React.FC<MARModuleProps> = ({
                     <option value="4 times daily">4 times daily</option>
                     <option value="Every 4 hours">Every 4 hours</option>
                     <option value="As needed (PRN)">As needed (PRN)</option>
+                    <option value="One Time Admin (Now)">One Time Admin (Now)</option>
                     <option value="Continuous">Continuous infusion</option>
                   </select>
                 </div>
 
                 {/* Administration Times - Dynamic based on frequency */}
-                {((newMedicationForm.frequency.includes('time daily') || newMedicationForm.frequency.includes('times daily')) && !newMedicationForm.frequency.includes('PRN')) ? (
+                {((newMedicationForm.frequency.includes('time daily') || newMedicationForm.frequency.includes('times daily')) && !newMedicationForm.frequency.includes('PRN') && !newMedicationForm.frequency.includes('One Time Admin')) ? (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <label className="block text-sm font-medium text-blue-700 mb-3">
                       ⏰ Administration Times *
