@@ -120,13 +120,13 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
 
     setIsLoading(true);
     try {
-      // Convert form data to VitalSigns format
+      // Convert form data to VitalSigns format (supporting partial vitals)
       const newVitals: VitalSigns = {
         temperature: data.vitalSigns.temperature,
-        bloodPressure: {
+        bloodPressure: data.vitalSigns.bloodPressure ? {
           systolic: data.vitalSigns.bloodPressure.systolic,
           diastolic: data.vitalSigns.bloodPressure.diastolic
-        },
+        } : undefined,
         heartRate: data.vitalSigns.heartRate,
         respiratoryRate: data.vitalSigns.respiratoryRate,
         oxygenSaturation: data.vitalSigns.oxygenSaturation,
