@@ -7,6 +7,46 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.3.4] - 2026-03-23 - STAT MEDICATIONS + EMPTY ARRAY BUGFIX
+===============================================================================
+
+NEW FEATURES
+-----------------
+
+* Added STAT Medication Category with One Time Admin Frequency
+  - CLINICAL NEED: Support STAT (immediately administered) medications like Vitamin K injections
+  - CHANGES:
+    * Added 'stat' medication category with red color coding
+    * Added 'One Time Admin (Now)' frequency option
+    * STAT medications excluded from scheduling system (no due time picker)
+    * STAT medications excluded from overdue alerts (immediate admin expected)
+    * "Due at" display hidden for STAT meds in MAR
+    * STAT tab added to medication administration interface
+    * Frontend calculates immediate timestamp for One Time Admin frequency
+  - MIGRATION: database/migrations/20260323000001_add_stat_category_to_medications.sql
+  - AFFECTED COMPONENTS:
+    * MedicationForm.tsx - STAT card UI, conditional schedule picker
+    * MARModule.tsx - STAT dropdown entry, filter tab, conditional "Due at" display
+    * MedicationAdministration.tsx - STAT navigation tab
+    * useMedications.ts - STAT exclusion from overdue filtering
+    * clinical.ts types - Added 'stat' to MedicationCategory union
+  - COMPATIBILITY: Works across production, simulation templates, and active simulations
+
+CRITICAL BUGFIXES
+-----------------
+
+* Fixed Simulation Launch Failure with Empty Arrays in Patient Data
+  - ISSUE: "INSERT has more target columns than expressions" error when launching 
+    simulations containing patients with empty arrays (e.g., "allergies": [])
+  - ROOT CAUSE: restore_snapshot_to_tenant function converted empty arrays to NULL,
+    which were then skipped entirely from INSERT VALUES list, causing column/value mismatch
+  - SOLUTION: Updated array handling to correctly convert empty arrays to 'ARRAY[]::text[]'
+    or 'ARRAY[]::type[]' instead of NULL, ensuring VALUES list matches column count
+  - MIGRATION: database/migrations/20260323000005_fix_empty_array_handling.sql
+  - AFFECTED FUNCTION: restore_snapshot_to_tenant (lines 141-152, 321-340)
+  - IMPACT: All simulations now launch successfully regardless of patient array data
+
+===============================================================================
 [5.3.3] - 2026-03-23 - OPTIONAL VITAL SIGNS SUPPORT
 ===============================================================================
 
