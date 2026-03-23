@@ -2017,48 +2017,48 @@ export type Database = {
       }
       patient_vitals: {
         Row: {
-          blood_pressure_diastolic: number
-          blood_pressure_systolic: number
-          heart_rate: number
+          blood_pressure_diastolic: number | null
+          blood_pressure_systolic: number | null
+          heart_rate: number | null
           id: string
           oxygen_delivery: string | null
           oxygen_flow_rate: string | null
           oxygen_saturation: number
           patient_id: string | null
           recorded_at: string | null
-          respiratory_rate: number
+          respiratory_rate: number | null
           student_name: string | null
-          temperature: number
+          temperature: number | null
           tenant_id: string | null
         }
         Insert: {
-          blood_pressure_diastolic: number
-          blood_pressure_systolic: number
-          heart_rate: number
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          heart_rate?: number | null
           id?: string
           oxygen_delivery?: string | null
           oxygen_flow_rate?: string | null
           oxygen_saturation: number
           patient_id?: string | null
           recorded_at?: string | null
-          respiratory_rate: number
+          respiratory_rate?: number | null
           student_name?: string | null
-          temperature: number
+          temperature?: number | null
           tenant_id?: string | null
         }
         Update: {
-          blood_pressure_diastolic?: number
-          blood_pressure_systolic?: number
-          heart_rate?: number
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          heart_rate?: number | null
           id?: string
           oxygen_delivery?: string | null
           oxygen_flow_rate?: string | null
           oxygen_saturation?: number
           patient_id?: string | null
           recorded_at?: string | null
-          respiratory_rate?: number
+          respiratory_rate?: number | null
           student_name?: string | null
-          temperature?: number
+          temperature?: number | null
           tenant_id?: string | null
         }
         Relationships: [
@@ -4265,9 +4265,10 @@ export type Database = {
       }
       create_simulation_template: {
         Args: {
-          p_default_duration_minutes?: number
-          p_description?: string
+          p_default_duration_minutes: number
+          p_description: string
           p_name: string
+          p_primary_categories?: string[]
         }
         Returns: Json
       }

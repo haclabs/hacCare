@@ -120,13 +120,13 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
 
     setIsLoading(true);
     try {
-      // Convert form data to VitalSigns format
+      // Convert form data to VitalSigns format (supporting partial vitals)
       const newVitals: VitalSigns = {
         temperature: data.vitalSigns.temperature,
-        bloodPressure: {
+        bloodPressure: data.vitalSigns.bloodPressure ? {
           systolic: data.vitalSigns.bloodPressure.systolic,
           diastolic: data.vitalSigns.bloodPressure.diastolic
-        },
+        } : undefined,
         heartRate: data.vitalSigns.heartRate,
         respiratoryRate: data.vitalSigns.respiratoryRate,
         oxygenSaturation: data.vitalSigns.oxygenSaturation,
@@ -221,6 +221,11 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
 
   // Age-based vitals analysis using new utility
   const getVitalStatus = (vitalType: string, value: number, dateOfBirth: string) => {
+    // If value is null/undefined, return gray (no data)
+    if (value == null) {
+      return { status: 'no-data', color: 'text-gray-400', bgColor: 'bg-gray-50' };
+    }
+    
     // Map vital type names to assessment function parameter names
     const vitalTypeMap: Record<string, 'temperature' | 'heartRate' | 'systolic' | 'diastolic' | 'respiratoryRate' | 'oxygenSaturation'> = {
       'temperature': 'temperature',
@@ -249,7 +254,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const getTrendDirection = (currentVital: VitalSigns, previousVital: VitalSigns | undefined, vitalType: string) => {
     if (!previousVital) return { icon: Minus, color: 'text-gray-400', trend: 'no-data' };
 
-    let current: number, previous: number;
+    let current: number | undefined, previous: number | undefined;
     
     switch (vitalType) {
       case 'heartRate':
@@ -257,16 +262,16 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         previous = previousVital.heartRate;
         break;
       case 'temperature':
-        current = currentVital.temperature || 0;
-        previous = previousVital.temperature || 0;
+        current = currentVital.temperature;
+        previous = previousVital.temperature;
         break;
       case 'systolic':
-        current = currentVital.bloodPressure.systolic;
-        previous = previousVital.bloodPressure.systolic;
+        current = currentVital.bloodPressure?.systolic;
+        previous = previousVital.bloodPressure?.systolic;
         break;
       case 'diastolic':
-        current = currentVital.bloodPressure.diastolic;
-        previous = previousVital.bloodPressure.diastolic;
+        current = currentVital.bloodPressure?.diastolic;
+        previous = previousVital.bloodPressure?.diastolic;
         break;
       case 'oxygenSaturation':
         current = currentVital.oxygenSaturation;
@@ -278,6 +283,11 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         break;
       default:
         return { icon: Minus, color: 'text-gray-400', trend: 'stable' };
+    }
+
+    // If either current or previous value is missing, return no trend
+    if (current == null || previous == null) {
+      return { icon: Minus, color: 'text-gray-400', trend: 'no-data' };
     }
 
     const difference = current - previous;
@@ -328,35 +338,37 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     const vitalItems = [
       {
         label: 'Temperature',
-        value: `${latestVitals.temperature?.toFixed(1)}°C`,
-        rawValue: latestVitals.temperature || 0,
+        value: latestVitals.temperature != null ? `${latestVitals.temperature.toFixed(1)}°C` : '-',
+        rawValue: latestVitals.temperature ?? null,
         type: 'temperature'
       },
       {
         label: 'Heart Rate',
-        value: `${latestVitals.heartRate} BPM`,
-        rawValue: latestVitals.heartRate,
+        value: latestVitals.heartRate != null ? `${latestVitals.heartRate} BPM` : '-',
+        rawValue: latestVitals.heartRate ?? null,
         type: 'heartRate'
       },
       {
         label: 'Blood Pressure',
-        value: `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}`,
-        rawValue: latestVitals.bloodPressure.systolic,
+        value: latestVitals.bloodPressure?.systolic != null && latestVitals.bloodPressure?.diastolic != null 
+          ? `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}` 
+          : '-',
+        rawValue: latestVitals.bloodPressure?.systolic ?? null,
         type: 'systolic'
       },
       {
         label: 'O2 Saturation',
-        value: `${latestVitals.oxygenSaturation}%`,
+        value: latestVitals.oxygenSaturation != null ? `${latestVitals.oxygenSaturation}%` : '-',
         subtitle: latestVitals.oxygenFlowRate && latestVitals.oxygenFlowRate !== 'N/A'
           ? `${latestVitals.oxygenDelivery || 'Room Air'} @ ${latestVitals.oxygenFlowRate.replace('L', ' L/min')}`
           : latestVitals.oxygenDelivery || 'Room Air',
-        rawValue: latestVitals.oxygenSaturation,
+        rawValue: latestVitals.oxygenSaturation ?? null,
         type: 'oxygenSaturation'
       },
       {
         label: 'Respiratory Rate',
-        value: `${latestVitals.respiratoryRate}/min`,
-        rawValue: latestVitals.respiratoryRate,
+        value: latestVitals.respiratoryRate != null ? `${latestVitals.respiratoryRate}/min` : '-',
+        rawValue: latestVitals.respiratoryRate ?? null,
         type: 'respiratoryRate'
       }
     ];
@@ -405,9 +417,10 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
                   <div className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${
                     status.status === 'normal' ? 'bg-green-100 text-green-700' :
                     status.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                    status.status === 'no-data' ? 'bg-gray-100 text-gray-600' :
                     'bg-red-100 text-red-700'
                   }`}>
-                    {status.status.toUpperCase()}
+                    {status.status === 'no-data' ? 'NOT RECORDED' : status.status.toUpperCase()}
                   </div>
                 </div>
               );

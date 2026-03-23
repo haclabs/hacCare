@@ -245,18 +245,49 @@ export async function addVitalsWithTenant(
       return { data: null, error: { message: 'Patient not found or access denied' } };
     }
 
-    const dbVitals = {
+    // Build insert object dynamically - only include fields that have values
+    // This supports partial vitals entry (e.g., newborns without BP readings)
+    const dbVitals: any = {
       patient_id: patientId,
-      temperature: vitals.temperature,
-      blood_pressure_systolic: vitals.bloodPressure.systolic,
-      blood_pressure_diastolic: vitals.bloodPressure.diastolic,
-      heart_rate: vitals.heartRate,
-      respiratory_rate: vitals.respiratoryRate,
-      oxygen_saturation: vitals.oxygenSaturation,
+      tenant_id: tenantId,
+      recorded_at: vitals.recorded_at || new Date().toISOString(),
       oxygen_delivery: vitals.oxygenDelivery || 'Room Air',
-      oxygen_flow_rate: vitals.oxygenFlowRate || 'N/A',
-      recorded_at: vitals.recorded_at || new Date().toISOString()
+      oxygen_flow_rate: vitals.oxygenFlowRate || 'N/A'
     };
+
+    // Only include vitals that were actually measured
+    if (vitals.temperature != null) {
+      dbVitals.temperature = vitals.temperature;
+    }
+    if (vitals.heartRate != null) {
+      dbVitals.heart_rate = vitals.heartRate;
+    }
+    if (vitals.respiratoryRate != null) {
+      dbVitals.respiratory_rate = vitals.respiratoryRate;
+    }
+    if (vitals.oxygenSaturation != null) {
+      dbVitals.oxygen_saturation = vitals.oxygenSaturation;
+    }
+    
+    // Blood pressure: include both or neither (must be a pair)
+    if (vitals.bloodPressure?.systolic != null && vitals.bloodPressure?.diastolic != null) {
+      dbVitals.blood_pressure_systolic = vitals.bloodPressure.systolic;
+      dbVitals.blood_pressure_diastolic = vitals.bloodPressure.diastolic;
+    }
+
+    // Validate: at least one vital sign must be present
+    const hasAtLeastOneVital = 
+      dbVitals.temperature != null ||
+      dbVitals.heart_rate != null ||
+      dbVitals.respiratory_rate != null ||
+      dbVitals.oxygen_saturation != null ||
+      dbVitals.blood_pressure_systolic != null;
+
+    if (!hasAtLeastOneVital) {
+      return { data: null, error: { message: 'At least one vital sign measurement must be provided' } };
+    }
+
+    console.log('📊 Recording partial vitals:', Object.keys(dbVitals).filter(k => k.includes('_') && dbVitals[k] != null));
 
     const { data: newVitals, error } = await supabase
       .from('patient_vitals')

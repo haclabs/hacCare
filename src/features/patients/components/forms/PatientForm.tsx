@@ -52,16 +52,9 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
   const [newAllergy, setNewAllergy] = useState('');
 
   /**
-   * Generate a cryptographically secure patient ID
-   * DEPRECATED: Use generateSecurePatientId from utils/secureRandom.ts instead
-   */
-  function generatePatientId(): string {
-    // Replaced with secure implementation
-    return generateSecurePatientId();
-  }  /**
    * Update form field value
    */
-  const updateField = (field: keyof Patient, value: any) => {
+  const updateField = (field: keyof Patient, value: Patient[keyof Patient]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value

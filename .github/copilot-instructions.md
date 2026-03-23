@@ -283,6 +283,113 @@ const simPatient = await supabase
 - [database/functions/reset_simulation_with_template_updates.sql](../database/functions/reset_simulation_with_template_updates.sql) - Medication sync example
 - [database/functions/compare_simulation_template_patients.sql](../database/functions/compare_simulation_template_patients.sql) - Patient comparison pattern
 
+### Optional/Nullable Vital Signs (March 2026)
+**Vital signs fields are now OPTIONAL to support clinical reality where not all measurements can be obtained:**
+
+**Clinical Use Cases:**
+- Newborns without blood pressure readings (equipment limitations, clinical protocols)
+- Emergency situations where only critical vitals are captured
+- Equipment failures or patient refusal
+- Partial assessments during rapid response scenarios
+
+**Implementation (3-Layer Fix):**
+```typescript
+// ❌ OLD - All vitals required as nested object
+const newVitals: VitalSigns = {
+  temperature: data.vitalSigns.temperature,     // Required
+  bloodPressure: {                              // Required
+    systolic: data.vitalSigns.bloodPressure.systolic,
+    diastolic: data.vitalSigns.bloodPressure.diastolic
+  },
+  heartRate: data.vitalSigns.heartRate,         // Required
+  // ... all fields required
+};
+
+// ✅ NEW - Optional vitals with conditional creation
+const newVitals: VitalSigns = {
+  temperature: data.vitalSigns.temperature,
+  bloodPressure: data.vitalSigns.bloodPressure ? {
+    systolic: data.vitalSigns.bloodPressure.systolic,
+    diastolic: data.vitalSigns.bloodPressure.diastolic
+  } : undefined,  // Only create if data present
+  heartRate: data.vitalSigns.heartRate,
+  // ... all fields can be undefined
+};
+```
+
+**Database Layer (Migration 20260323000000):**
+```sql
+-- All vital columns now nullable
+ALTER TABLE patient_vitals 
+  ALTER COLUMN temperature DROP NOT NULL,
+  ALTER COLUMN heart_rate DROP NOT NULL,
+  ALTER COLUMN blood_pressure_systolic DROP NOT NULL,
+  ALTER COLUMN blood_pressure_diastolic DROP NOT NULL,
+  ALTER COLUMN respiratory_rate DROP NOT NULL,
+  ALTER COLUMN oxygen_saturation DROP NOT NULL;
+
+-- Validation: At least ONE vital must be present
+ADD CONSTRAINT patient_vitals_at_least_one_vital CHECK (
+  temperature IS NOT NULL OR heart_rate IS NOT NULL OR ...
+);
+
+-- Validation: Blood pressure must be recorded as pair
+ADD CONSTRAINT patient_vitals_bp_pair CHECK (
+  (blood_pressure_systolic IS NULL AND blood_pressure_diastolic IS NULL) OR
+  (blood_pressure_systolic IS NOT NULL AND blood_pressure_diastolic IS NOT NULL)
+);
+```
+
+**Service Layer (Dynamic Field Building):**
+```typescript
+// patientService.ts & multiTenantPatientService.ts
+// Only insert fields that have values - prevents explicit NULL insertion
+const vitalData: Record<string, any> = { patient_id, tenant_id };
+
+if (vitals.temperature !== undefined) vitalData.temperature = vitals.temperature;
+if (vitals.heartRate !== undefined) vitalData.heart_rate = vitals.heartRate;
+// ... build object dynamically
+
+// Validation before insert
+if (Object.keys(vitalData).length <= 2) {
+  throw new Error('At least one vital sign must be provided');
+}
+```
+
+**Schema Layer (Form Validation):**
+- `vitalsSchemas.ts`: `vitalSigns` field marked `required: false`, `allowPartial: true`
+- `formsSchemas.ts`: Same changes for admission assessment
+- UI displays notice: "Enter available vitals only - not all measurements are required"
+
+**Input Validation Updates:**
+- Respiratory rate range expanded: **5-80** (was 8-40) to accommodate newborn critical highs (70 bpm)
+- Age-based ranges still enforced, but fields are optional
+- Blood pressure pairing enforced at all layers (both values or neither)
+
+**Affected Components:**
+- [src/components/forms/fields/VitalSignsField.tsx](../src/components/forms/fields/VitalSignsField.tsx) - Input limits + conditional BP object creation
+- [src/features/clinical/components/vitals/VitalsModule.tsx](../src/features/clinical/components/vitals/VitalsModule.tsx) - Conditional BP object creation
+- [src/services/patient/patientService.ts](../src/services/patient/patientService.ts) - Dynamic field building (~30 lines)
+- [src/services/patient/multiTenantPatientService.ts](../src/services/patient/multiTenantPatientService.ts) - Identical logic for simulations
+
+**System-Wide Compatibility:**
+- ✅ Production patients
+- ✅ Simulation templates (template tenant editing)
+- ✅ Active simulations (multi-tenant service)
+- ✅ Student debrief reports (reads from patient_vitals table)
+
+**Common Issues:**
+- ❌ "Cannot read properties of undefined (reading 'systolic')" → Check for `bloodPressure` existence before accessing `.systolic`
+- ❌ Database CHECK constraint violation → Ensure at least one vital field has a value before insert
+- ❌ Blood pressure validation error → Both systolic and diastolic must be provided together or both omitted
+- ✅ Always use conditional object creation: `bloodPressure: data.bloodPressure ? {...} : undefined`
+- ✅ Service layer validates and rejects empty vital submissions (at least one required)
+
+**Migration Status:**
+- Database migration created: `database/migrations/20260323000000_make_patient_vitals_nullable.sql`
+- TypeScript types need regeneration after migration runs: `npm run supabase:types`
+- Test with newborn patient (0-28 days) entering only respiratory rate (e.g., 70)
+
 ### Template Editing Workflow (Critical Understanding)
 **Templates ARE real tenant environments with live data**, not just frozen snapshots:
 

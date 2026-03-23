@@ -51,8 +51,8 @@ export const vitalsEntrySchema: VitalsSchema = {
     vitalSigns: {
       type: 'vital-signs',
       title: 'Current Vital Signs',
-      description: 'Record all current vital signs',
-      required: true,
+      description: 'Record available vital signs (not all measurements required)',
+      required: false,
       healthcare: {
         category: 'vitals',
         alertThresholds: {
@@ -63,7 +63,8 @@ export const vitalsEntrySchema: VitalsSchema = {
           respiratoryRate: { low: 10, high: 25 },
           oxygenSaturation: { low: 92, high: 100 }
         },
-        requiredFor: ['assessment']
+        requiredFor: ['assessment'],
+        allowPartial: true
       },
       validation: {
         healthcareRules: {
