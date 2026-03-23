@@ -628,8 +628,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             const errorText = await response.text();
             console.error('❌ Direct fetch failed:', response.status, errorText);
-            // See security note above - storing access token for direct API calls
-            sessionStorage.setItem('supabase_access_token', data.session.access_token);
+            // Store a non-sensitive flag to indicate profile is missing, without persisting the access token
+            sessionStorage.setItem('supabase_profile_status', 'missing');
             setUser(data.session.user);
             setProfile(null);
             setLoading(false);
@@ -637,8 +637,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (fetchError) {
           console.error('💥 Exception during direct fetch:', fetchError);
           // Set user anyway so they can create profile
-          // See security note above - storing access token for direct API calls
-          sessionStorage.setItem('supabase_access_token', data.session.access_token);
+          // Store a non-sensitive flag to indicate profile is missing, without persisting the access token
+          sessionStorage.setItem('supabase_profile_status', 'missing');
           setUser(data.session.user);
           setProfile(null);
           setLoading(false);
