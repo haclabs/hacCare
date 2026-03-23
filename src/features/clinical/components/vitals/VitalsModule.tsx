@@ -328,35 +328,37 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     const vitalItems = [
       {
         label: 'Temperature',
-        value: `${latestVitals.temperature?.toFixed(1)}°C`,
+        value: latestVitals.temperature != null ? `${latestVitals.temperature.toFixed(1)}°C` : '-',
         rawValue: latestVitals.temperature || 0,
         type: 'temperature'
       },
       {
         label: 'Heart Rate',
-        value: `${latestVitals.heartRate} BPM`,
-        rawValue: latestVitals.heartRate,
+        value: latestVitals.heartRate != null ? `${latestVitals.heartRate} BPM` : '-',
+        rawValue: latestVitals.heartRate || 0,
         type: 'heartRate'
       },
       {
         label: 'Blood Pressure',
-        value: `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}`,
-        rawValue: latestVitals.bloodPressure.systolic,
+        value: latestVitals.bloodPressure?.systolic != null && latestVitals.bloodPressure?.diastolic != null 
+          ? `${latestVitals.bloodPressure.systolic}/${latestVitals.bloodPressure.diastolic}` 
+          : '-',
+        rawValue: latestVitals.bloodPressure?.systolic || 0,
         type: 'systolic'
       },
       {
         label: 'O2 Saturation',
-        value: `${latestVitals.oxygenSaturation}%`,
+        value: latestVitals.oxygenSaturation != null ? `${latestVitals.oxygenSaturation}%` : '-',
         subtitle: latestVitals.oxygenFlowRate && latestVitals.oxygenFlowRate !== 'N/A'
           ? `${latestVitals.oxygenDelivery || 'Room Air'} @ ${latestVitals.oxygenFlowRate.replace('L', ' L/min')}`
           : latestVitals.oxygenDelivery || 'Room Air',
-        rawValue: latestVitals.oxygenSaturation,
+        rawValue: latestVitals.oxygenSaturation || 0,
         type: 'oxygenSaturation'
       },
       {
         label: 'Respiratory Rate',
-        value: `${latestVitals.respiratoryRate}/min`,
-        rawValue: latestVitals.respiratoryRate,
+        value: latestVitals.respiratoryRate != null ? `${latestVitals.respiratoryRate}/min` : '-',
+        rawValue: latestVitals.respiratoryRate || 0,
         type: 'respiratoryRate'
       }
     ];
