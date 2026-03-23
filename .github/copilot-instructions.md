@@ -2,7 +2,7 @@
 
 **Current Version:** 1.0 (Milestone Release Candidate)  
 **Status:** Production-ready multi-tenant healthcare simulation platform  
-**Last Updated:** February 2, 2026
+**Last Updated:** March 23, 2026
 
 ## System Overview
 hacCare is a **multi-tenant healthcare simulation platform** for clinical education. React 19 + TypeScript + Supabase (PostgreSQL 15) with strict Row-Level Security (RLS) for HIPAA compliance.
@@ -389,6 +389,83 @@ if (Object.keys(vitalData).length <= 2) {
 - Database migration created: `database/migrations/20260323000000_make_patient_vitals_nullable.sql`
 - TypeScript types need regeneration after migration runs: `npm run supabase:types`
 - Test with newborn patient (0-28 days) entering only respiratory rate (e.g., 70)
+
+### Empty Array Handling in restore_snapshot_to_tenant (March 2026)
+**Empty arrays in JSONB snapshots cause INSERT failures due to column/value count mismatch:**
+
+**The Problem (March 23, 2026):**
+When a patient has `"allergies": []` in the snapshot, the restore function would skip adding a value to the VALUES array, but still add the column name to the columns array. Result:
+```
+ERROR: INSERT has more target columns than expressions
+```
+
+**Root Cause:**
+```sql
+-- OLD CODE (BUGGY)
+IF jsonb_typeof(v_col.value) = 'array' THEN
+  SELECT string_agg(quote_literal(elem), ',')
+  INTO v_array_elements
+  FROM jsonb_array_elements_text(v_col.value) elem;
+  
+  -- If array is empty, v_array_elements is NULL
+  -- Code then checks v_array_elements and skips appending to v_values
+  -- But column was already added to v_columns! = MISMATCH
+END IF;
+```
+
+**Fix Applied (Migration 20260323000005):**
+```sql
+-- NEW CODE (FIXED)
+IF jsonb_typeof(v_col.value) = 'array' THEN
+  SELECT string_agg(quote_literal(elem), ',')
+  INTO v_array_elements
+  FROM jsonb_array_elements_text(v_col.value) elem;
+  
+  IF v_array_elements IS NULL OR v_array_elements = '' THEN
+    -- Empty array - ALWAYS add value
+    IF v_column_type = 'ARRAY' AND v_udt_name LIKE '\_%' THEN
+      v_values := array_append(v_values, 'ARRAY[]::' || substring(v_udt_name from 2) || '[]');
+    ELSE
+      v_values := array_append(v_values, 'ARRAY[]::text[]');
+    END IF;
+  ELSE
+    -- Non-empty array - add elements with proper cast
+    v_values := array_append(v_values, 'ARRAY[' || v_array_elements || ']');
+  END IF;
+END IF;
+```
+
+**Where Applied:**
+1. **Patient table restoration** (lines 140-157 in migration) - handles empty allergies/arrays in patient records
+2. **All other tables restoration** (lines 300-340 in migration) - handles empty arrays in devices, wounds, etc.
+
+**Testing:**
+- Create simulation template with patient having `allergies: []`
+- Launch simulation from template
+- Function should successfully restore patient with empty array as `ARRAY[]::text[]`
+- No "INSERT has more target columns than expressions" error
+
+**Related Fixes (Same Session):**
+- `20260323000001_add_stat_category_to_medications.sql` - Added STAT medication category
+- `20260323000002_fix_medication_category_default.sql` - Fixed category default handling
+- `20260323000003_fix_restore_snapshot_category_handling.sql` - Improved category field restoration
+- `20260323000004_revert_restore_snapshot_fix.sql` - Revert migration for safety
+
+**Critical Files:**
+- [database/migrations/20260323000005_fix_empty_array_handling.sql](../database/migrations/20260323000005_fix_empty_array_handling.sql) - Main fix
+- [database/functions/restore_snapshot_to_tenant.sql](../database/functions/restore_snapshot_to_tenant.sql) - Function being fixed
+
+**Common Issues:**
+- ❌ "INSERT has more target columns than expressions" → Check for empty arrays in JSONB being skipped
+- ❌ Array type mismatch error → Use proper type casting (`ARRAY[]::text[]` vs `ARRAY[]::device_type[]`)
+- ✅ Always check `v_array_elements IS NULL OR v_array_elements = ''` for empty arrays
+- ✅ Match array type to database column type (use `information_schema.columns.udt_name`)
+
+**Security Updates (March 23, 2026):**
+Fixed 2 critical/high npm vulnerabilities:
+- **jspdf** (CRITICAL): HTML Injection (GHSA-wfv2-pwc8-crg5, CVSS 9.6) + PDF Object Injection (GHSA-7x6v-j9x4-qf24, CVSS 8.1)
+- **flatted** (HIGH): DoS vulnerability (GHSA-25h7-pfq9-p65f, CVSS 7.5) + Prototype Pollution (GHSA-rf6f-7fwh-wjgh)
+- Fixed via: `npm audit fix` (package-lock.json updated)
 
 ### Template Editing Workflow (Critical Understanding)
 **Templates ARE real tenant environments with live data**, not just frozen snapshots:
