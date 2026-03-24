@@ -111,7 +111,12 @@ npm run test:coverage          # Coverage report
 npm run supabase:types         # Regenerate TypeScript types from Supabase schema
 ```
 
-**Database migrations**: Never run `supabase migration` command (PREFERRED LOCATION)
+**Database migrations**: Place migration files in `database/migrations/` (PREFERRED LOCATION). Never run `supabase migration` commands directly.
+
+### Feature Folder Structure
+```
+src/features/
+├── patients/         # Patient management & clinical workflows
 │   ├── components/   # UI components
 │   ├── hooks/        # React Query hooks (usePatients, useMultiTenantPatients)
 │   └── services/     # API calls (rare - most logic in hooks)
@@ -124,17 +129,19 @@ npm run supabase:types         # Regenerate TypeScript types from Supabase schem
 1. Check if functionality already exists in `patients/`
 2. Migrate or consolidate into `patients/` feature folder
 3. Delete the old `clinical/` version
-4. Update imports across the codebase patients/         # Patient management & clinical workflows
-│   ├── components/   # UI components
-│   ├── hooks/        # React Query hooks (usePatients, useMultiTenantPatients)
-│   └── services/     # API calls (rare - most logic in hooks)
-├── simulation/       # Simulation manager, templates, debrief reports
-├── admin/     vs Production
+4. Update imports across the codebase
+
+### Simulation vs Production
 **No special handling needed** - simulations use the same system as production, just in dedicated tenant environments. The only difference:
 - Simulations may run on `simulation.` subdomain (auto-redirects to `/simulation-portal`)
 - Same components, same workflows, same database structure
-- See [src/App.tsx](../src/App.tsx) lines 69-81 for subdomain detection/features/simulation/components/SimulationManager'));
+- See [src/App.tsx](../src/App.tsx) lines 69-81 for subdomain detection
+
+```typescript
+// Lazy-loaded simulation route example
+const SimulationManager = React.lazy(() => import('./features/simulation/components/SimulationManager'));
 ```
+
 See [src/App.tsx](../src/App.tsx) lines 17-29 for all lazy-loaded routes.
 
 ## Key Gotchas

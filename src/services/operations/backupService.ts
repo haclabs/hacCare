@@ -20,7 +20,7 @@ export interface BackupOptions {
   includeWoundCare: boolean;
   includeVitals: boolean;
   includeNotes: boolean;
-  includeDiabeticRecords: boolean;
+  includeBBITEntries: boolean;
   includeAdmissionRecords: boolean;
   includeAdvancedDirectives: boolean;
   includeBowelRecords: boolean;
@@ -110,7 +110,7 @@ export interface BackupData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     notes?: any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    diabetic_records?: any[];
+    bbit_entries?: any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     admission_records?: any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -212,9 +212,9 @@ class BackupService {
         backupData.metadata.record_counts.notes = backupData.data.notes.length;
       }
 
-      if (options.includeDiabeticRecords) {
-        backupData.data.diabetic_records = await this.exportDiabeticRecords(options);
-        backupData.metadata.record_counts.diabetic_records = backupData.data.diabetic_records.length;
+      if (options.includeBBITEntries) {
+        backupData.data.bbit_entries = await this.exportBBITEntries(options);
+        backupData.metadata.record_counts.bbit_entries = backupData.data.bbit_entries.length;
       }
 
       if (options.includeAdmissionRecords) {
@@ -541,7 +541,7 @@ class BackupService {
       options.includeWoundCare,
       options.includeVitals,
       options.includeNotes,
-      options.includeDiabeticRecords,
+      options.includeBBITEntries,
       options.includeAdmissionRecords,
       options.includeAdvancedDirectives,
       options.includeBowelRecords,
@@ -744,8 +744,8 @@ class BackupService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async exportDiabeticRecords(options: BackupOptions): Promise<any[]> {
-    let query = supabase.from('diabetic_records').select('*');
+  private async exportBBITEntries(options: BackupOptions): Promise<any[]> {
+    let query = supabase.from('patient_bbit_entries').select('*');
 
     if (options.dateRange) {
       query = query

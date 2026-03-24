@@ -125,9 +125,9 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % lab panels', v_count;
   
-  DELETE FROM diabetic_records WHERE tenant_id = v_tenant_id;
+  DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
-  RAISE NOTICE '🗑️  Deleted % diabetic records', v_count;
+  RAISE NOTICE '🗑️  Deleted % BBIT entries', v_count;
   
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
