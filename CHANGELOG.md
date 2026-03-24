@@ -8,7 +8,6 @@ documented in this file.
 
 ===============================================================================
 [5.3.4] - 2026-03-23 - STAT MEDICATIONS + EMPTY ARRAY BUGFIX
-===============================================================================
 
 NEW FEATURES
 -----------------
@@ -46,7 +45,6 @@ CRITICAL BUGFIXES
   - AFFECTED FUNCTION: restore_snapshot_to_tenant (lines 141-152, 321-340)
   - IMPACT: All simulations now launch successfully regardless of patient array data
 
-===============================================================================
 [5.3.3] - 2026-03-23 - OPTIONAL VITAL SIGNS SUPPORT
 ===============================================================================
 

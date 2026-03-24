@@ -2039,6 +2039,7 @@ export type Database = {
           oxygen_delivery?: string | null
           oxygen_flow_rate?: string | null
           oxygen_saturation?: number | null
+          oxygen_saturation: number
           patient_id?: string | null
           recorded_at?: string | null
           respiratory_rate?: number | null
@@ -2054,6 +2055,7 @@ export type Database = {
           oxygen_delivery?: string | null
           oxygen_flow_rate?: string | null
           oxygen_saturation?: number | null
+          oxygen_saturation?: number
           patient_id?: string | null
           recorded_at?: string | null
           respiratory_rate?: number | null
