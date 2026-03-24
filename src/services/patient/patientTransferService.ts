@@ -11,7 +11,7 @@ export interface PatientTransferOptions {
   transferAssessments?: boolean;
   transferHandoverNotes?: boolean;
   transferAlerts?: boolean;
-  transferDiabeticRecords?: boolean;
+  transferBBITEntries?: boolean;
   transferBowelRecords?: boolean;
   transferWoundCare?: boolean;
   transferDoctorsOrders?: boolean;
@@ -40,7 +40,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
     transferAssessments = true,
     transferHandoverNotes = true,
     transferAlerts = true,
-    transferDiabeticRecords = true,
+    transferBBITEntries = true,
     transferBowelRecords = true,
     transferWoundCare = true,
     transferDoctorsOrders = true,
@@ -94,7 +94,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         p_include_assessments: transferAssessments,
         p_include_handover_notes: transferHandoverNotes,
         p_include_alerts: transferAlerts,
-        p_include_diabetic_records: transferDiabeticRecords,
+        p_include_diabetic_records: transferBBITEntries,
         p_include_bowel_records: transferBowelRecords,
         p_include_wound_care: transferWoundCare,
         p_include_doctors_orders: transferDoctorsOrders,
@@ -112,7 +112,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
           p_include_assessments: transferAssessments,
           p_include_handover_notes: transferHandoverNotes,
           p_include_alerts: transferAlerts,
-          p_include_diabetic_records: transferDiabeticRecords,
+          p_include_diabetic_records: transferBBITEntries,
           p_include_bowel_records: transferBowelRecords,
           p_include_wound_care: transferWoundCare,
           p_include_doctors_orders: transferDoctorsOrders,

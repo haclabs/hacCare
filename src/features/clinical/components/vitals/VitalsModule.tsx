@@ -20,6 +20,7 @@ import { Patient, VitalSigns } from '../../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge, getVitalRangesForAgeBand, assessVitalSign } from '../../../../utils/vitalRanges';
+import { NeuroAssessmentTab } from '../../../../features/patients/components/vitals/NeuroAssessmentTab';
 
 interface VitalsModuleProps {
   patient: Patient;
@@ -47,7 +48,7 @@ interface VitalsModuleProps {
   hasNewNotes?: boolean;
 }
 
-type VitalsView = 'trends';
+type VitalsView = 'trends' | 'neuro';
 
 export const VitalsModule: React.FC<VitalsModuleProps> = ({
   patient,
@@ -74,7 +75,8 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const [successMessage, setSuccessMessage] = useState('');
   const [showVitalsModal, setShowVitalsModal] = useState(false);
   const [showTrendsDetail, setShowTrendsDetail] = useState(false);
-  const [activeView] = useState<VitalsView>('trends');
+  const [activeView, setActiveView] = useState<VitalsView>('trends');
+  const [showNeuroForm, setShowNeuroForm] = useState(false);
 
   // Register schemas on component mount
   useEffect(() => {
@@ -556,7 +558,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-4">
       {/* Patient Action Bar */}
       <PatientActionBar
         onChartClick={onChartClick}
@@ -581,9 +583,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           <h2 className="text-2xl font-bold text-gray-900">Vital Signs Management</h2>
           <p className="text-gray-600">Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})</p>
         </div>
-        
-        {/* Action Buttons */}
-        <div className="flex space-x-2">
+
+        {/* Action button — matches active tab */}
+        {activeView === 'trends' && (
           <button
             onClick={() => setShowVitalsModal(true)}
             className="px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700"
@@ -591,14 +593,47 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
             <Plus className="h-4 w-4 inline mr-2" />
             Record Vitals
           </button>
-        </div>
+        )}
+        {activeView === 'neuro' && (
+          <button
+            onClick={() => setShowNeuroForm(true)}
+            className="px-4 py-2 rounded-lg font-medium transition-colors bg-purple-600 text-white hover:bg-purple-700"
+          >
+            <Plus className="h-4 w-4 inline mr-2" />
+            New Assessment
+          </button>
+        )}
+      </div>
+
+      {/* Tab bar */}
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setActiveView('trends')}
+          className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeView === 'trends'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Vitals
+        </button>
+        <button
+          onClick={() => setActiveView('neuro')}
+          className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeView === 'neuro'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Neuro Assessment
+        </button>
       </div>
 
       {/* Clinical Alerts */}
-      {renderAlerts()}
+      {activeView === 'trends' && renderAlerts()}
 
       {/* Success Message */}
-      {renderSuccessMessage()}
+      {activeView === 'trends' && renderSuccessMessage()}
 
       {/* Current View Content */}
       {activeView === 'trends' && (
@@ -606,6 +641,16 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           {/* Enhanced Vitals Summary with Color Coding and Trends */}
           {renderEnhancedVitalsSummary()}
         </div>
+      )}
+
+      {/* Neuro Assessment tab */}
+      {activeView === 'neuro' && (
+        <NeuroAssessmentTab
+          patient={patient}
+          currentUser={currentUser}
+          externalShowForm={showNeuroForm}
+          onExternalFormClose={() => setShowNeuroForm(false)}
+        />
       )}
 
       {/* Detailed Trends Modal */}

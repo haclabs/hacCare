@@ -107,7 +107,7 @@ BEGIN
   DELETE FROM device_assessments WHERE tenant_id = v_tenant_id;
   DELETE FROM lab_results WHERE tenant_id = v_tenant_id;
   DELETE FROM lab_panels WHERE tenant_id = v_tenant_id;
-  DELETE FROM diabetic_records WHERE tenant_id = v_tenant_id;
+  DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id;
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
   DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;

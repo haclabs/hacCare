@@ -1,5 +1,7 @@
 import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote } from '../../types';
+import type { NeuroAssessment, NeuroAssessmentInput } from '../../features/patients/types/neuroAssessment';
+import type { BBITEntry, BBITEntryInput } from '../../features/patients/types/bbitEntry';
 
 /**
  * Multi-Tenant Patient Service
@@ -447,6 +449,109 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: any[]): Pat
     notes: [] // Will be loaded separately
   };
 };
+
+// ============================================================================
+// Neuro Assessments
+// ============================================================================
+
+/**
+ * Get all neuro assessments for a patient (oldest first for tick chart columns)
+ */
+export async function getNeuroAssessments(
+  patientId: string,
+  tenantId: string
+): Promise<{ data: NeuroAssessment[] | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('patient_neuro_assessments')
+      .select('*')
+      .eq('patient_id', patientId)
+      .eq('tenant_id', tenantId)
+      .order('recorded_at', { ascending: true });
+
+    if (error) return { data: null, error };
+    return { data: data as NeuroAssessment[], error: null };
+  } catch (error) {
+    console.error('Error in getNeuroAssessments:', error);
+    return { data: null, error };
+  }
+}
+
+/**
+ * Add a neuro assessment for a patient
+ */
+export async function addNeuroAssessment(
+  patientId: string,
+  tenantId: string,
+  assessment: NeuroAssessmentInput,
+  studentName?: string
+): Promise<{ data: NeuroAssessment | null; error: any }> {
+  try {
+    const { data, error } = await supabase
+      .from('patient_neuro_assessments')
+      .insert([{
+        patient_id: patientId,
+        tenant_id: tenantId,
+        student_name: studentName || null,
+        recorded_at: assessment.recorded_at || new Date().toISOString(),
+        ...assessment,
+      }])
+      .select()
+      .single();
+
+    if (error) return { data: null, error };
+    return { data: data as NeuroAssessment, error: null };
+  } catch (error) {
+    console.error('Error in addNeuroAssessment:', error);
+    return { data: null, error };
+  }
+}
+
+// ─── BBIT (Basal-Bolus Insulin Therapy) ──────────────────────────────────────
+
+export async function getBBITEntries(patientId: string, tenantId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('patient_bbit_entries')
+      .select('*')
+      .eq('patient_id', patientId)
+      .eq('tenant_id', tenantId)
+      .order('recorded_at', { ascending: true });
+
+    if (error) return { data: null, error };
+    return { data: data as BBITEntry[], error: null };
+  } catch (error) {
+    console.error('Error in getBBITEntries:', error);
+    return { data: null, error };
+  }
+}
+
+export async function addBBITEntry(
+  patientId: string,
+  tenantId: string,
+  entry: BBITEntryInput,
+  studentName?: string,
+) {
+  try {
+    const { data, error } = await supabase
+      .from('patient_bbit_entries')
+      .insert([{
+        patient_id: patientId,
+        tenant_id: tenantId,
+        student_name: studentName || null,
+        recorded_at: entry.recorded_at || new Date().toISOString(),
+        ...entry,
+      }])
+      .select()
+      .single();
+
+    if (error) return { data: null, error };
+    return { data: data as BBITEntry, error: null };
+  } catch (error) {
+    console.error('Error in addBBITEntry:', error);
+    return { data: null, error };
+  }
+}
 
 /**
  * Convert database vitals to app vitals format

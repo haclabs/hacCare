@@ -5,4 +5,3 @@
 
 export * from './clinical';
 export * from './labs';
-export * from './diabetic';

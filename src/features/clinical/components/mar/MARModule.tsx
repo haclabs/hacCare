@@ -21,7 +21,7 @@ import { formatLocalTime } from '../../../../utils/time';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
-import DiabeticRecordModule from '../../../../components/DiabeticRecordModule';
+import { BBITTab } from '../../../patients/components/mar/BBITTab';
 import { MedicationHistoryView } from './MedicationHistoryView';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge } from '../../../../utils/vitalRanges';
@@ -54,7 +54,7 @@ interface MARModuleProps {
   hasNewNotes?: boolean;
 }
 
-type MARView = 'administration' | 'history' | 'diabetic-record' | 'add-medication';
+type MARView = 'administration' | 'history' | 'bbit' | 'add-medication';
 
 export const MARModule: React.FC<MARModuleProps> = ({
   patient,
@@ -84,6 +84,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showBarcodeLabels, setShowBarcodeLabels] = useState(false);
+  const [showBBITForm, setShowBBITForm] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
 
@@ -991,7 +992,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-4">
       {/* Patient Action Bar */}
       <PatientActionBar
         onChartClick={onChartClick}
@@ -1013,65 +1014,104 @@ export const MARModule: React.FC<MARModuleProps> = ({
       {/* Module Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Medication Administration Record</h2>
-          <div className="flex items-center gap-3">
-            <p className="text-gray-600">Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})</p>
-            {patient.date_of_birth && (() => {
-              const ageInfo = calculatePreciseAge(patient.date_of_birth);
-              const ageBandLabels: Record<string, string> = {
-                'NEWBORN': 'Newborn (0-28 days)',
-                'INFANT': 'Infant (1-12 months)',
-                'TODDLER': 'Toddler (1-3 years)',
-                'PRESCHOOL': 'Preschool (3-5 years)',
-                'SCHOOL_AGE': 'School Age (6-12 years)',
-                'ADOLESCENT': 'Adolescent (13-18 years)',
-                'ADULT': 'Adult (18+ years)'
-              };
-              return (
-                <span className="text-sm text-blue-600 font-medium px-3 py-1 bg-blue-50 rounded-full">
-                  {ageBandLabels[ageInfo.ageBand]}
-                </span>
-              );
-            })()}
-          </div>
+          {activeView === 'bbit' ? (
+            <>
+              <div className="flex items-center gap-2 mb-0.5">
+                <button
+                  onClick={() => setActiveView('administration')}
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Medication Administration Record
+                </button>
+              </div>
+              <h2 className="text-2xl font-bold text-purple-700">
+                BBIT
+                <span className="text-lg font-normal text-purple-500 ml-2">Basal-Bolus Insulin Therapy</span>
+              </h2>
+              <p className="text-gray-600 mt-0.5">
+                Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900">Medication Administration Record</h2>
+              <div className="flex items-center gap-3">
+                <p className="text-gray-600">Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})</p>
+                {patient.date_of_birth && (() => {
+                  const ageInfo = calculatePreciseAge(patient.date_of_birth);
+                  const ageBandLabels: Record<string, string> = {
+                    'NEWBORN': 'Newborn (0-28 days)',
+                    'INFANT': 'Infant (1-12 months)',
+                    'TODDLER': 'Toddler (1-3 years)',
+                    'PRESCHOOL': 'Preschool (3-5 years)',
+                    'SCHOOL_AGE': 'School Age (6-12 years)',
+                    'ADOLESCENT': 'Adolescent (13-18 years)',
+                    'ADULT': 'Adult (18+ years)'
+                  };
+                  return (
+                    <span className="text-sm text-blue-600 font-medium px-3 py-1 bg-blue-50 rounded-full">
+                      {ageBandLabels[ageInfo.ageBand]}
+                    </span>
+                  );
+                })()}
+              </div>
+            </>
+          )}
         </div>
         
-        {/* View Toggle */}
-        <div className="flex space-x-2">
+        {/* View Toggle + Context Action */}
+        <div className="flex items-center space-x-2">
+          {activeView === 'bbit' && (
+            <button
+              onClick={() => setShowBBITForm(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center"
+            >
+              <Droplets className="h-4 w-4 mr-2" />
+              New Entry
+            </button>
+          )}
+          <div className="flex space-x-2">
+          {activeView !== 'bbit' && (
+            <>
+              <button
+                onClick={() => setActiveView('administration')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeView === 'administration'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Pill className="h-4 w-4 inline mr-2" />
+                Administration
+              </button>
+              <button
+                onClick={() => setActiveView('history')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeView === 'history'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Clock className="h-4 w-4 inline mr-2" />
+                History
+              </button>
+            </>
+          )}
           <button
-            onClick={() => setActiveView('administration')}
+            onClick={() => setActiveView(activeView === 'bbit' ? 'administration' : 'bbit')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'administration'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Pill className="h-4 w-4 inline mr-2" />
-            Administration
-          </button>
-          <button
-            onClick={() => setActiveView('history')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'history'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Clock className="h-4 w-4 inline mr-2" />
-            History
-          </button>
-          <button
-            onClick={() => setActiveView('diabetic-record')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeView === 'diabetic-record'
+              activeView === 'bbit'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             <Droplets className="h-4 w-4 inline mr-2" />
-            Diabetic Record
+            BBIT Chart
           </button>
-          
+          </div>
         </div>
       </div>
 
@@ -1138,10 +1178,12 @@ export const MARModule: React.FC<MARModuleProps> = ({
         />
       )}
 
-      {activeView === 'diabetic-record' && (
-        <DiabeticRecordModule 
-          patientId={patient.patient_id} 
-          patientName={`${patient.first_name} ${patient.last_name}`}
+      {activeView === 'bbit' && (
+        <BBITTab
+          patient={patient}
+          currentUser={currentUser}
+          externalShowForm={showBBITForm}
+          onExternalFormClose={() => setShowBBITForm(false)}
         />
       )}
 
