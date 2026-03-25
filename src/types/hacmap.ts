@@ -35,9 +35,11 @@ export type DeviceType =
   | 'chest-tube'
   | 'foley'
   | 'feeding-tube'
+  | 'nasogastric'
   | 'iv-peripheral'
   | 'iv-picc'
   | 'iv-port'
+  | 'ostomy'
   | 'other';
 
 export type ReservoirType =
@@ -151,6 +153,14 @@ export interface Device {
   initial_ph?: number;
   initial_aspirate_appearance?: string;
   placement_confirmed?: boolean;
+  // Ostomy-specific fields
+  ostomy_construction?: string; // Colostomy, Ileostomy, Urostomy, Other
+  stoma_side?: string; // Left, Right
+  // Nasogastric-specific fields
+  ng_securement?: string; // Mefix, Bridle, Other
+  ng_attached_to?: string; // Gravity, Suction
+  ng_external_length_mm?: number;
+  ng_residual_volume_ml?: number;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -309,6 +319,14 @@ export interface CreateDeviceInput {
   initial_ph?: number;
   initial_aspirate_appearance?: string;
   placement_confirmed?: boolean;
+  // Ostomy-specific fields
+  ostomy_construction?: string;
+  stoma_side?: string;
+  // Nasogastric-specific fields
+  ng_securement?: string;
+  ng_attached_to?: string;
+  ng_external_length_mm?: number;
+  ng_residual_volume_ml?: number;
   created_by: string;
 }
 
@@ -338,6 +356,14 @@ export interface UpdateDeviceInput {
   initial_ph?: number;
   initial_aspirate_appearance?: string;
   placement_confirmed?: boolean;
+  // Ostomy-specific fields
+  ostomy_construction?: string;
+  stoma_side?: string;
+  // Nasogastric-specific fields
+  ng_securement?: string;
+  ng_attached_to?: string;
+  ng_external_length_mm?: number;
+  ng_residual_volume_ml?: number;
 }
 
 export interface CreateWoundInput {
@@ -433,9 +459,11 @@ export const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
   'chest-tube': 'Chest Tube',
   'foley': 'Foley Catheter',
   'feeding-tube': 'Feeding Tube',
+  'nasogastric': 'Nasogastric Tube (NG)',
   'iv-peripheral': 'IV Peripheral',
   'iv-picc': 'IV PICC Line',
   'iv-port': 'IV Port',
+  'ostomy': 'Ostomy',
   'other': 'Other'
 };
 
@@ -568,6 +596,39 @@ export interface FoleyAssessmentData {
   hygiene_notes?: string;
   indication_valid?: boolean;
   plan?: 'continue' | 'consider_removal' | 'remove_today';
+}
+
+export interface NGAssessmentData {
+  xray_confirmed?: boolean;
+  tube_size_fr?: string;
+  securement?: string; // Mefix, Bridle, Other
+  attached_to?: string; // Gravity, Suction
+  gastric_ph?: number;
+  gastric_contents_appearance?: string;
+  external_length_mm?: number;
+  residual_volume_ml?: number;
+  tube_patent?: boolean;
+  tube_notes?: string;
+}
+
+export interface OstomyAssessmentData {
+  ostomy_type?: 'Colostomy' | 'Ileostomy' | 'Urostomy' | 'Other';
+  stoma_color?: 'Beefy Red' | 'Pink' | 'Pale' | 'Dusky' | 'Dark/Necrotic';
+  stoma_moist?: boolean;
+  stoma_shape?: 'Round' | 'Oval' | 'Irregular';
+  stoma_height?: 'Protruding/Budded' | 'Flush' | 'Retracted';
+  stoma_size_mm?: number;
+  peristomal_skin?: string[]; // Intact, Reddened, Irritated, Rash, Excoriated, Macerated
+  peristomal_notes?: string;
+  output_amount_ml?: number;
+  output_consistency?: 'Liquid' | 'Soft' | 'Formed' | 'Hard' | 'None';
+  output_color?: string;
+  output_odor?: 'Normal' | 'Foul';
+  appliance_changed?: boolean;
+  appliance_last_changed?: string;
+  appliance_notes?: string;
+  patient_education_provided?: boolean;
+  patient_tolerance?: string;
 }
 
 export interface FeedingTubeAssessmentData {

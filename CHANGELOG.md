@@ -7,6 +7,102 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.4.0] - 2026-03-25 - HACMAP EXPANSION + NEURO ASSESSMENT + SIMULATION WIRING
+===============================================================================
+
+NEW FEATURES
+-----------------
+
+* HacMap - Ostomy Device Type
+  - CLINICAL NEED: Support ostomy care assessment and placement documentation
+  - CHANGES:
+    * Added 'ostomy' to DeviceType union and DEVICE_TYPE_LABELS
+    * Placement form (DeviceForm.tsx): Ostomy Construction (Colostomy/Ileostomy/Urostomy/Other),
+      Stoma Side (Left/Right); irrelevant generic fields hidden (Tube Number, Orientation,
+      Tube Size, Sutures, Reservoir)
+    * Assessment form (OstomyAssessmentFields.tsx, teal styling): Stoma appearance (color,
+      moisture, shape, height, size mm), Peristomal skin, Output (amount/consistency/colour/odour),
+      Pouching system, Patient education and tolerance
+    * Red alert on Dusky/Necrotic stoma colour assessment
+    * OstomyAssessmentData interface added to hacmap.ts
+  - MIGRATION: database/migrations/20260325000000_add_ostomy_fields_to_devices.sql
+    (ALTER TYPE device_type_enum ADD VALUE 'ostomy'; + ostomy_construction, stoma_side columns)
+
+* HacMap - Nasogastric Tube (NG) Device Type
+  - CLINICAL NEED: Support NG tube insertion documentation and ongoing assessment
+  - CHANGES:
+    * Added 'nasogastric' to DeviceType union and DEVICE_TYPE_LABELS
+    * Placement form (DeviceForm.tsx, orange styling): X-ray confirmation, French size,
+      Securement device (Mefix/Bridle/Other), Attached to (Gravity/Suction/Drainage Bag),
+      pH of gastric contents, Visual inspection of gastric contents,
+      External tube length (mm), Residual volume (mL); generic fields hidden
+    * Assessment form (NGAssessmentFields.tsx, orange styling): Placement verification
+      (X-ray confirmed, tube patency), tube details, gastric contents, additional notes
+    * NGAssessmentData interface added to hacmap.ts
+  - MIGRATION: database/migrations/20260325000000_add_ostomy_fields_to_devices.sql
+    (ALTER TYPE device_type_enum ADD VALUE 'nasogastric'; + ng_securement, ng_attached_to,
+    ng_external_length_mm, ng_residual_volume_ml columns)
+
+* Neurological Assessment Tick Chart
+  - CLINICAL NEED: Ongoing neuro charting with GCS, orientation, pupils, limb strength
+  - CHANGES:
+    * New patient_neuro_assessments table (migration 20260324000000)
+    * Fields: LOC (AVPU), Orientation (A×3 — person/place/time), GCS (E+V+M),
+      Pupils (size mm, reaction per eye, equality), Limb strength (MRC 0–5 per limb),
+      Sensation, Speech, Pain score
+    * Removed 'Event' from orientation options (updated type, UI, and migration)
+    * student_name tracking for simulation debrief integration
+  - AFFECTED FILES: neuroAssessment.ts, NeuroAssessmentTab.tsx
+
+* Handover Notes - Optional SBAR Sections
+  - CLINICAL NEED: Allow partial handover notes - not every shift has complete SBAR data
+  - CHANGES:
+    * Removed mandatory validation for Situation/Background/Assessment/Recommendations
+    * Only student name verification is still required
+    * Removed HTML 'required' attributes from SBAR textarea fields
+  - AFFECTED FILES: HandoverNotesForm.tsx
+
+IMPROVEMENTS
+-----------------
+
+* Uniform Header UI - MAR & Vitals
+  - MAR Module: Replaced button-style tab toggles with underline tab bar
+    (Administration/History/BBIT Chart) matching VitalsModule tab style
+  - Vitals Module: Added age-range badge next to patient header info
+    (Newborn/Infant/Toddler/Child/Adolescent/Adult) matching MAR pattern
+  - AFFECTED FILES: MARModule.tsx, VitalsModule.tsx
+
+SIMULATION INTEGRATION
+-----------------
+
+* Neuro Assessments - Full Simulation Lifecycle Wiring
+  - SNAPSHOT: Captured automatically (schema-agnostic save_template_snapshot_v2)
+  - RESTORE: Restored automatically on launch (dynamic restore_snapshot_to_tenant)
+  - RESET: Added DELETE FROM patient_neuro_assessments to both reset functions
+  - DEBRIEF: Added to studentActivityService.ts query + NeuroAssessmentEntry interface;
+    added 'neuroAssessments' section to EnhancedDebriefModal with LOC, GCS, pupils,
+    strength rendering (violet/🧠 colour scheme)
+  - AFFECTED FILES: reset_simulation_for_next_session.sql,
+    reset_simulation_with_template_updates.sql, studentActivityService.ts,
+    EnhancedDebriefModal.tsx
+
+BUGFIXES
+-----------------
+
+* Fixed Handover Notes - Recommendations Field Missing in Debrief Reports
+  - ISSUE: Debrief modal showed empty "Recommendations" for all handover notes
+  - ROOT CAUSE: Database column is `recommendations` (plural) but studentActivityService
+    was reading `note.recommendation` (singular) — field was always undefined
+  - FIX: Corrected to `note.recommendations` in studentActivityService.ts and
+    updated HandoverNoteEntry interface; updated debrief label from "Recommendation"
+    to "Recommendations"
+  - AFFECTED FILES: studentActivityService.ts, EnhancedDebriefModal.tsx
+
+* HacMap Deduplication - Neuro in Student Activity Merge
+  - Added neuroAssessments array to deduplication spread in EnhancedDebriefModal.tsx
+    to prevent duplicate entries when multiple activity sources are merged
+
+===============================================================================
 [5.3.4] - 2026-03-23 - STAT MEDICATIONS + EMPTY ARRAY BUGFIX
 ===============================================================================
 

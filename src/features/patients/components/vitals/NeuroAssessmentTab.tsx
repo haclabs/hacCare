@@ -57,9 +57,9 @@ const rows: RowDef[] = [
   {
     type: 'row', key: 'orientation', label: 'Oriented A×',
     render: (a) => {
-      const count = [a.oriented_person, a.oriented_place, a.oriented_time, a.oriented_event]
+      const count = [a.oriented_person, a.oriented_place, a.oriented_time]
         .filter(Boolean).length;
-      const total = [a.oriented_person, a.oriented_place, a.oriented_time, a.oriented_event]
+      const total = [a.oriented_person, a.oriented_place, a.oriented_time]
         .filter(v => v !== undefined).length;
       if (total === 0) return '—';
       return `A×${count}`;
@@ -76,10 +76,6 @@ const rows: RowDef[] = [
   {
     type: 'row', key: 'o_time', label: '  Time',
     render: (a) => a.oriented_time === undefined ? '—' : a.oriented_time ? '✓' : '✗',
-  },
-  {
-    type: 'row', key: 'o_event', label: '  Event',
-    render: (a) => a.oriented_event === undefined ? '—' : a.oriented_event ? '✓' : '✗',
   },
   { type: 'section', label: 'Glasgow Coma Scale' },
   {
@@ -163,7 +159,6 @@ const emptyForm = (): NeuroAssessmentInput => ({
   oriented_person: undefined,
   oriented_place: undefined,
   oriented_time: undefined,
-  oriented_event: undefined,
   gcs_eye: undefined,
   gcs_verbal: undefined,
   gcs_motor: undefined,
@@ -467,7 +462,7 @@ export const NeuroAssessmentTab: React.FC<NeuroAssessmentTabProps> = ({
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Orientation</label>
                   <div className="flex gap-3 flex-wrap">
-                    {(['person', 'place', 'time', 'event'] as const).map(o => {
+                    {(['person', 'place', 'time'] as const).map(o => {
                       const key = `oriented_${o}` as keyof NeuroAssessmentInput;
                       return (
                         <button

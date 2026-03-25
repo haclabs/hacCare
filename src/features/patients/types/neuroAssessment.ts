@@ -12,7 +12,6 @@ export interface NeuroAssessment {
   oriented_person?: boolean;
   oriented_place?: boolean;
   oriented_time?: boolean;
-  oriented_event?: boolean;
 
   // Glasgow Coma Scale (eye 1-4, verbal 1-5, motor 1-6)
   gcs_eye?: number;

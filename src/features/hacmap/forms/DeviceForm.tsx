@@ -63,9 +63,25 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
   const [initialAspirateAppearance, setInitialAspirateAppearance] = useState(device?.initial_aspirate_appearance || '');
   const [placementConfirmed, setPlacementConfirmed] = useState(device?.placement_confirmed || false);
 
-  useEffect(() => {
+  // Ostomy-specific fields
+  const [ostomyConstruction, setOstomyConstruction] = useState(device?.ostomy_construction || '');
+  const [stomaSide, setStomaSide] = useState(device?.stoma_side || '');
+
+  // Nasogastric-specific fields
+  const [ngSecurement, setNgSecurement] = useState(device?.ng_securement || '');
+  const [ngAttachedTo, setNgAttachedTo] = useState(device?.ng_attached_to || '');
+  const [ngExternalLengthMm, setNgExternalLengthMm] = useState<number | undefined>(device?.ng_external_length_mm);
+  const [ngResidualVolumeMl, setNgResidualVolumeMl] = useState<number | undefined>(device?.ng_residual_volume_ml);
+
+  const isOstomy = type === 'ostomy';
+  const isNasogastric = type === 'nasogastric';
+  const isIV = type === 'iv-peripheral' || type === 'iv-picc' || type === 'iv-port';
+  const isFeedingTube = type === 'feeding-tube';
+  const isDrain = type === 'closed-suction-drain' || type === 'chest-tube';
+
+      useEffect(() => {
     setIsDirty(true);
-  }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes, studentName, gauge, siteSide, siteLocation, route, externalLengthCm, initialXrayConfirmed, initialPh, initialAspirateAppearance, placementConfirmed]);
+  }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes, studentName, gauge, siteSide, siteLocation, route, externalLengthCm, initialXrayConfirmed, initialPh, initialAspirateAppearance, placementConfirmed, ostomyConstruction, stomaSide, ngSecurement, ngAttachedTo, ngExternalLengthMm, ngResidualVolumeMl]);
 
   const handleOrientationToggle = (value: Orientation) => {
     setOrientation(prev =>
@@ -110,7 +126,15 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
         initial_xray_confirmed: initialXrayConfirmed || undefined,
         initial_ph: initialPh,
         initial_aspirate_appearance: initialAspirateAppearance || undefined,
-        placement_confirmed: placementConfirmed || undefined
+        placement_confirmed: placementConfirmed || undefined,
+        // Ostomy-specific fields
+        ostomy_construction: ostomyConstruction || undefined,
+        stoma_side: stomaSide || undefined,
+        // Nasogastric-specific fields
+        ng_securement: ngSecurement || undefined,
+        ng_attached_to: ngAttachedTo || undefined,
+        ng_external_length_mm: ngExternalLengthMm,
+        ng_residual_volume_ml: ngResidualVolumeMl,
       };
 
       if (!device) {
@@ -330,6 +354,162 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
         </div>
       )}
 
+      {/* Nasogastric Tube-Specific Fields */}
+      {isNasogastric && (
+        <div className="space-y-4 p-4 bg-orange-50 border border-orange-200 rounded-md">
+          <h3 className="text-sm font-semibold text-orange-900">Nasogastric Tube (NG) Information</h3>
+
+          {/* Radiographic Confirmation */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={initialXrayConfirmed}
+              onChange={(e) => setInitialXrayConfirmed(e.target.checked)}
+              className="rounded text-orange-500 focus:ring-orange-500"
+            />
+            <span className="text-sm font-medium text-gray-700">Radiographic Confirmation (X-ray) Completed</span>
+          </label>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Tube French Size */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tube Size (French)</label>
+              <input
+                type="text"
+                value={tubeSizeFr}
+                onChange={(e) => setTubeSizeFr(e.target.value)}
+                placeholder="e.g., 12, 14, 16"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            {/* Securement Device */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Securement Device</label>
+              <select
+                value={ngSecurement}
+                onChange={(e) => setNgSecurement(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="">Select...</option>
+                <option value="Mefix">Mefix</option>
+                <option value="Bridle">Bridle</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Attached To */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Attached To</label>
+              <select
+                value={ngAttachedTo}
+                onChange={(e) => setNgAttachedTo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="">Select...</option>
+                <option value="Gravity">Gravity</option>
+                <option value="Suction">Suction</option>
+              </select>
+            </div>
+
+            {/* pH of Gastric Contents */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">pH of Gastric Contents</label>
+              <input
+                type="number"
+                value={initialPh || ''}
+                onChange={(e) => setInitialPh(e.target.value ? parseFloat(e.target.value) : undefined)}
+                step="0.1"
+                min="0"
+                max="14"
+                placeholder="0.0 – 14.0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            {/* External Tube Length */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">External Tube Length (mm)</label>
+              <input
+                type="number"
+                value={ngExternalLengthMm || ''}
+                onChange={(e) => setNgExternalLengthMm(e.target.value ? parseFloat(e.target.value) : undefined)}
+                min="0"
+                step="1"
+                placeholder="mm at nare"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            {/* Residual Volume */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Residual Volume (mL)</label>
+              <input
+                type="number"
+                value={ngResidualVolumeMl || ''}
+                onChange={(e) => setNgResidualVolumeMl(e.target.value ? parseFloat(e.target.value) : undefined)}
+                min="0"
+                step="1"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+
+          {/* Visual Inspection of Gastric Contents */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Visual Inspection of Gastric Contents</label>
+            <input
+              type="text"
+              value={initialAspirateAppearance}
+              onChange={(e) => setInitialAspirateAppearance(e.target.value)}
+              placeholder="e.g., Clear, Bile-tinged, Bloody, Coffee-grounds"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Ostomy-Specific Fields */}
+      {isOstomy && (
+        <div className="space-y-4 p-4 bg-teal-50 border border-teal-200 rounded-md">
+          <h3 className="text-sm font-semibold text-teal-900">Ostomy Information</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="ostomyConstruction" className="block text-sm font-medium text-gray-700 mb-1">
+                Ostomy Type
+              </label>
+              <select
+                id="ostomyConstruction"
+                value={ostomyConstruction}
+                onChange={(e) => setOstomyConstruction(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              >
+                <option value="">Select...</option>
+                <option value="Colostomy">Colostomy</option>
+                <option value="Ileostomy">Ileostomy</option>
+                <option value="Urostomy">Urostomy</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="stomaSide" className="block text-sm font-medium text-gray-700 mb-1">
+                Stoma Side
+              </label>
+              <select
+                id="stomaSide"
+                value={stomaSide}
+                onChange={(e) => setStomaSide(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              >
+                <option value="">Select...</option>
+                <option value="Left">Left</option>
+                <option value="Right">Right</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Placement Date & Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -392,7 +572,8 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
         />
       </div>
 
-      {/* Tube Number */}
+      {/* Tube Number — not applicable for ostomy, IV, or NG */}
+      {!isOstomy && !isIV && !isNasogastric && (
       <div>
         <label htmlFor="tubeNumber" className="block text-sm font-medium text-gray-700 mb-1">
           Tube Number (1-10)
@@ -407,8 +588,10 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
+      )}
 
-      {/* Orientation */}
+      {/* Orientation — drains/tubes only */}
+      {(isDrain || isFeedingTube) && (
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Orientation
@@ -427,8 +610,10 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           ))}
         </div>
       </div>
+      )}
 
-      {/* Tube Size (French) */}
+      {/* Tube Size — drains/tubes only (NG uses its own section) */}
+      {(isDrain || isFeedingTube) && (
       <div>
         <label htmlFor="tubeSizeFr" className="block text-sm font-medium text-gray-700 mb-1">
           Tube Size (French)
@@ -442,8 +627,10 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           placeholder="e.g., 10 Fr"
         />
       </div>
+      )}
 
-      {/* Number of Sutures */}
+      {/* Sutures — drains only */}
+      {isDrain && (
       <div>
         <label htmlFor="numberOfSutures" className="block text-sm font-medium text-gray-700 mb-1">
           Number of Sutures Placed
@@ -457,8 +644,10 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
+      )}
 
-      {/* Reservoir Type */}
+      {/* Reservoir — drains only */}
+      {isDrain && (
       <div>
         <label htmlFor="reservoirType" className="block text-sm font-medium text-gray-700 mb-1">
           Reservoir Type
@@ -475,8 +664,9 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           ))}
         </select>
       </div>
+      )}
 
-      {/* Reservoir Size (mL) */}
+      {isDrain && (
       <div>
         <label htmlFor="reservoirSizeMl" className="block text-sm font-medium text-gray-700 mb-1">
           Reservoir Size (mL)
@@ -490,6 +680,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
+      )}
 
       {/* Securement Method */}
       <div>

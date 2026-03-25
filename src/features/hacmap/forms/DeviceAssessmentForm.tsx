@@ -10,6 +10,8 @@ import { DEVICE_TYPE_LABELS } from '../../../types/hacmap';
 import { IVAssessmentFields } from './device-assessments/IVAssessmentFields';
 import { FoleyAssessmentFields } from './device-assessments/FoleyAssessmentFields';
 import { FeedingTubeAssessmentFields } from './device-assessments/FeedingTubeAssessmentFields';
+import { OstomyAssessmentFields } from './device-assessments/OstomyAssessmentFields';
+import { NGAssessmentFields } from './device-assessments/NGAssessmentFields';
 
 interface DeviceAssessmentFormProps {
   device: Device;
@@ -77,6 +79,12 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
       
       case 'feeding-tube':
         return <FeedingTubeAssessmentFields device={device} onChange={handleAssessmentDataChange} />;
+      
+      case 'ostomy':
+        return <OstomyAssessmentFields device={device} onChange={handleAssessmentDataChange} />;
+
+      case 'nasogastric':
+        return <NGAssessmentFields device={device} onChange={handleAssessmentDataChange} />;
       
       case 'chest-tube':
       case 'closed-suction-drain':
