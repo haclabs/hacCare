@@ -27,6 +27,7 @@ export interface StudentActivity {
     neuroAssessments: NeuroAssessmentEntry[];
     intakeOutput: IntakeOutputEntry[];
     advancedDirectives: AdvancedDirectiveEntry[]; // 🆕 NEW
+    bbitEntries: BBITEntry[];
   };
 }
 
@@ -211,6 +212,23 @@ interface AdvancedDirectiveEntry {
   special_instructions: string | null;
 }
 
+interface BBITEntry {
+  id: string;
+  recorded_at: string;
+  time_label: string | null;
+  glucose_value: number | null;
+  basal_name: string | null;
+  basal_dose: number | null;
+  basal_status: string | null;
+  bolus_dose: number | null;
+  bolus_meal: string | null;
+  bolus_status: string | null;
+  correction_dose: number | null;
+  correction_suggested_dose: number | null;
+  correction_status: string | null;
+  carb_intake: string | null;
+}
+
 /**
  * Get all activities for a specific simulation grouped by student
  */
@@ -307,6 +325,7 @@ export async function getStudentActivitiesBySimulation(
       intakeOutputData,
       advancedDirectivesData, // 🆕 NEW: Advanced Directives
       neuroAssessmentsData,
+      bbitData,
     ] = await Promise.all([
       // Vitals
       supabase
@@ -523,6 +542,16 @@ export async function getStudentActivitiesBySimulation(
         .not('student_name', 'is', null)
         .gte('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
+
+      // BBIT Entries
+      supabase
+        .from('patient_bbit_entries')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .gte('recorded_at', simulationStartTime || '1970-01-01')
+        .order('recorded_at', { ascending: false }),
     ]);
 
     // Group all activities by student name
@@ -554,6 +583,7 @@ export async function getStudentActivitiesBySimulation(
             neuroAssessments: [],
             intakeOutput: [],
             advancedDirectives: [], // 🆕 NEW
+            bbitEntries: [],
           },
         });
       }
@@ -886,6 +916,28 @@ export async function getStudentActivitiesBySimulation(
         sensation: neuro.sensation,
         speech: neuro.speech,
         pain_score: neuro.pain_score,
+      });
+      student.totalEntries++;
+    });
+
+    // Process BBIT entries
+    bbitData.data?.forEach((bbit: any) => {
+      const student = getOrCreateStudent(bbit.student_name);
+      student.activities.bbitEntries.push({
+        id: bbit.id,
+        recorded_at: bbit.recorded_at,
+        time_label: bbit.time_label,
+        glucose_value: bbit.glucose_value,
+        basal_name: bbit.basal_name,
+        basal_dose: bbit.basal_dose,
+        basal_status: bbit.basal_status,
+        bolus_dose: bbit.bolus_dose,
+        bolus_meal: bbit.bolus_meal,
+        bolus_status: bbit.bolus_status,
+        correction_dose: bbit.correction_dose,
+        correction_suggested_dose: bbit.correction_suggested_dose,
+        correction_status: bbit.correction_status,
+        carb_intake: bbit.carb_intake,
       });
       student.totalEntries++;
     });

@@ -103,6 +103,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.woundAssessments.push(...activity.activities.woundAssessments);
         existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
         existing.activities.neuroAssessments.push(...(activity.activities.neuroAssessments || []));
+        existing.activities.bbitEntries.push(...(activity.activities.bbitEntries || []));
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
         existing.totalEntries += activity.totalEntries;
       } else {
@@ -858,7 +859,8 @@ const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded
     { key: 'deviceAssessments', title: 'Device Assessments', items: student.activities.deviceAssessments || [], color: 'indigo', icon: '🩺' },
     { key: 'woundAssessments', title: 'Wound Assessments', items: student.activities.woundAssessments || [], color: 'fuchsia', icon: '🔍' },
     { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' },
-    { key: 'neuroAssessments', title: 'Neuro Assessments', items: student.activities.neuroAssessments || [], color: 'violet', icon: '🧠' }
+    { key: 'neuroAssessments', title: 'Neuro Assessments', items: student.activities.neuroAssessments || [], color: 'violet', icon: '🧠' },
+    { key: 'bbitEntries', title: 'BBIT Chart', items: student.activities.bbitEntries || [], color: 'purple', icon: '🩸' }
   ].filter(s => s.items.length > 0);
   
   const initialExpanded = forceExpanded 
@@ -1327,6 +1329,32 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                 RA:{item.strength_right_arm ?? '?'} LA:{item.strength_left_arm ?? '?'} RL:{item.strength_right_leg ?? '?'} LL:{item.strength_left_leg ?? '?'}
               </div>
             )}
+          </div>
+        );
+      }
+      case 'bbitEntries': {
+        const timeStr = item.time_label?.trim() || (item.recorded_at ? format(new Date(item.recorded_at), 'HH:mm') : 'N/A');
+        const dateStr = item.recorded_at ? format(new Date(item.recorded_at), 'MMM d') : '';
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{timeStr} {dateStr && <span className="text-gray-500 font-normal">— {dateStr}</span>}</p>
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-700">
+              {item.glucose_value != null && (
+                <span><span className="font-semibold">CBG:</span> {Number(item.glucose_value).toFixed(1)} mmol/L</span>
+              )}
+              {item.carb_intake && (
+                <span><span className="font-semibold">Carbs:</span> {item.carb_intake === 'full' ? 'Full meal' : item.carb_intake === 'partial' ? 'Partial' : 'None'}</span>
+              )}
+              {item.basal_name && (
+                <span><span className="font-semibold">Basal:</span> {item.basal_name} {item.basal_dose != null ? `${item.basal_dose}u` : ''} — {item.basal_status === 'given' ? '✓ Given' : '⊘ Held'}</span>
+              )}
+              {item.bolus_meal && (
+                <span><span className="font-semibold">Bolus ({item.bolus_meal}):</span> {item.bolus_dose != null ? `${item.bolus_dose}u` : '—'} — {item.bolus_status === 'given' ? '✓ Given' : '⊘ Not given'}</span>
+              )}
+              {item.correction_status === 'given' && item.correction_dose != null && (
+                <span><span className="font-semibold">Correction:</span> {item.correction_dose}u given</span>
+              )}
+            </div>
           </div>
         );
       }
