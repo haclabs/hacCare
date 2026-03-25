@@ -100,6 +100,7 @@ BEGIN
   DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id;
   UPDATE patient_medications SET last_administered = NULL WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
+  DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_images WHERE tenant_id = v_tenant_id;
@@ -110,6 +111,7 @@ BEGIN
   DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id;
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
+  DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id;
   DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM bowel_records WHERE tenant_id = v_tenant_id;
   DELETE FROM wounds WHERE tenant_id = v_tenant_id;

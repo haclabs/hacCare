@@ -55,10 +55,8 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.situation.trim() || !formData.background.trim() || 
-        !formData.assessment.trim() || !formData.recommendations.trim() || 
-        !formData.studentName.trim()) {
-      alert('Please fill in all SBAR sections and student name before submitting.');
+    if (!formData.studentName.trim()) {
+      alert('Please enter your student name before submitting.');
       return;
     }
 
@@ -246,7 +244,6 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
                     placeholder={section.placeholder}
                     rows={4}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                    required
                   />
                 </div>
               );

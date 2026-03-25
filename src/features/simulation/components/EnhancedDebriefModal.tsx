@@ -102,6 +102,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.deviceAssessments.push(...activity.activities.deviceAssessments);
         existing.activities.woundAssessments.push(...activity.activities.woundAssessments);
         existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
+        existing.activities.neuroAssessments.push(...(activity.activities.neuroAssessments || []));
+        existing.activities.bbitEntries.push(...(activity.activities.bbitEntries || []));
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
         existing.totalEntries += activity.totalEntries;
       } else {
@@ -856,7 +858,9 @@ const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded
     { key: 'hacmapWounds', title: 'hacMap - Add Wound', items: student.activities.hacmapWounds || [], color: 'rose', icon: '🩹' },
     { key: 'deviceAssessments', title: 'Device Assessments', items: student.activities.deviceAssessments || [], color: 'indigo', icon: '🩺' },
     { key: 'woundAssessments', title: 'Wound Assessments', items: student.activities.woundAssessments || [], color: 'fuchsia', icon: '🔍' },
-    { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' }
+    { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' },
+    { key: 'neuroAssessments', title: 'Neuro Assessments', items: student.activities.neuroAssessments || [], color: 'violet', icon: '🧠' },
+    { key: 'bbitEntries', title: 'BBIT Chart', items: student.activities.bbitEntries || [], color: 'purple', icon: '🩸' }
   ].filter(s => s.items.length > 0);
   
   const initialExpanded = forceExpanded 
@@ -1278,8 +1282,8 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                 <p className="text-gray-900">{item.assessment}</p>
               </div>
               <div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Recommendation:</span>
-                <p className="text-gray-900">{item.recommendation}</p>
+                <span className="text-xs font-semibold text-gray-500 uppercase">Recommendations:</span>
+                <p className="text-gray-900">{item.recommendations}</p>
               </div>
               {item.student_name && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
@@ -1303,6 +1307,57 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
             </div>
           </div>
         );
+      case 'neuroAssessments': {
+        const gcsTot = (item.gcs_eye ?? 0) + (item.gcs_verbal ?? 0) + (item.gcs_motor ?? 0);
+        const aOrientCount = [item.oriented_person, item.oriented_place, item.oriented_time].filter(Boolean).length;
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.recorded_at ? format(new Date(item.recorded_at), 'PPp') : 'N/A'}</p>
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-700">
+              {item.level_of_consciousness && <span><span className="font-semibold">LOC:</span> {item.level_of_consciousness} {item.level_of_consciousness === 'Alert' ? `(A×${aOrientCount})` : ''}</span>}
+              {(item.gcs_eye || item.gcs_verbal || item.gcs_motor) ? <span><span className="font-semibold">GCS:</span> E{item.gcs_eye ?? '?'}+V{item.gcs_verbal ?? '?'}+M{item.gcs_motor ?? '?'}={gcsTot || '?'}</span> : null}
+              {item.pupils_equal !== null && <span><span className="font-semibold">Pupils equal:</span> {item.pupils_equal ? 'Yes' : 'No'}</span>}
+              {item.pupil_left_size && <span><span className="font-semibold">L pupil:</span> {item.pupil_left_size}mm {item.pupil_left_reaction}</span>}
+              {item.pupil_right_size && <span><span className="font-semibold">R pupil:</span> {item.pupil_right_size}mm {item.pupil_right_reaction}</span>}
+              {item.sensation && <span><span className="font-semibold">Sensation:</span> {item.sensation}</span>}
+              {item.speech && <span><span className="font-semibold">Speech:</span> {item.speech}</span>}
+              {item.pain_score !== null && <span><span className="font-semibold">Pain:</span> {item.pain_score}/10</span>}
+            </div>
+            {(item.strength_right_arm !== null || item.strength_left_arm !== null) && (
+              <div className="mt-1 text-xs text-gray-600">
+                <span className="font-semibold">Strength: </span>
+                RA:{item.strength_right_arm ?? '?'} LA:{item.strength_left_arm ?? '?'} RL:{item.strength_right_leg ?? '?'} LL:{item.strength_left_leg ?? '?'}
+              </div>
+            )}
+          </div>
+        );
+      }
+      case 'bbitEntries': {
+        const timeStr = item.time_label?.trim() || (item.recorded_at ? format(new Date(item.recorded_at), 'HH:mm') : 'N/A');
+        const dateStr = item.recorded_at ? format(new Date(item.recorded_at), 'MMM d') : '';
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{timeStr} {dateStr && <span className="text-gray-500 font-normal">— {dateStr}</span>}</p>
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-700">
+              {item.glucose_value != null && (
+                <span><span className="font-semibold">CBG:</span> {Number(item.glucose_value).toFixed(1)} mmol/L</span>
+              )}
+              {item.carb_intake && (
+                <span><span className="font-semibold">Carbs:</span> {item.carb_intake === 'full' ? 'Full meal' : item.carb_intake === 'partial' ? 'Partial' : 'None'}</span>
+              )}
+              {item.basal_name && (
+                <span><span className="font-semibold">Basal:</span> {item.basal_name} {item.basal_dose != null ? `${item.basal_dose}u` : ''} — {item.basal_status === 'given' ? '✓ Given' : '⊘ Held'}</span>
+              )}
+              {item.bolus_meal && (
+                <span><span className="font-semibold">Bolus ({item.bolus_meal}):</span> {item.bolus_dose != null ? `${item.bolus_dose}u` : '—'} — {item.bolus_status === 'given' ? '✓ Given' : '⊘ Not given'}</span>
+              )}
+              {item.correction_status === 'given' && item.correction_dose != null && (
+                <span><span className="font-semibold">Correction:</span> {item.correction_dose}u given</span>
+              )}
+            </div>
+          </div>
+        );
+      }
       default: {
         // Safely get timestamp with fallback chain and null check
         const timestamp = item.created_at || item.recorded_at || item.timestamp || item.event_timestamp || item.ordered_at || item.acknowledged_at;

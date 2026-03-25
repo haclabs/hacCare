@@ -629,6 +629,50 @@ Patient/medication barcodes persist across simulation resets for semester-long l
 
 See [docs/features/simulation/REUSABLE_SIMULATION_LABELS_GUIDE.md](../docs/features/simulation/REUSABLE_SIMULATION_LABELS_GUIDE.md).
 
+### ⚠️ CRITICAL: Adding a New Clinical Table — 4-Part Checklist
+**Every new `patient_*` table must be wired into ALL four places or data will accumulate / disappear incorrectly:**
+
+**1. Reset functions (database — must redeploy, not just edit local files)**
+Both functions need a `DELETE FROM new_table WHERE tenant_id = v_tenant_id`:
+- `database/functions/reset_simulation_for_next_session.sql`
+- `database/functions/reset_simulation_with_template_updates.sql`
+
+⚠️ **The live database runs its own compiled copy of these functions.** Editing the `.sql` files locally does NOT update the database. You must create a migration to `CREATE OR REPLACE FUNCTION` both.
+
+**2. simulation_table_config (database registry)**
+Controls which tables `save_template_snapshot_v2` captures in template snapshots:
+```sql
+INSERT INTO simulation_table_config (table_name, category, has_patient_id, has_tenant_id, requires_id_mapping, delete_order, enabled, notes)
+SELECT 'patient_new_table', 'student_work', true, true, true, 5, true, 'Description'
+WHERE NOT EXISTS (SELECT 1 FROM simulation_table_config WHERE table_name = 'patient_new_table');
+```
+Without this, instructor baseline entries added to templates won't survive a simulation reset.
+
+**3. studentActivityService.ts (debrief pipeline)**
+Located at `src/services/simulation/studentActivityService.ts`. Add:
+- Interface for the new entry type
+- Field to `StudentActivity.activities` type + `getOrCreateStudent()` initializer
+- Supabase query in the `Promise.all` block (filter by `.not('student_name', 'is', null)`)
+- Processing block that pushes to the student's activity array + increments `totalEntries`
+
+**4. EnhancedDebriefModal.tsx (debrief render)**
+Located at `src/features/simulation/components/EnhancedDebriefModal.tsx`. Add:
+- Spread to the deduplication block: `existing.activities.newEntries.push(...(activity.activities.newEntries || []))`
+- Entry in `sectionsData`: `{ key: 'newEntries', title: 'Section Title', items: ..., color: '...', icon: '...' }`
+- `case 'newEntries':` render block in the switch statement
+
+**Real Bug (March 25, 2026):**
+- `patient_bbit_entries` and `patient_advanced_directives` were added to the schema but missed steps 1-4
+- BBIT entries accumulated on every reset (live DB reset function never deleted them)
+- BBIT entries never appeared in debrief (missing from studentActivityService + EnhancedDebriefModal)
+- Fix: Migration `20260325000001_redeploy_reset_functions_with_bbit_fix.sql` redeployed both functions
+
+**Common Issues:**
+- ❌ Entries duplicating on reset → Reset function in live DB is stale, needs migration to redeploy
+- ❌ Entries not appearing in debrief → Missing from `studentActivityService.ts` query or `EnhancedDebriefModal.tsx`
+- ❌ Template baseline entries not surviving reset → Missing from `simulation_table_config`
+- ✅ Always create a migration (not just edit .sql files) when functions need to change in the live DB
+
 ## File Conventions
 
 - **TSX for React components**, TS for utilities/types/services

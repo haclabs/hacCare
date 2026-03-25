@@ -24,8 +24,10 @@ export interface StudentActivity {
     deviceAssessments: DeviceAssessmentEntry[]; // ✅ NEW: hacMap v2
     woundAssessments: WoundAssessmentEntry[]; // ✅ NEW: hacMap v2
     bowelAssessments: BowelAssessmentEntry[];
+    neuroAssessments: NeuroAssessmentEntry[];
     intakeOutput: IntakeOutputEntry[];
     advancedDirectives: AdvancedDirectiveEntry[]; // 🆕 NEW
+    bbitEntries: BBITEntry[];
   };
 }
 
@@ -96,8 +98,32 @@ interface HandoverNoteEntry {
   situation: string;
   background: string;
   assessment: string;
-  recommendation: string;
+  recommendations: string;
   student_name: string | null;
+}
+
+interface NeuroAssessmentEntry {
+  id: string;
+  recorded_at: string;
+  level_of_consciousness: string | null;
+  oriented_person: boolean | null;
+  oriented_place: boolean | null;
+  oriented_time: boolean | null;
+  gcs_eye: number | null;
+  gcs_verbal: number | null;
+  gcs_motor: number | null;
+  pupils_equal: boolean | null;
+  pupil_left_size: number | null;
+  pupil_left_reaction: string | null;
+  pupil_right_size: number | null;
+  pupil_right_reaction: string | null;
+  strength_right_arm: number | null;
+  strength_left_arm: number | null;
+  strength_right_leg: number | null;
+  strength_left_leg: number | null;
+  sensation: string | null;
+  speech: string | null;
+  pain_score: number | null;
 }
 
 interface HacMapDeviceEntry {
@@ -184,6 +210,23 @@ interface AdvancedDirectiveEntry {
   healthcare_proxy_name: string | null;
   organ_donation_status: string | null;
   special_instructions: string | null;
+}
+
+interface BBITEntry {
+  id: string;
+  recorded_at: string;
+  time_label: string | null;
+  glucose_value: number | null;
+  basal_name: string | null;
+  basal_dose: number | null;
+  basal_status: string | null;
+  bolus_dose: number | null;
+  bolus_meal: string | null;
+  bolus_status: string | null;
+  correction_dose: number | null;
+  correction_suggested_dose: number | null;
+  correction_status: string | null;
+  carb_intake: string | null;
 }
 
 /**
@@ -281,6 +324,8 @@ export async function getStudentActivitiesBySimulation(
       woundAssessmentsData, // ✅ NEW: hacMap v2
       intakeOutputData,
       advancedDirectivesData, // 🆕 NEW: Advanced Directives
+      neuroAssessmentsData,
+      bbitData,
     ] = await Promise.all([
       // Vitals
       supabase
@@ -487,6 +532,26 @@ export async function getStudentActivitiesBySimulation(
           });
           return result;
         }),
+
+      // Neuro Assessments
+      supabase
+        .from('patient_neuro_assessments')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .gte('recorded_at', simulationStartTime || '1970-01-01')
+        .order('recorded_at', { ascending: false }),
+
+      // BBIT Entries
+      supabase
+        .from('patient_bbit_entries')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null)
+        .gte('recorded_at', simulationStartTime || '1970-01-01')
+        .order('recorded_at', { ascending: false }),
     ]);
 
     // Group all activities by student name
@@ -515,8 +580,10 @@ export async function getStudentActivitiesBySimulation(
             deviceAssessments: [], // ✅ NEW: hacMap v2
             woundAssessments: [], // ✅ NEW: hacMap v2
             bowelAssessments: [],
+            neuroAssessments: [],
             intakeOutput: [],
             advancedDirectives: [], // 🆕 NEW
+            bbitEntries: [],
           },
         });
       }
@@ -673,7 +740,7 @@ export async function getStudentActivitiesBySimulation(
           situation: note.situation,
           background: note.background,
           assessment: note.assessment,
-          recommendation: note.recommendation,
+          recommendations: note.recommendations,
           student_name: note.student_name,
         });
         student.totalEntries++;
@@ -820,6 +887,57 @@ export async function getStudentActivitiesBySimulation(
         healthcare_proxy_name: directive.healthcare_proxy_name,
         organ_donation_status: directive.organ_donation_status,
         special_instructions: directive.special_instructions,
+      });
+      student.totalEntries++;
+    });
+
+    // Process neuro assessments
+    neuroAssessmentsData.data?.forEach((neuro: any) => {
+      const student = getOrCreateStudent(neuro.student_name);
+      student.activities.neuroAssessments.push({
+        id: neuro.id,
+        recorded_at: neuro.recorded_at,
+        level_of_consciousness: neuro.level_of_consciousness,
+        oriented_person: neuro.oriented_person,
+        oriented_place: neuro.oriented_place,
+        oriented_time: neuro.oriented_time,
+        gcs_eye: neuro.gcs_eye,
+        gcs_verbal: neuro.gcs_verbal,
+        gcs_motor: neuro.gcs_motor,
+        pupils_equal: neuro.pupils_equal,
+        pupil_left_size: neuro.pupil_left_size,
+        pupil_left_reaction: neuro.pupil_left_reaction,
+        pupil_right_size: neuro.pupil_right_size,
+        pupil_right_reaction: neuro.pupil_right_reaction,
+        strength_right_arm: neuro.strength_right_arm,
+        strength_left_arm: neuro.strength_left_arm,
+        strength_right_leg: neuro.strength_right_leg,
+        strength_left_leg: neuro.strength_left_leg,
+        sensation: neuro.sensation,
+        speech: neuro.speech,
+        pain_score: neuro.pain_score,
+      });
+      student.totalEntries++;
+    });
+
+    // Process BBIT entries
+    bbitData.data?.forEach((bbit: any) => {
+      const student = getOrCreateStudent(bbit.student_name);
+      student.activities.bbitEntries.push({
+        id: bbit.id,
+        recorded_at: bbit.recorded_at,
+        time_label: bbit.time_label,
+        glucose_value: bbit.glucose_value,
+        basal_name: bbit.basal_name,
+        basal_dose: bbit.basal_dose,
+        basal_status: bbit.basal_status,
+        bolus_dose: bbit.bolus_dose,
+        bolus_meal: bbit.bolus_meal,
+        bolus_status: bbit.bolus_status,
+        correction_dose: bbit.correction_dose,
+        correction_suggested_dose: bbit.correction_suggested_dose,
+        correction_status: bbit.correction_status,
+        carb_intake: bbit.carb_intake,
       });
       student.totalEntries++;
     });
