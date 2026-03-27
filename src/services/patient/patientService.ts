@@ -39,12 +39,12 @@ export interface DatabasePatient {
 export interface DatabaseVitals {
   id: string;
   patient_id: string;
-  temperature: number; 
-  blood_pressure_systolic: number;
-  blood_pressure_diastolic: number;
-  heart_rate: number; 
-  respiratory_rate: number; 
-  oxygen_saturation: number;
+  temperature: number | null;
+  blood_pressure_systolic: number | null;
+  blood_pressure_diastolic: number | null;
+  heart_rate: number | null;
+  respiratory_rate: number | null;
+  oxygen_saturation: number | null;
   oxygen_delivery?: string;
   oxygen_flow_rate?: string;
   recorded_at: string;
