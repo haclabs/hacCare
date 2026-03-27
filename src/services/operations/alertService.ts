@@ -1,6 +1,5 @@
 import { supabase, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 import { Alert } from '../../types';
-import { superAdminTenantService } from '../admin/superAdminTenantService';
 import { simulationAlertStore } from '../../simulation/simulationAlertStore';
 
 /**
@@ -37,34 +36,6 @@ export const ALERT_CONFIG = {
  * - Batch processing for safe bulk operations
  * - Tenant-aware checking for super admin users
  */
-
-/**
- * Get the current tenant ID filter for alert checking
- * Returns null for all tenants, or specific tenant ID when super admin has selected one
- */
-const getCurrentTenantFilter = async (): Promise<string | null> => {
-  try {
-    const currentAccess = superAdminTenantService.getCurrentAccess();
-    
-    // If super admin has selected a specific tenant, use that filter
-    if (currentAccess.hasAccess && currentAccess.tenantId) {
-      console.log(`🎯 Alert checks filtering for tenant: ${currentAccess.tenantId} (${currentAccess.tenantName})`);
-      return currentAccess.tenantId;
-    }
-    
-    // If super admin is in "all tenants" mode or regular user, no filter
-    if (currentAccess.hasAccess && !currentAccess.tenantId) {
-      console.log('🌐 Alert checks running for ALL tenants (super admin mode)');
-    } else {
-      console.log('👤 Alert checks running for user\'s assigned tenant(s)');
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error getting tenant filter for alerts:', error);
-    return null;
-  }
-};
 
 export interface DatabaseAlert {
   id: string;
@@ -171,159 +142,6 @@ export const fetchActiveAlerts = async (tenantId?: string): Promise<Alert[]> => 
 };
 
 /**
- * Create a new alert
- * For simulation tenants, stores alerts in memory only (no database persistence)
- */
-export const createAlert = async (
-  alert: Omit<DatabaseAlert, 'id' | 'created_at'>
-): Promise<Alert> => {
-  try {
-    // Validate that tenant_id is provided
-    if (!alert.tenant_id) {
-      throw new Error('Cannot create alert - tenant_id is required for multi-tenant support');
-    }
-
-    console.log('🚨 Creating new alert:', alert);
-
-    // For simulation mode, use in-memory storage
-    if (isSimulationMode) {
-      const simulationAlert: Alert = {
-        id: `sim-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        patientId: alert.patient_id,
-        patientName: alert.patient_name,
-        tenant_id: alert.tenant_id,
-        type: alert.alert_type === 'medication_due' ? 'Medication Due' :
-              alert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
-              alert.alert_type === 'emergency' ? 'Emergency' :
-              alert.alert_type === 'lab_results' ? 'Lab Results' :
-              'Discharge Ready',
-        message: alert.message,
-        priority: alert.priority === 'low' ? 'Low' :
-                 alert.priority === 'medium' ? 'Medium' :
-                 alert.priority === 'high' ? 'High' :
-                 'Critical',
-        timestamp: new Date().toISOString(),
-        acknowledged: false
-      };
-      
-      simulationAlertStore.addAlert(simulationAlert);
-      console.log('✅ Simulation alert created in memory:', simulationAlert.id);
-      return simulationAlert;
-    }
-
-    if (!supabase) {
-      throw new Error('Cannot create alert - Supabase not configured')
-    }
-
-    console.log('🏥 Creating database alert using RPC function V3 (dynamic SQL bypasses ALL cache)');
-    
-    // Use RPC function V3 with dynamic SQL to bypass PostgREST cache issues
-    const { data: alertId, error } = await supabase
-      .rpc('create_patient_alert_v3', {
-        p_patient_id: alert.patient_id,
-        p_tenant_id: alert.tenant_id,
-        p_alert_type: alert.alert_type,
-        p_message: alert.message,
-        p_patient_name: alert.patient_name,
-        p_priority: alert.priority || 'medium',
-        p_expires_at: alert.expires_at || null
-      });
-
-    // If successful, return a constructed alert object
-    if (alertId && !error) {
-      const newAlert: Alert = {
-        id: alertId,
-        patientId: alert.patient_id,
-        patientName: alert.patient_name || '',
-        tenant_id: alert.tenant_id,
-        type: alert.alert_type === 'medication_due' ? 'Medication Due' :
-              alert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
-              alert.alert_type === 'emergency' ? 'Emergency' :
-              alert.alert_type === 'lab_results' ? 'Lab Results' :
-              'Discharge Ready',
-        message: alert.message,
-        priority: (alert.priority === 'low' ? 'Low' :
-                  alert.priority === 'medium' ? 'Medium' :
-                  alert.priority === 'high' ? 'High' :
-                  'Critical'),
-        timestamp: new Date().toISOString(),
-        acknowledged: false
-      };
-      console.log('✅ Alert created successfully via RPC:', newAlert.id);
-      return newAlert;
-    }
-
-    // If we get RLS error, try super admin RPC function
-    if (error?.code === '42501') {
-      console.log('🔐 RLS blocked standard insert, trying super admin RPC...');
-      
-      const { data: rpcResult, error: rpcError } = await supabase
-        .rpc('create_alert_for_tenant', {
-          p_tenant_id: alert.tenant_id,
-          p_patient_id: alert.patient_id,
-          p_alert_type: alert.alert_type,
-          p_message: alert.message,
-          p_patient_name: alert.patient_name,
-          p_priority: alert.priority || 'medium',
-          p_expires_at: alert.expires_at || null
-        });
-
-      if (rpcError) {
-        console.error('❌ Super admin RPC failed:', rpcError);
-        throw rpcError;
-      }
-
-      if (!rpcResult.success) {
-        console.error('❌ Super admin RPC returned error:', rpcResult.error);
-        throw new Error(rpcResult.error);
-      }
-
-      console.log('✅ Alert created via super admin RPC:', rpcResult.alert_id);
-      
-      // Try to fetch the created alert to return proper format
-      // If RLS blocks this, we'll use the mock response below
-      const { data: createdAlert, error: fetchError } = await supabase
-        .from('patient_alerts')
-        .select('*')
-        .eq('id', rpcResult.alert_id)
-        .single();
-
-      if (createdAlert && !fetchError) {
-        return convertDatabaseAlert(createdAlert);
-      }
-
-      // If we can't fetch it back (likely due to RLS), create a mock response
-      return {
-        id: rpcResult.alert_id,
-        patientId: alert.patient_id,
-        patientName: alert.patient_name || '',
-        tenant_id: alert.tenant_id,
-        type: alert.alert_type === 'medication_due' ? 'Medication Due' :
-              alert.alert_type === 'vital_signs' ? 'Vital Signs Alert' :
-              alert.alert_type === 'emergency' ? 'Emergency' :
-              alert.alert_type === 'lab_results' ? 'Lab Results' :
-              'Discharge Ready',
-        message: alert.message,
-        priority: (alert.priority === 'low' ? 'Low' :
-                  alert.priority === 'medium' ? 'Medium' :
-                  alert.priority === 'high' ? 'High' :
-                  'Critical'),
-        timestamp: new Date().toISOString(),
-        acknowledged: false
-      };
-    }
-
-    // For other errors, throw them
-    console.error('❌ Error creating alert:', error);
-    throw error;
-
-  } catch (error) {
-    console.error('Error creating alert:', error);
-    throw error;
-  }
-};
-
-/**
  * Acknowledge an alert
  */
 export const acknowledgeAlert = async (alertId: string, userId: string): Promise<void> => {
@@ -405,7 +223,7 @@ export const acknowledgeAlert = async (alertId: string, userId: string): Promise
 /**
  * Clean up duplicate alerts for the same patient and alert type
  */
-export const cleanupDuplicateAlerts = async (): Promise<void> => {
+const cleanupDuplicateAlerts = async (): Promise<void> => {
   const MAX_ALERTS_TO_PROCESS = 10000; // Safety limit to prevent overwhelming operations
   
   try {
@@ -526,14 +344,11 @@ export const setSimulationMode = (enabled: boolean) => {
   console.log(enabled ? '🎮 Alert service: Simulation mode ENABLED (memory-only)' : '🗄️ Alert service: Database mode ENABLED');
 };
 
-export const getSimulationMode = () => isSimulationMode;
-
 export const runAlertChecks = async (): Promise<void> => {
   try {
     // In simulation mode, skip database connection checks
     if (isSimulationMode) {
       console.log('🎮 Running simulation alert checks (memory-only mode)...');
-      // Run checks normally - createAlert will handle simulation storage
     } else {
       // Check if Supabase is properly configured
       if (!isSupabaseConfigured) {
@@ -566,57 +381,10 @@ export const runAlertChecks = async (): Promise<void> => {
 };
 
 /**
- * Subscribe to real-time alert changes
- */
-export const subscribeToAlerts = (callback: (alerts: Alert[]) => void) => {
-  console.log('🔔 Setting up real-time alert subscription...');
-  
-  const subscription = supabase
-    .channel('patient_alerts')
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'patient_alerts' 
-      }, 
-      async () => {
-        // Fetch updated alerts when changes occur
-        const alerts = await fetchActiveAlerts();
-        callback(alerts);
-      }
-    )
-    .subscribe();
-
-  return subscription;
-};
-
-/**
- * Clean up expired alerts (using expires_at field)
- */
-export const cleanupExpiredAlerts = async (): Promise<void> => {
-  try {
-    console.log('🧹 Cleaning up expired alerts...');
-    
-    const { error } = await supabase
-      .from('patient_alerts')
-      .delete()
-      .lt('expires_at', new Date().toISOString());
-
-    if (error) {
-      console.error('Error cleaning up expired alerts:', error);
-    } else {
-      console.log('✅ Expired alerts cleaned up');
-    }
-  } catch (error) {
-    console.error('Error cleaning up expired alerts:', error);
-  }
-};
-
-/**
  * Clean up alerts older than 24 hours
  * Automatically deletes alerts created more than 24 hours ago
  */
-export const cleanupOldAlerts = async (): Promise<void> => {
+const cleanupOldAlerts = async (): Promise<void> => {
   try {
     console.log('🧹 Cleaning up alerts older than 24 hours and acknowledged alerts older than 2 hours...');
     
@@ -671,34 +439,4 @@ export const cleanupOldAlerts = async (): Promise<void> => {
   } catch (error) {
     console.error('Error cleaning up old alerts:', error);
   }
-};
-
-/**
- * Start automatic alert cleanup service
- * Runs cleanup every 2 hours in the background
- */
-export const startAlertCleanupService = (): NodeJS.Timeout => {
-  console.log('🗑️ Starting automatic alert cleanup service (runs every 2 hours)');
-  
-  // Run initial cleanup
-  cleanupOldAlerts().catch(error => 
-    console.error('Initial alert cleanup failed:', error)
-  );
-  
-  // Schedule recurring cleanup
-  const cleanupInterval = setInterval(() => {
-    cleanupOldAlerts().catch(error => 
-      console.error('Scheduled alert cleanup failed:', error)
-    );
-  }, ALERT_CONFIG.CLEANUP_INTERVAL_MS);
-  
-  return cleanupInterval;
-};
-
-/**
- * Stop automatic alert cleanup service
- */
-export const stopAlertCleanupService = (interval: NodeJS.Timeout): void => {
-  console.log('🛑 Stopping automatic alert cleanup service');
-  clearInterval(interval);
 };
