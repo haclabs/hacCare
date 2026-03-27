@@ -61,9 +61,9 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
     }
   };
 
-  const getMetricData = (metric: string) => {
+  const getMetricData = (metric: string): { timestamp: string; value: number | null }[] => {
     return vitals.map(vital => {
-      let value: number;
+      let value: number | null;
       switch (metric) {  
         case 'temperature':
           value = vital.temperature;
@@ -84,7 +84,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
           value = vital.respiratory_rate;
           break;
         default:
-          value = 0;
+          value = null;
       }
       return {
         timestamp: vital.recorded_at,
@@ -142,7 +142,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   const metricData = getMetricData(selectedMetric);
   
   // Calculate min and max values with fallbacks to prevent NaN
-  const values = metricData.map(d => d.value).filter(v => !isNaN(v) && v !== undefined);
+  const values = metricData.map(d => d.value).filter((v): v is number => v !== null && v !== undefined && !isNaN(v));
   const maxValue = values.length > 0 ? Math.max(...values) : 100;
   const minValue = values.length > 0 ? Math.min(...values) : 0;
   
@@ -291,27 +291,28 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                   </g>
 
                   {/* Data line */}
-                  {metricData.length > 1 && (  
+                  {metricData.length > 1 && (
                     <polyline
                       fill="none"
                       stroke="#2563eb"
                       strokeWidth="3"
                       points={metricData
                         .map((point, index) => {
+                          if (point.value === null) return null;
                           const x = (index / (metricData.length - 1)) * 800;
-                          // Calculate y position with proper range values to prevent NaN
                           const y = 200 - ((point.value - range.min) / Math.max(range.max - range.min, 1)) * 200;
                           return `${x},${y}`;
                         })
+                        .filter(Boolean)
                         .join(' ')}
                     />
                   )}
 
                   {/* Data points */}
                   <g>
-                    {metricData.map((point, index) => {  
+                    {metricData.map((point, index) => {
+                      if (point.value === null) return null;
                       const x = (index / Math.max(metricData.length - 1, 1)) * 800;
-                      // Calculate y position with proper range values to prevent NaN
                       const y = 200 - ((point.value - range.min) / Math.max(range.max - range.min, 1)) * 200;
                       return (
                         <g key={index}>
@@ -386,25 +387,27 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {isValid(date) ? format(date, 'MM/dd/yyyy HH:mm') : 'Invalid Date'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> 
-                            {vital.temperature.toFixed(1)}°C
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {vital.temperature != null ? `${vital.temperature.toFixed(1)}°C` : '—'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.heart_rate} bpm
+                            {vital.heart_rate != null ? `${vital.heart_rate} bpm` : '—'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic} mmHg
+                            {vital.blood_pressure_systolic != null ? `${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic} mmHg` : '—'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.oxygen_saturation}% <span className="text-red-600 font-medium">
-                              {vital.oxygen_delivery || 'Room Air'}
-                              {vital.oxygen_flow_rate && vital.oxygen_flow_rate !== 'N/A' && (
-                                <> @ {vital.oxygen_flow_rate.replace('L', ' L/min')}</>  
-                              )}
-                            </span>
+                            {vital.oxygen_saturation != null ? (
+                              <>{vital.oxygen_saturation}% <span className="text-red-600 font-medium">
+                                {vital.oxygen_delivery || 'Room Air'}
+                                {vital.oxygen_flow_rate && vital.oxygen_flow_rate !== 'N/A' && (
+                                  <> @ {vital.oxygen_flow_rate.replace('L', ' L/min')}</>
+                                )}
+                              </span></>
+                            ) : '—'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {vital.respiratory_rate}/min
+                            {vital.respiratory_rate != null ? `${vital.respiratory_rate}/min` : '—'}
                           </td>
                         </tr>
                       );
