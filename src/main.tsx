@@ -5,7 +5,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Hidden - uncomment to show TanStack devtools
 import { SimulationAwareAuthProvider } from './contexts/auth/SimulationAwareAuthProvider';
 import { PatientProvider } from './contexts/PatientContext';
-import { AlertProvider } from './contexts/AlertContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
@@ -58,13 +57,11 @@ createRoot(document.getElementById('root')!).render(
               {/* Protected application routes */}
               <Route path="/app/*" element={
                 <TenantProvider>
-                  <AlertProvider>
-                    <PatientProvider>
-                      <ProtectedRoute>
-                        <App />
-                      </ProtectedRoute>
-                    </PatientProvider>
-                  </AlertProvider>
+                  <PatientProvider>
+                    <ProtectedRoute>
+                      <App />
+                    </ProtectedRoute>
+                  </PatientProvider>
                 </TenantProvider>
               } />
             </Routes>
