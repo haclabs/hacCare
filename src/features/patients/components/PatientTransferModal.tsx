@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Copy, Move, Users, AlertCircle, CheckCircle } from 'lucide-react';
+import { Copy, Move, Users, AlertCircle } from 'lucide-react';
 import { transferPatient, getAvailableTenantsForTransfer, canTransferPatient, PatientTransferOptions } from '../../../services/patient/patientTransferService';
-import { testPatientTransferFunctions } from '../../utils/testPatientTransfer';
 import { Patient } from '../../../types';
 
 interface PatientTransferModalProps {

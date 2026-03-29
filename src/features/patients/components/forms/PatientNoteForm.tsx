@@ -3,7 +3,6 @@ import { X, Save, FileText, AlertTriangle, User } from 'lucide-react';
 import { PatientNote } from '../../../../types';
 import { format } from 'date-fns';
 import { useAuth } from '../../../../hooks/useAuth';
-import { createPatientNote, updatePatientNote } from '../../../../services/patient/patientService';
 
 /**
  * Patient Note Form Component

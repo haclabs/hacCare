@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, Users, FileText, BookOpen } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, FileText, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';

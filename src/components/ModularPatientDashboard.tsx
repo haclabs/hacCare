@@ -21,17 +21,12 @@ import {
   Pill, 
   FileText, 
   User, 
-  Settings,
   Calendar,
   Clock,
   AlertTriangle,
   CheckCircle,
-  Users,
-  BedDouble,
   Badge,
   FileCheck,
-  ArrowRight,
-  Camera,
   MessageSquare,
   FlaskConical,
   MapPin,
@@ -50,11 +45,10 @@ import { AdvancedDirectivesForm } from '../features/patients/components/forms/Ad
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
 import { IntakeOutputCard } from '../features/clinical/components/intake-output';
-import { PatientActionBar } from './PatientActionBar';
-import { Patient, DoctorsOrder } from '../types';
+import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals } from '../services/patient/patientService';
 import { fetchPatientMedications } from '../services/clinical/medicationService';
-import { fetchAdmissionRecord, fetchAdvancedDirective, upsertAdmissionRecord, AdmissionRecord, AdvancedDirective } from '../services/patient/admissionService';
+import { fetchAdmissionRecord, fetchAdvancedDirective, upsertAdmissionRecord, AdmissionRecord } from '../services/patient/admissionService';
 import { supabase } from '../lib/api/supabase';
 import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
 import { getPatientHandoverNotes } from '../services/patient/handoverService';

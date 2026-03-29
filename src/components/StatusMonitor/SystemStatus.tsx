@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw,
-  Database, Wifi, WifiOff, Clock, Server
+  Database, Wifi, WifiOff, Clock
 } from 'lucide-react';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 

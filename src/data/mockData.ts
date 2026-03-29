@@ -1,5 +1,5 @@
 import { Patient, Nurse, Alert } from '../types';
-import { addHours, subHours, format, setHours, setMinutes } from 'date-fns';
+import { subHours, format, setHours, setMinutes } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 export const currentNurse: Nurse = {

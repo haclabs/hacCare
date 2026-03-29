@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
-import { usePatients } from '../../hooks/usePatients';
-import { supabase } from '../../../../lib/api/supabase';
 import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
 
 interface AdvancedDirectivesFormProps {

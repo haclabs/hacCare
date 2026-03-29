@@ -2,7 +2,7 @@
 // Displays lab panels with tab navigation (All/Chemistry/ABG/Hematology/Order Entry)
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText, Trash2 } from 'lucide-react';
+import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import {
