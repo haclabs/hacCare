@@ -54,7 +54,7 @@ export async function createAssessment(input: CreateAssessmentInput): Promise<As
     .single();
 
   if (error) {
-    console.error('Error creating assessment:', error);
+    secureLogger.error('Error creating assessment:', error);
     throw error;
   }
 
@@ -76,7 +76,7 @@ export async function getDeviceAssessments(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching device assessments:', error);
+    secureLogger.error('Error fetching device assessments:', error);
     throw error;
   }
 
@@ -98,7 +98,7 @@ export async function getWoundAssessments(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching wound assessments:', error);
+    secureLogger.error('Error fetching wound assessments:', error);
     throw error;
   }
 
@@ -120,7 +120,7 @@ export async function getPatientAssessments(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching patient assessments:', error);
+    secureLogger.error('Error fetching patient assessments:', error);
     throw error;
   }
 
@@ -146,7 +146,7 @@ export async function getAssessment(
       // Not found
       return null;
     }
-    console.error('Error fetching assessment:', error);
+    secureLogger.error('Error fetching assessment:', error);
     throw error;
   }
 
@@ -188,7 +188,7 @@ export async function updateAssessment(
     .single();
 
   if (error) {
-    console.error('Error updating assessment:', error);
+    secureLogger.error('Error updating assessment:', error);
     throw error;
   }
 
@@ -209,7 +209,7 @@ export async function deleteAssessment(
     .eq('tenant_id', tenantId);
 
   if (error) {
-    console.error('Error deleting assessment:', error);
+    secureLogger.error('Error deleting assessment:', error);
     throw error;
   }
 }
@@ -243,7 +243,7 @@ export async function getLatestAssessment(
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching latest assessment:', error);
+    secureLogger.error('Error fetching latest assessment:', error);
     throw error;
   }
 

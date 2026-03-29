@@ -23,7 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   useEffect(() => {
     // Security: Log auth state for debugging (development only)
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ ProtectedRoute - Auth state:', { 
+      secureLogger.debug('🛡️ ProtectedRoute - Auth state:', { 
         hasUser: !!user, 
         hasProfile: !!profile,
         userRole: profile?.role,
@@ -32,7 +32,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         loading,
         LOADING: loading  // Duplicate to ensure it shows
       });
-      console.log('🛡️ Loading check - if (loading):', loading, 'will', loading ? 'SHOW SPINNER' : 'PROCEED');
+      secureLogger.debug('🛡️ Loading check - if (loading):', loading, 'will', loading ? 'SHOW SPINNER' : 'PROCEED');
     }
   }, [user, profile, requiredRoles, loading]);
 
@@ -58,7 +58,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Security: If no user, redirect to login
   if (!user) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ ProtectedRoute - No user found, redirecting to login');
+      secureLogger.debug('🛡️ ProtectedRoute - No user found, redirecting to login');
     }
     return <Navigate to="/login" replace />;
   }
@@ -66,7 +66,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Security: If user exists but no profile, show secure profile creation
   if (user && !profile) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ User exists but no profile found');
+      secureLogger.debug('🛡️ User exists but no profile found');
     }
     
     const handleCreateProfile = async () => {
@@ -76,7 +76,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       try {
         await createProfile();
       } catch (error: unknown) {
-        console.error('Failed to create profile:', error);
+        secureLogger.error('Failed to create profile:', error);
         setProfileError(parseAuthError(error));
       } finally {
         setCreatingProfile(false);

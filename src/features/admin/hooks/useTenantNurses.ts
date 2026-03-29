@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/auth/useAuth';
 
@@ -60,7 +61,7 @@ export const useTenantNurses = () => {
         .eq('user_profiles.is_active', true);
 
       if (fetchError) {
-        console.error('Error fetching tenant nurses:', fetchError);
+        secureLogger.error('Error fetching tenant nurses', fetchError);
         setError('Failed to load nurses');
         return;
       }
@@ -82,7 +83,7 @@ export const useTenantNurses = () => {
 
       setNurses(nurseOptions);
     } catch (err: any) {
-      console.error('Exception fetching tenant nurses:', err);
+      secureLogger.error('Exception fetching tenant nurses:', err);
       setError('An error occurred while loading nurses');
     } finally {
       setLoading(false);

@@ -40,7 +40,7 @@ const SimulationTemplates: React.FC = () => {
       const data = await getSimulationTemplates();
       setTemplates(data);
     } catch (error) {
-      console.error('Error loading templates:', error);
+      secureLogger.error('Error loading templates:', error);
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ const SimulationTemplates: React.FC = () => {
         alert(`Error: ${result.message}`);
       }
     } catch (error) {
-      console.error('Error saving snapshot:', error);
+      secureLogger.error('Error saving snapshot:', error);
       alert('Failed to save snapshot');
     } finally {
       setActionLoading(null);
@@ -73,7 +73,7 @@ const SimulationTemplates: React.FC = () => {
       await deleteSimulationTemplate(templateId);
       await loadTemplates();
     } catch (error) {
-      console.error('Error deleting template:', error);
+      secureLogger.error('Error deleting template:', error);
       alert('Failed to delete template');
     } finally {
       setActionLoading(null);
@@ -83,7 +83,7 @@ const SimulationTemplates: React.FC = () => {
 
   const handleEditTemplate = async (template: SimulationTemplateWithDetails) => {
     // Store the template being edited in session storage
-    console.log('🎨 Edit Template clicked:', template.name, template.id);
+    secureLogger.debug('🎨 Edit Template clicked:', template.name, template.id);
     
     // Store the template being edited in session storage
     const editInfo = {
@@ -91,11 +91,11 @@ const SimulationTemplates: React.FC = () => {
       template_name: template.name,
       tenant_id: template.tenant_id
     };
-    console.log('💾 Storing edit info:', editInfo);
+    secureLogger.debug('💾 Storing edit info:', editInfo);
     sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
 
     // Navigate to patients page and trigger template edit mode
-    console.log('🚀 Navigating to patients view and triggering template-edit-start event');
+    secureLogger.debug('🚀 Navigating to patients view and triggering template-edit-start event');
     
     // Dispatch event to notify TemplateEditingBanner with the template info
     window.dispatchEvent(new CustomEvent('template-edit-start', { detail: editInfo }));

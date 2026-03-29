@@ -25,7 +25,7 @@ export async function processBatch<T, R>(
   const totalBatches = Math.ceil(items.length / batchSize);
 
   if (logProgress) {
-    console.log(`🔄 Processing ${items.length} items in ${totalBatches} batches of ${batchSize}`);
+    secureLogger.debug(`🔄 Processing ${items.length} items in ${totalBatches} batches of ${batchSize}`);
   }
 
   for (let i = 0; i < items.length; i += batchSize) {
@@ -34,14 +34,14 @@ export async function processBatch<T, R>(
     
     try {
       if (logProgress) {
-        console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} items)`);
+        secureLogger.debug(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} items)`);
       }
       
       const result = await processor(batch);
       results.push(result);
       
       if (logProgress) {
-        console.log(`✅ Completed batch ${batchNumber}/${totalBatches}`);
+        secureLogger.debug(`✅ Completed batch ${batchNumber}/${totalBatches}`);
       }
       
       // Add delay between batches to avoid overwhelming the database
@@ -49,13 +49,13 @@ export async function processBatch<T, R>(
         await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
       }
     } catch (error) {
-      console.error(`❌ Error processing batch ${batchNumber}:`, error);
+      secureLogger.error(`❌ Error processing batch ${batchNumber}:`, error);
       throw error;
     }
   }
 
   if (logProgress) {
-    console.log(`🎉 Completed processing ${items.length} items in ${totalBatches} batches`);
+    secureLogger.debug(`🎉 Completed processing ${items.length} items in ${totalBatches} batches`);
   }
 
   return results;
@@ -82,13 +82,13 @@ export async function batchDelete(
 
   if (ids.length === 0) {
     if (logProgress) {
-      console.log('✅ No items to delete');
+      secureLogger.debug('✅ No items to delete');
     }
     return { totalDeleted: 0, errors: 0 };
   }
 
   if (logProgress) {
-    console.log(`🗑️ Deleting ${ids.length} items from ${tableName} in batches...`);
+    secureLogger.debug(`🗑️ Deleting ${ids.length} items from ${tableName} in batches...`);
   }
 
   let totalDeleted = 0;
@@ -104,7 +104,7 @@ export async function batchDelete(
           .in('id', batch);
 
         if (error) {
-          console.error(`❌ Error deleting batch from ${tableName}:`, error);
+          secureLogger.error(`❌ Error deleting batch from ${tableName}:`, error);
           errors++;
           return 0;
         } else {
@@ -113,7 +113,7 @@ export async function batchDelete(
           return deleted;
         }
       } catch (batchError) {
-        console.error(`❌ Batch deletion error:`, batchError);
+        secureLogger.error(`❌ Batch deletion error:`, batchError);
         errors++;
         return 0;
       }
@@ -123,9 +123,9 @@ export async function batchDelete(
 
   if (logProgress) {
     if (errors === 0) {
-      console.log(`✅ Successfully deleted ${totalDeleted} items from ${tableName}`);
+      secureLogger.debug(`✅ Successfully deleted ${totalDeleted} items from ${tableName}`);
     } else {
-      console.log(`⚠️ Deleted ${totalDeleted} items from ${tableName} with ${errors} batch errors`);
+      secureLogger.debug(`⚠️ Deleted ${totalDeleted} items from ${tableName} with ${errors} batch errors`);
     }
   }
 
@@ -153,13 +153,13 @@ export async function batchInsert<T>(
 
   if (items.length === 0) {
     if (logProgress) {
-      console.log('✅ No items to insert');
+      secureLogger.debug('✅ No items to insert');
     }
     return { totalInserted: 0, errors: 0 };
   }
 
   if (logProgress) {
-    console.log(`➕ Inserting ${items.length} items into ${tableName} in batches...`);
+    secureLogger.debug(`➕ Inserting ${items.length} items into ${tableName} in batches...`);
   }
 
   let totalInserted = 0;
@@ -174,7 +174,7 @@ export async function batchInsert<T>(
           .insert(batch, { count: 'exact' });
 
         if (error) {
-          console.error(`❌ Error inserting batch into ${tableName}:`, error);
+          secureLogger.error(`❌ Error inserting batch into ${tableName}:`, error);
           errors++;
           return 0;
         } else {
@@ -183,7 +183,7 @@ export async function batchInsert<T>(
           return inserted;
         }
       } catch (batchError) {
-        console.error(`❌ Batch insertion error:`, batchError);
+        secureLogger.error(`❌ Batch insertion error:`, batchError);
         errors++;
         return 0;
       }
@@ -193,9 +193,9 @@ export async function batchInsert<T>(
 
   if (logProgress) {
     if (errors === 0) {
-      console.log(`✅ Successfully inserted ${totalInserted} items into ${tableName}`);
+      secureLogger.debug(`✅ Successfully inserted ${totalInserted} items into ${tableName}`);
     } else {
-      console.log(`⚠️ Inserted ${totalInserted} items into ${tableName} with ${errors} batch errors`);
+      secureLogger.debug(`⚠️ Inserted ${totalInserted} items into ${tableName} with ${errors} batch errors`);
     }
   }
 

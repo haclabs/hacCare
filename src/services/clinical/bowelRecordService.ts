@@ -32,7 +32,7 @@ export interface BowelRecord {
  */
 export const createBowelRecord = async (record: BowelRecord): Promise<BowelRecord> => {
   try {
-    console.log('Creating bowel record:', record);
+    secureLogger.debug('Creating bowel record:', record);
 
     const { data, error } = await supabase
       .from('bowel_records')
@@ -52,14 +52,14 @@ export const createBowelRecord = async (record: BowelRecord): Promise<BowelRecor
       .single();
 
     if (error) {
-      console.error('Error creating bowel record:', error);
+      secureLogger.error('Error creating bowel record:', error);
       throw new Error(`Failed to create bowel record: ${error.message}`);
     }
 
-    console.log('Bowel record created successfully:', data);
+    secureLogger.debug('Bowel record created successfully:', data);
     return data as BowelRecord;
   } catch (error: any) {
-    console.error('Error in createBowelRecord:', error);
+    secureLogger.error('Error in createBowelRecord:', error);
     throw error;
   }
 };
@@ -70,7 +70,7 @@ export const createBowelRecord = async (record: BowelRecord): Promise<BowelRecor
  */
 export const fetchPatientBowelRecords = async (patientId: string): Promise<BowelRecord[]> => {
   try {
-    console.log('Fetching bowel records for patient:', patientId);
+    secureLogger.debug('Fetching bowel records for patient:', patientId);
 
     const { data, error } = await supabase
       .from('bowel_records')
@@ -80,14 +80,14 @@ export const fetchPatientBowelRecords = async (patientId: string): Promise<Bowel
       .limit(10);
 
     if (error) {
-      console.error('Error fetching bowel records:', error);
+      secureLogger.error('Error fetching bowel records:', error);
       throw new Error(`Failed to fetch bowel records: ${error.message}`);
     }
 
-    console.log(`Fetched ${data?.length || 0} bowel records for patient ${patientId}`);
+    secureLogger.debug(`Fetched ${data?.length || 0} bowel records for patient ${patientId}`);
     return data || [];
   } catch (error: any) {
-    console.error('Error in fetchPatientBowelRecords:', error);
+    secureLogger.error('Error in fetchPatientBowelRecords:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
   }
 };
@@ -97,7 +97,7 @@ export const fetchPatientBowelRecords = async (patientId: string): Promise<Bowel
  */
 export const updateBowelRecord = async (recordId: string, updates: Partial<BowelRecord>): Promise<BowelRecord> => {
   try {
-    console.log('Updating bowel record:', recordId, updates);
+    secureLogger.debug('Updating bowel record:', recordId, updates);
 
     const { data, error } = await supabase
       .from('bowel_records')
@@ -107,14 +107,14 @@ export const updateBowelRecord = async (recordId: string, updates: Partial<Bowel
       .single();
 
     if (error) {
-      console.error('Error updating bowel record:', error);
+      secureLogger.error('Error updating bowel record:', error);
       throw new Error(`Failed to update bowel record: ${error.message}`);
     }
 
-    console.log('Bowel record updated successfully:', data);
+    secureLogger.debug('Bowel record updated successfully:', data);
     return data as BowelRecord;
   } catch (error: any) {
-    console.error('Error in updateBowelRecord:', error);
+    secureLogger.error('Error in updateBowelRecord:', error);
     throw error;
   }
 };
@@ -124,7 +124,7 @@ export const updateBowelRecord = async (recordId: string, updates: Partial<Bowel
  */
 export const deleteBowelRecord = async (recordId: string): Promise<void> => {
   try {
-    console.log('Deleting bowel record:', recordId);
+    secureLogger.debug('Deleting bowel record:', recordId);
 
     const { error } = await supabase
       .from('bowel_records')
@@ -132,13 +132,13 @@ export const deleteBowelRecord = async (recordId: string): Promise<void> => {
       .eq('id', recordId);
 
     if (error) {
-      console.error('Error deleting bowel record:', error);
+      secureLogger.error('Error deleting bowel record:', error);
       throw new Error(`Failed to delete bowel record: ${error.message}`);
     }
 
-    console.log('Bowel record deleted successfully');
+    secureLogger.debug('Bowel record deleted successfully');
   } catch (error: any) {
-    console.error('Error in deleteBowelRecord:', error);
+    secureLogger.error('Error in deleteBowelRecord:', error);
     throw error;
   }
 };

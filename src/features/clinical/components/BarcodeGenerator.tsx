@@ -104,7 +104,7 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error generating barcode:', error);
+      secureLogger.error('Error generating barcode:', error);
       
       // Fallback: Draw error message
       const ctx = canvas.getContext('2d');

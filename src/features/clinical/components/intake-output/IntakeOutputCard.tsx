@@ -85,7 +85,7 @@ export const IntakeOutputCard: React.FC<IntakeOutputCardProps> = ({
       const events = await getIntakeOutputEvents(patientId, { hoursBack, limit: 5 });
       setRecentEvents(events || []);
     } catch (error) {
-      console.error('Failed to load I&O data:', error);
+      secureLogger.error('Failed to load I&O data:', error);
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export const IntakeOutputCard: React.FC<IntakeOutputCardProps> = ({
       await loadData();
       onRefresh?.();
     } catch (error) {
-      console.error('Failed to delete entry:', error);
+      secureLogger.error('Failed to delete entry:', error);
       alert('Failed to delete entry');
     }
   };

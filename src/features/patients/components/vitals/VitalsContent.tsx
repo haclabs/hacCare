@@ -49,7 +49,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
       onVitalsUpdated(vitalsData);
       setShowVitalsEditor(false);
     } catch (error) {
-      console.error('Error updating vitals:', error);
+      secureLogger.error('Error updating vitals:', error);
     }
   };
 
@@ -60,7 +60,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
       const vitalsData = await fetchPatientVitals(patientId);
       onVitalsUpdated(vitalsData);
     } catch (error) {
-      console.error('Error refreshing vitals:', error);
+      secureLogger.error('Error refreshing vitals:', error);
     } finally {
       setRefreshingVitals(false);
     }
@@ -215,7 +215,7 @@ export const VitalsContent: React.FC<VitalsContentProps> = ({
           patientName={patientName}
           onClose={() => setShowVitalsTrends(false)}
           onRecordVitals={() => {
-            console.log("Record vitals clicked from trends");
+            secureLogger.debug("Record vitals clicked from trends");
             setShowVitalsTrends(false);
             setShowVitalsEditor(true);
           }}

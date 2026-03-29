@@ -40,7 +40,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
     if (!patientId) return;
     try {
       if (!user || !profile) {
-        console.error('User not authenticated');
+        secureLogger.error('User not authenticated');
         return;
       }
       
@@ -53,7 +53,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
         });
         
         if (!updatedNote) {
-          console.error('Note not found or could not be updated');
+          secureLogger.error('Note not found or could not be updated');
           alert('Error: Note not found or could not be updated. It may have been deleted.');
           return;
         }
@@ -75,12 +75,12 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       setShowNoteForm(false);
       setEditingNote(null);
     } catch (error) {
-      console.error('Error updating notes:', error);
+      secureLogger.error('Error updating notes:', error);
     }
   };
 
   const handleEditNote = (note: PatientNote) => {
-    console.log('Editing note:', note);
+    secureLogger.debug('Editing note:', note);
     setEditingNote(note);
     setShowNoteForm(true);
   };
@@ -88,16 +88,16 @@ export const NotesContent: React.FC<NotesContentProps> = ({
   const handleDeleteNote = async (noteId: string) => {
     if (!window.confirm('Are you sure you want to delete this note?')) return;
     
-    console.log('Deleting note with ID:', noteId);
+    secureLogger.debug('Deleting note with ID:', noteId);
     try {
       setDeleting(true);
       
       // Call the delete function
       try {
         await deletePatientNote(noteId);
-        console.log('Note deleted successfully');
+        secureLogger.debug('Note deleted successfully');
       } catch (deleteError) {
-        console.error('Error during note deletion:', deleteError);
+        secureLogger.error('Error during note deletion:', deleteError);
         alert('Failed to delete note. It may have already been deleted.');
       }
       
@@ -105,7 +105,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       const notesData = await fetchPatientNotes(patientId);
       onNotesUpdated(notesData);
     } catch (error) {
-      console.error('Error deleting note:', error);
+      secureLogger.error('Error deleting note:', error);
       alert('Failed to refresh notes after deletion.');
     } finally {
       setDeleting(false);
@@ -119,7 +119,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       const notesData = await fetchPatientNotes(patientId);
       onNotesUpdated(notesData);
     } catch (error) {
-      console.error('Error refreshing notes:', error);
+      secureLogger.error('Error refreshing notes:', error);
     } finally {
       setRefreshing(false);
     }
@@ -135,16 +135,16 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       for (const note of notes) {
         try {
           await deletePatientNote(note.id);
-          console.log(`Note ${note.id} deleted successfully`);
+          secureLogger.debug(`Note ${note.id} deleted successfully`);
         } catch (deleteError) {
-          console.error(`Error deleting note ${note.id}:`, deleteError);
+          secureLogger.error(`Error deleting note ${note.id}:`, deleteError);
         }
       }
       
       // Refresh notes after deletion
       await handleRefreshNotes();
     } catch (error) {
-      console.error('Error deleting all notes:', error);
+      secureLogger.error('Error deleting all notes:', error);
       alert('Failed to delete all notes.');
     } finally {
       setDeleting(false);

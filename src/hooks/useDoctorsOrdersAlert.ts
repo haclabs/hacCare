@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
+import { secureLogger } from '../lib/security/secureLogger';
 
 export const useDoctorsOrdersAlert = (patientId: string, refreshTrigger?: number) => {
   const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
@@ -13,7 +14,7 @@ export const useDoctorsOrdersAlert = (patientId: string, refreshTrigger?: number
         const unacknowledgedOrders = orders.filter(order => !order.is_acknowledged);
         setUnacknowledgedCount(unacknowledgedOrders.length);
       } catch (error) {
-        console.error('Error loading doctors orders for alert count:', error);
+        secureLogger.error('Error loading doctors orders for alert count', error);
         setUnacknowledgedCount(0);
       } finally {
         setLoading(false);

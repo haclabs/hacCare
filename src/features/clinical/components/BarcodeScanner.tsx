@@ -57,7 +57,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       }
     } catch (err) {
       setError('Camera access denied or not available');
-      console.error('Camera error:', err);
+      secureLogger.error('Camera error:', err);
     }
   };
 

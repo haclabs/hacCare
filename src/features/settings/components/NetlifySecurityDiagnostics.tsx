@@ -62,7 +62,7 @@ export const NetlifySecurityDiagnostics: React.FC = () => {
       setLastRunTime(new Date());
       
     } catch (error) {
-      console.error('Security diagnostics error:', error);
+      secureLogger.error('Security diagnostics error:', error);
     } finally {
       setIsRunning(false);
     }

@@ -26,7 +26,7 @@ class SimulationAlertStore {
       this.tenantAlerts.get(alert.tenant_id)!.add(alert.id);
     }
     
-    console.log(`📝 Simulation alert added to memory: ${alert.patientName} - ${alert.message}`);
+    secureLogger.debug(`📝 Simulation alert added to memory: ${alert.patientName} - ${alert.message}`);
   }
 
   /**
@@ -55,7 +55,7 @@ class SimulationAlertStore {
     const alert = this.alerts.get(alertId);
     if (alert) {
       alert.acknowledged = true;
-      console.log(`✅ Simulation alert acknowledged: ${alertId}`);
+      secureLogger.debug(`✅ Simulation alert acknowledged: ${alertId}`);
       return true;
     }
     return false;
@@ -79,7 +79,7 @@ class SimulationAlertStore {
     const alertIds = this.tenantAlerts.get(tenantId) || new Set();
     alertIds.forEach(id => this.alerts.delete(id));
     this.tenantAlerts.delete(tenantId);
-    console.log(`🧹 Cleared all simulation alerts for tenant: ${tenantId}`);
+    secureLogger.debug(`🧹 Cleared all simulation alerts for tenant: ${tenantId}`);
   }
 
   /**
@@ -88,7 +88,7 @@ class SimulationAlertStore {
   clearAll(): void {
     this.alerts.clear();
     this.tenantAlerts.clear();
-    console.log('🧹 Cleared all simulation alerts from memory');
+    secureLogger.debug('🧹 Cleared all simulation alerts from memory');
   }
 
   /**

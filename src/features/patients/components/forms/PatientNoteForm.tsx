@@ -148,7 +148,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
       }
 
     } catch (error) {
-      console.error('Error saving note:', error);
+      secureLogger.error('Error saving note:', error);
       alert('Failed to save note. Please try again.');
     } finally {
       setLoading(false);

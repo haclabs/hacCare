@@ -17,7 +17,7 @@ import { useTenant } from './TenantContext';
 
 // MODULE LOAD TIMESTAMP - If you don't see this in console, browser is using cached code
 // Used for debugging Vite HMR caching issues during development
-console.log('PatientContext.tsx LOADED AT:', new Date().toISOString());
+secureLogger.debug('PatientContext.tsx LOADED AT:', new Date().toISOString());
 
 /**
  * Patient Context Interface
@@ -50,10 +50,10 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Loading patients...');
+      secureLogger.debug('🔄 Loading patients...');
 
       if (!isSupabaseConfigured) {
-        console.error('❌ Supabase not configured');
+        secureLogger.error('❌ Supabase not configured');
         setPatients([]);
         setError('Database not configured. Please check your .env file and connect to Supabase.');
         return;
@@ -62,13 +62,13 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Check database health first
       const isHealthy = await checkDatabaseHealth();
       if (!isHealthy) {
-        console.error('❌ Database connection failed');
+        secureLogger.error('❌ Database connection failed');
         setPatients([]);
         setError('Database connection failed. Please check your Supabase configuration and internet connection.');
         return;
       }
 
-      console.log('📊 Fetching patients from Supabase...');
+      secureLogger.debug('📊 Fetching patients from Supabase...');
       
       try {
         let dbPatients: Patient[] = [];
@@ -76,7 +76,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (isMultiTenantAdmin) {
           if (selectedTenantId) {
             // Super admin viewing a specific tenant
-            console.log('🔓 Super admin viewing specific tenant:', selectedTenantId);
+            secureLogger.debug('🔓 Super admin viewing specific tenant:', selectedTenantId);
             const { data, error: tenantError } = await getPatientsByTenant(selectedTenantId);
             
             if (tenantError) {
@@ -86,12 +86,12 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
             dbPatients = data || [];
           } else {
             // Super admin viewing all tenants
-            console.log('🔓 Super admin access - fetching all patients from all tenants');
+            secureLogger.debug('🔓 Super admin access - fetching all patients from all tenants');
             dbPatients = await fetchPatients();
           }
         } else if (currentTenant) {
           // Regular users see only their tenant's patients
-          console.log('🏢 Fetching patients for tenant:', currentTenant.name);
+          secureLogger.debug('🏢 Fetching patients for tenant:', currentTenant.name);
           const { data, error: tenantError } = await getPatientsByTenant(currentTenant.id);
           
           if (tenantError) {
@@ -101,15 +101,15 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
           dbPatients = data || [];
         } else {
           // User has no tenant - show empty list
-          console.log('⚠️ User has no tenant assigned');
+          secureLogger.debug('⚠️ User has no tenant assigned');
           dbPatients = [];
           setError('You are not assigned to any organization. Please contact your administrator.');
         }
 
-        console.log(`✅ Loaded ${dbPatients.length} patients from database`);
+        secureLogger.debug(`✅ Loaded ${dbPatients.length} patients from database`);
         setPatients(dbPatients);
       } catch (fetchError: any) {
-        console.error('❌ Error fetching patients from database:', fetchError);
+        secureLogger.error('❌ Error fetching patients from database:', fetchError);
         setPatients([]);
         
         // Provide more specific error messages
@@ -123,7 +123,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
     } catch (err: any) {
-      console.error('❌ Error loading patients:', err);
+      secureLogger.error('❌ Error loading patients:', err);
       setError(err.message || 'Failed to load patients');
       setPatients([]);
     } finally {
@@ -153,7 +153,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
       }
 
-      console.log('Creating patient in database...');
+      secureLogger.debug('Creating patient in database...');
       
       let newPatient: Patient;
       
@@ -167,7 +167,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // at call time ensures we get the current value.
         const freshTenantId = localStorage.getItem('superAdminTenantId');
         
-        console.log('TENANT CONTEXT CHECK (AT CALL TIME):', {
+        secureLogger.debug('TENANT CONTEXT CHECK (AT CALL TIME):', {
           isMultiTenantAdmin,
           freshTenantId_from_localStorage: freshTenantId,
           selectedTenantId_from_closure: selectedTenantId,
@@ -178,8 +178,8 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         
         if (targetTenantId) {
           // Super admin creating patient for selected tenant (including simulation templates)
-          console.log('Super admin creating patient for tenant ID:', targetTenantId);
-          console.log('ACTUAL TENANT_ID BEING USED:', targetTenantId);
+          secureLogger.debug('Super admin creating patient for tenant ID:', targetTenantId);
+          secureLogger.debug('ACTUAL TENANT_ID BEING USED:', targetTenantId);
           const { data, error } = await createPatientWithTenant(patient, targetTenantId);
           
           if (error) {
@@ -193,12 +193,12 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
           newPatient = data;
         } else {
           // Super admin creating patient without tenant restriction (global)
-          console.log('🔓 Super admin creating global patient - no tenant selected');
+          secureLogger.debug('🔓 Super admin creating global patient - no tenant selected');
           newPatient = await createPatientDB(patient);
         }
       } else if (currentTenant) {
         // Regular users create patients in their tenant
-        console.log('🏢 Creating patient for tenant:', currentTenant.name);
+        secureLogger.debug('🏢 Creating patient for tenant:', currentTenant.name);
         const { data, error } = await createPatientWithTenant(patient, currentTenant.id);
         
         if (error) {
@@ -216,7 +216,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       setPatients(prev => [newPatient, ...prev]);
     } catch (err: any) {
-      console.error('❌ Error adding patient:', err);
+      secureLogger.error('❌ Error adding patient:', err);
       
       // Provide more specific error messages
       if (err.message?.includes('Failed to fetch') || 
@@ -253,17 +253,17 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Patient not found');
       }
 
-      console.log('✏️ Updating patient in database...');
+      secureLogger.debug('✏️ Updating patient in database...');
       
       let updated: Patient;
       
       if (isMultiTenantAdmin) {
         // Super admins can update any patient
-        console.log('🔓 Super admin updating patient');
+        secureLogger.debug('🔓 Super admin updating patient');
         updated = await updatePatientDB({ ...currentPatient, ...updates });
       } else if (currentTenant) {
         // Regular users can only update patients in their tenant
-        console.log('🏢 Updating patient for tenant:', currentTenant.name);
+        secureLogger.debug('🏢 Updating patient for tenant:', currentTenant.name);
         const { data, error } = await updatePatientWithTenant(
           patientId, 
           updates, 
@@ -287,7 +287,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         patient.id === updated.id ? updated : patient
       ));
     } catch (err: any) {
-      console.error('❌ Error updating patient:', err);
+      secureLogger.error('❌ Error updating patient:', err);
       
       // Provide more specific error messages
       if (err.message?.includes('Failed to fetch') || 
@@ -319,15 +319,15 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('Database connection failed. Please check your Supabase configuration and internet connection.');
       }
 
-      console.log('🗑️ Deleting patient from database...');
+      secureLogger.debug('🗑️ Deleting patient from database...');
       
       if (isMultiTenantAdmin) {
         // Super admins can delete any patient
-        console.log('🔓 Super admin deleting patient');
+        secureLogger.debug('🔓 Super admin deleting patient');
         await deletePatientDB(patientId);
       } else if (currentTenant) {
         // Regular users can only delete patients in their tenant
-        console.log('🏢 Deleting patient for tenant:', currentTenant.name);
+        secureLogger.debug('🏢 Deleting patient for tenant:', currentTenant.name);
         const { error } = await deletePatientWithTenant(patientId, currentTenant.id);
         
         if (error) {
@@ -339,7 +339,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       setPatients(prev => prev.filter(patient => patient.id !== patientId));
     } catch (err: any) {
-      console.error('❌ Error deleting patient:', err);
+      secureLogger.error('❌ Error deleting patient:', err);
       
       // Provide more specific error messages
       if (err.message?.includes('Failed to fetch') || 
@@ -365,7 +365,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
    * Refresh patients from database
    */
   const refreshPatients = async () => {
-    console.log('🔄 Refreshing patients...');
+    secureLogger.debug('🔄 Refreshing patients...');
     await loadPatients();
   };
 

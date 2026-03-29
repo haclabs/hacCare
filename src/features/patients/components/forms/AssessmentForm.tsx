@@ -148,18 +148,18 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         ...formData
       };
 
-      console.log('Submitting assessment:', assessmentData);
+      secureLogger.debug('Submitting assessment:', assessmentData);
       
       // Save to database
       const savedAssessment = await createAssessment(assessmentData);
       
-      console.log('Assessment saved successfully:', savedAssessment);
+      secureLogger.debug('Assessment saved successfully:', savedAssessment);
       
       // Call the onSave callback
       onSave(savedAssessment);
       
     } catch (error: any) {
-      console.error('Error saving assessment:', error);
+      secureLogger.error('Error saving assessment:', error);
       alert(`Failed to save assessment: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
       setLoading(false);

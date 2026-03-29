@@ -55,7 +55,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
 
     if (err) {
       setError('Failed to load lab panels');
-      console.error(err);
+      secureLogger.error(err);
     } else {
       setPanels(data || []);
     }
@@ -69,7 +69,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
     const { data, error: err } = await getLabOrders(patientId, currentTenant.id);
 
     if (err) {
-      console.error('Failed to load lab orders:', err);
+      secureLogger.error('Failed to load lab orders:', err);
     } else {
       setLabOrders(data || []);
     }

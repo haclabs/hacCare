@@ -76,7 +76,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       const ordersData = await fetchDoctorsOrders(patientId);
       setOrders(ordersData);
     } catch (error) {
-      console.error('Error loading doctors orders:', error);
+      secureLogger.error('Error loading doctors orders:', error);
       setError('Failed to load doctors orders');
     } finally {
       setLoading(false);
@@ -120,7 +120,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       // Notify parent component of the change
       onOrdersChange?.();
     } catch (error) {
-      console.error('Error saving doctors order:', error);
+      secureLogger.error('Error saving doctors order:', error);
       setError('Failed to save doctors order');
     } finally {
       setSubmitting(false);
@@ -150,7 +150,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       await deleteDoctorsOrder(orderId);
       setOrders(orders.filter(order => order.id !== orderId));
     } catch (error) {
-      console.error('Error deleting doctors order:', error);
+      secureLogger.error('Error deleting doctors order:', error);
       setError('Failed to delete doctors order');
     }
   };
@@ -184,7 +184,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       // Notify parent component of the change
       onOrdersChange?.();
     } catch (error) {
-      console.error('Error acknowledging order:', error);
+      secureLogger.error('Error acknowledging order:', error);
       setError('Failed to acknowledge order');
       throw error; // Re-throw to let modal handle error display
     }

@@ -48,7 +48,7 @@ export function computeLabFlag(
   );
 
   // Debug logging
-  console.log('🔬 Lab Flag Computation:', {
+  secureLogger.debug('🔬 Lab Flag Computation:', {
     value,
     ref_operator,
     patient_sex,
@@ -62,38 +62,38 @@ export function computeLabFlag(
 
   // Check critical thresholds first
   if (critical_low !== null && value < critical_low) {
-    console.log('✅ Flagged as CRITICAL_LOW');
+    secureLogger.debug('✅ Flagged as CRITICAL_LOW');
     return 'critical_low';
   }
   if (critical_high !== null && value > critical_high) {
-    console.log('✅ Flagged as CRITICAL_HIGH');
+    secureLogger.debug('✅ Flagged as CRITICAL_HIGH');
     return 'critical_high';
   }
 
   // Check abnormal thresholds
   if (ref_operator === '>=') {
     if (low !== null && value < low) {
-      console.log('✅ Flagged as ABNORMAL_LOW (>= operator)');
+      secureLogger.debug('✅ Flagged as ABNORMAL_LOW (>= operator)');
       return 'abnormal_low';
     }
   } else if (ref_operator === '<=') {
     if (high !== null && value > high) {
-      console.log('✅ Flagged as ABNORMAL_HIGH (<= operator)');
+      secureLogger.debug('✅ Flagged as ABNORMAL_HIGH (<= operator)');
       return 'abnormal_high';
     }
   } else {
     // 'between' or 'sex-specific'
     if (low !== null && value < low) {
-      console.log('✅ Flagged as ABNORMAL_LOW');
+      secureLogger.debug('✅ Flagged as ABNORMAL_LOW');
       return 'abnormal_low';
     }
     if (high !== null && value > high) {
-      console.log('✅ Flagged as ABNORMAL_HIGH');
+      secureLogger.debug('✅ Flagged as ABNORMAL_HIGH');
       return 'abnormal_high';
     }
   }
 
-  console.log('✅ Flagged as NORMAL');
+  secureLogger.debug('✅ Flagged as NORMAL');
   return 'normal';
 }
 
@@ -642,8 +642,8 @@ export async function acknowledgeLabs(
     note: input.note,
   };
   
-  console.log('🔍 Lab ack event data being inserted:', ackEventData);
-  console.log('🔍 input.note value:', input.note);
+  secureLogger.debug('🔍 Lab ack event data being inserted:', ackEventData);
+  secureLogger.debug('🔍 input.note value:', input.note);
   
   const { error: logError } = await supabase
     .from('lab_ack_events')

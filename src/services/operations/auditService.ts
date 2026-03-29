@@ -35,12 +35,12 @@ export const logAction = async (
   details: any = {}
 ): Promise<AuditLog | null> => {
   if (!user) {
-    console.error('Cannot log action: No user provided');
+    secureLogger.error('Cannot log action: No user provided');
     return null;
   }
 
   try {
-    console.log(`Logging action: ${action} on ${targetType} ${targetId} by user ${user.id}`);
+    secureLogger.debug(`Logging action: ${action} on ${targetType} ${targetId} by user ${user.id}`);
     
     const { data, error } = await supabase
       .from('audit_logs')
@@ -56,14 +56,14 @@ export const logAction = async (
       .single();
 
     if (error) {
-      console.error('Error logging action:', error);
+      secureLogger.error('Error logging action:', error);
       return null;
     }
 
-    console.log('Action logged successfully:', data);
+    secureLogger.debug('Action logged successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error in logAction:', error);
+    secureLogger.error('Error in logAction:', error);
     return null;
   }
 };
@@ -82,7 +82,7 @@ export const fetchTargetActivity = async (
   limit: number = 10
 ): Promise<AuditLog[]> => {
   try {
-    console.log(`Fetching activity for ${targetType} ${targetId}`);
+    secureLogger.debug(`Fetching activity for ${targetType} ${targetId}`);
     
     const { data, error } = await supabase
       .from('audit_logs')
@@ -99,7 +99,7 @@ export const fetchTargetActivity = async (
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching target activity:', error);
+      secureLogger.error('Error fetching target activity:', error);
       return [];
     }
 
@@ -111,10 +111,10 @@ export const fetchTargetActivity = async (
         'Unknown User'
     }));
 
-    console.log(`Found ${formattedData.length} activity logs`);
+    secureLogger.debug(`Found ${formattedData.length} activity logs`);
     return formattedData;
   } catch (error) {
-    console.error('Error in fetchTargetActivity:', error);
+    secureLogger.error('Error in fetchTargetActivity:', error);
     return [];
   }
 };
@@ -131,7 +131,7 @@ export const fetchUserActivity = async (
   limit: number = 10
 ): Promise<AuditLog[]> => {
   try {
-    console.log(`Fetching activity for user ${userId}`);
+    secureLogger.debug(`Fetching activity for user ${userId}`);
     
     const { data, error } = await supabase
       .from('audit_logs')
@@ -141,14 +141,14 @@ export const fetchUserActivity = async (
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching user activity:', error);
+      secureLogger.error('Error fetching user activity:', error);
       return [];
     }
 
-    console.log(`Found ${data.length} activity logs`);
+    secureLogger.debug(`Found ${data.length} activity logs`);
     return data;
   } catch (error) {
-    console.error('Error in fetchUserActivity:', error);
+    secureLogger.error('Error in fetchUserActivity:', error);
     return [];
   }
 };

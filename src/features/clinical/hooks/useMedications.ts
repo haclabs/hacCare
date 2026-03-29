@@ -241,10 +241,10 @@ export function useCreateMedication() {
           context.previousMedications
         );
       }
-      console.error('❌ Failed to create medication:', error);
+      secureLogger.error('❌ Failed to create medication:', error);
     },
     onSuccess: (data, _variables) => {
-      console.log(`✅ Medication "${data.name}" created successfully`);
+      secureLogger.debug(`✅ Medication "${data.name}" created successfully`);
     },
     onSettled: (_data, _error, variables) => {
       // Always refetch to ensure data consistency
@@ -314,10 +314,10 @@ export function useUpdateMedication() {
           context.previousMedications
         );
       }
-      console.error('❌ Failed to update medication:', error);
+      secureLogger.error('❌ Failed to update medication:', error);
     },
     onSuccess: (data) => {
-      console.log(`✅ Medication "${data.name}" updated successfully`);
+      secureLogger.debug(`✅ Medication "${data.name}" updated successfully`);
     },
     onSettled: (_data, _error, _variables, context) => {
       // Always refetch to ensure data consistency
@@ -386,10 +386,10 @@ export function useDeleteMedication() {
           context.previousMedications
         );
       }
-      console.error('❌ Failed to delete medication:', error);
+      secureLogger.error('❌ Failed to delete medication:', error);
     },
     onSuccess: (_data, _medicationId, context) => {
-      console.log(`✅ Medication "${context?.medicationToDelete?.name}" deleted successfully`);
+      secureLogger.debug(`✅ Medication "${context?.medicationToDelete?.name}" deleted successfully`);
     },
     onSettled: (_data, _error, _medicationId, context) => {
       // Always refetch to ensure data consistency
@@ -451,10 +451,10 @@ export function useRecordMedicationAdministration() {
           context.previousMedications
         );
       }
-      console.error('❌ Failed to record medication administration:', error);
+      secureLogger.error('❌ Failed to record medication administration:', error);
     },
     onSuccess: (_data, _administration, context) => {
-      console.log(`✅ Medication administration recorded successfully`);
+      secureLogger.debug(`✅ Medication administration recorded successfully`);
       
       // Invalidate medication history
       if (context?.medicationId && context?.patientId) {
@@ -489,10 +489,10 @@ export function useUpdateMedicationNextDue() {
       queryClient.invalidateQueries({ 
         queryKey: ['patients'] 
       });
-      console.log(`✅ Medication ${medicationId} next due time updated`);
+      secureLogger.debug(`✅ Medication ${medicationId} next due time updated`);
     },
     onError: (error) => {
-      console.error('❌ Failed to update medication next due time:', error);
+      secureLogger.error('❌ Failed to update medication next due time:', error);
     },
   });
 }

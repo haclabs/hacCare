@@ -38,7 +38,7 @@ export const EditLabResultModal: React.FC<EditLabResultModalProps> = ({
 
     if (err) {
       setError('Failed to update lab result');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
     } else {
       onSuccess();

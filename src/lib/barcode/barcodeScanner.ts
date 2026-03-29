@@ -5,7 +5,7 @@
 
 // Dispatch barcode scan event
 export const dispatchBarcodeEvent = (barcode: string) => {
-  console.log('📱 Dispatching barcode event:', barcode);
+  secureLogger.debug('📱 Dispatching barcode event:', barcode);
   
   const event = new CustomEvent('barcodescanned', {
     detail: { barcode },
@@ -25,43 +25,43 @@ const handleKeyPress = (e: KeyboardEvent) => {
   clearTimeout(barcodeTimeout);
   
   // Debug keyboard input
-  console.log('⌨️ Key pressed:', e.key, 'Buffer:', barcodeBuffer);
+  secureLogger.debug('⌨️ Key pressed:', e.key, 'Buffer:', barcodeBuffer);
   
   // Reset buffer after 100ms of inactivity
   barcodeTimeout = setTimeout(() => {
-    console.log('⏰ Buffer timeout, clearing:', barcodeBuffer);
+    secureLogger.debug('⏰ Buffer timeout, clearing:', barcodeBuffer);
     barcodeBuffer = '';
   }, 100);
 
   if (e.key === 'Enter') {
     // Barcode scanners typically end with Enter
     if (barcodeBuffer.length > 3) {
-      console.log('🔍 Keyboard barcode detected:', barcodeBuffer);
+      secureLogger.debug('🔍 Keyboard barcode detected:', barcodeBuffer);
       dispatchBarcodeEvent(barcodeBuffer);
       barcodeBuffer = '';
     } else {
-      console.log('⚠️ Buffer too short for barcode:', barcodeBuffer);
+      secureLogger.debug('⚠️ Buffer too short for barcode:', barcodeBuffer);
     }
   } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
     // Add character to buffer (ignore modifier keys)
     barcodeBuffer += e.key;
-    console.log('➕ Added to buffer:', e.key, 'Full buffer:', barcodeBuffer);
+    secureLogger.debug('➕ Added to buffer:', e.key, 'Full buffer:', barcodeBuffer);
   }
 };
 
 // Initialize barcode scanner listener
 export const initializeBarcodeScanner = () => {
-  console.log('🔧 Initializing barcode scanner listener');
+  secureLogger.debug('🔧 Initializing barcode scanner listener');
   document.addEventListener('keypress', handleKeyPress);
   
   // Add global test function for browser console
   (window as any).testBarcodeScan = (barcode: string) => {
-    console.log('🧪 Console test barcode scan:', barcode);
+    secureLogger.debug('🧪 Console test barcode scan:', barcode);
     simulateBarcodeScan(barcode);
   };
   
   // Test that the system is working
-  console.log('🔧 Barcode scanner initialized. Test with: testBarcodeScan("TEST123")');
+  secureLogger.debug('🔧 Barcode scanner initialized. Test with: testBarcodeScan("TEST123")');
   
   return () => {
     document.removeEventListener('keypress', handleKeyPress);
@@ -72,6 +72,6 @@ export const initializeBarcodeScanner = () => {
 
 // Manual barcode input for testing
 export const simulateBarcodeScan = (barcode: string) => {
-  console.log('🧪 Simulating barcode scan:', barcode);
+  secureLogger.debug('🧪 Simulating barcode scan:', barcode);
   dispatchBarcodeEvent(barcode);
 };

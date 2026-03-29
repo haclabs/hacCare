@@ -116,7 +116,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   // Handle vitals form submission
   const handleVitalsSubmission = async (data: FormData, validation: ValidationResult) => {
     if (!validation.valid) {
-      console.error('Form validation failed:', validation.errors);
+      secureLogger.error('Form validation failed:', validation.errors);
       return;
     }
 
@@ -138,9 +138,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       };
 
       // Save vitals to database with student name
-      console.log('Saving vitals to database for patient:', patient.id);
+      secureLogger.debug('Saving vitals to database for patient:', patient.id);
       await updatePatientVitals(patient.id, newVitals, data.studentName);
-      console.log('Vitals saved to database successfully');
+      secureLogger.debug('Vitals saved to database successfully');
 
       // Update local state through parent component
       const updatedVitals = [newVitals, ...vitals];
@@ -154,7 +154,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       // Show success message
       setSuccessMessage(`Vital signs recorded successfully at ${new Date().toLocaleTimeString()}`);
       setShowSuccessMessage(true);
-      console.log('Vitals recorded successfully');
+      secureLogger.debug('Vitals recorded successfully');
       
       // Close the modal
       setShowVitalsModal(false);
@@ -164,7 +164,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         setShowSuccessMessage(false);
       }, 5000);
     } catch (error) {
-      console.error('Error recording vitals:', error);
+      secureLogger.error('Error recording vitals:', error);
       // Show error message to user
       setAlerts([{
         severity: 'critical',
@@ -179,7 +179,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   // Handle form changes for real-time feedback
   const handleFormChange = (data: FormData, field: string) => {
     // Real-time form updates could trigger preview updates here
-    console.log('Form field changed:', field, data[field]);
+    secureLogger.debug('Form field changed:', field, data[field]);
   };
 
   // Handle validation changes for real-time alerts
@@ -194,7 +194,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     try {
       return calculatePreciseAge(birthDate);
     } catch (error) {
-      console.error('Error calculating age:', error);
+      secureLogger.error('Error calculating age:', error);
       // Fallback to adult age band
       return {
         years: 25,

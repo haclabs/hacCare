@@ -144,7 +144,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
     try {
       // Get all patient data for comprehensive record including clinical assessments
-      console.log('🔍 DEBUG: Fetching lab panels for patient.id:', patient.id, 'tenant:', currentTenant?.id);
+      secureLogger.debug('🔍 DEBUG: Fetching lab panels for patient.id:', patient.id, 'tenant:', currentTenant?.id);
       
       const [vitalsData, medicationsData, assessmentsData, bowelRecordsData, admissionData, directiveData, ordersData, labPanelsResponse] = await Promise.all([
         fetchPatientVitals(patient.id),
@@ -171,25 +171,25 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       );
       
       // Debug: Log lab panels data
-      console.log('🔍 DEBUG: labPanelsResponse:', labPanelsResponse);
-      console.log('🔍 DEBUG: labPanelsData:', labPanelsData);
-      console.log('🔍 DEBUG: labPanelsData.length:', labPanelsData.length);
-      console.log('🔍 DEBUG: labPanelsWithResults:', labPanelsWithResults);
+      secureLogger.debug('🔍 DEBUG: labPanelsResponse:', labPanelsResponse);
+      secureLogger.debug('🔍 DEBUG: labPanelsData:', labPanelsData);
+      secureLogger.debug('🔍 DEBUG: labPanelsData.length:', labPanelsData.length);
+      secureLogger.debug('🔍 DEBUG: labPanelsWithResults:', labPanelsWithResults);
       
       // Debug: Log assessments data
-      console.log('🔍 DEBUG: assessmentsData:', assessmentsData);
+      secureLogger.debug('🔍 DEBUG: assessmentsData:', assessmentsData);
       if (assessmentsData.length > 0) {
-        console.log('🔍 DEBUG: First assessment:', assessmentsData[0]);
-        console.log('🔍 DEBUG: assessment_notes field:', assessmentsData[0].assessment_notes);
-        console.log('🔍 DEBUG: typeof assessment_notes:', typeof assessmentsData[0].assessment_notes);
+        secureLogger.debug('🔍 DEBUG: First assessment:', assessmentsData[0]);
+        secureLogger.debug('🔍 DEBUG: assessment_notes field:', assessmentsData[0].assessment_notes);
+        secureLogger.debug('🔍 DEBUG: typeof assessment_notes:', typeof assessmentsData[0].assessment_notes);
       }
       
       // Debug: Log advanced directives data
-      console.log('🔍 DEBUG: directiveData:', directiveData);
-      console.log('Assessments Data for patient record:', assessmentsData);
+      secureLogger.debug('🔍 DEBUG: directiveData:', directiveData);
+      secureLogger.debug('Assessments Data for patient record:', assessmentsData);
       if (assessmentsData.length > 0) {
-        console.log('First assessment:', assessmentsData[0]);
-        console.log('First assessment notes:', assessmentsData[0].assessment_notes);
+        secureLogger.debug('First assessment:', assessmentsData[0]);
+        secureLogger.debug('First assessment notes:', assessmentsData[0].assessment_notes);
       }
 
       // Pre-format vitals data for display to avoid [object Object] issues
@@ -847,14 +847,14 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                         <div class="note-content">
                           ${assessmentsData.map((assessment, idx) => {
                             let parsedData = null;
-                            console.log(`🔍 DEBUG: Processing assessment #${idx + 1}:`, assessment);
-                            console.log(`🔍 DEBUG: assessment_notes type:`, typeof assessment.assessment_notes);
-                            console.log(`🔍 DEBUG: assessment_notes value:`, assessment.assessment_notes);
+                            secureLogger.debug(`🔍 DEBUG: Processing assessment #${idx + 1}:`, assessment);
+                            secureLogger.debug(`🔍 DEBUG: assessment_notes type:`, typeof assessment.assessment_notes);
+                            secureLogger.debug(`🔍 DEBUG: assessment_notes value:`, assessment.assessment_notes);
                             try {
                               parsedData = JSON.parse(assessment.assessment_notes);
-                              console.log(`🔍 DEBUG: Parsed data:`, parsedData);
+                              secureLogger.debug(`🔍 DEBUG: Parsed data:`, parsedData);
                             } catch (e) {
-                              console.log(`🔍 DEBUG: Parse error:`, e);
+                              secureLogger.debug(`🔍 DEBUG: Parse error:`, e);
                               // If it's not JSON, display as plain text
                             }
                             
@@ -1151,7 +1151,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
       reportWindow.focus();
       
     } catch (error) {
-      console.error('Error generating patient record:', error);
+      secureLogger.error('Error generating patient record:', error);
       alert('Error generating patient record. Please try again.');
     }
   };
@@ -1208,7 +1208,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         const [patientData, medicationsData] = await Promise.all([
           fetchPatientById(id),
           fetchPatientMedications(id).catch(err => {
-            console.warn('Failed to fetch medications:', err);
+            secureLogger.warn('Failed to fetch medications:', err);
             return []; // Return empty array if medications fail to load
           })
         ]);
@@ -1220,12 +1220,12 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
             medications: medicationsData
           };
           setPatient(patientWithData);
-          console.log(`✅ Patient loaded with ${medicationsData.length} medications`);
+          secureLogger.debug(`✅ Patient loaded with ${medicationsData.length} medications`);
         }
         
         setLastUpdated(new Date());
       } catch (err) {
-        console.error('Error loading patient:', err);
+        secureLogger.error('Error loading patient:', err);
         setError(err instanceof Error ? err.message : 'Failed to load patient');
       } finally {
         setLoading(false);
@@ -1366,8 +1366,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
   const handleAssessmentSave = async (assessment: any) => {
     try {
-      console.log('Saving assessment to database:', assessment);
-      console.log('Assessment type:', assessment.type);
+      secureLogger.debug('Saving assessment to database:', assessment);
+      secureLogger.debug('Assessment type:', assessment.type);
       
       // Route to appropriate table based on assessment type
       if (assessment.type === 'admission-assessment') {
@@ -1394,7 +1394,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         };
         
         await upsertAdmissionRecord(admissionRecord);
-        console.log('Admission assessment saved to patient_admission_records');
+        secureLogger.debug('Admission assessment saved to patient_admission_records');
         
       } else if (assessment.type === 'nursing-assessment') {
         // Save to patient_notes table directly with JSON content
@@ -1412,11 +1412,11 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           .single();
           
         if (error) {
-          console.error('Error saving nursing assessment:', error);
+          secureLogger.error('Error saving nursing assessment:', error);
           throw error;
         }
         
-        console.log('Nursing assessment saved to patient_notes:', savedNote);
+        secureLogger.debug('Nursing assessment saved to patient_notes:', savedNote);
         
       } else if (assessment.type === 'bowel-assessment') {
         // Save to bowel_records table
@@ -1432,7 +1432,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           stool_amount: assessment.data.stoolAmount || 'Moderate',
           notes: assessment.data.notes || ''
         });
-        console.log('Bowel assessment saved to bowel_records');
+        secureLogger.debug('Bowel assessment saved to bowel_records');
         
       } else {
         // Default: save as generic assessment
@@ -1447,13 +1447,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           follow_up_required: false,
           priority_level: 'routine'
         });
-        console.log('Generic assessment saved to patient_notes');
+        secureLogger.debug('Generic assessment saved to patient_notes');
       }
       
-      console.log('Assessment saved to database successfully');
+      secureLogger.debug('Assessment saved to database successfully');
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Error saving assessment to database:', error);
+      secureLogger.error('Error saving assessment to database:', error);
     }
   };
 
@@ -2178,7 +2178,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         isOpen={showSchemaEditor}
         onClose={() => setShowSchemaEditor(false)}
         onSave={(schema) => {
-          console.log('Schema saved:', schema);
+          secureLogger.debug('Schema saved:', schema);
           // Here you would typically save to database
           setShowSchemaEditor(false);
         }}

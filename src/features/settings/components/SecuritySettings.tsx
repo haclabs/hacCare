@@ -131,7 +131,7 @@ export const SecuritySettings: React.FC = () => {
       setConfirmPassword('');
       setSuccess('Password updated successfully');
     } catch (err: any) {
-      console.error('Error updating password:', err);
+      secureLogger.error('Error updating password:', err);
       setError(parseAuthError(err));
     } finally {
       setLoading(false);

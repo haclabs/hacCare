@@ -27,12 +27,12 @@ import PatientTransferModal from './PatientTransferModal';
  * @returns {JSX.Element} The patient management component
  */
 export const PatientManagement: React.FC = () => {
-  console.log('🏥 PatientManagement component rendering');
+  secureLogger.debug('🏥 PatientManagement component rendering');
   
   // Get patient data using react-query hook
   const { data: patients = [], isLoading: loading, error, refetch: refreshPatients } = usePatients();
   
-  console.log('📊 Patient data:', { patients, loading, error });
+  secureLogger.debug('📊 Patient data:', { patients, loading, error });
   
   // Mutation hooks for patient operations
   const createPatientMutation = useCreatePatient();
@@ -121,7 +121,7 @@ export const PatientManagement: React.FC = () => {
         setSelectedPatient(null);
       }
     } catch (error) {
-      console.error('Error deleting patient:', error);
+      secureLogger.error('Error deleting patient:', error);
       alert('Failed to delete patient. Please try again.');
     } finally {
       setActionLoading(false);
@@ -150,7 +150,7 @@ export const PatientManagement: React.FC = () => {
       setShowForm(false);
       setSelectedPatient(null);
     } catch (error) {
-      console.error('Error saving patient:', error);
+      secureLogger.error('Error saving patient:', error);
       alert('Failed to save patient. Please try again.');
     } finally {
       setActionLoading(false);
@@ -173,10 +173,10 @@ export const PatientManagement: React.FC = () => {
       // Refresh the patient list to reflect changes
       refreshPatients();
       // You can also show a success toast notification here
-      console.log('✅ Transfer successful:', message);
+      secureLogger.debug('✅ Transfer successful:', message);
     } else {
       // Show error message
-      console.error('❌ Transfer failed:', message);
+      secureLogger.error('❌ Transfer failed:', message);
       alert(`Transfer failed: ${message}`);
     }
   };

@@ -38,7 +38,7 @@ export interface UserSession {
  */
 export const getActiveSessions = async (): Promise<UserSession[]> => {
   try {
-    console.log('📊 Fetching active sessions...');
+    secureLogger.debug('📊 Fetching active sessions...');
     
     // First check if we can access the user_sessions table at all
     const { count, error: countError } = await supabase
@@ -46,11 +46,11 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
       .select('*', { count: 'exact', head: true });
 
     if (countError) {
-      console.error('❌ Cannot access user_sessions table:', countError);
+      secureLogger.error('❌ Cannot access user_sessions table:', countError);
       throw countError;
     }
 
-    console.log(`📈 Total sessions in database: ${count}`);
+    secureLogger.debug(`📈 Total sessions in database: ${count}`);
 
     // Now get active sessions
     const { data: sessionsData, error: sessionsError } = await supabase
@@ -61,14 +61,14 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
       .order('last_activity', { ascending: false });
 
     if (sessionsError) {
-      console.error('❌ Error fetching active sessions:', sessionsError);
+      secureLogger.error('❌ Error fetching active sessions:', sessionsError);
       throw sessionsError;
     }
 
-    console.log(`🔍 Raw sessions query result:`, sessionsData);
+    secureLogger.debug(`🔍 Raw sessions query result:`, sessionsData);
 
     if (!sessionsData || sessionsData.length === 0) {
-      console.log('⚠️ No active sessions found. Checking all sessions...');
+      secureLogger.debug('⚠️ No active sessions found. Checking all sessions...');
       
       // Check what sessions exist with different statuses
       const { data: allSessions } = await supabase
@@ -76,11 +76,11 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
         .select('status, COUNT(*)')
         .is('logout_time', null);
         
-      console.log('📊 Session status breakdown:', allSessions);
+      secureLogger.debug('📊 Session status breakdown:', allSessions);
       return [];
     }
 
-    console.log(`✅ Found ${sessionsData.length} active sessions:`, sessionsData.map(s => ({ id: s.id, user_id: s.user_id, ip: s.ip_address, status: s.status })));
+    secureLogger.debug(`✅ Found ${sessionsData.length} active sessions:`, sessionsData.map(s => ({ id: s.id, user_id: s.user_id, ip: s.ip_address, status: s.status })));
 
     // Get unique user IDs from sessions, filtering out null values
     const userIds = [...new Set(sessionsData.map(session => session.user_id).filter(id => id !== null))];
@@ -100,7 +100,7 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
     }
 
     if (profilesError) {
-      console.warn('Could not fetch user profiles:', profilesError);
+      secureLogger.warn('Could not fetch user profiles:', profilesError);
     }
 
     // Create a map of user profiles for quick lookup
@@ -121,7 +121,7 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
         .in('id', tenantIds);
       
       if (tenantError) {
-        console.warn('Could not fetch tenant names:', tenantError);
+        secureLogger.warn('Could not fetch tenant names:', tenantError);
       } else {
         tenantsData = data || [];
       }
@@ -154,10 +154,10 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
       };
     });
 
-    console.log(`✅ Retrieved ${sessions.length} active sessions`);
+    secureLogger.debug(`✅ Retrieved ${sessions.length} active sessions`);
     return sessions;
   } catch (error) {
-    console.error('Failed to fetch active sessions:', error);
+    secureLogger.error('Failed to fetch active sessions:', error);
     return [];
   }
 };
@@ -173,7 +173,7 @@ export const createUserSession = async (
   tenantId?: string
 ): Promise<string | null> => {
   try {
-    console.log('🔐 Creating/updating user session...');
+    secureLogger.debug('🔐 Creating/updating user session...');
     
     const { data, error } = await supabase.rpc('create_user_session', {
       p_ip_address: ipAddress,
@@ -182,14 +182,14 @@ export const createUserSession = async (
     });
 
     if (error) {
-      console.error('Error creating user session:', error);
+      secureLogger.error('Error creating user session:', error);
       throw error;
     }
 
-    console.log('✅ User session created/updated:', data);
+    secureLogger.debug('✅ User session created/updated:', data);
     return data;
   } catch (error) {
-    console.error('Failed to create user session:', error);
+    secureLogger.error('Failed to create user session:', error);
     return null;
   }
 };
@@ -199,19 +199,19 @@ export const createUserSession = async (
  */
 export const endUserSession = async (): Promise<boolean> => {
   try {
-    console.log('🚪 Ending user session...');
+    secureLogger.debug('🚪 Ending user session...');
     
     const { data, error } = await supabase.rpc('end_user_session');
 
     if (error) {
-      console.error('Error ending user session:', error);
+      secureLogger.error('Error ending user session:', error);
       throw error;
     }
 
-    console.log('✅ User session ended successfully');
+    secureLogger.debug('✅ User session ended successfully');
     return data;
   } catch (error) {
-    console.error('Failed to end user session:', error);
+    secureLogger.error('Failed to end user session:', error);
     return false;
   }
 };
@@ -223,7 +223,7 @@ export const endUserSession = async (): Promise<boolean> => {
  */
 export const getRecentLoginHistory = async (): Promise<UserSession[]> => {
   try {
-    console.log('📜 Fetching recent login history...');
+    secureLogger.debug('📜 Fetching recent login history...');
     
     const { data, error } = await supabase
       .from('recent_login_history')
@@ -232,7 +232,7 @@ export const getRecentLoginHistory = async (): Promise<UserSession[]> => {
       .order('login_time', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching login history:', error);
+      secureLogger.error('❌ Error fetching login history:', error);
       throw error;
     }
 
@@ -253,10 +253,10 @@ export const getRecentLoginHistory = async (): Promise<UserSession[]> => {
       tenant_name: record.tenant_name || 'Unknown Tenant'
     }));
 
-    console.log(`📜 Retrieved ${loginHistory.length} login history records`);
+    secureLogger.debug(`📜 Retrieved ${loginHistory.length} login history records`);
     return loginHistory;
   } catch (error) {
-    console.error('Failed to fetch login history:', error);
+    secureLogger.error('Failed to fetch login history:', error);
     return [];
   }
 };
@@ -273,7 +273,7 @@ export const getSystemStats = async () => {
       systemStatus: 'online'
     };
   } catch (error) {
-    console.error('Failed to get system stats:', error);
+    secureLogger.error('Failed to get system stats:', error);
     return {
       activeSessionCount: 0,
       systemStatus: 'error'
@@ -286,22 +286,22 @@ export const getSystemStats = async () => {
  */
 export const cleanupOldSessions = async () => {
   try {
-    console.log('🧹 Cleaning up old sessions...');
+    secureLogger.debug('🧹 Cleaning up old sessions...');
     
     const { data, error } = await supabase.rpc('cleanup_old_sessions');
 
     if (error) {
-      console.error('Error cleaning up sessions:', error);
+      secureLogger.error('Error cleaning up sessions:', error);
       throw error;
     }
 
-    console.log(`✅ Cleanup complete - Sessions deleted: ${data || 0}`);
+    secureLogger.debug(`✅ Cleanup complete - Sessions deleted: ${data || 0}`);
     
     return {
       sessionsDeleted: data || 0
     };
   } catch (error) {
-    console.error('Failed to cleanup old sessions:', error);
+    secureLogger.error('Failed to cleanup old sessions:', error);
     return { sessionsDeleted: 0 };
   }
 };
@@ -336,20 +336,20 @@ export const getClientIpAddress = async (): Promise<string | null> => {
           // Handle different response formats
           const ip = data.ip || data.query || 'unknown';
           if (ip && ip !== 'unknown' && ip.length > 6) {
-            console.log(`🌐 Detected IP address: ${ip} (via ${service})`);
+            secureLogger.debug(`🌐 Detected IP address: ${ip} (via ${service})`);
             return ip;
           }
         }
       } catch (serviceError) {
-        console.log(`IP service ${service} failed:`, serviceError);
+        secureLogger.debug(`IP service ${service} failed:`, serviceError);
         continue;
       }
     }
     
-    console.warn('⚠️ Could not detect IP address, using NULL');
+    secureLogger.warn('⚠️ Could not detect IP address, using NULL');
     return null; // Return null for database compatibility
   } catch (error) {
-    console.error('❌ IP detection failed:', error);
+    secureLogger.error('❌ IP detection failed:', error);
     return null; // Return null for database compatibility
   }
 };
@@ -362,42 +362,42 @@ export const initializeSessionTracking = async (tenantId?: string) => {
     // Check authentication first
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('❌ No authenticated user found for session tracking');
+      secureLogger.error('❌ No authenticated user found for session tracking');
       return null;
     }
 
-    console.log('👤 Creating session for user:', user.email, 'ID:', user.id);
+    secureLogger.debug('👤 Creating session for user:', user.email, 'ID:', user.id);
 
     // Start IP detection in background - don't wait for it
     const ipPromise = getClientIpAddress();
     const userAgent = navigator.userAgent;
     
-    console.log('🔐 Initializing session tracking (async)...');
+    secureLogger.debug('🔐 Initializing session tracking (async)...');
     
     // Create session in background without blocking login
     ipPromise.then(async (ipAddress) => {
       try {
-        console.log('🌐 Got IP address:', ipAddress, 'creating session...');
+        secureLogger.debug('🌐 Got IP address:', ipAddress, 'creating session...');
         const sessionId = await createUserSession(ipAddress, userAgent, tenantId);
         
         if (sessionId) {
-          console.log('✅ Session tracking completed successfully:', sessionId);
+          secureLogger.debug('✅ Session tracking completed successfully:', sessionId);
         } else {
-          console.warn('⚠️ Session creation returned null');
+          secureLogger.warn('⚠️ Session creation returned null');
         }
       } catch (error) {
-        console.warn('⚠️ Background session creation failed:', error);
+        secureLogger.warn('⚠️ Background session creation failed:', error);
       }
     }).catch(error => {
-      console.warn('⚠️ Background session tracking failed:', error);
+      secureLogger.warn('⚠️ Background session tracking failed:', error);
     });
     
     // Return immediately - don't block login
-    console.log('🚀 Login proceeding while session creates in background');
+    secureLogger.debug('🚀 Login proceeding while session creates in background');
     return null; // We don't wait for the session ID
     
   } catch (error) {
-    console.error('❌ Failed to initialize session tracking:', error);
+    secureLogger.error('❌ Failed to initialize session tracking:', error);
     return null;
   }
 };

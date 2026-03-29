@@ -50,42 +50,42 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
   } = options;
 
   try {
-    console.log('🚀 Transfer patient:', sourcePatientId, 'to', targetTenantId);
-    console.log('🔍 sourcePatientId type:', typeof sourcePatientId, 'value:', JSON.stringify(sourcePatientId));
+    secureLogger.debug('🚀 Transfer patient:', sourcePatientId, 'to', targetTenantId);
+    secureLogger.debug('🔍 sourcePatientId type:', typeof sourcePatientId, 'value:', JSON.stringify(sourcePatientId));
 
     // Determine if sourcePatientId is a UUID or a patient_id string
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sourcePatientId);
-    console.log('🔍 Is UUID?', isUUID);
+    secureLogger.debug('🔍 Is UUID?', isUUID);
     
     let patientIdString: string;
     
     if (isUUID) {
       // sourcePatientId is a UUID, get the patient_id string
-      console.log('🔍 Looking up patient by UUID:', sourcePatientId);
+      secureLogger.debug('🔍 Looking up patient by UUID:', sourcePatientId);
       const { data: patient, error: lookupError } = await supabase
         .from('patients')
         .select('patient_id, first_name, last_name')
         .eq('id', sourcePatientId)
         .single();
       
-      console.log('🔍 Patient lookup result:', { patient, lookupError });
+      secureLogger.debug('🔍 Patient lookup result:', { patient, lookupError });
       
       if (!patient) {
         throw new Error('Patient not found');
       }
       
       patientIdString = patient.patient_id;
-      console.log('🔍 Found patient_id string:', patientIdString);
+      secureLogger.debug('🔍 Found patient_id string:', patientIdString);
     } else {
       // sourcePatientId is already a patient_id string
       patientIdString = sourcePatientId;
-      console.log('🔍 Using sourcePatientId as patient_id string:', patientIdString);
+      secureLogger.debug('🔍 Using sourcePatientId as patient_id string:', patientIdString);
     }
     
-    console.log('✅ Using patient_id string:', patientIdString);
+    secureLogger.debug('✅ Using patient_id string:', patientIdString);
 
     if (preserveOriginal) {
-      console.log('📝 Calling duplicate_patient_to_tenant with params:', {
+      secureLogger.debug('📝 Calling duplicate_patient_to_tenant with params:', {
         p_source_patient_id: patientIdString,
         p_target_tenant_id: targetTenantId,
         p_new_patient_id: newPatientId || null,
@@ -121,7 +121,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         });
 
       if (error) {
-        console.error('SQL error:', error);
+        secureLogger.error('SQL error:', error);
         return {
           success: false,
           message: 'Failed to duplicate patient',
@@ -129,12 +129,12 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
         };
       }
 
-      console.log('Raw RPC response:', { data, type: typeof data, isArray: Array.isArray(data) });
+      secureLogger.debug('Raw RPC response:', { data, type: typeof data, isArray: Array.isArray(data) });
       
       // When RETURNS TABLE is used, Supabase returns an array of rows
       // data is already the array: [{ success: true, new_patient_id: 'uuid', ... }]
       const result = Array.isArray(data) ? data[0] : data;
-      console.log('Parsed result:', result);
+      secureLogger.debug('Parsed result:', result);
 
       if (!result || !result.success) {
         return {
@@ -146,9 +146,9 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
 
       // Check if patient was actually created
       if (!result.new_patient_id) {
-        console.error('⚠️ WARNING: Function returned success but new_patient_id is null!');
-        console.error('This indicates the database function may have an issue or is returning the wrong format.');
-        console.error('Result:', result);
+        secureLogger.error('⚠️ WARNING: Function returned success but new_patient_id is null!');
+        secureLogger.error('This indicates the database function may have an issue or is returning the wrong format.');
+        secureLogger.error('Result:', result);
       }
 
       return {
@@ -164,7 +164,7 @@ export const transferPatient = async (options: PatientTransferOptions): Promise<
       message: 'Move not implemented yet'
     };
   } catch (error) {
-    console.error('Error:', error);
+    secureLogger.error('Error:', error);
     return {
       success: false,
       message: 'Transfer failed',
@@ -215,7 +215,7 @@ export const getAvailableTenantsForTransfer = async (sourcePatientId: string) =>
       });
 
     if (error) {
-      console.error('SQL error:', error);
+      secureLogger.error('SQL error:', error);
       // Fallback using current tenant ID
       const { data: fallback } = await supabase
         .from('tenants')
@@ -236,7 +236,7 @@ export const getAvailableTenantsForTransfer = async (sourcePatientId: string) =>
       subdomain: t.subdomain
     })) || [];
   } catch (error) {
-    console.error('Error:', error);
+    secureLogger.error('Error:', error);
     return [];
   }
 };

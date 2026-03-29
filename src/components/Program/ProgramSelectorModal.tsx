@@ -37,7 +37,7 @@ export const ProgramSelectorModal: React.FC = () => {
       // Reload the page to trigger TenantContext to load the selected program tenant
       window.location.reload();
     } catch (err) {
-      console.error('Error selecting program:', err);
+      secureLogger.error('Error selecting program:', err);
       setError(err instanceof Error ? err.message : 'Failed to select program');
       setSelecting(false);
     }

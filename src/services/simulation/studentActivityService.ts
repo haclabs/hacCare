@@ -236,7 +236,7 @@ export async function getStudentActivitiesBySimulation(
   simulationId: string
 ): Promise<StudentActivity[]> {
   try {
-    console.log('🎯 getStudentActivitiesBySimulation called with simulation ID:', simulationId);
+    secureLogger.debug('🎯 getStudentActivitiesBySimulation called with simulation ID:', simulationId);
     
     // Try to get tenant_id AND start time from simulation_active first, then simulation_history
     let tenantId: string | null = null;
@@ -248,42 +248,42 @@ export async function getStudentActivitiesBySimulation(
       .eq('id', simulationId)
       .maybeSingle();
 
-    console.log('📋 Active simulation query result:', { activeSim, activeError });
+    secureLogger.debug('📋 Active simulation query result:', { activeSim, activeError });
 
     if (activeSim?.tenant_id) {
       tenantId = activeSim.tenant_id;
       simulationStartTime = activeSim.starts_at;
-      console.log('✅ Found in simulation_active with tenant_id:', tenantId, 'starts_at:', simulationStartTime);
+      secureLogger.debug('✅ Found in simulation_active with tenant_id:', tenantId, 'starts_at:', simulationStartTime);
     } else {
       // Not in active, check history
-      console.log('🔍 Not in active, checking simulation_history...');
+      secureLogger.debug('🔍 Not in active, checking simulation_history...');
       const { data: historySim, error: historyError } = await supabase
         .from('simulation_history')
         .select('tenant_id, started_at')
         .eq('id', simulationId)
         .maybeSingle();
       
-      console.log('📜 History simulation query result:', { historySim, historyError });
+      secureLogger.debug('📜 History simulation query result:', { historySim, historyError });
       
       if (historySim?.tenant_id) {
         tenantId = historySim.tenant_id;
         simulationStartTime = historySim.started_at;
-        console.log('✅ Found in simulation_history with tenant_id:', tenantId, 'started_at:', simulationStartTime);
+        secureLogger.debug('✅ Found in simulation_history with tenant_id:', tenantId, 'started_at:', simulationStartTime);
       }
     }
 
     if (!tenantId) {
-      console.warn('❌ Could not determine tenant for simulation:', simulationId);
+      secureLogger.warn('❌ Could not determine tenant for simulation:', simulationId);
       return [];
     }
 
     if (!simulationStartTime) {
-      console.warn('⚠️ No start time found for simulation - data may include historical records');
+      secureLogger.warn('⚠️ No start time found for simulation - data may include historical records');
     } else {
-      console.log('📅 Filtering activities after:', simulationStartTime);
+      secureLogger.debug('📅 Filtering activities after:', simulationStartTime);
     }
 
-    console.log('🔍 Looking for patient(s) with tenant_id:', tenantId);
+    secureLogger.debug('🔍 Looking for patient(s) with tenant_id:', tenantId);
 
     // Get the patient_id for this tenant (limit 1 in case there are duplicates)
     const { data: patients, error: patientError } = await supabase
@@ -293,20 +293,20 @@ export async function getStudentActivitiesBySimulation(
       .limit(1);
 
     if (patientError) {
-      console.error('Error fetching patient:', patientError);
+      secureLogger.error('Error fetching patient:', patientError);
     }
 
     const patient = patients?.[0];
-    console.log('👤 Patient found:', patient);
+    secureLogger.debug('👤 Patient found:', patient);
 
     if (!patient?.id) {
       // No patient found - return empty results instead of error
-      console.warn('⚠️ No patient found for tenant_id:', tenantId, '- returning empty activities');
+      secureLogger.warn('⚠️ No patient found for tenant_id:', tenantId, '- returning empty activities');
       return [];
     }
 
     const patientId = patient.id;
-    console.log('✅ Using patient_id:', patientId, 'for student activity queries');
+    secureLogger.debug('✅ Using patient_id:', patientId, 'for student activity queries');
 
     // Fetch all activities in parallel
     const [
@@ -347,7 +347,7 @@ export async function getStudentActivitiesBySimulation(
         .gte('timestamp', simulationStartTime || '1970-01-01')
         .order('timestamp', { ascending: false })
         .then(result => {
-          console.log('💊 Medications query result:', { 
+          secureLogger.debug('💊 Medications query result:', { 
             count: result.data?.length || 0, 
             error: result.error,
             data: result.data 
@@ -375,7 +375,7 @@ export async function getStudentActivitiesBySimulation(
         .not('student_name', 'is', null)
         .order('ack_at', { ascending: false})
         .then(result => {
-          console.log('🧪 Lab Ack Events query result:', {
+          secureLogger.debug('🧪 Lab Ack Events query result:', {
             count: result.data?.length || 0,
             error: result.error,
             data: result.data
@@ -432,7 +432,7 @@ export async function getStudentActivitiesBySimulation(
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
-          console.log('🔧 Devices query result:', {
+          secureLogger.debug('🔧 Devices query result:', {
             count: result.data?.length || 0,
             error: result.error,
             data: result.data
@@ -450,7 +450,7 @@ export async function getStudentActivitiesBySimulation(
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
-          console.log('🩹 Wounds query result:', {
+          secureLogger.debug('🩹 Wounds query result:', {
             count: result.data?.length || 0,
             error: result.error,
             data: result.data
@@ -468,7 +468,7 @@ export async function getStudentActivitiesBySimulation(
         .gte('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
         .then(result => {
-          console.log('🔧📋 Device Assessments query result:', {
+          secureLogger.debug('🔧📋 Device Assessments query result:', {
             count: result.data?.length || 0,
             error: result.error,
             data: result.data
@@ -486,7 +486,7 @@ export async function getStudentActivitiesBySimulation(
         .gte('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
         .then(result => {
-          console.log('🩹📋 Wound Assessments query result:', {
+          secureLogger.debug('🩹📋 Wound Assessments query result:', {
             count: result.data?.length || 0,
             error: result.error,
             data: result.data
@@ -504,7 +504,7 @@ export async function getStudentActivitiesBySimulation(
         .not('student_name', 'is', null)
         .order('event_timestamp', { ascending: false })
         .then(result => {
-          console.log('💧 I&O Events query result:', {
+          secureLogger.debug('💧 I&O Events query result:', {
             count: result.data?.length || 0,
             error: result.error,
             tenantId,
@@ -525,7 +525,7 @@ export async function getStudentActivitiesBySimulation(
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
-          console.log('📜 Advanced Directives query result:', {
+          secureLogger.debug('📜 Advanced Directives query result:', {
             count: result.data?.length || 0,
             error: result.error,
             data: result.data
@@ -608,10 +608,10 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process medication administrations (BCMA)
-    console.log('💊 Processing medications:', medicationsData.data?.length || 0);
-    console.log('💊 ALL medication data:', medicationsData.data);
+    secureLogger.debug('💊 Processing medications:', medicationsData.data?.length || 0);
+    secureLogger.debug('💊 ALL medication data:', medicationsData.data);
     medicationsData.data?.forEach((med: any) => {
-      console.log('💊 Med details:', {
+      secureLogger.debug('💊 Med details:', {
         id: med.id,
         student_name: med.student_name,
         medication_name: med.medication_name,
@@ -619,7 +619,7 @@ export async function getStudentActivitiesBySimulation(
         timestamp: med.timestamp
       });
       if (!med.student_name) {
-        console.warn('⚠️ Medication missing student_name:', med);
+        secureLogger.warn('⚠️ Medication missing student_name:', med);
         return;
       }
       const student = getOrCreateStudent(med.student_name);
@@ -656,9 +656,9 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process lab acknowledgements from lab_ack_events (has student_name and note)
-    console.log('🧪 Processing lab ack events:', labAcksData.data?.length || 0);
+    secureLogger.debug('🧪 Processing lab ack events:', labAcksData.data?.length || 0);
     labAcksData.data?.forEach((ackEvent: any) => {
-      console.log('🧪 Lab ack event:', {
+      secureLogger.debug('🧪 Lab ack event:', {
         id: ackEvent.id,
         student_name: ackEvent.student_name,
         note: ackEvent.note,
@@ -667,7 +667,7 @@ export async function getStudentActivitiesBySimulation(
       });
       
       if (!ackEvent.student_name) {
-        console.warn('⚠️ Lab ack event missing student_name:', ackEvent);
+        secureLogger.warn('⚠️ Lab ack event missing student_name:', ackEvent);
         return;
       }
       
@@ -675,14 +675,14 @@ export async function getStudentActivitiesBySimulation(
       
       // Parse abnormal_summary to get lab details
       const abnormalTests = ackEvent.abnormal_summary || [];
-      console.log('🧪 Abnormal tests array:', abnormalTests);
+      secureLogger.debug('🧪 Abnormal tests array:', abnormalTests);
       
       if (Array.isArray(abnormalTests) && abnormalTests.length > 0) {
         abnormalTests.forEach((test: any) => {
           const value = test.value !== null && test.value !== undefined ? test.value : '-';
           const units = test.units ? ' ' + test.units : '';
           
-          console.log('🧪 Adding lab ack entry:', {
+          secureLogger.debug('🧪 Adding lab ack entry:', {
             test_name: test.test_name || test.test_code,
             result_value: value + units,
             note: ackEvent.note
@@ -699,7 +699,7 @@ export async function getStudentActivitiesBySimulation(
           student.totalEntries++;
         });
       } else {
-        console.warn('⚠️ No abnormal tests in abnormal_summary for ack event:', ackEvent.id);
+        secureLogger.warn('⚠️ No abnormal tests in abnormal_summary for ack event:', ackEvent.id);
       }
     });
 
@@ -847,10 +847,10 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process intake & output events
-    console.log('💧 Processing intake/output:', intakeOutputData.data?.length || 0);
-    console.log('💧 ALL I&O data:', intakeOutputData.data);
+    secureLogger.debug('💧 Processing intake/output:', intakeOutputData.data?.length || 0);
+    secureLogger.debug('💧 ALL I&O data:', intakeOutputData.data);
     intakeOutputData.data?.forEach((io: any) => {
-      console.log('💧 I&O entry:', {
+      secureLogger.debug('💧 I&O entry:', {
         id: io.id,
         student_name: io.student_name,
         direction: io.direction,
@@ -859,11 +859,11 @@ export async function getStudentActivitiesBySimulation(
         event_timestamp: io.event_timestamp
       });
       if (!io.student_name) {
-        console.warn('⚠️ I&O entry missing student_name:', io);
+        secureLogger.warn('⚠️ I&O entry missing student_name:', io);
         return; // Skip entries without student_name
       }
       const student = getOrCreateStudent(io.student_name);
-      console.log('💧 Adding I&O entry to student:', student.studentName);
+      secureLogger.debug('💧 Adding I&O entry to student:', student.studentName);
       student.activities.intakeOutput.push({
         id: io.id,
         event_timestamp: io.event_timestamp,
@@ -945,9 +945,9 @@ export async function getStudentActivitiesBySimulation(
     // Convert map to array and sort by total entries
     const result = Array.from(studentMap.values()).sort((a, b) => b.totalEntries - a.totalEntries);
     
-    console.log('📊 FINAL RESULT - Total students:', result.length);
+    secureLogger.debug('📊 FINAL RESULT - Total students:', result.length);
     result.forEach((student, index) => {
-      console.log(`👤 Student ${index + 1}:`, {
+      secureLogger.debug(`👤 Student ${index + 1}:`, {
         name: student.studentName,
         totalEntries: student.totalEntries,
         vitals: student.activities.vitals.length,
@@ -962,17 +962,17 @@ export async function getStudentActivitiesBySimulation(
       
       // Debug: Show lab acknowledgement details with notes
       if (student.activities.labAcknowledgements.length > 0) {
-        console.log(`🔬 Lab Acknowledgements for ${student.studentName}:`, student.activities.labAcknowledgements);
+        secureLogger.debug(`🔬 Lab Acknowledgements for ${student.studentName}:`, student.activities.labAcknowledgements);
       }
     });
     
     if (result.length === 0) {
-      console.warn('⚠️ NO STUDENTS FOUND - Check if any activities have student_name set');
+      secureLogger.warn('⚠️ NO STUDENTS FOUND - Check if any activities have student_name set');
     }
     
     return result;
   } catch (error: any) {
-    console.error('Error fetching student activities:', error);
+    secureLogger.error('Error fetching student activities:', error);
     throw error;
   }
 }

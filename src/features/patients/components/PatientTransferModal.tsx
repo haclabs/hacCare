@@ -59,7 +59,7 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
       const tenants = await getAvailableTenantsForTransfer(patient.id);
       setAvailableTenants(tenants);
     } catch (error) {
-      console.error('Failed to load tenants:', error);
+      secureLogger.error('Failed to load tenants:', error);
       setError('Failed to load available tenants');
     }
   };

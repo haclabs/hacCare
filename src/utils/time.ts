@@ -26,7 +26,7 @@ export const formatLocalTime = (date: Date | string, formatString: string): stri
     // Format using date-fns with the user's local timezone
     return format(dateObj, formatString);
   } catch (error) {
-    console.error('Error formatting local time:', error);
+    secureLogger.error('Error formatting local time:', error);
     return 'Invalid Date';
   }
 };
@@ -51,7 +51,7 @@ export const formatDate = (dateValue: string | Date | null | undefined, formatSt
     
     return format(date, formatString);
   } catch (error) {
-    console.error('Error formatting date:', error);
+    secureLogger.error('Error formatting date:', error);
     return 'Invalid Date';
   }
 };
@@ -90,7 +90,7 @@ export const getRelativeTime = (date: Date | string): string => {
       return format(dateObj, 'MMM dd, yyyy');
     }
   } catch (error) {
-    console.error('Error calculating relative time:', error);
+    secureLogger.error('Error calculating relative time:', error);
     return 'Unknown time';
   }
 };
@@ -116,7 +116,7 @@ export const isToday = (date: Date | string): boolean => {
       dateObj.getFullYear() === today.getFullYear()
     );
   } catch (error) {
-    console.error('Error checking if date is today:', error);
+    secureLogger.error('Error checking if date is today:', error);
     return false;
   }
 };
@@ -141,7 +141,7 @@ export const format24HourDateTime = (dateValue: Date | string | null | undefined
     // Format: "MMM dd, yyyy, HH:mm" (e.g., "Nov 02, 2025, 14:30")
     return format(date, 'MMM dd, yyyy, HH:mm');
   } catch (error) {
-    console.error('Error formatting 24-hour date time:', error);
+    secureLogger.error('Error formatting 24-hour date time:', error);
     return 'Invalid Date';
   }
 };
@@ -165,7 +165,7 @@ export const format24HourTime = (dateValue: Date | string | null | undefined): s
     // Format: "HH:mm" (e.g., "14:30")
     return format(date, 'HH:mm');
   } catch (error) {
-    console.error('Error formatting 24-hour time:', error);
+    secureLogger.error('Error formatting 24-hour time:', error);
     return 'Invalid Time';
   }
 };

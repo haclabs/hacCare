@@ -47,15 +47,15 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
     const start = new Date(startDate);
     const now = new Date();
     
-    console.log('Calculating next due time:');
-    console.log('- Frequency:', frequency);
-    console.log('- Start date:', startDate);
-    console.log('- Admin time:', adminTime);
-    console.log('- Current time:', now.toISOString());
+    secureLogger.debug('Calculating next due time:');
+    secureLogger.debug('- Frequency:', frequency);
+    secureLogger.debug('- Start date:', startDate);
+    secureLogger.debug('- Admin time:', adminTime);
+    secureLogger.debug('- Current time:', now.toISOString());
     
     // Parse admin time (HH:MM format)
     const [hours, minutes] = adminTime.split(':').map(Number);
-    console.log('- Parsed hours:', hours, 'minutes:', minutes);
+    secureLogger.debug('- Parsed hours:', hours, 'minutes:', minutes);
     
     // If start date is in the future, use start date with admin time
     if (start > now) {
@@ -90,18 +90,18 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
         const today = new Date(now);
         const todayAdmin = setHours(setMinutes(today, minutes), hours);
         
-        console.log('- Today admin time:', todayAdmin.toISOString());
-        console.log('- Current time vs today admin:', now < todayAdmin ? 'before' : 'after');
+        secureLogger.debug('- Today admin time:', todayAdmin.toISOString());
+        secureLogger.debug('- Current time vs today admin:', now < todayAdmin ? 'before' : 'after');
         
         // If today's admin time hasn't passed, use it; otherwise, use tomorrow
         if (todayAdmin > now) {
-          console.log('- Using today admin time');
+          secureLogger.debug('- Using today admin time');
           return todayAdmin.toISOString();
         } else {
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
           const tomorrowAdmin = setHours(setMinutes(tomorrow, minutes), hours);
-          console.log('- Using tomorrow admin time:', tomorrowAdmin.toISOString());
+          secureLogger.debug('- Using tomorrow admin time:', tomorrowAdmin.toISOString());
           return tomorrowAdmin.toISOString();
         }
       }
@@ -303,9 +303,9 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           admin_times: formData.adminTimes.length > 0 ? formData.adminTimes : null
         };
         
-        console.log('Updating existing medication:', medicationData);
+        secureLogger.debug('Updating existing medication:', medicationData);
         const updatedMedication = await updateMedication(medication.id, medicationData);
-        console.log('Medication updated successfully:', updatedMedication);
+        secureLogger.debug('Medication updated successfully:', updatedMedication);
         onSuccess(updatedMedication);
       } else {
         // Create new medication - exclude ID to let database generate it
@@ -325,13 +325,13 @@ export const MedicationForm: React.FC<MedicationFormProps> = ({
           admin_times: formData.adminTimes.length > 0 ? formData.adminTimes : null
         };
         
-        console.log('Creating new medication:', medicationData);
+        secureLogger.debug('Creating new medication:', medicationData);
         const newMedication = await createMedication(medicationData);
-        console.log('New medication added successfully:', newMedication);
+        secureLogger.debug('New medication added successfully:', newMedication);
         onSuccess(newMedication);
       }
     } catch (error) {
-      console.error('Error saving medication:', error);
+      secureLogger.error('Error saving medication:', error);
       setErrors({ general: 'Failed to save medication. Please try again.' });
     } finally {
       setLoading(false);

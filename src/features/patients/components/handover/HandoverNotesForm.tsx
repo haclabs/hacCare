@@ -85,7 +85,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
       
       onClose();
     } catch (error) {
-      console.error('Error saving handover note:', error);
+      secureLogger.error('Error saving handover note:', error);
       alert('Failed to save handover note. Please try again.');
     } finally {
       setLoading(false);

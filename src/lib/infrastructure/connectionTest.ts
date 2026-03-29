@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../api/supabase';
+import { secureLogger } from '../security/secureLogger';
 
 /**
  * Connection Test Utility
@@ -11,7 +12,7 @@ import { supabase, isSupabaseConfigured } from '../api/supabase';
  * Tests various aspects of the Supabase connection and returns detailed results
  */
 export const runConnectionTest = async () => {
-  console.log('🔍 Running comprehensive Supabase connection test...');
+  secureLogger.debug('Running comprehensive Supabase connection test...');
   
   const results = {
     configPresent: false,
@@ -30,7 +31,7 @@ export const runConnectionTest = async () => {
   
   if (!results.configPresent) {
     results.errors.push('Supabase configuration missing. Check your .env file.');
-    console.error('❌ Supabase configuration missing');
+    secureLogger.error('Supabase configuration missing');
     return results;
   }
   
@@ -39,7 +40,7 @@ export const runConnectionTest = async () => {
   
   if (!results.configValid) {
     results.errors.push('Supabase configuration invalid. URL should start with https:// and include .supabase.co');
-    console.error('❌ Supabase configuration invalid');
+    secureLogger.error('Supabase configuration invalid');
     return results;
   }
   
@@ -50,10 +51,10 @@ export const runConnectionTest = async () => {
       mode: 'no-cors'
     });
     results.networkReachable = true;
-    console.log('✅ Network connectivity test passed');
+    secureLogger.debug('Network connectivity test passed');
   } catch (error) {
     results.errors.push(`Network connectivity issue: ${error}`);
-    console.error('❌ Network connectivity test failed:', error);
+    secureLogger.error('Network connectivity test failed', error);
     return results;
   }
   
@@ -64,13 +65,13 @@ export const runConnectionTest = async () => {
     
     if (error) {
       results.errors.push(`Auth service error: ${error.message}`);
-      console.error('❌ Auth service test failed:', error);
+      secureLogger.error('Auth service test failed', error);
     } else {
-      console.log('✅ Auth service test passed');
+      secureLogger.debug('Auth service test passed');
     }
   } catch (error: any) {
     results.errors.push(`Auth service exception: ${error.message}`);
-    console.error('❌ Auth service test exception:', error);
+    secureLogger.error('Auth service test exception', error);
   }
   
   // Test database query
@@ -84,16 +85,16 @@ export const runConnectionTest = async () => {
     
     if (error) {
       results.errors.push(`Database query error: ${error.message}`);
-      console.error('❌ Database query test failed:', error);
+      secureLogger.error('Database query test failed', error);
     } else {
-      console.log('✅ Database query test passed');
+      secureLogger.debug('Database query test passed');
     }
   } catch (error: any) {
     results.errors.push(`Database query exception: ${error.message}`);
-    console.error('❌ Database query test exception:', error);
+    secureLogger.error('Database query test exception', error);
   }
   
-  console.log('🔍 Connection test results:', results);
+  secureLogger.debug('Connection test complete', { results });
   return results;
 };
 

@@ -46,7 +46,7 @@ export const CreateLabPanelModal: React.FC<CreateLabPanelModalProps> = ({
 
     if (err) {
       setError('Failed to create lab panel');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
     } else {
       onSuccess();

@@ -13,27 +13,27 @@ export const AuthCallback = () => {
     // Handle the OAuth callback
     const handleCallback = async () => {
       try {
-        console.log('🔄 Processing OAuth callback...');
+        secureLogger.debug('🔄 Processing OAuth callback...');
         
         // Get the session from the URL hash
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('❌ OAuth callback error:', error);
+          secureLogger.error('❌ OAuth callback error:', error);
           navigate('/login?error=oauth_failed');
           return;
         }
 
         if (data.session) {
-          console.log('✅ OAuth session established:', data.session.user.email);
+          secureLogger.debug('✅ OAuth session established:', data.session.user.email);
           // The AuthContext will handle the rest, redirect to app
           navigate('/app');
         } else {
-          console.warn('⚠️ No session found in callback');
+          secureLogger.warn('⚠️ No session found in callback');
           navigate('/login?error=no_session');
         }
       } catch (error) {
-        console.error('❌ Unexpected error in OAuth callback:', error);
+        secureLogger.error('❌ Unexpected error in OAuth callback:', error);
         navigate('/login?error=unexpected');
       }
     };

@@ -56,7 +56,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       
       setFormData(emptyRecord);
     } catch (err: any) {
-      console.error('Error loading admission record:', err);
+      secureLogger.error('Error loading admission record:', err);
       setError(err.message || 'Failed to load admission record');
     } finally {
       setLoading(false);
@@ -83,8 +83,8 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       
       // Save to database
       const savedRecord = await upsertAdmissionRecord(formData);
-      console.log('Admission record saved successfully:', savedRecord);
-      console.log('Admission record saved successfully');
+      secureLogger.debug('Admission record saved successfully:', savedRecord);
+      secureLogger.debug('Admission record saved successfully');
       
       // Refresh patient data to reflect changes
       await refreshPatients();
@@ -95,7 +95,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
         onClose();
       }
     } catch (err: any) {
-      console.error('Error saving admission record:', err);
+      secureLogger.error('Error saving admission record:', err);
       setError(err.message || 'Failed to save admission record');
     } finally {
       setSaving(false);

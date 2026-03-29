@@ -7,22 +7,21 @@
 
 import { getTenantBySubdomain } from '../../services/admin/tenantService';
 import { Tenant } from '../../types';
+import { secureLogger } from '../security/secureLogger';
 
 /**
  * Extract subdomain from current URL
  */
 export function getCurrentSubdomain(): string | null {
   // Debug logging for production troubleshooting
-  console.log('🌐 Subdomain Detection Debug:', {
+  secureLogger.debug('Subdomain Detection', {
     isDev: import.meta.env.DEV,
     hostname: window.location.hostname,
-    env: import.meta.env.MODE,
-    href: window.location.href
+    env: import.meta.env.MODE
   });
 
   // In development, return null (no subdomain routing)
   if (import.meta.env.DEV) {
-    console.log('🚫 Development mode detected - subdomain routing disabled');
     return null;
   }
 
@@ -30,18 +29,14 @@ export function getCurrentSubdomain(): string | null {
   
   // Handle localhost and development environments
   if (hostname === 'localhost' || hostname.includes('127.0.0.1') || hostname.includes('.local')) {
-    console.log('🚫 Localhost detected - subdomain routing disabled');
     return null;
   }
 
   // Split hostname into parts
   const parts = hostname.split('.');
   
-  console.log('🔍 Hostname parts:', parts);
-  
   // Need at least 3 parts for subdomain (subdomain.domain.com)
   if (parts.length < 3) {
-    console.log('🚫 Not enough hostname parts for subdomain');
     return null;
   }
 
@@ -49,7 +44,7 @@ export function getCurrentSubdomain(): string | null {
   const subdomain = parts[0];
   const result = subdomain === 'www' ? null : subdomain;
   
-  console.log('✅ Subdomain detected:', result);
+  secureLogger.debug('Subdomain detected', { result });
   return result;
 }
 

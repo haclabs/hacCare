@@ -1205,12 +1205,12 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
       setLoading(true);
       setError(null);
       
-      console.log('🏷️ Fetching labels for simulation:', simulationName);
-      console.log('🆔 Using Tenant ID:', tenantId);
+      secureLogger.debug('🏷️ Fetching labels for simulation:', simulationName);
+      secureLogger.debug('🆔 Using Tenant ID:', tenantId);
       
       const labelsData = await fetchAllLabelsForPrinting(tenantId);
       
-      console.log('✅ Successfully loaded labels:', {
+      secureLogger.debug('✅ Successfully loaded labels:', {
         patients: labelsData.patients.length,
         medications: labelsData.medications.length,
         simulation: simulationName
@@ -1218,7 +1218,7 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
       
       setLabels(labelsData);
     } catch (err) {
-      console.error('❌ Error fetching labels:', err);
+      secureLogger.error('❌ Error fetching labels:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch label data');
     } finally {
       setLoading(false);

@@ -65,9 +65,9 @@ export const HandoverNotes: React.FC<HandoverNotesProps> = ({
       await createHandoverNote(noteData);
       setRefreshKey(prev => prev + 1); // Trigger refresh
       onParentRefresh?.(); // Call parent refresh
-      console.log('✅ Handover note created successfully');
+      secureLogger.debug('✅ Handover note created successfully');
     } catch (error) {
-      console.error('Error creating handover note:', error);
+      secureLogger.error('Error creating handover note:', error);
       throw error; // Re-throw to let form handle the error
     }
   };

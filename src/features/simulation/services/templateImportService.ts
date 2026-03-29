@@ -133,7 +133,7 @@ export async function importSimulationTemplate(
     );
 
     if (createError) {
-      console.error('Error creating template:', createError);
+      secureLogger.error('Error creating template:', createError);
       return {
         success: false,
         error: `Failed to create template: ${createError.message}`,
@@ -155,11 +155,11 @@ export async function importSimulationTemplate(
     const snapshotData = exportPackage.snapshot.data;
 
     if (options.preserve_patient_ids) {
-      console.log('Preserving patient UUIDs and barcodes from export');
+      secureLogger.debug('Preserving patient UUIDs and barcodes from export');
       // The snapshot already contains patient UUIDs and barcode IDs
       // These will be used when restoring to tenant
     } else {
-      console.warn('Not preserving patient IDs - new IDs will be generated');
+      secureLogger.warn('Not preserving patient IDs - new IDs will be generated');
       // Could strip IDs here if needed, but generally we want to preserve them
     }
 
@@ -175,7 +175,7 @@ export async function importSimulationTemplate(
       .eq('id', templateId);
 
     if (updateError) {
-      console.error('Error updating template with snapshot:', updateError);
+      secureLogger.error('Error updating template with snapshot:', updateError);
       return {
         success: false,
         error: `Template created but snapshot failed: ${updateError.message}`,
@@ -184,10 +184,10 @@ export async function importSimulationTemplate(
       };
     }
 
-    console.log(`✅ Template imported successfully: ${templateId}`);
-    console.log(`   Tenant: ${tenantId}`);
-    console.log(`   Patients: ${validation.patient_count}`);
-    console.log(`   Medications: ${validation.medication_count}`);
+    secureLogger.debug(`✅ Template imported successfully: ${templateId}`);
+    secureLogger.debug(`   Tenant: ${tenantId}`);
+    secureLogger.debug(`   Patients: ${validation.patient_count}`);
+    secureLogger.debug(`   Medications: ${validation.medication_count}`);
 
     return {
       success: true,
@@ -196,7 +196,7 @@ export async function importSimulationTemplate(
       warnings: validation.warnings,
     };
   } catch (error: any) {
-    console.error('Error importing template:', error);
+    secureLogger.error('Error importing template:', error);
     return {
       success: false,
       error: error.message || 'Unknown error during import',
@@ -264,7 +264,7 @@ export async function importTemplateFromFile(
 
     return result;
   } catch (error: any) {
-    console.error('Error importing template from file:', error);
+    secureLogger.error('Error importing template from file:', error);
     return {
       success: false,
       error: error.message || 'Failed to import template',

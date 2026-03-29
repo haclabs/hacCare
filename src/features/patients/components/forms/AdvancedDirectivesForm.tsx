@@ -46,7 +46,7 @@ interface AdvancedDirectivesFormProps {
       
       setFormData(emptyDirective);
     } catch (err: any) {
-      console.error('Error loading advanced directive:', err);
+      secureLogger.error('Error loading advanced directive:', err);
       setError(err.message || 'Failed to load advanced directive');
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ interface AdvancedDirectivesFormProps {
       
       // Save to database
       const savedDirective = await upsertAdvancedDirective(formData);
-      console.log('Advanced directive saved successfully:', savedDirective);
+      secureLogger.debug('Advanced directive saved successfully:', savedDirective);
       
       if (onSave) {
         onSave();
@@ -87,7 +87,7 @@ interface AdvancedDirectivesFormProps {
         onClose();
       }
     } catch (err: any) {
-      console.error('Error saving advanced directive:', err);
+      secureLogger.error('Error saving advanced directive:', err);
       setError(err.message || 'Failed to save advanced directive');
     } finally {
       setSaving(false);

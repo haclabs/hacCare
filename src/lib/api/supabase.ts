@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { secureLogger } from '../security/secureLogger';
 
 /**
  * Supabase Configuration and Client Setup
@@ -21,18 +22,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
 // Log configuration status for debugging (development only)
 if (import.meta.env.DEV) {
-  console.log('🔧 Supabase Environment Check:');
-  if (supabaseUrl) {
-    console.log('  URL:', `${supabaseUrl.substring(0, 50)}...`);
-  } else {
-    console.error('  URL: Not set - Please check your .env file');
-  }
-
-  if (supabaseAnonKey) {
-    console.log('  Key:', `${supabaseAnonKey.substring(0, 30)}...`);
-  } else {
-    console.error('  Key: Not set - Please check your .env file');
-  }
+  secureLogger.debug('Supabase Environment Check', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlPrefix: supabaseUrl ? supabaseUrl.substring(0, 50) : 'not set',
+    keyPrefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 15) : 'not set'
+  });
 }
 
 /**
@@ -55,18 +50,15 @@ const isValidKey = supabaseAnonKey &&
 const hasValidConfig = isValidUrl && isValidKey;
 
 if (import.meta.env.DEV) {
-  console.log('✅ Configuration valid:', hasValidConfig);
+  secureLogger.debug('Supabase configuration valid', { hasValidConfig });
 }
 
 if (!hasValidConfig) {
   if (import.meta.env.DEV) {
-    console.error('⚠️ Missing or invalid Supabase environment variables:', {
+    secureLogger.warn('Missing or invalid Supabase environment variables', {
       hasUrl: !!supabaseUrl,
-      hasKey: !!supabaseAnonKey,
-      url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'undefined'
+      hasKey: !!supabaseAnonKey
     });
-    console.warn('💡 Copy .env.example to .env and add your Supabase credentials.');
-    console.warn('🔗 Get your credentials from: https://app.supabase.com/project/[your-project]/settings/api');
   }
 }
 
@@ -127,12 +119,12 @@ export interface UserProfile {
  */
 export const checkDatabaseHealth = async (): Promise<boolean> => {
   if (!isSupabaseConfigured) {
-    console.warn('⚠️ Supabase client not properly configured - check environment variables');
+    secureLogger.warn('Supabase client not properly configured - check environment variables');
     return false; 
   }
 
   try {
-    console.log('🔍 Testing database connection...');
+    secureLogger.debug('Testing database connection...');
     
     // Use a simple query with timeout
     const controller = new AbortController(); 
@@ -148,28 +140,26 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
       clearTimeout(timeoutId);
       
       if (error) {
-        console.warn('🔌 Database connection failed:', error.message);
-        console.warn('🔌 Database connection failed - please check your Supabase configuration and internet connection');
+        secureLogger.warn('Database connection failed', { message: error.message });
         return false;
       }
       
-      console.log('✅ Database connection successful');
+      secureLogger.debug('Database connection successful');
       return true;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
-        console.warn('🔌 Database connection timeout - request took too long');
+        secureLogger.warn('Database connection timeout');
       } else {
-        console.warn('🔌 Database connection error:', fetchError.message);
+        secureLogger.warn('Database connection error', { message: fetchError.message });
       }
       
       return false;
     }
     
   } catch (error: any) {
-    // Consolidate all network-related errors into a single informative message
-    console.warn('🔌 Unable to connect to database - please verify your Supabase URL and API key in .env file');
+    secureLogger.warn('Unable to connect to database - check Supabase URL and API key');
     return false;
   }
 };
@@ -179,7 +169,6 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
  */
 export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
   if (!isSupabaseConfigured) {
-    console.log('Supabase not configured, skipping connection test');
     return false; 
   }
 
@@ -187,20 +176,18 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
     try {
       const isHealthy = await checkDatabaseHealth();
       if (isHealthy) {
-        console.log(`✅ Connection successful on attempt ${i + 1}`);
+        secureLogger.debug('Connection successful', { attempt: i + 1 });
         return true;
       }
-      console.log(`❌ Connection attempt ${i + 1} failed, will retry ${retries - i - 1} more times`);
+      secureLogger.debug('Connection attempt failed, retrying', { attempt: i + 1, remaining: retries - i - 1 });
     } catch (error) {
-      console.log(`Connection attempt ${i + 1} failed:`, error);
+      secureLogger.debug('Connection attempt exception', { attempt: i + 1 });
       if (i < retries - 1) {
-        // Wait before retrying (exponential backoff)
         const backoffTime = Math.pow(2, i) * 1000;
-        console.log(`Waiting ${backoffTime}ms before next attempt...`);
         await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
   }
-  console.log('All connection attempts failed');
+  secureLogger.warn('All connection attempts failed');
   return false;
 };

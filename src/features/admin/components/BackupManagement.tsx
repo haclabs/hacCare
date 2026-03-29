@@ -117,7 +117,7 @@ export const BackupManagement: React.FC = () => {
       setBackups(backupList);
     } catch (err) {
       setError('Failed to load backups');
-      console.error('Load backups error:', err);
+      secureLogger.error('Load backups error:', err);
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ export const BackupManagement: React.FC = () => {
       await loadBackups();
     } catch (err: any) {
       setError(`Failed to create backup: ${err.message || 'Unknown error'}`);
-      console.error('Backup creation error:', err);
+      secureLogger.error('Backup creation error:', err);
     } finally {
       setCreating(false);
     }
@@ -205,7 +205,7 @@ export const BackupManagement: React.FC = () => {
       const log = await backupService.getBackupActivityLog(backupId, user!.id);
       setActivityLog(log);
     } catch (err: any) {
-      console.error('Failed to load activity log:', err);
+      secureLogger.error('Failed to load activity log:', err);
       setActivityLog([]);
     } finally {
       setLoadingLog(false);
@@ -618,7 +618,7 @@ export const BackupManagement: React.FC = () => {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        console.log('Selected file:', file.name);
+                        secureLogger.debug('Selected file:', file.name);
                       }
                     }}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"

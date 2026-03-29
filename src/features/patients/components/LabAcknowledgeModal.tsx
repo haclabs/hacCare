@@ -44,7 +44,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
       throw new Error('No tenant selected');
     }
 
-    console.log('🔍 LabAcknowledgeModal - note from modal:', noteFromModal);
+    secureLogger.debug('🔍 LabAcknowledgeModal - note from modal:', noteFromModal);
 
     setLoading(true);
     setError('');
@@ -62,7 +62,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
 
     if (err) {
       setError('Failed to acknowledge labs');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
       throw err; // Re-throw to let modal handle error display
     } else {

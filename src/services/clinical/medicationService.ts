@@ -40,7 +40,7 @@ import { secureLogger } from '../../lib/security/secureLogger';
   try {
     // If simulation mode, fetch from simulation_patient_medications
     if (simulationId) {
-      console.log('Fetching simulation medications for patient:', patientId, 'simulation:', simulationId);
+      secureLogger.debug('Fetching simulation medications for patient:', patientId, 'simulation:', simulationId);
       
       const { data: simData, error: simError } = await supabase
         .from('simulation_patient_medications')
@@ -49,7 +49,7 @@ import { secureLogger } from '../../lib/security/secureLogger';
         .order('created_at', { ascending: false });
 
       if (simError) {
-        console.error('Error fetching simulation medications:', simError);
+        secureLogger.error('Error fetching simulation medications:', simError);
         throw simError;
       }
 
@@ -69,7 +69,7 @@ import { secureLogger } from '../../lib/security/secureLogger';
         status: dbMed.status || 'Active'
       } as Medication));
 
-      console.log('Found', medications.length, 'simulation medications');
+      secureLogger.debug('Found', medications.length, 'simulation medications');
       return medications;
     }
     
@@ -223,11 +223,11 @@ export const debugMedication = async (medicationId: string): Promise<void> => {
       .select('*', { count: 'exact' })
       .eq('id', medicationId);
     
-    console.log('🔍 DEBUGGING: Select result:', { data: med, error: selectError, count });
+    secureLogger.debug('🔍 DEBUGGING: Select result:', { data: med, error: selectError, count });
     
     // Try to get user info
     const { data: user, error: userError } = await supabase.auth.getUser();
-    console.log('🔍 DEBUGGING: Current user:', { user: user?.user?.id, error: userError });
+    secureLogger.debug('🔍 DEBUGGING: Current user:', { user: user?.user?.id, error: userError });
     
     // Check RLS policies by attempting a simple select
     const { data: rlsTest, error: rlsError } = await supabase
@@ -236,10 +236,10 @@ export const debugMedication = async (medicationId: string): Promise<void> => {
       .eq('id', medicationId)
       .limit(1);
     
-    console.log('🔍 DEBUGGING: RLS test:', { data: rlsTest, error: rlsError });
+    secureLogger.debug('🔍 DEBUGGING: RLS test:', { data: rlsTest, error: rlsError });
     
   } catch (error) {
-    console.error('🔍 DEBUGGING: Error in debug function:', error);
+    secureLogger.error('🔍 DEBUGGING: Error in debug function:', error);
   }
 };
 
@@ -248,7 +248,7 @@ export const debugMedication = async (medicationId: string): Promise<void> => {
  */
 export const updateMedication = async (medicationId: string, updates: Partial<Medication>): Promise<Medication> => {
   try {
-    console.log('Updating medication:', medicationId, updates);
+    secureLogger.debug('Updating medication:', medicationId, updates);
     
     // First check if the medication exists
     const { data: existingMed, error: checkError } = await supabase
@@ -258,7 +258,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       .single();
     
     if (checkError) {
-      console.error('Error checking medication existence:', checkError);
+      secureLogger.error('Error checking medication existence:', checkError);
       throw new Error(`Medication with ID ${medicationId} not found or access denied`);
     }
     
@@ -266,7 +266,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       throw new Error(`Medication with ID ${medicationId} does not exist`);
     }
     
-    console.log('Found existing medication:', existingMed);
+    secureLogger.debug('Found existing medication:', existingMed);
     
     // Map Medication interface fields to database column names for the update
     const dbUpdates: any = {};
@@ -285,7 +285,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.admin_time !== undefined) dbUpdates.admin_time = updates.admin_time;
     if (updates.admin_times !== undefined) dbUpdates.admin_times = updates.admin_times;
     
-    console.log('Database updates:', dbUpdates);
+    secureLogger.debug('Database updates:', dbUpdates);
     
     const { data, error } = await supabase
       .from('patient_medications')
@@ -295,7 +295,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       .single();
 
     if (error) {
-      console.error('Error updating medication:', error);
+      secureLogger.error('Error updating medication:', error);
       throw error;
     }
 
@@ -306,7 +306,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     // If frequency or admin_times were updated, recalculate next due time
     let nextDueTime = data.next_due;
     if (updates.frequency !== undefined || updates.admin_times !== undefined || updates.admin_time !== undefined) {
-      console.log('Frequency or admin times updated, recalculating next due time...');
+      secureLogger.debug('Frequency or admin times updated, recalculating next due time...');
       nextDueTime = await calculateNextDueTime(medicationId);
       
       // Update the next_due in the database
@@ -316,10 +316,10 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
         .eq('id', medicationId);
         
       if (nextDueError) {
-        console.error('Error updating next_due time:', nextDueError);
+        secureLogger.error('Error updating next_due time:', nextDueError);
         // Don't throw here, just log the error since the main update succeeded
       } else {
-        console.log('Next due time updated to:', nextDueTime);
+        secureLogger.debug('Next due time updated to:', nextDueTime);
       }
     }
 
@@ -358,10 +358,10 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     );
     */
 
-    console.log('Medication updated successfully:', updatedMedication);
+    secureLogger.debug('Medication updated successfully:', updatedMedication);
     return updatedMedication;
   } catch (error) {
-    console.error('Error updating medication:', error);
+    secureLogger.error('Error updating medication:', error);
     throw error;
   }
 };
@@ -371,7 +371,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
  */
 export const deleteMedication = async (medicationId: string): Promise<void> => {
   try {
-    console.log('Deleting medication:', medicationId);
+    secureLogger.debug('Deleting medication:', medicationId);
     
     // First delete any administration records for this medication
     const { error: adminError } = await supabase
@@ -380,7 +380,7 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
       .eq('medication_id', medicationId);
     
     if (adminError) {
-      console.error('Error deleting medication administrations:', adminError);
+      secureLogger.error('Error deleting medication administrations:', adminError);
       // Continue anyway to try deleting the medication
     }
     
@@ -391,13 +391,13 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
       .eq('id', medicationId);
 
     if (error) {
-      console.error('Error deleting medication:', error);
+      secureLogger.error('Error deleting medication:', error);
       throw error;
     }
 
-    console.log('Medication deleted successfully');
+    secureLogger.debug('Medication deleted successfully');
   } catch (error) {
-    console.error('Error deleting medication:', error);
+    secureLogger.error('Error deleting medication:', error);
     throw error;
   }
 };
@@ -407,7 +407,7 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
  */
 export const updateMedicationNextDue = async (medicationId: string, nextDue: string): Promise<void> => {
   try {
-    console.log('Updating medication next due time:', medicationId, nextDue);
+    secureLogger.debug('Updating medication next due time:', medicationId, nextDue);
     
     const { error } = await supabase
       .from('patient_medications')
@@ -415,13 +415,13 @@ export const updateMedicationNextDue = async (medicationId: string, nextDue: str
       .eq('id', medicationId);
 
     if (error) {
-      console.error('Error updating medication next due time:', error);
+      secureLogger.error('Error updating medication next due time:', error);
       throw error;
     }
 
-    console.log('Medication next due time updated successfully');
+    secureLogger.debug('Medication next due time updated successfully');
   } catch (error) {
-    console.error('Error updating medication next due time:', error);
+    secureLogger.error('Error updating medication next due time:', error);
     throw error;
   }
 };
@@ -431,12 +431,12 @@ export const updateMedicationNextDue = async (medicationId: string, nextDue: str
  */
 export const recordMedicationAdministration = async (administration: Omit<MedicationAdministration, 'id'>): Promise<MedicationAdministration> => {
   try {
-    console.log('🔍 Recording medication administration - Full object:', JSON.stringify(administration, null, 2));
-    console.log('🔍 Medication ID type:', typeof administration.medication_id, 'Value:', administration.medication_id);
-    console.log('🔍 Patient ID type:', typeof administration.patient_id, 'Value:', administration.patient_id);
-    console.log('🔍 Administered by:', administration.administered_by || 'MISSING');
-    console.log('🔍 Administered by ID type:', typeof administration.administered_by_id, 'Value:', administration.administered_by_id);
-    console.log('🔍 Timestamp:', administration.timestamp || 'MISSING');
+    secureLogger.debug('🔍 Recording medication administration - Full object:', JSON.stringify(administration, null, 2));
+    secureLogger.debug('🔍 Medication ID type:', typeof administration.medication_id, 'Value:', administration.medication_id);
+    secureLogger.debug('🔍 Patient ID type:', typeof administration.patient_id, 'Value:', administration.patient_id);
+    secureLogger.debug('🔍 Administered by:', administration.administered_by || 'MISSING');
+    secureLogger.debug('🔍 Administered by ID type:', typeof administration.administered_by_id, 'Value:', administration.administered_by_id);
+    secureLogger.debug('🔍 Timestamp:', administration.timestamp || 'MISSING');
 
     // Validate required fields
     if (!administration.medication_id) {
@@ -485,7 +485,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       }
     });
     
-    console.log('🔍 Clean administration object (no undefined values):', JSON.stringify(cleanAdministration, null, 2));
+    secureLogger.debug('🔍 Clean administration object (no undefined values):', JSON.stringify(cleanAdministration, null, 2));
 
     // Ensure timestamp is in ISO format
     try {
@@ -500,7 +500,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
         cleanAdministration.timestamp = (cleanAdministration.timestamp as Date).toISOString();
       }
     } catch (error) {
-      console.error('Error formatting timestamp:', error);
+      secureLogger.error('Error formatting timestamp:', error);
       // Fallback to current time if there's an error
       cleanAdministration.timestamp = new Date().toISOString();
     }
@@ -512,24 +512,24 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       .single();
 
     if (error) {
-      console.error('❌ BCMA: Error saving administration record:', error);
-      console.error('❌ BCMA: Administration data that failed:', cleanAdministration);
+      secureLogger.error('❌ BCMA: Error saving administration record:', error);
+      secureLogger.error('❌ BCMA: Administration data that failed:', cleanAdministration);
       
       // Provide detailed error information for debugging
       if (error.message.includes('permission denied')) {
-        console.error('🔒 Permission denied error details:', {
+        secureLogger.error('🔒 Permission denied error details:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
           code: error.code,
           table: 'medication_administrations'
         });
-        console.error('🔧 Fix: Run the fix-medication-administration-permissions.sql script');
+        secureLogger.error('🔧 Fix: Run the fix-medication-administration-permissions.sql script');
         throw new Error(`Permission denied: Cannot save medication administration. Please contact your administrator to run the database permission fix.`);
       }
       
       if (error.message.includes('foreign key')) {
-        console.error('🔗 Foreign key constraint error:', {
+        secureLogger.error('🔗 Foreign key constraint error:', {
           message: error.message,
           details: error.details,
           hint: error.hint
@@ -538,7 +538,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       }
       
       if (error.message.includes('null value')) {
-        console.error('❌ Required field missing:', {
+        secureLogger.error('❌ Required field missing:', {
           message: error.message,
           administration: cleanAdministration
         });
@@ -579,9 +579,9 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     if (cleanAdministration.medication_id) {
       const nextDueTime = await calculateNextDueTime(cleanAdministration.medication_id);
       
-      console.log(`Updating medication ${cleanAdministration.medication_id} after administration:`);
-      console.log(`- Last administered: ${cleanAdministration.timestamp}`);
-      console.log(`- Next due: ${nextDueTime}`);
+      secureLogger.debug(`Updating medication ${cleanAdministration.medication_id} after administration:`);
+      secureLogger.debug(`- Last administered: ${cleanAdministration.timestamp}`);
+      secureLogger.debug(`- Next due: ${nextDueTime}`);
 
       // Update medication with last administered time and next due time
       const { data: updatedMed, error: updateError } = await supabase
@@ -594,17 +594,17 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
         .select();
       
       if (updateError) { 
-        console.error('Error updating medication last_administered and next_due:', updateError);
+        secureLogger.error('Error updating medication last_administered and next_due:', updateError);
         // Continue anyway since the administration was recorded
       } else {
-        console.log('Medication updated successfully:', updatedMed);
+        secureLogger.debug('Medication updated successfully:', updatedMed);
       }
     }
 
-    console.log('Medication administration recorded successfully:', data);
+    secureLogger.debug('Medication administration recorded successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error recording medication administration:', error);
+    secureLogger.error('Error recording medication administration:', error);
     throw error;
   }
 };
@@ -614,7 +614,7 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
  */
 const calculateNextDueTime = async (medicationId: string): Promise<string> => {
   try {
-    console.log('Calculating next due time for medication:', medicationId);
+    secureLogger.debug('Calculating next due time for medication:', medicationId);
     // Get the medication to check its frequency and admin_times
     const { data: medication, error } = await supabase 
       .from('patient_medications')
@@ -623,15 +623,15 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
       .single();
     
     if (error) {
-      console.error('Error fetching medication for next due calculation:', error);
+      secureLogger.error('Error fetching medication for next due calculation:', error);
       return new Date().toISOString(); // Fallback to current time
     } else if (!medication) {
-      console.error('Medication not found for next due calculation:', medicationId);
+      secureLogger.error('Medication not found for next due calculation:', medicationId);
       return new Date().toISOString(); // Fallback to current time
     }
     
-    console.log('Medication frequency:', medication.frequency);
-    console.log('Admin times:', medication.admin_times);
+    secureLogger.debug('Medication frequency:', medication.frequency);
+    secureLogger.debug('Admin times:', medication.admin_times);
     
     const currentTime = new Date();
     
@@ -646,7 +646,7 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
       adminTimes = ['08:00']; // Default fallback
     }
     
-    console.log('Using admin times:', adminTimes);
+    secureLogger.debug('Using admin times:', adminTimes);
     
     // Handle PRN medications
     if (medication.frequency.includes('PRN') || medication.frequency.includes('As needed')) {
@@ -671,7 +671,7 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     // Find the next administration time
     for (const adminTime of todayAdminTimes) {
       if (currentTime < adminTime) {
-        console.log(`Next due time today: ${adminTime.toISOString()}`);
+        secureLogger.debug(`Next due time today: ${adminTime.toISOString()}`);
         return adminTime.toISOString();
       }
     }
@@ -680,10 +680,10 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
     const tomorrowFirstTime = new Date(todayAdminTimes[0]);
     tomorrowFirstTime.setDate(tomorrowFirstTime.getDate() + 1);
     
-    console.log(`Next due time tomorrow: ${tomorrowFirstTime.toISOString()}`);
+    secureLogger.debug(`Next due time tomorrow: ${tomorrowFirstTime.toISOString()}`);
     return tomorrowFirstTime.toISOString();
   } catch (error) {
-    console.error('Error calculating next due time:', error);
+    secureLogger.error('Error calculating next due time:', error);
     // Return 24 hours from now as fallback
     return new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   }
@@ -694,13 +694,13 @@ const calculateNextDueTime = async (medicationId: string): Promise<string> => {
  */
 export const fetchMedicationAdministrationHistory = async (medicationId: string, patientId: string): Promise<MedicationAdministration[]> => {
   try {
-    console.log('Fetching administration history for medication:', medicationId);
-    console.log('For patient:', patientId);
+    secureLogger.debug('Fetching administration history for medication:', medicationId);
+    secureLogger.debug('For patient:', patientId);
     
     if (!medicationId || !patientId) {
-      console.error('Missing required parameters for fetching history');
-      console.error('Medication ID:', medicationId);
-      console.error('Patient ID:', patientId);
+      secureLogger.error('Missing required parameters for fetching history');
+      secureLogger.error('Medication ID:', medicationId);
+      secureLogger.error('Patient ID:', patientId);
       return [];
     }
     
@@ -712,16 +712,16 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
       .order('timestamp', { ascending: false });
 
     if (error) {
-      console.error('Error fetching administration history:', error);
+      secureLogger.error('Error fetching administration history:', error);
       return [];
     }
 
-    console.log(`Found ${data?.length || 0} administration records for medication ${medicationId} and patient ${patientId}`);
+    secureLogger.debug(`Found ${data?.length || 0} administration records for medication ${medicationId} and patient ${patientId}`);
     
     if (data && data.length > 0) {
-      console.log('First record:', JSON.stringify(data[0]));
+      secureLogger.debug('First record:', JSON.stringify(data[0]));
     } else {
-      console.log('No administration records found');
+      secureLogger.debug('No administration records found');
       
       // Check if there are any records for this medication at all
       const { data: allRecords, error: allRecordsError } = await supabase
@@ -730,7 +730,7 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
         .eq('medication_id', medicationId);
         
       if (!allRecordsError) {
-        console.log(`Total records for this medication (any patient): ${allRecords?.length || 0}`);
+        secureLogger.debug(`Total records for this medication (any patient): ${allRecords?.length || 0}`);
       }
       
       // Check if there are any records for this patient
@@ -740,13 +740,13 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
         .eq('patient_id', patientId);
         
       if (!patientRecordsError) {
-        console.log(`Total records for this patient (any medication): ${patientRecords?.length || 0}`);
+        secureLogger.debug(`Total records for this patient (any medication): ${patientRecords?.length || 0}`);
       }
     }
     
     return data || [];
   } catch (error) {
-    console.error('Error fetching medication administration history:', error);
+    secureLogger.error('Error fetching medication administration history:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
   }
 };
@@ -757,12 +757,12 @@ export const fetchMedicationAdministrationHistory = async (medicationId: string,
  */
 export const getPatientByMedicationId = async (medicationId: string): Promise<{ patientId: string, medicationId: string } | null> => {
   try {
-    console.log('Looking up patient by medication ID:', medicationId);
-    console.log('Medication ID type:', typeof medicationId, 'Length:', medicationId.length, 'Value:', medicationId);
+    secureLogger.debug('Looking up patient by medication ID:', medicationId);
+    secureLogger.debug('Medication ID type:', typeof medicationId, 'Length:', medicationId.length, 'Value:', medicationId);
     
     // Extract the actual medication ID from the barcode format (e.g., "MED123456" -> "123456")
     const extractedId = medicationId.startsWith('MED') ? medicationId.substring(3) : medicationId;
-    console.log('Extracted ID from barcode:', extractedId, typeof extractedId, 'Length:', extractedId.length, 'Value:', extractedId);
+    secureLogger.debug('Extracted ID from barcode:', extractedId, typeof extractedId, 'Length:', extractedId.length, 'Value:', extractedId);
     
     // Fetch all medications to perform client-side matching
     const { data, error } = await supabase
@@ -771,21 +771,21 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error looking up patient by medication ID:', error);
+      secureLogger.error('Error looking up patient by medication ID:', error);
       return null;
     }
 
     if (!data || data.length === 0) {
-      console.log('No medications found in database');
+      secureLogger.debug('No medications found in database');
       return null;
     }
 
-    console.log(`Checking ${data.length} medications for a match with ${extractedId}`);
+    secureLogger.debug(`Checking ${data.length} medications for a match with ${extractedId}`);
     
     // Log all medication IDs for debugging
-    console.log('All medication IDs in database:');
+    secureLogger.debug('All medication IDs in database:');
     data.forEach(med => {
-      console.log(`- Medication ID: ${med.id}, Patient ID: ${med.patient_id}, Name: ${med.name}, Category: ${med.category || 'scheduled'}`);
+      secureLogger.debug(`- Medication ID: ${med.id}, Patient ID: ${med.patient_id}, Name: ${med.name}, Category: ${med.category || 'scheduled'}`);
     });
     
     // Try multiple matching strategies
@@ -808,7 +808,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
       // 5. Special case for "FE0FCA" format - check if the ID contains these characters in sequence
       const specialMatch = extractedId === "FE0FCA" && med.id.includes("FE") && med.id.includes("0") && med.id.includes("F") && med.id.includes("C") && med.id.includes("A");
       
-      console.log(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId}:`, {
+      secureLogger.debug(`Comparing medication ${med.id} (suffix: ${medIdSuffix}) with extracted ID ${extractedId}:`, {
         directMatch,
         caseInsensitiveMatch,
         suffixMatch,
@@ -822,16 +822,16 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     });
     
     if (matchedMedication) {
-      console.log('Found matching medication:', matchedMedication.id, matchedMedication.name);
+      secureLogger.debug('Found matching medication:', matchedMedication.id, matchedMedication.name);
       return {
         patientId: matchedMedication.patient_id,
         medicationId: matchedMedication.id
       };
     } else {
-      console.log('No medication found with ID:', extractedId);
+      secureLogger.debug('No medication found with ID:', extractedId);
       
       // Try a more flexible approach - check if any medication ID contains any part of the extracted ID
-      console.log('Trying more flexible matching...');
+      secureLogger.debug('Trying more flexible matching...');
       
       // If extractedId is very short (less than 3 chars), it might match too many things
       // So only do this for longer IDs
@@ -842,7 +842,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
           for (let i = 0; i < med.id.length - 1; i++) {
             const medSubstring = med.id.substring(i, i + 2);
             if (extractedId.includes(medSubstring)) {
-              console.log(`Found partial match: Medication ${med.id} substring "${medSubstring}" is in extracted ID "${extractedId}"`);
+              secureLogger.debug(`Found partial match: Medication ${med.id} substring "${medSubstring}" is in extracted ID "${extractedId}"`);
               return {
                 patientId: med.patient_id,
                 medicationId: med.id
@@ -853,7 +853,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
           for (let i = 0; i < extractedId.length - 1; i++) {
             const extractedSubstring = extractedId.substring(i, i + 2);
             if (med.id.includes(extractedSubstring)) {
-              console.log(`Found partial match: Extracted ID "${extractedId}" substring "${extractedSubstring}" is in medication ID "${med.id}"`);
+              secureLogger.debug(`Found partial match: Extracted ID "${extractedId}" substring "${extractedSubstring}" is in medication ID "${med.id}"`);
               return {
                 patientId: med.patient_id,
                 medicationId: med.id
@@ -865,7 +865,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
       
       // Special case for "FE0FCA" - this appears to be a specific barcode format
       if (extractedId === "FE0FCA" || medicationId === "MEDFE0FCA") {
-        console.log("Special case handling for FE0FCA barcode");
+        secureLogger.debug("Special case handling for FE0FCA barcode");
         
         // Look for any medication for Heather Gordon (as mentioned in the user request)
         const heatherMeds = data.filter(() => {
@@ -875,7 +875,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
         });
         
         if (heatherMeds.length > 0) {
-          console.log(`Found ${heatherMeds.length} potential medications for the special case`);
+          secureLogger.debug(`Found ${heatherMeds.length} potential medications for the special case`);
           // Return the first one as a fallback
           return {
             patientId: heatherMeds[0].patient_id,
@@ -887,7 +887,7 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
       return null;
     }
   } catch (error) {
-    console.error('Error in getPatientByMedicationId:', error);
+    secureLogger.error('Error in getPatientByMedicationId:', error);
     return null;
   }
 };
@@ -898,10 +898,10 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
  */
 export const fetchPatientAdministrationHistory24h = async (patientId: string): Promise<MedicationAdministration[]> => {
   try {
-    console.log('Fetching 24-hour administration history for patient:', patientId);
+    secureLogger.debug('Fetching 24-hour administration history for patient:', patientId);
     
     if (!patientId) {
-      console.error('Missing required patient ID for fetching history');
+      secureLogger.error('Missing required patient ID for fetching history');
       return [];
     }
     
@@ -918,12 +918,12 @@ export const fetchPatientAdministrationHistory24h = async (patientId: string): P
       .order('timestamp', { ascending: false });
 
     if (adminError) {
-      console.error('Error fetching 24-hour administration history:', adminError);
+      secureLogger.error('Error fetching 24-hour administration history:', adminError);
       return [];
     }
 
     if (!adminData || adminData.length === 0) {
-      console.log('No administration records found in the last 24 hours for patient:', patientId);
+      secureLogger.debug('No administration records found in the last 24 hours for patient:', patientId);
       return [];
     }
 
@@ -940,7 +940,7 @@ export const fetchPatientAdministrationHistory24h = async (patientId: string): P
         .in('id', medicationIds);
 
       if (medicationError) {
-        console.warn('Error fetching medication details:', medicationError);
+        secureLogger.warn('Error fetching medication details:', medicationError);
       } else if (medicationData) {
         // Create a map for quick lookup
         medicationsMap = medicationData.reduce((acc, med) => {
@@ -961,11 +961,11 @@ export const fetchPatientAdministrationHistory24h = async (patientId: string): P
       }
     }));
 
-    console.log(`Found ${enrichedData.length} administration records in the last 24 hours for patient ${patientId}`);
+    secureLogger.debug(`Found ${enrichedData.length} administration records in the last 24 hours for patient ${patientId}`);
     
     return enrichedData;
   } catch (error) {
-    console.error('Error in fetchPatientAdministrationHistory24h:', error);
+    secureLogger.error('Error in fetchPatientAdministrationHistory24h:', error);
     return [];
   }
 };

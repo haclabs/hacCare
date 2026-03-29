@@ -41,13 +41,13 @@ const CreateTenantModal: React.FC<{
       const { data, error } = await supabase.rpc('get_available_admins');
       
       if (error) {
-        console.error('Error loading available admins:', error);
+        secureLogger.error('Error loading available admins:', error);
         setError('Failed to load available admins');
       } else {
         setAvailableAdmins(data || []);
       }
     } catch (err) {
-      console.error('Error loading available admins:', err);
+      secureLogger.error('Error loading available admins:', err);
       setError('Failed to load available admins');
     } finally {
       setLoadingAdmins(false);
@@ -64,7 +64,7 @@ const CreateTenantModal: React.FC<{
       
       return data[0].user_id;
     } catch (err) {
-      console.error('Error finding user by email:', err);
+      secureLogger.error('Error finding user by email:', err);
       return null;
     }
   };
@@ -101,7 +101,7 @@ const CreateTenantModal: React.FC<{
       
       onSuccess();
     } catch (err) {
-      console.error('Error creating tenant:', err);
+      secureLogger.error('Error creating tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to create tenant');
     } finally {
       setLoading(false);

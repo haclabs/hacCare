@@ -31,7 +31,7 @@ export const ProgramWorkspace: React.FC = () => {
         .single();
       
       if (error) {
-        console.error('Error fetching program:', error);
+        secureLogger.error('Error fetching program:', error);
         return null;
       }
       return data;

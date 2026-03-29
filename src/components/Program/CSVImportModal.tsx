@@ -94,7 +94,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         setStep('preview');
       },
       error: (error) => {
-        console.error('CSV parsing error:', error);
+        secureLogger.error('CSV parsing error:', error);
         alert('Error parsing CSV file. Please check the file format.');
       }
     });
@@ -114,7 +114,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
       setImportResult(data);
       setStep('result');
     } catch (error: any) {
-      console.error('Import error:', error);
+      secureLogger.error('Import error:', error);
       alert('Import failed: ' + (error.message || 'Unknown error'));
     } finally {
       setImporting(false);

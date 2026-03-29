@@ -60,7 +60,7 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
 
       await onSave(data);
     } catch (error) {
-      console.error('Error saving device assessment:', error);
+      secureLogger.error('Error saving device assessment:', error);
       alert('Failed to save assessment. Please try again.');
     } finally {
       setIsSubmitting(false);

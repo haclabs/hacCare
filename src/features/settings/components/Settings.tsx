@@ -124,7 +124,7 @@ export const Settings: React.FC = () => {
 
       setFeatureStatus(newFeatureStatus);
     } catch (error) {
-      console.error('Error checking feature status:', error);
+      secureLogger.error('Error checking feature status:', error);
     }
   };
 
@@ -166,7 +166,7 @@ export const Settings: React.FC = () => {
       // Update feature status
       await checkFeatureStatus();
     } catch (error) {
-      console.error('Error updating system info:', error);
+      secureLogger.error('Error updating system info:', error);
       setSystemInfo(prev => ({
         ...prev,
         dbStatus: 'error',

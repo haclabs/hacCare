@@ -73,7 +73,7 @@ export const ManagementDashboard: React.FC = () => {
       const { data: users, error: usersError } = await getTenantUsers(tenant.id);
       
       if (usersError) {
-        console.error('Error loading tenant users:', usersError);
+        secureLogger.error('Error loading tenant users:', usersError);
       } else {
         setTenantUsers(users || []);
       }
@@ -82,13 +82,13 @@ export const ManagementDashboard: React.FC = () => {
       const { data: patientStats, error: patientError } = await getTenantPatientStats(tenant.id);
       
       if (patientError) {
-        console.error('❌ Error loading tenant patient stats:', patientError);
+        secureLogger.error('❌ Error loading tenant patient stats:', patientError);
       } else {
-        console.log('✅ Loaded patient stats:', patientStats);
+        secureLogger.debug('✅ Loaded patient stats:', patientStats);
         setTenantPatientStats(patientStats);
       }
     } catch (err) {
-      console.error('💥 Exception loading tenant data:', err);
+      secureLogger.error('💥 Exception loading tenant data:', err);
     }
   };
 
@@ -106,7 +106,7 @@ export const ManagementDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      console.log(`Starting ${actionText} for tenant:`, tenantId);
+      secureLogger.debug(`Starting ${actionText} for tenant:`, tenantId);
       
       // Add timeout for permanent deletions
       if (permanent) {
@@ -127,7 +127,7 @@ export const ManagementDashboard: React.FC = () => {
         }
       }
       
-      console.log(`✓ ${actionText} completed, refreshing dashboard...`);
+      secureLogger.debug(`✓ ${actionText} completed, refreshing dashboard...`);
       
       // Force refresh the dashboard data
       await loadDashboardData();
@@ -137,10 +137,10 @@ export const ManagementDashboard: React.FC = () => {
         setSelectedTenant(null);
       }
       
-      console.log('✓ Dashboard refreshed');
+      secureLogger.debug('✓ Dashboard refreshed');
       
     } catch (err) {
-      console.error(`Error in ${actionText}:`, err);
+      secureLogger.error(`Error in ${actionText}:`, err);
       setError(err instanceof Error ? err.message : `Failed to ${actionText} tenant`);
     } finally {
       setLoading(false);
@@ -626,12 +626,12 @@ const CreateTenantModal: React.FC<{
         return;
       }
       
-      console.error('Error loading admins:', { rpcError, profileError });
+      secureLogger.error('Error loading admins:', { rpcError, profileError });
       setError('Could not load available admins. You can still enter an email manually.');
       setAvailableAdmins([]);
       
     } catch (err) {
-      console.error('Error loading available admins:', err);
+      secureLogger.error('Error loading available admins:', err);
       setError('Could not load available admins. You can still enter an email manually.');
       setAvailableAdmins([]);
     } finally {
@@ -663,11 +663,11 @@ const CreateTenantModal: React.FC<{
         return profileData.id;
       }
       
-      console.error('User not found:', { email, rpcError, profileError });
+      secureLogger.error('User not found:', { email, rpcError, profileError });
       return null;
       
     } catch (err) {
-      console.error('Error finding user by email:', err);
+      secureLogger.error('Error finding user by email:', err);
       return null;
     }
   };

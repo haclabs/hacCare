@@ -76,7 +76,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
 
       onSuccess();
     } catch (err: any) {
-      console.error('Error creating student:', err);
+      secureLogger.error('Error creating student:', err);
       setError(err.message || 'Failed to create student');
     } finally {
       setLoading(false);

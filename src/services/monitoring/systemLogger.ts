@@ -70,14 +70,14 @@ class SystemLogger {
           .maybeSingle();
         
         if (error) {
-          console.warn('System logger: Could not fetch user tenant_id:', error.message);
+          secureLogger.warn('System logger: Could not fetch user tenant_id:', error.message);
           return;
         }
         
         this.tenant_id = tenantUser?.tenant_id;
       }
     } catch (error) {
-      console.error('Failed to initialize system logger user context:', error);
+      secureLogger.error('Failed to initialize system logger user context:', error);
     }
   }
 
@@ -169,7 +169,7 @@ class SystemLogger {
           security: '🔒'
         }[entry.log_level];
 
-        console.log(`${emoji} [${entry.log_type}]`, entry.action || entry.error_message, entry.metadata);
+        secureLogger.debug(`${emoji} [${entry.log_type}]`, entry.action || entry.error_message, entry.metadata);
       }
 
       // Write to database
@@ -188,10 +188,10 @@ class SystemLogger {
         });
 
       if (error) {
-        console.error('Failed to write system log:', error);
+        secureLogger.error('Failed to write system log:', error);
       }
     } catch (error) {
-      console.error('System logger error:', error);
+      secureLogger.error('System logger error:', error);
     }
   }
 

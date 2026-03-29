@@ -53,18 +53,18 @@ export async function sendDebriefEmail(
 
     // Call the Supabase Edge Function using the Supabase client
     // The client automatically handles authentication with the new JWT format
-    console.log('🔥 CALLING EDGE FUNCTION via supabase.functions.invoke');
-    console.log('🔥 Request:', { recipientEmails: request.recipientEmails });
+    secureLogger.debug('🔥 CALLING EDGE FUNCTION via supabase.functions.invoke');
+    secureLogger.debug('🔥 Request:', { recipientEmails: request.recipientEmails });
     
     const { data, error } = await supabase.functions.invoke('send-debrief-report', {
       body: request,
     });
 
-    console.log('🔥 Response data:', data);
-    console.log('🔥 Response error:', error);
+    secureLogger.debug('🔥 Response data:', data);
+    secureLogger.debug('🔥 Response error:', error);
 
     if (error) {
-      console.error('Error sending debrief email:', error);
+      secureLogger.error('Error sending debrief email:', error);
       return {
         success: false,
         error: error.message || 'Failed to send email. Please try again.',
@@ -73,7 +73,7 @@ export async function sendDebriefEmail(
 
     // Check if the response data contains an error
     if (data?.error) {
-      console.error('Edge Function returned error:', data.error);
+      secureLogger.error('Edge Function returned error:', data.error);
       return {
         success: false,
         error: data.error,
@@ -85,7 +85,7 @@ export async function sendDebriefEmail(
       message: data?.message || `Email sent to ${request.recipientEmails.length} recipient${request.recipientEmails.length !== 1 ? 's' : ''}`,
     };
   } catch (error) {
-    console.error('Unexpected error sending debrief email:', error);
+    secureLogger.error('Unexpected error sending debrief email:', error);
     return {
       success: false,
       error: 'An unexpected error occurred. Please try again later.',

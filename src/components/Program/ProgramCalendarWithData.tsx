@@ -58,7 +58,7 @@ export const ProgramCalendar: React.FC = () => {
         .order('scheduled_start');
       
       if (error) {
-        console.error('Error fetching scheduled simulations:', error);
+        secureLogger.error('Error fetching scheduled simulations:', error);
         return [];
       }
       

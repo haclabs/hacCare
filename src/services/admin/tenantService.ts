@@ -22,7 +22,7 @@ export async function createTenant(tenantData: Omit<Tenant, 'id' | 'created_at' 
       .select();
 
     if (error) {
-      console.error('Error creating tenant:', error);
+      secureLogger.error('Error creating tenant:', error);
       return { data: null, error };
     }
 
@@ -33,7 +33,7 @@ export async function createTenant(tenantData: Omit<Tenant, 'id' | 'created_at' 
     // Return the first (and should be only) created tenant
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
-    console.error('Error creating tenant:', error);
+    secureLogger.error('Error creating tenant:', error);
     return { data: null, error };
   }
 }
@@ -50,14 +50,14 @@ export async function getAllTenants(): Promise<{ data: Tenant[] | null; error: a
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching tenants:', error);
+      secureLogger.error('Error fetching tenants:', error);
       return { data: null, error };
     }
 
-    console.log(`📊 Fetched ${data?.length || 0} tenants from database at ${new Date().toISOString()}`);
+    secureLogger.debug(`📊 Fetched ${data?.length || 0} tenants from database at ${new Date().toISOString()}`);
     return { data, error };
   } catch (error) {
-    console.error('Error fetching tenants:', error);
+    secureLogger.error('Error fetching tenants:', error);
     return { data: null, error };
   }
 }
@@ -81,12 +81,12 @@ export async function getTenantById(tenantId: string): Promise<{ data: Tenant | 
     }
 
     if (data.length > 1) {
-      console.warn(`Warning: Found ${data.length} tenants with ID ${tenantId}. This should not happen.`);
+      secureLogger.warn(`Warning: Found ${data.length} tenants with ID ${tenantId}. This should not happen.`);
     }
 
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
-    console.error('Error fetching tenant:', error);
+    secureLogger.error('Error fetching tenant:', error);
     return { data: null, error };
   }
 }
@@ -118,14 +118,14 @@ export async function updateTenant(tenantId: string, updates: Partial<Tenant>): 
       .select();
 
     if (error) {
-      console.error('Update error:', error);
+      secureLogger.error('Update error:', error);
       return { data: null, error };
     }
 
     // If no data is returned, it could mean no changes were made or there was an issue
     // In this case, fetch the current tenant data to verify it still exists
     if (!data || data.length === 0) {
-      console.warn(`No data returned from update for tenant ${tenantId}, fetching current state...`);
+      secureLogger.warn(`No data returned from update for tenant ${tenantId}, fetching current state...`);
       
       const { data: currentTenant, error: fetchError } = await supabase
         .from('tenants')
@@ -133,7 +133,7 @@ export async function updateTenant(tenantId: string, updates: Partial<Tenant>): 
         .eq('id', tenantId);
       
       if (fetchError) {
-        console.error('Error fetching tenant after update:', fetchError);
+        secureLogger.error('Error fetching tenant after update:', fetchError);
         return { data: null, error: fetchError };
       }
       
@@ -142,18 +142,18 @@ export async function updateTenant(tenantId: string, updates: Partial<Tenant>): 
       }
       
       // Return the existing tenant data
-      console.log(`Successfully retrieved tenant data after update: ${currentTenant[0].name}`);
+      secureLogger.debug(`Successfully retrieved tenant data after update: ${currentTenant[0].name}`);
       return { data: currentTenant[0] as Tenant, error: null };
     }
 
     if (data.length > 1) {
-      console.warn(`Warning: Update affected ${data.length} rows for tenant ${tenantId}`);
+      secureLogger.warn(`Warning: Update affected ${data.length} rows for tenant ${tenantId}`);
     }
 
     // Return the first (and hopefully only) updated row
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
-    console.error('Error updating tenant:', error);
+    secureLogger.error('Error updating tenant:', error);
     return { data: null, error };
   }
 }
@@ -170,7 +170,7 @@ export async function deleteTenant(tenantId: string): Promise<{ error: any }> {
 
     return { error };
   } catch (error) {
-    console.error('Error deleting tenant:', error);
+    secureLogger.error('Error deleting tenant:', error);
     return { error };
   }
 }
@@ -192,24 +192,24 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
       return { error: fetchError || new Error('Tenant not found') };
     }
 
-    console.log(`🗑️ Starting permanent deletion for tenant: ${tenant.name}`);
+    secureLogger.debug(`🗑️ Starting permanent deletion for tenant: ${tenant.name}`);
 
     // Delete in strict order to handle all possible foreign key constraints:
     
     // 1. Delete tenant users first (they reference tenants)
-    console.log('1️⃣ Deleting tenant users...');
+    secureLogger.debug('1️⃣ Deleting tenant users...');
     const { error: tenantUsersError } = await supabase
       .from('tenant_users')
       .delete()
       .eq('tenant_id', tenantId);
 
     if (tenantUsersError) {
-      console.error('Error deleting tenant users:', tenantUsersError);
+      secureLogger.error('Error deleting tenant users:', tenantUsersError);
       return { error: tenantUsersError };
     }
 
     // 2. Get all patients for this tenant
-    console.log('2️⃣ Getting patients for tenant...');
+    secureLogger.debug('2️⃣ Getting patients for tenant...');
     const { data: patients } = await supabase
       .from('patients')
       .select('patient_id')
@@ -217,7 +217,7 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
 
     if (patients && patients.length > 0) {
       const patientIdStrings = patients.map(p => p.patient_id);
-      console.log(`Found ${patients.length} patients to clean up`);
+      secureLogger.debug(`Found ${patients.length} patients to clean up`);
 
       // 3. Delete patient-related data by patient_id
       const cleanupOperations = [
@@ -237,35 +237,35 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
 
       for (const { table, column, ids, description } of cleanupOperations) {
         try {
-          console.log(`3️⃣ Deleting ${description}...`);
+          secureLogger.debug(`3️⃣ Deleting ${description}...`);
           const { error: cleanupError } = await supabase
             .from(table)
             .delete()
             .in(column, ids);
 
           if (cleanupError) {
-            console.warn(`Error cleaning ${description}:`, cleanupError);
+            secureLogger.warn(`Error cleaning ${description}:`, cleanupError);
           } else {
-            console.log(`✓ Deleted ${description}`);
+            secureLogger.debug(`✓ Deleted ${description}`);
           }
         } catch (e) {
-          console.warn(`Failed to clean ${description}:`, e);
+          secureLogger.warn(`Failed to clean ${description}:`, e);
         }
       }
     }
 
   // 4. Delete patients for this tenant
-  console.log('4️⃣ Deleting patients...');
+  secureLogger.debug('4️⃣ Deleting patients...');
   const { error: patientsError } = await supabase
     .from('patients')
     .delete()
     .eq('tenant_id', tenantId);
 
   if (patientsError) {
-    console.error('Error deleting patients:', patientsError);
+    secureLogger.error('Error deleting patients:', patientsError);
     return { error: patientsError };
   }
-  console.log('✓ Deleted patients');
+  secureLogger.debug('✓ Deleted patients');
 
   // 5. Try to find and delete any other references
   // Only check tables that are likely to exist in your database
@@ -287,7 +287,7 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
   // Clean known tables first
   for (const table of knownTenantReferences) {
     try {
-      console.log(`5️⃣ Cleaning ${table}...`);
+      secureLogger.debug(`5️⃣ Cleaning ${table}...`);
       const { error: refError } = await supabase
         .from(table)
         .delete()
@@ -295,24 +295,24 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
 
       if (refError) {
         if (refError.message.includes('does not exist') || refError.code === 'PGRST106') {
-          console.log(`ℹ️  ${table} doesn't exist`);
+          secureLogger.debug(`ℹ️  ${table} doesn't exist`);
         } else if (refError.message.includes('column')) {
-          console.log(`ℹ️  ${table} has no tenant_id column`);
+          secureLogger.debug(`ℹ️  ${table} has no tenant_id column`);
         } else {
-          console.warn(`⚠️  Error cleaning ${table}:`, refError.message);
+          secureLogger.warn(`⚠️  Error cleaning ${table}:`, refError.message);
         }
       } else {
-        console.log(`✓ Cleaned ${table}`);
+        secureLogger.debug(`✓ Cleaned ${table}`);
       }
     } catch (e) {
-      console.log(`ℹ️  Skipping ${table} (doesn't exist)`);
+      secureLogger.debug(`ℹ️  Skipping ${table} (doesn't exist)`);
     }
   }
 
   // Check possible tables with verification first
   for (const table of possibleTenantReferences) {
     try {
-      console.log(`5️⃣ Checking if ${table} exists...`);
+      secureLogger.debug(`5️⃣ Checking if ${table} exists...`);
       
       // First, try a simple select to see if table exists and has tenant_id
       const { data: checkData, error: checkError } = await supabase
@@ -323,38 +323,38 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
 
       if (checkError) {
         if (checkError.code === 'PGRST106' || checkError.message.includes('does not exist')) {
-          console.log(`ℹ️  ${table} doesn't exist`);
+          secureLogger.debug(`ℹ️  ${table} doesn't exist`);
         } else if (checkError.message.includes('column')) {
-          console.log(`ℹ️  ${table} has no tenant_id column`);
+          secureLogger.debug(`ℹ️  ${table} has no tenant_id column`);
         } else {
-          console.log(`ℹ️  Skipping ${table}: ${checkError.message}`);
+          secureLogger.debug(`ℹ️  Skipping ${table}: ${checkError.message}`);
         }
         continue;
       }
 
       // If we get here, table exists and has tenant_id column
       if (checkData && checkData.length > 0) {
-        console.log(`🧹 Found data in ${table}, deleting...`);
+        secureLogger.debug(`🧹 Found data in ${table}, deleting...`);
         const { error: deleteError } = await supabase
           .from(table)
           .delete()
           .eq('tenant_id', tenantId);
 
         if (deleteError) {
-          console.warn(`⚠️  Error cleaning ${table}:`, deleteError.message);
+          secureLogger.warn(`⚠️  Error cleaning ${table}:`, deleteError.message);
         } else {
-          console.log(`✓ Cleaned ${table}`);
+          secureLogger.debug(`✓ Cleaned ${table}`);
         }
       } else {
-        console.log(`ℹ️  ${table} has no records for this tenant`);
+        secureLogger.debug(`ℹ️  ${table} has no records for this tenant`);
       }
     } catch (e) {
-      console.log(`ℹ️  Skipping ${table} (error during check)`);
+      secureLogger.debug(`ℹ️  Skipping ${table} (error during check)`);
     }
   }
 
   // 6. Finally, attempt to delete the tenant itself
-  console.log(`6️⃣ Attempting to delete tenant: ${tenantId}`);
+  secureLogger.debug(`6️⃣ Attempting to delete tenant: ${tenantId}`);
   
   // Try with bypass RLS for this critical operation
   const { data: deleteData, error: deleteError } = await supabase
@@ -363,19 +363,19 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
     .eq('id', tenantId)
     .select();
 
-  console.log('Delete response:', { deleteData, deleteError });
+  secureLogger.debug('Delete response:', { deleteData, deleteError });
 
   if (deleteError) {
-    console.error('❌ Error permanently deleting tenant:', deleteError);
+    secureLogger.error('❌ Error permanently deleting tenant:', deleteError);
     return { error: deleteError };
   }
 
   if (!deleteData || deleteData.length === 0) {
-    console.error('❌ No tenant was deleted - tenant may not exist or deletion was blocked');
+    secureLogger.error('❌ No tenant was deleted - tenant may not exist or deletion was blocked');
     return { error: new Error('Tenant deletion failed - no records were deleted') };
   }
 
-  console.log(`✅ Tenant "${tenant.name}" permanently deleted successfully (${deleteData.length} record(s))`);
+  secureLogger.debug(`✅ Tenant "${tenant.name}" permanently deleted successfully (${deleteData.length} record(s))`);
   
   // Small delay to ensure database transaction is committed
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -383,7 +383,7 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
   return { error: null };
 
   } catch (error) {
-    console.error('Error permanently deleting tenant:', error);
+    secureLogger.error('Error permanently deleting tenant:', error);
     return { error };
   }
 }
@@ -411,7 +411,7 @@ export async function addUserToTenant(tenantId: string, userId: string, role: st
 
     return { data, error };
   } catch (error) {
-    console.error('Error adding user to tenant:', error);
+    secureLogger.error('Error adding user to tenant:', error);
     return { data: null, error };
   }
 }
@@ -426,13 +426,13 @@ export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUs
       .rpc('get_tenant_users', { target_tenant_id: tenantId });
 
     if (error) {
-      console.error('Error fetching tenant users:', error);
+      secureLogger.error('Error fetching tenant users:', error);
       return { data: null, error };
     }
 
     // Transform the data to match the expected TenantUser interface
     const tenantUsers: TenantUser[] = data?.map((row: any) => {
-      console.log('🛠️ Processing row:', row);
+      secureLogger.debug('🛠️ Processing row:', row);
       
       const user = {
         id: `${row.user_id}-${row.tenant_id}`, // Generate a unique ID
@@ -453,13 +453,13 @@ export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUs
         }
       };
       
-      console.log('✅ Transformed user:', user);
+      secureLogger.debug('✅ Transformed user:', user);
       return user;
     }) || [];
 
     return { data: tenantUsers, error: null };
   } catch (error) {
-    console.error('Error in getTenantUsers:', error);
+    secureLogger.error('Error in getTenantUsers:', error);
     return { data: null, error };
   }
 }
@@ -477,7 +477,7 @@ export async function removeUserFromTenant(tenantId: string, userId: string): Pr
 
     return { error };
   } catch (error) {
-    console.error('Error removing user from tenant:', error);
+    secureLogger.error('Error removing user from tenant:', error);
     return { error };
   }
 }
@@ -526,7 +526,7 @@ export async function getManagementDashboardStats(): Promise<{ data: ManagementD
 
     return { data: stats, error: null };
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+    secureLogger.error('Error fetching dashboard stats:', error);
     return { data: null, error };
   }
 }
@@ -545,7 +545,7 @@ export async function getAvailableAdminUsers(): Promise<{ data: { id: string; em
 
     return { data, error };
   } catch (error) {
-    console.error('Error fetching available admin users:', error);
+    secureLogger.error('Error fetching available admin users:', error);
     return { data: null, error };
   }
 }
@@ -555,13 +555,13 @@ export async function getAvailableAdminUsers(): Promise<{ data: { id: string; em
  */
 export async function getCurrentUserTenant(userId: string): Promise<{ data: Tenant | null; error: any }> {
   try {
-    console.log('🔍 getCurrentUserTenant: Starting for user:', userId);
+    secureLogger.debug('🔍 getCurrentUserTenant: Starting for user:', userId);
     
     // Try to get access token from sessionStorage (set during login to bypass hanging Supabase client)
     const accessToken = sessionStorage.getItem('supabase_access_token');
     
     if (accessToken) {
-      console.log('🔑 Using direct HTTP fetch with stored access token');
+      secureLogger.debug('🔑 Using direct HTTP fetch with stored access token');
       
       try {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -580,20 +580,20 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
         }
         
         const tenantData = await response.json();
-        console.log('🔍 getCurrentUserTenant: Direct RPC result:', tenantData);
+        secureLogger.debug('🔍 getCurrentUserTenant: Direct RPC result:', tenantData);
         
         if (!tenantData || !Array.isArray(tenantData) || tenantData.length === 0) {
-          console.log('🔍 getCurrentUserTenant: No tenant found for user');
+          secureLogger.debug('🔍 getCurrentUserTenant: No tenant found for user');
           return { data: null, error: new Error(`User ${userId} is not associated with any active tenant`) };
         }
         
         const tenantId = tenantData[0]?.tenant_id;
         if (!tenantId) {
-          console.error('🔍 getCurrentUserTenant: No tenant_id in result:', tenantData[0]);
+          secureLogger.error('🔍 getCurrentUserTenant: No tenant_id in result:', tenantData[0]);
           return { data: null, error: new Error(`Invalid tenant data returned for user ${userId}`) };
         }
         
-        console.log('🔍 getCurrentUserTenant: Found tenant_id:', tenantId);
+        secureLogger.debug('🔍 getCurrentUserTenant: Found tenant_id:', tenantId);
         
         // Get tenant details with direct fetch
         const tenantResponse = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${tenantId}&select=*`, {
@@ -611,19 +611,19 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
         }
         
         const tenants = await tenantResponse.json();
-        console.log('🔍 getCurrentUserTenant: Direct tenant fetch result:', tenants);
+        secureLogger.debug('🔍 getCurrentUserTenant: Direct tenant fetch result:', tenants);
         
         if (!tenants || tenants.length === 0) {
-          console.error('🔍 getCurrentUserTenant: Tenant not found for ID:', tenantId);
+          secureLogger.error('🔍 getCurrentUserTenant: Tenant not found for ID:', tenantId);
           return { data: null, error: new Error(`Tenant with ID ${tenantId} not found`) };
         }
         
         const tenant = tenants[0];
-        console.log('🔍 getCurrentUserTenant: Success via direct fetch, returning tenant:', tenant.name);
+        secureLogger.debug('🔍 getCurrentUserTenant: Success via direct fetch, returning tenant:', tenant.name);
         return { data: tenant, error: null };
         
       } catch (fetchError) {
-        console.warn('⚠️ Direct fetch failed, falling back to Supabase client:', fetchError);
+        secureLogger.warn('⚠️ Direct fetch failed, falling back to Supabase client:', fetchError);
         // Fall through to original Supabase client method
       }
     }
@@ -632,26 +632,26 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
     const { data: tenantData, error: tenantError } = await supabase
       .rpc('get_user_current_tenant', { target_user_id: userId });
 
-    console.log('🔍 getCurrentUserTenant: RPC result:', { tenantData, tenantError });
+    secureLogger.debug('🔍 getCurrentUserTenant: RPC result:', { tenantData, tenantError });
 
     if (tenantError) {
-      console.error('🔍 getCurrentUserTenant: RPC error:', tenantError);
+      secureLogger.error('🔍 getCurrentUserTenant: RPC error:', tenantError);
       return { data: null, error: tenantError };
     }
 
     // Handle empty result gracefully
     if (!tenantData || !Array.isArray(tenantData) || tenantData.length === 0) {
-      console.log('🔍 getCurrentUserTenant: No tenant found for user');
+      secureLogger.debug('🔍 getCurrentUserTenant: No tenant found for user');
       return { data: null, error: new Error(`User ${userId} is not associated with any active tenant`) };
     }
 
     const tenantId = tenantData[0]?.tenant_id;
     if (!tenantId) {
-      console.error('🔍 getCurrentUserTenant: No tenant_id in result:', tenantData[0]);
+      secureLogger.error('🔍 getCurrentUserTenant: No tenant_id in result:', tenantData[0]);
       return { data: null, error: new Error(`Invalid tenant data returned for user ${userId}`) };
     }
 
-    console.log('🔍 getCurrentUserTenant: Found tenant_id:', tenantId);
+    secureLogger.debug('🔍 getCurrentUserTenant: Found tenant_id:', tenantId);
 
     // Get the full tenant details using the tenant_id
     const { data: tenant, error: fullTenantError } = await supabase
@@ -660,22 +660,22 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
       .eq('id', tenantId)
       .maybeSingle();
 
-    console.log('🔍 getCurrentUserTenant: Tenant details result:', { tenant, fullTenantError });
+    secureLogger.debug('🔍 getCurrentUserTenant: Tenant details result:', { tenant, fullTenantError });
 
     if (fullTenantError) {
-      console.error('🔍 getCurrentUserTenant: Error fetching tenant details:', fullTenantError);
+      secureLogger.error('🔍 getCurrentUserTenant: Error fetching tenant details:', fullTenantError);
       return { data: null, error: fullTenantError };
     }
 
     if (!tenant) {
-      console.error('🔍 getCurrentUserTenant: Tenant not found for ID:', tenantId);
+      secureLogger.error('🔍 getCurrentUserTenant: Tenant not found for ID:', tenantId);
       return { data: null, error: new Error(`Tenant with ID ${tenantId} not found`) };
     }
 
-    console.log('🔍 getCurrentUserTenant: Success, returning tenant:', tenant.name);
+    secureLogger.debug('🔍 getCurrentUserTenant: Success, returning tenant:', tenant.name);
     return { data: tenant, error: null };
   } catch (error) {
-    console.error('Error fetching current user tenant:', error);
+    secureLogger.error('Error fetching current user tenant:', error);
     return { data: null, error };
   }
 }
@@ -756,7 +756,7 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 
     return data.role === 'super_admin';
   } catch (error) {
-    console.error('Error checking super admin status:', error);
+    secureLogger.error('Error checking super admin status:', error);
     return false;
   }
 }
@@ -774,7 +774,7 @@ export async function getTenantsForSwitching(): Promise<{ data: Pick<Tenant, 'id
 
     return { data, error };
   } catch (error) {
-    console.error('Error fetching tenants for switching:', error);
+    secureLogger.error('Error fetching tenants for switching:', error);
     return { data: null, error };
   }
 }
@@ -821,7 +821,7 @@ export async function getTenantBySubdomain(subdomain: string): Promise<{ data: T
     // Return the first tenant found
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
-    console.error('Error fetching tenant by subdomain:', error);
+    secureLogger.error('Error fetching tenant by subdomain:', error);
     return { data: null, error };
   }
 }

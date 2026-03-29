@@ -152,7 +152,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       const data = await listMarkers(patientId);
       setMarkers(data);
     } catch (err: any) {
-      console.error('Error loading markers:', err);
+      secureLogger.error('Error loading markers:', err);
       
       // Check if it's a "table doesn't exist" error
       if (err?.message?.includes('does not exist') || err?.code === '42P01') {
@@ -201,7 +201,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         setPanelMode('edit-wound');
       }
     } catch (err) {
-      console.error('Error loading item:', err);
+      secureLogger.error('Error loading item:', err);
       alert('Failed to load item. Please try again.');
     }
   };
@@ -229,7 +229,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         )
       );
     } catch (err) {
-      console.error('Error moving marker:', err);
+      secureLogger.error('Error moving marker:', err);
       // Reload to revert on error
       await loadMarkers();
     }
@@ -277,7 +277,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       await loadMarkers();
       handleClosePanel();
     } catch (err) {
-      console.error('Error saving device:', err);
+      secureLogger.error('Error saving device:', err);
       systemLogger.logError(err as Error, {
         component: 'AvatarBoard',
         action: panelMode === 'create-device' ? 'create_device' : 'update_device',
@@ -299,7 +299,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       await loadMarkers();
       handleClosePanel();
     } catch (err) {
-      console.error('Error deleting device:', err);
+      secureLogger.error('Error deleting device:', err);
       throw err;
     }
   };
@@ -346,7 +346,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       await loadMarkers();
       handleClosePanel();
     } catch (err) {
-      console.error('Error saving wound:', err);
+      secureLogger.error('Error saving wound:', err);
       systemLogger.logError(err as Error, {
         component: 'AvatarBoard',
         action: panelMode === 'create-wound' ? 'create_wound' : 'update_wound',
@@ -367,7 +367,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       await loadMarkers();
       handleClosePanel();
     } catch (err) {
-      console.error('Error deleting wound:', err);
+      secureLogger.error('Error deleting wound:', err);
       throw err;
     }
   };
@@ -413,7 +413,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         setDeviceAssessments([]);
       }
     } catch (err) {
-      console.error('Error loading assessments:', err);
+      secureLogger.error('Error loading assessments:', err);
       setDeviceAssessments([]);
       setWoundAssessments([]);
     } finally {
@@ -442,7 +442,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         const device = await getDevice(selectedRecordId);
         setSelectedDevice(device);
       } catch (err) {
-        console.error('Error loading device:', err);
+        secureLogger.error('Error loading device:', err);
         alert('Failed to load device information.');
         return;
       }
@@ -465,7 +465,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         setWoundAssessments(data);
       }
     } catch (err) {
-      console.error('Error saving wound assessment:', err);
+      secureLogger.error('Error saving wound assessment:', err);
       throw err;
     }
   };
@@ -482,7 +482,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         setDeviceAssessments(data);
       }
     } catch (err) {
-      console.error('Error saving device assessment:', err);
+      secureLogger.error('Error saving device assessment:', err);
       throw err;
     }
   };

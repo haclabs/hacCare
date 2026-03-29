@@ -44,7 +44,7 @@ export const fetchDoctorsOrders = async (patientId: string): Promise<DoctorsOrde
       .order('order_time', { ascending: false });
 
     if (error) {
-      console.error('Error fetching doctors orders:', error);
+      secureLogger.error('Error fetching doctors orders:', error);
       throw error;
     }
 
@@ -75,7 +75,7 @@ export const fetchDoctorsOrders = async (patientId: string): Promise<DoctorsOrde
       updated_at: order.updated_at
     }));
   } catch (error) {
-    console.error('Error in fetchDoctorsOrders:', error);
+    secureLogger.error('Error in fetchDoctorsOrders:', error);
     throw error;
   }
 };
@@ -117,7 +117,7 @@ export const createDoctorsOrder = async (orderData: CreateDoctorsOrderData): Pro
       .single();
 
     if (error) {
-      console.error('Error creating doctors order:', error);
+      secureLogger.error('Error creating doctors order:', error);
       throw error;
     }
 
@@ -144,7 +144,7 @@ export const createDoctorsOrder = async (orderData: CreateDoctorsOrderData): Pro
       updated_at: data.updated_at
     };
   } catch (error) {
-    console.error('Error in createDoctorsOrder:', error);
+    secureLogger.error('Error in createDoctorsOrder:', error);
     throw error;
   }
 };
@@ -176,7 +176,7 @@ export const updateDoctorsOrder = async (orderId: string, orderData: UpdateDocto
       .single();
 
     if (error) {
-      console.error('Error updating doctors order:', error);
+      secureLogger.error('Error updating doctors order:', error);
       throw error;
     }
 
@@ -205,7 +205,7 @@ export const updateDoctorsOrder = async (orderId: string, orderData: UpdateDocto
       updated_at: data.updated_at
     };
   } catch (error) {
-    console.error('Error in updateDoctorsOrder:', error);
+    secureLogger.error('Error in updateDoctorsOrder:', error);
     throw error;
   }
 };
@@ -221,11 +221,11 @@ export const deleteDoctorsOrder = async (orderId: string): Promise<void> => {
       .eq('id', orderId);
 
     if (error) {
-      console.error('Error deleting doctors order:', error);
+      secureLogger.error('Error deleting doctors order:', error);
       throw error;
     }
   } catch (error) {
-    console.error('Error in deleteDoctorsOrder:', error);
+    secureLogger.error('Error in deleteDoctorsOrder:', error);
     throw error;
   }
 };
@@ -260,7 +260,7 @@ export const acknowledgeDoctorsOrder = async (orderId: string, studentName?: str
       .single();
 
     if (error) {
-      console.error('Error acknowledging doctors order:', error);
+      secureLogger.error('Error acknowledging doctors order:', error);
       throw error;
     }
 
@@ -289,7 +289,7 @@ export const acknowledgeDoctorsOrder = async (orderId: string, studentName?: str
       updated_at: data.updated_at
     };
   } catch (error) {
-    console.error('Error in acknowledgeDoctorsOrder:', error);
+    secureLogger.error('Error in acknowledgeDoctorsOrder:', error);
     throw error;
   }
 };

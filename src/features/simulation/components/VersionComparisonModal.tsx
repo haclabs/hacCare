@@ -68,7 +68,7 @@ export default function VersionComparisonModal({
         : await compareTemplateVersions(templateId, versionOld, versionNew);
       setDiff(data);
     } catch (err: any) {
-      console.error('Error loading version comparison:', err);
+      secureLogger.error('Error loading version comparison:', err);
       setError(err.message);
     } finally {
       setLoading(false);

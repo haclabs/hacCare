@@ -84,11 +84,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       
       try {
         setLoading(true);
-        console.log('Loading patient data for ID:', id);
+        secureLogger.debug('Loading patient data for ID:', id);
         
         // Get simulation context for proper data fetching
         const simulationId = currentTenant?.simulation_id;
-        console.log('PatientDetail - Simulation ID:', simulationId);
+        secureLogger.debug('PatientDetail - Simulation ID:', simulationId);
         
         const [patientData, vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
           fetchPatientById(id, simulationId),
@@ -100,7 +100,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
           fetchDoctorsOrders(id)
         ]);
         
-        console.log('Patient data loaded:', patientData);
+        secureLogger.debug('Patient data loaded:', patientData);
         setPatient(patientData);
         setVitals(vitalsData);
         setMedications(medicationsData);
@@ -109,7 +109,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         setAdvancedDirective(directiveData);
         setDoctorsOrders(ordersData || []);
       } catch (error) {
-        console.error('Error loading patient data:', error);
+        secureLogger.error('Error loading patient data:', error);
       } finally {
         setLoading(false);
       }
@@ -376,9 +376,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 const simulationId = currentTenant?.simulation_id;
                 const freshMedications = await fetchPatientMedications(id!, simulationId);
                 setMedications(freshMedications);
-                console.log('Medications refreshed from database after update');
+                secureLogger.debug('Medications refreshed from database after update');
               } catch (error) {
-                console.error('Error refreshing medications after update:', error);
+                secureLogger.error('Error refreshing medications after update:', error);
                 // Keep the local update if database refresh fails
               }
             }}
@@ -1145,7 +1145,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       reportWindow.focus();
       
     } catch (error) {
-      console.error('Error generating patient record:', error);
+      secureLogger.error('Error generating patient record:', error);
       alert('Error generating patient record. Please try again.');
     }
   };

@@ -27,7 +27,7 @@ const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
       
       const element = document.getElementById('student-guide-content');
       if (!element) {
-        console.error('Guide content element not found');
+        secureLogger.error('Guide content element not found');
         return;
       }
 
@@ -83,7 +83,7 @@ const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
         const logoX = (pageWidth - logoWidth) / 2;
         pdf.addImage(HACCARE_LOGO_BASE64, 'PNG', logoX, 8, logoWidth, logoHeight);
       } catch (error) {
-        console.warn('Could not add logo to PDF:', error);
+        secureLogger.warn('Could not add logo to PDF:', error);
       }
       
       pdf.setFontSize(11);
@@ -145,7 +145,7 @@ const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
       pdf.save(`hacCare-Student-Guide-${new Date().toISOString().split('T')[0]}.pdf`);
       
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      secureLogger.error('Error generating PDF:', error);
       alert('There was an error generating the PDF. Please try again.');
     } finally {
       setIsGeneratingPdf(false);

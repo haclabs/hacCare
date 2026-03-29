@@ -23,7 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   useEffect(() => {
     // Security: Log auth state for debugging (development only)
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ ProtectedRoute - Auth state:', { 
+      secureLogger.debug('🛡️ ProtectedRoute - Auth state:', { 
         hasUser: !!user, 
         hasProfile: !!profile,
         userRole: profile?.role,
@@ -56,7 +56,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Security: If no user, show login
   if (!user) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ ProtectedRoute - No user found, showing login');
+      secureLogger.debug('🛡️ ProtectedRoute - No user found, showing login');
     }
     return <LoginForm />;
   }
@@ -64,7 +64,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Security: If user exists but no profile, show secure profile creation
   if (user && !profile) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🛡️ User exists but no profile found');
+      secureLogger.debug('🛡️ User exists but no profile found');
     }
     
     const handleCreateProfile = async () => {
@@ -74,7 +74,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       try {
         await createProfile();
       } catch (error: any) {
-        console.error('Failed to create profile:', error);
+        secureLogger.error('Failed to create profile:', error);
         setProfileError(parseAuthError(error));
       } finally {
         setCreatingProfile(false);

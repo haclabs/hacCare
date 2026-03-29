@@ -103,7 +103,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         output_amount_ml: formData.output_amount_ml,
       });
     } catch (error) {
-      console.error('Error saving assessment:', error);
+      secureLogger.error('Error saving assessment:', error);
       alert('Failed to save assessment. Please try again.');
     } finally {
       setIsSubmitting(false);

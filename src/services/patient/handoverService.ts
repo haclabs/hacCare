@@ -61,13 +61,13 @@ export const createHandoverNote = async (noteData: CreateHandoverNoteData): Prom
       .single();
 
     if (error) {
-      console.error('Error creating handover note:', error);
+      secureLogger.error('Error creating handover note:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in createHandoverNote:', error);
+    secureLogger.error('Error in createHandoverNote:', error);
     throw error;
   }
 };
@@ -84,13 +84,13 @@ export const getPatientHandoverNotes = async (patientId: string): Promise<Handov
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching handover notes:', error);
+      secureLogger.error('Error fetching handover notes:', error);
       throw error;
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getPatientHandoverNotes:', error);
+    secureLogger.error('Error in getPatientHandoverNotes:', error);
     throw error;
   }
 };
@@ -107,13 +107,13 @@ export const getRecentHandoverNotes = async (limit: number = 10): Promise<Handov
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching recent handover notes:', error);
+      secureLogger.error('Error fetching recent handover notes:', error);
       throw error;
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getRecentHandoverNotes:', error);
+    secureLogger.error('Error in getRecentHandoverNotes:', error);
     throw error;
   }
 };
@@ -137,13 +137,13 @@ export const updateHandoverNote = async (
       .single();
 
     if (error) {
-      console.error('Error updating handover note:', error);
+      secureLogger.error('Error updating handover note:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in updateHandoverNote:', error);
+    secureLogger.error('Error in updateHandoverNote:', error);
     throw error;
   }
 };
@@ -170,13 +170,13 @@ export const acknowledgeHandoverNote = async (
       .single();
 
     if (error) {
-      console.error('Error acknowledging handover note:', error);
+      secureLogger.error('Error acknowledging handover note:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in acknowledgeHandoverNote:', error);
+    secureLogger.error('Error in acknowledgeHandoverNote:', error);
     throw error;
   }
 };
@@ -192,11 +192,11 @@ export const deleteHandoverNote = async (noteId: string): Promise<void> => {
       .eq('id', noteId);
 
     if (error) {
-      console.error('Error deleting handover note:', error);
+      secureLogger.error('Error deleting handover note:', error);
       throw error;
     }
   } catch (error) {
-    console.error('Error in deleteHandoverNote:', error);
+    secureLogger.error('Error in deleteHandoverNote:', error);
     throw error;
   }
 };

@@ -39,15 +39,15 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
   const loadTenants = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading tenants...');
+      secureLogger.debug('🔄 Loading tenants...');
       const { data, error } = await getAllTenants();
       if (error) {
         throw new Error(error.message);
       }
-      console.log(`📋 Setting ${data?.length || 0} tenants in state`);
+      secureLogger.debug(`📋 Setting ${data?.length || 0} tenants in state`);
       setTenants(data || []);
     } catch (err) {
-      console.error('❌ Error loading tenants:', err);
+      secureLogger.error('❌ Error loading tenants:', err);
       setError(err instanceof Error ? err.message : 'Failed to load tenants');
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
       await loadTenants();
       setShowCreateModal(false);
     } catch (err) {
-      console.error('Error creating tenant:', err);
+      secureLogger.error('Error creating tenant:', err);
       throw err;
     }
   };
@@ -97,7 +97,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
       setShowEditModal(false);
       setSelectedTenant(null);
     } catch (err) {
-      console.error('Error updating tenant:', err);
+      secureLogger.error('Error updating tenant:', err);
       throw err;
     }
   };
@@ -116,7 +116,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
       setLoading(true);
       setError(null);
       
-      console.log(`Starting ${actionText} for tenant:`, tenantId);
+      secureLogger.debug(`Starting ${actionText} for tenant:`, tenantId);
       
       // Add timeout for permanent deletions
       if (permanent) {
@@ -137,7 +137,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
         }
       }
       
-      console.log(`✓ ${actionText} completed, refreshing tenant list...`);
+      secureLogger.debug(`✓ ${actionText} completed, refreshing tenant list...`);
       
       // Force refresh the tenant list
       await loadTenants();
@@ -147,10 +147,10 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
         setSelectedTenant(null);
       }
       
-      console.log('✓ Tenant list refreshed');
+      secureLogger.debug('✓ Tenant list refreshed');
       
     } catch (err) {
-      console.error(`Error in ${actionText}:`, err);
+      secureLogger.error(`Error in ${actionText}:`, err);
       setError(err instanceof Error ? err.message : `Failed to ${actionText} tenant`);
     } finally {
       setLoading(false);

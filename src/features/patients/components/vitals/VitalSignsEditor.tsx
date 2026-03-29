@@ -52,7 +52,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
     setError(''); 
 
     try {
-      console.log('Saving vitals for patient:', patientId, editedVitals);
+      secureLogger.debug('Saving vitals for patient:', patientId, editedVitals);
       
       // Format temperature (already in Celsius)
       const vitalsToSave = { 
@@ -60,20 +60,20 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
         temperature: formatTemperature(editedVitals.temperature)
       };
       
-      console.log('Formatted vitals to save:', vitalsToSave);
+      secureLogger.debug('Formatted vitals to save:', vitalsToSave);
       
       // Save vitals to database
       await updatePatientVitals(patientId, vitalsToSave);
-      console.log('Vitals saved successfully');
+      secureLogger.debug('Vitals saved successfully');
       
       // Refresh patients to get updated vitals
       await refreshPatients();
-      console.log('Patients refreshed');
+      secureLogger.debug('Patients refreshed');
       
       // Call the onSave callback
       onSave(vitalsToSave);
     } catch (err: any) {
-      console.error('Error saving vitals:', err);
+      secureLogger.error('Error saving vitals:', err);
       setError(err.message || 'Failed to save vital signs');
     } finally {
       setLoading(false);

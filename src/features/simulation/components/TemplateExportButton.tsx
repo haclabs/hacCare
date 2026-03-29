@@ -54,7 +54,7 @@ const TemplateExportButton: React.FC<TemplateExportButtonProps> = ({
       // Success notification
       alert(`✅ Template exported successfully!\n\nThe file has been downloaded to your Downloads folder.`);
     } catch (error: any) {
-      console.error('Error exporting template:', error);
+      secureLogger.error('Error exporting template:', error);
       alert(`❌ Export failed: ${error.message}`);
     } finally {
       setIsExporting(false);

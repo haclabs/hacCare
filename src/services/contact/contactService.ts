@@ -49,7 +49,7 @@ export async function submitContactForm(
     });
 
     if (error) {
-      console.error('Error submitting contact form:', error);
+      secureLogger.error('Error submitting contact form:', error);
       return {
         success: false,
         error: 'Failed to send message. Please try again or email support@haccare.app directly.',
@@ -61,7 +61,7 @@ export async function submitContactForm(
       message: data?.message || 'Thank you for your message! We\'ll get back to you soon.',
     };
   } catch (error) {
-    console.error('Unexpected error submitting contact form:', error);
+    secureLogger.error('Unexpected error submitting contact form:', error);
     return {
       success: false,
       error: 'An unexpected error occurred. Please try again later.',

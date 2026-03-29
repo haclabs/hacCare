@@ -45,11 +45,11 @@ const SimulationPortal: React.FC = () => {
 
   const loadAssignments = React.useCallback(async (retryCount = 0, isBackgroundRefresh = false) => {
     if (!user) {
-      console.log('⚠️ loadAssignments: No user, skipping');
+      secureLogger.debug('⚠️ loadAssignments: No user, skipping');
       return;
     }
 
-    console.log(`📡 loadAssignments: Starting fetch for user: ${user.id} (attempt ${retryCount + 1}/3)${isBackgroundRefresh ? ' [background]' : ''}`);
+    secureLogger.debug(`📡 loadAssignments: Starting fetch for user: ${user.id} (attempt ${retryCount + 1}/3)${isBackgroundRefresh ? ' [background]' : ''}`);
     try {
       // Only show loading spinner on initial load, not background refreshes
       if (!isBackgroundRefresh) {
@@ -60,7 +60,7 @@ const SimulationPortal: React.FC = () => {
       // Use RPC function with longer timeout for initial load (cold start can be slow)
       // Background refreshes use shorter timeout since function should be warm
       const timeoutDuration = isBackgroundRefresh ? 5000 : 15000;
-      console.log(`📡 loadAssignments: Calling RPC function (${timeoutDuration/1000}s timeout)...`);
+      secureLogger.debug(`📡 loadAssignments: Calling RPC function (${timeoutDuration/1000}s timeout)...`);
       const rpcCall = supabase.rpc(
         'get_user_simulation_assignments',
         { p_user_id: user.id }
@@ -76,7 +76,7 @@ const SimulationPortal: React.FC = () => {
       ]).catch((error) => {
         // Only log errors for initial load, not background refreshes
         if (!isBackgroundRefresh) {
-          console.error('📡 RPC call failed or timed out:', error);
+          secureLogger.error('📡 RPC call failed or timed out:', error);
         }
         return { data: null, error };
       });
@@ -84,12 +84,12 @@ const SimulationPortal: React.FC = () => {
       if (rpcError) {
         // Only log detailed errors for initial load
         if (!isBackgroundRefresh) {
-          console.error(`❌ RPC error details (attempt ${retryCount + 1}):`, rpcError);
+          secureLogger.error(`❌ RPC error details (attempt ${retryCount + 1}):`, rpcError);
         }
         
         // Retry on timeout (cold start issue), max 2 retries - but only on initial load
         if (rpcError.message?.includes('timeout') && retryCount < 2 && !isBackgroundRefresh) {
-          console.log(`🔄 Retrying... (${retryCount + 1}/2)`);
+          secureLogger.debug(`🔄 Retrying... (${retryCount + 1}/2)`);
           // Wait a bit before retry
           await new Promise(resolve => setTimeout(resolve, 500));
           return loadAssignments(retryCount + 1, isBackgroundRefresh);
@@ -105,7 +105,7 @@ const SimulationPortal: React.FC = () => {
             setError('Unable to load simulations. Please try again.');
           }
         } else {
-          console.log('⚠️ Background refresh failed silently, keeping existing data');
+          secureLogger.debug('⚠️ Background refresh failed silently, keeping existing data');
         }
         
         // Only clear assignments on initial load failure, keep existing data on background refresh failure
@@ -117,7 +117,7 @@ const SimulationPortal: React.FC = () => {
       }
       
       const data = rpcData || [];
-      console.log('✅ loadAssignments: Received', data.length, 'assignments', data);
+      secureLogger.debug('✅ loadAssignments: Received', data.length, 'assignments', data);
       setAssignments(data);
 
       // DISABLED: Auto-routing is completely disabled to prevent unwanted redirects
@@ -129,22 +129,22 @@ const SimulationPortal: React.FC = () => {
       
       if (data.length === 0 && profile?.role !== 'admin' && profile?.role !== 'instructor') {
         // No assignments for non-instructor: Show message
-        console.log('ℹ️ No simulation assignments found');
+        secureLogger.debug('ℹ️ No simulation assignments found');
       }
     } catch (err) {
-      console.error('❌ Error loading simulation assignments:', err);
+      secureLogger.error('❌ Error loading simulation assignments:', err);
       setError(err instanceof Error ? err.message : 'Failed to load simulations');
       setAssignments([]);
     } finally {
-      console.log('🏁 loadAssignments: Complete, setting loading to false');
+      secureLogger.debug('🏁 loadAssignments: Complete, setting loading to false');
       setLoading(false);
     }
   }, [user, profile]);
 
   useEffect(() => {
-    console.log('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
+    secureLogger.debug('🎯 SimulationPortal useEffect - authLoading:', authLoading, 'user:', !!user);
     if (!authLoading && user) {
-      console.log('✅ Conditions met, waiting for Supabase session to be ready...');
+      secureLogger.debug('✅ Conditions met, waiting for Supabase session to be ready...');
       
       let isMounted = true;
       let sessionCheckAttempts = 0;
@@ -160,21 +160,21 @@ const SimulationPortal: React.FC = () => {
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session) {
-            console.log('✅ Supabase session confirmed, loading assignments...');
+            secureLogger.debug('✅ Supabase session confirmed, loading assignments...');
             // Give it a tiny bit more time to fully propagate
             setTimeout(() => {
               if (isMounted) loadAssignments();
             }, 200);
           } else if (sessionCheckAttempts < maxSessionAttempts) {
-            console.warn(`⚠️ No session found, retrying (${sessionCheckAttempts}/${maxSessionAttempts})...`);
+            secureLogger.warn(`⚠️ No session found, retrying (${sessionCheckAttempts}/${maxSessionAttempts})...`);
             setTimeout(waitForSession, 500);
           } else {
-            console.error('❌ Session never established after', maxSessionAttempts, 'attempts');
+            secureLogger.error('❌ Session never established after', maxSessionAttempts, 'attempts');
             setError('Unable to establish connection. Please refresh the page.');
             setLoading(false);
           }
         } catch (error) {
-          console.error('❌ Error checking session:', error);
+          secureLogger.error('❌ Error checking session:', error);
           if (sessionCheckAttempts < maxSessionAttempts) {
             setTimeout(waitForSession, 500);
           }
@@ -194,24 +194,24 @@ const SimulationPortal: React.FC = () => {
       };
     } else if (!authLoading && !user) {
       // Redirect to login if not authenticated
-      console.log('🔒 No user, redirecting to login');
+      secureLogger.debug('🔒 No user, redirecting to login');
       navigate('/login?redirect=/simulation-portal');
     } else {
-      console.log('⏳ Still loading auth...');
+      secureLogger.debug('⏳ Still loading auth...');
     }
   }, [user, authLoading, navigate, loadAssignments]);
 
   const enterSimulation = async (tenantId: string, simulationName: string) => {
     try {
       setEnteringSimulation(true);
-      console.log('🔄 Switching to simulation tenant:', tenantId);
+      secureLogger.debug('🔄 Switching to simulation tenant:', tenantId);
       await enterSimulationTenant(tenantId);
-      console.log('✅ Entered simulation:', simulationName);
+      secureLogger.debug('✅ Entered simulation:', simulationName);
       // Navigate to dashboard which will now show simulation patients
       // Force a full page reload to ensure all contexts refresh with new tenant
       window.location.href = '/app';
     } catch (err) {
-      console.error('Error entering simulation:', err);
+      secureLogger.error('Error entering simulation:', err);
       setError(err instanceof Error ? err.message : 'Failed to enter simulation');
       setEnteringSimulation(false);
     }

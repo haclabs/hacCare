@@ -39,15 +39,15 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   // Glucose reading states for diabetic medications
   const requiresGlucoseReading = useMemo(() => {
     const isDiabeticMedication = medication.category === 'diabetic';
-    console.log('🩸 BCMA: Checking medication category:', {
+    secureLogger.debug('🩸 BCMA: Checking medication category:', {
       medication: medication.name,
       category: medication.category,
       isDiabetic: isDiabeticMedication
     });
     if (isDiabeticMedication) {
-      console.log('🩸 BCMA: Diabetic medication detected - glucose reading will be required');
+      secureLogger.debug('🩸 BCMA: Diabetic medication detected - glucose reading will be required');
     } else {
-      console.log('🩸 BCMA: Non-diabetic medication - no glucose reading required');
+      secureLogger.debug('🩸 BCMA: Non-diabetic medication - no glucose reading required');
     }
     return isDiabeticMedication;
   }, [medication.category, medication.name]);
@@ -63,32 +63,32 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
   // Set BCMA as active when component mounts
   useEffect(() => {
-    console.log('🔵 BCMA: Component mounting, setting BCMA active');
+    secureLogger.debug('🔵 BCMA: Component mounting, setting BCMA active');
     setBCMAActive(true);
     
     return () => {
-      console.log('🔵 BCMA: Component unmounting, setting BCMA inactive');
+      secureLogger.debug('🔵 BCMA: Component unmounting, setting BCMA inactive');
       setBCMAActive(false);
     };
   }, []);
 
   // Define barcode handler with proper dependencies
   const handleBarcodeScanned = useCallback((barcode: string) => {
-    console.log('🔵 BCMA: Barcode scanned:', barcode);
-    console.log('🔵 BCMA: Barcode length:', barcode.length, 'Characters:', barcode.split('').map(c => c + '(' + c.charCodeAt(0) + ')').join(' '));
-    console.log('🔵 BCMA: Current step:', currentStep);
-    console.log('🔵 BCMA: Scanned patient ID:', scannedPatientId);
-    console.log('🔵 BCMA: Scanned medication ID:', scannedMedicationId);
+    secureLogger.debug('🔵 BCMA: Barcode scanned:', barcode);
+    secureLogger.debug('🔵 BCMA: Barcode length:', barcode.length, 'Characters:', barcode.split('').map(c => c + '(' + c.charCodeAt(0) + ')').join(' '));
+    secureLogger.debug('🔵 BCMA: Current step:', currentStep);
+    secureLogger.debug('🔵 BCMA: Scanned patient ID:', scannedPatientId);
+    secureLogger.debug('🔵 BCMA: Scanned medication ID:', scannedMedicationId);
     
     // Ignore barcode scans during verify or complete steps
     if (currentStep === 'verify' || currentStep === 'complete') {
-      console.log('🔵 BCMA: Ignoring barcode scan - already in', currentStep, 'step');
+      secureLogger.debug('🔵 BCMA: Ignoring barcode scan - already in', currentStep, 'step');
       return;
     }
     
     // Prevent re-scanning the same barcode (debounce duplicate scans)
     if (currentStep === 'scan-medication' && barcode === scannedPatientId) {
-      console.log('🔵 BCMA: Ignoring duplicate patient barcode scan during medication step');
+      secureLogger.debug('🔵 BCMA: Ignoring duplicate patient barcode scan during medication step');
       return;
     }
     
@@ -98,31 +98,31 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     const medicationRegex = /^M[A-Z]\d{5}$/;
     const isMedicationBarcode = barcode.startsWith('MED') || medicationRegex.test(barcode);
     
-    console.log('� BCMA: Barcode detection details:');
-    console.log('  - Barcode value:', barcode);
-    console.log('  - Starts with PT:', barcode.startsWith('PT'));
-    console.log('  - Starts with PAT-:', barcode.startsWith('PAT-'));
-    console.log('  - Starts with MED:', barcode.startsWith('MED'));
-    console.log('  - Starts with M:', barcode.startsWith('M'));
-    console.log('  - Regex test /^M[A-Z]\\d{5}$/:', medicationRegex.test(barcode));
-    console.log('  - Final: isPatientBarcode =', isPatientBarcode);
-    console.log('  - Final: isMedicationBarcode =', isMedicationBarcode);
+    secureLogger.debug('� BCMA: Barcode detection details:');
+    secureLogger.debug('  - Barcode value:', barcode);
+    secureLogger.debug('  - Starts with PT:', barcode.startsWith('PT'));
+    secureLogger.debug('  - Starts with PAT-:', barcode.startsWith('PAT-'));
+    secureLogger.debug('  - Starts with MED:', barcode.startsWith('MED'));
+    secureLogger.debug('  - Starts with M:', barcode.startsWith('M'));
+    secureLogger.debug('  - Regex test /^M[A-Z]\\d{5}$/:', medicationRegex.test(barcode));
+    secureLogger.debug('  - Final: isPatientBarcode =', isPatientBarcode);
+    secureLogger.debug('  - Final: isMedicationBarcode =', isMedicationBarcode);
     
     if (currentStep === 'scan-patient') {
       if (isPatientBarcode) {
-        console.log('🔵 BCMA: Valid patient barcode, proceeding');
+        secureLogger.debug('🔵 BCMA: Valid patient barcode, proceeding');
         setScannedPatientId(barcode);
         setCurrentStep('scan-medication');
       } else if (isMedicationBarcode) {
-        console.log('❌ BCMA: Medication barcode scanned during patient step - rejecting');
+        secureLogger.debug('❌ BCMA: Medication barcode scanned during patient step - rejecting');
         alert(`❌ Wrong barcode type!\n\nExpected: Patient barcode (starts with PT)\nScanned: Medication barcode (${barcode})\n\nPlease scan the patient's wristband barcode.`);
       } else {
-        console.log('❌ BCMA: Unknown barcode format during patient step');
+        secureLogger.debug('❌ BCMA: Unknown barcode format during patient step');
         alert(`❌ Unknown barcode format: ${barcode}\n\nExpected: Patient barcode starting with PT`);
       }
     } else if (currentStep === 'scan-medication') {
       if (isMedicationBarcode) {
-        console.log('🔵 BCMA: Valid medication barcode, proceeding');
+        secureLogger.debug('🔵 BCMA: Valid medication barcode, proceeding');
         setScannedMedicationId(barcode);
         
         // Validate both barcodes
@@ -133,14 +133,14 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
           medication
         );
         
-        console.log('🔵 BCMA: Validation result:', validation);
+        secureLogger.debug('🔵 BCMA: Validation result:', validation);
         setValidationResult(validation);
         setCurrentStep('verify');
       } else if (isPatientBarcode) {
-        console.log('❌ BCMA: Patient barcode scanned during medication step - rejecting');
+        secureLogger.debug('❌ BCMA: Patient barcode scanned during medication step - rejecting');
         alert(`❌ Wrong barcode type!\n\nExpected: Medication barcode\nScanned: Patient barcode (${barcode})\n\nPlease scan the medication package barcode.`);
       } else {
-        console.log('❌ BCMA: Unknown barcode format during medication step');
+        secureLogger.debug('❌ BCMA: Unknown barcode format during medication step');
         alert(`❌ Unknown barcode format: ${barcode}\n\nExpected: Medication barcode (format: M + letter + 5 digits, e.g., MA26325)`);
       }
     }
@@ -148,12 +148,12 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
   // Listen for barcode scans from global barcode dispatcher
   useEffect(() => {
-    console.log('🔵 BCMA: Setting up barcode listener');
-    console.log('🔵 BCMA: Component mounted and listening for barcodescanned events');
+    secureLogger.debug('🔵 BCMA: Setting up barcode listener');
+    secureLogger.debug('🔵 BCMA: Component mounted and listening for barcodescanned events');
     
     const handleBarcodeInput = (event: CustomEvent) => {
-      console.log('🔵 BCMA: Received barcode event:', event.detail.barcode);
-      console.log('🔵 BCMA: Event type:', event.type);
+      secureLogger.debug('🔵 BCMA: Received barcode event:', event.detail.barcode);
+      secureLogger.debug('🔵 BCMA: Event type:', event.type);
       const barcode = event.detail.barcode;
       
       handleBarcodeScanned(barcode);
@@ -163,16 +163,16 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     document.addEventListener('barcodescanned', handleBarcodeInput as (event: Event) => void);
     
     // Test that event listener is working
-    console.log('🔵 BCMA: Event listener attached to document');
+    secureLogger.debug('🔵 BCMA: Event listener attached to document');
     
     // Add a test function to the component instance for debugging
     (window as Window & { bcmaTestScan?: (barcode: string) => void }).bcmaTestScan = (barcode: string) => {
-      console.log('🧪 Direct BCMA test scan:', barcode);
+      secureLogger.debug('🧪 Direct BCMA test scan:', barcode);
       handleBarcodeScanned(barcode);
     };
 
     return () => {
-      console.log('🔵 BCMA: Cleaning up barcode listener');
+      secureLogger.debug('🔵 BCMA: Cleaning up barcode listener');
       document.removeEventListener('barcodescanned', handleBarcodeInput as (event: Event) => void);
       delete (window as Window & { bcmaTestScan?: (barcode: string) => void }).bcmaTestScan;
     };
@@ -213,7 +213,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       // Call parent completion handler
       onAdministrationComplete(true, log);
     } catch (error) {
-      console.error('BCMA administration error:', error);
+      secureLogger.error('BCMA administration error:', error);
       onAdministrationComplete(false);
     }
   };
@@ -422,8 +422,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                   <button
                     onClick={() => {
                       const patientBarcode = bcmaService.generatePatientBarcode(patient);
-                      console.log('🧪 Test Patient Scan clicked - Generated barcode:', patientBarcode);
-                      console.log('🧪 Patient object:', patient);
+                      secureLogger.debug('🧪 Test Patient Scan clicked - Generated barcode:', patientBarcode);
+                      secureLogger.debug('🧪 Patient object:', patient);
                       simulateBarcodeScan(patientBarcode);
                     }}
                     className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"

@@ -75,7 +75,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       const deduped = deduplicateStudentActivities(activities);
       setStudentActivities(deduped);
     } catch (error) {
-      console.error('Failed to load student activities:', error);
+      secureLogger.error('Failed to load student activities:', error);
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         quality: 2
       });
     } catch (error) {
-      console.error('PDF export failed:', error);
+      secureLogger.error('PDF export failed:', error);
     } finally {
       setIsExporting(false);
     }
@@ -485,7 +485,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
 
       return response;
     } catch (error) {
-      console.error('Error sending email:', error);
+      secureLogger.error('Error sending email:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send email',

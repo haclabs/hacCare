@@ -24,7 +24,7 @@ export const LoginForm: React.FC = () => {
       // Without this, tenant switching and logout don't work until manual refresh
       
       if (profile.simulation_only) {
-        console.log('🎯 Simulation-only user detected, redirecting to lobby...');
+        secureLogger.debug('🎯 Simulation-only user detected, redirecting to lobby...');
         // Clear any old simulation tenant from localStorage
         localStorage.removeItem('current_simulation_tenant');
         setTimeout(() => {
@@ -32,7 +32,7 @@ export const LoginForm: React.FC = () => {
         }, 100);
       } else {
         // Regular user - go to main app with full page reload
-        console.log('🎯 Regular user detected, redirecting to app...');
+        secureLogger.debug('🎯 Regular user detected, redirecting to app...');
         setTimeout(() => {
           window.location.href = '/app';
         }, 100);
@@ -52,19 +52,19 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log('🔐 Attempting to sign in user...');
+      secureLogger.debug('🔐 Attempting to sign in user...');
       const { error } = await signIn(email, password);
       
       if (error) {
-        console.error('❌ Sign in error:', error);
+        secureLogger.error('❌ Sign in error:', error);
         setError(parseAuthError(error));
         setLoading(false); // Only set loading to false on error
       } else {
-        console.log('✅ Sign in successful, useEffect will handle redirect based on user type...');
+        secureLogger.debug('✅ Sign in successful, useEffect will handle redirect based on user type...');
         // Navigation handled by useEffect above based on simulation_only flag
       }
     } catch (error: unknown) {
-      console.error('Login error:', error);
+      secureLogger.error('Login error:', error);
       setError(parseAuthError(error));
       setLoading(false); // Only set loading to false on error
     }
@@ -81,7 +81,7 @@ export const LoginForm: React.FC = () => {
     setOauthLoading(true);
 
     try {
-      console.log('🔐 Initiating Microsoft OAuth sign in...');
+      secureLogger.debug('🔐 Initiating Microsoft OAuth sign in...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
@@ -91,13 +91,13 @@ export const LoginForm: React.FC = () => {
       });
 
       if (error) {
-        console.error('❌ Microsoft OAuth error:', error);
+        secureLogger.error('❌ Microsoft OAuth error:', error);
         setError(parseAuthError(error));
         setOauthLoading(false);
       }
       // If successful, user will be redirected to Microsoft login
     } catch (error: unknown) {
-      console.error('Microsoft OAuth error:', error);
+      secureLogger.error('Microsoft OAuth error:', error);
       setError(parseAuthError(error));
       setOauthLoading(false);
     }

@@ -57,7 +57,7 @@ export const InstructorNameModal: React.FC<InstructorNameModalProps> = ({
           .eq('user.role', 'instructor');
 
         if (error) {
-          console.error('Error loading instructors:', error);
+          secureLogger.error('Error loading instructors:', error);
           return;
         }
 
@@ -77,7 +77,7 @@ export const InstructorNameModal: React.FC<InstructorNameModalProps> = ({
 
         setInstructors(Array.from(uniqueInstructors.values()));
       } catch (error) {
-        console.error('Error loading instructors:', error);
+        secureLogger.error('Error loading instructors:', error);
       } finally {
         setLoading(false);
       }

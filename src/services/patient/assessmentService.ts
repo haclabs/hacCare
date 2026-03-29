@@ -57,7 +57,7 @@ export interface PatientAssessment {
  */
 export const createAssessment = async (assessment: PatientAssessment): Promise<PatientAssessment> => {
   try {
-    console.log('Creating assessment as patient note:', assessment);
+    secureLogger.debug('Creating assessment as patient note:', assessment);
     
     // Create comprehensive note content from assessment data
     let noteContent = `Assessment Type: ${assessment.assessment_type.charAt(0).toUpperCase() + assessment.assessment_type.slice(1)}\n\n`;
@@ -103,7 +103,7 @@ export const createAssessment = async (assessment: PatientAssessment): Promise<P
       .single();
 
     if (error) {
-      console.error('Error creating assessment note:', error);
+      secureLogger.error('Error creating assessment note:', error);
       throw new Error(`Failed to save assessment: ${error.message}`);
     }
 
@@ -122,10 +122,10 @@ export const createAssessment = async (assessment: PatientAssessment): Promise<P
       created_at: data.created_at
     };
 
-    console.log('Assessment saved successfully:', savedAssessment);
+    secureLogger.debug('Assessment saved successfully:', savedAssessment);
     return savedAssessment;
   } catch (error: any) {
-    console.error('Error creating assessment:', error);
+    secureLogger.error('Error creating assessment:', error);
     throw new Error(`Failed to create assessment: ${error.message || 'Unknown error'}`);
   }
 };
@@ -136,7 +136,7 @@ export const createAssessment = async (assessment: PatientAssessment): Promise<P
  */
 export const fetchPatientAssessments = async (patientId: string): Promise<PatientAssessment[]> => {
   try {
-    console.log('Fetching assessment notes for patient:', patientId);
+    secureLogger.debug('Fetching assessment notes for patient:', patientId);
     
     const { data, error } = await supabase
       .from('patient_notes')
@@ -146,7 +146,7 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching assessment notes:', error);
+      secureLogger.error('Error fetching assessment notes:', error);
       // Don't throw error, return empty array to prevent UI crashes
       return [];
     }
@@ -203,10 +203,10 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
       }
     });
 
-    console.log(`Fetched ${assessments.length} assessments for patient ${patientId}`);
+    secureLogger.debug(`Fetched ${assessments.length} assessments for patient ${patientId}`);
     return assessments;
   } catch (error: any) {
-    console.error('Error fetching assessments:', error);
+    secureLogger.error('Error fetching assessments:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
   }
 };
@@ -216,7 +216,7 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
  */
 export const updateAssessment = async (assessmentId: string, updates: Partial<PatientAssessment>): Promise<PatientAssessment> => {
   try {
-    console.log('Updating assessment note:', assessmentId, updates);
+    secureLogger.debug('Updating assessment note:', assessmentId, updates);
     
     // Create updated note content
     let noteContent = `Assessment Type: ${updates.assessment_type || 'Physical'}\n\n`;
@@ -237,7 +237,7 @@ export const updateAssessment = async (assessmentId: string, updates: Partial<Pa
       .single();
 
     if (error) {
-      console.error('Error updating assessment note:', error);
+      secureLogger.error('Error updating assessment note:', error);
       throw new Error(`Failed to update assessment: ${error.message}`);
     }
 
@@ -256,10 +256,10 @@ export const updateAssessment = async (assessmentId: string, updates: Partial<Pa
       created_at: data.created_at
     };
 
-    console.log('Assessment updated successfully:', updatedAssessment);
+    secureLogger.debug('Assessment updated successfully:', updatedAssessment);
     return updatedAssessment;
   } catch (error: any) {
-    console.error('Error updating assessment:', error);
+    secureLogger.error('Error updating assessment:', error);
     throw new Error(`Failed to update assessment: ${error.message || 'Unknown error'}`);
   }
 };
@@ -269,7 +269,7 @@ export const updateAssessment = async (assessmentId: string, updates: Partial<Pa
  */
 export const deleteAssessment = async (assessmentId: string): Promise<void> => {
   try {
-    console.log('Deleting assessment note:', assessmentId);
+    secureLogger.debug('Deleting assessment note:', assessmentId);
     
     const { error } = await supabase
       .from('patient_notes')
@@ -277,13 +277,13 @@ export const deleteAssessment = async (assessmentId: string): Promise<void> => {
       .eq('id', assessmentId);
 
     if (error) {
-      console.error('Error deleting assessment note:', error);
+      secureLogger.error('Error deleting assessment note:', error);
       throw new Error(`Failed to delete assessment: ${error.message}`);
     }
 
-    console.log('Assessment deleted successfully');
+    secureLogger.debug('Assessment deleted successfully');
   } catch (error: any) {
-    console.error('Error deleting assessment:', error);
+    secureLogger.error('Error deleting assessment:', error);
     throw new Error(`Failed to delete assessment: ${error.message || 'Unknown error'}`);
   }
 };

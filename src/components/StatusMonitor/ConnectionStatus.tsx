@@ -35,7 +35,7 @@ export const ConnectionStatus: React.FC = () => {
       setStatus(isConnected ? 'connected' : 'disconnected');
       setIsConfigured(true);
     } catch (error) {
-      console.error('Connection check error:', error);
+      secureLogger.error('Connection check error:', error);
       setStatus('disconnected');
     } finally {
       setLastChecked(new Date());

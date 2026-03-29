@@ -58,7 +58,7 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
       if (data && !error) {
         setTenantId(data.tenant_id);
       } else {
-        console.error('Failed to fetch patient tenant:', error);
+        secureLogger.error('Failed to fetch patient tenant:', error);
       }
     };
     
@@ -113,7 +113,7 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
 
       onSuccess();
     } catch (err) {
-      console.error('Failed to create I&O entry:', err);
+      secureLogger.error('Failed to create I&O entry:', err);
       setError('Failed to create entry. Please try again.');
       setLoading(false);
     }

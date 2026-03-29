@@ -26,7 +26,7 @@ export const PatientTransferButtons: React.FC<PatientTransferButtonsProps> = ({
       onTransferComplete?.();
     }
     // You can also show a toast notification here
-    console.log(success ? '✅' : '❌', message);
+    secureLogger.debug(success ? '✅' : '❌', message);
   };
 
   return (
@@ -80,7 +80,7 @@ export const PatientTransferActions: React.FC<PatientTransferButtonsProps> = ({
     if (success) {
       onTransferComplete?.();
     }
-    console.log(success ? '✅' : '❌', message);
+    secureLogger.debug(success ? '✅' : '❌', message);
   };
 
   return (

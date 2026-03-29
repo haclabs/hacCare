@@ -144,7 +144,7 @@ export const SystemLogsViewer: React.FC = () => {
 
       setLogs(enrichedLogs);
     } catch (error) {
-      console.error('Error fetching system logs:', error);
+      secureLogger.error('Error fetching system logs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +175,7 @@ export const SystemLogsViewer: React.FC = () => {
       alert(`Logs older than ${olderThan} deleted successfully`);
       fetchLogs();
     } catch (error) {
-      console.error('Error deleting logs:', error);
+      secureLogger.error('Error deleting logs:', error);
       alert('Failed to delete logs');
     }
   };

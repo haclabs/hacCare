@@ -5,6 +5,7 @@ import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientL
 import { BarcodeGenerator } from '../../clinical/components/BarcodeGenerator';
 import { Tenant } from '../../../types';
 import { bcmaService } from '../../../services/clinical/bcmaService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
@@ -682,28 +683,16 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
       setLoading(true);
       setError(null);
       
-      console.log('🚨 TENANT DEBUG INFO:');
-      console.log('📍 Selected Tenant:', selectedTenant);
-      console.log('🆔 Using Tenant ID:', selectedTenant.id);
-      console.log('🏷️ Tenant Name:', selectedTenant.name);
-      console.log('🌐 Tenant Subdomain:', selectedTenant.subdomain);
-      console.log('🔍 Fetching bulk labels for tenant:', selectedTenant.id, selectedTenant.name);
+      secureLogger.debug('Fetching bulk labels', { tenantId: selectedTenant.id, tenantName: selectedTenant.name });
       
       const labelsData = await fetchAllLabelsForPrinting(selectedTenant.id);
-      console.log('📊 Raw labels data:', {
-        patients: labelsData.patients,
-        medications: labelsData.medications,
-        tenantUsed: selectedTenant.id
+      secureLogger.debug('Bulk labels loaded', {
+        patients: labelsData.patients.length,
+        medications: labelsData.medications.length
       });
       setLabels(labelsData);
-      
-      console.log('✅ Successfully loaded bulk labels:', {
-        patients: labelsData.patients.length,
-        medications: labelsData.medications.length,
-        tenant: selectedTenant.name
-      });
     } catch (err) {
-      console.error('Error fetching bulk labels:', err);
+      secureLogger.error('Error fetching bulk labels', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch label data');
     } finally {
       setLoading(false);

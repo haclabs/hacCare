@@ -84,7 +84,7 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
 
     if (err) {
       setError('Failed to create lab result');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
     } else {
       onSuccess();

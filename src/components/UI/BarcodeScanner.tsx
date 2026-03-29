@@ -19,7 +19,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   });
 
   useEffect(() => {
-    if (debug) console.log('🔢 Buffer updated:', buffer);
+    if (debug) secureLogger.debug('🔢 Buffer updated:', buffer);
   }, [buffer, debug]);
 
   return (

@@ -177,7 +177,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
 
       await onSave(patientData);
     } catch (error) {
-      console.error('Error saving patient:', error);
+      secureLogger.error('Error saving patient:', error);
       alert('Failed to save patient. Please try again.');
     } finally {
       setLoading(false);

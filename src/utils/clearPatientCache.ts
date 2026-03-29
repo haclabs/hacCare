@@ -4,7 +4,7 @@
 import { queryClient } from '../lib/api/queryClient';
 
 export function clearPatientCache() {
-  console.log('🧹 Clearing patient cache...');
+  secureLogger.debug('🧹 Clearing patient cache...');
   
   // Clear all patient-related queries
   queryClient.removeQueries({ queryKey: ['patients'] });
@@ -13,12 +13,12 @@ export function clearPatientCache() {
   // Invalidate to trigger refetch
   queryClient.invalidateQueries({ queryKey: ['patients'] });
   
-  console.log('✅ Patient cache cleared. Refetching...');
+  secureLogger.debug('✅ Patient cache cleared. Refetching...');
 }
 
 // Auto-run on import in dev mode
 if (import.meta.env.DEV) {
-  console.log('🔄 Auto-clearing patient cache in dev mode...');
+  secureLogger.debug('🔄 Auto-clearing patient cache in dev mode...');
   setTimeout(() => {
     clearPatientCache();
   }, 1000);

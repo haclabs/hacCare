@@ -26,7 +26,7 @@ export const createLabOrder = async (
       .single();
 
     if (error) {
-      console.error('Error creating lab order:', error);
+      secureLogger.error('Error creating lab order:', error);
       return { data: null, error: error.message };
     }
 
@@ -57,7 +57,7 @@ export const getLabOrders = async (
       .order('order_time', { ascending: false });
 
     if (error) {
-      console.error('Error fetching lab orders:', error);
+      secureLogger.error('Error fetching lab orders:', error);
       return { data: null, error: error.message };
     }
 
@@ -85,7 +85,7 @@ export const getLabOrder = async (
       .single();
 
     if (error) {
-      console.error('Error fetching lab order:', error);
+      secureLogger.error('Error fetching lab order:', error);
       return { data: null, error: error.message };
     }
 
@@ -115,7 +115,7 @@ export const updateLabOrderStatus = async (
       .single();
 
     if (error) {
-      console.error('Error updating lab order status:', error);
+      secureLogger.error('Error updating lab order status:', error);
       return { data: null, error: error.message };
     }
 
@@ -147,7 +147,7 @@ export const markLabelPrinted = async (
       .single();
 
     if (error) {
-      console.error('Error marking label as printed:', error);
+      secureLogger.error('Error marking label as printed:', error);
       return { data: null, error: error.message };
     }
 
@@ -174,7 +174,7 @@ export const deleteLabOrder = async (
       .eq('id', orderId);
 
     if (error) {
-      console.error('Error deleting lab order:', error);
+      secureLogger.error('Error deleting lab order:', error);
       return { error: error.message };
     }
 

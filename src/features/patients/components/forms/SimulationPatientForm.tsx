@@ -126,13 +126,13 @@ export const SimulationPatientForm: React.FC<SimulationPatientFormProps> = ({ on
     setLoading(true);
     
     try {
-      console.log('Creating simulation patient for simulation:', currentSimulation.id);
+      secureLogger.debug('Creating simulation patient for simulation:', currentSimulation.id);
       await createActiveSimulationPatient(currentSimulation.id, formData);
-      console.log('Patient created successfully, refreshing simulation data');
+      secureLogger.debug('Patient created successfully, refreshing simulation data');
       await refreshSimulationData(); // Refresh the simulation context
       onSave();
     } catch (error) {
-      console.error('Error creating simulation patient:', error);
+      secureLogger.error('Error creating simulation patient:', error);
       alert('Failed to create patient. Please try again.');
     } finally {
       setLoading(false);

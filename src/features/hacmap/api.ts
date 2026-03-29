@@ -33,7 +33,7 @@ export async function createAvatarLocation(
     .single();
 
   if (error) {
-    console.error('Error creating avatar location:', error);
+    secureLogger.error('Error creating avatar location:', error);
     throw new Error(`Failed to create avatar location: ${error.message}`);
   }
 
@@ -55,7 +55,7 @@ export async function updateAvatarLocation(
     .single();
 
   if (error) {
-    console.error('Error updating avatar location:', error);
+    secureLogger.error('Error updating avatar location:', error);
     throw new Error(`Failed to update avatar location: ${error.message}`);
   }
 
@@ -77,10 +77,10 @@ export async function listMarkers(patientId: string): Promise<MarkerWithDetails[
       .eq('patient_id', patientId);
 
     if (devicesError) {
-      console.error('Error fetching devices:', devicesError);
+      secureLogger.error('Error fetching devices:', devicesError);
       // If table doesn't exist, return empty array instead of throwing
       if (devicesError.message?.includes('does not exist') || devicesError.code === '42P01') {
-        console.warn('devices table does not exist - please run the hacmap_tables.sql migration');
+        secureLogger.warn('devices table does not exist - please run the hacmap_tables.sql migration');
         return [];
       }
       throw devicesError;
@@ -96,10 +96,10 @@ export async function listMarkers(patientId: string): Promise<MarkerWithDetails[
       .eq('patient_id', patientId);
 
     if (woundsError) {
-      console.error('Error fetching wounds:', woundsError);
+      secureLogger.error('Error fetching wounds:', woundsError);
       // If table doesn't exist, return empty array instead of throwing
       if (woundsError.message?.includes('does not exist') || woundsError.code === '42P01') {
-        console.warn('wounds table does not exist - please run the hacmap_tables.sql migration');
+        secureLogger.warn('wounds table does not exist - please run the hacmap_tables.sql migration');
         return [];
       }
       throw woundsError;
@@ -147,7 +147,7 @@ export async function listMarkers(patientId: string): Promise<MarkerWithDetails[
 
     return markers;
   } catch (error) {
-    console.error('Error listing markers:', error);
+    secureLogger.error('Error listing markers:', error);
     throw error;
   }
 }
@@ -167,7 +167,7 @@ export async function getDevice(id: string): Promise<Device> {
     .single();
 
   if (error) {
-    console.error('Error fetching device:', error);
+    secureLogger.error('Error fetching device:', error);
     throw new Error(`Failed to fetch device: ${error.message}`);
   }
 
@@ -185,7 +185,7 @@ export async function createDevice(input: CreateDeviceInput): Promise<Device> {
     .single();
 
   if (error) {
-    console.error('Error creating device:', error);
+    secureLogger.error('Error creating device:', error);
     throw new Error(`Failed to create device: ${error.message}`);
   }
 
@@ -207,7 +207,7 @@ export async function updateDevice(
     .single();
 
   if (error) {
-    console.error('Error updating device:', error);
+    secureLogger.error('Error updating device:', error);
     throw new Error(`Failed to update device: ${error.message}`);
   }
 
@@ -224,7 +224,7 @@ export async function deleteDevice(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting device:', error);
+    secureLogger.error('Error deleting device:', error);
     throw new Error(`Failed to delete device: ${error.message}`);
   }
 }
@@ -244,7 +244,7 @@ export async function getWound(id: string): Promise<Wound> {
     .single();
 
   if (error) {
-    console.error('Error fetching wound:', error);
+    secureLogger.error('Error fetching wound:', error);
     throw new Error(`Failed to fetch wound: ${error.message}`);
   }
 
@@ -262,7 +262,7 @@ export async function createWound(input: CreateWoundInput): Promise<Wound> {
     .single();
 
   if (error) {
-    console.error('Error creating wound:', error);
+    secureLogger.error('Error creating wound:', error);
     throw new Error(`Failed to create wound: ${error.message}`);
   }
 
@@ -284,7 +284,7 @@ export async function updateWound(
     .single();
 
   if (error) {
-    console.error('Error updating wound:', error);
+    secureLogger.error('Error updating wound:', error);
     throw new Error(`Failed to update wound: ${error.message}`);
   }
 
@@ -301,7 +301,7 @@ export async function deleteWound(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting wound:', error);
+    secureLogger.error('Error deleting wound:', error);
     throw new Error(`Failed to delete wound: ${error.message}`);
   }
 }

@@ -43,7 +43,7 @@ export async function fetchAdvancedDirective(patientId: string): Promise<Advance
 
     return data;
   } catch (error) {
-    console.error('Error fetching advanced directive:', error);
+    secureLogger.error('Error fetching advanced directive:', error);
     return null;
   }
 }
@@ -64,7 +64,7 @@ export async function upsertAdvancedDirective(directive: AdvancedDirective): Pro
 
     return data;
   } catch (error) {
-    console.error('Error upserting advanced directive:', error);
+    secureLogger.error('Error upserting advanced directive:', error);
     throw error;
   }
 }
@@ -82,7 +82,7 @@ export async function deleteAdvancedDirective(patientId: string): Promise<boolea
 
     return true;
   } catch (error) {
-    console.error('Error deleting advanced directive:', error);
+    secureLogger.error('Error deleting advanced directive:', error);
     return false;
   }
 }

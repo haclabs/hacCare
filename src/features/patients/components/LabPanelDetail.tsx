@@ -73,7 +73,7 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
     const { data, error } = await getLabResults(panel.id);
     
     if (error) {
-      console.error('Failed to load results:', error);
+      secureLogger.error('Failed to load results:', error);
     } else {
       setResults(data || []);
       

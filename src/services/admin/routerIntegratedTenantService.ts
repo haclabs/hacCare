@@ -24,7 +24,7 @@ class RouterIntegratedTenantService {
     this.navigate = options.navigate;
     this.preserveRoute = options.preserveRoute ?? true;
 
-    console.log('🔄 Router-integrated tenant service initialized');
+    secureLogger.debug('🔄 Router-integrated tenant service initialized');
   }
 
   /**
@@ -46,19 +46,19 @@ class RouterIntegratedTenantService {
       // Handle routing based on configuration
       if (this.preserveRoute && this.navigate && currentPath) {
         // Stay on current route but refresh with new tenant context
-        console.log(`🔄 Refreshing route ${currentPath} with new tenant context`);
+        secureLogger.debug(`🔄 Refreshing route ${currentPath} with new tenant context`);
         
         // Navigate to same route to trigger data refresh
         this.navigate(currentPath + currentSearch, { replace: true });
       } else if (this.navigate) {
         // Navigate to home/dashboard
-        console.log('🏠 Navigating to dashboard with new tenant context');
+        secureLogger.debug('🏠 Navigating to dashboard with new tenant context');
         this.navigate('/');
       }
 
       return { success: true };
     } catch (error) {
-      console.error('❌ Error in router-integrated tenant switch:', error);
+      secureLogger.error('❌ Error in router-integrated tenant switch:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Navigation error' 
@@ -76,11 +76,11 @@ class RouterIntegratedTenantService {
 
       // Navigate to management dashboard or home
       if (this.navigate) {
-        console.log('🏠 Navigating to management view');
+        secureLogger.debug('🏠 Navigating to management view');
         this.navigate('/management', { replace: true });
       }
     } catch (error) {
-      console.error('❌ Error clearing tenant context with routing:', error);
+      secureLogger.error('❌ Error clearing tenant context with routing:', error);
     }
   }
 
@@ -105,7 +105,7 @@ class RouterIntegratedTenantService {
 
     // If on tenant-specific route but no tenant selected, redirect to management
     if (isTenantSpecificRoute && !tenantId && this.navigate) {
-      console.log('⚠️ Tenant-specific route accessed without tenant context, redirecting');
+      secureLogger.debug('⚠️ Tenant-specific route accessed without tenant context, redirecting');
       this.navigate('/management', { replace: true });
       return false;
     }
@@ -119,13 +119,13 @@ class RouterIntegratedTenantService {
   getTenantAwareNavigate() {
     return (to: string, options?: { replace?: boolean; state?: any }) => {
       if (!this.navigate) {
-        console.warn('Navigator not initialized for tenant-aware navigation');
+        secureLogger.warn('Navigator not initialized for tenant-aware navigation');
         return;
       }
 
       const currentAccess = superAdminTenantService.getCurrentAccess();
       
-      console.log(`🧭 Tenant-aware navigation to ${to} with tenant ${currentAccess.tenantId}`);
+      secureLogger.debug(`🧭 Tenant-aware navigation to ${to} with tenant ${currentAccess.tenantId}`);
       return this.navigate(to, options);
     };
   }
@@ -135,11 +135,11 @@ class RouterIntegratedTenantService {
    */
   setupRouteGuards() {
     if (!this.navigate) {
-      console.warn('Navigator not available for route guards setup');
+      secureLogger.warn('Navigator not available for route guards setup');
       return;
     }
 
-    console.log('🛡️ Tenant route guards configured');
+    secureLogger.debug('🛡️ Tenant route guards configured');
   }
 }
 
