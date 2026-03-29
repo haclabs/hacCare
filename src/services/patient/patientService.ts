@@ -1,7 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote, SimulationPatient } from '../../types';
 import { logAction } from '../operations/auditService';
-import { runAlertChecks } from '../operations/alertService';
 
 /**
  *    // Fetch vitals for all patients
@@ -758,18 +757,6 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
     );
 
     console.log('Vitals inserted successfully');
-    
-    // Trigger alert checks after saving vitals to update missing vitals alerts
-    // TEMPORARILY DISABLED FOR DEMO - Was causing UI spinner to hang
-    /*
-    try {
-      console.log('Triggering alert checks after vitals update');
-      await runAlertChecks();
-    } catch (alertError) {
-      console.warn('Alert checks failed, but vitals were saved successfully:', alertError);
-      // Don't throw error here as vitals were saved successfully
-    }
-    */
   } catch (error) {
     console.error('Error updating patient vitals:', error);
     throw error;

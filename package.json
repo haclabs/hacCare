@@ -25,7 +25,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "preview": "vite preview",
-    "type-check": "./node_modules/.bin/tsc --noEmit",
+    "type-check": "./node_modules/.bin/tsc --noEmit -p tsconfig.app.json",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

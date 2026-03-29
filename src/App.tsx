@@ -2,12 +2,10 @@ import { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-import { AlertPanel } from './components/Alerts/AlertPanel'; 
 import { QuickStats } from './components/Dashboard/QuickStats';
 import { ModularPatientDashboard } from './components/ModularPatientDashboard';
 import { ModularPatientSystemDemo } from './components/ModularPatientSystemDemo';
 import { useMultiTenantPatients } from './features/patients/hooks/useMultiTenantPatients';
-import { useAlertContext } from './hooks/useAlertContext';
 import { useTenant } from './contexts/TenantContext';
 import { getPatientByMedicationId } from './services/clinical/medicationService';
 import LoadingSpinner from './components/UI/LoadingSpinner';
@@ -63,11 +61,10 @@ function App() {
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [showAlerts, setShowAlerts] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
-  const [editingTemplate, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
+  const [, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
 
   // Listen for sidebar toggle events
   useEffect(() => {
@@ -144,9 +141,6 @@ function App() {
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
   const { patients = [], error: dbError } = useMultiTenantPatients();
-  
-  // Get alerts from AlertContext (avoid React Query conflicts)
-  const { alerts } = useAlertContext();
 
   // Create currentUser object for components that need it
   const currentUser = user && profile ? {
@@ -613,7 +607,7 @@ function App() {
         return (
           <div className="space-y-6">
             {/* Dashboard Statistics */}
-            <QuickStats patients={patients} alerts={alerts} />
+            <QuickStats patients={patients} alerts={[]} />
             
             {/* Patient List */}
             <div>
@@ -783,12 +777,6 @@ function App() {
             </Routes>
           </main>
         </div>
-
-      {/* Alert Panel Overlay */}
-      <AlertPanel
-        isOpen={showAlerts}
-        onClose={() => setShowAlerts(false)}
-      />
 
       {/* Program Selector Modal - For instructors with multiple programs */}
       <Suspense fallback={null}>

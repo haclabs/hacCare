@@ -8,7 +8,6 @@ import { MedicationForm } from '../forms/MedicationForm';
 import { useAuth } from '../../../../hooks/useAuth';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { fetchPatientMedications, deleteMedication } from '../../../../services/clinical/medicationService';
-import { runAlertChecks } from '../../../../lib/alertService';
 // import { usePatients } from '../../hooks/usePatients'; // Commented out as not currently used
 import { Medication } from '../../../../types';
 
@@ -68,12 +67,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
         const updatedMedications = await fetchPatientMedications(patientId, simulationId);
         console.log(`Fetched ${updatedMedications.length} medications`);
         setAllMedications(updatedMedications);
-        try {
-            console.log('Running alert checks after medication refresh');
-            await runAlertChecks();
-        } catch (error) {
-            console.error('Error refreshing alerts:', error);
-        }
         onRefresh();
     } catch (error) {
         console.error('Error refreshing medications:', error);
