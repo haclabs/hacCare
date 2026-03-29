@@ -40,7 +40,7 @@ export interface Patient {
 export interface VitalSigns {
   id?: string;
   temperature: number;
-  bloodPressure: {
+  bloodPressure?: {
     systolic: number;
     diastolic: number;
   };

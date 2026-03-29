@@ -91,7 +91,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
     setEditedVitals(prev => ({
       ...prev,
       bloodPressure: { 
-        ...prev.bloodPressure, 
+        ...(prev.bloodPressure ?? { systolic: 120, diastolic: 80 }), 
         [type]: value 
       } 
     }));
@@ -167,7 +167,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                     type="number"
                     min="70"
                     max="250"
-                    value={editedVitals.bloodPressure.systolic}
+                    value={editedVitals.bloodPressure?.systolic ?? ''}
                     onChange={(e) => updateBloodPressure('systolic', parseInt(e.target.value))}
                     className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
@@ -179,7 +179,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
                     type="number"
                     min="40"
                     max="150"
-                    value={editedVitals.bloodPressure.diastolic}
+                    value={editedVitals.bloodPressure?.diastolic ?? ''}
                     onChange={(e) => updateBloodPressure('diastolic', parseInt(e.target.value))}
                     className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
