@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Mail, Hash } from 'lucide-react';
 import { addStudentToRoster } from '../../services/admin/programService';
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface AddStudentModalProps {
   programId: string;

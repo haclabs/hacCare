@@ -21,6 +21,7 @@ import {
 import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote } from '../../../../services/patient/handoverService';
 import { StudentAcknowledgeModal } from '../../../../components/modals/StudentAcknowledgeModal';
 import { format } from 'date-fns';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface HandoverNotesListProps {
   patientId: string;

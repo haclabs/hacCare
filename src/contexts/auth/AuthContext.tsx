@@ -4,6 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { initializeSessionPersistence, checkSessionWithRetry } from '../../services/auth/authPersistence';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Authentication Context Interface

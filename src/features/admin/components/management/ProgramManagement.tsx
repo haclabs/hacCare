@@ -10,6 +10,7 @@ import {
   type ProgramWithUserCount
 } from '../../../../services/admin/programService';
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Program Management Component

@@ -5,6 +5,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../../lib/api/supabase';
 import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 import { SecuritySettings } from './SecuritySettings';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Settings Component

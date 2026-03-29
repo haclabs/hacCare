@@ -18,6 +18,7 @@ import { VitalsContent } from '../vitals/VitalsContent';
 import { NotesContent } from './NotesContent';
 import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { ModernPatientManagement } from '../../ModernPatientManagement';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface PatientDetailProps {
   onShowBracelet?: (patient: Patient) => void;

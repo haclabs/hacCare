@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * SYSTEM LOGGING SERVICE

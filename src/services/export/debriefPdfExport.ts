@@ -5,6 +5,7 @@
 
 import { format } from 'date-fns';
 import { loadPdfLibraries } from '../../utils/pdfLoader';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface PdfExportOptions {
   filename?: string;

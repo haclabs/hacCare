@@ -18,6 +18,7 @@ interface IntakeOutputSummary extends BaseIntakeOutputSummary {
 }
 import type { Database } from '../../../../types/supabase';
 import { AddIntakeOutputModal } from './AddIntakeOutputModal';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 type IntakeOutputEvent = Database['public']['Tables']['patient_intake_output_events']['Row'];
 

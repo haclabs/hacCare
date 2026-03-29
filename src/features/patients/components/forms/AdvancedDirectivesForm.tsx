@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
 import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;

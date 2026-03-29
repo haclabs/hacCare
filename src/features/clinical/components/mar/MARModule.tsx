@@ -25,6 +25,7 @@ import { BBITTab } from '../../../patients/components/mar/BBITTab';
 import { MedicationHistoryView } from './MedicationHistoryView';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge } from '../../../../utils/vitalRanges';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 

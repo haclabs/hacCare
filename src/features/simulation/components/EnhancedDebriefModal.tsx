@@ -16,6 +16,7 @@ import { generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGener
 import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
 import { EmailDebriefModal } from './EmailDebriefModal';
 import type { Database } from '../../../types/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 type HistoryRecordWithActivities = Database['public']['Tables']['simulation_history']['Row'] & {
   student_activities?: StudentActivity[] | null;

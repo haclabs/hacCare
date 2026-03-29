@@ -4,6 +4,7 @@ import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getTenantsForSwitching } from '../../services/admin/tenantService';
 import { Tenant } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Tenant Switcher Component

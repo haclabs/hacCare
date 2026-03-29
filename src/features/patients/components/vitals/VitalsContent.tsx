@@ -5,6 +5,7 @@ import { VitalSignsEditor } from './VitalSignsEditor';
 import { VitalsTrends } from './VitalsTrends';
 import { fetchPatientVitals } from '../../../../services/patient/patientService';
 import { calculatePreciseAge } from '../../../../utils/vitalRanges';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsContentProps {
   patientId: string;

@@ -9,6 +9,7 @@ import { Edit, Save, BookOpen, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { saveTemplateSnapshot } from '../../../services/simulation/simulationService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface TemplateEditingInfo {
   template_id: string;

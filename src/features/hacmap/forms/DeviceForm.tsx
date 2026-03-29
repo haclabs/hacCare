@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Trash2 } from 'lucide-react';
 import type { Device, CreateDeviceInput, UpdateDeviceInput } from '../../../types/hacmap';
 import {
+import { secureLogger } from '../../../lib/security/secureLogger';
   DEVICE_TYPE_LABELS,
   RESERVOIR_TYPE_LABELS,
   ORIENTATION_LABELS,

@@ -3,6 +3,7 @@ import { X, Clock, User, FileText, RefreshCw, Activity, Edit, Plus, Trash2, Pill
 import { parseISO, isValid } from 'date-fns';
 import { fetchTargetActivity, AuditLog } from '../../../../lib/auditService';
 import { formatLocalTime } from '../../../../utils/dateUtils';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface RecentActivityProps {
   patientId: string;

@@ -5,6 +5,7 @@ import { Copy, Move, MoreHorizontal } from 'lucide-react';
 import PatientTransferModal from './PatientTransferModal';
 import { usePatientTransfer } from '../hooks/usePatientTransfer';
 import { Patient } from '../../../types';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 // Add these buttons to your existing patient list/card components
 

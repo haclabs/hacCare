@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Upload, AlertCircle, CheckCircle, Download, FileText } from 'lucide-react';
 import Papa from 'papaparse';
 import { bulkCreateStudents } from '../../services/admin/programService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface CSVImportModalProps {
   programId: string;

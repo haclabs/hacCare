@@ -9,6 +9,7 @@
 
 import { supabase } from '../../../lib/api/supabase';
 import type { TemplateExportPackage } from '../types/templateSnapshot';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Export a simulation template with complete snapshot data

@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '../config/database'; // Adjust import path as needed
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface OldMedication {
   id: string;

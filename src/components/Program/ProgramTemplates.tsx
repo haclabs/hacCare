@@ -7,6 +7,7 @@ import { supabase } from '../../lib/api/supabase';
 import { useUserProgramAccess } from '../../hooks/useUserProgramAccess';
 import { formatDistanceToNow } from 'date-fns';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface SimulationTemplate {
   id: string;

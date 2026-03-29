@@ -17,6 +17,7 @@ import TemplateImportModal from './TemplateImportModal';
 import { formatDistanceToNow } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { useNavigate } from 'react-router-dom';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 const SimulationTemplates: React.FC = () => {
   const [templates, setTemplates] = useState<SimulationTemplateWithDetails[]>([]);

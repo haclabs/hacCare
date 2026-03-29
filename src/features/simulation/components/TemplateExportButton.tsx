@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { Download } from 'lucide-react';
 import { downloadTemplateExport, getExportSummary } from '../services/templateExportService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface TemplateExportButtonProps {
   templateId: string;

@@ -52,6 +52,7 @@ import type {
 import { DEVICE_TYPE_LABELS, WOUND_TYPE_LABELS } from '../../types/hacmap';
 import { AlertCircle, Filter, X, FileText, Plus } from 'lucide-react';
 import { PatientActionBar } from '../../components/PatientActionBar';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface AvatarBoardProps {
   patientId: string;

@@ -8,6 +8,7 @@ import { Patient } from '../../../types';
 import { usePatients, useCreatePatient, useUpdatePatient, useDeletePatient } from '../hooks/usePatients';
 import { PatientForm } from './forms/PatientForm';
 import PatientTransferModal from './PatientTransferModal';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Patient Management Component

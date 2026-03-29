@@ -32,6 +32,7 @@ import {
 import { CreateLabResultModal } from './CreateLabResultModal';
 import { EditLabResultModal } from './EditLabResultModal';
 import { LabAcknowledgeModal } from './LabAcknowledgeModal';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LabPanelDetailProps {
   panel: LabPanel;

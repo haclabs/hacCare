@@ -6,6 +6,7 @@ import { BowelRecordForm } from '../forms/BowelRecordForm';
 import { BowelRecordsList } from '../bowel/BowelRecordsList';
 import { Brain, Heart, Stethoscope, Plus, RefreshCw, FileText } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface PatientAssessmentsTabProps {
   patientId: string;

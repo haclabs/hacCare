@@ -6,6 +6,7 @@ import { useAuth } from '../../../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../../../lib/media/imageService';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface ImageAnnotationProps {
   patientId: string;

@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface SimulationInfo {
   id: string;

@@ -5,6 +5,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import type {
+import { secureLogger } from '../../lib/security/secureLogger';
   DeviceAssessment,
   CreateDeviceAssessmentInput,
   UpdateDeviceAssessmentInput

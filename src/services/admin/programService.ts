@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import type { Database } from '../../types/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Type Definitions

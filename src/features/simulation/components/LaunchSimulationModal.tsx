@@ -12,6 +12,7 @@ import { launchSimulation } from '../../../services/simulation/simulationService
 import { supabase } from '../../../lib/api/supabase';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LaunchSimulationModalProps {
   template: SimulationTemplateWithDetails;

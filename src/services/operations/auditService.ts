@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { User } from '@supabase/supabase-js';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Audit Service

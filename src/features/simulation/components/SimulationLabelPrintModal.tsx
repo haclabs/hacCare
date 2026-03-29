@@ -13,6 +13,7 @@ import { fetchAllLabelsForPrinting, BulkLabelData, PatientLabelData, MedicationL
 import { BarcodeGenerator } from '../../clinical/components/BarcodeGenerator';
 import { bcmaService } from '../../../services/clinical/bcmaService';
 import type { Medication } from '../../clinical/types/clinical';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface WindowWithJsBarcode extends Window {
   JsBarcode: (canvas: HTMLElement, text: string, options: Record<string, unknown>) => void;

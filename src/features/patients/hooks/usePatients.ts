@@ -16,6 +16,7 @@ import {
 import { fetchPatientMedications } from '../../../services/clinical/medicationService';
 import { Patient, VitalSigns, PatientNote } from '../../../types';
 import { useTenant } from '../../../contexts/TenantContext';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Hook to fetch all patients

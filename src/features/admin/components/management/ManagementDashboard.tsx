@@ -16,6 +16,7 @@ import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 import { TenantSettings } from './TenantSettings';
 import BulkLabelPrint from '../BulkLabelPrint';
 import ProgramManagement from './ProgramManagement';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 export const ManagementDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'programs' | 'settings' | 'bulk-print'>('overview');

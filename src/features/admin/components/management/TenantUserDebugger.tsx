@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { getTenantUsers } from '../../../../services/admin/tenantService';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 export const TenantUserDebugger: React.FC = () => {
   const [tenantId, setTenantId] = useState('');

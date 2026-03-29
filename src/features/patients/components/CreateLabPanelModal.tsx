@@ -7,6 +7,7 @@ import { useTenant } from '../../../contexts/TenantContext';
 import { createLabPanel } from '../../../services/clinical/labService';
 import type { CreateLabPanelInput } from '../../../features/clinical/types/labs';
 import { getCurrentLocalDateTimeString } from '../../../utils/time';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateLabPanelModalProps {
   patientId: string;

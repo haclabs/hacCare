@@ -4,6 +4,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import { useAuth } from '../../../../hooks/useAuth';
 import { usePatients } from '../../hooks/usePatients';
 import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../../../services/patient/patientService';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsTrendsProps {
   patientId: string;

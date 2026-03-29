@@ -10,6 +10,7 @@ import {
   getTenantUsers
 } from '../../../../services/admin/tenantService';
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface TenantCRUDProps {
   onSelectTenant?: (tenant: Tenant) => void;

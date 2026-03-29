@@ -59,6 +59,7 @@ import type { LabPanel, LabResult } from '../features/clinical/types/labs';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 import { calculatePreciseAge } from '../utils/vitalRanges';
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface ModularPatientDashboardProps {
   onShowBracelet?: (patient: Patient) => void;

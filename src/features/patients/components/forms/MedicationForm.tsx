@@ -5,6 +5,7 @@ import { createMedication, updateMedication } from '../../../../services/clinica
 import { addHours, setHours, setMinutes, format } from 'date-fns';
 import { formatLocalTime } from '../../../../utils/dateUtils';
 import { CheckCircle } from 'lucide-react';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface MedicationFormProps {
   medication?: Medication | null;

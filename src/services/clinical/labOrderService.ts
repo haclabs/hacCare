@@ -5,6 +5,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import type { LabOrder, CreateLabOrderInput } from '../../features/clinical/types/labOrders';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Create a new lab order

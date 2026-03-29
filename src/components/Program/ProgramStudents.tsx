@@ -8,6 +8,7 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { format } from 'date-fns';
 import AddStudentModal from './AddStudentModal';
 import ImportStudentsModal from './ImportStudentsModal';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Students Management Page

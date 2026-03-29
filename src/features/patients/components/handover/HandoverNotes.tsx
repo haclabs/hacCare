@@ -11,6 +11,7 @@ import { HandoverNotesForm } from './HandoverNotesForm';
 import { HandoverNotesList } from './HandoverNotesList';
 import { createHandoverNote, CreateHandoverNoteData } from '../../../../services/patient/handoverService';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface HandoverNotesProps {
   patientId: string;

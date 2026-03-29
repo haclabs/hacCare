@@ -6,6 +6,7 @@ import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getSimulationTemplates } from '../../services/simulation/simulationService';
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface CalendarEventModalProps {
   isOpen: boolean;

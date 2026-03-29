@@ -14,6 +14,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import { supabase } from '../../../lib/api/supabase';
 import StudentQuickIntro from '../../../components/StudentQuickIntro';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface SimulationAssignment {
   id: string;

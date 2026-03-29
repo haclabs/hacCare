@@ -3,6 +3,7 @@ import { X, Save, Stethoscope, Heart, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { createAssessment, PatientAssessment } from '../../../../services/patient/assessmentService';
 import { useAuth } from '../../hooks/useAuth';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Assessment Form Component

@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Download, Upload, Trash2, Shield, Database, AlertTriangle, CheckCircle, FileUp, FileText, X } from 'lucide-react';
 import { backupService, BackupOptions, BackupMetadata } from '../../../services/operations/backupService';
 import { useAuth } from '../../../hooks/useAuth';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 // Local formatter functions to avoid import issues
 const formatBytes = (bytes: number, decimals: number = 2): string => {

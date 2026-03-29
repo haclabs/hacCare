@@ -7,6 +7,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { systemLogger } from '../services/monitoring/systemLogger';
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface Props {
   children: ReactNode;

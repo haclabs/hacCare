@@ -17,6 +17,7 @@ import {
   acknowledgeDoctorsOrder
 } from '../../../services/clinical/doctorsOrdersService';
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface DoctorsOrdersProps {
   patientId: string;

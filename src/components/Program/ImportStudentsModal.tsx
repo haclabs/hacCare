@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { bulkCreateStudents } from '../../services/admin/programService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface ImportStudentsModalProps {
   programId: string;

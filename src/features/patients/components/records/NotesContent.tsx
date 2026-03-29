@@ -5,6 +5,7 @@ import { PatientNoteForm } from '../forms/PatientNoteForm';
 import { fetchPatientNotes, deletePatientNote, createPatientNote, updatePatientNote } from '../../../../services/patient/patientService';
 import { useAuth } from '../../../../hooks/useAuth';
 import { format, parseISO, isValid } from 'date-fns';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface NotesContentProps {
   patientId: string;

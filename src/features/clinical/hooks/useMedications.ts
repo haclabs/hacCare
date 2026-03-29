@@ -13,6 +13,7 @@ import {
 import { Medication, MedicationAdministration } from '../../../types';
 import { queryKeys } from '../../../lib/api/queryClient';
 import { useTenant } from '../../../contexts/TenantContext';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 // ========================================
 // 💊 MEDICATION QUERY HOOKS

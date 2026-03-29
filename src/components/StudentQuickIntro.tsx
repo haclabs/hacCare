@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { BookOpen, Download, X } from 'lucide-react';
 import { HACCARE_LOGO_BASE64 } from '../utils/logoBase64';
 import { loadPdfLibraries } from '../utils/pdfLoader';
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface StudentQuickIntroProps {
   onClose: () => void;

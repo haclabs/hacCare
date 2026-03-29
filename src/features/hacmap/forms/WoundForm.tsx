@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Trash2 } from 'lucide-react';
 import type { Wound, CreateWoundInput, UpdateWoundInput } from '../../../types/hacmap';
 import { WOUND_TYPE_LABELS, type WoundType } from '../../../types/hacmap';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface WoundFormProps {
   wound?: Wound;

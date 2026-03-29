@@ -1,3 +1,4 @@
+import { secureLogger } from '../../lib/security/secureLogger';
 /**
  * Bulk Operations Utility
  * Provides safe batch processing for bulk database operations

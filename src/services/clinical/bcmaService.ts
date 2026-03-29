@@ -5,6 +5,7 @@
 
 import { Patient, Medication, MedicationAdministration } from '../../types';
 import { recordMedicationAdministration } from './medicationService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface AdministrationLog {
   id: string;

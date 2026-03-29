@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, AlertCircle, Users, Monitor } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 const SimulationLogin: React.FC = () => {
   const [email, setEmail] = useState('');

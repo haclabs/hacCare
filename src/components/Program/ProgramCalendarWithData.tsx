@@ -10,6 +10,7 @@ import {
   deleteScheduledSimulation 
 } from '../../services/admin/programService';
 import CalendarEventModal, { ScheduledSimulationData } from './CalendarEventModal';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface ScheduledSimulation {
   id: string;

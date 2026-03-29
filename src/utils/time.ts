@@ -5,6 +5,7 @@
  */
 
 import { format, parseISO, isValid } from 'date-fns';
+import { secureLogger } from '../lib/security/secureLogger';
 
 /**
  * Format a date to local time

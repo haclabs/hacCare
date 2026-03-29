@@ -10,6 +10,7 @@ import { bcmaService, BCMAValidationResult } from '../../../services/clinical/bc
 import { BarcodeGenerator } from './BarcodeGenerator';
 import { simulateBarcodeScan } from '../../../lib/barcode/barcodeScanner';
 import { setBCMAActive } from '../../../services/simulation/bcmaState';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface BCMAAdministrationProps {
   patient: Patient;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Patient, Alert } from '../../types';
 import { Users, AlertTriangle, Activity, Clock } from 'lucide-react';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface QuickStatsProps {
   patients: Patient[];

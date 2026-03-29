@@ -14,6 +14,7 @@ import {
   deletePatientWithTenant
 } from '../services/patient/multiTenantPatientService';
 import { useTenant } from './TenantContext';
+import { secureLogger } from '../lib/security/secureLogger';
 
 // MODULE LOAD TIMESTAMP - If you don't see this in console, browser is using cached code
 // Used for debugging Vite HMR caching issues during development

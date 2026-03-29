@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
 import { getTenantById } from '../../services/admin/tenantService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Selector Modal

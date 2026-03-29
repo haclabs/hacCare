@@ -5,6 +5,7 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { User, AlertCircle, CheckCircle } from 'lucide-react';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

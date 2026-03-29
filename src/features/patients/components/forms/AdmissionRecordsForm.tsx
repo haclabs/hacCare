@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, User, Phone, Heart, AlertTriangle } from 'lucide-react';
 import { AdmissionRecord, upsertAdmissionRecord } from '../../../../services/patient/admissionService';
 import { usePatients } from '../../hooks/usePatients';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AdmissionRecordsFormProps {
   patientId: string;

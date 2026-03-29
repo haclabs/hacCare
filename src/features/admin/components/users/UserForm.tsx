@@ -131,6 +131,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     setError('');
     setLoading(true);
 
+    let authData: Awaited<ReturnType<typeof supabase.auth.signUp>>['data'] | null = null;
+
     try {
       if (user) {
         // Update existing user using RPC to bypass RLS restrictions
@@ -197,7 +199,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         // Log what we're about to send
         secureLogger.debug('Creating new user', { email: formData.email });
 
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const signUpResult = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -207,6 +209,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             }
           }
         });
+        authData = signUpResult.data;
+        const authError = signUpResult.error;
 
         if (authError) {
           setError(parseAuthError(authError));

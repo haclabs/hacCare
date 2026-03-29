@@ -4,6 +4,7 @@ import { CreateSimulationPatientRequest } from '../../../../types';
 import { createActiveSimulationPatient } from '../../../../services/simulation/simulationService';
 import { useSimulation } from '../../../../contexts/SimulationContext';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Simulation Patient Form Component

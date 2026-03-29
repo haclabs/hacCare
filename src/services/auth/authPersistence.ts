@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Force session restoration from localStorage

@@ -5,6 +5,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { Tenant } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface SuperAdminTenantAccess {
   tenantId: string | null;

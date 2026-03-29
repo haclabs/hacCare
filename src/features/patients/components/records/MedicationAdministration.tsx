@@ -10,6 +10,7 @@ import { useTenant } from '../../../../contexts/TenantContext';
 import { fetchPatientMedications, deleteMedication } from '../../../../services/clinical/medicationService';
 // import { usePatients } from '../../hooks/usePatients'; // Commented out as not currently used
 import { Medication } from '../../../../types';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface MedicationAdministrationProps {
   patientId: string;

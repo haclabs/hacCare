@@ -4,6 +4,7 @@ import {
   Wifi, WifiOff, Server, Globe
 } from 'lucide-react';
 import { isSupabaseConfigured, testSupabaseConnection, supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Connection Status Component

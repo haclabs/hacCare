@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, X, Check, AlertTriangle } from 'lucide-react';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string, type: 'medication' | 'patient') => void;

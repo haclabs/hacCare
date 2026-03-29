@@ -24,6 +24,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Printer, Download } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface BarcodeGeneratorProps {
   data: string;

@@ -10,6 +10,7 @@ import { createIntakeOutputEvent, getCategoryDisplayName } from '../../../../ser
 import type { IoDirection, IoCategory } from '../../../../services/clinical/intakeOutputService';
 import { getCurrentLocalDateTimeString } from '../../../../utils/time';
 import { supabase } from '../../../../lib/api/supabase';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AddIntakeOutputModalProps {
   patientId: string;

@@ -13,6 +13,7 @@ import { getPrograms, type Program } from '../../../services/admin/programServic
 import { useTenant } from '../../../contexts/TenantContext';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateTemplateModalProps {
   onClose: () => void;

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;

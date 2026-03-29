@@ -13,6 +13,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import type { Database } from '../../types/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 type IntakeOutputEvent = Database['public']['Tables']['patient_intake_output_events']['Row'];
 type IntakeOutputInsert = Database['public']['Tables']['patient_intake_output_events']['Insert'];

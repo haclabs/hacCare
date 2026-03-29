@@ -21,6 +21,7 @@ import { FormData, ValidationResult, FormGenerationContext } from '../../../../t
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge, assessVitalSign } from '../../../../utils/vitalRanges';
 import { NeuroAssessmentTab } from '../../../../features/patients/components/vitals/NeuroAssessmentTab';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsModuleProps {
   patient: Patient;

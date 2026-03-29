@@ -12,6 +12,7 @@ import { FoleyAssessmentFields } from './device-assessments/FoleyAssessmentField
 import { FeedingTubeAssessmentFields } from './device-assessments/FeedingTubeAssessmentFields';
 import { OstomyAssessmentFields } from './device-assessments/OstomyAssessmentFields';
 import { NGAssessmentFields } from './device-assessments/NGAssessmentFields';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface DeviceAssessmentFormProps {
   device: Device;

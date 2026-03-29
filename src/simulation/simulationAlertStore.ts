@@ -7,6 +7,7 @@
  */
 
 import { Alert } from '../../types';
+import { secureLogger } from '../lib/security/secureLogger';
 
 class SimulationAlertStore {
   private alerts: Map<string, Alert> = new Map();

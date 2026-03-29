@@ -1,3 +1,4 @@
+import { secureLogger } from '../../lib/security/secureLogger';
 /**
  * Global BCMA state manager
  * Prevents conflicts between different barcode scanners

@@ -18,6 +18,7 @@ import VersionComparisonModal from './VersionComparisonModal';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import type { PatientListComparison } from '../types/simulation';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 const ActiveSimulations: React.FC = () => {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);

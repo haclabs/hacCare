@@ -1,3 +1,4 @@
+import { secureLogger } from '../security/secureLogger';
 /**
  * Barcode Scanner Event Dispatcher
  * Ensures barcode scans are properly dispatched to listening components

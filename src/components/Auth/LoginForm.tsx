@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, supabase } from '../../lib/api/supabase';
 import logo from '../../images/logo.png';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();

@@ -3,6 +3,7 @@ import { AuthProvider as StandardAuthProvider } from './AuthContext';
 import { useAuth as useStandardAuth } from './useAuth';
 import { supabase } from '../../lib/api/supabase';
 import { initializeSessionTracking, endUserSession } from '../../services/admin/adminService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface SimulationAwareContextType {
   isSimulationUser: boolean;

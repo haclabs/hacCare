@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/api/supabase';
 import { initializeSessionTracking, endUserSession } from '../services/admin/adminService';
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface AuthContextType {
   user: User | null;

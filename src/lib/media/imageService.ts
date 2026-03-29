@@ -1,6 +1,7 @@
 import { supabase } from '../api/supabase';
 import { logAction } from './auditService';
 import { v4 as uuidv4 } from 'uuid';
+import { secureLogger } from '../security/secureLogger';
 
 /**
  * Image Service

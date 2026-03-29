@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Clock, User, RefreshCw } from 'lucide-react';
 import { fetchPatientBowelRecords, BowelRecord } from '../../../../services/clinical/bowelRecordService';
 import { formatLocalTime } from '../../../../utils/time';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface BowelRecordsListProps {
   patientId: string;

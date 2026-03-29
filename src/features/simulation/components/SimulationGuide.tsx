@@ -11,6 +11,7 @@ import { BookOpen, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { HACCARE_LOGO_BASE64 } from '../../../utils/logoBase64';
 import { loadPdfLibraries } from '../../../utils/pdfLoader';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 const SimulationGuide: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);

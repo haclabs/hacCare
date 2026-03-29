@@ -16,6 +16,7 @@ import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSche
 import { Patient } from '../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 import { fetchPatientAssessments } from '../../../services/patient/assessmentService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface FormsModuleProps {
   patient: Patient;

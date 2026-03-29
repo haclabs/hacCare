@@ -2,6 +2,7 @@ import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote } from '../../types';
 import type { NeuroAssessment, NeuroAssessmentInput } from '../../features/patients/types/neuroAssessment';
 import type { BBITEntry, BBITEntryInput } from '../../features/patients/types/bbitEntry';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Multi-Tenant Patient Service

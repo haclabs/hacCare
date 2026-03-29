@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { Tenant, TenantUser, ManagementDashboardStats } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Tenant Service

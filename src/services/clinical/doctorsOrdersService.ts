@@ -5,6 +5,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { DoctorsOrder } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface CreateDoctorsOrderData {
   patient_id: string;

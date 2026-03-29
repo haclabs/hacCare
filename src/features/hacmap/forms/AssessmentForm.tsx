@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Assessment, CreateAssessmentInput } from '../../../types/hacmap';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface AssessmentFormProps {
   recordType: 'device' | 'wound';

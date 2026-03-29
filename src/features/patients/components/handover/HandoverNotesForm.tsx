@@ -19,6 +19,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { CreateHandoverNoteData } from '../../../../services/patient/handoverService';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface HandoverNotesFormProps {
   isOpen: boolean;

@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/api/supabase';
 import { parseAuthError } from '../../../utils/authErrorParser';
 import { useAuth } from '../../../hooks/useAuth';
 import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Security Settings Component

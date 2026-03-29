@@ -2,6 +2,7 @@
 // This ensures we get the latest data including avatar_id
 
 import { queryClient } from '../lib/api/queryClient';
+import { secureLogger } from '../lib/security/secureLogger';
 
 export function clearPatientCache() {
   secureLogger.debug('🧹 Clearing patient cache...');

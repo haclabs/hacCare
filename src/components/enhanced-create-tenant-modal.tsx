@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/api/supabase';
 import { createTenant } from '../../services/admin/tenantService';
+import { secureLogger } from '../lib/security/secureLogger';
 
 // Add this interface near the top of your file
 interface AdminUser {

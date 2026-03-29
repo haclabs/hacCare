@@ -3,6 +3,7 @@ import { X, Save, FileText, Clock } from 'lucide-react';
 import { createBowelRecord, BowelRecord } from '../../../../services/clinical/bowelRecordService';
 import { useAuth } from '../../../../hooks/useAuth';
 import { formatLocalTime } from '../../../../utils/time';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Bowel Record Form Component

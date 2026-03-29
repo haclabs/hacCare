@@ -5,6 +5,7 @@ import { Patient } from '../../../../types';
 import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
 import { PATIENT_AVATARS, getRandomAvatarId } from '../../../../data/patientAvatars';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Patient Form Component

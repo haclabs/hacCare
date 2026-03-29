@@ -5,6 +5,7 @@ import {
   Database, Key, Globe, Lock, FileText, Shield
 } from 'lucide-react';
 import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Connection Diagnostics Component

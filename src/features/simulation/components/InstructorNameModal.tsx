@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserCheck, X, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface InstructorNameModalProps {
   simulationName: string;

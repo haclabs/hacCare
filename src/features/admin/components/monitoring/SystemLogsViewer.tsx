@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Download, AlertCircle, Activity, Navigation, Lock, X, RefreshCw } from 'lucide-react';
 import { supabase } from '../../../../lib/api/supabase';
 import { formatLocalTime } from '../../../../utils/time';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface SystemLog {
   id: string;

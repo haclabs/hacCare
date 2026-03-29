@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote, SimulationPatient } from '../../types';
 import { logAction } from '../operations/auditService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  *    // Fetch vitals for all patients

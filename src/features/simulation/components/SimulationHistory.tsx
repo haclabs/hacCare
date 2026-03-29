@@ -14,6 +14,7 @@ import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
 import { formatDistanceToNow, differenceInMinutes, format } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 type TabType = 'active' | 'archived';
 

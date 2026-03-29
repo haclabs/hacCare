@@ -21,6 +21,7 @@ import { LabOrderEntryForm } from './LabOrderEntryForm';
 import { LabOrderCard } from './LabOrderCard';
 import { LabOrderLabelModal } from './LabOrderLabelModal';
 import { format24HourDateTime } from '../../../utils/time';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LabsProps {
   patientId: string;

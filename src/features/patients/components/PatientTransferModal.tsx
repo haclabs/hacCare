@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Copy, Move, Users, AlertCircle } from 'lucide-react';
 import { transferPatient, getAvailableTenantsForTransfer, canTransferPatient, PatientTransferOptions } from '../../../services/patient/patientTransferService';
 import { Patient } from '../../../types';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface PatientTransferModalProps {
   patient: Patient | null;

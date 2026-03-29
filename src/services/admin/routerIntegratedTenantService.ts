@@ -6,6 +6,7 @@
 import React from 'react';
 import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { superAdminTenantService } from './superAdminTenantService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface RouteAwareTenantSwitchingOptions {
   navigate: NavigateFunction;

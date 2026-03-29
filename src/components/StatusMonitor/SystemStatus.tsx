@@ -4,6 +4,7 @@ import {
   Database, Wifi, WifiOff, Clock
 } from 'lucide-react';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * System Status Component

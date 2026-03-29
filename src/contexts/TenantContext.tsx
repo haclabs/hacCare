@@ -15,6 +15,7 @@ import {
 import { getCurrentSubdomain } from '../lib/infrastructure/subdomainService';
 import { useAuth } from './auth/SimulationAwareAuthProvider';
 import { supabase } from '../lib/api/supabase';
+import { secureLogger } from '../lib/security/secureLogger';
 
 /**
  * Tenant Context Interface

@@ -3,6 +3,7 @@ import { VitalSigns } from '../../../../types';
 import { Save, X, Thermometer, Heart, Activity, Droplets } from 'lucide-react';
 import { updatePatientVitals } from '../../../../services/patient/patientService';
 import { usePatients } from '../../hooks/usePatients';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalSignsEditorProps {
   patientId: string;

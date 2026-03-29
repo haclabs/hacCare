@@ -9,6 +9,7 @@ import { supabase } from '../../lib/api/supabase';
 import { Patient } from '../../types';
 import { PatientAssessment } from '../patient/assessmentService';
 import { UserProfile } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface BackupOptions {
   includePatients: boolean;
