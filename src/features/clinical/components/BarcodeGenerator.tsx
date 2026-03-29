@@ -43,10 +43,6 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    generateBarcode();
-  }, [data]);
-
   const generateBarcode = () => {
     const canvas = canvasRef.current;
     if (!canvas || !data) return;
@@ -122,6 +118,10 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       }
     }
   };
+
+  useEffect(() => {
+    generateBarcode();
+  }, [data]);
 
   const handlePrint = () => {
     const canvas = canvasRef.current;

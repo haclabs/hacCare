@@ -82,6 +82,12 @@ export const BackupManagement: React.FC = () => {
   // Restore state
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && hasRole(['super_admin'])) {
+      loadBackups();
+    }
+  }, [authLoading]);
+
   // Security check - wait for auth to load before checking roles
   if (authLoading) {
     return (
@@ -106,10 +112,6 @@ export const BackupManagement: React.FC = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    loadBackups();
-  }, []);
 
   const loadBackups = async () => {
     try {
