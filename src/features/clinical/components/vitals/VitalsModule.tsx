@@ -17,9 +17,9 @@ import { schemaEngine } from '../../../../lib/infrastructure/schemaEngine';
 import { vitalsEntrySchema, vitalsReviewSchema } from '../../../../schemas/vitalsSchemas';
 import { updatePatientVitals } from '../../../../services/patient/patientService';
 import { Patient, VitalSigns } from '../../../../types';
-import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
+import { FormData, ValidationResult, FormGenerationContext } from '../../../../types/schema';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
-import { calculatePreciseAge, getVitalRangesForAgeBand, assessVitalSign } from '../../../../utils/vitalRanges';
+import { calculatePreciseAge, assessVitalSign } from '../../../../utils/vitalRanges';
 import { NeuroAssessmentTab } from '../../../../features/patients/components/vitals/NeuroAssessmentTab';
 
 interface VitalsModuleProps {
@@ -222,7 +222,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   };
 
   // Age-based vitals analysis using new utility
-  const getVitalStatus = (vitalType: string, value: number, dateOfBirth: string) => {
+  const getVitalStatus = (vitalType: string, value: number | null, dateOfBirth: string) => {
     // If value is null/undefined, return gray (no data)
     if (value == null) {
       return { status: 'no-data', color: 'text-gray-400', bgColor: 'bg-gray-50' };

@@ -64,7 +64,7 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
-  const [editingTemplate, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
+  const [, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
 
   // Listen for sidebar toggle events
   useEffect(() => {
