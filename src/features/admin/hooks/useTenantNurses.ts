@@ -40,10 +40,11 @@ export const useTenantNurses = () => {
 
     try {
       // Query to get nurses assigned to the current tenant
+      // Note: !inner is required to filter on embedded table columns (PostgREST requirement)
       const { data, error: fetchError } = await supabase
         .from('tenant_users')
         .select(`
-          user_profiles (
+          user_profiles!inner (
             id,
             email,
             first_name,
