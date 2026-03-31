@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Moon, Sun, Monitor, Terminal, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw, MemoryStick } from 'lucide-react';
+import { Settings as SettingsIcon, Moon, Sun, User, Bell, Shield, Database, Wifi, WifiOff, Clock, Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw, MemoryStick } from 'lucide-react';
 import { useTheme } from '../../../hooks/useTheme';
 import { useAuth } from '../../../hooks/useAuth';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../../lib/api/supabase';
 import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 import { SecuritySettings } from './SecuritySettings';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Settings Component
@@ -124,7 +125,7 @@ export const Settings: React.FC = () => {
 
       setFeatureStatus(newFeatureStatus);
     } catch (error) {
-      console.error('Error checking feature status:', error);
+      secureLogger.error('Error checking feature status:', error);
     }
   };
 
@@ -166,7 +167,7 @@ export const Settings: React.FC = () => {
       // Update feature status
       await checkFeatureStatus();
     } catch (error) {
-      console.error('Error updating system info:', error);
+      secureLogger.error('Error updating system info:', error);
       setSystemInfo(prev => ({
         ...prev,
         dbStatus: 'error',

@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * File Upload Service
@@ -59,7 +60,7 @@ export async function uploadTenantLogo(
       });
 
     if (error) {
-      console.error('Upload error:', error);
+      secureLogger.error('Upload error:', error);
       return { success: false, error: error.message };
     }
 
@@ -74,7 +75,7 @@ export async function uploadTenantLogo(
     };
 
   } catch (error) {
-    console.error('Upload service error:', error);
+    secureLogger.error('Upload service error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Upload failed' 
@@ -97,14 +98,14 @@ export async function deleteTenantLogo(logoUrl: string): Promise<{ success: bool
       .remove([filePath]);
 
     if (error) {
-      console.error('Delete error:', error);
+      secureLogger.error('Delete error:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
 
   } catch (error) {
-    console.error('Delete service error:', error);
+    secureLogger.error('Delete service error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Delete failed' 
@@ -141,14 +142,14 @@ export async function updateTenantLogoUrl(tenantId: string, logoUrl: string | nu
       .eq('id', tenantId);
 
     if (error) {
-      console.error('Database update error:', error);
+      secureLogger.error('Database update error:', error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
 
   } catch (error) {
-    console.error('Update service error:', error);
+    secureLogger.error('Update service error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Database update failed' 

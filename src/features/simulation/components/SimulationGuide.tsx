@@ -11,6 +11,7 @@ import { BookOpen, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { HACCARE_LOGO_BASE64 } from '../../../utils/logoBase64';
 import { loadPdfLibraries } from '../../../utils/pdfLoader';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 const SimulationGuide: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -24,7 +25,7 @@ const SimulationGuide: React.FC = () => {
       
       const element = document.getElementById('instructor-guide-content');
       if (!element) {
-        console.error('Guide content element not found');
+        secureLogger.error('Guide content element not found');
         return;
       }
 
@@ -88,7 +89,7 @@ const SimulationGuide: React.FC = () => {
         const logoX = (pageWidth - logoWidth) / 2;
         pdf.addImage(HACCARE_LOGO_BASE64, 'PNG', logoX, 8, logoWidth, logoHeight);
       } catch (error) {
-        console.warn('Could not add logo to PDF:', error);
+        secureLogger.warn('Could not add logo to PDF:', error);
       }
       
       // Document title below logo
@@ -203,7 +204,7 @@ const SimulationGuide: React.FC = () => {
       pdf.save(filename);
       
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      secureLogger.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try again.');
     } finally {
       setIsGeneratingPdf(false);

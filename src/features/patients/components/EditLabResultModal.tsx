@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { updateLabResult } from '../../../services/clinical/labService';
 import type { LabResult } from '../../../features/clinical/types/labs';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface EditLabResultModalProps {
   result: LabResult;
@@ -38,7 +39,7 @@ export const EditLabResultModal: React.FC<EditLabResultModalProps> = ({
 
     if (err) {
       setError('Failed to update lab result');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
     } else {
       onSuccess();

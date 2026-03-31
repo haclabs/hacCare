@@ -5,6 +5,7 @@ import { Patient } from '../../../../types';
 import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
 import { PATIENT_AVATARS, getRandomAvatarId } from '../../../../data/patientAvatars';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Patient Form Component
@@ -177,7 +178,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
 
       await onSave(patientData);
     } catch (error) {
-      console.error('Error saving patient:', error);
+      secureLogger.error('Error saving patient:', error);
       alert('Failed to save patient. Please try again.');
     } finally {
       setLoading(false);

@@ -2,6 +2,7 @@
 // NOTE: This file is currently unused legacy code kept for reference
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/api/supabase';
+import { secureLogger } from '../lib/security/secureLogger';
 
 // Types for the new simulation system
 export interface SimTemplate {
@@ -114,7 +115,7 @@ export function useSimRun(runId: string) {
       setBarcodePool(barcodeData || []);
 
     } catch (err) {
-      console.error('Error fetching run data:', err);
+      secureLogger.error('Error fetching run data', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch run data');
     } finally {
       setLoading(false);
@@ -136,14 +137,14 @@ export function useSimRun(runId: string) {
 
       if (error) throw error;
 
-      console.log('Reset completed:', data);
+      secureLogger.debug('Reset completed');
       
       // Refetch all data to show baseline state
       await fetchRunData();
 
       return data;
     } catch (err) {
-      console.error('Error resetting simulation:', err);
+      secureLogger.error('Error resetting simulation', err);
       setError(err instanceof Error ? err.message : 'Failed to reset simulation');
       throw err;
     } finally {
@@ -173,7 +174,7 @@ export function useSimRun(runId: string) {
       // Refresh patients to show new vitals
       await fetchRunData();
     } catch (err) {
-      console.error('Error recording vitals:', err);
+      secureLogger.error('Error recording vitals', err);
       setError(err instanceof Error ? err.message : 'Failed to record vitals');
       throw err;
     }
@@ -214,7 +215,7 @@ export function useSimRun(runId: string) {
 
       await fetchRunData();
     } catch (err) {
-      console.error('Error administering medication:', err);
+      secureLogger.error('Error administering medication', err);
       setError(err instanceof Error ? err.message : 'Failed to administer medication');
       throw err;
     }
@@ -244,7 +245,7 @@ export function useSimRun(runId: string) {
       if (error) throw error;
       await fetchRunData();
     } catch (err) {
-      console.error('Error acknowledging alert:', err);
+      secureLogger.error('Error acknowledging alert', err);
       setError(err instanceof Error ? err.message : 'Failed to acknowledge alert');
       throw err;
     }
@@ -274,7 +275,7 @@ export function useSimRun(runId: string) {
       if (error) throw error;
       await fetchRunData();
     } catch (err) {
-      console.error('Error adding note:', err);
+      secureLogger.error('Error adding note', err);
       setError(err instanceof Error ? err.message : 'Failed to add note');
       throw err;
     }
@@ -295,7 +296,7 @@ export function useSimRun(runId: string) {
           filter: `id=eq.${runId}`
         }, 
         () => {
-          console.log('Run updated, refetching data');
+          secureLogger.debug('Run updated, refetching data');
           fetchRunData();
         }
       )
@@ -372,7 +373,7 @@ export function useSimTemplates() {
       if (error) throw error;
       setTemplates(data || []);
     } catch (err) {
-      console.error('Error fetching templates:', err);
+      secureLogger.error('Error fetching templates', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch templates');
     } finally {
       setLoading(false);
@@ -410,7 +411,7 @@ export function useSimSnapshots(templateId?: string) {
       if (error) throw error;
       setSnapshots(data || []);
     } catch (err) {
-      console.error('Error fetching snapshots:', err);
+      secureLogger.error('Error fetching snapshots', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch snapshots');
     } finally {
       setLoading(false);
@@ -433,7 +434,7 @@ export function useSimSnapshots(templateId?: string) {
       await fetchSnapshots();
       return data;
     } catch (err) {
-      console.error('Error creating snapshot:', err);
+      secureLogger.error('Error creating snapshot', err);
       throw err;
     }
   }, [fetchSnapshots]);
@@ -464,7 +465,7 @@ export function useSimRuns() {
       if (error) throw error;
       setRuns(data || []);
     } catch (err) {
-      console.error('Error fetching runs:', err);
+      secureLogger.error('Error fetching runs', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch runs');
     } finally {
       setLoading(false);
@@ -485,7 +486,7 @@ export function useSimRuns() {
       await fetchRuns();
       return data;
     } catch (err) {
-      console.error('Error launching run:', err);
+      secureLogger.error('Error launching run', err);
       throw err;
     }
   }, [fetchRuns]);

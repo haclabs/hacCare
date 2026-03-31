@@ -16,6 +16,7 @@ import {
 import { fetchPatientMedications } from '../../../services/clinical/medicationService';
 import { Patient, VitalSigns, PatientNote } from '../../../types';
 import { useTenant } from '../../../contexts/TenantContext';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Hook to fetch all patients
@@ -36,7 +37,7 @@ export function usePatients() {
     select: (patients) => {
       // Safety check: ensure patients is an array before sorting
       if (!Array.isArray(patients)) {
-        console.warn('usePatients: received non-array data:', patients);
+        secureLogger.warn('usePatients: received non-array data:', patients);
         return [];
       }
       // Sort patients by admission date (newest first)
@@ -121,7 +122,7 @@ export function useCreatePatient() {
       queryClient.invalidateQueries({ queryKey: queryKeys.patients });
     },
     onError: (error) => {
-      console.error('Failed to create patient:', error);
+      secureLogger.error('Failed to create patient:', error);
     },
   });
 }
@@ -169,7 +170,7 @@ export function useUpdatePatient() {
           context.previousPatient
         );
       }
-      console.error('Failed to update patient:', error);
+      secureLogger.error('Failed to update patient:', error);
     },
     
     // Always refetch after error or success
@@ -203,7 +204,7 @@ export function useDeletePatient() {
       queryClient.removeQueries({ queryKey: queryKeys.patientMedications(patientId) });
     },
     onError: (error) => {
-      console.error('Failed to delete patient:', error);
+      secureLogger.error('Failed to delete patient:', error);
     },
   });
 }
@@ -239,7 +240,7 @@ export function useUpdatePatientVitals() {
           context.previousVitals
         );
       }
-      console.error('Failed to update vitals:', error);
+      secureLogger.error('Failed to update vitals:', error);
     },
     
     onSettled: (_data, _error, variables) => {
@@ -270,7 +271,7 @@ export function useCreatePatientNote() {
       queryClient.invalidateQueries({ queryKey: queryKeys.patient(variables.patient_id) });
     },
     onError: (error) => {
-      console.error('Failed to create note:', error);
+      secureLogger.error('Failed to create note:', error);
     },
   });
 }
@@ -299,7 +300,7 @@ export function useUpdatePatientNote() {
       );
     },
     onError: (error) => {
-      console.error('Failed to update note:', error);
+      secureLogger.error('Failed to update note:', error);
     },
   });
 }
@@ -323,7 +324,7 @@ export function useDeletePatientNote() {
       );
     },
     onError: (error) => {
-      console.error('Failed to delete note:', error);
+      secureLogger.error('Failed to delete note:', error);
     },
   });
 }

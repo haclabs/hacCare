@@ -4,6 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { initializeSessionPersistence, checkSessionWithRetry } from '../../services/auth/authPersistence';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Authentication Context Interface
@@ -73,12 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Starting enhanced auth initialization...');
+          secureLogger.debug('Starting enhanced auth initialization...');
         }
         
         // Skip initialization if Supabase is not configured
         if (!isSupabaseConfigured) {
-          console.log('⚠️ Supabase not configured, using mock data mode');
+          secureLogger.debug('⚠️ Supabase not configured, using mock data mode');
           if (mounted) {
             setLoading(false);
             setIsOffline(true);
@@ -91,13 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Set timeout to prevent infinite loading (15 seconds)
         timeoutId = setTimeout(() => {
-          console.log('⏰ Auth initialization timeout reached');
+          secureLogger.debug('⏰ Auth initialization timeout reached');
           if (mounted) {
             setLoading(false);
           }
         }, 15000);
 
-        console.log('🔍 Checking session with retry logic...');
+        secureLogger.debug('🔍 Checking session with retry logic...');
         
         // Use enhanced session check with retry logic
         const sessionExists = await checkSessionWithRetry(3);
@@ -112,13 +113,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: { session }, error } = await supabase.auth.getSession();
           
           if (error) {
-            console.error('❌ Error getting session after successful check:', error);
+            secureLogger.error('❌ Error getting session after successful check:', error);
             
             // Handle refresh token errors specifically
             if (error.message?.includes('Invalid Refresh Token') || 
                 error.message?.includes('Refresh Token Not Found') ||
                 error.message?.includes('refresh_token_not_found')) {
-              console.log('🔄 Invalid refresh token detected, clearing session...');
+              secureLogger.debug('🔄 Invalid refresh token detected, clearing session...');
               await signOut();
             }
             
@@ -129,20 +130,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           if (session?.user && mounted) {
-            console.log('👤 User session restored successfully:', session.user.email);
+            secureLogger.debug('👤 User session restored successfully:', session.user.email);
             setUser(session.user);
             
             // Fetch user profile and wait for completion
             try {
               await fetchUserProfile(session.user.id);
             } catch (error) {
-              console.error('Profile fetch failed during init:', error);
+              secureLogger.error('Profile fetch failed during init:', error);
             }
             
             setLoading(false);
           }
         } else {
-          console.log('👤 No session found, user needs to log in');
+          secureLogger.debug('👤 No session found, user needs to log in');
           if (mounted) {
             setUser(null);
             setProfile(null);
@@ -155,22 +156,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Debug logging handled elsewhere
         }
       } catch (error: any) {
-        console.error('💥 Error in initializeAuth:', error);
+        secureLogger.error('💥 Error in initializeAuth:', error);
         
         // Handle specific error types
         if (error.message?.includes('Failed to fetch') || 
             error.message?.includes('NetworkError') ||
             error.message?.includes('timeout') ||
             error.message?.includes('Supabase not configured')) {
-          console.error('🌐 Network connectivity issue or Supabase not configured during auth initialization');
-          console.error('💡 Falling back to mock data mode');
+          secureLogger.error('🌐 Network connectivity issue or Supabase not configured during auth initialization');
+          secureLogger.error('💡 Falling back to mock data mode');
         }
         
         // Handle refresh token errors in catch block as well
         if (error.message?.includes('Invalid Refresh Token') || 
             error.message?.includes('Refresh Token Not Found') ||
             error.message?.includes('refresh_token_not_found')) {
-          console.log('🔄 Invalid refresh token detected in catch, clearing session...');
+          secureLogger.debug('🔄 Invalid refresh token detected in catch, clearing session...');
           await signOut();
         }
         
@@ -193,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('Auth state changed:', event, session?.user?.email || 'No user');
+          secureLogger.debug('Auth state changed:', event, session?.user?.email || 'No user');
         }
         
         // Clear any existing timeout
@@ -208,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Only fetch profile on INITIAL_SESSION (page load/refresh)
           // SIGNED_IN is handled manually in signIn() function with longer delay
           if (event === 'INITIAL_SESSION') {
-            console.log(`✅ ${event} - Session ready, fetching profile...`);
+            secureLogger.debug(`✅ ${event} - Session ready, fetching profile...`);
             
             const handleProfileFetch = async () => {
               try {
@@ -223,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   .maybeSingle();
                 
                 if (!existingProfile && session.user.app_metadata?.provider === 'azure') {
-                  console.log('🔧 OAuth user without profile detected, creating profile...');
+                  secureLogger.debug('🔧 OAuth user without profile detected, creating profile...');
                   try {
                     // Create profile with OAuth user metadata
                     const { data: newProfile, error: createError } = await supabase
@@ -242,17 +243,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                       .single();
                     
                     if (createError) {
-                      console.error('❌ Failed to auto-create profile:', createError);
+                      secureLogger.error('❌ Failed to auto-create profile:', createError);
                     } else {
-                      console.log('✅ Profile auto-created for OAuth user:', newProfile);
+                      secureLogger.debug('✅ Profile auto-created for OAuth user:', newProfile);
                       setProfile(newProfile);
                     }
                   } catch (createError) {
-                    console.error('❌ Exception creating profile:', createError);
+                    secureLogger.error('❌ Exception creating profile:', createError);
                   }
                 }
               } catch (error) {
-                console.error('Profile fetch failed on auth change:', error);
+                secureLogger.error('Profile fetch failed on auth change:', error);
               }
             };
             
@@ -263,7 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             // SIGNED_IN or other events - just update user, don't fetch profile here
             // Keep loading true - signIn() will handle profile fetch and set loading false
-            console.log(`⏳ ${event} event - skipping profile fetch (handled by signIn() function)`);
+            secureLogger.debug(`⏳ ${event} event - skipping profile fetch (handled by signIn() function)`);
           }
         } else {
           setUser(null);
@@ -278,7 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
      * Prevents memory leaks and state updates after unmount
      */
     return () => {
-      console.log('🧹 Cleaning up auth context');
+      secureLogger.debug('🧹 Cleaning up auth context');
       mounted = false;
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -296,24 +297,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @returns {Promise<void>}
    */
   const fetchUserProfile = async (userId: string): Promise<void> => {
-    console.log('🎯 fetchUserProfile called for:', userId, 'Guard flag:', fetchingProfile.current);
+    secureLogger.debug('🎯 fetchUserProfile called for:', userId, 'Guard flag:', fetchingProfile.current);
     
     // Skip if Supabase not configured
     if (!isSupabaseConfigured) {
-      console.log('⚠️ Supabase not configured, skipping profile fetch');
+      secureLogger.debug('⚠️ Supabase not configured, skipping profile fetch');
       setProfile(null);
       return;
     }
 
     // Prevent duplicate fetches (Chrome race condition fix)
     if (fetchingProfile.current) {
-      console.log('🔄 Profile fetch already in progress, skipping duplicate');
+      secureLogger.debug('🔄 Profile fetch already in progress, skipping duplicate');
       return;
     }
 
     try {
       fetchingProfile.current = true;
-      console.log('📥 Starting profile fetch for user:', userId);
+      secureLogger.debug('📥 Starting profile fetch for user:', userId);
       setProfileLoading(true);
       
       // Skip health check - it's blocking and causing hangs
@@ -328,7 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         // Fetch profile with timeout protection (8 seconds)
         // Uses Supabase database query - no localStorage involved
-        console.log('🔍 Querying user_profiles table...');
+        secureLogger.debug('🔍 Querying user_profiles table...');
         const result = await Promise.race([
           supabase
             .from('user_profiles')
@@ -341,39 +342,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ]);
         
         const elapsed = performance.now() - startTime;
-        console.log(`✅ Profile query completed in ${elapsed.toFixed(0)}ms`);
+        secureLogger.debug(`✅ Profile query completed in ${elapsed.toFixed(0)}ms`);
 
         clearTimeout(timeoutId);
         const { data, error } = result;
 
         // Handle profile fetch errors
         if (error) {
-          console.error('❌ Error fetching user profile:', error);
+          secureLogger.error('❌ Error fetching user profile:', error);
           
           // Handle specific error cases gracefully
           if (error.code === 'PGRST116') {
             // Profile not found - this is expected for new users
-            console.log('📋 Profile not found for user:', userId);
+            secureLogger.debug('📋 Profile not found for user:', userId);
             setProfile(null);
           } else if (error.message?.includes('Failed to fetch') || 
                      error.message?.includes('NetworkError') ||
                      error.message?.includes('fetch')) {
             // Network connectivity issues
-            console.warn('📱 Error fetching profile:', error.message);
+            secureLogger.warn('📱 Error fetching profile:', error.message);
             setIsOffline(true);
             setProfile(null);
           } else if (error.code === '42501' || error.message?.includes('permission denied')) {
             // Permission/RLS policy issues
-            console.error('🔒 Permission denied - check RLS policies');
+            secureLogger.error('🔒 Permission denied - check RLS policies');
             setProfile(null);
           } else {
             // Other unexpected errors
-            console.error('💥 Unexpected error fetching profile:', error);
+            secureLogger.error('💥 Unexpected error fetching profile:', error);
             setProfile(null);
           }
         } else {
           if (process.env.NODE_ENV === 'development') {
-            console.log('Profile fetched successfully:', data?.email);
+            secureLogger.debug('Profile fetched successfully:', data?.email);
           }
           setProfile(data);
           setIsOffline(false);
@@ -383,19 +384,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const elapsed = performance.now() - startTime;
         
         if (fetchError.name === 'AbortError') {
-          console.error(`❌ Profile fetch aborted after ${elapsed.toFixed(0)}ms`);
+          secureLogger.error(`❌ Profile fetch aborted after ${elapsed.toFixed(0)}ms`);
         } else if (fetchError.message?.includes('Profile fetch timeout')) {
-          console.error(`⏱️ Profile fetch timeout after ${elapsed.toFixed(0)}ms`);
+          secureLogger.error(`⏱️ Profile fetch timeout after ${elapsed.toFixed(0)}ms`);
         } else if (fetchError.message?.includes('Supabase not configured')) {
-          console.error('❌ Supabase not configured properly');
+          secureLogger.error('❌ Supabase not configured properly');
         } else {
-          console.error(`❌ Profile fetch error after ${elapsed.toFixed(0)}ms:`, fetchError.message);
+          secureLogger.error(`❌ Profile fetch error after ${elapsed.toFixed(0)}ms:`, fetchError.message);
         }
         
         setProfile(null);
       }
     } catch (error: any) {
-      console.error('💥 Exception in fetchUserProfile:', error);
+      secureLogger.error('💥 Exception in fetchUserProfile:', error);
       
       // Handle network-related errors gracefully
       if (error.message?.includes('Failed to fetch') || 
@@ -403,7 +404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           error.message?.includes('timeout') ||
           error.message?.includes('fetch') ||
           error.message?.includes('Supabase not configured')) {
-        console.warn('📱 Network error fetching profile:', error);
+        secureLogger.warn('📱 Network error fetching profile:', error);
         setIsOffline(true);
       }
       
@@ -434,7 +435,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       setProfileLoading(true);
-      console.log('📝 Creating/updating profile for user:', user.id);
+      secureLogger.debug('📝 Creating/updating profile for user:', user.id);
 
       // Create abort controller for timeout
       const controller = new AbortController();
@@ -466,7 +467,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Handle profile creation errors
       if (error) {
-        console.error('❌ Error creating/updating user profile:', error);
+        secureLogger.error('❌ Error creating/updating user profile:', error);
         
         // Provide specific error messages for different failure types
         if (error.message?.includes('Failed to fetch') || 
@@ -479,11 +480,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
       } else {
-        console.log('✅ Profile created/updated successfully:', data);
+        secureLogger.debug('✅ Profile created/updated successfully:', data);
         setProfile(data);
       }
     } catch (error: any) {
-      console.error('💥 Exception in createProfile:', error);
+      secureLogger.error('💥 Exception in createProfile:', error);
       
       // Provide user-friendly error messages
       if (error.message?.includes('Failed to fetch') || 
@@ -515,7 +516,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: { message: 'Database connection not configured. Please check your .env file.' } };
     }
 
-    console.log('🔐 Attempting sign in for:', email);
+    secureLogger.debug('🔐 Attempting sign in for:', email);
     setLoading(true);
     
     try {
@@ -540,28 +541,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Handle sign in errors
       if (error) {
-        console.error('❌ Sign in error:', error);
+        secureLogger.error('❌ Sign in error:', error);
         
         // Provide specific feedback for different error types
         if (error.message?.includes('Invalid login credentials')) {
-          console.error('🔑 Invalid credentials for email:', email);
-          console.error('💡 Tip: Ensure demo accounts exist in Supabase Auth');
+          secureLogger.error('🔑 Invalid credentials for email:', email);
+          secureLogger.error('💡 Tip: Ensure demo accounts exist in Supabase Auth');
         } else if (error.message?.includes('Failed to fetch') || 
                    error.message?.includes('NetworkError') ||
                    error.message?.includes('fetch')) {
-          console.error('🌐 Network error during sign in');
+          secureLogger.error('🌐 Network error during sign in');
           return { error: { message: 'Network error - check your internet connection and Supabase configuration' } };
         }
         
         setLoading(false);
       } else if (data?.session?.user) {
         // Sign in successful - use the session data returned directly
-        console.log('✅ Sign in successful, session data available immediately');
-        console.log('👤 User ID from signIn:', data.session.user.id);
-        console.log('🔑 Access Token:', data.session.access_token?.substring(0, 20) + '...');
+        secureLogger.debug('✅ Sign in successful, session data available immediately');
+        secureLogger.debug('👤 User ID from signIn:', data.session.user.id);
+        secureLogger.debug('🔑 Access Token:', data.session.access_token?.substring(0, 20) + '...');
         
         // Bypass hanging Supabase client - use direct HTTP fetch with the access token
-        console.log('📋 Using direct HTTP fetch to bypass Supabase client...');
+        secureLogger.debug('📋 Using direct HTTP fetch to bypass Supabase client...');
         try {
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const response = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${data.session.user.id}&select=*`, {
@@ -574,15 +575,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           });
           
-          console.log('📡 Direct fetch response status:', response.status);
+          secureLogger.debug('📡 Direct fetch response status:', response.status);
           
           if (response.ok) {
             const profiles = await response.json();
-            console.log('✅ Direct fetch successful, profiles:', profiles);
+            secureLogger.debug('✅ Direct fetch successful, profiles:', profiles);
             
             if (profiles && profiles.length > 0) {
-              console.log('✅ Profile found:', profiles[0]);
-              console.log('👤 Profile role:', profiles[0].role, 'Is super_admin?', profiles[0].role === 'super_admin');
+              secureLogger.debug('✅ Profile found:', profiles[0]);
+              secureLogger.debug('👤 Profile role:', profiles[0].role, 'Is super_admin?', profiles[0].role === 'super_admin');
               
               /**
                * SECURITY NOTE: Storing access token in sessionStorage
@@ -613,12 +614,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Small delay to ensure state propagates to all consumers before clearing loading
               setTimeout(() => {
                 setLoading(false);
-                console.log('🏁 Loading cleared after state propagation');
+                secureLogger.debug('🏁 Loading cleared after state propagation');
               }, 50);
               
-              console.log('🏁 User and profile state updated');
+              secureLogger.debug('🏁 User and profile state updated');
             } else {
-              console.warn('⚠️ No profile found for user');
+              secureLogger.warn('⚠️ No profile found for user');
               // See security note above - storing access token for direct API calls
               sessionStorage.setItem('supabase_access_token', data.session.access_token);
               setUser(data.session.user);
@@ -627,7 +628,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } else {
             const errorText = await response.text();
-            console.error('❌ Direct fetch failed:', response.status, errorText);
+            secureLogger.error('❌ Direct fetch failed:', response.status, errorText);
             // See security note above - storing access token for direct API calls
             sessionStorage.setItem('supabase_access_token', data.session.access_token);
             setUser(data.session.user);
@@ -635,7 +636,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
           }
         } catch (fetchError) {
-          console.error('💥 Exception during direct fetch:', fetchError);
+          secureLogger.error('💥 Exception during direct fetch:', fetchError);
           // Set user anyway so they can create profile
           // See security note above - storing access token for direct API calls
           sessionStorage.setItem('supabase_access_token', data.session.access_token);
@@ -644,13 +645,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         }
       } else {
-        console.warn('⚠️ signInWithPassword returned no session data');
+        secureLogger.warn('⚠️ signInWithPassword returned no session data');
         setLoading(false);
       }
       
       return { error };
     } catch (error: any) {
-      console.error('💥 Sign in exception:', error);
+      secureLogger.error('💥 Sign in exception:', error);
       setLoading(false);
       
       // Handle timeout and network errors
@@ -674,7 +675,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @returns {Promise<void>}
    */
   const signOut = async () => {
-    console.log('🚪 Signing out');
+    secureLogger.debug('🚪 Signing out');
     
     try {
       // Reset the profile fetch guard on logout
@@ -684,14 +685,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // This clears all session data managed by Supabase
       if (isSupabaseConfigured) {
         await supabase.auth.signOut();
-        console.log('✅ Supabase sign out successful');
+        secureLogger.debug('✅ Supabase sign out successful');
       }
     } catch (error) {
-      console.error('❌ Supabase sign out error (continuing with local cleanup):', error);
+      secureLogger.error('❌ Supabase sign out error (continuing with local cleanup):', error);
       // Don't throw error - we still want to clear local state
     } finally {
       // Always clear local state regardless of Supabase call success
-      console.log('🧹 Clearing local authentication state');
+      secureLogger.debug('🧹 Clearing local authentication state');
       
       // Clear Supabase session data from localStorage to prevent refresh token errors
       try {
@@ -699,16 +700,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const key = localStorage.key(i);
           if (key && key.startsWith('sb-')) {
             localStorage.removeItem(key);
-            console.log('🗑️ Removed localStorage key:', key);
+            secureLogger.debug('🗑️ Removed localStorage key:', key);
           }
         }
         
         // Clear the stored access token used for direct fetches
         sessionStorage.removeItem('supabase_access_token');
-        console.log('🗑️ Removed stored access token');
+        secureLogger.debug('🗑️ Removed stored access token');
       
       } catch (error) {
-        console.error('❌ Error clearing localStorage:', error);
+        secureLogger.error('❌ Error clearing localStorage:', error);
       }
       
       setUser(null);
@@ -748,7 +749,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
-    console.log(`🎭 Anonymous simulation user set: Nurse Simulation ${simulationName}`);
+    secureLogger.debug(`🎭 Anonymous simulation user set: Nurse Simulation ${simulationName}`);
   }, []);
 
   // Context value object
@@ -767,7 +768,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Debug loading state
   if (process.env.NODE_ENV === 'development' && user && !profile) {
-    console.log('🔄 AuthContext state:', { loading, profileLoading, combinedLoading: loading || profileLoading, hasUser: !!user, hasProfile: !!profile });
+    secureLogger.debug('🔄 AuthContext state:', { loading, profileLoading, combinedLoading: loading || profileLoading, hasUser: !!user, hasProfile: !!profile });
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

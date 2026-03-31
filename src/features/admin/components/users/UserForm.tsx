@@ -6,6 +6,7 @@ import { useAuth } from '../../../../hooks/useAuth';
 import { getAllTenants } from '../../../../services/admin/tenantService';
 import { getPrograms, getUserPrograms, bulkAssignUserToPrograms, type Program } from '../../../../services/admin/programService';
 import { Tenant } from '../../../../types';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface UserFormProps {
   user?: UserProfile | null;
@@ -89,7 +90,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             setSelectedTenantId(data.tenant_id);
           }
         } catch (error) {
-          console.error('Error loading user tenant:', error);
+          secureLogger.error('Error loading user tenant', error);
         }
       };
       loadUserTenant();
@@ -100,13 +101,13 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     try {
       const { data: allTenants, error } = await getAllTenants();
       if (error) {
-        console.error('Error loading tenants:', error);
+        secureLogger.error('Error loading tenants', error);
         setError('Failed to load tenants');
         return;
       }
       setTenants(allTenants || []);
     } catch (error) {
-      console.error('Error loading tenants:', error);
+      secureLogger.error('Error loading tenants', error);
       setError('Failed to load tenants');
     }
   };
@@ -130,15 +131,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     setError('');
     setLoading(true);
 
+    let authData: Awaited<ReturnType<typeof supabase.auth.signUp>>['data'] | null = null;
+
     try {
       if (user) {
         // Update existing user using RPC to bypass RLS restrictions
-        console.log('Updating user profile:', {
-          userId: user.id,
-          role: formData.role,
-          selectedTenantId,
-          selectedProgramIds
-        });
+        secureLogger.debug('Updating user profile via RPC', { userId: user.id, role: formData.role });
 
         const { data: rpcResult, error: updateError } = await supabase
           .rpc('update_user_profile_admin', {
@@ -154,12 +152,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           });
 
         if (updateError) {
-          console.error('Error updating user profile:', updateError);
+          secureLogger.error('Error updating user profile', updateError);
           setError(parseAuthError(updateError));
           return;
         }
 
-        console.log('✅ User profile updated successfully via RPC:', rpcResult);
+        secureLogger.debug('User profile updated via RPC');
 
         // Handle tenant assignment for super admin
         if (hasRole('super_admin') && selectedTenantId) {
@@ -173,14 +171,14 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               });
 
             if (reassignError) {
-              console.error('Error reassigning user tenant:', reassignError);
+              secureLogger.error('Error reassigning user tenant', reassignError);
               setError('User updated but failed to reassign tenant: ' + parseAuthError(reassignError));
               return;
             }
 
-            console.log('✅ Tenant reassignment result:', result);
+            secureLogger.debug('Tenant reassignment complete');
           } catch (assignError: any) {
-            console.error('Error in tenant reassignment:', assignError);
+            secureLogger.error('Error in tenant reassignment', assignError);
             setError('User updated but failed to reassign tenant: ' + parseAuthError(assignError));
             return;
           }
@@ -199,13 +197,9 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         }
 
         // Log what we're about to send
-        console.log('Creating user with data:', {
-          email: formData.email,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-        });
+        secureLogger.debug('Creating new user', { email: formData.email });
 
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const signUpResult = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -215,6 +209,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             }
           }
         });
+        authData = signUpResult.data;
+        const authError = signUpResult.error;
 
         if (authError) {
           setError(parseAuthError(authError));
@@ -230,12 +226,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               });
 
             if (confirmError) {
-              console.error('Error confirming user email:', confirmError);
+              secureLogger.error('Error confirming user email', confirmError);
               // Don't fail the creation, just warn
-              console.warn('User created but email not confirmed. They may need to confirm via email.');
+              secureLogger.warn('User created but email not confirmed. They may need to confirm via email.');
             }
           } catch (confirmError: any) {
-            console.error('Error in email confirmation:', confirmError);
+            secureLogger.error('Error in email confirmation', confirmError);
             // Continue with user creation even if confirmation fails
           }
 
@@ -243,11 +239,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           await new Promise(resolve => setTimeout(resolve, 800));
 
           // Use RPC function to update profile (bypasses RLS)
-          console.log('Updating user profile via RPC:', {
-            id: authData.user.id,
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-          });
+          secureLogger.debug('Updating user profile via RPC for new user');
 
           const { data: rpcResult, error: rpcError } = await supabase
             .rpc('update_user_profile_admin', {
@@ -262,14 +254,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               p_simulation_only: formData.simulation_only
             });
 
-          console.log('RPC update result:', { data: rpcResult, error: rpcError });
-
           if (rpcError) {
-            console.error('❌ Profile update error:', rpcError);
+            secureLogger.error('Profile update error for new user', rpcError);
             setError('User created but profile update failed: ' + parseAuthError(rpcError));
             // Don't return - continue with tenant assignment
           } else {
-            console.log('✅ Profile updated successfully via RPC');
+            secureLogger.debug('Profile updated via RPC for new user');
           }
 
           // Assign user to tenant (for super admin or default tenant)
@@ -289,12 +279,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
                 });
 
               if (assignError) {
-                console.error('Error assigning new user to tenant:', assignError);
+                secureLogger.error('Error assigning new user to tenant', assignError);
                 setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
                 return;
               }
             } catch (assignError: any) {
-              console.error('Error in new user tenant assignment:', assignError);
+              secureLogger.error('Error in new user tenant assignment', assignError);
               setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
               return;
             }
@@ -306,20 +296,18 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
       const userId = user?.id || authData?.user?.id;
       if (userId && (formData.role === 'instructor' || formData.role === 'coordinator')) {
         // Always run bulkAssignUserToPrograms - it will clear old assignments if empty
-        console.log('Assigning programs to user:', { userId, programIds: selectedProgramIds });
+        secureLogger.debug('Assigning programs to user');
         const { error: programError } = await bulkAssignUserToPrograms(userId, selectedProgramIds);
         if (programError) {
-          console.error('Error assigning programs:', programError);
+          secureLogger.error('Error assigning programs', programError);
           setError('User saved but failed to assign programs: ' + parseAuthError(programError));
           return;
         }
-        console.log('✅ Programs assigned successfully');
       } else if (userId) {
         // If changing away from instructor/coordinator, clear all program assignments
-        console.log('Clearing program assignments for non-instructor/coordinator role');
         const { error: programError } = await bulkAssignUserToPrograms(userId, []);
         if (programError) {
-          console.error('Error clearing programs:', programError);
+          secureLogger.error('Error clearing programs', programError);
           // Don't fail on this, just log it
         }
       }

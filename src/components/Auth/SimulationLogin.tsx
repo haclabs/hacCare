@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, AlertCircle, Users, Monitor } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 const SimulationLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -27,20 +28,20 @@ const SimulationLogin: React.FC = () => {
     setError('');
 
     try {
-      console.log('🎯 Attempting simulation login for:', email);
-      console.log('🔍 Simulation ID from URL:', simulationId);
-      console.log('🔍 Simulation name from URL:', simulationName);
+      secureLogger.debug('🎯 Attempting simulation login for:', email);
+      secureLogger.debug('🔍 Simulation ID from URL:', simulationId);
+      secureLogger.debug('🔍 Simulation name from URL:', simulationName);
       
       const { error: signInError } = await signIn(email.trim(), password.trim());
 
       if (signInError) {
         setError(signInError.message || 'Invalid email or password');
       } else {
-        console.log('✅ Simulation login successful');
+        secureLogger.debug('✅ Simulation login successful');
         // Navigation handled by SimulationRouter after successful login
       }
     } catch (error: any) {
-      console.error('Simulation login error:', error);
+      secureLogger.error('Simulation login error:', error);
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);

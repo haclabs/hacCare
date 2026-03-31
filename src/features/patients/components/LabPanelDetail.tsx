@@ -32,6 +32,7 @@ import {
 import { CreateLabResultModal } from './CreateLabResultModal';
 import { EditLabResultModal } from './EditLabResultModal';
 import { LabAcknowledgeModal } from './LabAcknowledgeModal';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LabPanelDetailProps {
   panel: LabPanel;
@@ -73,7 +74,7 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
     const { data, error } = await getLabResults(panel.id);
     
     if (error) {
-      console.error('Failed to load results:', error);
+      secureLogger.error('Failed to load results:', error);
     } else {
       setResults(data || []);
       

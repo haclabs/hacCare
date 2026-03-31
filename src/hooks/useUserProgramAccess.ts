@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { getUserProgramCodes } from '../services/admin/programService';
+import { secureLogger } from '../lib/security/secureLogger';
 
 /**
  * Hook to get current user's assigned program codes and check access
@@ -26,7 +27,7 @@ export function useUserProgramAccess() {
       
       const { data, error } = await getUserProgramCodes(user.id);
       if (error) {
-        console.error('Error fetching user programs:', error);
+        secureLogger.error('Error fetching user programs', error);
         return [];
       }
       return data || [];

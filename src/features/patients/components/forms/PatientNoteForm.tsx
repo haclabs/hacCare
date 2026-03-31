@@ -3,7 +3,7 @@ import { X, Save, FileText, AlertTriangle, User } from 'lucide-react';
 import { PatientNote } from '../../../../types';
 import { format } from 'date-fns';
 import { useAuth } from '../../../../hooks/useAuth';
-import { createPatientNote, updatePatientNote } from '../../../../services/patient/patientService';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Patient Note Form Component
@@ -148,7 +148,7 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
       }
 
     } catch (error) {
-      console.error('Error saving note:', error);
+      secureLogger.error('Error saving note:', error);
       alert('Failed to save note. Please try again.');
     } finally {
       setLoading(false);

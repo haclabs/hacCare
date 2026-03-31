@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/api/supabase';
 import { initializeSessionTracking, endUserSession } from '../services/admin/adminService';
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface AuthContextType {
   user: User | null;
@@ -49,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Security: Check database health before fetching profile
       const dbHealthy = await checkDatabaseHealth();
       if (!dbHealthy) {
-        console.log('⚠️ Database not healthy, skipping profile fetch');
+        secureLogger.debug('⚠️ Database not healthy, skipping profile fetch');
         setIsOffline(true);
         setProfile(null);
         return;
@@ -65,10 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('👤 No profile found for user');
+          secureLogger.debug('👤 No profile found for user');
           setProfile(null);
         } else {
-          console.error('Error fetching user profile:', error);
+          secureLogger.error('Error fetching user profile:', error);
           setIsOffline(true);
           setProfile(null);
         }
@@ -77,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsOffline(false);
       }
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      secureLogger.error('Error in fetchUserProfile:', error);
       if (mounted.current) {
         setIsOffline(true);
         setProfile(null);
@@ -93,24 +94,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
       if (userError || !userData.user) {
-        console.log('🔍 Session validation failed, attempting refresh...');
+        secureLogger.debug('🔍 Session validation failed, attempting refresh...');
         
         // Security: Try to refresh the session
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         
         if (refreshError || !refreshData.session) {
-          console.log('❌ Session refresh failed, signing out');
+          secureLogger.debug('❌ Session refresh failed, signing out');
           await supabase.auth.signOut();
           return false;
         }
         
-        console.log('✅ Session refreshed successfully');
+        secureLogger.debug('✅ Session refreshed successfully');
         return true;
       }
       
       return true;
     } catch (error) {
-      console.error('Session validation error:', error);
+      secureLogger.error('Session validation error:', error);
       return false;
     }
   };
@@ -120,10 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuth = async () => {
       try {
-        console.log('🔄 Starting secure auth initialization...');
+        secureLogger.debug('🔄 Starting secure auth initialization...');
         
         if (!isSupabaseConfigured) {
-          console.log('⚠️ Supabase not configured, using offline mode');
+          secureLogger.debug('⚠️ Supabase not configured, using offline mode');
           if (mounted.current) {
             setLoading(false);
             setIsOffline(true);
@@ -133,13 +134,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Security: Set maximum initialization time (prevents infinite loading)
         initializationTimeoutRef.current = setTimeout(() => {
-          console.log('⏰ Auth initialization timeout - proceeding with current state');
+          secureLogger.debug('⏰ Auth initialization timeout - proceeding with current state');
           if (mounted.current) {
             setLoading(false);
           }
         }, 5000); // 5 second maximum
 
-        console.log('🔍 Getting session...');
+        secureLogger.debug('🔍 Getting session...');
         const { data: { session }, error } = await supabase.auth.getSession();
 
         // Clear timeout since we got a response
@@ -149,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (error) {
-          console.error('❌ Error getting session:', error);
+          secureLogger.error('❌ Error getting session:', error);
           if (mounted.current) {
             setUser(null);
             setProfile(null);
@@ -163,20 +164,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const isValidSession = await validateSession(session);
           
           if (isValidSession && mounted.current) {
-            console.log('✅ Valid session found:', session.user.email);
+            secureLogger.debug('✅ Valid session found:', session.user.email);
             setUser(session.user);
             
             // Fetch profile in background, don't block loading
             fetchUserProfile(session.user.id).catch(err => 
-              console.error('Background profile fetch failed:', err)
+              secureLogger.error('Background profile fetch failed:', err)
             );
           } else if (mounted.current) {
-            console.log('❌ Invalid session, clearing auth state');
+            secureLogger.debug('❌ Invalid session, clearing auth state');
             setUser(null);
             setProfile(null);
           }
         } else {
-          console.log('👤 No session found');
+          secureLogger.debug('👤 No session found');
           if (mounted.current) {
             setUser(null);
             setProfile(null);
@@ -188,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
       } catch (error: any) {
-        console.error('💥 Error in initializeAuth:', error);
+        secureLogger.error('💥 Error in initializeAuth:', error);
         
         // Clear timeout on error
         if (initializationTimeoutRef.current) {
@@ -211,7 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         if (!mounted.current) return;
 
-        console.log('🔄 Auth state changed:', event, session?.user?.email || 'no user');
+        secureLogger.debug('🔄 Auth state changed:', event, session?.user?.email || 'no user');
 
         // Clear any initialization timeout
         if (initializationTimeoutRef.current) {
@@ -222,25 +223,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switch (event) {
           case 'SIGNED_IN':
             if (session?.user) {
-              console.log('👤 User signed in:', session.user.email);
+              secureLogger.debug('👤 User signed in:', session.user.email);
               setUser(session.user);
               fetchUserProfile(session.user.id).catch(err => 
-                console.error('Profile fetch failed:', err)
+                secureLogger.error('Profile fetch failed:', err)
               );
               
               // Initialize session tracking for admin dashboard
               initializeSessionTracking().catch(err =>
-                console.error('Session tracking failed:', err)
+                secureLogger.error('Session tracking failed:', err)
               );
             }
             break;
             
           case 'SIGNED_OUT':
-            console.log('👋 User signed out');
+            secureLogger.debug('👋 User signed out');
             
             // End session tracking
             endUserSession().catch(err =>
-              console.error('Failed to end session:', err)
+              secureLogger.error('Failed to end session:', err)
             );
             
             setUser(null);
@@ -249,18 +250,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             break;
             
           case 'TOKEN_REFRESHED':
-            console.log('🔄 Token refreshed');
+            secureLogger.debug('🔄 Token refreshed');
             if (session?.user) {
               setUser(session.user);
             }
             break;
             
           case 'USER_UPDATED':
-            console.log('👤 User updated');
+            secureLogger.debug('👤 User updated');
             if (session?.user) {
               setUser(session.user);
               fetchUserProfile(session.user.id).catch(err => 
-                console.error('Profile fetch after update failed:', err)
+                secureLogger.error('Profile fetch after update failed:', err)
               );
             }
             break;
@@ -307,7 +308,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    console.log('⏱️ Starting 8-hour inactivity monitor');
+    secureLogger.debug('⏱️ Starting 8-hour inactivity monitor');
 
     const resetInactivityTimer = () => {
       // Clear existing timeout
@@ -317,11 +318,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Set new timeout for 8 hours
       inactivityTimeoutRef.current = setTimeout(async () => {
-        console.log('⏰ 8-hour inactivity timeout reached - auto-logging out');
+        secureLogger.debug('⏰ 8-hour inactivity timeout reached - auto-logging out');
         await signOut();
         // Optional: Show a message to the user
         if (mounted.current) {
-          console.log('👋 Session expired due to inactivity');
+          secureLogger.debug('👋 Session expired due to inactivity');
         }
       }, INACTIVITY_TIMEOUT);
     };
@@ -355,13 +356,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         document.removeEventListener(event, resetInactivityTimer);
       });
       
-      console.log('🧹 Inactivity monitor cleaned up');
+      secureLogger.debug('🧹 Inactivity monitor cleaned up');
     };
   }, [user]); // Re-run when user changes (login/logout)
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 Starting secure sign in...');
+      secureLogger.debug('🔐 Starting secure sign in...');
       setLoading(true);
       
       // Security: Validate input
@@ -376,16 +377,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
-        console.error('❌ Sign in failed:', error.message);
+        secureLogger.error('❌ Sign in failed:', error.message);
         setLoading(false);
         return { error };
       }
       
-      console.log('✅ Sign in successful, waiting for auth state change...');
+      secureLogger.debug('✅ Sign in successful, waiting for auth state change...');
       // Don't set loading to false here - let auth state change handle it
       return { error: null };
     } catch (error) {
-      console.error('💥 Exception during sign in:', error);
+      secureLogger.error('💥 Exception during sign in:', error);
       setLoading(false);
       return { error };
     }
@@ -393,7 +394,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      console.log('🚪 Signing out...');
+      secureLogger.debug('🚪 Signing out...');
       
       // Clear inactivity timeout on manual logout
       if (inactivityTimeoutRef.current) {
@@ -408,7 +409,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null);
       setIsOffline(false);
     } catch (error) {
-      console.error('Error signing out:', error);
+      secureLogger.error('Error signing out:', error);
       // Security: Clear state even if sign out fails
       setUser(null);
       setProfile(null);
@@ -434,7 +435,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (existingProfile) {
-        console.log('Profile already exists, fetching...');
+        secureLogger.debug('Profile already exists, fetching...');
         await fetchUserProfile(user.id);
         return;
       }
@@ -457,7 +458,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await fetchUserProfile(user.id);
     } catch (error) {
-      console.error('Error creating profile:', error);
+      secureLogger.error('Error creating profile:', error);
       throw error;
     }
   };

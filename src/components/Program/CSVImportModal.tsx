@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Upload, AlertCircle, CheckCircle, Download, FileText } from 'lucide-react';
 import Papa from 'papaparse';
 import { bulkCreateStudents } from '../../services/admin/programService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface CSVImportModalProps {
   programId: string;
@@ -94,7 +95,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         setStep('preview');
       },
       error: (error) => {
-        console.error('CSV parsing error:', error);
+        secureLogger.error('CSV parsing error:', error);
         alert('Error parsing CSV file. Please check the file format.');
       }
     });
@@ -114,7 +115,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
       setImportResult(data);
       setStep('result');
     } catch (error: any) {
-      console.error('Import error:', error);
+      secureLogger.error('Import error:', error);
       alert('Import failed: ' + (error.message || 'Unknown error'));
     } finally {
       setImporting(false);

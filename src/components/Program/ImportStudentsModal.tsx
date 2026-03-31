@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import { bulkCreateStudents } from '../../services/admin/programService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface ImportStudentsModalProps {
   programId: string;
@@ -118,7 +119,7 @@ export const ImportStudentsModal: React.FC<ImportStudentsModalProps> = ({
       const text = await file.text();
       const students = parseCSV(text);
 
-      console.log(`📊 Parsed ${students.length} students from CSV`);
+      secureLogger.debug(`📊 Parsed ${students.length} students from CSV`);
 
       // Call bulk create RPC function
       const { data, error: importError } = await bulkCreateStudents(programId, students);
@@ -136,7 +137,7 @@ export const ImportStudentsModal: React.FC<ImportStudentsModalProps> = ({
       }
 
     } catch (err: any) {
-      console.error('Import error:', err);
+      secureLogger.error('Import error:', err);
       setError(err.message || 'Failed to import students');
     } finally {
       setLoading(false);

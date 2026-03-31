@@ -10,6 +10,7 @@ import { createIntakeOutputEvent, getCategoryDisplayName } from '../../../../ser
 import type { IoDirection, IoCategory } from '../../../../services/clinical/intakeOutputService';
 import { getCurrentLocalDateTimeString } from '../../../../utils/time';
 import { supabase } from '../../../../lib/api/supabase';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AddIntakeOutputModalProps {
   patientId: string;
@@ -58,7 +59,7 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
       if (data && !error) {
         setTenantId(data.tenant_id);
       } else {
-        console.error('Failed to fetch patient tenant:', error);
+        secureLogger.error('Failed to fetch patient tenant:', error);
       }
     };
     
@@ -113,7 +114,7 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
 
       onSuccess();
     } catch (err) {
-      console.error('Failed to create I&O entry:', err);
+      secureLogger.error('Failed to create I&O entry:', err);
       setError('Failed to create entry. Please try again.');
       setLoading(false);
     }

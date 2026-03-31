@@ -4,6 +4,7 @@ import { supabase, UserProfile, UserRole } from '../../../../lib/api/supabase';
 import { useAuth } from '../../../../hooks/useAuth';
 import { getUserPrograms } from '../../../../services/admin/programService';
 import { UserForm } from './UserForm';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 export const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -21,16 +22,15 @@ export const UserManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      console.log('🔄 Fetching users from database...');
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching users:', error);
+        secureLogger.error('Error fetching users', error);
       } else {
-        console.log(`✅ Fetched ${data?.length || 0} users`);
+        secureLogger.debug('Fetched users', { count: data?.length || 0 });
         setUsers(data || []);
         
         // Fetch programs for instructors and coordinators
@@ -46,7 +46,7 @@ export const UserManagement: React.FC = () => {
         setUserPrograms(programsMap);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      secureLogger.error('Error fetching users', error);
     } finally {
       setLoading(false);
     }
@@ -61,14 +61,14 @@ export const UserManagement: React.FC = () => {
       });
       
       if (error) {
-        console.error('Error deactivating user:', error);
+        secureLogger.error('Error deactivating user', error);
         alert('Error deactivating user: ' + error.message);
       } else {
         alert('User deactivated successfully');
         await fetchUsers();
       }
     } catch (error) {
-      console.error('Error deactivating user:', error);
+      secureLogger.error('Error deactivating user', error);
       alert('Error deactivating user');
     }
   };
@@ -88,14 +88,14 @@ export const UserManagement: React.FC = () => {
       });
       
       if (error) {
-        console.error('Error deleting user permanently:', error);
+        secureLogger.error('Error deleting user permanently', error);
         alert('Error deleting user: ' + error.message);
       } else {
         alert('User permanently deleted');
         await fetchUsers();
       }
     } catch (error) {
-      console.error('Error deleting user permanently:', error);
+      secureLogger.error('Error deleting user permanently', error);
       alert('Error deleting user');
     }
   };
@@ -109,14 +109,14 @@ export const UserManagement: React.FC = () => {
       });
       
       if (error) {
-        console.error('Error reactivating user:', error);
+        secureLogger.error('Error reactivating user', error);
         alert('Error reactivating user: ' + error.message);
       } else {
         alert('User reactivated successfully');
         await fetchUsers();
       }
     } catch (error) {
-      console.error('Error reactivating user:', error);
+      secureLogger.error('Error reactivating user', error);
       alert('Error reactivating user');
     }
   };
@@ -376,13 +376,11 @@ export const UserManagement: React.FC = () => {
             setSelectedUser(null);
           }}
           onSuccess={async () => {
-            console.log('✅ User form saved successfully, refreshing user list...');
             setShowForm(false);
             setSelectedUser(null);
             // Small delay to ensure database changes propagate
             await new Promise(resolve => setTimeout(resolve, 500));
             await fetchUsers();
-            console.log('✅ User list refreshed');
           }}
         />
       )}

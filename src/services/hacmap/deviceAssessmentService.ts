@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 import type {
   DeviceAssessment,
   CreateDeviceAssessmentInput,
@@ -16,7 +17,7 @@ import type {
 export async function createDeviceAssessment(
   input: CreateDeviceAssessmentInput
 ): Promise<DeviceAssessment> {
-  console.log('Creating device assessment:', input);
+  secureLogger.debug('Creating device assessment:', input);
 
   const { data, error } = await supabase
     .from('device_assessments')
@@ -36,7 +37,7 @@ export async function createDeviceAssessment(
     .single();
 
   if (error) {
-    console.error('Error creating device assessment:', error);
+    secureLogger.error('Error creating device assessment:', error);
     throw error;
   }
 
@@ -58,7 +59,7 @@ export async function getDeviceAssessments(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching device assessments:', error);
+    secureLogger.error('Error fetching device assessments:', error);
     throw error;
   }
 
@@ -80,7 +81,7 @@ export async function getPatientDeviceAssessments(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching patient device assessments:', error);
+    secureLogger.error('Error fetching patient device assessments:', error);
     throw error;
   }
 
@@ -105,7 +106,7 @@ export async function getDeviceAssessment(
     if (error.code === 'PGRST116') {
       return null;
     }
-    console.error('Error fetching device assessment:', error);
+    secureLogger.error('Error fetching device assessment:', error);
     throw error;
   }
 
@@ -132,7 +133,7 @@ export async function updateDeviceAssessment(
     .single();
 
   if (error) {
-    console.error('Error updating device assessment:', error);
+    secureLogger.error('Error updating device assessment:', error);
     throw error;
   }
 
@@ -153,7 +154,7 @@ export async function deleteDeviceAssessment(
     .eq('tenant_id', tenantId);
 
   if (error) {
-    console.error('Error deleting device assessment:', error);
+    secureLogger.error('Error deleting device assessment:', error);
     throw error;
   }
 }
@@ -178,7 +179,7 @@ export async function getLatestDeviceAssessment(
     if (error.code === 'PGRST116') {
       return null;
     }
-    console.error('Error fetching latest device assessment:', error);
+    secureLogger.error('Error fetching latest device assessment:', error);
     throw error;
   }
 
@@ -200,7 +201,7 @@ export async function getAssessmentsByDeviceType(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching assessments by device type:', error);
+    secureLogger.error('Error fetching assessments by device type:', error);
     throw error;
   }
 
@@ -222,7 +223,7 @@ export async function getAssessmentsByStudent(
     .order('assessed_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching assessments by student:', error);
+    secureLogger.error('Error fetching assessments by student:', error);
     throw error;
   }
 

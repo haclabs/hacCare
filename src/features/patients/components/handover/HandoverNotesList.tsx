@@ -21,6 +21,7 @@ import {
 import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote } from '../../../../services/patient/handoverService';
 import { StudentAcknowledgeModal } from '../../../../components/modals/StudentAcknowledgeModal';
 import { format } from 'date-fns';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface HandoverNotesListProps {
   patientId: string;
@@ -52,7 +53,7 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
       const data = await getPatientHandoverNotes(patientId);
       setNotes(data);
     } catch (error) {
-      console.error('Error loading handover notes:', error);
+      secureLogger.error('Error loading handover notes:', error);
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
       if (onRefresh) onRefresh();
       setAcknowledgingNoteId(null);
     } catch (error) {
-      console.error('Error acknowledging note:', error);
+      secureLogger.error('Error acknowledging note:', error);
       alert('Failed to acknowledge note. Please try again.');
       throw error; // Re-throw to let modal handle error display
     } finally {

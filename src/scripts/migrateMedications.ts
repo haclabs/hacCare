@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '../config/database'; // Adjust import path as needed
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface OldMedication {
   id: string;
@@ -94,7 +95,7 @@ export async function migrateMedicationsToNewFormat(): Promise<{
   errors: string[];
   summary: any;
 }> {
-  console.log('🔄 Starting medication format migration...');
+  secureLogger.debug('🔄 Starting medication format migration...');
   
   const errors: string[] = [];
   let migratedCount = 0;
@@ -110,11 +111,11 @@ export async function migrateMedicationsToNewFormat(): Promise<{
     }
     
     if (!medications || medications.length === 0) {
-      console.log('ℹ️ No medications found to migrate');
+      secureLogger.debug('ℹ️ No medications found to migrate');
       return { success: true, migrated: 0, errors: [], summary: {} };
     }
     
-    console.log(`📋 Found ${medications.length} medications to process`);
+    secureLogger.debug(`📋 Found ${medications.length} medications to process`);
     
     // Process each medication
     for (const medication of medications as OldMedication[]) {
@@ -160,14 +161,14 @@ export async function migrateMedicationsToNewFormat(): Promise<{
             errors.push(`Failed to update medication ${medication.name} (ID: ${medication.id}): ${updateError.message}`);
           } else {
             migratedCount++;
-            console.log(`✅ Updated medication: ${medication.name}`);
+            secureLogger.debug(`✅ Updated medication: ${medication.name}`);
           }
         }
         
       } catch (medicationError) {
         const errorMsg = `Error processing medication ${medication.name} (ID: ${medication.id}): ${medicationError}`;
         errors.push(errorMsg);
-        console.error(errorMsg);
+        secureLogger.error(errorMsg);
       }
     }
     
@@ -200,7 +201,7 @@ export async function migrateMedicationsToNewFormat(): Promise<{
       }, {});
     }
     
-    console.log('📊 Migration Summary:', summary);
+    secureLogger.debug('📊 Migration Summary:', summary);
     
     return {
       success: errors.length === 0,
@@ -210,7 +211,7 @@ export async function migrateMedicationsToNewFormat(): Promise<{
     };
     
   } catch (error) {
-    console.error('💥 Migration failed:', error);
+    secureLogger.error('💥 Migration failed:', error);
     return {
       success: false,
       migrated: migratedCount,
@@ -222,7 +223,7 @@ export async function migrateMedicationsToNewFormat(): Promise<{
 
 // Function to verify migration results
 export async function verifyMigration(): Promise<void> {
-  console.log('🔍 Verifying migration results...');
+  secureLogger.debug('🔍 Verifying migration results...');
   
   try {
     const { data: medications, error } = await supabase
@@ -230,7 +231,7 @@ export async function verifyMigration(): Promise<void> {
       .select('*');
     
     if (error) {
-      console.error('❌ Failed to fetch medications for verification:', error);
+      secureLogger.error('❌ Failed to fetch medications for verification:', error);
       return;
     }
     
@@ -259,14 +260,14 @@ export async function verifyMigration(): Promise<void> {
     }
     
     if (issues.length === 0) {
-      console.log('✅ Migration verification passed - all medications look good!');
+      secureLogger.debug('✅ Migration verification passed - all medications look good!');
     } else {
-      console.log('⚠️ Migration verification found issues:');
-      issues.forEach(issue => console.log(`  - ${issue}`));
+      secureLogger.debug('⚠️ Migration verification found issues:');
+      issues.forEach(issue => secureLogger.debug(`  - ${issue}`));
     }
     
   } catch (error) {
-    console.error('💥 Verification failed:', error);
+    secureLogger.error('💥 Verification failed:', error);
   }
 }
 
@@ -274,11 +275,11 @@ export async function verifyMigration(): Promise<void> {
 if (require.main === module) {
   migrateMedicationsToNewFormat()
     .then(result => {
-      console.log('\n🎉 Migration completed!');
-      console.log(`✅ Migrated: ${result.migrated} medications`);
+      secureLogger.debug('\n🎉 Migration completed!');
+      secureLogger.debug(`✅ Migrated: ${result.migrated} medications`);
       if (result.errors.length > 0) {
-        console.log(`❌ Errors: ${result.errors.length}`);
-        result.errors.forEach(error => console.log(`  - ${error}`));
+        secureLogger.debug(`❌ Errors: ${result.errors.length}`);
+        result.errors.forEach(error => secureLogger.debug(`  - ${error}`));
       }
       
       // Run verification
@@ -288,7 +289,7 @@ if (require.main === module) {
       process.exit(0);
     })
     .catch(error => {
-      console.error('💥 Migration script failed:', error);
+      secureLogger.error('💥 Migration script failed:', error);
       process.exit(1);
     });
 }

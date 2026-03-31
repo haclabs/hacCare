@@ -9,6 +9,7 @@
 
 import { supabase } from '../../../lib/api/supabase';
 import type { TemplateExportPackage } from '../types/templateSnapshot';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Export a simulation template with complete snapshot data
@@ -63,7 +64,7 @@ export async function exportSimulationTemplate(
 
     return exportPackage;
   } catch (error: any) {
-    console.error('Error exporting template:', error);
+    secureLogger.error('Error exporting template:', error);
     throw error;
   }
 }
@@ -102,7 +103,7 @@ export async function downloadTemplateExport(
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   } catch (error: any) {
-    console.error('Error downloading template export:', error);
+    secureLogger.error('Error downloading template export:', error);
     throw error;
   }
 }
@@ -149,7 +150,7 @@ export async function getExportSummary(templateId: string): Promise<{
       estimated_size_kb: estimatedSizeKb,
     };
   } catch (error: any) {
-    console.error('Error getting export summary:', error);
+    secureLogger.error('Error getting export summary:', error);
     throw error;
   }
 }

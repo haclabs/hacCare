@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Brain, Heart, Stethoscope, AlertTriangle, CheckCircle, Clock, User } from 'lucide-react';
+import { X, Brain, Heart, Stethoscope, AlertTriangle, Clock, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AssessmentDetailProps {

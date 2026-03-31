@@ -6,9 +6,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, Trash2, AlertCircle, Activity, Navigation, Lock, X, RefreshCw } from 'lucide-react';
+import { Search, Download, AlertCircle, Activity, Navigation, Lock, X, RefreshCw } from 'lucide-react';
 import { supabase } from '../../../../lib/api/supabase';
 import { formatLocalTime } from '../../../../utils/time';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface SystemLog {
   id: string;
@@ -144,7 +145,7 @@ export const SystemLogsViewer: React.FC = () => {
 
       setLogs(enrichedLogs);
     } catch (error) {
-      console.error('Error fetching system logs:', error);
+      secureLogger.error('Error fetching system logs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +176,7 @@ export const SystemLogsViewer: React.FC = () => {
       alert(`Logs older than ${olderThan} deleted successfully`);
       fetchLogs();
     } catch (error) {
-      console.error('Error deleting logs:', error);
+      secureLogger.error('Error deleting logs:', error);
       alert('Failed to delete logs');
     }
   };

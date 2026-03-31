@@ -15,6 +15,7 @@ import {
 import { getCurrentSubdomain } from '../lib/infrastructure/subdomainService';
 import { useAuth } from './auth/SimulationAwareAuthProvider';
 import { supabase } from '../lib/api/supabase';
+import { secureLogger } from '../lib/security/secureLogger';
 
 /**
  * Tenant Context Interface
@@ -95,16 +96,16 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const { data, error } = await getUserProgramTenants(user.id);
       if (error) {
-        console.error('Error loading program tenants:', error);
+        secureLogger.error('Error loading program tenants:', error);
         setProgramTenants([]);
         return [];
       } else {
         setProgramTenants(data || []);
-        console.log('📚 Loaded', data?.length || 0, 'program tenants');
+        secureLogger.debug('📚 Loaded', data?.length || 0, 'program tenants');
         return data || [];
       }
     } catch (error) {
-      console.error('Error loading program tenants:', error);
+      secureLogger.error('Error loading program tenants:', error);
       setProgramTenants([]);
       return [];
     }
@@ -133,9 +134,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Load program tenants for instructors FIRST (before any other logic)
       let loadedProgramTenants: ProgramTenant[] = [];
       if (profile?.role === 'instructor' || profile?.role === 'coordinator') {
-        console.log('👨‍🏫 Loading program tenants for instructor/coordinator...');
+        secureLogger.debug('👨‍🏫 Loading program tenants for instructor/coordinator...');
         loadedProgramTenants = await loadProgramTenants();
-        console.log('👨‍🏫 Program tenants loaded:', loadedProgramTenants.length);
+        secureLogger.debug('👨‍🏫 Program tenants loaded:', loadedProgramTenants.length);
       }
       
       // Check if user was in a simulation (survives refresh)
@@ -148,13 +149,13 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // For simulation-only users, restore simulation tenant if available before skipping tenant load
       if (profile?.simulation_only && profile?.role !== 'super_admin') {
         if (simulationTenantId) {
-          console.log('🎮 Simulation-only user restoring simulation tenant:', simulationTenantId);
+          secureLogger.debug('🎮 Simulation-only user restoring simulation tenant:', simulationTenantId);
           const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
           if (simulationTenant && !simError) {
             if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
               // Ensure user has access via tenant_users table (critical for RLS)
               if (user) {
-                console.log('🔐 Ensuring simulation-only user has tenant access...');
+                secureLogger.debug('🔐 Ensuring simulation-only user has tenant access...');
                 const { error: accessError } = await supabase
                   .from('tenant_users')
                   .upsert({
@@ -167,42 +168,42 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   });
 
                 if (accessError) {
-                  console.warn('⚠️ Could not grant tenant access:', accessError);
+                  secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
                 } else {
-                  console.log('✅ Simulation-only user granted tenant access');
+                  secureLogger.debug('✅ Simulation-only user granted tenant access');
                 }
               }
               
               setCurrentTenant(simulationTenant);
               setSelectedTenantId(simulationTenantId);
               setLoading(false);
-              console.log('✅ Simulation tenant restored for simulation-only user:', simulationTenant.name);
+              secureLogger.debug('✅ Simulation tenant restored for simulation-only user:', simulationTenant.name);
               return;
             } else {
-              console.log('⚠️ Stored tenant is no longer a simulation, clearing');
+              secureLogger.debug('⚠️ Stored tenant is no longer a simulation, clearing');
               localStorage.removeItem('current_simulation_tenant');
             }
           } else {
-            console.log('⚠️ Simulation tenant not found, clearing localStorage');
+            secureLogger.debug('⚠️ Simulation tenant not found, clearing localStorage');
             localStorage.removeItem('current_simulation_tenant');
           }
         }
 
-        console.log('🎯 Simulation-only user detected, skipping automatic tenant load');
+        secureLogger.debug('🎯 Simulation-only user detected, skipping automatic tenant load');
         setCurrentTenant(null);
         setLoading(false);
         return;
       }
       
       if (simulationTenantId && profile?.role !== 'instructor' && profile?.role !== 'coordinator') {
-        console.log('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
+        secureLogger.debug('🎮 Restoring simulation tenant from localStorage:', simulationTenantId);
         const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
         if (simulationTenant && !simError) {
           // Verify it's still a simulation tenant
           if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
             // Ensure user has access via tenant_users table (critical for RLS)
             if (user) {
-              console.log('🔐 Ensuring user has tenant access on restore...');
+              secureLogger.debug('🔐 Ensuring user has tenant access on restore...');
               const { error: accessError } = await supabase
                 .from('tenant_users')
                 .upsert({
@@ -215,38 +216,38 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 });
 
               if (accessError) {
-                console.warn('⚠️ Could not grant tenant access:', accessError);
+                secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
               } else {
-                console.log('✅ User granted tenant access on restore');
+                secureLogger.debug('✅ User granted tenant access on restore');
               }
             }
             
             setCurrentTenant(simulationTenant);
             setSelectedTenantId(simulationTenantId);
             setLoading(false);
-            console.log('✅ Simulation tenant restored:', simulationTenant.name);
+            secureLogger.debug('✅ Simulation tenant restored:', simulationTenant.name);
             return;
           } else {
             // Not a simulation anymore, clear localStorage
-            console.log('⚠️ Stored tenant is no longer a simulation, clearing');
+            secureLogger.debug('⚠️ Stored tenant is no longer a simulation, clearing');
             localStorage.removeItem('current_simulation_tenant');
           }
         } else {
           // Tenant no longer exists, clear localStorage
-          console.log('⚠️ Simulation tenant not found, clearing localStorage');
+          secureLogger.debug('⚠️ Simulation tenant not found, clearing localStorage');
           localStorage.removeItem('current_simulation_tenant');
         }
       } else if (simulationTenantId && (profile?.role === 'instructor' || profile?.role === 'coordinator')) {
         // For instructors/coordinators: Check if they're actively IN a simulation
         if (isInSimulationContext) {
           // They're in simulation context - restore the simulation tenant
-          console.log('🎮 Instructor in simulation context - restoring simulation tenant');
+          secureLogger.debug('🎮 Instructor in simulation context - restoring simulation tenant');
           const { data: simulationTenant, error: simError } = await getTenantById(simulationTenantId);
           if (simulationTenant && !simError) {
             if (simulationTenant.is_simulation || simulationTenant.tenant_type === 'simulation_active') {
               // Ensure instructor has access via tenant_users table
               if (user) {
-                console.log('🔐 Ensuring instructor has tenant access...');
+                secureLogger.debug('🔐 Ensuring instructor has tenant access...');
                 const { error: accessError } = await supabase
                   .from('tenant_users')
                   .upsert({
@@ -259,28 +260,28 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   });
 
                 if (accessError) {
-                  console.warn('⚠️ Could not grant tenant access:', accessError);
+                  secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
                 } else {
-                  console.log('✅ Instructor granted tenant access');
+                  secureLogger.debug('✅ Instructor granted tenant access');
                 }
               }
               
               setCurrentTenant(simulationTenant);
               setSelectedTenantId(simulationTenantId);
               setLoading(false);
-              console.log('✅ Simulation tenant restored for instructor:', simulationTenant.name);
+              secureLogger.debug('✅ Simulation tenant restored for instructor:', simulationTenant.name);
               return;
             } else {
-              console.log('⚠️ Stored tenant is no longer a simulation, clearing');
+              secureLogger.debug('⚠️ Stored tenant is no longer a simulation, clearing');
               localStorage.removeItem('current_simulation_tenant');
             }
           } else {
-            console.log('⚠️ Simulation tenant not found, clearing localStorage');
+            secureLogger.debug('⚠️ Simulation tenant not found, clearing localStorage');
             localStorage.removeItem('current_simulation_tenant');
           }
         } else {
           // They're logging in fresh - clear simulation tenant and route to program workspace
-          console.log('🧹 Clearing simulation tenant for instructor/coordinator - routing to program workspace');
+          secureLogger.debug('🧹 Clearing simulation tenant for instructor/coordinator - routing to program workspace');
           localStorage.removeItem('current_simulation_tenant');
         }
       }
@@ -289,10 +290,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // EXCEPT for simulation subdomain (which hosts multiple simulations)
       const currentSubdomain = getCurrentSubdomain();
       if (currentSubdomain && currentSubdomain !== 'simulation' && process.env.NODE_ENV === 'production') {
-        console.log('🔍 Checking subdomain tenant:', currentSubdomain);
+        secureLogger.debug('🔍 Checking subdomain tenant:', currentSubdomain);
         const { data: subdomainTenant, error: subdomainError } = await getTenantBySubdomain(currentSubdomain);
         if (subdomainTenant && !subdomainError) {
-          console.log('✅ Tenant loaded from subdomain:', subdomainTenant.name);
+          secureLogger.debug('✅ Tenant loaded from subdomain:', subdomainTenant.name);
           setCurrentTenant(subdomainTenant);
           setSelectedTenantId(subdomainTenant.id);
           setLoading(false);
@@ -302,7 +303,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (isMultiTenantAdmin) {
         // Super admin user - initialize enhanced access and load context
-        console.log('🔐 SUPER ADMIN: Initializing enhanced tenant access');
+        secureLogger.debug('🔐 SUPER ADMIN: Initializing enhanced tenant access');
         
         const hasAccess = await initializeSuperAdminAccess();
         if (!hasAccess) {
@@ -326,12 +327,12 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       } else {
         // Regular user - load their assigned tenant
-        console.log('🏢 TENANT CONTEXT: Loading tenant for regular user:', user.id);
+        secureLogger.debug('🏢 TENANT CONTEXT: Loading tenant for regular user:', user.id);
         const startTime = Date.now();
         
         // Check if instructor or coordinator with program tenant
         if ((profile?.role === 'instructor' || profile?.role === 'coordinator') && loadedProgramTenants.length > 0) {
-          console.log('👨‍🏫 INSTRUCTOR/COORDINATOR: Found', loadedProgramTenants.length, 'program tenants');
+          secureLogger.debug('👨‍🏫 INSTRUCTOR/COORDINATOR: Found', loadedProgramTenants.length, 'program tenants');
           
           // Check for saved program tenant preference
           const savedProgramTenantId = localStorage.getItem('current_program_tenant');
@@ -340,7 +341,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             // Restore previous program tenant
             const savedTenant = loadedProgramTenants.find(pt => pt.tenant_id === savedProgramTenantId);
             if (savedTenant) {
-              console.log('✅ Restoring program tenant:', savedTenant.program_name);
+              secureLogger.debug('✅ Restoring program tenant:', savedTenant.program_name);
               const { data: tenant, error: tenantError } = await getTenantById(savedTenant.tenant_id);
               if (!tenantError && tenant) {
                 setCurrentTenant(tenant);
@@ -355,7 +356,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           
           // Auto-login to first program tenant if they have only one
           if (loadedProgramTenants.length === 1) {
-            console.log('✅ Auto-login to single program tenant:', loadedProgramTenants[0].program_name);
+            secureLogger.debug('✅ Auto-login to single program tenant:', loadedProgramTenants[0].program_name);
             const { data: tenant, error: tenantError } = await getTenantById(loadedProgramTenants[0].tenant_id);
             if (!tenantError && tenant) {
               setCurrentTenant(tenant);
@@ -366,7 +367,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
           } else {
             // Multiple programs - let ProgramSelectorModal handle it
-            console.log('🎯 Multiple program tenants - showing selector');
+            secureLogger.debug('🎯 Multiple program tenants - showing selector');
             setCurrentTenant(null);
             setSelectedTenantId(null);
             setLoading(false);
@@ -381,28 +382,28 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setTimeout(() => reject(new Error('Tenant fetch timeout after 15 seconds')), 15000)
           )
         ]).catch((error) => {
-          console.error('🏢 TENANT CONTEXT: Timeout or error fetching tenant:', error);
+          secureLogger.error('🏢 TENANT CONTEXT: Timeout or error fetching tenant:', error);
           return { data: null, error };
         });
         
         const elapsed = Date.now() - startTime;
-        console.log(`🏢 TENANT CONTEXT: Tenant fetch took ${elapsed}ms`);
+        secureLogger.debug(`🏢 TENANT CONTEXT: Tenant fetch took ${elapsed}ms`);
         
         const { data: tenant, error: tenantError } = tenantResult;
         
-        console.log('🏢 TENANT CONTEXT: getCurrentUserTenant result:', { tenant, tenantError });
+        secureLogger.debug('🏢 TENANT CONTEXT: getCurrentUserTenant result:', { tenant, tenantError });
         
         if (tenantError) {
-          console.error('🏢 TENANT CONTEXT: Error loading tenant:', tenantError);
+          secureLogger.error('🏢 TENANT CONTEXT: Error loading tenant:', tenantError);
           throw new Error(tenantError.message);
         }
 
-        console.log('🏢 TENANT CONTEXT: Setting current tenant:', tenant);
+        secureLogger.debug('🏢 TENANT CONTEXT: Setting current tenant:', tenant);
         setCurrentTenant(tenant);
         setSelectedTenantId(tenant?.id || null);
       }
     } catch (err) {
-      console.error('Error loading tenant:', err);
+      secureLogger.error('Error loading tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to load tenant');
       setCurrentTenant(null);
     } finally {
@@ -424,7 +425,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Clear simulation tenant from localStorage first to prevent restore
       localStorage.removeItem('current_simulation_tenant');
-      console.log('🧹 Cleared simulation tenant from localStorage before switch');
+      secureLogger.debug('🧹 Cleared simulation tenant from localStorage before switch');
 
       // Use enhanced super admin service for tenant switching
       const result = await switchSuperAdminToTenant(tenantId);
@@ -442,9 +443,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Update state
       setSelectedTenantId(tenantId);
       setCurrentTenant(tenant);
-      console.log('✅ Switched to tenant:', tenant?.name);
+      secureLogger.debug('✅ Switched to tenant:', tenant?.name);
     } catch (err) {
-      console.error('Error switching tenant:', err);
+      secureLogger.error('Error switching tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to switch tenant');
     } finally {
       setLoading(false);
@@ -460,12 +461,12 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
-      console.log('🎮 Entering simulation tenant:', tenantId);
+      secureLogger.debug('🎮 Entering simulation tenant:', tenantId);
 
       // First, ensure the user has access to this tenant via tenant_users table
       // This is critical for RLS policies to grant data access
       if (user) {
-        console.log('🔐 Ensuring user has access to simulation tenant...');
+        secureLogger.debug('🔐 Ensuring user has access to simulation tenant...');
         const { error: accessError } = await supabase
           .from('tenant_users')
           .upsert({
@@ -478,10 +479,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
 
         if (accessError) {
-          console.warn('⚠️ Could not grant tenant access:', accessError);
+          secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
           // Continue anyway - they might already have access from simulation assignment
         } else {
-          console.log('✅ User granted access to simulation tenant');
+          secureLogger.debug('✅ User granted access to simulation tenant');
         }
       }
 
@@ -501,11 +502,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       // Persist simulation tenant to localStorage (survives refresh)
       localStorage.setItem('current_simulation_tenant', tenantId);
-      console.log('💾 Simulation tenant saved to localStorage');
+      secureLogger.debug('💾 Simulation tenant saved to localStorage');
       
-      console.log('✅ Successfully entered simulation tenant:', tenant.name);
+      secureLogger.debug('✅ Successfully entered simulation tenant:', tenant.name);
     } catch (err) {
-      console.error('Error entering simulation tenant:', err);
+      secureLogger.error('Error entering simulation tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to enter simulation');
       throw err;
     } finally {
@@ -521,15 +522,15 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
-      console.log('🚪 Exiting simulation tenant...');
+      secureLogger.debug('🚪 Exiting simulation tenant...');
       
       // Clear simulation tenant from localStorage
       localStorage.removeItem('current_simulation_tenant');
-      console.log('🧹 Cleared simulation tenant from localStorage');
+      secureLogger.debug('🧹 Cleared simulation tenant from localStorage');
 
       // For simulation_only users, redirect to portal instead of loading home tenant
       if (profile?.simulation_only) {
-        console.log('🎯 Simulation-only user exiting, redirecting to portal');
+        secureLogger.debug('🎯 Simulation-only user exiting, redirecting to portal');
         setCurrentTenant(null);
         setSelectedTenantId(null);
         // Navigation will be handled by the calling component
@@ -542,11 +543,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
           setCurrentTenant(tenant);
           setSelectedTenantId(tenant?.id || null);
-          console.log('✅ Returned to home tenant:', tenant?.name);
+          secureLogger.debug('✅ Returned to home tenant:', tenant?.name);
         }
       }
     } catch (err) {
-      console.error('Error exiting simulation:', err);
+      secureLogger.error('Error exiting simulation:', err);
       setError(err instanceof Error ? err.message : 'Failed to exit simulation');
       throw err;
     } finally {
@@ -564,12 +565,12 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
-      console.log('📝 Entering template tenant for editing:', tenantId);
+      secureLogger.debug('📝 Entering template tenant for editing:', tenantId);
 
       // First, ensure the user has access to this tenant
       // Add them to tenant_users if they're not already there
       if (user) {
-        console.log('🔐 Ensuring user has access to template tenant...');
+        secureLogger.debug('🔐 Ensuring user has access to template tenant...');
         const { error: accessError } = await supabase
           .from('tenant_users')
           .upsert({
@@ -582,10 +583,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
 
         if (accessError) {
-          console.warn('⚠️ Could not grant tenant access:', accessError);
+          secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
           // Continue anyway - they might already have access
         } else {
-          console.log('✅ User granted access to template tenant');
+          secureLogger.debug('✅ User granted access to template tenant');
         }
       }
 
@@ -604,9 +605,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCurrentTenant(tenant);
       
       // Note: We don't persist to sessionStorage - the editing_template flag drives everything
-      console.log('✅ Successfully entered template tenant:', tenant.name);
+      secureLogger.debug('✅ Successfully entered template tenant:', tenant.name);
     } catch (err) {
-      console.error('Error entering template tenant:', err);
+      secureLogger.error('Error entering template tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to enter template');
       throw err;
     } finally {
@@ -622,19 +623,19 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLoading(true);
       setError(null);
 
-      console.log('🚪 Exiting template tenant...');
+      secureLogger.debug('🚪 Exiting template tenant...');
       
       // Clear template editing flag
       sessionStorage.removeItem('editing_template');
       
       // Simply reload the tenant context to restore home tenant
       // This avoids RPC permission issues when calling from template tenant
-      console.log('🔄 Reloading tenant context to restore home tenant...');
+      secureLogger.debug('🔄 Reloading tenant context to restore home tenant...');
       await loadCurrentTenant();
       
-      console.log('✅ Returned to home tenant');
+      secureLogger.debug('✅ Returned to home tenant');
     } catch (err) {
-      console.error('Error exiting template tenant:', err);
+      secureLogger.error('Error exiting template tenant:', err);
       setError(err instanceof Error ? err.message : 'Failed to exit template');
       throw err;
     } finally {
@@ -655,7 +656,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setSelectedTenantId(null);
       setCurrentTenant(null);
     } catch (error) {
-      console.error('Error clearing tenant context:', error);
+      secureLogger.error('Error clearing tenant context:', error);
       setError('Failed to clear tenant context');
     }
   };

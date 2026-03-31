@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Heart, Sparkles } from 'lucide-react';
+import { ArrowLeft, Activity, Clock, User, Calendar, Phone, AlertTriangle, FileText, Pill, Stethoscope, Clipboard, Shield, Sparkles } from 'lucide-react';
 import { Patient, VitalSigns, Medication, PatientNote } from '../../../../types';
 import { fetchPatientById, fetchPatientVitals, fetchPatientNotes } from '../../../../services/patient/patientService';
 import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
@@ -10,14 +10,13 @@ import { fetchDoctorsOrders } from '../../../../services/clinical/doctorsOrdersS
 import { DoctorsOrder } from '../../../../types';
 import { RecentActivity } from './RecentActivity';
 import { MARModule } from '../../../clinical/components/mar';
-import { WoundAssessment } from '../forms/WoundAssessment';
-// import { ImageAnnotation } from '../visuals/ImageAnnotation';
 import { AdmissionRecordsForm } from '../forms/AdmissionRecordsForm';
 import { AdvancedDirectivesForm } from '../forms/AdvancedDirectivesForm';
 import { VitalsContent } from '../vitals/VitalsContent';
 import { NotesContent } from './NotesContent';
 import { PatientAssessmentsTab } from './PatientAssessmentsTab';
-import { ModernPatientManagement } from '../../ModernPatientManagement';
+import { ModernPatientManagement } from '../../../../components/ModernPatientManagement';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface PatientDetailProps {
   onShowBracelet?: (patient: Patient) => void;
@@ -33,9 +32,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   const [vitals, setVitals] = useState<VitalSigns[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState<PatientNote[]>([]);
-  const [admissionRecord, setAdmissionRecord] = useState<AdmissionRecord | null>(null);
-  const [advancedDirective, setAdvancedDirective] = useState<AdvancedDirective | null>(null);
-  const [doctorsOrders, setDoctorsOrders] = useState<DoctorsOrder[]>([]);
+  const [, setAdmissionRecord] = useState<AdmissionRecord | null>(null);
+  const [, setAdvancedDirective] = useState<AdvancedDirective | null>(null);
+  const [, setDoctorsOrders] = useState<DoctorsOrder[]>([]);
   const [loading, setLoading] = useState(true);
   // Check if we have an initial tab from location state (e.g., from barcode scan)
   const [activeTab, setActiveTab] = useState(
@@ -84,11 +83,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       
       try {
         setLoading(true);
-        console.log('Loading patient data for ID:', id);
+        secureLogger.debug('Loading patient data for ID:', id);
         
         // Get simulation context for proper data fetching
         const simulationId = currentTenant?.simulation_id;
-        console.log('PatientDetail - Simulation ID:', simulationId);
+        secureLogger.debug('PatientDetail - Simulation ID:', simulationId);
         
         const [patientData, vitalsData, medicationsData, notesData, admissionData, directiveData, ordersData] = await Promise.all([
           fetchPatientById(id, simulationId),
@@ -100,7 +99,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
           fetchDoctorsOrders(id)
         ]);
         
-        console.log('Patient data loaded:', patientData);
+        secureLogger.debug('Patient data loaded:', patientData);
         setPatient(patientData);
         setVitals(vitalsData);
         setMedications(medicationsData);
@@ -109,7 +108,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         setAdvancedDirective(directiveData);
         setDoctorsOrders(ordersData || []);
       } catch (error) {
-        console.error('Error loading patient data:', error);
+        secureLogger.error('Error loading patient data:', error);
       } finally {
         setLoading(false);
       }
@@ -140,8 +139,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
     { id: 'assessments', label: 'Assessments', icon: Stethoscope, subTabs: [
       { id: 'overview', label: 'Overview', icon: Stethoscope },
       { id: 'vitals', label: 'Vital Signs', icon: Activity },
-      { id: 'notes', label: 'Notes', icon: FileText },
-      { id: 'wounds', label: 'Wound Care', icon: Heart }
+      { id: 'notes', label: 'Notes', icon: FileText }
     ]},
     { id: 'admission', label: 'Admission', icon: Clipboard },
     { id: 'directives', label: 'Directives', icon: Shield },
@@ -358,7 +356,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 onNotesUpdated={(updatedNotes) => setNotes(updatedNotes)}
               />
             )}
-            {activeSubTab === 'wounds' && <WoundAssessment patientId={id!} />}
           </div>
         );
 
@@ -376,9 +373,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
                 const simulationId = currentTenant?.simulation_id;
                 const freshMedications = await fetchPatientMedications(id!, simulationId);
                 setMedications(freshMedications);
-                console.log('Medications refreshed from database after update');
+                secureLogger.debug('Medications refreshed from database after update');
               } catch (error) {
-                console.error('Error refreshing medications after update:', error);
+                secureLogger.error('Error refreshing medications after update:', error);
                 // Keep the local update if database refresh fails
               }
             }}
@@ -452,13 +449,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
         ...vital,
         bloodPressureDisplay: vital.bloodPressure?.systolic && vital.bloodPressure?.diastolic 
           ? `${vital.bloodPressure.systolic}/${vital.bloodPressure.diastolic}`
-          : vital.blood_pressure_systolic && vital.blood_pressure_diastolic
-          ? `${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic}`
           : 'N/A',
-        respiratoryRateDisplay: vital.respiratoryRate || vital.respiratory_rate || 'N/A',
-        oxygenSaturationDisplay: vital.oxygenSaturation || vital.oxygen_saturation || 'N/A',
-        roomAirIndicator: ((vital.oxygenSaturation || vital.oxygen_saturation) >= 95 && 
-                          (vital.oxygenSaturation || vital.oxygen_saturation) <= 100) ? ' (RA)' : ''
+        respiratoryRateDisplay: vital.respiratoryRate ?? 'N/A',
+        oxygenSaturationDisplay: vital.oxygenSaturation ?? 'N/A',
+        roomAirIndicator: (vital.oxygenSaturation >= 95 && vital.oxygenSaturation <= 100) ? ' (RA)' : ''
       }));
 
       // Create a new window for the hospital record
@@ -1145,7 +1139,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
       reportWindow.focus();
       
     } catch (error) {
-      console.error('Error generating patient record:', error);
+      secureLogger.error('Error generating patient record:', error);
       alert('Error generating patient record. Please try again.');
     }
   };

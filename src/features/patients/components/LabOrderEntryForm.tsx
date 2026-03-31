@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../hooks/useAuth';
-import { createLabOrder, markLabelPrinted } from '../../../services/clinical/labOrderService';
+import { createLabOrder } from '../../../services/clinical/labOrderService';
 import type { CreateLabOrderInput } from '../../clinical/types/labOrders';
 import {
   getProcedureCategories,

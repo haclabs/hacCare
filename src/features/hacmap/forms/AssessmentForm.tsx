@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Assessment, CreateAssessmentInput } from '../../../types/hacmap';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface AssessmentFormProps {
   recordType: 'device' | 'wound';
@@ -103,7 +104,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         output_amount_ml: formData.output_amount_ml,
       });
     } catch (error) {
-      console.error('Error saving assessment:', error);
+      secureLogger.error('Error saving assessment:', error);
       alert('Failed to save assessment. Please try again.');
     } finally {
       setIsSubmitting(false);

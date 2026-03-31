@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
-import { usePatients } from '../../hooks/usePatients';
-import { supabase } from '../../../../lib/api/supabase';
 import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
@@ -46,7 +45,7 @@ interface AdvancedDirectivesFormProps {
       
       setFormData(emptyDirective);
     } catch (err: any) {
-      console.error('Error loading advanced directive:', err);
+      secureLogger.error('Error loading advanced directive:', err);
       setError(err.message || 'Failed to load advanced directive');
     } finally {
       setLoading(false);
@@ -79,7 +78,7 @@ interface AdvancedDirectivesFormProps {
       
       // Save to database
       const savedDirective = await upsertAdvancedDirective(formData);
-      console.log('Advanced directive saved successfully:', savedDirective);
+      secureLogger.debug('Advanced directive saved successfully:', savedDirective);
       
       if (onSave) {
         onSave();
@@ -87,7 +86,7 @@ interface AdvancedDirectivesFormProps {
         onClose();
       }
     } catch (err: any) {
-      console.error('Error saving advanced directive:', err);
+      secureLogger.error('Error saving advanced directive:', err);
       setError(err.message || 'Failed to save advanced directive');
     } finally {
       setSaving(false);

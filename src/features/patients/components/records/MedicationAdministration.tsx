@@ -10,6 +10,7 @@ import { useTenant } from '../../../../contexts/TenantContext';
 import { fetchPatientMedications, deleteMedication } from '../../../../services/clinical/medicationService';
 // import { usePatients } from '../../hooks/usePatients'; // Commented out as not currently used
 import { Medication } from '../../../../types';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface MedicationAdministrationProps {
   patientId: string;
@@ -62,14 +63,14 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     setLoading(true);
     try {
         const now = new Date();
-        console.log('Refreshing medications for patient:', patientId, now.toISOString());
+        secureLogger.debug('Refreshing medications for patient:', patientId, now.toISOString());
         const simulationId = currentTenant?.simulation_id;
         const updatedMedications = await fetchPatientMedications(patientId, simulationId);
-        console.log(`Fetched ${updatedMedications.length} medications`);
+        secureLogger.debug(`Fetched ${updatedMedications.length} medications`);
         setAllMedications(updatedMedications);
         onRefresh();
     } catch (error) {
-        console.error('Error refreshing medications:', error);
+        secureLogger.error('Error refreshing medications:', error);
         setError('Failed to refresh medications');
     } finally {
         setLoading(false);
@@ -87,7 +88,7 @@ const handleDeleteMedication = async (medicationId: string) => {
             await deleteMedication(medicationId);
             await handleRefresh();
         } catch (error) {
-            console.error('Error deleting medication:', error);
+            secureLogger.error('Error deleting medication:', error);
             setError('Failed to delete medication');
         }
     }
@@ -95,12 +96,12 @@ const handleDeleteMedication = async (medicationId: string) => {
 
 // const getPatientDetails = () => {
 //     const patientDetails = getPatient(patientId);
-//     console.log('Fetched patient details:', patientDetails);
+//     secureLogger.debug('Fetched patient details:', patientDetails);
 //     return patientDetails;
 // };
 
 // const supabaseClientCheck = () => {
-//     console.log('Supabase client initialized:', supabase);
+//     secureLogger.debug('Supabase client initialized:', supabase);
 // };
 
 // useEffect(() => {
@@ -116,7 +117,7 @@ const handleDeleteMedication = async (medicationId: string) => {
 
   const getDueMedications = () => {
     const now = new Date();
-    console.log('Checking for due medications at:', now.toISOString());
+    secureLogger.debug('Checking for due medications at:', now.toISOString());
     
     // Get medications due within the next hour
     const dueMeds = allMedications.filter(med => {
@@ -133,25 +134,25 @@ const handleDeleteMedication = async (medicationId: string) => {
         const isDue = isValid(dueTime) && timeDiff <= 60 * 60 * 1000 && timeDiff > 0 && med.status === 'Active';
         
         if (isDue) {
-          console.log(`Medication ${med.name} is due soon: ${med.next_due}`);
-          console.log(`- Current time: ${now.toISOString()}`);
-          console.log(`- Due time: ${dueTime.toISOString()}`);
-          console.log(`- Time diff: ${timeDiff}ms (${Math.round(timeDiff/60000)} minutes)`);
+          secureLogger.debug(`Medication ${med.name} is due soon: ${med.next_due}`);
+          secureLogger.debug(`- Current time: ${now.toISOString()}`);
+          secureLogger.debug(`- Due time: ${dueTime.toISOString()}`);
+          secureLogger.debug(`- Time diff: ${timeDiff}ms (${Math.round(timeDiff/60000)} minutes)`);
         }
         return isDue;
       } catch (error) {
-        console.error('Error checking due medication:', error, med);
+        secureLogger.error('Error checking due medication:', error, med);
         return false;
       }
     });
     
-    console.log(`Found ${dueMeds.length} medications due soon`);
+    secureLogger.debug(`Found ${dueMeds.length} medications due soon`);
     return dueMeds;
   };
 
   const getOverdueMedications = () => {
     const now = new Date();
-    console.log('Checking for overdue medications at:', now.toISOString());
+    secureLogger.debug('Checking for overdue medications at:', now.toISOString());
     
     // Get medications that are overdue
     const overdueMeds = allMedications.filter(med => {
@@ -167,19 +168,19 @@ const handleDeleteMedication = async (medicationId: string) => {
         const isOverdue = isValid(dueTime) && dueTime.getTime() <= now.getTime() && med.status === 'Active';
         
         if (isOverdue) {
-          console.log(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
-          console.log(`- Current time: ${now.toISOString()}`);
-          console.log(`- Due time: ${dueTime.toISOString()}`);
-          console.log(`- Time diff: ${dueTime.getTime() - now.getTime()}ms (${Math.round((dueTime.getTime() - now.getTime())/60000)} minutes)`);
+          secureLogger.debug(`Medication ${med.name} is OVERDUE: ${med.next_due}`);
+          secureLogger.debug(`- Current time: ${now.toISOString()}`);
+          secureLogger.debug(`- Due time: ${dueTime.toISOString()}`);
+          secureLogger.debug(`- Time diff: ${dueTime.getTime() - now.getTime()}ms (${Math.round((dueTime.getTime() - now.getTime())/60000)} minutes)`);
         }
         return isOverdue;
       } catch (error) {
-        console.error('Error checking overdue medication:', error, med);
+        secureLogger.error('Error checking overdue medication:', error, med);
         return false;
       }
     });
     
-    console.log(`Found ${overdueMeds.length} medications overdue`);
+    secureLogger.debug(`Found ${overdueMeds.length} medications overdue`);
     return overdueMeds;
   };
 
@@ -281,7 +282,7 @@ const handleDeleteMedication = async (medicationId: string) => {
             <button
               onClick={() => {
                 setSelectedMedication(medication);
-                console.log('Opening administration form for medication:', medication.id);
+                secureLogger.debug('Opening administration form for medication:', medication.id);
                 alert('Medication administration form not yet implemented');
               }}
               className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"

@@ -10,6 +10,7 @@ import {
   deleteScheduledSimulation 
 } from '../../services/admin/programService';
 import CalendarEventModal, { ScheduledSimulationData } from './CalendarEventModal';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface ScheduledSimulation {
   id: string;
@@ -58,7 +59,7 @@ export const ProgramCalendar: React.FC = () => {
         .order('scheduled_start');
       
       if (error) {
-        console.error('Error fetching scheduled simulations:', error);
+        secureLogger.error('Error fetching scheduled simulations:', error);
         return [];
       }
       

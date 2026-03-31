@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface SecurityCheck {
   id: string;
@@ -62,7 +63,7 @@ export const NetlifySecurityDiagnostics: React.FC = () => {
       setLastRunTime(new Date());
       
     } catch (error) {
-      console.error('Security diagnostics error:', error);
+      secureLogger.error('Security diagnostics error:', error);
     } finally {
       setIsRunning(false);
     }

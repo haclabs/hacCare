@@ -5,6 +5,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { Tenant } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface SuperAdminTenantAccess {
   tenantId: string | null;
@@ -54,10 +55,10 @@ class SuperAdminTenantService {
         await this.switchToTenant(savedTenantId);
       }
 
-      console.log('🔐 Super admin access initialized');
+      secureLogger.debug('🔐 Super admin access initialized');
       return true;
     } catch (error) {
-      console.error('❌ Error initializing super admin access:', error);
+      secureLogger.error('❌ Error initializing super admin access:', error);
       return false;
     }
   }
@@ -79,7 +80,7 @@ class SuperAdminTenantService {
 
       if (accessToken) {
         try {
-          console.log('🔑 Using direct fetch to validate tenant');
+          secureLogger.debug('🔑 Using direct fetch to validate tenant');
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const response = await fetch(`${supabaseUrl}/rest/v1/tenants?id=eq.${tenantId}&status=eq.active&select=id,name,status`, {
             method: 'GET',
@@ -94,11 +95,11 @@ class SuperAdminTenantService {
             const tenants = await response.json();
             if (tenants && tenants.length > 0) {
               tenant = tenants[0];
-              console.log('✅ Tenant validated via direct fetch:', tenant.name);
+              secureLogger.debug('✅ Tenant validated via direct fetch:', tenant.name);
             }
           }
         } catch (fetchError) {
-          console.warn('⚠️ Direct fetch failed, falling back to Supabase client:', fetchError);
+          secureLogger.warn('⚠️ Direct fetch failed, falling back to Supabase client:', fetchError);
         }
       }
 
@@ -135,10 +136,10 @@ class SuperAdminTenantService {
           if (!rpcResponse.ok) {
             contextError = new Error(`RPC failed: ${rpcResponse.status}`);
           } else {
-            console.log('✅ Tenant context set via direct fetch');
+            secureLogger.debug('✅ Tenant context set via direct fetch');
           }
         } catch (fetchError) {
-          console.warn('⚠️ Direct RPC fetch failed, falling back to Supabase client:', fetchError);
+          secureLogger.warn('⚠️ Direct RPC fetch failed, falling back to Supabase client:', fetchError);
           contextError = fetchError;
         }
       }
@@ -162,11 +163,11 @@ class SuperAdminTenantService {
       // Save to localStorage for persistence across page reloads
       this.saveTenantContext(tenantId, tenant.name);
 
-      console.log(`🔄 Super admin switched to tenant: ${tenant.name}`);
+      secureLogger.debug(`🔄 Super admin switched to tenant: ${tenant.name}`);
       return { success: true };
 
     } catch (error) {
-      console.error('❌ Error switching tenant:', error);
+      secureLogger.error('❌ Error switching tenant:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -203,10 +204,10 @@ class SuperAdminTenantService {
           
           if (response.ok) {
             cleared = true;
-            console.log('✅ Tenant context cleared via direct fetch');
+            secureLogger.debug('✅ Tenant context cleared via direct fetch');
           }
         } catch (fetchError) {
-          console.warn('⚠️ Direct fetch failed for clearing context:', fetchError);
+          secureLogger.warn('⚠️ Direct fetch failed for clearing context:', fetchError);
         }
       }
 
@@ -216,7 +217,7 @@ class SuperAdminTenantService {
           .rpc('set_super_admin_tenant_context', { target_tenant_id: null });
 
         if (error) {
-          console.warn('Warning: Could not clear database context:', error);
+          secureLogger.warn('Warning: Could not clear database context:', error);
         }
       }
 
@@ -227,9 +228,9 @@ class SuperAdminTenantService {
       // Clear saved context
       this.clearSavedTenantContext();
 
-      console.log('🔄 Super admin context cleared - viewing all tenants');
+      secureLogger.debug('🔄 Super admin context cleared - viewing all tenants');
     } catch (error) {
-      console.error('❌ Error clearing tenant context:', error);
+      secureLogger.error('❌ Error clearing tenant context:', error);
     }
   }
 

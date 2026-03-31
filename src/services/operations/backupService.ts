@@ -9,6 +9,7 @@ import { supabase } from '../../lib/api/supabase';
 import { Patient } from '../../types';
 import { PatientAssessment } from '../patient/assessmentService';
 import { UserProfile } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface BackupOptions {
   includePatients: boolean;
@@ -277,7 +278,7 @@ class BackupService {
       let finalData = JSON.stringify(backupData);
       const unencryptedSize = new Blob([finalData]).size;
       
-      console.log(`Backup size: ${(unencryptedSize / 1024 / 1024).toFixed(2)} MB`);
+      secureLogger.debug(`Backup size: ${(unencryptedSize / 1024 / 1024).toFixed(2)} MB`);
       
       if (options.encryptData) {
         if (!options.password) {
@@ -286,13 +287,13 @@ class BackupService {
         
         // Warn if data is very large (>50MB)
         if (unencryptedSize > 50 * 1024 * 1024) {
-          console.warn('Large backup detected. Encryption may take some time...');
+          secureLogger.warn('Large backup detected. Encryption may take some time...');
         }
         
         try {
           finalData = await this.encryptData(finalData, options.password);
         } catch (error) {
-          console.error('Encryption failed:', error);
+          secureLogger.error('Encryption failed:', error);
           throw new Error(`Failed to encrypt backup: ${error instanceof Error ? error.message : 'Unknown error'}. Try creating a backup without encryption or with fewer data types.`);
         }
       }
@@ -333,7 +334,7 @@ class BackupService {
 
       return metadata;
     } catch (error) {
-      console.error('Backup creation failed:', error);
+      secureLogger.error('Backup creation failed:', error);
       throw new Error(`Failed to create backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -385,7 +386,7 @@ class BackupService {
         }
       };
     } catch (error) {
-      console.error('Backup download failed:', error);
+      secureLogger.error('Backup download failed:', error);
       throw new Error(`Failed to download backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -411,7 +412,7 @@ class BackupService {
 
       return activeBackups;
     } catch (error) {
-      console.error('Failed to list backups:', error);
+      secureLogger.error('Failed to list backups:', error);
       throw new Error(`Failed to list backups: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -437,7 +438,7 @@ class BackupService {
       // Log deletion
       await this.logBackupActivity(userId, 'backup_deleted', backupId, {});
     } catch (error) {
-      console.error('Failed to delete backup:', error);
+      secureLogger.error('Failed to delete backup:', error);
       throw new Error(`Failed to delete backup: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -464,13 +465,13 @@ class BackupService {
             .eq('id', backup.id);
           deletedCount++;
         } catch (error) {
-          console.error(`Failed to cleanup backup ${backup.id}:`, error);
+          secureLogger.error(`Failed to cleanup backup ${backup.id}:`, error);
         }
       }
 
       return deletedCount;
     } catch (error) {
-      console.error('Failed to cleanup expired backups:', error);
+      secureLogger.error('Failed to cleanup expired backups:', error);
       return 0;
     }
   }
@@ -494,8 +495,8 @@ class BackupService {
       await this.verifySuperAdminAccess(userId);
 
       // This is a dangerous operation - require additional confirmation
-      console.warn('⚠️ Restore operation initiated - this will modify production data');
-      console.log(`Restore request for backup: ${backupId} by user: ${userId}`);
+      secureLogger.warn('⚠️ Restore operation initiated - this will modify production data');
+      secureLogger.debug(`Restore request for backup: ${backupId} by user: ${userId}`);
 
       if (!restoreOptions.dryRun) {
         throw new Error('Restore operations must be implemented with extreme caution and additional safeguards');
@@ -507,7 +508,7 @@ class BackupService {
         report: { message: 'Restore functionality requires additional security implementation' }
       };
     } catch (error) {
-      console.error('Restore operation failed:', error);
+      secureLogger.error('Restore operation failed:', error);
       throw error;
     }
   }
@@ -1003,7 +1004,7 @@ class BackupService {
       
       return btoa(binaryString);
     } catch (error) {
-      console.error('Encryption failed:', error);
+      secureLogger.error('Encryption failed:', error);
       throw new Error('Failed to encrypt backup data');
     }
   }
@@ -1061,7 +1062,7 @@ class BackupService {
       const decoder = new TextDecoder();
       return decoder.decode(decryptedBuffer);
     } catch (error) {
-      console.error('Decryption failed:', error);
+      secureLogger.error('Decryption failed:', error);
       throw new Error('Failed to decrypt backup data - please check your password');
     }
   }
@@ -1255,7 +1256,7 @@ class BackupService {
 
       return result;
     } catch (error) {
-      console.error('Restore failed:', error);
+      secureLogger.error('Restore failed:', error);
       
       await this.logBackupActivity(userId, 'restore_failed', 'restore_operation', {
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -1286,7 +1287,7 @@ class BackupService {
     // Add version compatibility checks
     const backupVersion = data.metadata.version;
     if (backupVersion !== this.BACKUP_VERSION) {
-      console.warn(`Backup version ${backupVersion} may not be fully compatible with current version ${this.BACKUP_VERSION}`);
+      secureLogger.warn(`Backup version ${backupVersion} may not be fully compatible with current version ${this.BACKUP_VERSION}`);
     }
   }
 
@@ -1305,7 +1306,7 @@ class BackupService {
         result.recordsProcessed!++;
 
         if (options.dryRun) {
-          console.log(`[DRY RUN] Would restore patient: ${patient.first_name} ${patient.last_name}`);
+          secureLogger.debug(`[DRY RUN] Would restore patient: ${patient.first_name} ${patient.last_name}`);
           continue;
         }
 
@@ -1372,7 +1373,7 @@ class BackupService {
         result.recordsProcessed!++;
 
         if (options.dryRun) {
-          console.log(`[DRY RUN] Would restore assessment for patient: ${assessment.patient_id}`);
+          secureLogger.debug(`[DRY RUN] Would restore assessment for patient: ${assessment.patient_id}`);
           continue;
         }
 
@@ -1446,7 +1447,7 @@ class BackupService {
         result.recordsProcessed!++;
 
         if (options.dryRun) {
-          console.log(`[DRY RUN] Would restore user: ${user.email}`);
+          secureLogger.debug(`[DRY RUN] Would restore user: ${user.email}`);
           continue;
         }
 
@@ -1537,7 +1538,7 @@ class BackupService {
         result.recordsProcessed!++;
 
         if (options.dryRun) {
-          console.log(`[DRY RUN] Would restore medication for patient: ${medication.patient_id}`);
+          secureLogger.debug(`[DRY RUN] Would restore medication for patient: ${medication.patient_id}`);
           continue;
         }
 
@@ -1576,7 +1577,7 @@ class BackupService {
         result.recordsProcessed!++;
 
         if (options.dryRun) {
-          console.log(`[DRY RUN] Would restore wound assessment for patient: ${wound.patient_id}`);
+          secureLogger.debug(`[DRY RUN] Would restore wound assessment for patient: ${wound.patient_id}`);
           continue;
         }
 
@@ -1626,7 +1627,7 @@ class BackupService {
       });
 
     if (error) {
-      console.error('Failed to log backup activity:', error);
+      secureLogger.error('Failed to log backup activity:', error);
     }
   }
 
@@ -1659,7 +1660,7 @@ class BackupService {
         .in('id', userIds);
 
       if (profileError) {
-        console.warn('Could not fetch user profiles:', profileError);
+        secureLogger.warn('Could not fetch user profiles:', profileError);
         // Return logs without user info if profile fetch fails
         return logData;
       }
@@ -1675,7 +1676,7 @@ class BackupService {
         user_profiles: log.user_id ? profileMap.get(log.user_id) : null
       }));
     } catch (error) {
-      console.error('Failed to fetch backup activity log:', error);
+      secureLogger.error('Failed to fetch backup activity log:', error);
       return [];
     }
   }

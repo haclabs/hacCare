@@ -24,6 +24,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Printer, Download } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface BarcodeGeneratorProps {
   data: string;
@@ -41,10 +42,6 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
   vertical = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    generateBarcode();
-  }, [data]);
 
   const generateBarcode = () => {
     const canvas = canvasRef.current;
@@ -104,7 +101,7 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error generating barcode:', error);
+      secureLogger.error('Error generating barcode:', error);
       
       // Fallback: Draw error message
       const ctx = canvas.getContext('2d');
@@ -121,6 +118,10 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
       }
     }
   };
+
+  useEffect(() => {
+    generateBarcode();
+  }, [data]);
 
   const handlePrint = () => {
     const canvas = canvasRef.current;

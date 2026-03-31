@@ -3,6 +3,7 @@ import { AuthProvider as StandardAuthProvider } from './AuthContext';
 import { useAuth as useStandardAuth } from './useAuth';
 import { supabase } from '../../lib/api/supabase';
 import { initializeSessionTracking, endUserSession } from '../../services/admin/adminService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface SimulationAwareContextType {
   isSimulationUser: boolean;
@@ -36,7 +37,7 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
     const detectUserType = async () => {
       // With new simulation system, all users use standard auth
       // Simulation users are just regular users assigned to simulation tenants
-      console.log('🔍 Using standard auth for all users');
+      secureLogger.debug('🔍 Using standard auth for all users');
       setIsSimulationUser(false);
       setSimulationContext({});
     };
@@ -45,22 +46,22 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
     
     // Listen for auth state changes to re-detect context and handle session tracking
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 Auth state changed in SimulationAwareAuthProvider:', event);
+      secureLogger.debug('🔄 Auth state changed in SimulationAwareAuthProvider:', event);
       
       if (event === 'SIGNED_IN') {
         detectUserType();
         
         // Initialize session tracking for all logins (non-blocking)
         if (session?.user) {
-          console.log('👤 User signed in, initializing session tracking for:', session.user.email);
+          secureLogger.debug('👤 User signed in, initializing session tracking for:', session.user.email);
           
           // Start session tracking in background without blocking auth
           initializeSessionTracking()
             .then(() => {
-              console.log('✅ Background session tracking completed');
+              secureLogger.debug('✅ Background session tracking completed');
             })
             .catch(error => {
-              console.warn('⚠️ Background session tracking failed (non-critical):', error);
+              secureLogger.warn('⚠️ Background session tracking failed (non-critical):', error);
             });
         }
       } else if (event === 'SIGNED_OUT') {
@@ -69,13 +70,13 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
         // Clear template editing state on logout
         sessionStorage.removeItem('editing_template');
         sessionStorage.removeItem('current_template_tenant');
-        console.log('🧹 Cleared template editing state on logout');
+        secureLogger.debug('🧹 Cleared template editing state on logout');
         
         // End session tracking on logout
         try {
           await endUserSession();
         } catch (error) {
-          console.error('Failed to end session tracking:', error);
+          secureLogger.error('Failed to end session tracking:', error);
         }
       }
     });
@@ -112,7 +113,7 @@ export const useAuth = () => {
     }
     // Fallback createProfile function
     return async () => {
-      console.log('Using fallback createProfile');
+      secureLogger.debug('Using fallback createProfile');
       // Import and use the standard auth context's createProfile
       const { supabase } = await import('../../lib/api/supabase');
       const { data: { user } } = await supabase.auth.getUser();
@@ -135,7 +136,7 @@ export const useAuth = () => {
   
   // Normalize the function names and add missing functions between standard and simulation auth
   if (isSimulationUser) {
-    console.log('🔄 Using simulation auth context');
+    secureLogger.debug('🔄 Using simulation auth context');
     // Simulation auth uses 'login', standardize to 'signIn' and add missing functions
     return {
       ...authContext,

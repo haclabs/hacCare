@@ -12,6 +12,7 @@ import { launchSimulation } from '../../../services/simulation/simulationService
 import { supabase } from '../../../lib/api/supabase';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LaunchSimulationModalProps {
   template: SimulationTemplateWithDetails;
@@ -60,7 +61,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
       if (error) throw error;
       setUsers(data || []);
     } catch (err) {
-      console.error('Error loading users:', err);
+      secureLogger.error('Error loading users:', err);
     } finally {
       setLoadingUsers(false);
     }
@@ -127,7 +128,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
         setError(launchResult?.message || 'Failed to launch simulation');
       }
     } catch (err: any) {
-      console.error('Error launching simulation:', err);
+      secureLogger.error('Error launching simulation:', err);
       
       // Provide user-friendly error messages
       if (err.message?.includes('Template not found or not ready')) {

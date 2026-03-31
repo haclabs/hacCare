@@ -264,10 +264,7 @@ export const ModularPatientSystemDemo: React.FC<DemoProps> = ({ onClose }) => {
 
       {demoMode === 'dashboard' && (
         <ModularPatientDashboard
-          patient={patientData}
-          onPatientUpdate={handlePatientUpdate}
           currentUser={DEMO_USER}
-          onClose={() => setDemoMode('overview')}
         />
       )}
 

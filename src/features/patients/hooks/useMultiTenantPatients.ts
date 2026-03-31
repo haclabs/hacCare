@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Patient, VitalSigns, PatientNote } from '../../../types';
+import { VitalSigns, PatientNote } from '../../../types';
 import {
   getPatientsByTenant,
   createPatientWithTenant,

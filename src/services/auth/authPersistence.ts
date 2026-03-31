@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Force session restoration from localStorage
@@ -42,7 +43,7 @@ export const forceSessionRestore = async (): Promise<boolean> => {
     }
 
   } catch (error) {
-    console.error('Error during forced session restore:', error);
+    secureLogger.error('Error during forced session restore:', error);
     return false;
   }
 };
@@ -82,7 +83,7 @@ export const checkSessionWithRetry = async (maxRetries = 3): Promise<boolean> =>
 
     } catch (error) {
       if (attempt === maxRetries) {
-        console.error('Final session check failed:', error);
+        secureLogger.error('Final session check failed:', error);
       }
     }
   }
@@ -100,7 +101,7 @@ export const initializeSessionPersistence = async (): Promise<void> => {
     try {
       await supabase.auth.getSession();
     } catch (configError) {
-      console.error('Supabase client configuration issue:', configError);
+      secureLogger.error('Supabase client configuration issue:', configError);
       return;
     }
 
@@ -119,7 +120,7 @@ export const initializeSessionPersistence = async (): Promise<void> => {
     });
 
   } catch (error) {
-    console.error('Error initializing session persistence:', error);
+    secureLogger.error('Error initializing session persistence:', error);
   }
 };
 
@@ -139,6 +140,6 @@ export const forceLogout = async (): Promise<void> => {
     });
     
   } catch (error) {
-    console.error('Error during force logout:', error);
+    secureLogger.error('Error during force logout:', error);
   }
 };

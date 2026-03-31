@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -19,7 +20,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   });
 
   useEffect(() => {
-    if (debug) console.log('🔢 Buffer updated:', buffer);
+    if (debug) secureLogger.debug('🔢 Buffer updated:', buffer);
   }, [buffer, debug]);
 
   return (

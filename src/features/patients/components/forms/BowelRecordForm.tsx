@@ -3,6 +3,7 @@ import { X, Save, FileText, Clock } from 'lucide-react';
 import { createBowelRecord, BowelRecord } from '../../../../services/clinical/bowelRecordService';
 import { useAuth } from '../../../../hooks/useAuth';
 import { formatLocalTime } from '../../../../utils/time';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Bowel Record Form Component
@@ -96,7 +97,7 @@ export const BowelRecordForm: React.FC<BowelRecordFormProps> = ({
       const createdRecord = await createBowelRecord(bowelRecord);
       onSave(createdRecord);
     } catch (error: any) {
-      console.error('Error creating bowel record:', error);
+      secureLogger.error('Error creating bowel record:', error);
       setErrors({ submit: error.message || 'Failed to save bowel record' });
     } finally {
       setLoading(false);

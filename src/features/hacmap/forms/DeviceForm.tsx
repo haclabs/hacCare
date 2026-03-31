@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Save, Trash2 } from 'lucide-react';
+import { secureLogger } from '../../../lib/security/secureLogger';
 import type { Device, CreateDeviceInput, UpdateDeviceInput } from '../../../types/hacmap';
 import {
   DEVICE_TYPE_LABELS,
@@ -144,7 +145,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
       await onSave(data);
       setIsDirty(false);
     } catch (error) {
-      console.error('Error saving device:', error);
+      secureLogger.error('Error saving device:', error);
       alert('Failed to save device. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -159,7 +160,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
     try {
       await onDelete();
     } catch (error) {
-      console.error('Error deleting device:', error);
+      secureLogger.error('Error deleting device:', error);
       alert('Failed to delete device. Please try again.');
     } finally {
       setIsSubmitting(false);

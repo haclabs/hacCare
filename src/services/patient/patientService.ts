@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote, SimulationPatient } from '../../types';
 import { logAction } from '../operations/auditService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  *    // Fetch vitals for all patients
@@ -178,7 +179,7 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
   try {
     // If simulation mode, fetch simulation patients
     if (simulationId) {
-      console.log('Fetching simulation patients for simulation:', simulationId);
+      secureLogger.debug('Fetching simulation patients for simulation:', simulationId);
       
       const { data: simulationPatients, error: simError } = await supabase
         .from('simulation_patients')
@@ -197,19 +198,19 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
       }
 
       if (!simulationPatients || simulationPatients.length === 0) {
-        console.log('No simulation patients found');
+        secureLogger.debug('No simulation patients found');
         return [];
       }
 
-      console.log(`Found ${simulationPatients.length} simulation patients`);
+      secureLogger.debug(`Found ${simulationPatients.length} simulation patients`);
       
       // Convert simulation patients to Patient format
       const convertedPatients = simulationPatients.map(convertSimulationPatient);
-      console.log('Simulation patients converted successfully');
+      secureLogger.debug('Simulation patients converted successfully');
       return convertedPatients;
     }
     
-    console.log('Fetching patients from database...', tenantId ? `for tenant: ${tenantId}` : '(all tenants)');
+    secureLogger.debug('Fetching patients from database...', tenantId ? `for tenant: ${tenantId}` : '(all tenants)');
     
     // Build query for patients
     let query = supabase
@@ -230,11 +231,11 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
     }
 
     if (!patients || patients.length === 0) {
-      console.log('No patients found in database');
+      secureLogger.debug('No patients found in database');
       return [];
     }
 
-    console.log(`Found ${patients.length} patients`);
+    secureLogger.debug(`Found ${patients.length} patients`);
 
     // Fetch vitals for all patients
     const { data: allVitals, error: vitalsError } = await supabase
@@ -243,7 +244,7 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
       .order('recorded_at', { ascending: false });
 
     if (vitalsError) {
-      console.error('Error fetching vitals:', vitalsError);
+      secureLogger.error('Error fetching vitals:', vitalsError);
     }
 
     // Group vitals by patient
@@ -260,11 +261,11 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
       convertDatabasePatient(patient, vitalsByPatient[patient.id] || [])
     );
 
-    console.log('Patients converted successfully');
+    secureLogger.debug('Patients converted successfully');
     return patientsWithVitals;
   } catch (error) {
-    console.error('Error fetching patients:', error);
-    console.log('Database error, returning empty array');
+    secureLogger.error('Error fetching patients:', error);
+    secureLogger.debug('Database error, returning empty array');
     return [];
   }
 };
@@ -274,11 +275,11 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
  */
 export const fetchPatientById = async (patientId: string, simulationId?: string): Promise<Patient | null> => {
   try {
-    console.log('Fetching patient by ID:', patientId);
+    secureLogger.debug('Fetching patient by ID:', patientId);
     
     // If simulation mode, fetch simulation patient
     if (simulationId) {
-      console.log('Fetching simulation patient for simulation:', simulationId);
+      secureLogger.debug('Fetching simulation patient for simulation:', simulationId);
       
       const { data: simulationPatient, error: simError } = await supabase
         .from('simulation_patients')
@@ -295,18 +296,18 @@ export const fetchPatientById = async (patientId: string, simulationId?: string)
 
       if (simError) {
         if (simError.code === 'PGRST116') {
-          console.log('Simulation patient not found:', patientId);
+          secureLogger.debug('Simulation patient not found:', patientId);
           return null;
         }
         throw simError;
       }
 
       if (!simulationPatient) {
-        console.log('Simulation patient not found:', patientId);
+        secureLogger.debug('Simulation patient not found:', patientId);
         return null;
       }
 
-      console.log('Found simulation patient:', simulationPatient.patient_name);
+      secureLogger.debug('Found simulation patient:', simulationPatient.patient_name);
       return convertSimulationPatient(simulationPatient);
     }
     
@@ -320,18 +321,18 @@ export const fetchPatientById = async (patientId: string, simulationId?: string)
     if (patientError) {
       if (patientError.code === 'PGRST116') {
         // No rows returned from database
-        console.log('Patient not found in database:', patientId);
+        secureLogger.debug('Patient not found in database:', patientId);
         return null;
       }
       throw patientError;
     }
 
     if (!patient) {
-      console.log('Patient not found in database:', patientId);
+      secureLogger.debug('Patient not found in database:', patientId);
       return null;
     }
 
-    console.log('Found patient:', patient.patient_id);
+    secureLogger.debug('Found patient:', patient.patient_id);
 
     // Fetch vitals for this patient
     const { data: vitals, error: vitalsError } = await supabase
@@ -341,16 +342,16 @@ export const fetchPatientById = async (patientId: string, simulationId?: string)
       .order('recorded_at', { ascending: false });
 
     if (vitalsError) {
-      console.error('Error fetching vitals for patient:', vitalsError);
+      secureLogger.error('Error fetching vitals for patient:', vitalsError);
     }
 
     // Convert patient with vitals
     const patientWithVitals = convertDatabasePatient(patient, vitals || []);
 
-    console.log('Patient fetched successfully');
+    secureLogger.debug('Patient fetched successfully');
     return patientWithVitals;
   } catch (error) {
-    console.error('Error fetching patient by ID:', error);
+    secureLogger.error('Error fetching patient by ID:', error);
     throw error;
   }
 };
@@ -385,11 +386,11 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
     // React Query hooks call this service directly, bypassing PatientContext.
     const freshTenantId = localStorage.getItem('superAdminTenantId');
     if (freshTenantId && !dbPatient.tenant_id) {
-      console.log('PATIENT SERVICE: Setting tenant_id from localStorage:', freshTenantId);
+      secureLogger.debug('PATIENT SERVICE: Setting tenant_id from localStorage:', freshTenantId);
       dbPatient.tenant_id = freshTenantId;
     }
     
-    console.log('PATIENT SERVICE: Creating patient with tenant_id:', dbPatient.tenant_id);
+    secureLogger.debug('PATIENT SERVICE: Creating patient with tenant_id:', dbPatient.tenant_id);
     
     const { data, error } = await supabase
       .from('patients')
@@ -413,7 +414,7 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
 
     return convertDatabasePatient(data);
   } catch (error) {
-    console.error('Error creating patient:', error);
+    secureLogger.error('Error creating patient:', error);
     throw error;
   }
 };
@@ -448,7 +449,7 @@ export const updatePatient = async (patient: Patient): Promise<Patient> => {
 
     return convertDatabasePatient(data);
   } catch (error) {
-    console.error('Error updating patient:', error);
+    secureLogger.error('Error updating patient:', error);
     throw error;
   }
 };
@@ -484,7 +485,7 @@ export const deletePatient = async (patientId: string): Promise<void> => {
       { patient_id: patient?.patient_id }
     );
   } catch (error) {
-    console.error('Error deleting patient:', error);
+    secureLogger.error('Error deleting patient:', error);
     throw error;
   }
 };
@@ -494,7 +495,7 @@ export const deletePatient = async (patientId: string): Promise<void> => {
  */
 export const createPatientNote = async (note: any): Promise<PatientNote> => {
   try {
-    console.log('Creating patient note:', note);
+    secureLogger.debug('Creating patient note:', note);
     
     const { data, error } = await supabase
       .from('patient_notes')
@@ -510,7 +511,7 @@ export const createPatientNote = async (note: any): Promise<PatientNote> => {
       .single();
 
     if (error) {
-      console.error('Error creating patient note:', error);
+      secureLogger.error('Error creating patient note:', error);
       throw error;
     }
 
@@ -536,10 +537,10 @@ export const createPatientNote = async (note: any): Promise<PatientNote> => {
       created_at: data.created_at
     };
 
-    console.log('Note created successfully:', createdNote);
+    secureLogger.debug('Note created successfully:', createdNote);
     return createdNote;
   } catch (error) {
-    console.error('Error creating patient note:', error);
+    secureLogger.error('Error creating patient note:', error);
     throw error;
   }
 };
@@ -549,7 +550,7 @@ export const createPatientNote = async (note: any): Promise<PatientNote> => {
  */
 export const updatePatientNote = async (noteId: string, updates: Partial<PatientNote>): Promise<PatientNote | null> => {
   try {
-    console.log('Updating patient note:', noteId, updates);
+    secureLogger.debug('Updating patient note:', noteId, updates);
     
     // Convert to database format
     const dbUpdates: any = {};
@@ -565,12 +566,12 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
       .maybeSingle();
 
     if (error) {
-      console.error('Error updating patient note:', error);
+      secureLogger.error('Error updating patient note:', error);
       throw error;
     }
 
     if (!data) {
-      console.log('No note found with ID:', noteId);
+      secureLogger.debug('No note found with ID:', noteId);
       return null;
     }
 
@@ -596,10 +597,10 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
       created_at: data.created_at
     };
 
-    console.log('Note updated successfully:', updatedNote);
+    secureLogger.debug('Note updated successfully:', updatedNote);
     return updatedNote;
   } catch (error) {
-    console.error('Error updating patient note:', error);
+    secureLogger.error('Error updating patient note:', error);
     throw error;
   }
 };
@@ -609,7 +610,7 @@ export const updatePatientNote = async (noteId: string, updates: Partial<Patient
  */
 export const deletePatientNote = async (noteId: string): Promise<void> => {
   try {
-    console.log('Deleting patient note:', noteId);
+    secureLogger.debug('Deleting patient note:', noteId);
     
     // Get the patient_id before deleting the note
     const { data: noteData } = await supabase
@@ -629,14 +630,14 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
     if (error) {
       // If the note doesn't exist, just log it and return
       if (error.code === 'PGRST116') {
-        console.log('Note not found, nothing to delete');
+        secureLogger.debug('Note not found, nothing to delete');
         return;
       } else {
-        console.error('Error deleting patient note:', error);
+        secureLogger.error('Error deleting patient note:', error);
         throw error;
       }
     } else {
-      console.log('Note deleted successfully');
+      secureLogger.debug('Note deleted successfully');
     }
 
     // Log the action
@@ -651,12 +652,12 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
           { note_id: noteId }
         );
       } catch (logError) {
-        console.warn('Failed to log note deletion:', logError);
+        secureLogger.warn('Failed to log note deletion:', logError);
         // Continue even if logging fails
       }
     }
   } catch (error) {
-    console.error('Error deleting patient note:', error);
+    secureLogger.error('Error deleting patient note:', error);
     throw error;
   }
 };
@@ -666,10 +667,10 @@ export const deletePatientNote = async (noteId: string): Promise<void> => {
  */
 export const updatePatientVitals = async (patientId: string, vitals: VitalSigns, studentName?: string): Promise<void> => {
   try {
-    console.log('Inserting vitals for patient:', patientId, vitals);
-    console.log('Storing temperature in Celsius:', vitals.temperature);
-    console.log('🩺 Oxygen delivery:', vitals.oxygenDelivery);
-    console.log('💨 Flow rate:', vitals.oxygenFlowRate);
+    secureLogger.debug('Inserting vitals for patient:', patientId, vitals);
+    secureLogger.debug('Storing temperature in Celsius:', vitals.temperature);
+    secureLogger.debug('🩺 Oxygen delivery:', vitals.oxygenDelivery);
+    secureLogger.debug('💨 Flow rate:', vitals.oxygenFlowRate);
     
     // Get the patient's tenant_id first for proper tenant support
     const { data: patient, error: patientError } = await supabase
@@ -679,7 +680,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
       .single();
 
     if (patientError) {
-      console.error('Error fetching patient for tenant_id:', patientError);
+      secureLogger.error('Error fetching patient for tenant_id:', patientError);
       throw patientError;
     }
     
@@ -726,14 +727,14 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
       throw new Error('At least one vital sign measurement must be provided');
     }
 
-    console.log('📊 Recording partial vitals:', Object.keys(vitalRecord).filter(k => k.includes('_') && vitalRecord[k] != null));
+    secureLogger.debug('📊 Recording partial vitals:', Object.keys(vitalRecord).filter(k => k.includes('_') && vitalRecord[k] != null));
 
     const { error } = await supabase
       .from('patient_vitals')
       .insert(vitalRecord);
 
     if (error) {
-      console.error('Database error inserting vitals:', error);
+      secureLogger.error('Database error inserting vitals:', error);
       throw error;
     }
 
@@ -756,9 +757,9 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
       logData
     );
 
-    console.log('Vitals inserted successfully');
+    secureLogger.debug('Vitals inserted successfully');
   } catch (error) {
-    console.error('Error updating patient vitals:', error);
+    secureLogger.error('Error updating patient vitals:', error);
     throw error;
   }
 };
@@ -768,7 +769,7 @@ export const updatePatientVitals = async (patientId: string, vitals: VitalSigns,
  */
 export const fetchPatientVitals = async (patientId: string): Promise<VitalSigns[]> => {
   try {
-    console.log('Fetching vitals for patient:', patientId);
+    secureLogger.debug('Fetching vitals for patient:', patientId);
     
     // Use the existing fetchPatientVitalsHistory function
     const vitalsHistory = await fetchPatientVitalsHistory(patientId);
@@ -776,7 +777,7 @@ export const fetchPatientVitals = async (patientId: string): Promise<VitalSigns[
     // Convert to app format
     return convertDatabaseVitals(vitalsHistory);
   } catch (error) {
-    console.error('Error fetching patient vitals:', error);
+    secureLogger.error('Error fetching patient vitals:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
   }
 }
@@ -786,7 +787,7 @@ export const fetchPatientVitals = async (patientId: string): Promise<VitalSigns[
  */
 export const getPatientVitals = async (patientId: string): Promise<VitalSigns | null> => {
   try {
-    console.log('Fetching latest vitals for patient:', patientId);
+    secureLogger.debug('Fetching latest vitals for patient:', patientId);
     
     const { data, error } = await supabase
       .from('patient_vitals')
@@ -797,7 +798,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching patient vitals:', error);
+      secureLogger.error('Error fetching patient vitals:', error);
       throw error;
     }
 
@@ -820,11 +821,11 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
       lastUpdated: data.recorded_at
     };
 
-    console.log('Latest vitals fetched successfully');
-    console.log('Temperature in Celsius:', vitals.temperature);
+    secureLogger.debug('Latest vitals fetched successfully');
+    secureLogger.debug('Temperature in Celsius:', vitals.temperature);
     return vitals;
   } catch (error) {
-    console.error('Error fetching patient vitals:', error);
+    secureLogger.error('Error fetching patient vitals:', error);
     throw error;
   }
 };
@@ -834,7 +835,7 @@ export const getPatientVitals = async (patientId: string): Promise<VitalSigns | 
  */
 export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[]> => {
   try {
-    console.log('Fetching notes for patient:', patientId);
+    secureLogger.debug('Fetching notes for patient:', patientId);
     
     const { data, error } = await supabase
       .from('patient_notes')
@@ -843,7 +844,7 @@ export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching patient notes:', error);
+      secureLogger.error('Error fetching patient notes:', error);
       throw error;
     }
 
@@ -863,10 +864,10 @@ export const fetchPatientNotes = async (patientId: string): Promise<PatientNote[
       created_at: note.created_at
     }));
 
-    console.log(`Found ${notes.length} notes for patient ${patientId}`);
+    secureLogger.debug(`Found ${notes.length} notes for patient ${patientId}`);
     return notes;
   } catch (error) {
-    console.error('Error fetching patient notes:', error);
+    secureLogger.error('Error fetching patient notes:', error);
     throw error;
   }
 };
@@ -880,7 +881,7 @@ export const getPatientNotes = fetchPatientNotes;
  */
 export const clearPatientVitals = async (patientId: string): Promise<void> => {
   try {
-    console.log('Clearing all vitals for patient:', patientId);
+    secureLogger.debug('Clearing all vitals for patient:', patientId);
     
     // First, verify the patient exists to avoid deleting wrong records
     const { error: patientError } = await supabase
@@ -890,7 +891,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
       .single();
     
     if (patientError) {
-      console.error('Error verifying patient before clearing vitals:', patientError);
+      secureLogger.error('Error verifying patient before clearing vitals:', patientError);
       throw new Error(`Patient with ID ${patientId} not found`);
     }
     
@@ -901,13 +902,13 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
       .eq('patient_id', patientId);
 
     if (error) {
-      console.error('Database error deleting vitals:', error);
+      secureLogger.error('Database error deleting vitals:', error);
       throw error;
     }
 
-    console.log('All vitals cleared successfully');
+    secureLogger.debug('All vitals cleared successfully');
   } catch (error) {
-    console.error('Error clearing patient vitals:', error);
+    secureLogger.error('Error clearing patient vitals:', error);
     throw error;
   }
 };
@@ -917,7 +918,7 @@ export const clearPatientVitals = async (patientId: string): Promise<void> => {
  */
 export const fetchPatientVitalsHistory = async (patientId: string, limit: number = 10): Promise<DatabaseVitals[]> => {
   try { 
-    console.log('Fetching vitals history for patient:', patientId);
+    secureLogger.debug('Fetching vitals history for patient:', patientId);
     
     const { data, error } = await supabase
       .from('patient_vitals')
@@ -927,16 +928,16 @@ export const fetchPatientVitalsHistory = async (patientId: string, limit: number
       .limit(limit);
 
     if (error) { 
-      console.error('Error fetching vitals history:', error);
+      secureLogger.error('Error fetching vitals history:', error);
       throw error;
     }
 
-    console.log(`Found ${data?.length || 0} vitals records for patient ${patientId}`);
+    secureLogger.debug(`Found ${data?.length || 0} vitals records for patient ${patientId}`);
     
     // Return the data with proper typing
     return (data || []) as DatabaseVitals[];
   } catch (error) {
-    console.error('Error fetching patient vitals history:', error);
+    secureLogger.error('Error fetching patient vitals history:', error);
     throw error;
   }
 };

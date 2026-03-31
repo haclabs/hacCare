@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Copy, Move, Users, AlertCircle, CheckCircle } from 'lucide-react';
+import { Copy, Move, Users, AlertCircle } from 'lucide-react';
 import { transferPatient, getAvailableTenantsForTransfer, canTransferPatient, PatientTransferOptions } from '../../../services/patient/patientTransferService';
-import { testPatientTransferFunctions } from '../../utils/testPatientTransfer';
 import { Patient } from '../../../types';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface PatientTransferModalProps {
   patient: Patient | null;
@@ -59,7 +59,7 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
       const tenants = await getAvailableTenantsForTransfer(patient.id);
       setAvailableTenants(tenants);
     } catch (error) {
-      console.error('Failed to load tenants:', error);
+      secureLogger.error('Failed to load tenants:', error);
       setError('Failed to load available tenants');
     }
   };

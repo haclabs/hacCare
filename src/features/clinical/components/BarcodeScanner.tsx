@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, X, Check, AlertTriangle } from 'lucide-react';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string, type: 'medication' | 'patient') => void;
@@ -27,16 +28,6 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   const [error, setError] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-
-  useEffect(() => {
-    if (isActive) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-
-    return () => stopCamera();
-  }, [isActive]);
 
   const startCamera = async () => {
     try {
@@ -57,7 +48,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       }
     } catch (err) {
       setError('Camera access denied or not available');
-      console.error('Camera error:', err);
+      secureLogger.error('Camera error:', err);
     }
   };
 
@@ -66,6 +57,43 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+  };
+
+  useEffect(() => {
+    if (isActive) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+
+    return () => stopCamera();
+  }, [isActive]);
+
+  const handleBarcodeDetected = (barcode: string) => {
+    if (barcode === lastScanned) return; // Prevent duplicate scans
+
+    setLastScanned(barcode);
+    
+    // Determine barcode type based on prefix or format
+    let detectedType: 'medication' | 'patient';
+    
+    // Updated logic for new barcode formats:
+    // - Patient barcodes start with 'PT' (e.g., PT12345678)
+    // - Medication barcodes are alphanumeric without prefix (e.g., ACE3D4DD4)
+    if (barcode.startsWith('PT') || barcode.startsWith('PAT-')) {
+      detectedType = 'patient';
+    } else if (barcode.startsWith('MED-') || barcode.startsWith('RX-')) {
+      // Legacy medication prefixes (for backward compatibility)
+      detectedType = 'medication';
+    } else if (/^[A-Z0-9]{6,12}$/i.test(barcode)) {
+      // Alphanumeric medication IDs (new format)
+      detectedType = 'medication';
+    } else {
+      // Fallback to expected type
+      detectedType = expectedType;
+    }
+
+    onScan(barcode, detectedType);
   };
 
   // Handle keyboard input for testing (simulate barcode scanner)
@@ -101,33 +129,6 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       clearTimeout(inputTimer);
     };
   }, [isActive]);
-
-  const handleBarcodeDetected = (barcode: string) => {
-    if (barcode === lastScanned) return; // Prevent duplicate scans
-
-    setLastScanned(barcode);
-    
-    // Determine barcode type based on prefix or format
-    let detectedType: 'medication' | 'patient';
-    
-    // Updated logic for new barcode formats:
-    // - Patient barcodes start with 'PT' (e.g., PT12345678)
-    // - Medication barcodes are alphanumeric without prefix (e.g., ACE3D4DD4)
-    if (barcode.startsWith('PT') || barcode.startsWith('PAT-')) {
-      detectedType = 'patient';
-    } else if (barcode.startsWith('MED-') || barcode.startsWith('RX-')) {
-      // Legacy medication prefixes (for backward compatibility)
-      detectedType = 'medication';
-    } else if (/^[A-Z0-9]{6,12}$/i.test(barcode)) {
-      // Alphanumeric medication IDs (new format)
-      detectedType = 'medication';
-    } else {
-      // Fallback to expected type
-      detectedType = expectedType;
-    }
-
-    onScan(barcode, detectedType);
-  };
 
   const handleManualInput = () => {
     const input = prompt(`Enter ${expectedType} barcode manually:`);

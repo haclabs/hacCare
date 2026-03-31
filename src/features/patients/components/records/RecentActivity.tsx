@@ -3,6 +3,7 @@ import { X, Clock, User, FileText, RefreshCw, Activity, Edit, Plus, Trash2, Pill
 import { parseISO, isValid } from 'date-fns';
 import { fetchTargetActivity, AuditLog } from '../../../../lib/auditService';
 import { formatLocalTime } from '../../../../utils/dateUtils';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface RecentActivityProps {
   patientId: string;
@@ -30,7 +31,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({
       const data = await fetchTargetActivity(patientId, 'patient', 20);
       setActivities(data);
     } catch (err: any) {
-      console.error('Error loading activity:', err);
+      secureLogger.error('Error loading activity:', err);
       setError(err.message || 'Failed to load activity logs');
     } finally {
       setLoading(false);

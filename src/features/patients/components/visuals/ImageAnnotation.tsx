@@ -6,6 +6,7 @@ import { useAuth } from '../../../../hooks/useAuth';
 import { PatientImage, uploadPatientImage, fetchPatientImages, updateImageAnnotations, deletePatientImage } from '../../../../lib/media/imageService';
 import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface ImageAnnotationProps {
   patientId: string;
@@ -58,7 +59,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
         handleSelectImage(patientImages[0]);
       }
     } catch (err: any) {
-      console.error('Error loading images:', err);
+      secureLogger.error('Error loading images:', err);
       setError(err.message || 'Failed to load images');
     } finally {
       setLoading(false);
@@ -75,7 +76,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   async function handleImageDrop(acceptedFiles: File[]) {
     if (acceptedFiles.length === 0) return;
     
-    console.log('File dropped:', acceptedFiles[0].name, acceptedFiles[0].type, acceptedFiles[0].size);
+    secureLogger.debug('File dropped:', acceptedFiles[0].name, acceptedFiles[0].type, acceptedFiles[0].size);
     
     try {
       setUploading(true);
@@ -94,8 +95,8 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       // Add to images list
       setImages(prev => [uploadedImage, ...prev]);
       
-      console.log('Image uploaded successfully:', uploadedImage);
-      console.log('Image URL:', uploadedImage.image_url);
+      secureLogger.debug('Image uploaded successfully:', uploadedImage);
+      secureLogger.debug('Image URL:', uploadedImage.image_url);
       
       // Select the uploaded image
       setSelectedImage(uploadedImage);
@@ -106,10 +107,10 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       try {
         await refreshPatients();
       } catch (refreshError) {
-        console.warn('Failed to refresh patient data after image upload:', refreshError);
+        secureLogger.warn('Failed to refresh patient data after image upload:', refreshError);
       }
     } catch (err: any) {
-      console.error('Error uploading image:', err);
+      secureLogger.error('Error uploading image:', err);
       setError(err.message || 'Failed to upload image');
     } finally {
       setUploading(false);
@@ -148,14 +149,14 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       
       setSelectedImage(updatedImage);
     } catch (err: any) {
-      console.error('Error saving annotations:', err);
+      secureLogger.error('Error saving annotations:', err);
       setError(err.message || 'Failed to save annotations'); 
       
       // Refresh patient data to reflect the updated annotations
       try {
         await refreshPatients();
       } catch (refreshError) {
-        console.warn('Failed to refresh patient data after annotation update:', refreshError);
+        secureLogger.warn('Failed to refresh patient data after annotation update:', refreshError);
       }
     } finally {
       setUploading(false);
@@ -182,10 +183,10 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       try {
         await refreshPatients();
       } catch (refreshError) {
-        console.warn('Failed to refresh patient data after image deletion:', refreshError);
+        secureLogger.warn('Failed to refresh patient data after image deletion:', refreshError);
       }
     } catch (err: any) {
-      console.error('Error deleting image:', err);
+      secureLogger.error('Error deleting image:', err);
       setError(err.message || 'Failed to delete image');
     } finally {
       setUploading(false);
