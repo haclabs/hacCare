@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Users, Clock, Monitor, Globe, User, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
-import { 
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { 
   getActiveSessions, 
   getRecentLoginHistory,
   getSystemStats,

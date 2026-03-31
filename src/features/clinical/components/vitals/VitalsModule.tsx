@@ -21,6 +21,7 @@ import { FormData, ValidationResult, FormGenerationContext } from '../../../../t
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge, assessVitalSign } from '../../../../utils/vitalRanges';
 import { NeuroAssessmentTab } from '../../../../features/patients/components/vitals/NeuroAssessmentTab';
+import { NewbornAssessmentTab } from '../../../../features/patients/components/assessments/NewbornAssessmentTab';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsModuleProps {
@@ -49,7 +50,7 @@ interface VitalsModuleProps {
   hasNewNotes?: boolean;
 }
 
-type VitalsView = 'trends' | 'neuro';
+type VitalsView = 'trends' | 'neuro' | 'newborn';
 
 export const VitalsModule: React.FC<VitalsModuleProps> = ({
   patient,
@@ -78,6 +79,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const [showTrendsDetail, setShowTrendsDetail] = useState(false);
   const [activeView, setActiveView] = useState<VitalsView>('trends');
   const [showNeuroForm, setShowNeuroForm] = useState(false);
+  const [showNewbornForm, setShowNewbornForm] = useState(false);
 
   // Register schemas on component mount
   useEffect(() => {
@@ -647,6 +649,16 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         >
           Neuro Assessment
         </button>
+        <button
+          onClick={() => setActiveView('newborn')}
+          className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeView === 'newborn'
+              ? 'border-cyan-600 text-cyan-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Newborn Assessment
+        </button>
       </div>
 
       {/* Clinical Alerts */}
@@ -670,6 +682,14 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           currentUser={currentUser}
           externalShowForm={showNeuroForm}
           onExternalFormClose={() => setShowNeuroForm(false)}
+        />
+      )}
+
+      {/* Newborn Assessment tab */}
+      {activeView === 'newborn' && (
+        <NewbornAssessmentTab
+          patient={patient}
+          currentUser={currentUser}
         />
       )}
 

@@ -28,10 +28,10 @@ interface ModernPatientManagementProps {
 
 export const ModernPatientManagement: React.FC<ModernPatientManagementProps> = ({
   patient,
-  onPatientUpdate,
+  onPatientUpdate: _onPatientUpdate,
   mode = 'standalone',
   currentUser,
-  onClose
+  onClose: _onClose
 }) => {
   const [isModularView, setIsModularView] = useState(false);
   const [patientData, setPatientData] = useState<Patient>(patient);
@@ -40,13 +40,6 @@ export const ModernPatientManagement: React.FC<ModernPatientManagementProps> = (
   useEffect(() => {
     setPatientData(patient);
   }, [patient]);
-
-  // Handle patient data updates from modular system
-  const handleModularPatientUpdate = (updatedData: Partial<Patient>) => {
-    const updated = { ...patientData, ...updatedData };
-    setPatientData(updated);
-    onPatientUpdate(updatedData);
-  };
 
   // Render comparison view showing traditional vs modular approach
   const renderComparisonView = () => {
@@ -207,15 +200,6 @@ export const ModernPatientManagement: React.FC<ModernPatientManagementProps> = (
   if (isModularView) {
     return (
       <ModularPatientDashboard
-        patient={patientData}
-        onPatientUpdate={handleModularPatientUpdate}
-        onClose={() => {
-          if (mode === 'standalone' && onClose) {
-            onClose();
-          } else {
-            setIsModularView(false);
-          }
-        }}
         currentUser={currentUser}
       />
     );

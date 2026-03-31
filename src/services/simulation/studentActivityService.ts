@@ -29,6 +29,7 @@ export interface StudentActivity {
     intakeOutput: IntakeOutputEntry[];
     advancedDirectives: AdvancedDirectiveEntry[]; // 🆕 NEW
     bbitEntries: BBITEntry[];
+    newbornAssessments: NewbornAssessmentEntry[];
   };
 }
 
@@ -125,6 +126,20 @@ interface NeuroAssessmentEntry {
   sensation: string | null;
   speech: string | null;
   pain_score: number | null;
+}
+
+interface NewbornAssessmentEntry {
+  id: string;
+  recorded_at: string;
+  apgar_1min: number | null;
+  apgar_5min: number | null;
+  apgar_10min: number | null;
+  vitamin_k_given: boolean | null;
+  vitamin_k_declined: boolean | null;
+  erythromycin_given: boolean | null;
+  physical_observations: Record<string, unknown> | null;
+  completed_by: string | null;
+  student_name: string | null;
 }
 
 interface HacMapDeviceEntry {
@@ -327,6 +342,7 @@ export async function getStudentActivitiesBySimulation(
       advancedDirectivesData, // 🆕 NEW: Advanced Directives
       neuroAssessmentsData,
       bbitData,
+      newbornAssessmentData,
     ] = await Promise.all([
       // Vitals
       supabase
@@ -553,6 +569,14 @@ export async function getStudentActivitiesBySimulation(
         .not('student_name', 'is', null)
         .gte('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
+
+      // Newborn Assessment
+      supabase
+        .from('patient_newborn_assessments')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .not('student_name', 'is', null),
     ]);
 
     // Group all activities by student name
@@ -585,6 +609,7 @@ export async function getStudentActivitiesBySimulation(
             intakeOutput: [],
             advancedDirectives: [], // 🆕 NEW
             bbitEntries: [],
+            newbornAssessments: [],
           },
         });
       }
@@ -939,6 +964,25 @@ export async function getStudentActivitiesBySimulation(
         correction_suggested_dose: bbit.correction_suggested_dose,
         correction_status: bbit.correction_status,
         carb_intake: bbit.carb_intake,
+      });
+      student.totalEntries++;
+    });
+
+    // Process Newborn Assessments
+    newbornAssessmentData.data?.forEach((nb: any) => {
+      const student = getOrCreateStudent(nb.student_name);
+      student.activities.newbornAssessments.push({
+        id: nb.id,
+        recorded_at: nb.recorded_at,
+        apgar_1min: nb.apgar_1min,
+        apgar_5min: nb.apgar_5min,
+        apgar_10min: nb.apgar_10min,
+        vitamin_k_given: nb.vitamin_k_given,
+        vitamin_k_declined: nb.vitamin_k_declined,
+        erythromycin_given: nb.erythromycin_given,
+        physical_observations: nb.physical_observations,
+        completed_by: nb.completed_by,
+        student_name: nb.student_name,
       });
       student.totalEntries++;
     });

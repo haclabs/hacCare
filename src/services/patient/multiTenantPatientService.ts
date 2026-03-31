@@ -2,6 +2,7 @@ import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote } from '../../types';
 import type { NeuroAssessment, NeuroAssessmentInput } from '../../features/patients/types/neuroAssessment';
 import type { BBITEntry, BBITEntryInput } from '../../features/patients/types/bbitEntry';
+import type { NewbornAssessment, NewbornAssessmentInput } from '../../features/patients/types/newbornAssessment';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
@@ -552,6 +553,85 @@ export async function addBBITEntry(
     secureLogger.error('Error in addBBITEntry:', error);
     return { data: null, error };
   }
+}
+
+// ============================================================================
+// Newborn Assessment
+// ============================================================================
+
+/**
+ * Get the newborn assessment for a patient (single UPSERT record per patient).
+ */
+export async function getNewbornAssessment(
+  patientId: string,
+  tenantId: string
+): Promise<NewbornAssessment | null> {
+  const { data, error } = await supabase
+    .from('patient_newborn_assessments')
+    .select('*')
+    .eq('patient_id', patientId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (error) {
+    secureLogger.error('Error in getNewbornAssessment:', error);
+    throw error;
+  }
+  return data as NewbornAssessment | null;
+}
+
+/**
+ * Save (upsert) the newborn assessment for a patient.
+ * There is at most one record per (patient_id, tenant_id).
+ */
+export async function saveNewbornAssessment(
+  patientId: string,
+  tenantId: string,
+  assessment: NewbornAssessmentInput
+): Promise<NewbornAssessment> {
+  // Build payload explicitly — avoids sending undefined values that trigger 400s
+  const payload: Record<string, unknown> = {
+    patient_id: patientId,
+    tenant_id: tenantId,
+    recorded_at: assessment.recorded_at || new Date().toISOString(),
+  };
+
+  // Date columns — empty string must become NULL, not be sent as ""
+  const dateFields: (keyof NewbornAssessmentInput)[] = ['vitamin_k_date', 'erythromycin_date'];
+  const otherFields: (keyof NewbornAssessmentInput)[] = [
+    'time_of_birth', 'weight_grams', 'length_cm',
+    'head_circumference_cm', 'head_circumference_1hr_cm', 'head_circumference_2hr_cm',
+    'apgar_1min', 'apgar_5min', 'apgar_10min',
+    'vitamin_k_given', 'vitamin_k_declined', 'vitamin_k_dose',
+    'vitamin_k_site', 'vitamin_k_time', 'vitamin_k_signature',
+    'erythromycin_given', 'erythromycin_time', 'erythromycin_signature',
+    'physical_observations', 'completed_by', 'completed_initials', 'student_name',
+  ];
+
+  for (const field of otherFields) {
+    if (assessment[field] !== undefined) {
+      payload[field] = assessment[field];
+    }
+  }
+  // For DATE fields: skip empty strings entirely (column stays NULL)
+  for (const field of dateFields) {
+    const val = assessment[field];
+    if (val !== undefined && val !== '') {
+      payload[field] = val;
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('patient_newborn_assessments')
+    .upsert(payload, { onConflict: 'patient_id,tenant_id', ignoreDuplicates: false })
+    .select()
+    .single();
+
+  if (error) {
+    secureLogger.error('Error in saveNewbornAssessment:', error);
+    throw error;
+  }
+  return data as NewbornAssessment;
 }
 
 /**

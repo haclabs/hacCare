@@ -2,8 +2,8 @@
 // Handles CRUD operations and flag computation for lab results
 
 import { supabase } from '../../lib/api/supabase';
-import type {
 import { secureLogger } from '../../lib/security/secureLogger';
+import type {
   LabPanel,
   LabResult,
   LabResultRef,

@@ -133,6 +133,10 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % BBIT entries', v_count;
   
+  DELETE FROM patient_newborn_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % newborn assessments', v_count;
+  
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % doctors orders', v_count;

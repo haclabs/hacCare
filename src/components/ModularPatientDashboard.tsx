@@ -88,7 +88,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isMultiTenantAdmin, currentTenant } = useTenant();
+  const { currentTenant } = useTenant();
   const [activeModule, setActiveModule] = useState<ActiveModule>('overview');
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,7 +139,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
     try {
       // Get all patient data for comprehensive record including clinical assessments
-      secureLogger.debug('🔍 DEBUG: Fetching lab panels for patient.id:', patient.id, 'tenant:', currentTenant?.id);
+      secureLogger.debug(`🔍 DEBUG: Fetching lab panels for patient.id: ${patient.id} tenant: ${currentTenant?.id}`);
       
       const [vitalsData, medicationsData, assessmentsData, bowelRecordsData, admissionData, directiveData, ordersData, labPanelsResponse] = await Promise.all([
         fetchPatientVitals(patient.id),
@@ -192,13 +192,10 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         ...vital,
         bloodPressureDisplay: vital.bloodPressure?.systolic && vital.bloodPressure?.diastolic 
           ? `${vital.bloodPressure.systolic}/${vital.bloodPressure.diastolic}`
-          : vital.blood_pressure_systolic && vital.blood_pressure_diastolic
-          ? `${vital.blood_pressure_systolic}/${vital.blood_pressure_diastolic}`
           : 'N/A',
-        respiratoryRateDisplay: vital.respiratoryRate || vital.respiratory_rate || 'N/A',
-        oxygenSaturationDisplay: vital.oxygenSaturation || vital.oxygen_saturation || 'N/A',
-        roomAirIndicator: ((vital.oxygenSaturation || vital.oxygen_saturation) >= 95 && 
-                          (vital.oxygenSaturation || vital.oxygen_saturation) <= 100) ? ' (RA)' : ''
+        respiratoryRateDisplay: vital.respiratoryRate ?? 'N/A',
+        oxygenSaturationDisplay: vital.oxygenSaturation ?? 'N/A',
+        roomAirIndicator: (vital.oxygenSaturation >= 95 && vital.oxygenSaturation <= 100) ? ' (RA)' : ''
       }));
 
       // Create a new window for the hospital record
@@ -762,22 +759,16 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                         <div class="note-header" style="color: #854d0e;">📝 Admission Assessment</div>
                         <div class="note-content">
                           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px;">
-                            ${admissionData.admission_date ? `
+                            ${admissionData.created_at ? `
                               <div>
                                 <span style="font-weight: 600; color: #854d0e;">Admission Date:</span>
-                                <span style="margin-left: 5px;">${new Date(admissionData.admission_date).toLocaleString()}</span>
+                                <span style="margin-left: 5px;">${new Date(admissionData.created_at).toLocaleString()}</span>
                               </div>
                             ` : ''}
                             ${admissionData.admission_type ? `
                               <div>
                                 <span style="font-weight: 600; color: #854d0e;">Admission Type:</span>
                                 <span style="margin-left: 5px;">${admissionData.admission_type}</span>
-                              </div>
-                            ` : ''}
-                            ${admissionData.admitting_diagnosis ? `
-                              <div style="grid-column: span 2;">
-                                <span style="font-weight: 600; color: #854d0e;">Admitting Diagnosis:</span>
-                                <span style="margin-left: 5px;">${admissionData.admitting_diagnosis}</span>
                               </div>
                             ` : ''}
                             ${admissionData.chief_complaint ? `
@@ -792,27 +783,15 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                                 <span style="margin-left: 5px;">${admissionData.attending_physician}</span>
                               </div>
                             ` : ''}
-                            ${admissionData.allergies ? `
-                              <div>
-                                <span style="font-weight: 600; color: #dc2626;">Allergies:</span>
-                                <span style="margin-left: 5px;">${admissionData.allergies}</span>
-                              </div>
-                            ` : ''}
-                            ${admissionData.current_medications ? `
-                              <div style="grid-column: span 2;">
-                                <span style="font-weight: 600; color: #059669;">Current Medications:</span>
-                                <span style="margin-left: 5px;">${admissionData.current_medications}</span>
-                              </div>
-                            ` : ''}
                           </div>
                           
-                          ${admissionData.emergency_contact_name ? `
+                          ${admissionData.secondary_contact_name ? `
                             <div style="background: #f8fafc; padding: 10px; border-radius: 6px; margin-top: 10px;">
-                              <div style="font-weight: 600; color: #475569; margin-bottom: 6px;">Emergency Contact</div>
+                              <div style="font-weight: 600; color: #475569; margin-bottom: 6px;">Secondary Contact</div>
                               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px;">
-                                <div><strong>Name:</strong> ${admissionData.emergency_contact_name}</div>
-                                ${admissionData.emergency_contact_phone ? `<div><strong>Phone:</strong> ${admissionData.emergency_contact_phone}</div>` : ''}
-                                ${admissionData.emergency_contact_relationship ? `<div><strong>Relationship:</strong> ${admissionData.emergency_contact_relationship}</div>` : ''}
+                                <div><strong>Name:</strong> ${admissionData.secondary_contact_name}</div>
+                                ${admissionData.secondary_contact_phone ? `<div><strong>Phone:</strong> ${admissionData.secondary_contact_phone}</div>` : ''}
+                                ${admissionData.secondary_contact_relationship ? `<div><strong>Relationship:</strong> ${admissionData.secondary_contact_relationship}</div>` : ''}
                               </div>
                             </div>
                           ` : ''}
@@ -827,7 +806,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                           <strong>DNR Status:</strong> <span style="font-weight: bold; font-size: 16px; color: ${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'};">${directiveData.dnr_status || 'Not Specified'}</span><br>
                           <strong>Healthcare Proxy:</strong> ${directiveData.healthcare_proxy_name || 'None designated'}<br>
                           ${directiveData.healthcare_proxy_phone ? `<strong>Proxy Contact:</strong> ${directiveData.healthcare_proxy_phone}<br>` : ''}
-                          ${directiveData.healthcare_proxy_relationship ? `<strong>Relationship:</strong> ${directiveData.healthcare_proxy_relationship}<br>` : ''}
                           <strong>Organ Donation:</strong> ${directiveData.organ_donation_status || 'Not specified'}<br>
                           ${directiveData.religious_preference ? `<strong>Religious Preference:</strong> ${directiveData.religious_preference}<br>` : ''}
                           ${directiveData.special_instructions ? `<strong>Special Instructions:</strong> ${directiveData.special_instructions}` : ''}
@@ -859,7 +837,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                                 <div style="margin-bottom: ${idx < assessmentsData.length - 1 ? '15px' : '0'};">
                                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <strong style="font-size: 14px; color: #1e40af; font-weight: 700;">${parsedData.assessmentType ? parsedData.assessmentType.toUpperCase() : 'NURSING ASSESSMENT'}</strong>
-                                    <span style="font-size: 12px; color: #64748b;">${new Date(parsedData.assessmentDate || assessment.created_at).toLocaleString()}</span>
+                                    <span style="font-size: 12px; color: #64748b;">${new Date(parsedData.assessmentDate || assessment.created_at || '').toLocaleString()}</span>
                                   </div>
                                   
                                   <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px;">
@@ -947,13 +925,13 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                                   
                                   <div style="margin-top: 10px; font-size: 12px; color: #64748b;">
                                     <strong>Assessed by:</strong> ${parsedData.nurseName || assessment.nurse_name} • 
-                                    <strong>Priority:</strong> ${parsedData.priorityLevel || assessment.priority || 'routine'}
+                                    <strong>Priority:</strong> ${parsedData.priorityLevel || assessment.priority_level || 'routine'}
                                   </div>
                                 </div>
                               `;
                             } else {
                               // Fallback for non-JSON or nursing assessments saved as plain text
-                              const content = assessment.assessment_notes || assessment.content || 'No notes provided';
+                              const content = assessment.assessment_notes || 'No notes provided';
                               
                               // Try to parse it as JSON one more time for nursing assessments
                               let nursingData = null;
@@ -970,7 +948,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                                   <div style="margin-bottom: ${idx < assessmentsData.length - 1 ? '15px' : '0'};">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                       <strong style="font-size: 14px; color: #1e40af;">Nursing Assessment #${idx + 1}</strong>
-                                      <span style="font-size: 12px; color: #64748b;">${new Date(assessment.created_at).toLocaleString()}</span>
+                                      <span style="font-size: 12px; color: #64748b;">${new Date(assessment.created_at || '').toLocaleString()}</span>
                                     </div>
                                     
                                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px;">
@@ -1026,7 +1004,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                                     
                                     <div style="margin-top: 10px; font-size: 12px; color: #64748b;">
                                       <strong>Assessed by:</strong> ${assessment.nurse_name || nursingData.nurseName} • 
-                                      <strong>Priority:</strong> ${assessment.priority || 'Medium'}
+                                      <strong>Priority:</strong> ${assessment.priority_level || 'Medium'}
                                     </div>
                                   </div>
                                 `;
@@ -1035,12 +1013,12 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                                 return `
                                   ${idx > 0 ? '<hr style="margin: 15px 0; border: none; border-top: 1px solid #e5e7eb;">' : ''}
                                   <div style="margin-bottom: ${idx < assessmentsData.length - 1 ? '15px' : '0'};">
-                                    <strong>Latest Assessment:</strong> ${new Date(assessment.created_at).toLocaleDateString()}<br>
-                                    <strong>Type:</strong> ${assessment.type || 'Assessment'}<br>
+                                    <strong>Latest Assessment:</strong> ${new Date(assessment.created_at || '').toLocaleDateString()}<br>
+                                    <strong>Type:</strong> ${assessment.assessment_type || 'Assessment'}<br>
                                     <strong>By:</strong> ${assessment.nurse_name}<br>
                                     <strong>Notes:</strong> ${content}
                                     <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
-                                      Priority: ${assessment.priority || 'Medium'}
+                                      Priority: ${assessment.priority_level || 'Medium'}
                                     </div>
                                   </div>
                                 `;
@@ -1370,22 +1348,25 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         // Only save fields that are actually collected by the form
         const admissionRecord: AdmissionRecord = {
           patient_id: assessment.patientId,
-          admission_type: 'Emergency', // Default since form doesn't collect this
-          admission_date: assessment.data.admissionDate || new Date().toISOString(),
+          admission_type: assessment.data.admissionType || 'Emergency',
           chief_complaint: assessment.data.chiefComplaint || '',
-          admitting_diagnosis: assessment.data.admittingDiagnosis || '',
-          attending_physician: null, // Form doesn't collect this
-          allergies: Array.isArray(assessment.data.allergies) ? assessment.data.allergies.join(', ') : assessment.data.allergies || '',
-          current_medications: assessment.data.medications || '',
-          // Form doesn't collect height/weight/BMI, insurance, or emergency contact
-          height: null,
-          weight: null,
-          bmi: null,
-          insurance_provider: null,
-          insurance_policy: null,
-          emergency_contact_name: null,
-          emergency_contact_phone: null,
-          emergency_contact_relationship: null
+          attending_physician: assessment.data.attendingPhysician || '',
+          insurance_provider: '',
+          insurance_policy: '',
+          admission_source: '',
+          height: '',
+          weight: '',
+          bmi: '',
+          smoking_status: '',
+          alcohol_use: '',
+          exercise: '',
+          occupation: '',
+          family_history: '',
+          marital_status: '',
+          secondary_contact_name: assessment.data.emergencyContactName || '',
+          secondary_contact_relationship: assessment.data.emergencyContactRelationship || '',
+          secondary_contact_phone: assessment.data.emergencyContactPhone || '',
+          secondary_contact_address: '',
         };
         
         await upsertAdmissionRecord(admissionRecord);
@@ -1704,8 +1685,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     const patientStatus = getPatientStatus();
     const age = calculateAge(patient.date_of_birth);
 
-    const admittedDays = Math.ceil((Date.now() - new Date(patient.admission_date).getTime()) / (1000 * 60 * 60 * 24));
-    const allergiesCount = patient.allergies?.length || 0;
     
     return (
       <div className="bg-white border-l-4 border-l-emerald-400 border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
