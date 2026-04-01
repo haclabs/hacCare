@@ -13,6 +13,7 @@ import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
 import { AuthCallback } from './components/Auth/AuthCallback';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
+import { secureLogger } from './lib/security/secureLogger';
 
 // Lazy-loaded feature components for better code splitting
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
@@ -81,7 +82,6 @@ function App() {
   useEffect(() => {
     const handleTabChange = (e: CustomEvent) => {
       if (e.detail?.tab) {
-        console.log('📍 Tab change event received:', e.detail.tab);
         setActiveTab(e.detail.tab);
       }
     };
@@ -98,9 +98,8 @@ function App() {
       try {
         const editInfo = JSON.parse(editInfoStr);
         setEditingTemplate(editInfo);
-        console.log('📝 Template editing mode active:', editInfo);
       } catch (error) {
-        console.error('❌ Error parsing editing_template:', error);
+        secureLogger.error('Error parsing editing_template', error);
       }
     } else {
       setEditingTemplate(null);
@@ -134,7 +133,7 @@ function App() {
         !currentPath.includes('simulation-portal') && 
         !currentPath.includes('dashboard') &&
         !currentPath.includes('patient')) {
-      console.log('🎮 Simulation subdomain detected, redirecting to portal...');
+      secureLogger.debug('Simulation subdomain detected, redirecting to portal');
       navigate('simulation-portal', { replace: true });
     }
   }, [location.pathname, navigate]);
@@ -177,49 +176,35 @@ function App() {
    */
   const handleBarcodeScan = async (barcode: string) => {
     try {
-      console.log('🔍 Barcode scanned:', barcode, typeof barcode, 'Length:', barcode.length);
-      
-      // Log all patients for debugging
-      console.log('👥 All patients:', patients.map(p => ({ 
-        id: p.id, 
-        patient_id: p.patient_id, 
-        name: `${p.first_name} ${p.last_name}` 
-      })));
+      secureLogger.debug('Barcode scanned', { length: barcode.length });
       
       if (barcode.startsWith('PT')) {
         // Patient barcode - extract patient ID and navigate to patient detail
         const patientId = barcode.substring(2); // Remove 'PT' prefix
-        console.log('🏷️ Extracted patient ID:', patientId);
 
         // Only log detailed comparison in debug mode to reduce console spam
         if (localStorage.getItem('debug-mode') === 'true') {
           patients.forEach(p => {
-            console.log(`🔍 Comparing: Patient ${p.first_name} ${p.last_name} - ID: "${p.patient_id}" vs Scanned: "${patientId}"`);
+            secureLogger.debug(`Comparing patient ID vs scanned`, { patient_id: p.patient_id, scanned: patientId });
           });
         }
         
         const patient = patients.find(p => p.patient_id === patientId);
         if (patient) {
-          console.log('✅ Patient found:', patient);
           navigate(`patient/${patient.id}`);
         } else {
-          console.warn(`⚠️ Patient with ID ${patientId} not found`);
+          secureLogger.warn('Patient not found with exact match, trying flexible search');
           
           // Try a more flexible search
-          console.log('🔍 Patient not found with exact match, trying flexible search...');
           const flexibleMatch = patients.find(p => 
             p.patient_id.includes(patientId) || 
             patientId.includes(p.patient_id)
           );
           
           if (flexibleMatch) {
-            console.log('✅ Found patient with flexible matching:', flexibleMatch);
-            console.log(`✅ Match found: "${flexibleMatch.patient_id}" contains or is contained in "${patientId}"`);
             navigate(`patient/${flexibleMatch.id}`);
             return;
           } else {
-            console.log('🔍 No patient found with flexible matching, trying numeric-only matching...');
-            
             // Try matching just the numeric part (for when PT prefix is missing)
             const numericMatch = patients.find(p => {
               // Extract numeric part from patient_id (remove PT prefix if present)
@@ -228,19 +213,17 @@ function App() {
             });
             
             if (numericMatch) {
-              console.log('✅ Found patient with numeric-only matching:', numericMatch);
-              console.log(`✅ Match found: numeric part of "${numericMatch.patient_id}" matches "${patientId}"`);
               navigate(`patient/${numericMatch.id}`);
               return;
             } else {
-              console.log('❌ No patient found with any matching method');
+              secureLogger.warn('No patient found with any matching method for patient barcode');
             }
           }
         }
       } else if (/^(?!MED|PT)[A-Z]{3}[A-Z0-9]{6}$/i.test(barcode)) {
         // BCMA short medication barcode - format: 3 letters + 6 alphanumeric chars (e.g., DOC866FA8)
         // Excludes existing MED and PT prefixes to avoid conflicts
-        console.log('💊 BCMA short medication barcode detected:', barcode);
+        secureLogger.debug('BCMA short medication barcode detected', { barcode });
         
         // First try to find the medication directly in our loaded medications by searching for the barcode
         let foundMedication: Medication | undefined;
@@ -255,14 +238,10 @@ function App() {
               const idSuffix = med.id.slice(-6).toUpperCase();
               const expectedBarcode = `${namePrefix}${idSuffix}`;
               
-              console.log(`🔍 Checking medication "${med.name}" (ID: ${med.id}): Expected barcode "${expectedBarcode}" vs Scanned "${barcode}"`);
-              
               return expectedBarcode === barcode.toUpperCase();
             });
             
             if (matchingMed) {
-              console.log('✅ Found medication with BCMA barcode match:', matchingMed);
-              console.log('✅ Patient:', patient.first_name, patient.last_name);
               foundMedication = matchingMed;
               patientWithMedication = patient;
               break;
@@ -272,7 +251,6 @@ function App() {
         
         // If found in local data, navigate directly
         if (patientWithMedication && foundMedication) {
-          console.log('✅ Navigating to patient MAR with medication category:', foundMedication.category);
           navigate(`/patient/${patientWithMedication.id}`, { 
             state: { 
               activeTab: 'medications',
@@ -280,13 +258,11 @@ function App() {
             } 
           });
         } else {
-          console.log('❌ No medication found with BCMA barcode:', barcode);
-          console.warn(`⚠️ Unknown BCMA medication barcode: ${barcode}`);
+          secureLogger.warn('Unknown BCMA medication barcode', { barcode });
         }
       } else if (/^\d+$/.test(barcode)) {
         // This is a numeric-only barcode, likely a patient ID without the PT prefix
-        console.log('🔢 Numeric-only barcode detected:', barcode);
-        console.log('🔍 Trying to match as patient ID without PT prefix');
+        secureLogger.debug('Numeric-only barcode detected, trying as patient ID', { barcode });
         
         // Try to find patient with this numeric ID (both with and without PT prefix)
         const numericMatch = patients.find(p => 
@@ -295,14 +271,11 @@ function App() {
         );
         
         if (numericMatch) {
-          console.log('✅ Found patient with numeric ID:', numericMatch);
           navigate(`/patient/${numericMatch.id}`);
           return;
         }
         
         // If no exact match, try a more flexible search
-        console.log('🔍 No exact match for numeric ID, trying flexible search...');
-        
         // Try to find a patient where the ID contains the barcode or vice versa
         const flexibleMatch = patients.find(p => {
           const numericPart = p.patient_id.replace(/^PT/, '');
@@ -311,7 +284,6 @@ function App() {
         
         // If found, navigate to the patient
         if (flexibleMatch) {
-          console.log('✅ Found patient with flexible numeric matching:', flexibleMatch);
           navigate(`/patient/${flexibleMatch.id}`);
           return;
         }
@@ -324,51 +296,28 @@ function App() {
         );
         
         if (anyMatch) {
-          console.log('✅ Found patient with general search:', anyMatch);
           navigate(`/patient/${anyMatch.id}`);
           return;
         }
         
-        console.log('❌ No patient found with any matching method for ID:', barcode);
+        secureLogger.warn('No patient found for numeric barcode', { barcode });
       } else if (barcode.startsWith('MED')) {
         // Medication barcode - look up patient by medication ID
         const medicationId = barcode.substring(3); // Remove 'MED' prefix
-        console.log('💊 Extracted medication ID from barcode:', medicationId, 'Original barcode:', barcode, 'Length:', barcode.length);
+        secureLogger.debug('MED barcode detected', { medicationId, barcodeLength: barcode.length });
         
         // First try to find the medication directly in our loaded medications
         let foundMedication = null;
         let patientWithMedication = null;
         
-        // Log all medications for debugging
-        console.log('💊 All medications in memory:');
-        patients.forEach(patient => {
-          if (patient.medications && patient.medications.length > 0) {
-            console.log(`Patient ${patient.first_name} ${patient.last_name} medications:`, 
-              patient.medications.map(med => ({ 
-                id: med.id, 
-                name: med.name,
-                category: med.category,
-                idLength: med.id.length,
-                idLastChars: med.id.slice(-6)
-              }))
-            );
-          }
-        });
-        
         // Special case for "MEDFE0FCA" - look for Heather Gordon
         if (barcode === "MEDFE0FCA" || medicationId === "FE0FCA") {
-          console.log("🔍 Special case handling for MEDFE0FCA barcode");
-          
-          // Find Heather Gordon in our patients
           const heather = patients.find(p => 
             (p.first_name.toLowerCase() === "heather" && p.last_name.toLowerCase() === "gordon") ||
             (p.first_name.toLowerCase().includes("heather") && p.last_name.toLowerCase().includes("gordon"))
           );
           
           if (heather) {
-            console.log("✅ Found Heather Gordon:", heather.id, heather.first_name, heather.last_name);
-            
-            // Navigate to Heather's MAR with scheduled tab
             navigate(`/patient/${heather.id}`, { 
               state: { 
                 activeTab: 'medications',
@@ -376,8 +325,6 @@ function App() {
               } 
             });
             return;
-          } else {
-            console.log("❌ Could not find Heather Gordon in patients list");
           }
         }
         
@@ -398,20 +345,10 @@ function App() {
                                   (med.id.includes("C") || med.id.includes("c")) && 
                                   (med.id.includes("A") || med.id.includes("a"));
               
-              console.log(`Checking medication ${med.id} against ${medicationId}:`, {
-                endsWithMatch,
-                includesMatch,
-                exactMatch,
-                specialMatch,
-                idLastChars: med.id.slice(-medicationId.length)
-              });
-              
               return endsWithMatch || includesMatch || exactMatch || specialMatch;
             });
             
             if (matchingMed) {
-              console.log('✅ Found medication directly in patient data:', matchingMed);
-              console.log('✅ Patient:', patient.first_name, patient.last_name);
               foundMedication = matchingMed;
               patientWithMedication = patient;
               break;
@@ -421,7 +358,6 @@ function App() {
         
         // If found in local data, navigate directly
         if (patientWithMedication && foundMedication) {
-          console.log('✅ Navigating to patient MAR with medication category:', foundMedication.category);
           navigate(`/patient/${patientWithMedication.id}`, { 
             state: { 
               activeTab: 'medications',
@@ -430,17 +366,14 @@ function App() {
           });
         } else {
           // Fallback to API lookup if not found in local data
-          console.log('🔍 Medication not found in local data, trying API lookup');
+          secureLogger.debug('Medication not found in local data, trying API lookup');
           const result = await getPatientByMedicationId(medicationId);
           
           // If API lookup fails, try with the full barcode
           if (!result && barcode !== medicationId) {
-            console.log('🔍 API lookup with extracted ID failed, trying with full barcode:', barcode);
             const fullBarcodeResult = await getPatientByMedicationId(barcode);
-            console.log('Full barcode API lookup result:', fullBarcodeResult);
             
             if (fullBarcodeResult) {
-              console.log('✅ Patient found via full barcode API lookup:', fullBarcodeResult);
               navigate(`/patient/${fullBarcodeResult.patientId}`, { 
                 state: { 
                   activeTab: 'medications',
@@ -449,12 +382,9 @@ function App() {
               });
               return;
             }
-          } else {
-            console.log('API lookup result:', result);
           }
           
           if (result) {
-            console.log('✅ Patient found via medication API lookup:', result);
             navigate(`/patient/${result.patientId}`, { 
               state: { 
                 activeTab: 'medications',
@@ -463,22 +393,16 @@ function App() {
             });
             return;
           } else {
-            console.warn(`⚠️ Patient for medication ID ${medicationId} not found`);
+            secureLogger.warn('Patient for medication ID not found', { medicationId });
             
-            // Special case for "MEDFE0FCA" - look for Heather Gordon
+            // Special case for "MEDFE0FCA" - second attempt
             if (barcode === "MEDFE0FCA" || medicationId === "FE0FCA") {
-              console.log("🔍 Special case handling for MEDFE0FCA barcode - second attempt");
-              
-              // Find Heather Gordon in our patients
               const heather = patients.find(p => 
                 (p.first_name.toLowerCase() === "heather" && p.last_name.toLowerCase() === "gordon") ||
                 (p.first_name.toLowerCase().includes("heather") && p.last_name.toLowerCase().includes("gordon"))
               );
               
               if (heather) {
-                console.log("✅ Found Heather Gordon:", heather.id, heather.first_name, heather.last_name);
-                
-                // Navigate to Heather's MAR with scheduled tab
                 navigate(`/patient/${heather.id}`, { 
                   state: { 
                     activeTab: 'medications',
@@ -491,16 +415,13 @@ function App() {
           }
         }
       } else {
-        console.log('❓ Unknown barcode format, raw value:', barcode);
+        secureLogger.warn('Unknown barcode format', { barcodeLength: barcode.length });
         
         // Try to guess the format
         if (/^\d+$/.test(barcode)) {
-          console.log('🔢 Barcode appears to be numeric only, might be a patient ID without PT prefix');
-          
           // Try to find patient with this numeric ID
           const numericMatch = patients.find(p => p.patient_id === `PT${barcode}` || p.patient_id === barcode);
           if (numericMatch) {
-            console.log('✅ Found patient with numeric ID match:', numericMatch);
             navigate(`/patient/${numericMatch.id}`);
             return;
           }
@@ -514,13 +435,10 @@ function App() {
           });
           
           if (flexibleMatch) {
-            console.log('✅ Found patient with flexible numeric matching:', flexibleMatch);
             navigate(`/patient/${flexibleMatch.id}`);
             return;
           }
         }
-        
-        console.warn(`⚠️ Unknown barcode format: ${barcode}`);
         
         // As a last resort, try to find any patient with a name or ID containing any part of the barcode
         const lastResortMatch = patients.find(p => 
@@ -531,13 +449,12 @@ function App() {
         );
         
         if (lastResortMatch) {
-          console.log('✅ Last resort match found:', lastResortMatch);
           navigate(`/patient/${lastResortMatch.id}`);
           return;
         }
       }
     } catch (error) {
-      console.error('❌ Error processing barcode scan:', error);
+      secureLogger.error('Error processing barcode scan', error);
     } finally {
       // Removed setIsScanning
     }

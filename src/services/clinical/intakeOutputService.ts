@@ -13,6 +13,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import type { Database } from '../../types/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 type IntakeOutputEvent = Database['public']['Tables']['patient_intake_output_events']['Row'];
 type IntakeOutputInsert = Database['public']['Tables']['patient_intake_output_events']['Insert'];
@@ -62,13 +63,13 @@ export async function getIntakeOutputEvents(
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching I&O events:', error);
+      secureLogger.error('Error fetching I&O events:', error);
       throw error;
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getIntakeOutputEvents:', error);
+    secureLogger.error('Error in getIntakeOutputEvents:', error);
     throw error;
   }
 }
@@ -100,7 +101,7 @@ export async function getIntakeOutputSummary(
       events,
     };
   } catch (error) {
-    console.error('Error in getIntakeOutputSummary:', error);
+    secureLogger.error('Error in getIntakeOutputSummary:', error);
     throw error;
   }
 }
@@ -112,8 +113,8 @@ export async function createIntakeOutputEvent(
   event: Omit<IntakeOutputInsert, 'id' | 'created_at' | 'updated_at'>
 ): Promise<IntakeOutputEvent> {
   try {
-    console.log('💧 Creating I&O event with data:', event);
-    console.log('💧 Student name being saved:', event.student_name);
+    secureLogger.debug('💧 Creating I&O event with data:', event);
+    secureLogger.debug('💧 Student name being saved:', event.student_name);
     
     const { data, error } = await supabase
       .from('patient_intake_output_events')
@@ -122,14 +123,14 @@ export async function createIntakeOutputEvent(
       .single();
 
     if (error) {
-      console.error('Error creating I&O event:', error);
+      secureLogger.error('Error creating I&O event:', error);
       throw error;
     }
 
-    console.log('✅ I&O event created successfully:', data);
+    secureLogger.debug('✅ I&O event created successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error in createIntakeOutputEvent:', error);
+    secureLogger.error('Error in createIntakeOutputEvent:', error);
     throw error;
   }
 }
@@ -150,13 +151,13 @@ export async function updateIntakeOutputEvent(
       .single();
 
     if (error) {
-      console.error('Error updating I&O event:', error);
+      secureLogger.error('Error updating I&O event:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Error in updateIntakeOutputEvent:', error);
+    secureLogger.error('Error in updateIntakeOutputEvent:', error);
     throw error;
   }
 }
@@ -172,11 +173,11 @@ export async function deleteIntakeOutputEvent(id: string): Promise<void> {
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting I&O event:', error);
+      secureLogger.error('Error deleting I&O event:', error);
       throw error;
     }
   } catch (error) {
-    console.error('Error in deleteIntakeOutputEvent:', error);
+    secureLogger.error('Error in deleteIntakeOutputEvent:', error);
     throw error;
   }
 }

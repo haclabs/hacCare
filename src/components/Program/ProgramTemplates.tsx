@@ -7,6 +7,7 @@ import { supabase } from '../../lib/api/supabase';
 import { useUserProgramAccess } from '../../hooks/useUserProgramAccess';
 import { formatDistanceToNow } from 'date-fns';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface SimulationTemplate {
   id: string;
@@ -41,7 +42,7 @@ export const ProgramTemplates: React.FC = () => {
         .single();
       
       if (error) {
-        console.error('Error fetching program:', error);
+        secureLogger.error('Error fetching program:', error);
         return null;
       }
       return data;

@@ -7,6 +7,7 @@ import { useTenant } from '../../../contexts/TenantContext';
 import { createLabPanel } from '../../../services/clinical/labService';
 import type { CreateLabPanelInput } from '../../../features/clinical/types/labs';
 import { getCurrentLocalDateTimeString } from '../../../utils/time';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateLabPanelModalProps {
   patientId: string;
@@ -46,7 +47,7 @@ export const CreateLabPanelModal: React.FC<CreateLabPanelModalProps> = ({
 
     if (err) {
       setError('Failed to create lab panel');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
     } else {
       onSuccess();

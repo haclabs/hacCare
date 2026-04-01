@@ -5,8 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { createLabResult, getLabResultRefs } from '../../../services/clinical/labService';
-import type { CreateLabResultInput, LabResultRef, LabCategory } from '../../../features/clinical/types/labs';
-import { LAB_CATEGORY_TABS } from '../../../features/clinical/types/labs';
+import type { CreateLabResultInput, LabResultRef } from '../../../features/clinical/types/labs';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateLabResultModalProps {
   panelId: string;
@@ -84,7 +84,7 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
 
     if (err) {
       setError('Failed to create lab result');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
     } else {
       onSuccess();

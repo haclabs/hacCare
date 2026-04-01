@@ -5,6 +5,7 @@
 
 import { Patient, Medication, MedicationAdministration } from '../../types';
 import { recordMedicationAdministration } from './medicationService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface AdministrationLog {
   id: string;
@@ -63,10 +64,10 @@ class BCMAService {
     
     const barcode = `M${namePrefix}${idSuffix}`;
     
-    console.log('🔵 Generated ULTRA-SHORT barcode for', medication.name, ':', barcode);
-    console.log('🔵 Original name:', medication.name, 'Clean name:', cleanName);
-    console.log('🔵 Name prefix (1 char):', namePrefix, 'ID suffix (5 digits):', idSuffix);
-    console.log('🔵 Final barcode length:', barcode.length, '- Wider bars for heavy labels!');
+    secureLogger.debug('🔵 Generated ULTRA-SHORT barcode for', medication.name, ':', barcode);
+    secureLogger.debug('🔵 Original name:', medication.name, 'Clean name:', cleanName);
+    secureLogger.debug('🔵 Name prefix (1 char):', namePrefix, 'ID suffix (5 digits):', idSuffix);
+    secureLogger.debug('🔵 Final barcode length:', barcode.length, '- Wider bars for heavy labels!');
     
     return barcode;
   }
@@ -132,10 +133,10 @@ class BCMAService {
       `PAT-${patient.patient_id}`   // Alternative legacy format
     ];
     
-    console.log('🔵 Validating patient barcode:', scannedId);
-    console.log('🔵 Valid patient IDs:', validIds);
-    console.log('🔵 Patient ID:', patient.patient_id);
-    console.log('🔵 Generated barcode:', generatedBarcode);
+    secureLogger.debug('🔵 Validating patient barcode:', scannedId);
+    secureLogger.debug('🔵 Valid patient IDs:', validIds);
+    secureLogger.debug('🔵 Patient ID:', patient.patient_id);
+    secureLogger.debug('🔵 Generated barcode:', generatedBarcode);
     
     return validIds.includes(scannedId);
   }
@@ -151,15 +152,15 @@ class BCMAService {
       `RX-${medication.id}`         // Alternative legacy format
     ];
     
-    console.log('🔵 Validating medication barcode:', scannedId);
-    console.log('🔵 Valid medication IDs:', validIds);
-    console.log('🔵 Medication ID:', medication.id);
-    console.log('🔵 Generated barcode:', generatedBarcode);
-    console.log('🔵 Medication name:', medication.name);
-    console.log('🔵 Does scanned match generated?', scannedId === generatedBarcode);
+    secureLogger.debug('🔵 Validating medication barcode:', scannedId);
+    secureLogger.debug('🔵 Valid medication IDs:', validIds);
+    secureLogger.debug('🔵 Medication ID:', medication.id);
+    secureLogger.debug('🔵 Generated barcode:', generatedBarcode);
+    secureLogger.debug('🔵 Medication name:', medication.name);
+    secureLogger.debug('🔵 Does scanned match generated?', scannedId === generatedBarcode);
     
     const isValid = validIds.includes(scannedId);
-    console.log('🔵 Is barcode valid?', isValid);
+    secureLogger.debug('🔵 Is barcode valid?', isValid);
     
     return isValid;
   }
@@ -249,7 +250,7 @@ class BCMAService {
     overrideReason?: string,
     witnessName?: string
   ): Promise<AdministrationLog> {
-    console.log('🔵 BCMA: Creating administration record in database...');
+    secureLogger.debug('🔵 BCMA: Creating administration record in database...');
     
     const log: AdministrationLog = {
       id: `admin-${Date.now()}`,
@@ -288,31 +289,31 @@ class BCMAService {
         witness_name: witnessName
       };
 
-      console.log('🔵 BCMA: Recording administration:', administrationRecord);
+      secureLogger.debug('🔵 BCMA: Recording administration:', administrationRecord);
       
       // Save to database using the medication service
       await recordMedicationAdministration(administrationRecord);
       
-      console.log('✅ BCMA: Administration record saved successfully');
-      console.log('🔵 BCMA Administration Log:', log);
+      secureLogger.debug('✅ BCMA: Administration record saved successfully');
+      secureLogger.debug('🔵 BCMA Administration Log:', log);
       
     } catch (error) {
-      console.error('❌ BCMA: Error saving administration record:', error);
+      secureLogger.error('❌ BCMA: Error saving administration record:', error);
       
       // Provide more specific error handling
       if (error instanceof Error) {
         if (error.message.includes('Permission denied')) {
-          console.error('🔒 BCMA: Database permission error - need to run fix-medication-administration-permissions.sql');
+          secureLogger.error('🔒 BCMA: Database permission error - need to run fix-medication-administration-permissions.sql');
           throw new Error('Database permission error: Please contact your administrator to fix medication administration permissions.');
         } else if (error.message.includes('constraint')) {
-          console.error('🔗 BCMA: Database constraint error:', error.message);
+          secureLogger.error('🔗 BCMA: Database constraint error:', error.message);
           throw new Error(`Database error: ${error.message}`);
         } else {
-          console.error('💥 BCMA: Unexpected error:', error.message);
+          secureLogger.error('💥 BCMA: Unexpected error:', error.message);
           throw new Error(`Failed to save administration: ${error.message}`);
         }
       } else {
-        console.error('💥 BCMA: Unknown error type:', error);
+        secureLogger.error('💥 BCMA: Unknown error type:', error);
         throw new Error('Unknown error occurred while saving administration record');
       }
     }

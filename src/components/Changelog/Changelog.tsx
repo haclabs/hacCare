@@ -50,7 +50,7 @@ export const Changelog: React.FC = () => {
         },
         {
           type: "improvement",
-          description: "Debug Log Cleanup - Removed 41 debug console.log statements, replaced with proper secureLogger"
+          description: "Debug Log Cleanup - Removed 41 debug secureLogger.debug statements, replaced with proper secureLogger"
         },
         {
           type: "improvement",
@@ -70,7 +70,7 @@ export const Changelog: React.FC = () => {
         },
         {
           type: "security",
-          description: "Error Logging Standardization - Replaced console.error with secureLogger throughout codebase"
+          description: "Error Logging Standardization - Replaced secureLogger.error with secureLogger throughout codebase"
         },
         {
           type: "improvement",

@@ -5,6 +5,7 @@ import { Copy, Move, MoreHorizontal } from 'lucide-react';
 import PatientTransferModal from './PatientTransferModal';
 import { usePatientTransfer } from '../hooks/usePatientTransfer';
 import { Patient } from '../../../types';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 // Add these buttons to your existing patient list/card components
 
@@ -26,7 +27,7 @@ export const PatientTransferButtons: React.FC<PatientTransferButtonsProps> = ({
       onTransferComplete?.();
     }
     // You can also show a toast notification here
-    console.log(success ? '✅' : '❌', message);
+    secureLogger.debug(success ? '✅' : '❌', message);
   };
 
   return (
@@ -80,7 +81,7 @@ export const PatientTransferActions: React.FC<PatientTransferButtonsProps> = ({
     if (success) {
       onTransferComplete?.();
     }
-    console.log(success ? '✅' : '❌', message);
+    secureLogger.debug(success ? '✅' : '❌', message);
   };
 
   return (

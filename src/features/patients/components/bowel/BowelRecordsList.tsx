@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Clock, User, RefreshCw } from 'lucide-react';
 import { fetchPatientBowelRecords, BowelRecord } from '../../../../services/clinical/bowelRecordService';
 import { formatLocalTime } from '../../../../utils/time';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface BowelRecordsListProps {
   patientId: string;
@@ -25,7 +26,7 @@ export const BowelRecordsList: React.FC<BowelRecordsListProps> = ({
       const data = await fetchPatientBowelRecords(patientId);
       setRecords(data);
     } catch (err: any) {
-      console.error('Error loading bowel records:', err);
+      secureLogger.error('Error loading bowel records:', err);
       setError(err.message || 'Failed to load bowel records');
     } finally {
       setLoading(false);

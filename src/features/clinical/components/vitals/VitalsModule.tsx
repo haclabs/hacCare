@@ -21,6 +21,8 @@ import { FormData, ValidationResult, FormGenerationContext } from '../../../../t
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge, assessVitalSign } from '../../../../utils/vitalRanges';
 import { NeuroAssessmentTab } from '../../../../features/patients/components/vitals/NeuroAssessmentTab';
+import { NewbornAssessmentTab } from '../../../../features/patients/components/assessments/NewbornAssessmentTab';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsModuleProps {
   patient: Patient;
@@ -48,7 +50,7 @@ interface VitalsModuleProps {
   hasNewNotes?: boolean;
 }
 
-type VitalsView = 'trends' | 'neuro';
+type VitalsView = 'trends' | 'neuro' | 'newborn';
 
 export const VitalsModule: React.FC<VitalsModuleProps> = ({
   patient,
@@ -77,6 +79,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const [showTrendsDetail, setShowTrendsDetail] = useState(false);
   const [activeView, setActiveView] = useState<VitalsView>('trends');
   const [showNeuroForm, setShowNeuroForm] = useState(false);
+  const [showNewbornForm, setShowNewbornForm] = useState(false);
 
   // Register schemas on component mount
   useEffect(() => {
@@ -116,7 +119,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   // Handle vitals form submission
   const handleVitalsSubmission = async (data: FormData, validation: ValidationResult) => {
     if (!validation.valid) {
-      console.error('Form validation failed:', validation.errors);
+      secureLogger.error('Form validation failed:', validation.errors);
       return;
     }
 
@@ -138,9 +141,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       };
 
       // Save vitals to database with student name
-      console.log('Saving vitals to database for patient:', patient.id);
+      secureLogger.debug('Saving vitals to database for patient:', patient.id);
       await updatePatientVitals(patient.id, newVitals, data.studentName);
-      console.log('Vitals saved to database successfully');
+      secureLogger.debug('Vitals saved to database successfully');
 
       // Update local state through parent component
       const updatedVitals = [newVitals, ...vitals];
@@ -154,7 +157,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
       // Show success message
       setSuccessMessage(`Vital signs recorded successfully at ${new Date().toLocaleTimeString()}`);
       setShowSuccessMessage(true);
-      console.log('Vitals recorded successfully');
+      secureLogger.debug('Vitals recorded successfully');
       
       // Close the modal
       setShowVitalsModal(false);
@@ -164,7 +167,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         setShowSuccessMessage(false);
       }, 5000);
     } catch (error) {
-      console.error('Error recording vitals:', error);
+      secureLogger.error('Error recording vitals:', error);
       // Show error message to user
       setAlerts([{
         severity: 'critical',
@@ -179,7 +182,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   // Handle form changes for real-time feedback
   const handleFormChange = (data: FormData, field: string) => {
     // Real-time form updates could trigger preview updates here
-    console.log('Form field changed:', field, data[field]);
+    secureLogger.debug('Form field changed:', field, data[field]);
   };
 
   // Handle validation changes for real-time alerts
@@ -194,7 +197,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
     try {
       return calculatePreciseAge(birthDate);
     } catch (error) {
-      console.error('Error calculating age:', error);
+      secureLogger.error('Error calculating age:', error);
       // Fallback to adult age band
       return {
         years: 25,
@@ -646,6 +649,16 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         >
           Neuro Assessment
         </button>
+        <button
+          onClick={() => setActiveView('newborn')}
+          className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeView === 'newborn'
+              ? 'border-cyan-600 text-cyan-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Newborn Assessment
+        </button>
       </div>
 
       {/* Clinical Alerts */}
@@ -669,6 +682,14 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           currentUser={currentUser}
           externalShowForm={showNeuroForm}
           onExternalFormClose={() => setShowNeuroForm(false)}
+        />
+      )}
+
+      {/* Newborn Assessment tab */}
+      {activeView === 'newborn' && (
+        <NewbornAssessmentTab
+          patient={patient}
+          currentUser={currentUser}
         />
       )}
 

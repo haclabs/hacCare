@@ -1,8 +1,8 @@
 import React from 'react';
 import { Patient } from '../../../../types';
-import { User, MapPin, Calendar, AlertTriangle, QrCode } from 'lucide-react';
+import { User, MapPin, AlertTriangle, QrCode } from 'lucide-react';
 import { format, isValid } from 'date-fns';
-import { PATIENT_AVATARS, getAvatarById } from '../../../../data/patientAvatars';
+import { getAvatarById } from '../../../../data/patientAvatars';
 
 /**
  * Patient Card Component

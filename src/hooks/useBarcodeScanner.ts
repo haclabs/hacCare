@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { isBCMACurrentlyActive } from '../services/simulation/bcmaState';
+import { secureLogger } from '../lib/security/secureLogger';
 
 /**
  * Custom hook for barcode scanner integration
@@ -35,7 +36,7 @@ export const useBarcodeScanner = (
   // Force the scanner to start listening
   const startListening = useCallback(() => {
     setIsListening(true);
-    console.log('Barcode scanner started listening');
+    secureLogger.debug('Barcode scanner started listening');
   }, []);
 
   // Process keydown events
@@ -45,13 +46,13 @@ export const useBarcodeScanner = (
     
     // Skip if BCMA is active - let BCMA handle barcode events
     if (isBCMACurrentlyActive()) {
-      console.log('🔵 Header barcode scanner: BCMA is active, skipping event handling');
+      secureLogger.debug('Header barcode scanner: BCMA is active, skipping event handling');
       return;
     }
     
     // Debug logging
     const isDebugMode = localStorage.getItem('debug-mode') === 'true';
-    if (isDebugMode) console.log('🔍 Barcode scanner keydown:', event.key, event.keyCode);
+    if (isDebugMode) secureLogger.debug('Barcode scanner keydown', { key: event.key, keyCode: event.keyCode });
     const currentTime = new Date().getTime();
     
     // Check if we're in an input field that should handle its own input
@@ -80,13 +81,13 @@ export const useBarcodeScanner = (
     
     // Allow normal input behavior for barcode-scanner-input class
     if (isInputField && !isBarcodeInput) {
-      if (isDebugMode) console.log('Ignoring keydown in standard input element');
+      if (isDebugMode) secureLogger.debug('Ignoring keydown in standard input element');
       return;
     }
     
     // For barcode input fields, we want to allow normal typing but still capture Enter
     if (isBarcodeInput && event.key !== 'Enter') {
-      if (isDebugMode) console.log('Allowing typing in barcode input field');
+      if (isDebugMode) secureLogger.debug('Allowing typing in barcode input field');
       return;
     }
 
@@ -96,7 +97,7 @@ export const useBarcodeScanner = (
       buffer.length === 0;
 
     if (isDebugMode) {
-      console.log('Barcode scanner timing:', {
+      secureLogger.debug('Barcode scanner timing', {
         currentTime,
         lastKeyTime,
         diff: currentTime - lastKeyTime,
@@ -111,14 +112,14 @@ export const useBarcodeScanner = (
 
     // If it's not likely from a scanner, reset
     if (!isLikelyBarcodeScanner && buffer.length > 0) {
-      if (isDebugMode) console.log('Not from scanner, clearing buffer');
+      if (isDebugMode) secureLogger.debug('Not from scanner, clearing buffer');
       clearBuffer();
       return; 
     }
 
     // Start scanning mode if not already started
     if (!isScanning) {
-      if (isDebugMode) console.log('Starting scanning mode');
+      if (isDebugMode) secureLogger.debug('Starting scanning mode');
       setIsScanning(true);
     }
 
@@ -134,13 +135,13 @@ export const useBarcodeScanner = (
     // Process the key
     if (event.key === 'Enter') {
       // Enter key signals end of barcode
-      console.log('Barcode scan complete:', buffer);
+      secureLogger.debug('Barcode scan complete', { buffer });
       
       // For barcode input fields, get the value from the input
       if (isBarcodeInput) {
         const inputValue = (event.target as HTMLInputElement).value;
         if (inputValue && inputValue.length > 0) {
-          console.log('Using input field value:', inputValue);
+          secureLogger.debug('Using input field value', { inputValue });
           onScan(inputValue);
         }
       } 
@@ -153,7 +154,7 @@ export const useBarcodeScanner = (
     } else if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
       // Only add printable characters to the buffer
       // Exclude any key combinations that might trigger browser shortcuts
-      if (isDebugMode) console.log('Adding character to buffer:', event.key);
+      if (isDebugMode) secureLogger.debug('Adding character to buffer', { key: event.key });
       setBuffer(prev => prev + event.key);
     }
   },
@@ -175,13 +176,13 @@ export const useBarcodeScanner = (
     if (buffer.length > 0) {
       // Only log in debug mode
       if (localStorage.getItem('debug-mode') === 'true') {
-        console.log('Setting reset timeout for buffer:', buffer);
+        secureLogger.debug('Setting reset timeout for buffer', { buffer });
       }
       const timeoutId = setTimeout(() => {
         if (buffer.length >= options.minLength) {
           // If we have enough characters but no Enter key was pressed,
           // still consider it a valid scan
-          console.log('Barcode scan timeout, processing anyway:', buffer);
+          secureLogger.debug('Barcode scan timeout, processing anyway', { buffer });
           onScan(buffer);
         }
         clearBuffer();

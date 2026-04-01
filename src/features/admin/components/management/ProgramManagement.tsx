@@ -10,6 +10,7 @@ import {
   type ProgramWithUserCount
 } from '../../../../services/admin/programService';
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
  * Program Management Component
@@ -49,7 +50,7 @@ export const ProgramManagement: React.FC = () => {
     
     if (error) {
       setError('Failed to load programs');
-      console.error(error);
+      secureLogger.error(error);
     } else {
       setPrograms(data || []);
     }
@@ -128,7 +129,7 @@ export const ProgramManagement: React.FC = () => {
     
     if (error) {
       setError('Failed to delete program');
-      console.error(error);
+      secureLogger.error(error);
     } else {
       setSuccess('Program deleted successfully');
       await loadPrograms();

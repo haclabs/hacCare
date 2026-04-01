@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface SimulationInfo {
   id: string;
@@ -44,7 +45,7 @@ export const SimulationIndicator: React.FC = () => {
           window.location.href = '/app';
         }
       } catch (error) {
-        console.error('Error exiting simulation:', error);
+        secureLogger.error('Error exiting simulation:', error);
         alert('Failed to exit simulation. Please try again.');
         setIsExiting(false);
       }
@@ -68,20 +69,20 @@ export const SimulationIndicator: React.FC = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error querying simulation:', error);
+          secureLogger.error('Error querying simulation:', error);
           setSimulation(null);
           return;
         }
 
         if (!data) {
-          console.log('No active simulation found for this tenant');
+          secureLogger.debug('No active simulation found for this tenant');
           setSimulation(null);
           return;
         }
 
         setSimulation(data);
       } catch (err) {
-        console.error('Error checking simulation:', err);
+        secureLogger.error('Error checking simulation:', err);
         setSimulation(null);
       }
     };
@@ -156,7 +157,7 @@ export const SimulationIndicator: React.FC = () => {
         exitSimulationTenant().then(() => {
           navigate('/app/simulation-portal');
         }).catch((error) => {
-          console.error('Error exiting simulation during auto-kick:', error);
+          secureLogger.error('Error exiting simulation during auto-kick:', error);
           // Force navigation even if exit fails
           navigate('/app/simulation-portal');
         });

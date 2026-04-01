@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { getTenantUsers } from '../../../../services/admin/tenantService';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 export const TenantUserDebugger: React.FC = () => {
   const [tenantId, setTenantId] = useState('');
@@ -13,14 +14,14 @@ export const TenantUserDebugger: React.FC = () => {
     if (!tenantId) return;
     
     setLoading(true);
-    console.log('🧪 Testing getTenantUsers with ID:', tenantId);
+    secureLogger.debug('🧪 Testing getTenantUsers with ID:', tenantId);
     
     try {
       const result = await getTenantUsers(tenantId);
-      console.log('🧪 Test result:', result);
+      secureLogger.debug('🧪 Test result:', result);
       setResult(result);
     } catch (error) {
-      console.error('🧪 Test error:', error);
+      secureLogger.error('🧪 Test error:', error);
       setResult({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       setLoading(false);

@@ -4,6 +4,7 @@ import { format, parseISO, isValid } from 'date-fns';
 import { useAuth } from '../../../../hooks/useAuth';
 import { usePatients } from '../../hooks/usePatients';
 import { clearPatientVitals, fetchPatientVitalsHistory, DatabaseVitals } from '../../../../services/patient/patientService';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsTrendsProps {
   patientId: string;
@@ -36,10 +37,10 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
       
       // Fetch the last 5 vital readings as specified in the user requirement
       const vitalsHistory = await fetchPatientVitalsHistory(patientId, 5);
-      console.log('Fetched last 5 vitals for trends:', vitalsHistory);
+      secureLogger.debug('Fetched last 5 vitals for trends:', vitalsHistory);
       setVitals(vitalsHistory);
     } catch (err) {
-      console.error('Error fetching vitals:', err);
+      secureLogger.error('Error fetching vitals:', err);
       setError('Failed to load vital signs data');
     } finally {
       setLoading(false);
@@ -56,7 +57,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
       await fetchVitals();
       await refreshPatients();
     } catch (err) {
-      console.error('Error clearing vitals:', err);
+      secureLogger.error('Error clearing vitals:', err);
       setError('Failed to clear vital signs');
     }
   };
@@ -209,7 +210,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('VitalsTrends close button clicked');
+                secureLogger.debug('VitalsTrends close button clicked');
                 onClose();
               }}  
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

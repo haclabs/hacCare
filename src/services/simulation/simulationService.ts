@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 import type {
   SimulationTemplate,
   SimulationTemplateWithDetails,
@@ -47,7 +48,7 @@ export async function createSimulationTemplate(
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error creating simulation template:', error);
+    secureLogger.error('Error creating simulation template:', error);
     throw error;
   }
 }
@@ -82,7 +83,7 @@ export async function getSimulationTemplates(
     if (error) throw error;
     return (data || []) as SimulationTemplateWithDetails[];
   } catch (error: any) {
-    console.error('Error fetching simulation templates:', error);
+    secureLogger.error('Error fetching simulation templates:', error);
     throw error;
   }
 }
@@ -103,7 +104,7 @@ export async function getSimulationTemplate(
     if (error) throw error;
     return data as SimulationTemplateWithDetails;
   } catch (error: any) {
-    console.error('Error fetching simulation template:', error);
+    secureLogger.error('Error fetching simulation template:', error);
     return null;
   }
 }
@@ -122,7 +123,7 @@ export async function saveTemplateSnapshot(
     // Ensure templateId is a valid UUID string (trim whitespace, etc)
     const cleanId = templateId.trim();
     
-    console.log('Calling save_template_snapshot_v2 with ID:', cleanId);
+    secureLogger.debug('Calling save_template_snapshot_v2 with ID:', cleanId);
     
     // First, save the snapshot
     const { data, error } = await supabase.rpc('save_template_snapshot_v2', {
@@ -130,32 +131,32 @@ export async function saveTemplateSnapshot(
     });
 
     if (error) {
-      console.error('RPC Error details:', error);
+      secureLogger.error('RPC Error details:', error);
       throw error;
     }
     
-    console.log('Snapshot saved (V2):', data);
+    secureLogger.debug('Snapshot saved (V2):', data);
     
     // Then archive the version (with the newly saved snapshot)
     if (data.success && data.snapshot_data) {
       try {
-        console.log('Archiving template version...');
+        secureLogger.debug('Archiving template version...');
         await supabase.rpc('save_template_version', {
           p_template_id: cleanId,
           p_new_snapshot: data.snapshot_data,
           p_change_notes: changeNotes || 'Snapshot saved',
           p_user_id: null, // Will use auth.uid() in function
         });
-        console.log('Version archived successfully');
+        secureLogger.debug('Version archived successfully');
       } catch (versionError) {
         // Don't fail the save if versioning fails, just log it
-        console.error('Failed to archive version (non-critical):', versionError);
+        secureLogger.error('Failed to archive version (non-critical):', versionError);
       }
     }
     
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error saving template snapshot:', error);
+    secureLogger.error('Error saving template snapshot:', error);
     throw error;
   }
 }
@@ -171,7 +172,7 @@ export async function saveTemplateSnapshotWithVersion(
   try {
     const cleanId = templateId.trim();
     
-    console.log('Saving template with version archiving:', cleanId);
+    secureLogger.debug('Saving template with version archiving:', cleanId);
     
     // First save the snapshot using existing function
     const snapshotResult = await saveTemplateSnapshot(cleanId);
@@ -189,14 +190,14 @@ export async function saveTemplateSnapshotWithVersion(
     });
 
     if (error) {
-      console.error('RPC Error archiving version:', error);
+      secureLogger.error('RPC Error archiving version:', error);
       throw error;
     }
     
-    console.log('Template version archived:', data);
+    secureLogger.debug('Template version archived:', data);
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error saving template with version:', error);
+    secureLogger.error('Error saving template with version:', error);
     throw error;
   }
 }
@@ -225,7 +226,7 @@ export async function getTemplateVersions(
     if (error) throw error;
     return data || [];
   } catch (error: any) {
-    console.error('Error fetching template versions:', error);
+    secureLogger.error('Error fetching template versions:', error);
     throw error;
   }
 }
@@ -248,7 +249,7 @@ export async function compareTemplateVersions(
     if (error) throw error;
     return data;
   } catch (error: any) {
-    console.error('Error comparing template versions:', error);
+    secureLogger.error('Error comparing template versions:', error);
     throw error;
   }
 }
@@ -272,7 +273,7 @@ export async function restoreTemplateVersion(
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error restoring template version:', error);
+    secureLogger.error('Error restoring template version:', error);
     throw error;
   }
 }
@@ -291,7 +292,7 @@ export async function compareSimulationTemplatePatients(
     if (error) throw error;
     return data;
   } catch (error: any) {
-    console.error('Error comparing patient lists:', error);
+    secureLogger.error('Error comparing patient lists:', error);
     throw error;
   }
 }
@@ -310,7 +311,7 @@ export async function compareSimulationVsTemplate(
     if (error) throw error;
     return data;
   } catch (error: any) {
-    console.error('Error comparing simulation vs template:', error);
+    secureLogger.error('Error comparing simulation vs template:', error);
     throw error;
   }
 }
@@ -330,7 +331,7 @@ export async function updateSimulationTemplate(
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error updating simulation template:', error);
+    secureLogger.error('Error updating simulation template:', error);
     throw error;
   }
 }
@@ -347,7 +348,7 @@ export async function deleteSimulationTemplate(templateId: string): Promise<void
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error deleting simulation template:', error);
+    secureLogger.error('Error deleting simulation template:', error);
     throw error;
   }
 }
@@ -363,7 +364,7 @@ export async function launchSimulation(
   params: LaunchSimulationParams
 ): Promise<SimulationFunctionResult> {
   try {
-    console.log('🚀 DEBUG: Launching simulation with params:', JSON.stringify(params, null, 2));
+    secureLogger.debug('🚀 DEBUG: Launching simulation with params:', JSON.stringify(params, null, 2));
     
     const { data, error } = await supabase.rpc('launch_simulation', {
       p_template_id: params.template_id,
@@ -375,11 +376,11 @@ export async function launchSimulation(
       p_sub_categories: params.sub_categories || [],
     });
 
-    console.log('📦 Launch response data:', JSON.stringify(data, null, 2));
-    console.log('❌ Launch response error:', JSON.stringify(error, null, 2));
+    secureLogger.debug('📦 Launch response data:', JSON.stringify(data, null, 2));
+    secureLogger.debug('❌ Launch response error:', JSON.stringify(error, null, 2));
 
     if (error) {
-      console.error('💥 Launch error details:', JSON.stringify({
+      secureLogger.error('💥 Launch error details:', JSON.stringify({
         code: error.code,
         message: error.message,
         details: error.details,
@@ -388,10 +389,10 @@ export async function launchSimulation(
       throw error;
     }
     
-    console.log('✅ Simulation launched successfully:', JSON.stringify(data, null, 2));
+    secureLogger.debug('✅ Simulation launched successfully:', JSON.stringify(data, null, 2));
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('❌ FULL Error launching simulation:', JSON.stringify(error, null, 2));
+    secureLogger.error('❌ FULL Error launching simulation:', JSON.stringify(error, null, 2));
     throw error;
   }
 }
@@ -490,7 +491,7 @@ export async function getActiveSimulations(
 
     return enrichedData as SimulationActiveWithDetails[];
   } catch (error: any) {
-    console.error('Error fetching active simulations:', error);
+    secureLogger.error('Error fetching active simulations:', error);
     throw error;
   }
 }
@@ -534,7 +535,7 @@ export async function getActiveSimulation(
       participant_count: data.participants?.length || 0,
     } as SimulationActiveWithDetails;
   } catch (error: any) {
-    console.error('Error fetching active simulation:', error);
+    secureLogger.error('Error fetching active simulation:', error);
     return null;
   }
 }
@@ -554,7 +555,7 @@ export async function updateSimulationStatus(
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error updating simulation status:', error);
+    secureLogger.error('Error updating simulation status:', error);
     throw error;
   }
 }
@@ -598,21 +599,21 @@ export async function resetSimulationForNextSession(
     });
 
     if (error) {
-      console.error('Error in reset_simulation_for_next_session:', error);
+      secureLogger.error('Error in reset_simulation_for_next_session:', error);
       throw error;
     }
     
     // Check if the function returned an error in the data
     if (!data.success) {
-      console.error('Reset failed:', data);
+      secureLogger.error('Reset failed:', data);
       throw new Error(data.error || 'Reset operation failed');
     }
     
-    console.log('✅ Reset completed with barcode preservation:', data);
+    secureLogger.debug('✅ Reset completed with barcode preservation:', data);
     
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error resetting simulation (V2):', error);
+    secureLogger.error('Error resetting simulation (V2):', error);
     throw error;
   }
 }
@@ -633,7 +634,7 @@ export async function resetSimulationToTemplate(
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error resetting simulation to template:', error);
+    secureLogger.error('Error resetting simulation to template:', error);
     throw error;
   }
 }
@@ -657,36 +658,36 @@ export async function resetSimulationWithTemplateUpdates(
   simulationId: string
 ): Promise<SimulationFunctionResult> {
   try {
-    console.log('🔄 Resetting simulation with template updates:', simulationId);
+    secureLogger.debug('🔄 Resetting simulation with template updates:', simulationId);
     
     const { data, error } = await supabase.rpc('reset_simulation_with_template_updates', {
       p_simulation_id: simulationId,
     });
 
-    console.log('📦 Raw RPC response:', { data, error });
+    secureLogger.debug('📦 Raw RPC response:', { data, error });
 
     if (error) {
       // Check if error is due to patient list mismatch
       if (error.message?.includes('PATIENT_LIST_CHANGED')) {
-        console.error('❌ Patient list changed - cannot preserve barcodes:', error);
+        secureLogger.error('❌ Patient list changed - cannot preserve barcodes:', error);
         throw new Error('Patient list in template has changed. Delete and relaunch simulation to get new barcodes.');
       }
-      console.error('Error in reset_simulation_with_template_updates:', error);
+      secureLogger.error('Error in reset_simulation_with_template_updates:', error);
       throw error;
     }
     
     if (!data) {
-      console.error('❌ No data returned from function');
+      secureLogger.error('❌ No data returned from function');
       throw new Error('No response from reset function');
     }
     
     if (!data.success) {
-      console.error('Reset with updates failed:', data);
+      secureLogger.error('Reset with updates failed:', data);
       throw new Error(data.error || 'Reset operation failed');
     }
     
-    console.log('✅ Reset with template updates completed:', data);
-    console.log('📊 Medication sync details:', {
+    secureLogger.debug('✅ Reset with template updates completed:', data);
+    secureLogger.debug('📊 Medication sync details:', {
       template_meds: data.template_medication_count,
       sim_meds_before: data.simulation_medication_count_before,
       sim_meds_after: data.simulation_medication_count_after,
@@ -695,7 +696,7 @@ export async function resetSimulationWithTemplateUpdates(
     
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error resetting simulation with template updates:', error);
+    secureLogger.error('Error resetting simulation with template updates:', error);
     throw error;
   }
 }
@@ -718,7 +719,7 @@ export async function completeSimulation(
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error completing simulation:', error);
+    secureLogger.error('Error completing simulation:', error);
     throw error;
   }
 }
@@ -739,7 +740,7 @@ export async function deleteSimulation(
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error deleting simulation:', error);
+    secureLogger.error('Error deleting simulation:', error);
     throw error;
   }
 }
@@ -772,7 +773,7 @@ export async function addSimulationParticipants(
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error adding simulation participants:', error);
+    secureLogger.error('Error adding simulation participants:', error);
     throw error;
   }
 }
@@ -791,7 +792,7 @@ export async function removeSimulationParticipant(
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error removing simulation participant:', error);
+    secureLogger.error('Error removing simulation participant:', error);
     throw error;
   }
 }
@@ -812,7 +813,7 @@ export async function updateParticipantAccess(simulationId: string): Promise<voi
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error updating participant access:', error);
+    secureLogger.error('Error updating participant access:', error);
   }
 }
 
@@ -847,7 +848,7 @@ export async function getUserSimulationAssignments(
     if (error) throw error;
     return data || [];
   } catch (error: any) {
-    console.error('Error getting user simulation assignments:', error);
+    secureLogger.error('Error getting user simulation assignments:', error);
     throw error;
   }
 }
@@ -931,7 +932,7 @@ export async function getSimulationHistory(
 
     return enrichedData as SimulationHistoryWithDetails[];
   } catch (error: any) {
-    console.error('Error fetching simulation history:', error);
+    secureLogger.error('Error fetching simulation history:', error);
     throw error;
   }
 }
@@ -955,7 +956,7 @@ export async function getSimulationHistoryRecord(
     if (error) throw error;
     return data as SimulationHistoryWithDetails;
   } catch (error: any) {
-    console.error('Error fetching simulation history record:', error);
+    secureLogger.error('Error fetching simulation history record:', error);
     return null;
   }
 }
@@ -974,7 +975,7 @@ export async function saveSimulationDebrief(
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error saving simulation debrief:', error);
+    secureLogger.error('Error saving simulation debrief:', error);
     throw error;
   }
 }
@@ -1004,7 +1005,7 @@ export async function logSimulationActivity(
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error logging simulation activity:', error);
+    secureLogger.error('Error logging simulation activity:', error);
   }
 }
 
@@ -1024,7 +1025,7 @@ export async function getSimulationActivityLog(
     if (error) throw error;
     return (data || []) as SimulationActivityLog[];
   } catch (error: any) {
-    console.error('Error fetching simulation activity log:', error);
+    secureLogger.error('Error fetching simulation activity log:', error);
     throw error;
   }
 }
@@ -1043,7 +1044,7 @@ export async function checkExpiredSimulations(): Promise<SimulationFunctionResul
     if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    console.error('Error checking expired simulations:', error);
+    secureLogger.error('Error checking expired simulations:', error);
     throw error;
   }
 }
@@ -1070,7 +1071,7 @@ export async function getUserAccessibleSimulations(): Promise<SimulationActiveWi
     if (error) throw error;
     return (data || []) as SimulationActiveWithDetails[];
   } catch (error: any) {
-    console.error('Error fetching user accessible simulations:', error);
+    secureLogger.error('Error fetching user accessible simulations:', error);
     return [];
   }
 }
@@ -1128,9 +1129,9 @@ export async function archiveSimulationHistory(historyId: string): Promise<void>
 
     if (error) throw error;
     
-    console.log(`📁 Archived to folder: ${archiveFolder}`);
+    secureLogger.debug(`📁 Archived to folder: ${archiveFolder}`);
   } catch (error: any) {
-    console.error('Error archiving simulation history:', error);
+    secureLogger.error('Error archiving simulation history:', error);
     throw error;
   }
 }
@@ -1151,7 +1152,7 @@ export async function unarchiveSimulationHistory(historyId: string): Promise<voi
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error unarchiving simulation history:', error);
+    secureLogger.error('Error unarchiving simulation history:', error);
     throw error;
   }
 }
@@ -1168,7 +1169,7 @@ export async function deleteSimulationHistory(historyId: string): Promise<void> 
 
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error deleting simulation history:', error);
+    secureLogger.error('Error deleting simulation history:', error);
     throw error;
   }
 }

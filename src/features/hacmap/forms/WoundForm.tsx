@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Trash2 } from 'lucide-react';
 import type { Wound, CreateWoundInput, UpdateWoundInput } from '../../../types/hacmap';
 import { WOUND_TYPE_LABELS, type WoundType } from '../../../types/hacmap';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface WoundFormProps {
   wound?: Wound;
@@ -90,7 +91,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
       await onSave(data);
       setIsDirty(false);
     } catch (error) {
-      console.error('Error saving wound:', error);
+      secureLogger.error('Error saving wound:', error);
       alert('Failed to save wound. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -105,7 +106,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
     try {
       await onDelete();
     } catch (error) {
-      console.error('Error deleting wound:', error);
+      secureLogger.error('Error deleting wound:', error);
       alert('Failed to delete wound. Please try again.');
     } finally {
       setIsSubmitting(false);

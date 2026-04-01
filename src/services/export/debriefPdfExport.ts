@@ -5,6 +5,7 @@
 
 import { format } from 'date-fns';
 import { loadPdfLibraries } from '../../utils/pdfLoader';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface PdfExportOptions {
   filename?: string;
@@ -115,7 +116,7 @@ export async function exportDebriefToPdf(
     }
 
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    secureLogger.error('Error generating PDF:', error);
     alert('Failed to generate PDF. Please try again or use the print function.');
     throw error;
   }

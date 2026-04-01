@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, Users, FileText, BookOpen } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, FileText, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getSimulationTemplates } from '../../services/simulation/simulationService';
 import { supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface CalendarEventModalProps {
   isOpen: boolean;
@@ -92,7 +93,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
         .single();
       
       if (error) {
-        console.error('Error fetching program:', error);
+        secureLogger.error('Error fetching program:', error);
         return null;
       }
       return data;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { useTenant } from '../../contexts/TenantContext';
 import { getTenantById } from '../../services/admin/tenantService';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Selector Modal
@@ -37,7 +38,7 @@ export const ProgramSelectorModal: React.FC = () => {
       // Reload the page to trigger TenantContext to load the selected program tenant
       window.location.reload();
     } catch (err) {
-      console.error('Error selecting program:', err);
+      secureLogger.error('Error selecting program:', err);
       setError(err instanceof Error ? err.message : 'Failed to select program');
       setSelecting(false);
     }

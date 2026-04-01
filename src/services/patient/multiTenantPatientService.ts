@@ -2,6 +2,8 @@ import { supabase } from '../../lib/api/supabase';
 import { Patient, VitalSigns, PatientNote } from '../../types';
 import type { NeuroAssessment, NeuroAssessmentInput } from '../../features/patients/types/neuroAssessment';
 import type { BBITEntry, BBITEntryInput } from '../../features/patients/types/bbitEntry';
+import type { NewbornAssessment, NewbornAssessmentInput } from '../../features/patients/types/newbornAssessment';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Multi-Tenant Patient Service
@@ -37,7 +39,7 @@ export interface DatabasePatient {
  */
 export async function getPatientsByTenant(tenantId: string): Promise<{ data: Patient[] | null; error: any }> {
   try {
-    console.log('📋 Fetching patients for tenant:', tenantId);
+    secureLogger.debug('📋 Fetching patients for tenant:', tenantId);
     
     const { data: patients, error } = await supabase
       .from('patients')
@@ -50,7 +52,7 @@ export async function getPatientsByTenant(tenantId: string): Promise<{ data: Pat
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching patients:', error);
+      secureLogger.error('Error fetching patients:', error);
       return { data: null, error };
     }
 
@@ -61,7 +63,7 @@ export async function getPatientsByTenant(tenantId: string): Promise<{ data: Pat
 
     return { data: convertedPatients, error: null };
   } catch (error) {
-    console.error('Error in getPatientsByTenant:', error);
+    secureLogger.error('Error in getPatientsByTenant:', error);
     return { data: null, error };
   }
 }
@@ -74,7 +76,7 @@ export async function createPatientWithTenant(
   tenantId: string
 ): Promise<{ data: Patient | null; error: any }> {
   try {
-    console.log('👤 Creating new patient for tenant:', tenantId);
+    secureLogger.debug('👤 Creating new patient for tenant:', tenantId);
 
     // Remove fields that don't belong in the patients table
     const { medications, vitals, notes, id, ...patientDataForDB } = patientData;
@@ -93,7 +95,7 @@ export async function createPatientWithTenant(
       .single();
 
     if (error) {
-      console.error('Error creating patient:', error);
+      secureLogger.error('Error creating patient:', error);
       return { data: null, error };
     }
 
@@ -101,7 +103,7 @@ export async function createPatientWithTenant(
     
     return { data: convertedPatient, error: null };
   } catch (error) {
-    console.error('Error in createPatientWithTenant:', error);
+    secureLogger.error('Error in createPatientWithTenant:', error);
     return { data: null, error };
   }
 }
@@ -115,7 +117,7 @@ export async function updatePatientWithTenant(
   tenantId: string
 ): Promise<{ data: Patient | null; error: any }> {
   try {
-    console.log('✏️ Updating patient:', patientId, 'for tenant:', tenantId);
+    secureLogger.debug('✏️ Updating patient:', patientId, 'for tenant:', tenantId);
 
     // First verify the patient belongs to the tenant
     const { data: existingPatient, error: fetchError } = await supabase
@@ -141,7 +143,7 @@ export async function updatePatientWithTenant(
       .single();
 
     if (error) {
-      console.error('Error updating patient:', error);
+      secureLogger.error('Error updating patient:', error);
       return { data: null, error };
     }
 
@@ -149,7 +151,7 @@ export async function updatePatientWithTenant(
     
     return { data: convertedPatient, error: null };
   } catch (error) {
-    console.error('Error in updatePatientWithTenant:', error);
+    secureLogger.error('Error in updatePatientWithTenant:', error);
     return { data: null, error };
   }
 }
@@ -159,7 +161,7 @@ export async function updatePatientWithTenant(
  */
 export async function deletePatientWithTenant(patientId: string, tenantId: string): Promise<{ error: any }> {
   try {
-    console.log('🗑️ Deleting patient:', patientId, 'for tenant:', tenantId);
+    secureLogger.debug('🗑️ Deleting patient:', patientId, 'for tenant:', tenantId);
 
     // First verify the patient belongs to the tenant
     const { data: existingPatient, error: fetchError } = await supabase
@@ -180,15 +182,15 @@ export async function deletePatientWithTenant(patientId: string, tenantId: strin
       .eq('tenant_id', tenantId);
 
     if (error) {
-      console.error('Error deleting patient:', error);
+      secureLogger.error('Error deleting patient:', error);
       return { error };
     }
 
     // Log the deletion action
-    console.log('✅ Patient deleted successfully:', patientId);
+    secureLogger.debug('✅ Patient deleted successfully:', patientId);
     return { error: null };
   } catch (error) {
-    console.error('Error in deletePatientWithTenant:', error);
+    secureLogger.error('Error in deletePatientWithTenant:', error);
     return { error };
   }
 }
@@ -198,7 +200,7 @@ export async function deletePatientWithTenant(patientId: string, tenantId: strin
  */
 export async function getPatientByIdWithTenant(patientId: string, tenantId: string): Promise<{ data: Patient | null; error: any }> {
   try {
-    console.log('🔍 Fetching patient:', patientId, 'for tenant:', tenantId);
+    secureLogger.debug('🔍 Fetching patient:', patientId, 'for tenant:', tenantId);
     
     const { data: patient, error } = await supabase
       .from('patients')
@@ -212,14 +214,14 @@ export async function getPatientByIdWithTenant(patientId: string, tenantId: stri
       .single();
 
     if (error) {
-      console.error('Error fetching patient:', error);
+      secureLogger.error('Error fetching patient:', error);
       return { data: null, error };
     }
 
     const convertedPatient = convertDatabasePatient(patient, patient.patient_vitals);
     return { data: convertedPatient, error: null };
   } catch (error) {
-    console.error('Error in getPatientByIdWithTenant:', error);
+    secureLogger.error('Error in getPatientByIdWithTenant:', error);
     return { data: null, error };
   }
 }
@@ -233,7 +235,7 @@ export async function addVitalsWithTenant(
   tenantId: string
 ): Promise<{ data: VitalSigns | null; error: any }> {
   try {
-    console.log('📊 Adding vitals for patient:', patientId, 'tenant:', tenantId);
+    secureLogger.debug('📊 Adding vitals for patient:', patientId, 'tenant:', tenantId);
 
     // First verify the patient belongs to the tenant
     const { data: existingPatient, error: fetchError } = await supabase
@@ -289,7 +291,7 @@ export async function addVitalsWithTenant(
       return { data: null, error: { message: 'At least one vital sign measurement must be provided' } };
     }
 
-    console.log('📊 Recording partial vitals:', Object.keys(dbVitals).filter(k => k.includes('_') && dbVitals[k] != null));
+    secureLogger.debug('📊 Recording partial vitals:', Object.keys(dbVitals).filter(k => k.includes('_') && dbVitals[k] != null));
 
     const { data: newVitals, error } = await supabase
       .from('patient_vitals')
@@ -298,7 +300,7 @@ export async function addVitalsWithTenant(
       .single();
 
     if (error) {
-      console.error('Error adding vitals:', error);
+      secureLogger.error('Error adding vitals:', error);
       return { data: null, error };
     }
 
@@ -320,7 +322,7 @@ export async function addVitalsWithTenant(
 
     return { data: convertedVitals, error: null };
   } catch (error) {
-    console.error('Error in addVitalsWithTenant:', error);
+    secureLogger.error('Error in addVitalsWithTenant:', error);
     return { data: null, error };
   }
 }
@@ -334,7 +336,7 @@ export async function addPatientNoteWithTenant(
   tenantId: string
 ): Promise<{ data: PatientNote | null; error: any }> {
   try {
-    console.log('📝 Adding note for patient:', patientId, 'tenant:', tenantId);
+    secureLogger.debug('📝 Adding note for patient:', patientId, 'tenant:', tenantId);
 
     // First verify the patient belongs to the tenant
     const { data: existingPatient, error: fetchError } = await supabase
@@ -361,13 +363,13 @@ export async function addPatientNoteWithTenant(
       .single();
 
     if (error) {
-      console.error('Error adding note:', error);
+      secureLogger.error('Error adding note:', error);
       return { data: null, error };
     }
 
     return { data: newNote, error: null };
   } catch (error) {
-    console.error('Error in addPatientNoteWithTenant:', error);
+    secureLogger.error('Error in addPatientNoteWithTenant:', error);
     return { data: null, error };
   }
 }
@@ -415,7 +417,7 @@ export async function getTenantPatientStats(tenantId: string): Promise<{
       error: null
     };
   } catch (error) {
-    console.error('Error in getTenantPatientStats:', error);
+    secureLogger.error('Error in getTenantPatientStats:', error);
     return { data: null, error };
   }
 }
@@ -472,7 +474,7 @@ export async function getNeuroAssessments(
     if (error) return { data: null, error };
     return { data: data as NeuroAssessment[], error: null };
   } catch (error) {
-    console.error('Error in getNeuroAssessments:', error);
+    secureLogger.error('Error in getNeuroAssessments:', error);
     return { data: null, error };
   }
 }
@@ -502,7 +504,7 @@ export async function addNeuroAssessment(
     if (error) return { data: null, error };
     return { data: data as NeuroAssessment, error: null };
   } catch (error) {
-    console.error('Error in addNeuroAssessment:', error);
+    secureLogger.error('Error in addNeuroAssessment:', error);
     return { data: null, error };
   }
 }
@@ -521,7 +523,7 @@ export async function getBBITEntries(patientId: string, tenantId: string) {
     if (error) return { data: null, error };
     return { data: data as BBITEntry[], error: null };
   } catch (error) {
-    console.error('Error in getBBITEntries:', error);
+    secureLogger.error('Error in getBBITEntries:', error);
     return { data: null, error };
   }
 }
@@ -548,9 +550,88 @@ export async function addBBITEntry(
     if (error) return { data: null, error };
     return { data: data as BBITEntry, error: null };
   } catch (error) {
-    console.error('Error in addBBITEntry:', error);
+    secureLogger.error('Error in addBBITEntry:', error);
     return { data: null, error };
   }
+}
+
+// ============================================================================
+// Newborn Assessment
+// ============================================================================
+
+/**
+ * Get the newborn assessment for a patient (single UPSERT record per patient).
+ */
+export async function getNewbornAssessment(
+  patientId: string,
+  tenantId: string
+): Promise<NewbornAssessment | null> {
+  const { data, error } = await supabase
+    .from('patient_newborn_assessments')
+    .select('*')
+    .eq('patient_id', patientId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (error) {
+    secureLogger.error('Error in getNewbornAssessment:', error);
+    throw error;
+  }
+  return data as NewbornAssessment | null;
+}
+
+/**
+ * Save (upsert) the newborn assessment for a patient.
+ * There is at most one record per (patient_id, tenant_id).
+ */
+export async function saveNewbornAssessment(
+  patientId: string,
+  tenantId: string,
+  assessment: NewbornAssessmentInput
+): Promise<NewbornAssessment> {
+  // Build payload explicitly — avoids sending undefined values that trigger 400s
+  const payload: Record<string, unknown> = {
+    patient_id: patientId,
+    tenant_id: tenantId,
+    recorded_at: assessment.recorded_at || new Date().toISOString(),
+  };
+
+  // Date columns — empty string must become NULL, not be sent as ""
+  const dateFields: (keyof NewbornAssessmentInput)[] = ['vitamin_k_date', 'erythromycin_date'];
+  const otherFields: (keyof NewbornAssessmentInput)[] = [
+    'time_of_birth', 'weight_grams', 'length_cm',
+    'head_circumference_cm', 'head_circumference_1hr_cm', 'head_circumference_2hr_cm',
+    'apgar_1min', 'apgar_5min', 'apgar_10min',
+    'vitamin_k_given', 'vitamin_k_declined', 'vitamin_k_dose',
+    'vitamin_k_site', 'vitamin_k_time', 'vitamin_k_signature',
+    'erythromycin_given', 'erythromycin_time', 'erythromycin_signature',
+    'physical_observations', 'completed_by', 'completed_initials', 'student_name',
+  ];
+
+  for (const field of otherFields) {
+    if (assessment[field] !== undefined) {
+      payload[field] = assessment[field];
+    }
+  }
+  // For DATE fields: skip empty strings entirely (column stays NULL)
+  for (const field of dateFields) {
+    const val = assessment[field];
+    if (val !== undefined && val !== '') {
+      payload[field] = val;
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('patient_newborn_assessments')
+    .upsert(payload, { onConflict: 'patient_id,tenant_id', ignoreDuplicates: false })
+    .select()
+    .single();
+
+  if (error) {
+    secureLogger.error('Error in saveNewbornAssessment:', error);
+    throw error;
+  }
+  return data as NewbornAssessment;
 }
 
 /**

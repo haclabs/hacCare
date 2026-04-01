@@ -7,6 +7,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { systemLogger } from '../services/monitoring/systemLogger';
+import { secureLogger } from '../lib/security/secureLogger';
 
 interface Props {
   children: ReactNode;
@@ -38,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('React Error Boundary caught error:', error, errorInfo);
+    secureLogger.error('React Error Boundary caught error:', error, errorInfo);
 
     // Log to system logs
     systemLogger.error(

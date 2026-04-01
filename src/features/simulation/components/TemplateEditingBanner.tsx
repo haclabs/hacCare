@@ -9,6 +9,7 @@ import { Edit, Save, BookOpen, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { saveTemplateSnapshot } from '../../../services/simulation/simulationService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface TemplateEditingInfo {
   template_id: string;
@@ -26,26 +27,26 @@ export const TemplateEditingBanner: React.FC = () => {
     // Check if we're editing a template on mount
     const checkEditingState = async () => {
       const stored = sessionStorage.getItem('editing_template');
-      console.log('🔍 Banner: Checking editing state:', stored);
+      secureLogger.debug('🔍 Banner: Checking editing state:', stored);
       if (stored) {
         const info: TemplateEditingInfo = JSON.parse(stored);
         setEditingInfo(info);
         
         // Switch to the template's tenant and grant instructor access
         if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
-          console.log('🔄 Banner: Switching to template tenant:', info.tenant_id);
+          secureLogger.debug('🔄 Banner: Switching to template tenant:', info.tenant_id);
           try {
             await enterTemplateTenant(info.tenant_id);
-            console.log('✅ Banner: Successfully switched to template tenant');
+            secureLogger.debug('✅ Banner: Successfully switched to template tenant');
           } catch (error) {
-            console.error('❌ Banner: Failed to switch to template tenant:', error);
+            secureLogger.error('❌ Banner: Failed to switch to template tenant:', error);
           }
         } else {
-          console.log('ℹ️ Banner: Already in template tenant');
+          secureLogger.debug('ℹ️ Banner: Already in template tenant');
         }
       } else {
         setEditingInfo(null);
-        console.log('ℹ️ Banner: No editing_template found in sessionStorage');
+        secureLogger.debug('ℹ️ Banner: No editing_template found in sessionStorage');
       }
     };
 
@@ -55,7 +56,7 @@ export const TemplateEditingBanner: React.FC = () => {
     // Listen for custom event when editing starts
     const handleEditStart = async (e: Event) => {
       const customEvent = e as CustomEvent;
-      console.log('📢 Banner: Received template-edit-start event:', customEvent.detail);
+      secureLogger.debug('📢 Banner: Received template-edit-start event:', customEvent.detail);
       const info = customEvent.detail as TemplateEditingInfo;
       setEditingInfo(info);
       
@@ -63,9 +64,9 @@ export const TemplateEditingBanner: React.FC = () => {
       if (info.tenant_id && info.tenant_id !== currentTenant?.id) {
         try {
           await enterTemplateTenant(info.tenant_id);
-          console.log('✅ Banner: Successfully switched to template tenant (from event)');
+          secureLogger.debug('✅ Banner: Successfully switched to template tenant (from event)');
         } catch (error) {
-          console.error('❌ Banner: Failed to switch to template tenant (from event):', error);
+          secureLogger.error('❌ Banner: Failed to switch to template tenant (from event):', error);
         }
       }
     };
@@ -80,24 +81,24 @@ export const TemplateEditingBanner: React.FC = () => {
   const handleExitTemplate = async () => {
     if (!editingInfo) return;
 
-    console.log('🚪 Banner: Exiting template editing mode');
+    secureLogger.debug('🚪 Banner: Exiting template editing mode');
     
     setSaving(true);
     
     try {
       // Step 1: Save the snapshot
-      console.log('💾 Banner: Saving template snapshot...');
+      secureLogger.debug('💾 Banner: Saving template snapshot...');
       const result = await saveTemplateSnapshot(editingInfo.template_id);
       
       if (result.success) {
-        console.log('✅ Banner: Snapshot saved successfully');
+        secureLogger.debug('✅ Banner: Snapshot saved successfully');
         
         // Show success message with details
         const recordCount = result.records_captured || 0;
         const tableCount = result.tables_captured || 0;
         alert(`✅ Template saved successfully!\n\n${recordCount} records captured from ${tableCount} tables.\n\nReturning to templates...`);
       } else {
-        console.error('❌ Banner: Failed to save snapshot:', result.message);
+        secureLogger.error('❌ Banner: Failed to save snapshot:', result.message);
         alert(`❌ Failed to save template:\n\n${result.message}`);
         setSaving(false);
         return; // Don't exit if save failed
@@ -108,16 +109,16 @@ export const TemplateEditingBanner: React.FC = () => {
       setEditingInfo(null);
 
       // Step 3: Exit template tenant (returns to home tenant)
-      console.log('🔙 Banner: Exiting template tenant');
+      secureLogger.debug('🔙 Banner: Exiting template tenant');
       await exitTemplateTenant();
-      console.log('✅ Banner: Successfully exited template tenant');
+      secureLogger.debug('✅ Banner: Successfully exited template tenant');
       
       // Step 4: Navigate back to simulations/templates tab
       navigate('/app');
       window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'simulations' } }));
       
     } catch (error) {
-      console.error('❌ Banner: Error during save/exit:', error);
+      secureLogger.error('❌ Banner: Error during save/exit:', error);
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to save template'}`);
     } finally {
       setSaving(false);

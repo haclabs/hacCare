@@ -16,6 +16,7 @@ import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSche
 import { Patient } from '../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
 import { fetchPatientAssessments } from '../../../services/patient/assessmentService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface FormsModuleProps {
   patient: Patient;
@@ -48,9 +49,9 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
         schemaEngine.registerSchema(admissionAssessmentSchema);
         schemaEngine.registerSchema(bowelAssessmentSchema);
         setSchemasRegistered(true);
-        console.log('✅ Forms schemas registered successfully');
+        secureLogger.debug('✅ Forms schemas registered successfully');
       } catch (error) {
-        console.error('❌ Error registering schemas:', error);
+        secureLogger.error('❌ Error registering schemas:', error);
         setSchemasRegistered(false);
       }
     };
@@ -62,9 +63,9 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
   useEffect(() => {
     const loadAssessments = async () => {
       try {
-        console.log('Loading assessments for patient:', patient.id);
+        secureLogger.debug('Loading assessments for patient:', patient.id);
         const assessments = await fetchPatientAssessments(patient.id);
-        console.log('Loaded assessments:', assessments);
+        secureLogger.debug('Loaded assessments:', assessments);
         
         // Convert database assessments to component format
         const formattedAssessments = assessments.map(assessment => ({
@@ -78,9 +79,9 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
         }));
         
         setCompletedAssessments(formattedAssessments);
-        console.log('✅ Loaded', formattedAssessments.length, 'assessments from database');
+        secureLogger.debug('✅ Loaded', formattedAssessments.length, 'assessments from database');
       } catch (error) {
-        console.error('Error loading assessments:', error);
+        secureLogger.error('Error loading assessments:', error);
       }
     };
 
@@ -119,7 +120,7 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
   // Handle assessment form submission
   const handleAssessmentSubmission = async (data: FormData, validation: ValidationResult) => {
     if (!validation.valid) {
-      console.error('Form validation failed:', validation.errors);
+      secureLogger.error('Form validation failed:', validation.errors);
       return;
     }
 
@@ -139,9 +140,9 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
       onAssessmentSave(assessment);
       setCompletedAssessments(prev => [assessment, ...prev]);
 
-      console.log('Assessment saved successfully');
+      secureLogger.debug('Assessment saved successfully');
     } catch (error) {
-      console.error('Error saving assessment:', error);
+      secureLogger.error('Error saving assessment:', error);
     } finally {
       setIsLoading(false);
     }

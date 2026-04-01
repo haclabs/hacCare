@@ -8,6 +8,7 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { format } from 'date-fns';
 import AddStudentModal from './AddStudentModal';
 import ImportStudentsModal from './ImportStudentsModal';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Students Management Page
@@ -35,7 +36,7 @@ export const ProgramStudents: React.FC = () => {
         .single();
       
       if (error) {
-        console.error('Error fetching program:', error);
+        secureLogger.error('Error fetching program:', error);
         return null;
       }
       return data;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Heart, Shield } from 'lucide-react';
+import { Building2, Heart } from 'lucide-react';
 import { Tenant } from '../../types';
 
 interface TenantLogoProps {

@@ -7,6 +7,7 @@ import { useUserProgramAccess } from '../../hooks/useUserProgramAccess';
 import { supabase } from '../../lib/api/supabase';
 import ProgramCalendar from './ProgramCalendarWithData';
 import ProgramAnnouncements from './ProgramAnnouncements';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Workspace Component
@@ -31,7 +32,7 @@ export const ProgramWorkspace: React.FC = () => {
         .single();
       
       if (error) {
-        console.error('Error fetching program:', error);
+        secureLogger.error('Error fetching program:', error);
         return null;
       }
       return data;

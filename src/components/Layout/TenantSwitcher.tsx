@@ -4,6 +4,7 @@ import { useTenant } from '../../contexts/TenantContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getTenantsForSwitching } from '../../services/admin/tenantService';
 import { Tenant } from '../../types';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Tenant Switcher Component
@@ -36,12 +37,12 @@ export const TenantSwitcher: React.FC = () => {
         setLoading(true);
         const { data, error } = await getTenantsForSwitching();
         if (error) {
-          console.error('Error loading tenants:', error);
+          secureLogger.error('Error loading tenants:', error);
           return;
         }
         setAvailableTenants(data || []);
       } catch (err) {
-        console.error('Error loading tenants:', err);
+        secureLogger.error('Error loading tenants:', err);
       } finally {
         setLoading(false);
       }
@@ -119,7 +120,7 @@ export const TenantSwitcher: React.FC = () => {
       // Refresh the page to update all tenant-specific data
       window.location.reload();
     } catch (err) {
-      console.error('Error switching tenant:', err);
+      secureLogger.error('Error switching tenant:', err);
       setLoading(false);
     }
   };
@@ -132,7 +133,7 @@ export const TenantSwitcher: React.FC = () => {
       // Refresh the page to show all tenants data
       window.location.reload();
     } catch (err) {
-      console.error('Error viewing all tenants:', err);
+      secureLogger.error('Error viewing all tenants:', err);
       setLoading(false);
     }
   };

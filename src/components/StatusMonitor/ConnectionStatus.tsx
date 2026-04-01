@@ -4,6 +4,7 @@ import {
   Wifi, WifiOff, Server, Globe
 } from 'lucide-react';
 import { isSupabaseConfigured, testSupabaseConnection, supabase } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Connection Status Component
@@ -35,7 +36,7 @@ export const ConnectionStatus: React.FC = () => {
       setStatus(isConnected ? 'connected' : 'disconnected');
       setIsConfigured(true);
     } catch (error) {
-      console.error('Connection check error:', error);
+      secureLogger.error('Connection check error:', error);
       setStatus('disconnected');
     } finally {
       setLastChecked(new Date());

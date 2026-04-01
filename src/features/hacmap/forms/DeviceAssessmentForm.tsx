@@ -12,6 +12,7 @@ import { FoleyAssessmentFields } from './device-assessments/FoleyAssessmentField
 import { FeedingTubeAssessmentFields } from './device-assessments/FeedingTubeAssessmentFields';
 import { OstomyAssessmentFields } from './device-assessments/OstomyAssessmentFields';
 import { NGAssessmentFields } from './device-assessments/NGAssessmentFields';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface DeviceAssessmentFormProps {
   device: Device;
@@ -60,7 +61,7 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
 
       await onSave(data);
     } catch (error) {
-      console.error('Error saving device assessment:', error);
+      secureLogger.error('Error saving device assessment:', error);
       alert('Failed to save assessment. Please try again.');
     } finally {
       setIsSubmitting(false);

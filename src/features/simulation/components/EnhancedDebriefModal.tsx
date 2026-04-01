@@ -16,6 +16,7 @@ import { generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGener
 import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
 import { EmailDebriefModal } from './EmailDebriefModal';
 import type { Database } from '../../../types/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 type HistoryRecordWithActivities = Database['public']['Tables']['simulation_history']['Row'] & {
   student_activities?: StudentActivity[] | null;
@@ -75,7 +76,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       const deduped = deduplicateStudentActivities(activities);
       setStudentActivities(deduped);
     } catch (error) {
-      console.error('Failed to load student activities:', error);
+      secureLogger.error('Failed to load student activities:', error);
     } finally {
       setLoading(false);
     }
@@ -104,6 +105,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
         existing.activities.neuroAssessments.push(...(activity.activities.neuroAssessments || []));
         existing.activities.bbitEntries.push(...(activity.activities.bbitEntries || []));
+        existing.activities.newbornAssessments.push(...(activity.activities.newbornAssessments || []));
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
         existing.totalEntries += activity.totalEntries;
       } else {
@@ -207,7 +209,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         quality: 2
       });
     } catch (error) {
-      console.error('PDF export failed:', error);
+      secureLogger.error('PDF export failed:', error);
     } finally {
       setIsExporting(false);
     }
@@ -485,7 +487,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
 
       return response;
     } catch (error) {
-      console.error('Error sending email:', error);
+      secureLogger.error('Error sending email:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to send email',
@@ -860,7 +862,8 @@ const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded
     { key: 'woundAssessments', title: 'Wound Assessments', items: student.activities.woundAssessments || [], color: 'fuchsia', icon: '🔍' },
     { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' },
     { key: 'neuroAssessments', title: 'Neuro Assessments', items: student.activities.neuroAssessments || [], color: 'violet', icon: '🧠' },
-    { key: 'bbitEntries', title: 'BBIT Chart', items: student.activities.bbitEntries || [], color: 'purple', icon: '🩸' }
+    { key: 'bbitEntries', title: 'BBIT Chart', items: student.activities.bbitEntries || [], color: 'purple', icon: '🩸' },
+    { key: 'newbornAssessments', title: 'Newborn Assessment', items: student.activities.newbornAssessments || [], color: 'cyan', icon: '👶' }
   ].filter(s => s.items.length > 0);
   
   const initialExpanded = forceExpanded 
@@ -1355,6 +1358,42 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                 <span><span className="font-semibold">Correction:</span> {item.correction_dose}u given</span>
               )}
             </div>
+          </div>
+        );
+      }
+      case 'newbornAssessments': {
+        const dateStr = item.recorded_at ? format(new Date(item.recorded_at), 'PPp') : 'N/A';
+        const apgarParts = [
+          item.apgar_1min != null && `1min: ${item.apgar_1min}`,
+          item.apgar_5min != null && `5min: ${item.apgar_5min}`,
+          item.apgar_10min != null && `10min: ${item.apgar_10min}`,
+        ].filter(Boolean).join(' · ');
+        const obs = item.physical_observations ?? {};
+        const varianceSystems = Object.entries(obs)
+          .filter(([key, val]) => key.endsWith('_variance') && Array.isArray(val) && (val as string[]).length > 0)
+          .map(([key]) => key.replace('_variance', '').replace(/_/g, ' '));
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{dateStr}</p>
+            {apgarParts && (
+              <p className="mt-1 text-xs text-gray-600"><span className="font-semibold">APGAR:</span> {apgarParts}</p>
+            )}
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-600">
+              {item.vitamin_k_declined ? (
+                <span className="text-amber-600">Vitamin K: Declined</span>
+              ) : item.vitamin_k_given ? (
+                <span>Vitamin K: ✓ Given</span>
+              ) : null}
+              {item.erythromycin_given && <span>Erythromycin: ✓ Given</span>}
+            </div>
+            {varianceSystems.length > 0 && (
+              <p className="mt-1 text-xs text-amber-700">
+                <span className="font-semibold">Variances noted:</span> {varianceSystems.join(', ')}
+              </p>
+            )}
+            {item.completed_by && (
+              <p className="mt-1 text-xs text-gray-400">Assessed by: {item.completed_by}</p>
+            )}
           </div>
         );
       }

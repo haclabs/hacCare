@@ -11,6 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, CheckCircle, Plus, Minus } from 'lucide-react';
 import { compareTemplateVersions, compareSimulationVsTemplate } from '../../../services/simulation/simulationService';
 import type {  SimulationTemplateVersion, PatientListComparison } from '../types/simulation';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface Props {
   templateId: string;
@@ -68,7 +69,7 @@ export default function VersionComparisonModal({
         : await compareTemplateVersions(templateId, versionOld, versionNew);
       setDiff(data);
     } catch (err: any) {
-      console.error('Error loading version comparison:', err);
+      secureLogger.error('Error loading version comparison:', err);
       setError(err.message);
     } finally {
       setLoading(false);

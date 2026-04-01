@@ -18,6 +18,7 @@ import VersionComparisonModal from './VersionComparisonModal';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import type { PatientListComparison } from '../types/simulation';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 const ActiveSimulations: React.FC = () => {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
@@ -52,7 +53,7 @@ const ActiveSimulations: React.FC = () => {
       });
       setSimulations(data);
     } catch (error) {
-      console.error('Error loading active simulations:', error);
+      secureLogger.error('Error loading active simulations:', error);
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ const ActiveSimulations: React.FC = () => {
       await updateSimulationStatus(id, 'paused');
       await loadSimulations();
     } catch (error) {
-      console.error('Error pausing simulation:', error);
+      secureLogger.error('Error pausing simulation:', error);
       alert('Failed to pause simulation');
     } finally {
       setActionLoading(null);
@@ -72,14 +73,14 @@ const ActiveSimulations: React.FC = () => {
   };
 
   const handleResume = async (id: string, isCompleted: boolean = false) => {
-    console.log('🎯 handleResume called:', { id, isCompleted });
+    secureLogger.debug('🎯 handleResume called:', { id, isCompleted });
     setActionLoading(id);
     try {
       if (isCompleted) {
         // If simulation is completed, reset it with a fresh timer
-        console.log('🔄 Resetting completed simulation...');
+        secureLogger.debug('🔄 Resetting completed simulation...');
         const result = await resetSimulationForNextSession(id);
-        console.log('✅ Simulation reset and restarted:', result);
+        secureLogger.debug('✅ Simulation reset and restarted:', result);
         
         alert('Simulation restarted with fresh timer! Reloading data...');
         
@@ -91,7 +92,7 @@ const ActiveSimulations: React.FC = () => {
         
         if (sim?.status === 'pending') {
           // Starting a pending simulation - need to set timer
-          console.log('▶️ Starting pending simulation with timer...');
+          secureLogger.debug('▶️ Starting pending simulation with timer...');
           const now = new Date();
           const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
           
@@ -107,14 +108,14 @@ const ActiveSimulations: React.FC = () => {
           if (error) throw error;
         } else {
           // If just paused, simply resume (timer already set)
-          console.log('▶️ Resuming paused simulation...');
+          secureLogger.debug('▶️ Resuming paused simulation...');
           await updateSimulationStatus(id, 'running');
         }
         
         await loadSimulations();
       }
     } catch (error) {
-      console.error('❌ Error resuming simulation:', error);
+      secureLogger.error('❌ Error resuming simulation:', error);
       alert('Failed to resume simulation: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setActionLoading(null);
@@ -134,21 +135,21 @@ const ActiveSimulations: React.FC = () => {
     
     try {
       const result = await resetSimulationForNextSession(id);
-      console.log('✅ Simulation reset successfully:', result);
+      secureLogger.debug('✅ Simulation reset successfully:', result);
       
       // Log detailed restore information
       if (result.restore_details) {
-        console.log('📊 Restore Details:', result.restore_details);
+        secureLogger.debug('📊 Restore Details:', result.restore_details);
         const details = result.restore_details;
         if (details.restored_counts) {
-          console.log('📈 Records Restored:', details.restored_counts);
+          secureLogger.debug('📈 Records Restored:', details.restored_counts);
         }
       }
       
       alert('Simulation reset successfully! Status set to "Ready to Start". Click Play when ready to begin. Patient and medication IDs have been preserved.');
       await loadSimulations();
     } catch (error) {
-      console.error('Error resetting simulation:', error);
+      secureLogger.error('Error resetting simulation:', error);
       alert('Failed to reset simulation');
     } finally {
       setActionLoading(null);
@@ -164,7 +165,7 @@ const ActiveSimulations: React.FC = () => {
         patientComparison,
       });
     } catch (error) {
-      console.error('Error comparing patient lists:', error);
+      secureLogger.error('Error comparing patient lists:', error);
       alert('Failed to load template comparison');
     } finally {
       setActionLoading(null);
@@ -179,9 +180,9 @@ const ActiveSimulations: React.FC = () => {
     setActionLoading(sim.id);
     
     try {
-      console.log('🚀 Starting sync for simulation:', sim.id);
+      secureLogger.debug('🚀 Starting sync for simulation:', sim.id);
       const result = await resetSimulationWithTemplateUpdates(sim.id);
-      console.log('✅ Simulation synced with template:', result);
+      secureLogger.debug('✅ Simulation synced with template:', result);
       
       // Show detailed results
       const medsAddedText = result.medications_added > 0 
@@ -191,8 +192,8 @@ const ActiveSimulations: React.FC = () => {
       alert(`Simulation synced to template v${result.template_version_synced}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
       await loadSimulations();
     } catch (error: any) {
-      console.error('❌ Error syncing simulation:', error);
-      console.error('Error details:', {
+      secureLogger.error('❌ Error syncing simulation:', error);
+      secureLogger.error('Error details:', {
         message: error.message,
         stack: error.stack,
         fullError: error
@@ -221,20 +222,20 @@ const ActiveSimulations: React.FC = () => {
     if (!completingSimulation) return;
     
     const id = completingSimulation.id;
-    console.log('🎯 handleComplete called for:', id, 'Instructor:', instructorName);
+    secureLogger.debug('🎯 handleComplete called for:', id, 'Instructor:', instructorName);
     setActionLoading(id);
     setCompletingSimulation(null);
     
     try {
       // First, get student activities BEFORE completing
-      console.log('📊 Generating student activity report...');
+      secureLogger.debug('📊 Generating student activity report...');
       const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
       const activities = await getStudentActivitiesBySimulation(id);
-      console.log('✅ Student activities captured:', activities.length, 'students');
+      secureLogger.debug('✅ Student activities captured:', activities.length, 'students');
       
       // Now complete the simulation WITH the activities snapshot and instructor name
       const result = await completeSimulation(id, activities, instructorName);
-      console.log('✅ Complete simulation result:', result);
+      secureLogger.debug('✅ Complete simulation result:', result);
       
       // Show success message
       const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
@@ -242,7 +243,7 @@ const ActiveSimulations: React.FC = () => {
       
       await loadSimulations();
     } catch (error) {
-      console.error('❌ Error completing simulation:', error);
+      secureLogger.error('❌ Error completing simulation:', error);
       alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setActionLoading(null);
@@ -258,7 +259,7 @@ const ActiveSimulations: React.FC = () => {
       await deleteSimulation(id);
       await loadSimulations();
     } catch (error) {
-      console.error('Error deleting simulation:', error);
+      secureLogger.error('Error deleting simulation:', error);
       alert('Failed to delete simulation');
     } finally {
       setActionLoading(null);
@@ -293,7 +294,7 @@ const ActiveSimulations: React.FC = () => {
       await loadSimulations();
       alert('Categories updated successfully!');
     } catch (error) {
-      console.error('Error updating categories:', error);
+      secureLogger.error('Error updating categories:', error);
       alert('Failed to update categories');
     } finally {
       setActionLoading(null);
@@ -312,7 +313,7 @@ const ActiveSimulations: React.FC = () => {
   const filteredSimulations = simulations.filter(sim => {
     // First filter by user's program access (instructors only see their programs)
     if (!canSeeAllPrograms) {
-      console.log('🔍 Filtering simulation for instructor:', {
+      secureLogger.debug('🔍 Filtering simulation for instructor:', {
         simulationName: sim.name,
         primaryCategories: sim.primary_categories,
         userProgramCodes: programCodes,
@@ -321,12 +322,12 @@ const ActiveSimulations: React.FC = () => {
       
       if (!sim.primary_categories || sim.primary_categories.length === 0) {
         // Uncategorized simulations visible to all
-        console.log('✅ Uncategorized simulation - visible to all');
+        secureLogger.debug('✅ Uncategorized simulation - visible to all');
         return true;
       }
       // Check if user has access to at least one of the simulation's programs
       const hasAccess = sim.primary_categories.some(cat => programCodes.includes(cat));
-      console.log(hasAccess ? '✅ User has access' : '❌ User does NOT have access');
+      secureLogger.debug(hasAccess ? '✅ User has access' : '❌ User does NOT have access');
       if (!hasAccess) return false;
     }
     
@@ -338,7 +339,7 @@ const ActiveSimulations: React.FC = () => {
     return matchesPrimary && matchesSub;
   });
 
-  console.log('📊 Simulation filtering results:', {
+  secureLogger.debug('📊 Simulation filtering results:', {
     totalSimulations: simulations.length,
     filteredSimulations: filteredSimulations.length,
     userProgramCodes: programCodes,

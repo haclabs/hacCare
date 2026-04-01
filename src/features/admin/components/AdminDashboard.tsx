@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Users, Clock, Monitor, Globe, User, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
+import { secureLogger } from '../../../lib/security/secureLogger';
 import { 
   getActiveSessions, 
   getRecentLoginHistory,
@@ -40,7 +41,7 @@ export const AdminDashboard: React.FC = () => {
       const sessions = await getActiveSessions();
       setActiveSessions(sessions);
     } catch (err) {
-      console.error('Failed to fetch sessions:', err);
+      secureLogger.error('Failed to fetch sessions:', err);
       setError('Failed to load active sessions');
     }
   };
@@ -53,7 +54,7 @@ export const AdminDashboard: React.FC = () => {
       const history = await getRecentLoginHistory();
       setLoginHistory(history);
     } catch (err) {
-      console.error('Failed to fetch login history:', err);
+      secureLogger.error('Failed to fetch login history:', err);
       setError('Failed to load login history');
     }
   };
@@ -75,7 +76,7 @@ export const AdminDashboard: React.FC = () => {
       setSystemStats(stats);
       setLastUpdate(new Date());
     } catch (err) {
-      console.error('Failed to refresh admin data:', err);
+      secureLogger.error('Failed to refresh admin data:', err);
     } finally {
       setLoading(false);
     }
@@ -191,7 +192,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex space-x-2 bg-gray-50 dark:bg-gray-700 p-1 rounded-lg">
               <button
                 onClick={() => {
-                  console.log('Switching to sessions tab');
+                  secureLogger.debug('Switching to sessions tab');
                   setActiveTab('sessions');
                 }}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -204,7 +205,7 @@ export const AdminDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  console.log('Switching to history tab');
+                  secureLogger.debug('Switching to history tab');
                   setActiveTab('history');
                 }}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${

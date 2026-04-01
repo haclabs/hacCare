@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getCurrentSubdomain } from '../../../lib/infrastructure/subdomainService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 import { getTenantBySubdomain } from '../services/admin/tenantService';
 import { Tenant } from '../../../types';
 
@@ -22,11 +23,11 @@ export const useTenantBranding = () => {
         // Get subdomain from URL
         const subdomain = getCurrentSubdomain();
         
-        console.log('🎨 Tenant Branding: Checking subdomain:', subdomain);
+        secureLogger.debug('Tenant Branding: Checking subdomain', { subdomain });
 
         if (!subdomain) {
           // No subdomain - using main domain
-          console.log('🎨 Tenant Branding: No subdomain detected, using default branding');
+          secureLogger.debug('Tenant Branding: No subdomain detected, using default branding');
           setTenant(null);
           return;
         }
@@ -35,22 +36,22 @@ export const useTenantBranding = () => {
         const { data: tenantData, error: tenantError } = await getTenantBySubdomain(subdomain);
         
         if (tenantError) {
-          console.error('🎨 Tenant Branding: Error fetching tenant:', tenantError);
+          secureLogger.error('Tenant Branding: Error fetching tenant', tenantError);
           setError('Failed to load tenant branding');
           setTenant(null);
           return;
         }
 
         if (tenantData) {
-          console.log('🎨 Tenant Branding: Found tenant:', tenantData.name);
+          secureLogger.debug('Tenant Branding: Found tenant', { name: tenantData.name });
           setTenant(tenantData);
         } else {
-          console.log('🎨 Tenant Branding: No tenant found for subdomain:', subdomain);
+          secureLogger.debug('Tenant Branding: No tenant found for subdomain', { subdomain });
           setTenant(null);
         }
 
       } catch (err) {
-        console.error('🎨 Tenant Branding: Unexpected error:', err);
+        secureLogger.error('Tenant Branding: Unexpected error', err);
         setError('Failed to load tenant branding');
         setTenant(null);
       } finally {

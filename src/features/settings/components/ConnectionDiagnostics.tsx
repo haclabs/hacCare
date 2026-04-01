@@ -5,6 +5,7 @@ import {
   Database, Key, Globe, Lock, FileText, Shield
 } from 'lucide-react';
 import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Connection Diagnostics Component
@@ -28,7 +29,7 @@ export const ConnectionDiagnostics: React.FC = () => {
       setStatus(connectionStatus.status);
       setMessage(connectionStatus.message);
     } catch (error) {
-      console.error('Error running diagnostics:', error);
+      secureLogger.error('Error running diagnostics:', error);
       setStatus('error');
       setMessage('An error occurred while running diagnostics.');
     } finally {

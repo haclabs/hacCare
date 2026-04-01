@@ -8,6 +8,7 @@ import { acknowledgeLabs } from '../../../services/clinical/labService';
 import type { LabPanel, LabResult } from '../../../features/clinical/types/labs';
 import { getFlagLabel, getFlagColorClass, getEffectiveRangeDisplay } from '../../../features/clinical/types/labs';
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LabAcknowledgeModalProps {
   panel: LabPanel;
@@ -44,7 +45,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
       throw new Error('No tenant selected');
     }
 
-    console.log('🔍 LabAcknowledgeModal - note from modal:', noteFromModal);
+    secureLogger.debug('🔍 LabAcknowledgeModal - note from modal:', noteFromModal);
 
     setLoading(true);
     setError('');
@@ -62,7 +63,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
 
     if (err) {
       setError('Failed to acknowledge labs');
-      console.error(err);
+      secureLogger.error(err);
       setLoading(false);
       throw err; // Re-throw to let modal handle error display
     } else {

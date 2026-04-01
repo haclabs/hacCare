@@ -13,6 +13,7 @@ import { getPrograms, type Program } from '../../../services/admin/programServic
 import { useTenant } from '../../../contexts/TenantContext';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateTemplateModalProps {
   onClose: () => void;
@@ -95,7 +96,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
         setError(result.message || 'Failed to create template');
       }
     } catch (err: any) {
-      console.error('Error creating template:', err);
+      secureLogger.error('Error creating template:', err);
       setError(err.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);

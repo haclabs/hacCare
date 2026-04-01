@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserCheck, X, ChevronDown } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface InstructorNameModalProps {
   simulationName: string;
@@ -57,7 +58,7 @@ export const InstructorNameModal: React.FC<InstructorNameModalProps> = ({
           .eq('user.role', 'instructor');
 
         if (error) {
-          console.error('Error loading instructors:', error);
+          secureLogger.error('Error loading instructors:', error);
           return;
         }
 
@@ -77,7 +78,7 @@ export const InstructorNameModal: React.FC<InstructorNameModalProps> = ({
 
         setInstructors(Array.from(uniqueInstructors.values()));
       } catch (error) {
-        console.error('Error loading instructors:', error);
+        secureLogger.error('Error loading instructors:', error);
       } finally {
         setLoading(false);
       }

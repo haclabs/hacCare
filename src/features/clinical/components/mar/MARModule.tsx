@@ -25,6 +25,7 @@ import { BBITTab } from '../../../patients/components/mar/BBITTab';
 import { MedicationHistoryView } from './MedicationHistoryView';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge } from '../../../../utils/vitalRanges';
+import { secureLogger } from '../../../../lib/security/secureLogger';
 
 type MedicationCategory = 'prn' | 'scheduled' | 'continuous';
 
@@ -134,21 +135,21 @@ export const MARModule: React.FC<MARModuleProps> = ({
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 5000);
 
-      console.log('BCMA administration completed:', log);
+      secureLogger.debug('BCMA administration completed:', log);
       
       // Refresh medications to reflect changes
-      console.log('Fetching fresh medication data after BCMA completion');
+      secureLogger.debug('Fetching fresh medication data after BCMA completion');
       try {
         const simulationId = currentTenant?.simulation_id;
         const freshMedications = await fetchPatientMedications(patient.id, simulationId);
-        console.log('Fresh medications fetched:', freshMedications.length, 'medications');
+        secureLogger.debug('Fresh medications fetched:', freshMedications.length, 'medications');
         
         if (typeof onMedicationUpdate === 'function') {
           await onMedicationUpdate(freshMedications);
-          console.log('Medication list refreshed successfully');
+          secureLogger.debug('Medication list refreshed successfully');
         }
       } catch (error) {
-        console.error('Error refreshing medications:', error);
+        secureLogger.error('Error refreshing medications:', error);
       }
     }
     
@@ -198,7 +199,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
       setShowSuccessMessage(true);
       setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
-      console.error('Error deleting medication:', error);
+      secureLogger.error('Error deleting medication:', error);
       alert('Failed to delete medication. Please try again.');
     } finally {
       setIsLoading(false);
@@ -253,7 +254,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   // Handle updating medication
   const handleUpdateMedication = async (data: any, validation: ValidationResult) => {
     if (!validation.valid) {
-      console.error('Form validation failed:', validation.errors);
+      secureLogger.error('Form validation failed:', validation.errors);
       return;
     }
 
@@ -289,7 +290,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
       
       setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
-      console.error('Error updating medication:', error);
+      secureLogger.error('Error updating medication:', error);
       alert('Failed to update medication. Please try again.');
     } finally {
       setIsLoading(false);
@@ -411,12 +412,12 @@ export const MARModule: React.FC<MARModuleProps> = ({
         admin_times: newMedicationForm.admin_times.length > 1 ? newMedicationForm.admin_times : null
       };
 
-      console.log('Creating medication in database:', medicationData);
+      secureLogger.debug('Creating medication in database:', medicationData);
       
       // Save to database using the medication service
       const savedMedication = await createMedication(medicationData);
       
-      console.log('Medication saved to database successfully:', savedMedication);
+      secureLogger.debug('Medication saved to database successfully:', savedMedication);
 
       // Update local state with the saved medication (which now has a real database ID)
       const updatedMedications = [...medications, savedMedication];
@@ -446,9 +447,9 @@ export const MARModule: React.FC<MARModuleProps> = ({
         setShowSuccessMessage(false);
       }, 5000);
 
-      console.log('New medication added and persisted successfully');
+      secureLogger.debug('New medication added and persisted successfully');
     } catch (error) {
-      console.error('Error adding medication:', error);
+      secureLogger.error('Error adding medication:', error);
       
       // Show error message to user
       setSuccessMessage(`Error adding medication: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -469,11 +470,11 @@ export const MARModule: React.FC<MARModuleProps> = ({
       return new Date().toISOString(); // Fallback if no admin time
     }
 
-    console.log('MAR - Calculating next due time:');
-    console.log('- Frequency:', frequency);
-    console.log('- Start date:', startDate);
-    console.log('- Admin time:', adminTime);
-    console.log('- Admin times:', adminTimes);
+    secureLogger.debug('MAR - Calculating next due time:');
+    secureLogger.debug('- Frequency:', frequency);
+    secureLogger.debug('- Start date:', startDate);
+    secureLogger.debug('- Admin time:', adminTime);
+    secureLogger.debug('- Admin times:', adminTimes);
 
     const now = new Date();
 
@@ -504,7 +505,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
     const [hours, minutes] = adminTime.split(':').map(Number);
 
-    console.log('- Parsed admin time: hours =', hours, ', minutes =', minutes);
+    secureLogger.debug('- Parsed admin time: hours =', hours, ', minutes =', minutes);
 
     // For different frequencies, calculate next appropriate time
     switch (frequency) {
@@ -513,18 +514,18 @@ export const MARModule: React.FC<MARModuleProps> = ({
         const todayAdmin = new Date(today);
         todayAdmin.setHours(hours, minutes, 0, 0);
         
-        console.log('- Today admin time:', todayAdmin.toISOString());
-        console.log('- Current time vs today admin:', now < todayAdmin ? 'before' : 'after');
+        secureLogger.debug('- Today admin time:', todayAdmin.toISOString());
+        secureLogger.debug('- Current time vs today admin:', now < todayAdmin ? 'before' : 'after');
         
         // If today's admin time hasn't passed, use it; otherwise, use tomorrow
         if (todayAdmin > now) {
-          console.log('- Using today admin time');
+          secureLogger.debug('- Using today admin time');
           return todayAdmin.toISOString();
         } else {
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
           tomorrow.setHours(hours, minutes, 0, 0);
-          console.log('- Using tomorrow admin time:', tomorrow.toISOString());
+          secureLogger.debug('- Using tomorrow admin time:', tomorrow.toISOString());
           return tomorrow.toISOString();
         }
       }
@@ -930,13 +931,13 @@ export const MARModule: React.FC<MARModuleProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log('🔵 BCMA Button clicked for medication:', medication.name);
-                  console.log('🔵 Medication category:', medication.category);
-                  console.log('🔵 Full medication object:', medication);
-                  console.log('🔵 Current user:', currentUser);
-                  console.log('🔵 BCMA state before:', bcma.state);
+                  secureLogger.debug('🔵 BCMA Button clicked for medication:', medication.name);
+                  secureLogger.debug('🔵 Medication category:', medication.category);
+                  secureLogger.debug('🔵 Full medication object:', medication);
+                  secureLogger.debug('🔵 Current user:', currentUser);
+                  secureLogger.debug('🔵 BCMA state before:', bcma.state);
                   bcma.startBCMAProcess(patient, medication);
-                  console.log('🔵 BCMA state after:', bcma.state);
+                  secureLogger.debug('🔵 BCMA state after:', bcma.state);
                 }}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1 ${
                   shouldAlert && isDue 

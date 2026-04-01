@@ -16,6 +16,7 @@ import App from './App.tsx';
 import './index.css';
 import { testSupabaseConnection } from './lib/api/supabase';
 import { getCurrentSubdomain } from './lib/infrastructure/subdomainService';
+import { secureLogger } from './lib/security/secureLogger';
 // import { initializeAuth } from './lib/browserAuthFix'; // Disabled for deployment fix
 
 // Initialize subdomain detection for production
@@ -30,7 +31,7 @@ if (import.meta.env.NODE_ENV === 'production') {
   // Log subdomain for debugging
   const subdomain = getCurrentSubdomain();
   if (subdomain) {
-    console.log('🏢 Tenant subdomain detected:', subdomain);
+    secureLogger.debug('Tenant subdomain detected', { subdomain });
   }
 }
 
@@ -39,8 +40,7 @@ const cleanupBarcodeScanner = initializeBarcodeScanner();
 
 // Initialize Supabase connection - auth persistence disabled for deployment fix
 testSupabaseConnection().then((isConnected) => {
-  console.log('🚀 Application initialization complete');
-  console.log('📡 Database connected:', isConnected);
+  secureLogger.info('Application initialization complete', { dbConnected: isConnected });
 });
 
 createRoot(document.getElementById('root')!).render(

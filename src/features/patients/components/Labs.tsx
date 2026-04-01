@@ -2,7 +2,7 @@
 // Displays lab panels with tab navigation (All/Chemistry/ABG/Hematology/Order Entry)
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText, Trash2 } from 'lucide-react';
+import { Plus, FlaskConical, Activity, Droplet, AlertCircle, FileText } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import {
@@ -21,6 +21,7 @@ import { LabOrderEntryForm } from './LabOrderEntryForm';
 import { LabOrderCard } from './LabOrderCard';
 import { LabOrderLabelModal } from './LabOrderLabelModal';
 import { format24HourDateTime } from '../../../utils/time';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface LabsProps {
   patientId: string;
@@ -55,7 +56,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
 
     if (err) {
       setError('Failed to load lab panels');
-      console.error(err);
+      secureLogger.error(err);
     } else {
       setPanels(data || []);
     }
@@ -69,7 +70,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
     const { data, error: err } = await getLabOrders(patientId, currentTenant.id);
 
     if (err) {
-      console.error('Failed to load lab orders:', err);
+      secureLogger.error('Failed to load lab orders:', err);
     } else {
       setLabOrders(data || []);
     }

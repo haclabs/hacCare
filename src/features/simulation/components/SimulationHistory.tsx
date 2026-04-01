@@ -14,6 +14,7 @@ import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
 import { formatDistanceToNow, differenceInMinutes, format } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 type TabType = 'active' | 'archived';
 
@@ -43,7 +44,7 @@ const SimulationHistory: React.FC = () => {
       const data = await getSimulationHistory({ archived: activeTab === 'archived' });
       setHistory(data);
     } catch (error) {
-      console.error('Error loading history:', error);
+      secureLogger.error('Error loading history:', error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ const SimulationHistory: React.FC = () => {
       // Reload the current tab's data
       await loadHistory();
     } catch (error) {
-      console.error('Error archiving simulation:', error);
+      secureLogger.error('Error archiving simulation:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to archive simulation';
       alert(`Failed to archive simulation: ${errorMessage}`);
     } finally {
@@ -71,7 +72,7 @@ const SimulationHistory: React.FC = () => {
       // Reload the current tab's data
       await loadHistory();
     } catch (error) {
-      console.error('Error unarchiving simulation:', error);
+      secureLogger.error('Error unarchiving simulation:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to restore simulation';
       alert(`Failed to restore simulation: ${errorMessage}`);
     } finally {
@@ -95,7 +96,7 @@ const SimulationHistory: React.FC = () => {
           await archiveSimulationHistory(record.id);
           successCount++;
         } catch (error) {
-          console.error(`Failed to archive ${record.name}:`, error);
+          secureLogger.error(`Failed to archive ${record.name}:`, error);
           errorCount++;
         }
       }
@@ -110,7 +111,7 @@ const SimulationHistory: React.FC = () => {
       // Reload the list
       await loadHistory();
     } catch (error) {
-      console.error('Error in bulk archive:', error);
+      secureLogger.error('Error in bulk archive:', error);
       alert('Failed to complete bulk archive operation.');
     } finally {
       setArchiving(null);
@@ -128,7 +129,7 @@ const SimulationHistory: React.FC = () => {
       // Reload the current tab's data
       await loadHistory();
     } catch (error) {
-      console.error('Error deleting simulation:', error);
+      secureLogger.error('Error deleting simulation:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete simulation';
       alert(`Failed to delete simulation: ${errorMessage}`);
     } finally {

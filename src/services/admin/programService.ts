@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import type { Database } from '../../types/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * Program Type Definitions
@@ -136,7 +137,7 @@ export async function createProgramTenant(
     if (error) throw error;
     return { data: data as CreateProgramTenantResult, error: null };
   } catch (error) {
-    console.error('Error creating program tenant:', error);
+    secureLogger.error('Error creating program tenant:', error);
     return { data: null, error };
   }
 }
@@ -155,7 +156,7 @@ export async function getUserProgramTenants(
     if (error) throw error;
     return { data: data as ProgramTenant[], error: null };
   } catch (error) {
-    console.error('Error fetching user program tenants:', error);
+    secureLogger.error('Error fetching user program tenants:', error);
     return { data: null, error };
   }
 }
@@ -175,7 +176,7 @@ export async function getPrograms(tenantId: string): Promise<{ data: Program[] |
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error fetching programs:', error);
+    secureLogger.error('Error fetching programs:', error);
     return { data: null, error };
   }
 }
@@ -212,7 +213,7 @@ export async function getProgramsWithUserCounts(tenantId: string): Promise<{ dat
 
     return { data: programsWithCounts, error: null };
   } catch (error) {
-    console.error('Error fetching programs with counts:', error);
+    secureLogger.error('Error fetching programs with counts:', error);
     return { data: null, error };
   }
 }
@@ -242,7 +243,7 @@ export async function createProgram(
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error creating program:', error);
+    secureLogger.error('Error creating program:', error);
     return { data: null, error };
   }
 }
@@ -268,7 +269,7 @@ export async function updateProgram(
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating program:', error);
+    secureLogger.error('Error updating program:', error);
     return { data: null, error };
   }
 }
@@ -287,7 +288,7 @@ export async function deleteProgram(programId: string): Promise<{ error: any }> 
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error deleting program:', error);
+    secureLogger.error('Error deleting program:', error);
     return { error };
   }
 }
@@ -308,7 +309,7 @@ export async function getUserPrograms(userId: string): Promise<{ data: UserProgr
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error fetching user programs:', error);
+    secureLogger.error('Error fetching user programs:', error);
     return { data: null, error };
   }
 }
@@ -324,7 +325,7 @@ export async function getUserProgramCodes(userId: string): Promise<{ data: strin
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching user program codes:', error);
+    secureLogger.error('Error fetching user program codes:', error);
     return { data: null, error };
   }
 }
@@ -352,7 +353,7 @@ export async function assignUserToProgram(
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error assigning user to program:', error);
+    secureLogger.error('Error assigning user to program:', error);
     return { data: null, error };
   }
 }
@@ -374,7 +375,7 @@ export async function removeUserFromProgram(
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error removing user from program:', error);
+    secureLogger.error('Error removing user from program:', error);
     return { error };
   }
 }
@@ -432,7 +433,7 @@ export async function bulkAssignUserToPrograms(
             onConflict: 'user_id,tenant_id'
           });
 
-        console.log(`✅ Granted access to ${programTenants.length} program tenants for user ${userId}`);
+        secureLogger.debug(`✅ Granted access to ${programTenants.length} program tenants for user ${userId}`);
       }
     } else {
       // Remove user from all program tenants when no programs assigned
@@ -452,7 +453,7 @@ export async function bulkAssignUserToPrograms(
 
     return { error: null };
   } catch (error) {
-    console.error('Error bulk assigning user to programs:', error);
+    secureLogger.error('Error bulk assigning user to programs:', error);
     return { error };
   }
 }
@@ -479,7 +480,7 @@ export async function getProgramUsers(programId: string): Promise<{ data: any[] 
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error fetching program users:', error);
+    secureLogger.error('Error fetching program users:', error);
     return { data: null, error };
   }
 }
@@ -501,7 +502,7 @@ export async function checkUserProgramAccess(
     if (error) throw error;
     return { hasAccess: data || false, error: null };
   } catch (error) {
-    console.error('Error checking program access:', error);
+    secureLogger.error('Error checking program access:', error);
     return { hasAccess: false, error };
   }
 }
@@ -561,7 +562,7 @@ export async function getStudentRoster(
     
     return { data: transformedData as StudentRoster[], error: null, count: count || 0 };
   } catch (error) {
-    console.error('Error fetching student roster:', error);
+    secureLogger.error('Error fetching student roster:', error);
     return { data: null, error, count: 0 };
   }
 }
@@ -590,7 +591,7 @@ export async function addStudentToRoster(
     if (error) throw error;
     return { data: data as StudentRoster, error: null };
   } catch (error) {
-    console.error('Error adding student to roster:', error);
+    secureLogger.error('Error adding student to roster:', error);
     return { data: null, error };
   }
 }
@@ -616,7 +617,7 @@ export async function bulkCreateStudents(
     if (error) throw error;
     return { data: data as BulkCreateStudentsResult, error: null };
   } catch (error) {
-    console.error('Error bulk creating students:', error);
+    secureLogger.error('Error bulk creating students:', error);
     return { data: null, error };
   }
 }
@@ -639,7 +640,7 @@ export async function updateStudentRoster(
     if (error) throw error;
     return { data: data as StudentRoster, error: null };
   } catch (error) {
-    console.error('Error updating student roster:', error);
+    secureLogger.error('Error updating student roster:', error);
     return { data: null, error };
   }
 }
@@ -657,7 +658,7 @@ export async function removeStudentFromRoster(studentId: string): Promise<{ erro
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error removing student from roster:', error);
+    secureLogger.error('Error removing student from roster:', error);
     return { error };
   }
 }
@@ -686,7 +687,7 @@ export async function getScheduledSimulations(
     if (error) throw error;
     return { data: data as ScheduledSimulation[], error: null };
   } catch (error) {
-    console.error('Error fetching scheduled simulations:', error);
+    secureLogger.error('Error fetching scheduled simulations:', error);
     return { data: null, error };
   }
 }
@@ -710,7 +711,7 @@ export async function createScheduledSimulation(
     if (error) throw error;
     return { data: data as ScheduledSimulation, error: null };
   } catch (error) {
-    console.error('Error creating scheduled simulation:', error);
+    secureLogger.error('Error creating scheduled simulation:', error);
     return { data: null, error };
   }
 }
@@ -733,7 +734,7 @@ export async function updateScheduledSimulation(
     if (error) throw error;
     return { data: data as ScheduledSimulation, error: null };
   } catch (error) {
-    console.error('Error updating scheduled simulation:', error);
+    secureLogger.error('Error updating scheduled simulation:', error);
     return { data: null, error };
   }
 }
@@ -751,7 +752,7 @@ export async function deleteScheduledSimulation(simulationId: string): Promise<{
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error deleting scheduled simulation:', error);
+    secureLogger.error('Error deleting scheduled simulation:', error);
     return { error };
   }
 }
@@ -777,7 +778,7 @@ export async function getProgramAnnouncements(
     if (error) throw error;
     return { data: data as ProgramAnnouncement[], error: null };
   } catch (error) {
-    console.error('Error fetching program announcements:', error);
+    secureLogger.error('Error fetching program announcements:', error);
     return { data: null, error };
   }
 }
@@ -798,7 +799,7 @@ export async function createProgramAnnouncement(
     if (error) throw error;
     return { data: data as ProgramAnnouncement, error: null };
   } catch (error) {
-    console.error('Error creating program announcement:', error);
+    secureLogger.error('Error creating program announcement:', error);
     return { data: null, error };
   }
 }
@@ -821,7 +822,7 @@ export async function updateProgramAnnouncement(
     if (error) throw error;
     return { data: data as ProgramAnnouncement, error: null };
   } catch (error) {
-    console.error('Error updating program announcement:', error);
+    secureLogger.error('Error updating program announcement:', error);
     return { data: null, error };
   }
 }
@@ -839,7 +840,7 @@ export async function deleteProgramAnnouncement(announcementId: string): Promise
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error deleting program announcement:', error);
+    secureLogger.error('Error deleting program announcement:', error);
     return { error };
   }
 }

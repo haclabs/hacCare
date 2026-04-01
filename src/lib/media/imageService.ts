@@ -1,6 +1,7 @@
 import { supabase } from '../api/supabase';
 import { logAction } from './auditService';
 import { v4 as uuidv4 } from 'uuid';
+import { secureLogger } from '../security/secureLogger';
 
 /**
  * Image Service
@@ -43,7 +44,7 @@ export const uploadPatientImage = async (
   description?: string
 ): Promise<PatientImage> => {
   try {
-    console.log('Uploading patient image:', file.name);
+    secureLogger.debug('Uploading patient image:', file.name);
     
     // Generate a unique filename
     const fileExt = file.name.split('.').pop();
@@ -51,7 +52,7 @@ export const uploadPatientImage = async (
     const filePath = `${patientId}/${fileName}`;
     
     // Upload to Supabase Storage (skip bucket check and try direct upload)
-    console.log('Attempting to upload to patient-images bucket...');
+    secureLogger.debug('Attempting to upload to patient-images bucket...');
     const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('patient-images')
@@ -61,7 +62,7 @@ export const uploadPatientImage = async (
       });
     
     if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+      secureLogger.error('Error uploading image:', uploadError);
       
       // Provide more helpful error messages based on the error type
       if (uploadError.message?.includes('Bucket not found')) {
@@ -73,7 +74,7 @@ export const uploadPatientImage = async (
       }
     }
     
-    console.log('Upload successful:', uploadData);
+    secureLogger.debug('Upload successful:', uploadData);
     
     // Get the public URL
     // Use the correct method to get a public URL that works
@@ -82,7 +83,7 @@ export const uploadPatientImage = async (
       .from('patient-images')
       .getPublicUrl(filePath).data.publicUrl;
     
-    console.log('Generated public URL:', publicUrl);
+    secureLogger.debug('Generated public URL:', publicUrl);
     
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -92,7 +93,7 @@ export const uploadPatientImage = async (
     }
     
     // Create database record
-    console.log('Creating database record...');
+    secureLogger.debug('Creating database record...');
     const { data, error } = await supabase
       .from('patient_images')
       .insert({
@@ -107,7 +108,7 @@ export const uploadPatientImage = async (
       .single();
     
     if (error) {
-      console.error('Error creating image record:', error);
+      secureLogger.error('Error creating image record:', error);
       throw new Error(`Failed to save image record: ${error.message}`);
     }
     
@@ -121,14 +122,14 @@ export const uploadPatientImage = async (
         { image_type: imageType, description }
       );
     } catch (logError) {
-      console.warn('Failed to log action:', logError);
+      secureLogger.warn('Failed to log action:', logError);
       // Don't fail the upload if logging fails
     }
     
-    console.log('Image uploaded successfully:', data);
+    secureLogger.debug('Image uploaded successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error in uploadPatientImage:', error);
+    secureLogger.error('Error in uploadPatientImage:', error);
     throw error;
   }
 };
@@ -138,7 +139,7 @@ export const uploadPatientImage = async (
  */
 export const fetchPatientImages = async (patientId: string): Promise<PatientImage[]> => {
   try {
-    console.log('Fetching images for patient:', patientId);
+    secureLogger.debug('Fetching images for patient:', patientId);
     
     const { data, error } = await supabase
       .from('patient_images')
@@ -147,14 +148,14 @@ export const fetchPatientImages = async (patientId: string): Promise<PatientImag
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching patient images:', error);
+      secureLogger.error('Error fetching patient images:', error);
       throw error;
     }
     
-    console.log(`Found ${data?.length || 0} images for patient ${patientId}`);
+    secureLogger.debug(`Found ${data?.length || 0} images for patient ${patientId}`);
     return data || [];
   } catch (error) {
-    console.error('Error in fetchPatientImages:', error);
+    secureLogger.error('Error in fetchPatientImages:', error);
     throw error;
   }
 };
@@ -167,7 +168,7 @@ export const updateImageAnnotations = async (
   annotations: Annotation[]
 ): Promise<PatientImage> => {
   try {
-    console.log('Updating annotations for image:', imageId);
+    secureLogger.debug('Updating annotations for image:', imageId);
     
     const { data, error } = await supabase
       .from('patient_images')
@@ -177,7 +178,7 @@ export const updateImageAnnotations = async (
       .single();
     
     if (error) {
-      console.error('Error updating image annotations:', error);
+      secureLogger.error('Error updating image annotations:', error);
       throw error;
     }
     
@@ -195,10 +196,10 @@ export const updateImageAnnotations = async (
       );
     }
     
-    console.log('Annotations updated successfully');
+    secureLogger.debug('Annotations updated successfully');
     return data;
   } catch (error) {
-    console.error('Error in updateImageAnnotations:', error);
+    secureLogger.error('Error in updateImageAnnotations:', error);
     throw error;
   }
 };
@@ -208,7 +209,7 @@ export const updateImageAnnotations = async (
  */
 export const deletePatientImage = async (imageId: string): Promise<void> => {
   try {
-    console.log('Deleting patient image:', imageId);
+    secureLogger.debug('Deleting patient image:', imageId);
     
     // Get image data first to get the file path
     const { data: imageData, error: fetchError } = await supabase
@@ -218,7 +219,7 @@ export const deletePatientImage = async (imageId: string): Promise<void> => {
       .single();
     
     if (fetchError) {
-      console.error('Error fetching image data:', fetchError);
+      secureLogger.error('Error fetching image data:', fetchError);
       throw fetchError;
     }
     
@@ -238,12 +239,12 @@ export const deletePatientImage = async (imageId: string): Promise<void> => {
       }
     } catch (parseError) {
       // If URL parsing fails, try to extract the filename directly
-      console.warn('Error parsing image URL, using fallback method:', parseError);
+      secureLogger.warn('Error parsing image URL, using fallback method:', parseError);
       const parts = imageData.image_url.split('/');
       filePath = parts[parts.length - 1];
     }
     
-    console.log('Extracted file path for deletion:', filePath);
+    secureLogger.debug('Extracted file path for deletion:', filePath);
     
     // Delete from storage
     const { error: storageError } = await supabase
@@ -252,7 +253,7 @@ export const deletePatientImage = async (imageId: string): Promise<void> => {
       .remove([filePath]);
     
     if (storageError) {
-      console.error('Error deleting image from storage:', storageError);
+      secureLogger.error('Error deleting image from storage:', storageError);
       // Continue anyway to delete the database record
     }
     
@@ -263,7 +264,7 @@ export const deletePatientImage = async (imageId: string): Promise<void> => {
       .eq('id', imageId);
     
     if (error) {
-      console.error('Error deleting image record:', error);
+      secureLogger.error('Error deleting image record:', error);
       throw error;
     }
     
@@ -281,9 +282,9 @@ export const deletePatientImage = async (imageId: string): Promise<void> => {
       );
     }
     
-    console.log('Image deleted successfully');
+    secureLogger.debug('Image deleted successfully');
   } catch (error) {
-    console.error('Error in deletePatientImage:', error);
+    secureLogger.error('Error in deletePatientImage:', error);
     throw error;
   }
 };

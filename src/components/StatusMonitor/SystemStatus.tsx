@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Activity, CheckCircle, XCircle, AlertTriangle, RefreshCw,
-  Database, Wifi, WifiOff, Clock, Server
+  Database, Wifi, WifiOff, Clock
 } from 'lucide-react';
 import { isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * System Status Component
@@ -90,7 +91,7 @@ export const SystemStatus: React.FC = () => {
 
       setFeatureStatus(newFeatureStatus);
     } catch (error) {
-      console.error('Error checking feature status:', error);
+      secureLogger.error('Error checking feature status:', error);
     }
   };
 
@@ -118,7 +119,7 @@ export const SystemStatus: React.FC = () => {
       // Update feature status
       await checkFeatureStatus();
     } catch (error) {
-      console.error('Error updating system info:', error);
+      secureLogger.error('Error updating system info:', error);
       setSystemInfo(prev => ({
         ...prev,
         dbStatus: 'error',

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Patient, Alert } from '../../types';
 import { Users, AlertTriangle, Activity, Clock } from 'lucide-react';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 interface QuickStatsProps {
   patients: Patient[];
@@ -17,7 +18,7 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ patients, alerts }) => {
   ).length;
   
   // Simple log to verify the count
-  console.log(`Medication alerts: ${medicationsDue} of ${alerts.length} total alerts`);
+  secureLogger.debug(`Medication alerts: ${medicationsDue} of ${alerts.length} total alerts`);
 
   // Define stats cards
   const stats = [

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
 import { queryKeys } from '../../lib/api/queryClient';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 // ========================================
 // 🔐 AUTHENTICATION QUERY HOOKS
@@ -32,7 +33,7 @@ export function useCurrentUser() {
           if (error.message?.includes('Invalid Refresh Token') || 
               error.message?.includes('Refresh Token Not Found') ||
               error.message?.includes('refresh_token_not_found')) {
-            console.log('🔄 Invalid refresh token detected, clearing session...');
+            secureLogger.info('Invalid refresh token detected, clearing session...');
             await supabase.auth.signOut();
             return { user: null, profile: null, isOffline: false };
           }
@@ -58,7 +59,7 @@ export function useCurrentUser() {
 
         return { user, profile, isOffline: false };
       } catch (error) {
-        console.error('❌ Error fetching user session:', error);
+        secureLogger.error('Error fetching user session', error);
         return { user: null, profile: null, isOffline: true };
       }
     },
@@ -88,7 +89,7 @@ export function useAuthStateListener() {
       // Set up auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
-          console.log('🔄 Auth state change:', event, session?.user?.id);
+          secureLogger.debug('Auth state change', { event, userId: session?.user?.id });
           
           // Invalidate user queries to refetch fresh data
           await queryClient.invalidateQueries({ queryKey: queryKeys.auth.user });
@@ -114,7 +115,7 @@ export function useAuthStateListener() {
                   
                   profile = profileData || null;
                 } catch (error) {
-                  console.error('Error fetching profile on sign in:', error);
+                  secureLogger.error('Error fetching profile on sign in', error);
                 }
 
                 return { user, profile, isOffline: false };
@@ -163,10 +164,10 @@ export function useSignIn() {
     onSuccess: (data) => {
       // Invalidate user queries to fetch fresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.user });
-      console.log('✅ Sign in successful:', data.user?.email);
+      secureLogger.info('Sign in successful');
     },
     onError: (error) => {
-      console.error('❌ Sign in failed:', error);
+      secureLogger.error('Sign in failed', error);
     },
   });
 }
@@ -192,10 +193,10 @@ export function useSignOut() {
     onSuccess: () => {
       // Clear all cached data on sign out
       queryClient.clear();
-      console.log('✅ Sign out successful');
+      secureLogger.info('Sign out successful');
     },
     onError: (error) => {
-      console.error('❌ Sign out failed:', error);
+      secureLogger.error('Sign out failed', error);
       // Even if sign out fails, clear local cache
       queryClient.clear();
     },
@@ -242,10 +243,10 @@ export function useCreateProfile() {
         ...old,
         profile: newProfile,
       }));
-      console.log('✅ Profile created successfully');
+      secureLogger.info('Profile created successfully');
     },
     onError: (error) => {
-      console.error('❌ Profile creation failed:', error);
+      secureLogger.error('Profile creation failed', error);
     },
   });
 }

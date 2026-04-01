@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/api/supabase';
 import { parseAuthError } from '../../../utils/authErrorParser';
 import { useAuth } from '../../../hooks/useAuth';
 import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
  * Security Settings Component
@@ -131,7 +132,7 @@ export const SecuritySettings: React.FC = () => {
       setConfirmPassword('');
       setSuccess('Password updated successfully');
     } catch (err: any) {
-      console.error('Error updating password:', err);
+      secureLogger.error('Error updating password:', err);
       setError(parseAuthError(err));
     } finally {
       setLoading(false);
