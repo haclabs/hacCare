@@ -64,14 +64,9 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     try {
       setLoading(true);
       
-      let activities: StudentActivity[];
-      
-      if (historyRecord.student_activities && Array.isArray(historyRecord.student_activities)) {
-        activities = historyRecord.student_activities as StudentActivity[];
-      } else {
-        // Use simulation_id not history record id!
-        activities = await getStudentActivitiesBySimulation(historyRecord.simulation_id);
-      }
+      // Always re-query the live table so that any saves that happened after the completion
+      // snapshot (e.g. auto-saved physical observations) are reflected in the debrief.
+      const activities = await getStudentActivitiesBySimulation(historyRecord.simulation_id);
       
       const deduped = deduplicateStudentActivities(activities);
       setStudentActivities(deduped);
@@ -1364,33 +1359,112 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
       case 'newbornAssessments': {
         const dateStr = item.recorded_at ? format(new Date(item.recorded_at), 'PPp') : 'N/A';
         const apgarParts = [
-          item.apgar_1min != null && `1min: ${item.apgar_1min}`,
-          item.apgar_5min != null && `5min: ${item.apgar_5min}`,
-          item.apgar_10min != null && `10min: ${item.apgar_10min}`,
+          item.apgar_1min != null && `1 min: ${item.apgar_1min}`,
+          item.apgar_5min != null && `5 min: ${item.apgar_5min}`,
+          item.apgar_10min != null && `10 min: ${item.apgar_10min}`,
         ].filter(Boolean).join(' · ');
-        const obs = item.physical_observations ?? {};
-        const varianceSystems = Object.entries(obs)
-          .filter(([key, val]) => key.endsWith('_variance') && Array.isArray(val) && (val as string[]).length > 0)
-          .map(([key]) => key.replace('_variance', '').replace(/_/g, ' '));
+
+        // Map system keys to display labels (in assessment order)
+        const systemLabels: Record<string, string> = {
+          head: 'Head', neck: 'Neck', chest: 'Chest',
+          cardiovascular: 'Cardiovascular', respiratory: 'Respiratory',
+          abdomen: 'Abdomen', skeletal: 'Skeletal', genitalia: 'Genitalia',
+          skin: 'Skin', neuromuscular: 'Neuromuscular',
+        };
+
+        // Process nested physical_observations structure (obs.system.field_normal / field_variance)
+        const obs = (item.physical_observations ?? {}) as Record<string, Record<string, unknown>>;
+        const systemSummaries = Object.entries(systemLabels)
+          .map(([key, label]) => {
+            const sysObs = obs[key];
+            if (!sysObs || typeof sysObs !== 'object') return null;
+            const normals: string[] = [];
+            const variances: string[] = [];
+            const others: string[] = [];
+            Object.entries(sysObs).forEach(([field, val]) => {
+              if (field.endsWith('_normal') && Array.isArray(val) && val.length > 0) {
+                normals.push(...(val as string[]));
+              } else if (field.endsWith('_variance') && Array.isArray(val) && val.length > 0) {
+                variances.push(...(val as string[]));
+              } else if (field.endsWith('_variance_specify') && typeof val === 'string' && val.trim()) {
+                variances.push(val.trim());
+              } else if (field.endsWith('_other') && typeof val === 'string' && val.trim()) {
+                others.push(val.trim());
+              }
+            });
+            if (normals.length === 0 && variances.length === 0 && others.length === 0) return null;
+            return { label, normals, variances, others };
+          })
+          .filter(Boolean) as { label: string; normals: string[]; variances: string[]; others: string[] }[];
+
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{dateStr}</p>
-            {apgarParts && (
-              <p className="mt-1 text-xs text-gray-600"><span className="font-semibold">APGAR:</span> {apgarParts}</p>
+
+            {/* Birth Measurements */}
+            {(item.weight_grams || item.length_cm || item.head_circumference_cm || item.time_of_birth) && (
+              <div className="mt-1 text-xs text-gray-600">
+                <span className="font-semibold">Measurements: </span>
+                {item.time_of_birth && <span>TOB: {item.time_of_birth} </span>}
+                {item.weight_grams && <span>· Weight: {item.weight_grams}g </span>}
+                {item.length_cm && <span>· Length: {item.length_cm}cm </span>}
+                {item.head_circumference_cm && <span>· HC: {item.head_circumference_cm}cm</span>}
+              </div>
             )}
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-gray-600">
-              {item.vitamin_k_declined ? (
-                <span className="text-amber-600">Vitamin K: Declined</span>
-              ) : item.vitamin_k_given ? (
-                <span>Vitamin K: ✓ Given</span>
-              ) : null}
-              {item.erythromycin_given && <span>Erythromycin: ✓ Given</span>}
-            </div>
-            {varianceSystems.length > 0 && (
-              <p className="mt-1 text-xs text-amber-700">
-                <span className="font-semibold">Variances noted:</span> {varianceSystems.join(', ')}
+
+            {/* APGAR scores */}
+            {apgarParts && (
+              <p className="mt-1 text-xs text-gray-600">
+                <span className="font-semibold">APGAR: </span>{apgarParts}
               </p>
             )}
+
+            {/* Medications */}
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+              {item.vitamin_k_declined ? (
+                <span className="text-amber-600 font-medium">Vitamin K: Declined</span>
+              ) : item.vitamin_k_given ? (
+                <span className="text-gray-600">
+                  Vitamin K: ✓ Given
+                  {item.vitamin_k_dose ? ` (${item.vitamin_k_dose})` : ''}
+                  {item.vitamin_k_site ? ` — ${item.vitamin_k_site}` : ''}
+                  {item.vitamin_k_time ? ` at ${item.vitamin_k_time}` : ''}
+                </span>
+              ) : null}
+              {item.erythromycin_given && (
+                <span className="text-gray-600">
+                  Erythromycin: ✓ Given{item.erythromycin_time ? ` at ${item.erythromycin_time}` : ''}
+                </span>
+              )}
+            </div>
+
+            {/* Physical Assessment by body system */}
+            {systemSummaries.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-semibold text-gray-700 mb-1">Physical Assessment:</p>
+                <div className="space-y-0.5">
+                  {systemSummaries.map(({ label, normals, variances, others }) => (
+                    <div key={label} className="text-xs leading-relaxed">
+                      <span className="font-medium text-gray-600">{label}: </span>
+                      {normals.length > 0 && (
+                        <span className="text-green-700">{normals.join(', ')}</span>
+                      )}
+                      {variances.length > 0 && (
+                        <span className="text-amber-700">
+                          {normals.length > 0 ? ' · ' : ''}
+                          <span className="font-medium">Variance: </span>
+                          {variances.join(', ')}
+                        </span>
+                      )}
+                      {others.length > 0 && (
+                        <span className="text-gray-500"> ({others.join('; ')})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {item.completed_by && (
               <p className="mt-1 text-xs text-gray-400">Assessed by: {item.completed_by}</p>
             )}

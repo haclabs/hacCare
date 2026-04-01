@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Baby } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Save, Baby, User } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTenant } from '../../../../contexts/TenantContext';
 import {
@@ -92,6 +92,10 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
 
   const [form, setForm] = useState<Omit<NewbornAssessmentInput, never>>(emptyForm);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [pendingName, setPendingName] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Load existing record ────────────────────────────────────────────────────
   const { data: existing, isLoading } = useQuery({
@@ -113,13 +117,24 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
     }
   }, [existing, currentUser]);
 
+  // Clean up debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, []);
+
   // ── Mutations ───────────────────────────────────────────────────────────────
+  const saveFn = (formOverride?: Omit<NewbornAssessmentInput, never>) => {
+    const formToSave = formOverride ?? form;
+    return saveNewbornAssessment(patient.id, tenantId, {
+      ...formToSave,
+      recorded_at: formToSave.recorded_at || new Date().toISOString(),
+    } as NewbornAssessmentInput);
+  };
+
   const { mutate: save, isPending: isSaving, isError, error: saveError } = useMutation({
-    mutationFn: () =>
-      saveNewbornAssessment(patient.id, tenantId, {
-        ...form,
-        recorded_at: form.recorded_at || new Date().toISOString(),
-      } as NewbornAssessmentInput),
+    mutationFn: saveFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newborn_assessment', patient.id, tenantId] });
       setSaveSuccess(true);
@@ -127,14 +142,43 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
     },
   });
 
+  // Silent auto-save for physical observations — no loading state or success banner
+  const { mutate: autoSave } = useMutation({ mutationFn: saveFn });
+
   // ── Generic field change handler ────────────────────────────────────────────
   const handleChange = (field: string, value: string | boolean | number | undefined) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  // ── Physical observations change ────────────────────────────────────────────
-  const handleObservationsChange = (updated: PhysicalObservations) => {
-    setForm(prev => ({ ...prev, physical_observations: updated }));
+  // ── Physical observations change — debounced auto-save ────────────────────
+  const handleObservationsChange = useCallback((updated: PhysicalObservations) => {
+    const updatedForm = { ...form, physical_observations: updated };
+    setForm(updatedForm);
+    // Debounce: wait 800ms after last checkbox click before saving
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      autoSave(updatedForm);
+    }, 800);
+  }, [form, autoSave]);
+
+  // ── Save with name confirmation ─────────────────────────────────────────────
+  const handleSaveClick = () => {
+    if (!form.student_name?.trim()) {
+      setPendingName('');
+      setShowNamePrompt(true);
+      setTimeout(() => nameInputRef.current?.focus(), 50);
+    } else {
+      save(undefined);
+    }
+  };
+
+  const handleNameConfirm = () => {
+    const name = pendingName.trim();
+    if (!name) return;
+    const updatedForm = { ...form, student_name: name, completed_by: form.completed_by || name };
+    setForm(updatedForm);
+    setShowNamePrompt(false);
+    save(updatedForm);
   };
 
   if (isLoading) {
@@ -263,17 +307,36 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
 
       {/* ── Save bar ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between pt-2">
-        {saveSuccess ? (
-          <span className="text-sm text-green-600 font-medium">Assessment saved successfully.</span>
-        ) : isError ? (
-          <span className="text-sm text-red-600 font-medium">
-            Save failed: {(saveError as any)?.message ?? 'Unknown error'}
-          </span>
-        ) : (
-          <span className="text-sm text-gray-400">All changes are saved manually.</span>
-        )}
+        <div className="flex flex-col gap-0.5">
+          {saveSuccess ? (
+            <span className="text-sm text-green-600 font-medium">Assessment saved successfully.</span>
+          ) : isError ? (
+            <span className="text-sm text-red-600 font-medium">
+              Save failed: {(saveError as any)?.message ?? 'Unknown error'}
+            </span>
+          ) : (
+            <span className="text-sm text-gray-400">All changes are saved manually.</span>
+          )}
+          {import.meta.env.DEV && (() => {
+            const obs = (form.physical_observations ?? {}) as Record<string, Record<string, unknown>>;
+            const counts = Object.entries(obs).map(([sys, fields]) => {
+              const items = Object.values(fields).flatMap(v => Array.isArray(v) ? v : (v ? [v] : []));
+              return items.length > 0 ? `${sys}:${items.length}` : null;
+            }).filter(Boolean);
+            const total = Object.values(obs).flatMap(fields =>
+              Object.values(fields).flatMap(v => Array.isArray(v) ? v : (v ? [v] : []))
+            ).length;
+            return total > 0 ? (
+              <span className="text-xs text-violet-500 font-mono">
+                [DEV] physical_obs: {total} item{total !== 1 ? 's' : ''} — {counts.join(', ')}
+              </span>
+            ) : (
+              <span className="text-xs text-gray-300 font-mono">[DEV] physical_obs: empty</span>
+            );
+          })()}
+        </div>
         <button
-          onClick={() => save()}
+          onClick={handleSaveClick}
           disabled={isSaving}
           className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60 transition-colors"
         >
@@ -281,6 +344,47 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
           {isSaving ? 'Saving…' : 'Save Assessment'}
         </button>
       </div>
+
+      {/* ── Student name prompt modal ─────────────────────────────────────── */}
+      {showNamePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-cyan-100 rounded-lg">
+                <User className="h-5 w-5 text-cyan-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Enter Your Name</h3>
+                <p className="text-xs text-gray-500">Required to save this assessment</p>
+              </div>
+            </div>
+            <input
+              ref={nameInputRef}
+              type="text"
+              value={pendingName}
+              onChange={e => setPendingName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleNameConfirm(); if (e.key === 'Escape') setShowNamePrompt(false); }}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4"
+              placeholder="Full name"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowNamePrompt(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleNameConfirm}
+                disabled={!pendingName.trim()}
+                className="px-4 py-2 text-sm font-medium bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:opacity-50 transition-colors"
+              >
+                Save Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

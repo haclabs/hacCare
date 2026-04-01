@@ -131,13 +131,26 @@ interface NeuroAssessmentEntry {
 interface NewbornAssessmentEntry {
   id: string;
   recorded_at: string;
+  // Birth details
+  time_of_birth: string | null;
+  weight_grams: number | null;
+  length_cm: number | null;
+  head_circumference_cm: number | null;
+  // APGAR
   apgar_1min: number | null;
   apgar_5min: number | null;
   apgar_10min: number | null;
+  // Vitamin K
   vitamin_k_given: boolean | null;
   vitamin_k_declined: boolean | null;
+  vitamin_k_dose: string | null;
+  vitamin_k_site: string | null;
+  vitamin_k_time: string | null;
+  // Erythromycin
   erythromycin_given: boolean | null;
-  physical_observations: Record<string, unknown> | null;
+  erythromycin_time: string | null;
+  // Physical observations (nested by body system)
+  physical_observations: Record<string, Record<string, unknown>> | null;
   completed_by: string | null;
   student_name: string | null;
 }
@@ -974,12 +987,24 @@ export async function getStudentActivitiesBySimulation(
       student.activities.newbornAssessments.push({
         id: nb.id,
         recorded_at: nb.recorded_at,
+        // Birth details
+        time_of_birth: nb.time_of_birth,
+        weight_grams: nb.weight_grams,
+        length_cm: nb.length_cm,
+        head_circumference_cm: nb.head_circumference_cm,
+        // APGAR
         apgar_1min: nb.apgar_1min,
         apgar_5min: nb.apgar_5min,
         apgar_10min: nb.apgar_10min,
+        // Vitamin K
         vitamin_k_given: nb.vitamin_k_given,
         vitamin_k_declined: nb.vitamin_k_declined,
+        vitamin_k_dose: nb.vitamin_k_dose,
+        vitamin_k_site: nb.vitamin_k_site,
+        vitamin_k_time: nb.vitamin_k_time,
+        // Erythromycin
         erythromycin_given: nb.erythromycin_given,
+        erythromycin_time: nb.erythromycin_time,
         physical_observations: nb.physical_observations,
         completed_by: nb.completed_by,
         student_name: nb.student_name,
