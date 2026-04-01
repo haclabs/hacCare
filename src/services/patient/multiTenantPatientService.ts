@@ -596,15 +596,18 @@ export async function saveNewbornAssessment(
     recorded_at: assessment.recorded_at || new Date().toISOString(),
   };
 
-  // Date columns — empty string must become NULL, not be sent as ""
-  const dateFields: (keyof NewbornAssessmentInput)[] = ['vitamin_k_date', 'erythromycin_date'];
+  // Date/time columns — empty string must become NULL, not be sent as ""
+  const dateOrTimeFields: (keyof NewbornAssessmentInput)[] = [
+    'vitamin_k_date', 'erythromycin_date',
+    'time_of_birth', 'vitamin_k_time', 'erythromycin_time',
+  ];
   const otherFields: (keyof NewbornAssessmentInput)[] = [
-    'time_of_birth', 'weight_grams', 'length_cm',
+    'weight_grams', 'length_cm',
     'head_circumference_cm', 'head_circumference_1hr_cm', 'head_circumference_2hr_cm',
     'apgar_1min', 'apgar_5min', 'apgar_10min',
     'vitamin_k_given', 'vitamin_k_declined', 'vitamin_k_dose',
-    'vitamin_k_site', 'vitamin_k_time', 'vitamin_k_signature',
-    'erythromycin_given', 'erythromycin_time', 'erythromycin_signature',
+    'vitamin_k_site', 'vitamin_k_signature',
+    'erythromycin_given', 'erythromycin_signature',
     'physical_observations', 'completed_by', 'completed_initials', 'student_name',
   ];
 
@@ -613,8 +616,8 @@ export async function saveNewbornAssessment(
       payload[field] = assessment[field];
     }
   }
-  // For DATE fields: skip empty strings entirely (column stays NULL)
-  for (const field of dateFields) {
+  // For date/time fields: skip empty strings entirely (column stays NULL)
+  for (const field of dateOrTimeFields) {
     const val = assessment[field];
     if (val !== undefined && val !== '') {
       payload[field] = val;
