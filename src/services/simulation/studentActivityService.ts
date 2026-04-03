@@ -314,28 +314,27 @@ export async function getStudentActivitiesBySimulation(
 
     secureLogger.debug('🔍 Looking for patient(s) with tenant_id:', tenantId);
 
-    // Get the patient_id for this tenant (limit 1 in case there are duplicates)
+    // Get ALL patients for this tenant (simulations can have multiple patients e.g. mother + newborn)
     const { data: patients, error: patientError } = await supabase
       .from('patients')
       .select('id, first_name, last_name')
-      .eq('tenant_id', tenantId)
-      .limit(1);
+      .eq('tenant_id', tenantId);
 
     if (patientError) {
-      secureLogger.error('Error fetching patient:', patientError);
+      secureLogger.error('Error fetching patients:', patientError);
     }
 
-    const patient = patients?.[0];
-    secureLogger.debug('👤 Patient found:', patient);
+    secureLogger.debug('👤 Patients found:', patients?.length || 0, patients?.map(p => `${p.first_name} ${p.last_name}`));
 
-    if (!patient?.id) {
-      // No patient found - return empty results instead of error
-      secureLogger.warn('⚠️ No patient found for tenant_id:', tenantId, '- returning empty activities');
+    if (!patients || patients.length === 0) {
+      // No patients found - return empty results instead of error
+      secureLogger.warn('⚠️ No patients found for tenant_id:', tenantId, '- returning empty activities');
       return [];
     }
 
-    const patientId = patient.id;
-    secureLogger.debug('✅ Using patient_id:', patientId, 'for student activity queries');
+    // All patient IDs in this simulation's tenant
+    const patientIds = patients.map(p => p.id);
+    secureLogger.debug('✅ Querying activities for', patientIds.length, 'patient(s) in tenant:', tenantId);
 
     // Fetch all activities in parallel
     const [
@@ -362,7 +361,6 @@ export async function getStudentActivitiesBySimulation(
         .from('patient_vitals')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
@@ -372,7 +370,6 @@ export async function getStudentActivitiesBySimulation(
         .from('medication_administrations')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('timestamp', simulationStartTime || '1970-01-01')
         .order('timestamp', { ascending: false })
@@ -390,7 +387,6 @@ export async function getStudentActivitiesBySimulation(
         .from('lab_orders')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
@@ -401,7 +397,6 @@ export async function getStudentActivitiesBySimulation(
         .from('lab_ack_events')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('ack_at', { ascending: false})
         .then(result => {
@@ -418,7 +413,6 @@ export async function getStudentActivitiesBySimulation(
         .from('doctors_orders')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('acknowledged_by_student', 'is', null)
         .gte('acknowledged_at', simulationStartTime || '1970-01-01')
         .order('acknowledged_at', { ascending: false }),
@@ -428,16 +422,15 @@ export async function getStudentActivitiesBySimulation(
         .from('patient_notes')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
-      // Handover Notes (no tenant_id column in this table)
+      // Handover Notes (no tenant_id column — filter by all patients in this simulation)
       supabase
         .from('handover_notes')
         .select('*')
-        .eq('patient_id', patientId)
+        .in('patient_id', patientIds)
         .not('student_name', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
@@ -447,7 +440,6 @@ export async function getStudentActivitiesBySimulation(
         .from('bowel_records')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
@@ -457,7 +449,6 @@ export async function getStudentActivitiesBySimulation(
         .from('devices')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('inserted_by', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
@@ -475,7 +466,6 @@ export async function getStudentActivitiesBySimulation(
         .from('wounds')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('entered_by', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
@@ -493,7 +483,6 @@ export async function getStudentActivitiesBySimulation(
         .from('device_assessments')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
@@ -511,7 +500,6 @@ export async function getStudentActivitiesBySimulation(
         .from('wound_assessments')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
@@ -530,7 +518,6 @@ export async function getStudentActivitiesBySimulation(
         .from('patient_intake_output_events')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .order('event_timestamp', { ascending: false })
         .then(result => {
@@ -538,19 +525,17 @@ export async function getStudentActivitiesBySimulation(
             count: result.data?.length || 0,
             error: result.error,
             tenantId,
-            patientId,
             simulationStartTime,
             data: result.data
           });
           return result;
         }),
 
-      // Advanced Directives - 🆕 NEW
+      // Advanced Directives
       supabase
         .from('patient_advanced_directives')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
@@ -568,7 +553,6 @@ export async function getStudentActivitiesBySimulation(
         .from('patient_neuro_assessments')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
@@ -578,7 +562,6 @@ export async function getStudentActivitiesBySimulation(
         .from('patient_bbit_entries')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null)
         .gte('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
@@ -588,7 +571,6 @@ export async function getStudentActivitiesBySimulation(
         .from('patient_newborn_assessments')
         .select('*')
         .eq('tenant_id', tenantId)
-        .eq('patient_id', patientId)
         .not('student_name', 'is', null),
     ]);
 
