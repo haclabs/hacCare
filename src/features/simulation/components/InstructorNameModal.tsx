@@ -37,35 +37,47 @@ export const InstructorNameModal: React.FC<InstructorNameModalProps> = ({
     const loadInstructors = async () => {
       try {
         setLoading(true);
-        
-        // Query instructors assigned to the simulation's programs
-        const { data, error } = await supabase
+
+        // Step 1: Get user_ids assigned to the simulation's programs
+        // (user_programs.user_id references auth.users, not user_profiles,
+        //  so we can't join directly to user_profiles via PostgREST)
+        const codes = programCodes.length > 0 ? programCodes : ['___NONE___'];
+        const { data: programData, error: programError } = await supabase
           .from('user_programs')
           .select(`
             user_id,
-            user:user_profiles!inner (
-              id,
-              first_name,
-              last_name,
-              email,
-              role
-            ),
             program:programs!inner (
               code
             )
           `)
-          .in('program.code', programCodes.length > 0 ? programCodes : ['___NONE___']) // Filter by program codes
-          .eq('user.role', 'instructor');
+          .in('program.code', codes);
 
-        if (error) {
-          secureLogger.error('Error loading instructors:', error);
+        if (programError) {
+          secureLogger.error('Error loading instructors:', programError);
           return;
         }
 
-        // Extract unique instructors
+        const userIds = [...new Set((programData ?? []).map((row: any) => row.user_id))];
+
+        if (userIds.length === 0) {
+          setInstructors([]);
+          return;
+        }
+
+        // Step 2: Fetch user_profiles for those user_ids, filtered to instructors
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('id, first_name, last_name, email, role')
+          .in('id', userIds)
+          .eq('role', 'instructor');
+
+        if (profileError) {
+          secureLogger.error('Error loading instructors:', profileError);
+          return;
+        }
+
         const uniqueInstructors = new Map<string, Instructor>();
-        data?.forEach((item: any) => {
-          const instructor = item.user;
+        profileData?.forEach((instructor: any) => {
           if (instructor && !uniqueInstructors.has(instructor.id)) {
             uniqueInstructors.set(instructor.id, {
               id: instructor.id,
