@@ -16,7 +16,8 @@ import {
   Info,
   Activity,
   Target,
-  MessageSquare
+  MessageSquare,
+  NotebookPen
 } from 'lucide-react';
 import { CreateHandoverNoteData } from '../../../../services/patient/handoverService';
 import { secureLogger } from '../../../../lib/security/secureLogger';
@@ -44,6 +45,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    nursingNotes: '',
     situation: '',
     background: '',
     assessment: '',
@@ -63,10 +65,11 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
 
     setLoading(true);
     try {
-      const { studentName, ...rest } = formData;
+      const { studentName, nursingNotes, ...rest } = formData;
       await onSave({
         patient_id: patientId,
         ...rest,
+        nursing_notes: nursingNotes || undefined,
         student_name: studentName,
         created_by: currentUser.id,
         created_by_name: currentUser.name,
@@ -75,6 +78,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
       
       // Reset form
       setFormData({
+        nursingNotes: '',
         situation: '',
         background: '',
         assessment: '',
@@ -213,6 +217,26 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
                 <option value="urgent">Urgent - Immediate action required</option>
               </select>
             </div>
+          </div>
+
+          {/* Nursing Notes */}
+          <div className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="p-2 rounded-lg bg-teal-100 text-teal-600">
+                <NotebookPen className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Nursing Notes</h3>
+                <p className="text-sm text-gray-600">General nursing observations and clinical notes.</p>
+              </div>
+            </div>
+            <textarea
+              value={formData.nursingNotes}
+              onChange={(e) => setFormData(prev => ({ ...prev, nursingNotes: e.target.value }))}
+              placeholder="Document general nursing observations, care provided, patient response..."
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+            />
           </div>
 
           {/* SBAR Sections */}

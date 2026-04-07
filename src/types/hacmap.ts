@@ -580,6 +580,7 @@ export interface IVAssessmentData {
 }
 
 export interface FoleyAssessmentData {
+  tube_size_fr?: string;
   patency_maintained?: boolean;
   patency_notes?: string;
   system_integrity?: boolean;

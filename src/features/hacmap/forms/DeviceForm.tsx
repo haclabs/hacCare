@@ -613,8 +613,8 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
       </div>
       )}
 
-      {/* Tube Size — drains/tubes only (NG uses its own section) */}
-      {(isDrain || isFeedingTube) && (
+      {/* Tube Size — drains, feeding tubes, and Foley (NG uses its own section) */}
+      {(isDrain || isFeedingTube || type === 'foley') && (
       <div>
         <label htmlFor="tubeSizeFr" className="block text-sm font-medium text-gray-700 mb-1">
           Tube Size (French)

@@ -15,6 +15,9 @@ export interface HandoverNote {
   created_at: string;
   updated_at: string;
   
+  // Nursing notes (free text, above SBAR)
+  nursing_notes?: string;
+  
   // SBAR Framework fields
   situation: string;
   background: string;
@@ -34,6 +37,7 @@ export interface HandoverNote {
 
 export interface CreateHandoverNoteData {
   patient_id: string;
+  nursing_notes?: string;
   situation: string;
   background: string;
   assessment: string;

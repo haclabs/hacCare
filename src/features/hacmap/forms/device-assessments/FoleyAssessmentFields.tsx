@@ -11,6 +11,7 @@ interface FoleyAssessmentFieldsProps {
 }
 
 export const FoleyAssessmentFields: React.FC<FoleyAssessmentFieldsProps> = ({ device: _device, onChange }) => {
+  const [tubeSizeFr, setTubeSizeFr] = useState('');
   const [patencyMaintained, setPatencyMaintained] = useState(true);
   const [patencyNotes, setPatencyNotes] = useState('');
   const [systemIntegrity, setSystemIntegrity] = useState(true);
@@ -30,6 +31,7 @@ export const FoleyAssessmentFields: React.FC<FoleyAssessmentFieldsProps> = ({ de
 
   useEffect(() => {
     const data: FoleyAssessmentData = {
+      tube_size_fr: tubeSizeFr || undefined,
       patency_maintained: patencyMaintained,
       patency_notes: patencyNotes || undefined,
       system_integrity: systemIntegrity,
@@ -49,7 +51,7 @@ export const FoleyAssessmentFields: React.FC<FoleyAssessmentFieldsProps> = ({ de
     };
     onChange(data);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patencyMaintained, patencyNotes, systemIntegrity, integrityNotes, catheterSecure, securementNotes, urineAmountMl, urineAppearance, urineOdor, siteFindings, siteNotes, patientComfort, hygieneProvided, hygieneNotes, indicationValid, plan]);
+  }, [tubeSizeFr, patencyMaintained, patencyNotes, systemIntegrity, integrityNotes, catheterSecure, securementNotes, urineAmountMl, urineAppearance, urineOdor, siteFindings, siteNotes, patientComfort, hygieneProvided, hygieneNotes, indicationValid, plan]);
 
   const toggleArrayItem = (array: string[], setArray: (arr: string[]) => void, value: string) => {
     if (array.includes(value)) {
@@ -62,6 +64,21 @@ export const FoleyAssessmentFields: React.FC<FoleyAssessmentFieldsProps> = ({ de
   return (
     <div className="space-y-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
       <h3 className="text-sm font-semibold text-amber-900">Foley Catheter Assessment</h3>
+
+      {/* Tube Details */}
+      <div className="border-b border-amber-200 pb-4">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">Tube Details</h4>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Tube Size (French)</label>
+          <input
+            type="text"
+            value={tubeSizeFr}
+            onChange={(e) => setTubeSizeFr(e.target.value)}
+            placeholder="e.g., 12, 14, 16"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      </div>
 
       {/* Catheter Function */}
       <div className="space-y-4">
