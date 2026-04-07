@@ -8,9 +8,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award, Mail } from 'lucide-react';
+import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award, Mail, RefreshCw } from 'lucide-react';
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
+import { regenerateDebriefSnapshot } from '../../../services/simulation/simulationService';
 import { exportDebriefToPdf } from '../../../services/export/debriefPdfExport';
 import { generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGenerator';
 import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
@@ -49,6 +50,7 @@ interface Metrics {
 const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyRecord, onClose }) => {
   const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [instructorName, setInstructorName] = useState('');
@@ -63,17 +65,58 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
   const loadStudentActivities = async () => {
     try {
       setLoading(true);
-      
-      // Always re-query the live table so that any saves that happened after the completion
-      // snapshot (e.g. auto-saved physical observations) are reflected in the debrief.
-      const activities = await getStudentActivitiesBySimulation(historyRecord.simulation_id);
-      
-      const deduped = deduplicateStudentActivities(activities);
-      setStudentActivities(deduped);
+
+      // Prefer the stored snapshot captured at completion time.
+      // Querying the live tables would return wrong data when the simulation
+      // tenant has been reset and re-run with different students since this
+      // history record was created (simulation_active.starts_at changes on
+      // every reset, so the time filter would point to the wrong session).
+      if (historyRecord.student_activities && Array.isArray(historyRecord.student_activities)) {
+        const snapshot = historyRecord.student_activities as unknown as StudentActivity[];
+        if (snapshot.length > 0) {
+          const deduped = deduplicateStudentActivities(snapshot);
+          setStudentActivities(deduped);
+          return;
+        }
+      }
+
+      // Fall back to live query for older records that have no snapshot.
+      // Pass historyRecord.started_at as the time anchor so we don't
+      // accidentally use a stale simulation_active.starts_at from a later reset.
+      if (historyRecord.simulation_id) {
+        const activities = await getStudentActivitiesBySimulation(
+          historyRecord.simulation_id,
+          historyRecord.started_at ?? undefined
+        );
+        const deduped = deduplicateStudentActivities(activities);
+        setStudentActivities(deduped);
+      }
     } catch (error) {
       secureLogger.error('Failed to load student activities:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRegenerateFromDatabase = async () => {
+    if (!historyRecord.simulation_id || !historyRecord.started_at) {
+      alert('Cannot regenerate: missing simulation reference or start time on this history record.');
+      return;
+    }
+    setIsRegenerating(true);
+    try {
+      await regenerateDebriefSnapshot(
+        historyRecord.id,
+        historyRecord.simulation_id,
+        historyRecord.started_at
+      );
+      // Re-run load — snapshot is now fresh so it will be picked up
+      await loadStudentActivities();
+    } catch (error) {
+      secureLogger.error('Failed to regenerate debrief snapshot:', error);
+      alert('Failed to refresh report data: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -547,6 +590,15 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   >
                     <Printer className="w-4 h-4" />
                     <span>Print</span>
+                  </button>
+                  <button
+                    onClick={handleRegenerateFromDatabase}
+                    disabled={isRegenerating}
+                    title="Re-query live database and refresh this report"
+                    className="flex items-center space-x-2 px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                    <span>{isRegenerating ? 'Refreshing...' : 'Refresh from DB'}</span>
                   </button>
                   <button
                     onClick={onClose}
@@ -1273,6 +1325,10 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                   <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes}</p>
                 </div>
               )}
+              <div>
+                <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
+                <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>
+              </div>
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
                 <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>
