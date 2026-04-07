@@ -165,7 +165,7 @@ export class SmartSanitizationEngine {
     input: string, 
     classification: ContentClassification, 
     phiMatches: PHIMatch[],
-    context?: any
+    _context?: any
   ): string {
     let sanitized = input;
 

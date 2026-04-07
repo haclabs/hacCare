@@ -365,7 +365,7 @@ const ActivityBar: React.FC<{ label: string; value: number; maxValue: number; co
   );
 };
 
-const ActivitySection: React.FC<{ title: string; items: Record<string, unknown>[]; formatter: (item: Record<string, unknown>) => string[]; color: string }> = ({ title, items, formatter, color }) => {
+const ActivitySection: React.FC<{ title: string; items: unknown[]; formatter: (item: unknown) => string[]; color: string }> = ({ title, items, formatter, color }) => {
   if (!items || items.length === 0) return null;
   
   return (
