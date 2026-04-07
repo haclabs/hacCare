@@ -260,17 +260,22 @@ interface BBITEntry {
 }
 
 /**
- * Get all activities for a specific simulation grouped by student
+ * Get all activities for a specific simulation grouped by student.
+ * @param simulationId  ID of the simulation_active (or simulation_history) record.
+ * @param startTimeOverride  When provided, use this timestamp instead of querying
+ *   simulation_active.starts_at.  Pass historyRecord.started_at when calling from
+ *   the debrief modal so that resets that changed starts_at don't corrupt the results.
  */
 export async function getStudentActivitiesBySimulation(
-  simulationId: string
+  simulationId: string,
+  startTimeOverride?: string
 ): Promise<StudentActivity[]> {
   try {
     secureLogger.debug('🎯 getStudentActivitiesBySimulation called with simulation ID:', simulationId);
     
     // Try to get tenant_id AND start time from simulation_active first, then simulation_history
     let tenantId: string | null = null;
-    let simulationStartTime: string | null = null;
+    let simulationStartTime: string | null = startTimeOverride ?? null;
     
     const { data: activeSim, error: activeError } = await supabase
       .from('simulation_active')
@@ -282,7 +287,10 @@ export async function getStudentActivitiesBySimulation(
 
     if (activeSim?.tenant_id) {
       tenantId = activeSim.tenant_id;
-      simulationStartTime = activeSim.starts_at;
+      // Only use simulation_active.starts_at when no override was supplied
+      if (!startTimeOverride) {
+        simulationStartTime = activeSim.starts_at;
+      }
       secureLogger.debug('✅ Found in simulation_active with tenant_id:', tenantId, 'starts_at:', simulationStartTime);
     } else {
       // Not in active, check history
@@ -297,7 +305,9 @@ export async function getStudentActivitiesBySimulation(
       
       if (historySim?.tenant_id) {
         tenantId = historySim.tenant_id;
-        simulationStartTime = historySim.started_at;
+        if (!startTimeOverride) {
+          simulationStartTime = historySim.started_at;
+        }
         secureLogger.debug('✅ Found in simulation_history with tenant_id:', tenantId, 'started_at:', simulationStartTime);
       }
     }

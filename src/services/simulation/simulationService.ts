@@ -1158,6 +1158,27 @@ export async function unarchiveSimulationHistory(historyId: string): Promise<voi
 }
 
 /**
+ * Re-query student activities from the live database for a completed simulation
+ * and persist the result back into simulation_history.student_activities.
+ * Use this to recover debrief reports whose stored snapshot is stale or wrong.
+ */
+export async function regenerateDebriefSnapshot(
+  historyId: string,
+  simulationId: string,
+  startedAt: string
+): Promise<void> {
+  const { getStudentActivitiesBySimulation } = await import('./studentActivityService');
+  const activities = await getStudentActivitiesBySimulation(simulationId, startedAt);
+
+  const { error } = await supabase
+    .from('simulation_history')
+    .update({ student_activities: activities as any })
+    .eq('id', historyId);
+
+  if (error) throw error;
+}
+
+/**
  * Delete a simulation history record permanently
  */
 export async function deleteSimulationHistory(historyId: string): Promise<void> {
