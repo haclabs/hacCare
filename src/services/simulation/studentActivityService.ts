@@ -97,6 +97,7 @@ interface PatientNoteEntry {
 interface HandoverNoteEntry {
   id: string;
   created_at: string;
+  nursing_notes?: string;
   situation: string;
   background: string;
   assessment: string;
