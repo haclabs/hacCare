@@ -1274,6 +1274,10 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
                 </div>
               )}
               <div>
+                <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
+                <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>
+              </div>
+              <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Situation:</span>
                 <p className="text-gray-900">{item.situation}</p>
               </div>

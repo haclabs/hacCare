@@ -759,6 +759,7 @@ export async function getStudentActivitiesBySimulation(
         student.activities.handoverNotes.push({
           id: note.id,
           created_at: note.created_at,
+          nursing_notes: note.nursing_notes,
           situation: note.situation,
           background: note.background,
           assessment: note.assessment,
