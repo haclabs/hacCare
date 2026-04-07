@@ -5,7 +5,7 @@
  * handover notes following healthcare communication standards.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   X, 
   User, 
@@ -44,6 +44,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
   currentUser
 }) => {
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
   const [formData, setFormData] = useState({
     nursingNotes: '',
     situation: '',
@@ -63,6 +64,8 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
       return;
     }
 
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
     try {
       const { studentName, nursingNotes, ...rest } = formData;
@@ -94,6 +97,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
       alert('Failed to save handover note. Please try again.');
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
