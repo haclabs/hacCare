@@ -52,7 +52,7 @@ export class SmartSanitizationEngine {
    * 🚀 Main smart sanitization function
    * Analyzes content and applies intelligent sanitization
    */
-  async smartSanitize(input: string, context?: {
+  async smartSanitize(input: string, _context?: {
     userRole?: 'doctor' | 'nurse' | 'admin' | 'patient';
     department?: string;
     urgency?: 'low' | 'medium' | 'high';

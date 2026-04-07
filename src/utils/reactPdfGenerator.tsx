@@ -294,7 +294,7 @@ function calculateMetrics(activities: StudentActivity[]) {
     totalDocs += (student.activities.patientNotes?.length || 0) + 
                  (student.activities.handoverNotes?.length || 0);
 
-    student.activities.medications?.forEach((med: Record<string, unknown>) => {
+    student.activities.medications?.forEach((med) => {
       bcmaTotal++;
       if (med.barcode_scanned) bcmaScanned++;
     });
@@ -328,7 +328,7 @@ const formatMedication = (m: Record<string, unknown>) => [
 
 const formatOrder = (o: Record<string, unknown>) => [
   `Type: ${o.order_type || 'N/A'}`,
-  o.order_text || o.order_details?.medication || 'Order details not available'
+  String(o.order_text || (o.order_details as Record<string, unknown>)?.medication || 'Order details not available')
 ];
 
 const formatIO = (io: Record<string, unknown>): string[] => [
@@ -340,6 +340,14 @@ const formatIO = (io: Record<string, unknown>): string[] => [
 const formatNote = (n: Record<string, unknown>): string[] => [
   `${n.note_type}: ${n.subject}`,
   n.content ? String(n.content) : null
+].filter((item): item is string => Boolean(item));
+
+const formatHandoverNote = (n: Record<string, unknown>): string[] => [
+  n.nursing_notes ? `Nursing Notes: ${String(n.nursing_notes)}` : null,
+  n.situation ? `Situation: ${String(n.situation)}` : null,
+  n.background ? `Background: ${String(n.background)}` : null,
+  n.assessment ? `Assessment: ${String(n.assessment)}` : null,
+  n.recommendations ? `Recommendations: ${String(n.recommendations)}` : null,
 ].filter((item): item is string => Boolean(item));
 
 // ===== PDF COMPONENTS =====
@@ -365,7 +373,7 @@ const ActivityBar: React.FC<{ label: string; value: number; maxValue: number; co
   );
 };
 
-const ActivitySection: React.FC<{ title: string; items: Record<string, unknown>[]; formatter: (item: Record<string, unknown>) => string[]; color: string }> = ({ title, items, formatter, color }) => {
+const ActivitySection: React.FC<{ title: string; items: unknown[]; formatter: (item: Record<string, unknown>) => string[]; color: string }> = ({ title, items, formatter, color }) => {
   if (!items || items.length === 0) return null;
   
   return (
@@ -378,9 +386,10 @@ const ActivitySection: React.FC<{ title: string; items: Record<string, unknown>[
       </View>
       
       {items.map((item, idx) => {
-        const lines = formatter(item);
-        const timestamp = item.recorded_at || item.timestamp || item.acknowledged_at || 
-                         item.administered_at || item.event_timestamp || item.created_at;
+        const r = item as Record<string, unknown>;
+        const lines = formatter(r);
+        const timestamp = (r.recorded_at || r.timestamp || r.acknowledged_at || 
+                         r.administered_at || r.event_timestamp || r.created_at) as string | undefined;
         
         return (
           <View key={idx} style={styles.activityItem} wrap={false}>
@@ -516,7 +525,7 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
           <ActivitySection 
             title="Handover Notes" 
             items={student.activities.handoverNotes || []} 
-            formatter={formatNote}
+            formatter={formatHandoverNote}
             color="#f97316"
           />
           
