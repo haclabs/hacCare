@@ -72,7 +72,16 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
 
   // Calculate patient age with date validation
   const birthDate = new Date(patient.date_of_birth);
-  const age = isValid(birthDate) ? new Date().getFullYear() - birthDate.getFullYear() : 'N/A';
+  const age = (() => {
+    if (!isValid(birthDate)) return 'N/A';
+    const today = new Date();
+    let years = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      years--;
+    }
+    return years;
+  })();
 
   // Format admission date with validation
   const admissionDate = new Date(patient.admission_date);

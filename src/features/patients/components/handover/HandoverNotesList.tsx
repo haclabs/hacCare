@@ -256,6 +256,15 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
               {/* Detailed View */}
               {selectedNote?.id === note.id && (
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                  {note.nursing_notes && (
+                    <div className="p-4 rounded-lg bg-teal-50 border border-teal-200">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <FileText className="h-4 w-4 text-teal-600" />
+                        <span className="font-medium text-teal-800">Nursing Notes</span>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-wrap">{note.nursing_notes}</p>
+                    </div>
+                  )}
                   {[
                     { key: 'situation', title: 'Situation', icon: Info, color: 'blue' },
                     { key: 'background', title: 'Background', icon: FileText, color: 'green' },
