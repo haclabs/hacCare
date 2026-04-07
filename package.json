@@ -81,7 +81,7 @@
     "tailwindcss": "^4.1.18",
     "terser": "^5.46.1",
     "ts-prune": "^0.10.3",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "vite": "^7.3.2",
     "vitest": "^3.2.4"
   },
