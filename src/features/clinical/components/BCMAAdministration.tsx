@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { QrCode, Check, X, AlertTriangle, Clock, User, Pill, CheckCircle } from 'lucide-react';
 import { Patient, Medication } from '../../../types';
 import { bcmaService, BCMAValidationResult } from '../../../services/clinical/bcmaService';
@@ -11,6 +12,8 @@ import { BarcodeGenerator } from './BarcodeGenerator';
 import { simulateBarcodeScan } from '../../../lib/barcode/barcodeScanner';
 import { setBCMAActive } from '../../../services/simulation/bcmaState';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { useTenant } from '../../../contexts/TenantContext';
+import { supabase } from '../../../lib/api/supabase';
 
 interface BCMAAdministrationProps {
   patient: Patient;
@@ -31,6 +34,29 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   onAdministrationComplete,
   onCancel
 }) => {
+  const { currentTenant } = useTenant();
+
+  const isSimulationTenant = currentTenant?.tenant_type === 'simulation_active' || !!currentTenant?.is_simulation;
+
+  // Fetch when the current simulation session started so we can ignore
+  // last_administered / next_due values from a previous group's run.
+  // Query by tenant_id (simulation_active.tenant_id = currentTenant.id).
+  const { data: simulationStartsAt } = useQuery({
+    queryKey: ['simulation-starts-at', currentTenant?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('simulation_active')
+        .select('starts_at')
+        .eq('tenant_id', currentTenant!.id)
+        .maybeSingle();
+      // null means simulation exists but hasn't been started yet (pending/reset)
+      // undefined/no row means not found — treat same as null (safe default)
+      return data?.starts_at ?? null;
+    },
+    enabled: isSimulationTenant && !!currentTenant?.id,
+    staleTime: 30 * 1000, // 30 s — refresh after instructor clicks Play
+  });
+
   const [scannedPatientId, setScannedPatientId] = useState<string>('');
   const [scannedMedicationId, setScannedMedicationId] = useState<string>('');
   const [validationResult, setValidationResult] = useState<BCMAValidationResult | null>(null);
@@ -126,12 +152,17 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         secureLogger.debug('🔵 BCMA: Valid medication barcode, proceeding');
         setScannedMedicationId(barcode);
         
-        // Validate both barcodes
+        // Validate both barcodes.
+        // Pass sessionStartedAt so last_administered from a previous group's run is ignored.
         const validation = bcmaService.validateBarcodes(
           scannedPatientId,
           barcode,
           patient,
-          medication
+          medication,
+          // undefined = not a simulation (full timing checks apply)
+          // null      = simulation reset/pending (skip stale timing)
+          // string    = simulation running (skip timing that predates session start)
+          isSimulationTenant ? simulationStartsAt ?? null : undefined
         );
         
         secureLogger.debug('🔵 BCMA: Validation result:', validation);
@@ -145,7 +176,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         alert(`❌ Unknown barcode format: ${barcode}\n\nExpected: Medication barcode (format: M + letter + 5 digits, e.g., MA26325)`);
       }
     }
-  }, [currentStep, scannedPatientId, scannedMedicationId, patient, medication]);
+  }, [currentStep, scannedPatientId, scannedMedicationId, patient, medication, isSimulationTenant, simulationStartsAt]);
 
   // Listen for barcode scans from global barcode dispatcher
   useEffect(() => {
