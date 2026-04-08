@@ -261,10 +261,10 @@ interface BBITEntry {
 
 /**
  * Get all activities for a specific simulation grouped by student.
- * @param simulationId  The simulation_active (or simulation_history) record ID.
- * @param startTimeOverride  When provided, use this timestamp as the time anchor instead of
- *   querying simulation_active.starts_at.  Pass historyRecord.started_at when calling from
- *   the debrief modal so that resets (which NULL or overwrite starts_at) don't corrupt results.
+ * @param simulationId  ID of the simulation_active (or simulation_history) record.
+ * @param startTimeOverride  When provided, use this timestamp instead of querying
+ *   simulation_active.starts_at.  Pass historyRecord.started_at when calling from
+ *   the debrief modal so that resets that changed starts_at don't corrupt the results.
  */
 export async function getStudentActivitiesBySimulation(
   simulationId: string,
@@ -275,7 +275,6 @@ export async function getStudentActivitiesBySimulation(
     
     // Try to get tenant_id AND start time from simulation_active first, then simulation_history
     let tenantId: string | null = null;
-    // External override takes priority — prevents stale starts_at from a later reset polluting results
     let simulationStartTime: string | null = startTimeOverride ?? null;
     
     const { data: activeSim, error: activeError } = await supabase
