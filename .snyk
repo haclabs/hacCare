@@ -1,0 +1,13 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.0
+
+# Ignore rules - add entries here after triaging known issues
+# Example:
+# ignore:
+#   SNYK-JS-PACKAGENAME-000000:
+#     - '*':
+#         reason: Not exploitable in our usage pattern
+#         expires: 2026-12-31T00:00:00.000Z
+
+ignore: {}
+patch: {}

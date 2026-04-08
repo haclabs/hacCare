@@ -293,12 +293,15 @@ export async function getStudentActivitiesBySimulation(
       }
       secureLogger.debug('✅ Found in simulation_active with tenant_id:', tenantId, 'starts_at:', simulationStartTime);
     } else {
-      // Not in active, check history
+      // Not in active, check history.
+      // NOTE: simulation_history.id is its own PK; the FK back to simulation_active is simulation_id.
       secureLogger.debug('🔍 Not in active, checking simulation_history...');
       const { data: historySim, error: historyError } = await supabase
         .from('simulation_history')
         .select('tenant_id, started_at')
-        .eq('id', simulationId)
+        .eq('simulation_id', simulationId)
+        .order('completed_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       
       secureLogger.debug('📜 History simulation query result:', { historySim, historyError });

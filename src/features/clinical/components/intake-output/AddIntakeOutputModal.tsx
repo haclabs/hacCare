@@ -85,6 +85,11 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
     e.preventDefault();
     
     // Validation
+    if (!formData.student_name?.trim()) {
+      setError('Please enter your student name before submitting.');
+      return;
+    }
+
     if (!formData.amount_ml || parseFloat(formData.amount_ml) <= 0) {
       setError('Please enter a valid amount');
       return;

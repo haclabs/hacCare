@@ -1319,16 +1319,6 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
             <div className="mt-2 space-y-2">
-              {item.nursing_notes && (
-                <div>
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
-                  <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes}</p>
-                </div>
-              )}
-              <div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
-                <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>
-              </div>
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
                 <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>

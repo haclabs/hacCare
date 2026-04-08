@@ -9,7 +9,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2, BookOpen } from 'lucide-react';
+import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2, BookOpen, UserCheck } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import { supabase } from '../../../lib/api/supabase';
@@ -202,6 +202,8 @@ const SimulationPortal: React.FC = () => {
     }
   }, [user, authLoading, navigate, loadAssignments]);
 
+  const [pendingAssignment, setPendingAssignment] = useState<SimulationAssignment | null>(null);
+
   const enterSimulation = async (tenantId: string, simulationName: string) => {
     try {
       setEnteringSimulation(true);
@@ -219,7 +221,19 @@ const SimulationPortal: React.FC = () => {
   };
 
   const handleJoinSimulation = (assignment: SimulationAssignment) => {
-    enterSimulation(assignment.simulation.tenant_id, assignment.simulation.name);
+    // Show student name reminder before entering — instructors skip it
+    if (profile?.role === 'nurse' || profile?.simulation_only) {
+      setPendingAssignment(assignment);
+    } else {
+      enterSimulation(assignment.simulation.tenant_id, assignment.simulation.name);
+    }
+  };
+
+  const handleConfirmEnter = () => {
+    if (pendingAssignment) {
+      setPendingAssignment(null);
+      enterSimulation(pendingAssignment.simulation.tenant_id, pendingAssignment.simulation.name);
+    }
   };
 
   const handleLaunchActiveSimulation = () => {
@@ -252,7 +266,6 @@ const SimulationPortal: React.FC = () => {
     );
   }
 
-  // Always show selection screen - no auto-routing for anyone
   // Check if user can manage simulations (instructors, admins, coordinators, and super admins)
   const isInstructor = profile?.role === 'admin' || profile?.role === 'instructor' || profile?.role === 'coordinator' || profile?.role === 'super_admin';
 
@@ -446,6 +459,52 @@ const SimulationPortal: React.FC = () => {
       {/* Student Quick Intro Modal */}
       {showQuickIntro && (
         <StudentQuickIntro onClose={() => setShowQuickIntro(false)} />
+      )}
+
+      {/* Student Name Reminder Modal */}
+      {pendingAssignment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <UserCheck className="h-8 w-8 text-yellow-600" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                Before You Begin
+              </h3>
+              <p className="text-gray-600 text-center mb-6">
+                Entering <span className="font-semibold text-gray-900">{pendingAssignment.simulation.name}</span>
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p className="text-sm font-semibold text-yellow-900 mb-2">
+                  ⚠️ Remember to enter your Student Name
+                </p>
+                <p className="text-sm text-yellow-800">
+                  Every form has a <span className="font-semibold">Student Name</span> field at the bottom.
+                  You <span className="font-semibold">must fill it in</span> before saving — otherwise your
+                  work will not be recorded in the debrief report.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPendingAssignment(null)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmEnter}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <span>👍</span>
+                  Understood — Enter Simulation
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
