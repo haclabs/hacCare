@@ -434,15 +434,22 @@ export const BBITTab: React.FC<BBITTabProps> = ({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Student Name</label>
-                  <input
-                    type="text"
-                    placeholder={currentUser?.name ?? ''}
-                    value={form.student_name ?? ''}
-                    onChange={e => setField('student_name', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
+                <div className="col-span-2">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-yellow-900 mb-2">
+                      Student Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={form.student_name ?? ''}
+                      onChange={e => setField('student_name', e.target.value)}
+                      className="w-full border border-yellow-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    />
+                    <p className="mt-2 text-xs text-yellow-700">
+                      By entering your name, you verify you documented this BBIT entry.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -836,7 +843,13 @@ export const BBITTab: React.FC<BBITTabProps> = ({
                 Cancel
               </button>
               <button
-                onClick={() => saveEntry()}
+                onClick={() => {
+                  if (!form.student_name?.trim()) {
+                    alert('Please enter your student name before submitting.');
+                    return;
+                  }
+                  saveEntry();
+                }}
                 disabled={isSaving}
                 className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60 transition-colors flex items-center"
               >

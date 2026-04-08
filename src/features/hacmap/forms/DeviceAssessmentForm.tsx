@@ -44,6 +44,12 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!studentName.trim()) {
+      alert('Please enter your student name before submitting.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -226,8 +232,8 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
       </div>
 
       {/* Student Name Verification */}
-      <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-md">
-        <label htmlFor="studentName" className="block text-sm font-medium text-gray-900 mb-2">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <label htmlFor="studentName" className="block text-sm font-medium text-yellow-900 mb-2">
           Student Name <span className="text-red-500">*</span>
         </label>
         <input
@@ -236,10 +242,10 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
           value={studentName}
           onChange={(e) => setStudentName(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
           placeholder="Enter your full name"
         />
-        <p className="mt-2 text-xs text-gray-700 font-medium">
+        <p className="mt-2 text-xs text-yellow-700">
           By entering your name, you verify this assessment is accurate.
         </p>
       </div>

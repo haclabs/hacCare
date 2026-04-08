@@ -261,10 +261,10 @@ interface BBITEntry {
 
 /**
  * Get all activities for a specific simulation grouped by student.
- * @param simulationId  ID of the simulation_active (or simulation_history) record.
- * @param startTimeOverride  When provided, use this timestamp instead of querying
- *   simulation_active.starts_at.  Pass historyRecord.started_at when calling from
- *   the debrief modal so that resets that changed starts_at don't corrupt the results.
+ * @param simulationId  The simulation_active (or simulation_history) record ID.
+ * @param startTimeOverride  When provided, use this timestamp as the time anchor instead of
+ *   querying simulation_active.starts_at.  Pass historyRecord.started_at when calling from
+ *   the debrief modal so that resets (which NULL or overwrite starts_at) don't corrupt results.
  */
 export async function getStudentActivitiesBySimulation(
   simulationId: string,
@@ -275,6 +275,7 @@ export async function getStudentActivitiesBySimulation(
     
     // Try to get tenant_id AND start time from simulation_active first, then simulation_history
     let tenantId: string | null = null;
+    // External override takes priority — prevents stale starts_at from a later reset polluting results
     let simulationStartTime: string | null = startTimeOverride ?? null;
     
     const { data: activeSim, error: activeError } = await supabase
@@ -293,12 +294,15 @@ export async function getStudentActivitiesBySimulation(
       }
       secureLogger.debug('✅ Found in simulation_active with tenant_id:', tenantId, 'starts_at:', simulationStartTime);
     } else {
-      // Not in active, check history
+      // Not in active, check history.
+      // NOTE: simulation_history.id is its own PK; the FK back to simulation_active is simulation_id.
       secureLogger.debug('🔍 Not in active, checking simulation_history...');
       const { data: historySim, error: historyError } = await supabase
         .from('simulation_history')
         .select('tenant_id, started_at')
-        .eq('id', simulationId)
+        .eq('simulation_id', simulationId)
+        .order('completed_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       
       secureLogger.debug('📜 History simulation query result:', { historySim, historyError });

@@ -1,5 +1,4 @@
 import { supabase } from '../../lib/api/supabase';
-import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
  * SYSTEM LOGGING SERVICE
@@ -71,14 +70,14 @@ class SystemLogger {
           .maybeSingle();
         
         if (error) {
-          secureLogger.warn('System logger: Could not fetch user tenant_id:', error.message);
+          console.warn('System logger: Could not fetch user tenant_id:', error.message);
           return;
         }
         
         this.tenant_id = tenantUser?.tenant_id;
       }
     } catch (error) {
-      secureLogger.error('Failed to initialize system logger user context:', error);
+      console.error('Failed to initialize system logger user context:', error);
     }
   }
 
@@ -170,7 +169,14 @@ class SystemLogger {
           security: '🔒'
         }[entry.log_level];
 
-        secureLogger.debug(`${emoji} [${entry.log_type}]`, entry.action || entry.error_message, entry.metadata);
+        console.log(`${emoji} [${entry.log_type}]`, entry.action || entry.error_message, entry.metadata);
+      }
+
+      // Only persist to the database for significant events.
+      // Skipping debug/info prevents high-frequency navigation and API
+      // diagnostic calls from generating excessive disk IO on Supabase.
+      if (entry.log_level === 'debug' || entry.log_level === 'info') {
+        return;
       }
 
       // Write to database
@@ -189,10 +195,10 @@ class SystemLogger {
         });
 
       if (error) {
-        secureLogger.error('Failed to write system log:', error);
+        console.error('Failed to write system log:', error);
       }
     } catch (error) {
-      secureLogger.error('System logger error:', error);
+      console.error('System logger error:', error);
     }
   }
 

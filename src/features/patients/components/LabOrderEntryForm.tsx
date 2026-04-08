@@ -84,6 +84,11 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
       return;
     }
 
+    if (!formData.student_name?.trim()) {
+      setError('Please enter your student name before submitting.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
