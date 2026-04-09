@@ -80,7 +80,7 @@ function fromRecord(record: NewbornAssessment): Omit<NewbornAssessmentInput, nev
     physical_observations: (record.physical_observations as PhysicalObservations) ?? {},
     completed_by: record.completed_by ?? '',
     completed_initials: record.completed_initials ?? '',
-    student_name: record.student_name ?? '',
+    student_name: '',
     recorded_at: record.recorded_at,
   };
 }
@@ -111,7 +111,6 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
     } else if (currentUser) {
       setForm(prev => ({
         ...prev,
-        student_name: currentUser.name,
         completed_by: currentUser.name,
       }));
     }
@@ -270,17 +269,7 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
       {/* ── Section 4: Signature ─────────────────────────────────────────── */}
       <section className="bg-white rounded-lg border border-gray-200 p-5">
         <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Completed By</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Student Name</label>
-            <input
-              type="text"
-              value={form.student_name ?? ''}
-              onChange={e => handleChange('student_name', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              placeholder="Full name"
-            />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Nurse / Assessor Name</label>
             <input
@@ -302,6 +291,22 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
               placeholder="RN"
             />
           </div>
+        </div>
+        {/* Student name - highlighted verification field */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <label className="block text-sm font-medium text-yellow-900 mb-2">
+            Student Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.student_name ?? ''}
+            onChange={e => handleChange('student_name', e.target.value)}
+            className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+            placeholder="e.g. Jane Smith"
+          />
+          <p className="text-xs text-yellow-700 mt-2">
+            By entering your name, you verify that all information above is correct and you recorded this assessment.
+          </p>
         </div>
       </section>
 

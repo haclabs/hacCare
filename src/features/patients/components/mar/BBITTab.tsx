@@ -190,7 +190,6 @@ const emptyForm = (): BBITEntryInput => ({
 // ─── Component ────────────────────────────────────────────────────────────────
 export const BBITTab: React.FC<BBITTabProps> = ({
   patient,
-  currentUser,
   externalShowForm,
   onExternalFormClose,
 }) => {
@@ -223,7 +222,7 @@ export const BBITTab: React.FC<BBITTabProps> = ({
   // ── Mutation ───────────────────────────────────────────────────────────────
   const { mutate: saveEntry, isPending: isSaving, error: saveError } = useMutation({
     mutationFn: () =>
-      addBBITEntry(patient.id, tenantId, form, form.student_name || currentUser?.name),
+      addBBITEntry(patient.id, tenantId, form, form.student_name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bbit_entries', patient.id, tenantId] });
       setShowForm(false);
@@ -433,23 +432,6 @@ export const BBITTab: React.FC<BBITTabProps> = ({
                     onChange={e => setField('time_label', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
-                </div>
-                <div className="col-span-2">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-yellow-900 mb-2">
-                      Student Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={form.student_name ?? ''}
-                      onChange={e => setField('student_name', e.target.value)}
-                      className="w-full border border-yellow-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                    />
-                    <p className="mt-2 text-xs text-yellow-700">
-                      By entering your name, you verify you documented this BBIT entry.
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -826,6 +808,23 @@ export const BBITTab: React.FC<BBITTabProps> = ({
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </section>
+
+              {/* Student Name Verification */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <label className="block text-sm font-medium text-yellow-900 mb-2">
+                  Student Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Jane Smith"
+                  value={form.student_name ?? ''}
+                  onChange={e => setField('student_name', e.target.value)}
+                  className="w-full border border-yellow-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                />
+                <p className="mt-2 text-xs text-yellow-700">
+                  By entering your name, you verify you documented this BBIT entry.
+                </p>
+              </div>
 
               {saveError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">

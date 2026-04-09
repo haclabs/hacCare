@@ -14,7 +14,8 @@ import {
   FileCheck, 
   MapPin, 
   Droplets, 
-  MessageSquare 
+  MessageSquare,
+  ClipboardList
 } from 'lucide-react';
 
 export interface PatientActionBarProps {
@@ -75,7 +76,7 @@ export const PatientActionBar: React.FC<PatientActionBarProps> = ({
           </button>
         )}
 
-        {/* Vitals */}
+        {/* Vitals & Assessments */}
         {onVitalsClick && (
           <button 
             onClick={onVitalsClick}
@@ -85,8 +86,11 @@ export const PatientActionBar: React.FC<PatientActionBarProps> = ({
                 : 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
             }`}
           >
-            <Activity className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-600">Vitals</span>
+            <div className="relative flex items-center justify-center">
+              <Activity className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
+              <ClipboardList className="h-3 w-3 text-purple-400 absolute -bottom-1 -right-2 group-hover:scale-110 transition-transform" />
+            </div>
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-600 whitespace-nowrap">Vitals &amp; Assess.</span>
             {vitalsCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                 {vitalsCount}

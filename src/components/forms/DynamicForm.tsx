@@ -440,7 +440,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
               value={formData.studentName || ''}
               onChange={(e) => handleFieldChange('studentName', e.target.value)}
               className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-              placeholder="Enter your full name"
+              placeholder="e.g. Jane Smith"
               required
               disabled={readOnly}
             />

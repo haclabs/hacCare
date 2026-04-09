@@ -4,7 +4,7 @@ import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Bui
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
-import logo from '../../images/logo.png';
+const logo = '/images/logo.svg';
 
 /**
  * Sidebar Navigation Component
@@ -114,9 +114,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
     { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
     { id: 'backup-management', label: 'Backups', icon: Database, color: 'text-emerald-600' },
-    { id: 'documentation', label: 'Documentation', icon: BookOpen, color: 'text-orange-600' },
-    { id: 'changelog', label: 'Changelog', icon: FileText, color: 'text-teal-600' },
   ] : [];
+
+  /**
+   * Resource items - available to all authenticated users
+   */
+  const resourceItems = [
+    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
+    { id: 'documentation', label: 'Help & Docs', icon: BookOpen, color: 'text-orange-600' },
+    { id: 'changelog', label: "What's New", icon: FileText, color: 'text-teal-600' },
+  ];
 
   /**
    * User dropdown items
@@ -146,8 +153,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           <img 
             src={logo} 
             alt="HacCare Logo" 
-            className="h-auto w-auto transition-all duration-300"
-            style={{ height: '70px' }}
+            className="transition-all duration-300"
+            style={{ width: '100%', height: 'auto', maxWidth: '190px' }}
           />
         )}
       </div>
@@ -401,6 +408,59 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
             </ul>
           </div>
         )}
+
+        {/* Resources Section - Available to all users */}
+        <div className="mb-4">
+          <div className="my-4 border-t border-gray-200 dark:border-gray-800" />
+          {!isCollapsed && (
+            <div className="px-3 mb-3">
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide dark:text-gray-400">
+                Resources
+              </span>
+            </div>
+          )}
+          <ul className="space-y-1">
+            {resourceItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onTabChange(item.id);
+                      navigate('/app', { replace: false });
+                    }}
+                    data-active-item={isActive}
+                    title={isCollapsed ? item.label : undefined}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group relative ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 shadow-sm dark:bg-blue-900/30 dark:text-blue-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                    } ${
+                      isCollapsed ? 'justify-center' : ''
+                    }`}
+                  >
+                    <Icon className={`h-5 w-5 transition-transform duration-200 flex-shrink-0 ${
+                      isActive
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : item.color + ' dark:text-gray-400 group-hover:scale-110'
+                    }`} />
+                    {!isCollapsed && (
+                      <span className="text-[15px] font-medium">{item.label}</span>
+                    )}
+                    {isCollapsed && (
+                      <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 shadow-lg">
+                        {item.label}
+                        <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
+                      </div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
         {/* User Profile Dropdown */}
         <div className="mt-auto pt-5 border-t border-gray-200 dark:border-gray-800">
