@@ -31,7 +31,8 @@ import {
   FlaskConical,
   MapPin,
   Droplets,
-  BookOpen
+  BookOpen,
+  ClipboardList
 } from 'lucide-react';
 import { VitalsModule } from '../features/clinical/components/vitals';
 import { MARModule } from '../features/clinical/components/mar';
@@ -525,7 +526,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
             
             <div class="record-container">
               <div class="hospital-header">
-                <img src="/images/logo.png" alt="HacCare Logo" class="logo-img" />
+                <img src="/images/logo.svg" alt="HacCare Logo" class="logo-img" />
                 <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
                 <div class="hospital-address">
                   1234 Healthcare Drive • Medical City, MC 12345<br>
@@ -1272,8 +1273,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   const moduleConfigs: ModuleConfig[] = [
     {
       id: 'vitals',
-      title: 'Vital Signs',
-      description: 'Monitor and record patient vital signs with real-time tracking',
+      title: 'Vitals & Assessments',
+      description: 'Vital signs monitoring, neuro/newborn assessments, and clinical documentation forms',
       icon: Activity,
       color: 'cyan', // Unique: Light blue for vitals
       badge: patient.vitals?.length?.toString() || '0'
@@ -1792,13 +1793,16 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600">Chart</span>
               </button>
 
-              {/* Vitals */}
+              {/* Vitals & Assessments */}
               <button 
                 onClick={() => setActiveModule('vitals')}
                 className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 group relative"
               >
-                <Activity className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-600">Vitals</span>
+                <div className="relative">
+                  <Activity className="h-5 w-5 text-purple-600 group-hover:scale-110 transition-transform" />
+                  <ClipboardList className="h-3 w-3 text-purple-500 absolute -bottom-1 -right-2" />
+                </div>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-600 whitespace-nowrap">Vitals & Assess.</span>
                 {patient.vitals && patient.vitals.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                     {patient.vitals.length}
@@ -1958,6 +1962,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                     handlePatientUpdate({ vitals });
                     setLastUpdated(new Date());
                   }}
+                  onAssessmentSave={handleAssessmentSave}
                   currentUser={currentUser}
                   onChartClick={handlePrintRecord}
                   onVitalsClick={() => setActiveModule('vitals')}

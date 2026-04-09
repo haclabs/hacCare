@@ -7,6 +7,61 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.4.1] - 2026-04-09 - DEBRIEF PDF OVERHAUL
+===============================================================================
+
+IMPROVEMENTS
+-----------------
+
+* Debrief Report - Download PDF & Print rebuilt on React-PDF renderer
+  - PROBLEM: Download PDF used html2canvas screenshot → jsPDF (blurry, unscalable);
+    Print opened a DOM-clone window with ~270 lines of hand-coded Tailwind CSS
+    reimplementations that inevitably missed styles and broke layouts
+  - CHANGES:
+    * Both "Download PDF" and "Print / View PDF" now use @react-pdf/renderer,
+      the same library already used for email attachments
+    * Print opens the generated PDF in a new browser tab for native print dialog
+    * Download saves a properly typeset PDF file
+    * Email, Download, and Print all share the same buildPdfData() helper —
+      guaranteed identical content across all three outputs
+    * Removed ~270 lines of dead code (legacy DOM-clone print function +
+      manually re-implemented Tailwind CSS utility classes)
+
+* Debrief PDF - Full activity coverage
+  - PROBLEM: reactPdfGenerator only rendered 6 activity types; newer types
+    (neuro, BBIT, newborn, bowel, labs, wound/device assessments, etc.)
+    were silently omitted from all PDF outputs including email
+  - CHANGES: Added formatters and student page sections for all activity types:
+    * Lab Orders & Lab Results Acknowledged
+    * Neurological Assessments (LOC, GCS, orientation, pupils, limb strength)
+    * Wound Assessments (site condition, appearance, drainage, dressing, treatment)
+    * Device Assessments (full assessment_data JSONB fields expanded — see below)
+    * Bowel Assessments (continence, stool characteristics)
+    * BBIT / Blood Sugar & Insulin Tracking (glucose, basal, bolus, correction)
+    * Newborn Assessments (weight, length, HC, APGAR, Vitamin K, erythromycin)
+    * Advanced Directives (DNR, living will, proxy, organ donation)
+    * HacMap Device & Wound placement records
+    * Handover Notes labelled as SBAR
+
+* Debrief PDF - Device assessment detail fields fully expanded
+  - PROBLEM: Device assessments in the PDF only showed device type, status,
+    output, and notes — the rich JSONB assessment_data (Plan, Urine Odor,
+    Tube Size Fr, Site Findings, Catheter Secure, Patient Comfort, etc.)
+    was hidden behind a "print:hidden" toggle in the modal and never included
+  - CHANGES:
+    * formatDeviceAssessment() now iterates all assessment_data keys
+    * snake_case keys converted to Title Case labels
+    * Arrays joined with commas, booleans rendered as Yes/No, nulls skipped
+    * Matches exactly what DeviceAssessmentViewer.tsx renders in-app
+    * Applies to all device types (Foley, IV, NG, feeding tube, ostomy, etc.)
+
+* Debrief PDF - Optional vital signs safety fix
+  - PROBLEM: Vital sign formatter produced "BP: null/null mmHg" for patients
+    where blood pressure was not recorded (e.g. newborns)
+  - FIX: Each vital field now conditionally included; empty result falls back
+    to "No vital values recorded"
+
+===============================================================================
 [5.4.0] - 2026-03-25 - HACMAP EXPANSION + NEURO ASSESSMENT + SIMULATION WIRING
 ===============================================================================
 

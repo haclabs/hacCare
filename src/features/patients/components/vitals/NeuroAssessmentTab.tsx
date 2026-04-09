@@ -412,27 +412,15 @@ export const NeuroAssessmentTab: React.FC<NeuroAssessmentTabProps> = ({
             </div>
 
             <div className="px-6 py-5 space-y-6">
-              {/* Date/time + student */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date &amp; Time</label>
-                  <input
-                    type="datetime-local"
-                    value={form.recorded_at as string ?? ''}
-                    onChange={e => setField('recorded_at', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Student Name</label>
-                  <input
-                    type="text"
-                    placeholder={currentUser?.name ?? ''}
-                    value={form.student_name ?? ''}
-                    onChange={e => setField('student_name', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
+              {/* Date/time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date &amp; Time</label>
+                <input
+                  type="datetime-local"
+                  value={form.recorded_at as string ?? ''}
+                  onChange={e => setField('recorded_at', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
               </div>
 
               {/* Consciousness */}
@@ -673,6 +661,23 @@ export const NeuroAssessmentTab: React.FC<NeuroAssessmentTabProps> = ({
                 </div>
               </section>
 
+              {/* Student Name - required verification */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <label className="block text-sm font-medium text-yellow-900 mb-2">
+                  Student Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.student_name ?? ''}
+                  onChange={e => setField('student_name', e.target.value)}
+                  className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  placeholder="e.g. Jane Smith"
+                />
+                <p className="text-xs text-yellow-700 mt-2">
+                  By entering your name, you verify that all information above is correct and you recorded this assessment.
+                </p>
+              </div>
+
               {/* Error */}
               {saveError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -691,7 +696,7 @@ export const NeuroAssessmentTab: React.FC<NeuroAssessmentTabProps> = ({
               </button>
               <button
                 onClick={() => saveAssessment()}
-                disabled={isSaving}
+                disabled={isSaving || !form.student_name?.trim()}
                 className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-60 transition-colors flex items-center"
               >
                 {isSaving && (
