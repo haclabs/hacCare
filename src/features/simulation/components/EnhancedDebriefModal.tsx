@@ -12,8 +12,7 @@ import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, 
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
 import { regenerateDebriefSnapshot } from '../../../services/simulation/simulationService';
-import { exportDebriefToPdf } from '../../../services/export/debriefPdfExport';
-import { generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGenerator';
+import { generateStudentActivityPDF, generateStudentActivityPDFBlob, generateStudentActivityPDFForEmail } from '../../../utils/reactPdfGenerator';
 import { sendDebriefEmail } from '../../../services/simulation/debriefEmailService';
 import { EmailDebriefModal } from './EmailDebriefModal';
 import type { Database } from '../../../types/supabase';
@@ -236,16 +235,18 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
+  const buildPdfData = () => ({
+    simulationName: historyRecord.name,
+    simulationDate: format(new Date(historyRecord.started_at || historyRecord.created_at || new Date()), 'PPP'),
+    duration: calculateDuration(),
+    studentActivities,
+  });
+
   const handleExportPdf = async () => {
     if (isExporting) return;
-    
     setIsExporting(true);
     try {
-      await exportDebriefToPdf('debrief-content', {
-        filename: `${historyRecord.name.replace(/[^a-z0-9]/gi, '_')}_Debrief_${format(new Date(), 'yyyy-MM-dd')}.pdf`,
-        title: `${historyRecord.name} - Clinical Simulation Debrief`,
-        quality: 2
-      });
+      await generateStudentActivityPDF(buildPdfData());
     } catch (error) {
       secureLogger.error('PDF export failed:', error);
     } finally {
@@ -253,267 +254,26 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     }
   };
 
-  const handlePrint = () => {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    // Get the printable content - clone it to manipulate
-    const printContent = document.querySelector('.print-content');
-    if (!printContent) return;
-    
-    const clonedContent = printContent.cloneNode(true) as HTMLElement;
-    
-    // Remove the student filter section
-    const filterSection = clonedContent.querySelector('.print\\:hidden');
-    if (filterSection) {
-      filterSection.remove();
+  const handlePrint = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const blob = await generateStudentActivityPDFBlob(buildPdfData());
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // Revoke after delay to allow the browser to load the PDF
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      secureLogger.error('Print PDF failed:', error);
+    } finally {
+      setIsExporting(false);
     }
-    
-    // Force all sections to be expanded by removing collapse logic
-    const studentSections = clonedContent.querySelectorAll('.student-section');
-    studentSections.forEach(section => {
-      // Find all activity sections and force them to be expanded
-      const activitySections = section.querySelectorAll('[class*="space-y-3"]');
-      activitySections.forEach(activitySection => {
-        const parent = activitySection.parentElement;
-        if (parent) {
-          parent.style.display = 'block';
-        }
-      });
-    });
-
-    // Write the content to the new window
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Clinical Simulation Debrief Report - ${historyRecord.name}</title>
-          <meta charset="UTF-8">
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: system-ui, -apple-system, sans-serif;
-              line-height: 1.5;
-              color: #1f2937;
-            }
-            
-            @page {
-              size: letter;
-              margin: 0.5in;
-            }
-            
-            /* Preserve all colors */
-            * {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-              color-adjust: exact !important;
-            }
-            
-            /* Import Tailwind-like utilities */
-            .bg-white { background-color: white; }
-            .bg-gray-50 { background-color: #f9fafb; }
-            .bg-gray-100 { background-color: #f3f4f6; }
-            .bg-gray-800 { background-color: #1f2937; }
-            .bg-gray-900 { background-color: #111827; }
-            
-            .bg-blue-50 { background-color: #eff6ff; }
-            .bg-blue-100 { background-color: #dbeafe; }
-            .bg-blue-500 { background-color: #3b82f6; }
-            .bg-purple-50 { background-color: #faf5ff; }
-            .bg-purple-100 { background-color: #f3e8ff; }
-            .bg-green-50 { background-color: #f0fdf4; }
-            .bg-green-100 { background-color: #dcfce7; }
-            .bg-green-500 { background-color: #22c55e; }
-            .bg-amber-50 { background-color: #fffbeb; }
-            .bg-amber-100 { background-color: #fef3c7; }
-            .bg-red-100 { background-color: #fee2e2; }
-            .bg-orange-100 { background-color: #ffedd5; }
-            
-            .text-white { color: white; }
-            .text-gray-500 { color: #6b7280; }
-            .text-gray-600 { color: #4b5563; }
-            .text-gray-700 { color: #374151; }
-            .text-gray-900 { color: #111827; }
-            .text-blue-600 { color: #2563eb; }
-            .text-blue-700 { color: #1d4ed8; }
-            .text-blue-900 { color: #1e3a8a; }
-            .text-purple-600 { color: #9333ea; }
-            .text-purple-700 { color: #7e22ce; }
-            .text-purple-900 { color: #581c87; }
-            .text-green-600 { color: #16a34a; }
-            .text-green-700 { color: #15803d; }
-            .text-green-900 { color: #14532d; }
-            .text-amber-600 { color: #d97706; }
-            .text-amber-700 { color: #b45309; }
-            .text-amber-900 { color: #78350f; }
-            .text-red-700 { color: #b91c1c; }
-            
-            .border { border-width: 1px; }
-            .border-gray-200 { border-color: #e5e7eb; }
-            .border-t { border-top-width: 1px; }
-            .border-b { border-bottom-width: 1px; }
-            
-            .rounded-lg { border-radius: 0.5rem; }
-            .rounded-xl { border-radius: 0.75rem; }
-            .rounded-full { border-radius: 9999px; }
-            
-            .p-2 { padding: 0.5rem; }
-            .p-4 { padding: 1rem; }
-            .p-5 { padding: 1.25rem; }
-            .p-6 { padding: 1.5rem; }
-            .p-8 { padding: 2rem; }
-            .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-            .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-            .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-            .py-0\\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
-            
-            .mb-1 { margin-bottom: 0.25rem; }
-            .mb-2 { margin-bottom: 0.5rem; }
-            .mb-3 { margin-bottom: 0.75rem; }
-            .mb-4 { margin-bottom: 1rem; }
-            .mb-6 { margin-bottom: 1.5rem; }
-            .mt-1 { margin-top: 0.25rem; }
-            .mt-2 { margin-top: 0.5rem; }
-            .mt-3 { margin-top: 0.75rem; }
-            .ml-1 { margin-left: 0.25rem; }
-            .mr-2 { margin-right: 0.5rem; }
-            
-            .grid { display: grid; }
-            .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-            .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-            .gap-2 { gap: 0.5rem; }
-            .gap-3 { gap: 0.75rem; }
-            .gap-4 { gap: 1rem; }
-            .gap-6 { gap: 1.5rem; }
-            .gap-8 { gap: 2rem; }
-            
-            .flex { display: flex; }
-            .items-center { align-items: center; }
-            .justify-between { justify-content: space-between; }
-            .space-x-2 > * + * { margin-left: 0.5rem; }
-            .space-x-3 > * + * { margin-left: 0.75rem; }
-            .space-x-4 > * + * { margin-left: 1rem; }
-            .space-y-2 > * + * { margin-top: 0.5rem; }
-            .space-y-3 > * + * { margin-top: 0.75rem; }
-            .space-y-8 > * + * { margin-top: 2rem; }
-            
-            .text-xs { font-size: 0.75rem; line-height: 1rem; }
-            .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-            .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-            .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-            .text-2xl { font-size: 1.5rem; line-height: 2rem; }
-            .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-            
-            .font-medium { font-weight: 500; }
-            .font-semibold { font-weight: 600; }
-            .font-bold { font-weight: 700; }
-            
-            .uppercase { text-transform: uppercase; }
-            .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            
-            .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-            
-            .bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }
-            .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
-            .from-blue-50 { --tw-gradient-from: #eff6ff; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(239 246 255 / 0)); }
-            .to-blue-100 { --tw-gradient-to: #dbeafe; }
-            .from-purple-50 { --tw-gradient-from: #faf5ff; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(250 245 255 / 0)); }
-            .to-purple-100 { --tw-gradient-to: #f3e8ff; }
-            .from-green-50 { --tw-gradient-from: #f0fdf4; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(240 253 244 / 0)); }
-            .to-green-100 { --tw-gradient-to: #dcfce7; }
-            .from-amber-50 { --tw-gradient-from: #fffbeb; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(255 251 235 / 0)); }
-            .to-amber-100 { --tw-gradient-to: #fef3c7; }
-            .from-gray-50 { --tw-gradient-from: #f9fafb; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(249 250 251 / 0)); }
-            .from-gray-800 { --tw-gradient-from: #1f2937; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(31 41 55 / 0)); }
-            .to-gray-900 { --tw-gradient-to: #111827; }
-            
-            /* Page breaks */
-            .student-section {
-              page-break-inside: avoid;
-              break-inside: avoid;
-              margin-bottom: 1rem;
-            }
-            
-            .activity-item {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-            
-            /* Specific layout fixes */
-            .w-12 { width: 3rem; }
-            .h-12 { height: 3rem; }
-            .w-10 { width: 2.5rem; }
-            .h-10 { height: 2.5rem; }
-            .w-5 { width: 1.25rem; }
-            .h-5 { height: 1.25rem; }
-            .w-4 { width: 1rem; }
-            .h-4 { height: 1rem; }
-            
-            .text-center { text-align: center; }
-            .leading-relaxed { line-height: 1.625; }
-            
-            .overflow-hidden { overflow: hidden; }
-            .col-span-2 { grid-column: span 2 / span 2; }
-            
-            /* Force all activity sections to be visible */
-            .space-y-3 { display: block !important; }
-          </style>
-          <script>
-            // Force expand all sections when document loads
-            window.onload = function() {
-              // Remove all hidden sections
-              document.querySelectorAll('[style*="display: none"]').forEach(el => {
-                el.style.display = 'block';
-              });
-              
-              // Ensure all activity items are visible
-              document.querySelectorAll('.space-y-3').forEach(section => {
-                section.style.display = 'block';
-                section.style.visibility = 'visible';
-                if (section.parentElement) {
-                  section.parentElement.style.display = 'block';
-                }
-              });
-            };
-          </script>
-        </head>
-        <body>
-          ${clonedContent.innerHTML}
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    
-    // Wait for content to load, then print
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 250);
-    };
   };
 
   const handleEmailSend = async (emails: string[]) => {
     try {
-      // Calculate duration for PDF
-      const duration = calculateDuration();
-
-      // Generate PDF for email
-      const pdfData = generateStudentActivityPDFForEmail({
-        simulationName: historyRecord.name,
-        simulationDate: format(new Date(historyRecord.started_at), 'PPP'),
-        duration,
-        studentActivities: studentActivities,
-      });
+      // Generate PDF for email using the same data as download/print
+      const pdfData = await generateStudentActivityPDFForEmail(buildPdfData());
 
       // Send email
       const response = await sendDebriefEmail({
@@ -586,10 +346,11 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   </button>
                   <button
                     onClick={handlePrint}
-                    className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={isExporting}
+                    className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Printer className="w-4 h-4" />
-                    <span>Print</span>
+                    <span>{isExporting ? 'Generating PDF...' : 'Print / View PDF'}</span>
                   </button>
                   <button
                     onClick={handleRegenerateFromDatabase}

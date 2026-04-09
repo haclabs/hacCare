@@ -316,23 +316,37 @@ function calculateMetrics(activities: StudentActivity[]) {
 
 // ===== FORMATTERS =====
 
-const formatVital = (v: Record<string, unknown>) => [
-  `BP: ${v.blood_pressure_systolic}/${v.blood_pressure_diastolic} mmHg | HR: ${v.heart_rate} bpm | RR: ${v.respiratory_rate}/min`,
-  `Temp: ${v.temperature}°C | SpO₂: ${v.oxygen_saturation}%${v.pain_score !== null ? ` | Pain: ${v.pain_score}/10` : ''}`
-];
+const formatVital = (v: Record<string, unknown>): string[] => {
+  const line1: string[] = [];
+  if (v.blood_pressure_systolic != null && v.blood_pressure_diastolic != null) {
+    line1.push(`BP: ${v.blood_pressure_systolic}/${v.blood_pressure_diastolic} mmHg`);
+  }
+  if (v.heart_rate != null) line1.push(`HR: ${v.heart_rate} bpm`);
+  if (v.respiratory_rate != null) line1.push(`RR: ${v.respiratory_rate}/min`);
 
-const formatMedication = (m: Record<string, unknown>) => [
+  const line2: string[] = [];
+  if (v.temperature != null) line2.push(`Temp: ${v.temperature}°C`);
+  if (v.oxygen_saturation != null) line2.push(`SpO₂: ${v.oxygen_saturation}%`);
+  if (v.pain_score != null) line2.push(`Pain: ${v.pain_score}/10`);
+
+  const result: string[] = [];
+  if (line1.length > 0) result.push(line1.join(' | '));
+  if (line2.length > 0) result.push(line2.join(' | '));
+  return result.length > 0 ? result : ['No vital values recorded'];
+};
+
+const formatMedication = (m: Record<string, unknown>): string[] => [
   `${m.medication_name || 'N/A'}${m.dosage ? ` - ${m.dosage}` : ''}${m.route ? ` via ${m.route}` : ''}`,
   `BCMA: ${m.barcode_scanned ? '✓ Scanned' : '⚠ Manual entry'}${m.override_reason ? ` - Override: ${m.override_reason}` : ''}`
 ];
 
-const formatOrder = (o: Record<string, unknown>) => [
+const formatOrder = (o: Record<string, unknown>): string[] => [
   `Type: ${o.order_type || 'N/A'}`,
   String(o.order_text || (o.order_details as Record<string, unknown>)?.medication || 'Order details not available')
 ];
 
 const formatIO = (io: Record<string, unknown>): string[] => [
-  `${io.direction === 'intake' ? '↓' : '↑'} ${String(io.category).toUpperCase()}: ${io.amount_ml} mL`,
+  `${io.direction === 'intake' ? '↓ IN' : '↑ OUT'} ${String(io.category).toUpperCase()}: ${io.amount_ml} mL`,
   io.route ? `Route: ${io.route}` : null,
   io.description ? String(io.description) : null
 ].filter((item): item is string => Boolean(item));
@@ -349,6 +363,154 @@ const formatHandoverNote = (n: Record<string, unknown>): string[] => [
   n.assessment ? `Assessment: ${String(n.assessment)}` : null,
   n.recommendations ? `Recommendations: ${String(n.recommendations)}` : null,
 ].filter((item): item is string => Boolean(item));
+
+const formatLabOrder = (o: Record<string, unknown>): string[] => [
+  `${o.test_name || 'Unknown Test'} — Priority: ${o.priority || 'N/A'} | Specimen: ${o.specimen_type || 'N/A'}`,
+  `Status: ${o.status || 'N/A'}`,
+].filter((item): item is string => Boolean(item));
+
+const formatLabAck = (a: Record<string, unknown>): string[] => [
+  `${a.test_name || 'Unknown Test'}: ${a.result_value || 'N/A'}${a.abnormal_flag ? '  ⚠ ABNORMAL' : ''}`,
+  a.note ? `Note: ${String(a.note)}` : null,
+].filter((item): item is string => Boolean(item));
+
+const formatNeuroAssessment = (n: Record<string, unknown>): string[] => {
+  const lines: string[] = [];
+  if (n.level_of_consciousness) lines.push(`LOC: ${n.level_of_consciousness}`);
+  const orientation = [
+    n.oriented_person ? 'Person' : null,
+    n.oriented_place ? 'Place' : null,
+    n.oriented_time ? 'Time' : null,
+  ].filter(Boolean).join(', ');
+  if (orientation) lines.push(`Oriented: ${orientation}`);
+  if (n.gcs_eye != null && n.gcs_verbal != null && n.gcs_motor != null) {
+    const gcs = Number(n.gcs_eye) + Number(n.gcs_verbal) + Number(n.gcs_motor);
+    lines.push(`GCS: ${gcs}/15 (E${n.gcs_eye} V${n.gcs_verbal} M${n.gcs_motor})`);
+  }
+  if (n.speech) lines.push(`Speech: ${n.speech}`);
+  if (n.sensation) lines.push(`Sensation: ${n.sensation}`);
+  if (n.pain_score != null) lines.push(`Pain: ${n.pain_score}/10`);
+  return lines.length > 0 ? lines : ['Assessment recorded'];
+};
+
+const formatWoundAssessment = (w: Record<string, unknown>): string[] => [
+  w.site_condition ? `Site Condition: ${w.site_condition}` : null,
+  w.wound_appearance ? `Appearance: ${w.wound_appearance}` : null,
+  (w.drainage_type || w.drainage_amount)
+    ? `Drainage: ${[w.drainage_type, w.drainage_amount].filter(Boolean).join(' — ')}`
+    : null,
+  w.dressing_type ? `Dressing: ${w.dressing_type}` : null,
+  w.treatment_applied ? `Treatment: ${w.treatment_applied}` : null,
+  w.pain_level != null ? `Pain: ${w.pain_level}/10` : null,
+  w.notes ? `Notes: ${String(w.notes)}` : null,
+].filter((item): item is string => Boolean(item));
+
+const formatDeviceAssessment = (d: Record<string, unknown>): string[] => {
+  const lines: string[] = [
+    `${String(d.device_type || 'Device').toUpperCase().replace(/-/g, ' ')} — Status: ${d.status || 'N/A'}`,
+  ];
+  if (d.output_amount_ml != null) lines.push(`Output: ${d.output_amount_ml} mL`);
+  if (d.notes) lines.push(`Notes: ${String(d.notes)}`);
+
+  // Expand all JSONB assessment_data fields (the "detailed fields" from the debrief modal)
+  const data = d.assessment_data as Record<string, unknown> | null | undefined;
+  if (data && typeof data === 'object') {
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') return;
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      let display: string;
+      if (Array.isArray(value)) {
+        if (value.length === 0) return;
+        display = value.join(', ');
+      } else if (typeof value === 'boolean') {
+        display = value ? 'Yes' : 'No';
+      } else if (typeof value === 'object') {
+        display = JSON.stringify(value);
+      } else {
+        display = String(value);
+      }
+      lines.push(`${label}: ${display}`);
+    });
+  }
+
+  return lines;
+};
+
+const formatBowelAssessment = (b: Record<string, unknown>): string[] => [
+  `Continence: ${b.bowel_incontinence || 'N/A'}`,
+  `Stool: ${[b.stool_appearance, b.stool_consistency, b.stool_colour, b.stool_amount].filter(Boolean).join(' | ')}`,
+];
+
+const formatBBITEntry = (b: Record<string, unknown>): string[] => {
+  const lines: string[] = [];
+  if (b.glucose_value != null) {
+    lines.push(`Glucose: ${b.glucose_value} mmol/L${b.time_label ? ` (${b.time_label})` : ''}`);
+  }
+  if (b.basal_name) {
+    lines.push(`Basal: ${b.basal_name}${b.basal_dose ? ` ${b.basal_dose} units` : ''} — ${b.basal_status || 'N/A'}`);
+  }
+  if (b.bolus_dose) {
+    lines.push(`Bolus: ${b.bolus_dose} units${b.bolus_meal ? ` with ${b.bolus_meal}` : ''} — ${b.bolus_status || 'N/A'}`);
+  }
+  if (b.correction_dose) {
+    lines.push(`Correction: ${b.correction_dose} units${b.correction_suggested_dose ? ` (suggested: ${b.correction_suggested_dose})` : ''} — ${b.correction_status || 'N/A'}`);
+  }
+  if (b.carb_intake) lines.push(`Carb intake: ${b.carb_intake}`);
+  return lines.length > 0 ? lines : ['BBIT entry recorded'];
+};
+
+const formatAdvancedDirective = (a: Record<string, unknown>): string[] => [
+  a.dnr_status ? `DNR: ${a.dnr_status}` : null,
+  a.living_will_status ? `Living Will: ${a.living_will_status}` : null,
+  a.healthcare_proxy_name ? `Healthcare Proxy: ${a.healthcare_proxy_name}` : null,
+  a.organ_donation_status ? `Organ Donation: ${a.organ_donation_status}` : null,
+  a.special_instructions ? `Special Instructions: ${String(a.special_instructions)}` : null,
+].filter((item): item is string => Boolean(item));
+
+const formatHacmapDevice = (d: Record<string, unknown>): string[] => {
+  const lines: string[] = [
+    `${d.type || 'Device'}${d.location ? ` — ${d.location}` : ''}${d.site ? ` / ${d.site}` : ''}`,
+  ];
+  if (d.placement_date) lines.push(`Placed: ${d.placement_date}`);
+  if (d.inserted_by) lines.push(`Inserted by: ${d.inserted_by}`);
+  return lines;
+};
+
+const formatHacmapWound = (w: Record<string, unknown>): string[] => {
+  const lines: string[] = [
+    `${w.wound_type || 'Wound'}${w.location ? ` — ${w.location}` : ''}`,
+  ];
+  if (w.wound_appearance) lines.push(`Appearance: ${w.wound_appearance}`);
+  const dims = [
+    w.wound_length_cm ? `${w.wound_length_cm}cm` : null,
+    w.wound_width_cm ? `x ${w.wound_width_cm}cm` : null,
+    w.wound_depth_cm ? `x ${w.wound_depth_cm}cm` : null,
+  ].filter(Boolean).join(' ');
+  if (dims) lines.push(`Size: ${dims}`);
+  if (w.wound_stage) lines.push(`Stage: ${w.wound_stage}`);
+  if (w.drainage_type || w.drainage_amount) {
+    lines.push(`Drainage: ${[w.drainage_type, w.drainage_amount].filter(Boolean).join(' — ')}`);
+  }
+  return lines;
+};
+
+const formatNewbornAssessment = (n: Record<string, unknown>): string[] => {
+  const lines: string[] = [];
+  if (n.weight_grams) lines.push(`Weight: ${n.weight_grams} g`);
+  if (n.length_cm) lines.push(`Length: ${n.length_cm} cm`);
+  if (n.head_circumference_cm) lines.push(`Head Circumference: ${n.head_circumference_cm} cm`);
+  if (n.apgar_1min != null || n.apgar_5min != null || n.apgar_10min != null) {
+    lines.push(`APGAR — 1 min: ${n.apgar_1min ?? 'N/A'} | 5 min: ${n.apgar_5min ?? 'N/A'} | 10 min: ${n.apgar_10min ?? 'N/A'}`);
+  }
+  if (n.vitamin_k_given) {
+    lines.push(`Vitamin K: Given${n.vitamin_k_dose ? ` — ${n.vitamin_k_dose}` : ''}${n.vitamin_k_site ? ` at ${n.vitamin_k_site}` : ''}`);
+  } else if (n.vitamin_k_declined) {
+    lines.push('Vitamin K: Declined by parent/guardian');
+  }
+  if (n.erythromycin_given) lines.push('Erythromycin: Given');
+  if (n.completed_by) lines.push(`Completed by: ${n.completed_by}`);
+  return lines.length > 0 ? lines : ['Assessment recorded'];
+};
 
 // ===== PDF COMPONENTS =====
 
@@ -388,8 +550,9 @@ const ActivitySection: React.FC<{ title: string; items: unknown[]; formatter: (i
       {items.map((item, idx) => {
         const r = item as Record<string, unknown>;
         const lines = formatter(r);
-        const timestamp = (r.recorded_at || r.timestamp || r.acknowledged_at || 
-                         r.administered_at || r.event_timestamp || r.created_at) as string | undefined;
+        const timestamp = (r.recorded_at || r.timestamp || r.acknowledged_at ||
+                         r.administered_at || r.ordered_at || r.assessed_at ||
+                         r.event_timestamp || r.created_at) as string | undefined;
         
         return (
           <View key={idx} style={styles.activityItem} wrap={false}>
@@ -514,6 +677,20 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
             formatter={formatIO}
             color="#06b6d4"
           />
+
+          <ActivitySection 
+            title="Lab Orders" 
+            items={student.activities.labOrders || []} 
+            formatter={formatLabOrder}
+            color="#0ea5e9"
+          />
+
+          <ActivitySection 
+            title="Lab Results Acknowledged" 
+            items={student.activities.labAcknowledgements || []} 
+            formatter={formatLabAck}
+            color="#0891b2"
+          />
           
           <ActivitySection 
             title="Patient Notes" 
@@ -523,10 +700,73 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
           />
           
           <ActivitySection 
-            title="Handover Notes" 
+            title="Handover Notes (SBAR)" 
             items={student.activities.handoverNotes || []} 
             formatter={formatHandoverNote}
             color="#f97316"
+          />
+
+          <ActivitySection 
+            title="Neurological Assessments" 
+            items={student.activities.neuroAssessments || []} 
+            formatter={formatNeuroAssessment}
+            color="#7c3aed"
+          />
+
+          <ActivitySection 
+            title="Wound Assessments" 
+            items={student.activities.woundAssessments || []} 
+            formatter={formatWoundAssessment}
+            color="#16a34a"
+          />
+
+          <ActivitySection 
+            title="Device Assessments" 
+            items={student.activities.deviceAssessments || []} 
+            formatter={formatDeviceAssessment}
+            color="#0891b2"
+          />
+
+          <ActivitySection 
+            title="Bowel Assessments" 
+            items={student.activities.bowelAssessments || []} 
+            formatter={formatBowelAssessment}
+            color="#a78bfa"
+          />
+
+          <ActivitySection 
+            title="Blood/Basal Insulin Tracking (BBIT)" 
+            items={student.activities.bbitEntries || []} 
+            formatter={formatBBITEntry}
+            color="#e11d48"
+          />
+
+          <ActivitySection 
+            title="Newborn Assessments" 
+            items={student.activities.newbornAssessments || []} 
+            formatter={formatNewbornAssessment}
+            color="#d97706"
+          />
+
+          <ActivitySection 
+            title="Advanced Directives" 
+            items={student.activities.advancedDirectives || []} 
+            formatter={formatAdvancedDirective}
+            color="#64748b"
+          />
+
+          <ActivitySection 
+            title="HacMap Devices" 
+            items={student.activities.hacmapDevices || []} 
+            formatter={formatHacmapDevice}
+            color="#2563eb"
+          />
+
+          <ActivitySection 
+            title="HacMap Wounds" 
+            items={student.activities.hacmapWounds || []} 
+            formatter={formatHacmapWound}
+            color="#059669"
           />
           
           <Text style={styles.footer}>
@@ -542,6 +782,14 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
 };
 
 // ===== PUBLIC API =====
+
+/**
+ * Generate PDF blob (used for print-in-new-tab and email attachment)
+ */
+export async function generateStudentActivityPDFBlob(data: StudentReportData): Promise<Blob> {
+  const doc = <DebriefReportDocument data={data} />;
+  return await pdf(doc).toBlob();
+}
 
 /**
  * Generate and download PDF report
