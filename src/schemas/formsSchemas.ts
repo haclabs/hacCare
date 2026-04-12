@@ -17,6 +17,7 @@ export const nursingAssessmentSchema: AssessmentSchema = {
       type: 'string',
       title: 'Patient ID',
       required: true,
+      disabled: true,
       validation: {
         pattern: '^PT\\d{5}$'
       }
@@ -25,12 +26,14 @@ export const nursingAssessmentSchema: AssessmentSchema = {
       type: 'datetime',
       title: 'Assessment Date & Time',
       required: true,
+      disabled: true,
       default: 'now'
     },
     nurseName: {
       type: 'string',
       title: 'Assessing Nurse',
-      required: true
+      required: true,
+      disabled: true
     },
     assessmentType: {
       type: 'select',
@@ -287,12 +290,14 @@ export const admissionAssessmentSchema: AssessmentSchema = {
     patientId: {
       type: 'string',
       title: 'Patient ID',
-      required: true
+      required: true,
+      disabled: true
     },
     admissionDate: {
       type: 'datetime',
       title: 'Admission Date & Time',
-      required: true
+      required: true,
+      disabled: true
     },
     admittingDiagnosis: {
       type: 'string',

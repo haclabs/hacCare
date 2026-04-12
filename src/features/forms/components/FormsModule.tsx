@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Clipboard, Stethoscope, User, Save } from 'lucide-react';
+import { FileText, Clipboard, Stethoscope, User, Save, CheckCircle, X } from 'lucide-react';
 import { DynamicForm } from '../../../components/forms/DynamicForm';
 import { schemaEngine } from '../../../lib/infrastructure/schemaEngine';
 import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../../schemas/formsSchemas';
@@ -40,6 +40,8 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
   const [savedForms, setSavedForms] = useState<any[]>([]);
   const [completedAssessments, setCompletedAssessments] = useState<any[]>([]);
   const [schemasRegistered, setSchemasRegistered] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Register schemas immediately on component mount
   useEffect(() => {
@@ -139,6 +141,15 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
       // Save assessment
       onAssessmentSave(assessment);
       setCompletedAssessments(prev => [assessment, ...prev]);
+
+      // Clear the draft for this form type now that it's submitted
+      setSavedForms(prev => prev.filter(form => !(form.type === activeView && form.isDraft)));
+
+      // Show success confirmation banner
+      const formTitle = getFormTypes().find(f => f.id === activeView)?.title || 'Assessment';
+      setSuccessMessage(`${formTitle} submitted successfully and added to your record.`);
+      setShowSuccessBanner(true);
+      setTimeout(() => setShowSuccessBanner(false), 3000);
 
       secureLogger.debug('Assessment saved successfully');
     } catch (error) {
@@ -294,7 +305,8 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
 
   // Render saved drafts
   const renderSavedDrafts = () => {
-    const drafts = savedForms.filter(form => form.isDraft);
+    // Only show drafts for forms the student is NOT currently viewing
+    const drafts = savedForms.filter(form => form.isDraft && form.type !== activeView);
     if (drafts.length === 0) return null;
 
     return (
@@ -361,6 +373,20 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Success Toast — fixed bottom-center, visible regardless of scroll position */}
+      {showSuccessBanner && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-green-600 text-white px-5 py-3 rounded-xl shadow-2xl">
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <p className="font-medium text-sm">{successMessage}</p>
+          <button
+            onClick={() => setShowSuccessBanner(false)}
+            className="ml-1 text-green-200 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Saved Drafts */}
       {renderSavedDrafts()}

@@ -340,6 +340,7 @@ export class SchemaEngine {
     data: FormData,
     context: FormGenerationContext
   ): boolean {
+    if (field.disabled) return true;
     if (field.conditional?.action === 'disable') {
       return field.conditional.conditions.every(condition =>
         this.evaluateCondition(condition, data, context)

@@ -33,6 +33,7 @@ export interface SchemaField {
   description?: string;
   default?: any;
   required?: boolean;
+  disabled?: boolean;
   validation?: FieldValidation;
   options?: FieldOptions;
   conditional?: ConditionalField;
