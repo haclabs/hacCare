@@ -847,7 +847,7 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
           <div className="text-sm">
             <p className="font-medium text-gray-700">{format(new Date(item.acknowledged_at), 'PPp')}</p>
             <p className="text-gray-900 mt-1 font-medium">✓ ACKNOWLEDGED</p>
-            <p className="text-gray-600">{item.order_text || item.order_type}</p>
+            <p className="text-gray-600 whitespace-pre-wrap">{item.order_text || item.order_type}</p>
           </div>
         );
       case 'intakeOutput':
@@ -1078,16 +1078,17 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
       case 'handoverNotes':
         return (
           <div className="text-sm">
-            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="font-medium text-gray-700">
+              {item.entry_type === 'acknowledged' ? 'Note from:' : 'Created:'}{' '}
+              {item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}
+            </p>
             <div className="mt-2 space-y-2">
-              <div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
-                <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
-                <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes || <span className="text-gray-400 italic">Not recorded</span>}</p>
-              </div>
+              {item.nursing_notes && (
+                <div>
+                  <span className="text-xs font-semibold text-gray-500 uppercase">Nursing Notes:</span>
+                  <p className="text-gray-900 whitespace-pre-wrap">{item.nursing_notes}</p>
+                </div>
+              )}
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Situation:</span>
                 <p className="text-gray-900">{item.situation}</p>
@@ -1106,7 +1107,12 @@ const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, secti
               </div>
               {item.student_name && (
                 <div className="mt-2 pt-2 border-t border-gray-200">
-                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">✓ Acknowledged by: {item.student_name}</span>
+                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">
+                    ✓ Acknowledged by: {item.student_name}
+                    {(item.acknowledged_at || item.updated_at) && (
+                      <> · {format(new Date((item.acknowledged_at || item.updated_at)!), 'PPp')}</>
+                    )}
+                  </span>
                 </div>
               )}
             </div>
