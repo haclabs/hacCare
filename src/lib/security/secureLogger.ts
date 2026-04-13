@@ -103,7 +103,7 @@ class SecureLogger {
     if (!this.isDevelopment || this.logLevel !== 'debug') return;
     
     const entry = this.createLogEntry('debug', message, data, operation);
-    console.log(`🔍 [DEBUG] ${entry.message}`, entry.data ? entry.data : '');
+    console.log('🔍 [DEBUG]', entry.message, entry.data ? entry.data : '');
   }
 
   /**
@@ -111,7 +111,7 @@ class SecureLogger {
    */
   info(message: string, data?: any, operation?: string): void {
     const entry = this.createLogEntry('info', message, data, operation);
-    console.log(`ℹ️ [INFO] ${entry.message}`, entry.data ? entry.data : '');
+    console.log('ℹ️ [INFO]', entry.message, entry.data ? entry.data : '');
   }
 
   /**
@@ -119,7 +119,7 @@ class SecureLogger {
    */
   warn(message: string, data?: any, operation?: string): void {
     const entry = this.createLogEntry('warn', message, data, operation);
-    console.warn(`⚠️ [WARN] ${entry.message}`, entry.data ? entry.data : '');
+    console.warn('⚠️ [WARN]', entry.message, entry.data ? entry.data : '');
   }
 
   /**
@@ -127,15 +127,15 @@ class SecureLogger {
    */
   error(message: string, error?: any, operation?: string): void {
     const entry = this.createLogEntry('error', message, error, operation);
-    console.error(`❌ [ERROR] ${entry.message}`, entry.data ? entry.data : '');
+    console.error('❌ [ERROR]', entry.message, entry.data ? entry.data : '');
   }
 
   /**
    * Log security events (always logged regardless of level)
    */
   security(message: string, data?: any, operation?: string): void {
-    const entry = this.createLogEntry('error', `SECURITY: ${message}`, data, operation);
-    console.error(`🔒 [SECURITY] ${entry.message}`, entry.data ? entry.data : '');
+    const entry = this.createLogEntry('error', 'SECURITY: ' + message, data, operation);
+    console.error('🔒 [SECURITY]', entry.message, entry.data ? entry.data : '');
     
     // In production, you would send this to your security monitoring system
     if (import.meta.env.PROD) {
@@ -147,8 +147,8 @@ class SecureLogger {
    * Log audit events for compliance
    */
   audit(action: string, resource: string, data?: any): void {
-    const entry = this.createLogEntry('info', `AUDIT: ${action} on ${resource}`, data, action);
-    console.log(`📋 [AUDIT] ${entry.message}`, entry.data ? entry.data : '');
+    const entry = this.createLogEntry('info', 'AUDIT: ' + action + ' on ' + resource, data, action);
+    console.log('📋 [AUDIT]', entry.message, entry.data ? entry.data : '');
     
     // In production, send to audit log system
     if (import.meta.env.PROD) {

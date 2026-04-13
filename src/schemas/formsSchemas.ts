@@ -395,6 +395,7 @@ export const bowelAssessmentSchema: AssessmentSchema = {
       type: 'string',
       title: 'Patient ID',
       required: true,
+      disabled: true,
       validation: {
         pattern: '^P\\d{5}$'
       }

@@ -15,6 +15,23 @@ import { bcmaService } from '../../../services/clinical/bcmaService';
 import type { Medication } from '../../clinical/types/clinical';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
+// 5 fluorescent colors for per-patient label color-coding
+const PATIENT_COLORS = [
+  { bg: '#a3f307', border: '#6a9f00', text: '#1a2600' },  // Fluorescent yellow-green
+  { bg: '#05f9e2', border: '#00b8a8', text: '#003530' },  // Fluorescent cyan
+  { bg: '#e2f705', border: '#9aaa00', text: '#2a2a00' },  // Fluorescent yellow
+  { bg: '#f50b86', border: '#b5005f', text: '#000000' },  // Fluorescent pink
+  { bg: '#ff6f00', border: '#c54000', text: '#1a0a00' },  // Fluorescent orange
+];
+
+// Sort patient IDs for deterministic color assignment across bracelets and medication labels
+function buildPatientColorMap(patientIds: string[]): Record<string, number> {
+  const sorted = [...new Set(patientIds)].sort();
+  const map: Record<string, number> = {};
+  sorted.forEach((id, i) => { map[id] = i % PATIENT_COLORS.length; });
+  return map;
+}
+
 interface WindowWithJsBarcode extends Window {
   JsBarcode: (canvas: HTMLElement, text: string, options: Record<string, unknown>) => void;
 }
@@ -52,7 +69,9 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
   const duplicatedPatients = patients.flatMap(patient => 
     Array(quantity).fill(patient)
   );
-  
+
+  const patientColorMap = buildPatientColorMap(patients.map(p => p.id));
+
   // Calculate empty labels to skip based on starting row
   // Each row has 3 labels, so skip (startRow - 1) * 3 labels
   const labelsToSkip = (startRow - 1) * 3;
@@ -128,13 +147,13 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               font-weight: 900;
               margin-bottom: 6px;
               line-height: 1.2;
-              color: #1a1a1a;
               text-transform: uppercase;
               letter-spacing: 0.5px;
               padding: 4px 8px;
-              background: linear-gradient(90deg, #e8f5e9 0%, transparent 100%);
-              border-left: 4px solid #4caf50;
+              border-left: 4px solid;
               border-radius: 3px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .patient-info {
               font-size: 12px;
@@ -142,9 +161,10 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               padding: 3px 8px;
               color: #333;
               font-weight: 700;
-              background: rgba(76, 175, 80, 0.08);
-              border-left: 3px solid #81c784;
+              border-left: 3px solid;
               border-radius: 2px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .barcode-area {
               width: 1.0in;
@@ -182,12 +202,10 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
                 background: #ffffff !important;
               }
               .patient-name {
-                background: #f1f8f4 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
               .patient-info {
-                background: #f8fbf9 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
@@ -208,17 +226,20 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
                 <div style="font-size: 8px; color: #999;">${duplicatedPatients.length} patient${duplicatedPatients.length !== 1 ? 's' : ''} • Patient Bracelets</div>
               </div>
             </div>
-            ${duplicatedPatients.map((patient, index) => `
+            ${duplicatedPatients.map((patient, index) => {
+              const color = PATIENT_COLORS[patientColorMap[patient.id]];
+              return `
               <div class="label">
                 <div class="label-content">
-                  <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                  <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">
                   <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
                 </div>
               </div>
-            `).join('')}
+              `;
+            }).join('')}
             ${Array(Math.max(0, 30 - labelsToSkip - 1 - duplicatedPatients.length)).fill(0).map(() => `
               <div class="label"></div>
             `).join('')}
@@ -317,8 +338,8 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             {duplicatedPatients.slice(0, 15).map((patient, idx) => (
               <div key={`${patient.id}-${idx}`} className="border border-gray-300 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex items-stretch" style={{width: '2.625in', height: '1in'}}>
                 <div className="flex-1 flex flex-col justify-center px-3 py-2">
-                  <div className="font-black text-base mb-2 uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-green-50 to-transparent border-l-4 border-green-500 rounded" style={{letterSpacing: '0.5px', fontWeight: 900}}>{patient.first_name} {patient.last_name}</div>
-                  <div className="text-sm font-bold px-2 py-1 bg-green-50 bg-opacity-50 border-l-3 border-green-400 rounded text-gray-700" style={{borderLeftWidth: '3px'}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                  <div className="font-black text-base mb-2 uppercase tracking-wide px-2 py-1 rounded" style={{letterSpacing: '0.5px', fontWeight: 900, background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `4px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`, color: PATIENT_COLORS[patientColorMap[patient.id]].text}}>{patient.first_name} {patient.last_name}</div>
+                  <div className="text-sm font-bold px-2 py-1 rounded text-gray-700" style={{background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `3px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div className="w-20 flex justify-center items-center bg-white border-l border-gray-200 p-1">
                   <BarcodeGenerator
@@ -373,7 +394,9 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
   const duplicatedMedications = medications.flatMap(medication => 
     Array(quantity).fill(medication)
   );
-  
+
+  const patientColorMap = buildPatientColorMap(medications.map(m => m.patient_id));
+
   // Calculate empty labels to skip based on starting row
   // Each row has 3 labels, so skip (startRow - 1) * 3 labels
   const labelsToSkip = (startRow - 1) * 3;
@@ -463,14 +486,14 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             .patient-name {
               font-size: 13px;
               font-weight: 700;
-              color: #000000;
               margin-top: 2px;
               line-height: 1.3;
               word-wrap: break-word;
               padding: 3px 6px;
-              background: #ffffff;
-              border-left: 2px solid #666666;
+              border-left: 2px solid;
               border-radius: 2px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .med-id {
               font-size: 11px;
@@ -536,7 +559,8 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 background: #ffffff !important;
               }
               .patient-name {
-                background: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             }
           </style>
@@ -568,12 +592,13 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               }
               const idSuffix = numericCode.toString().padStart(5, '0');
               const barcodeValue = 'M' + namePrefix + idSuffix;
+              const color = PATIENT_COLORS[patientColorMap[medication.patient_id]];
               
               return `
               <div class="label">
                 <div class="label-content">
                   <div class="medication-name">${medication.medication_name}</div>
-                  <div class="patient-name">${medication.patient_name}</div>
+                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${medication.patient_name}</div>
                   <div class="med-id">ID: ${barcodeValue}</div>
                 </div>
                 <div class="barcode-area">
@@ -684,7 +709,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               <div key={`${medication.id}-${idx}`} className="border border-gray-300 p-1 bg-white flex items-stretch rounded shadow-sm" style={{width: '2.625in', height: '1in'}}>
                 <div className="flex-1 flex flex-col justify-center px-2 bg-gradient-to-br from-gray-50 to-white border-r-2 border-gray-200" style={{minWidth: '1.6in'}}>
                   <div className="font-extrabold text-sm mb-1 leading-tight uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-blue-50 to-transparent border-l-3 border-blue-500 rounded" style={{borderLeftWidth: '3px'}}>{medication.medication_name}</div>
-                  <div className="text-xs font-semibold text-blue-600 leading-tight mt-1 px-2 py-1 bg-blue-50 bg-opacity-50 border-l-2 border-blue-600 rounded" style={{borderLeftWidth: '2px'}}>{medication.patient_name}</div>
+                  <div className="text-xs font-semibold leading-tight mt-1 px-2 py-1 rounded" style={{borderLeft: `2px solid ${PATIENT_COLORS[patientColorMap[medication.patient_id]].border}`, background: PATIENT_COLORS[patientColorMap[medication.patient_id]].bg, color: PATIENT_COLORS[patientColorMap[medication.patient_id]].text}}>{medication.patient_name}</div>
                 </div>
                 <div className="w-20 h-full flex justify-center items-center">
                   <div className="transform rotate-90 origin-center">
@@ -759,7 +784,10 @@ const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
   const duplicatedMedications = medications.flatMap(medication => 
     Array(medicationQuantity).fill(medication)
   );
-  
+
+  // Build color map keyed by patient id — same sort order as individual modals
+  const patientColorMap = buildPatientColorMap(patients.map(p => p.id));
+
   const labelsToSkip = (startRow - 1) * 3;
   const totalLabels = 1 + duplicatedPatients.length + duplicatedMedications.length; // 1 for header
   
@@ -825,13 +853,13 @@ const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               font-weight: 900;
               margin-bottom: 6px;
               line-height: 1.2;
-              color: #1a1a1a;
               text-transform: uppercase;
               letter-spacing: 0.5px;
               padding: 4px 8px;
-              background: linear-gradient(90deg, #e8f5e9 0%, transparent 100%);
-              border-left: 4px solid #4caf50;
+              border-left: 4px solid;
               border-radius: 3px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .patient-bracelet .patient-info {
               font-size: 12px;
@@ -839,9 +867,10 @@ const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               padding: 3px 8px;
               color: #333;
               font-weight: 700;
-              background: rgba(76, 175, 80, 0.08);
-              border-left: 3px solid #81c784;
+              border-left: 3px solid;
               border-radius: 2px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .patient-bracelet .barcode-area {
               width: 1.05in;
@@ -890,14 +919,14 @@ const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
             .medication-label .patient-name-med {
               font-size: 13px;
               font-weight: 700;
-              color: #000000;
               margin-top: 2px;
               line-height: 1.3;
               word-wrap: break-word;
               padding: 3px 6px;
-              background: #ffffff;
-              border-left: 2px solid #666666;
+              border-left: 2px solid;
               border-radius: 2px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .medication-label .med-id {
               font-size: 11px;
@@ -986,12 +1015,13 @@ const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               const row = Math.floor(position / 3);
               const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
               const topPos = (0.5 + row * 1.0) + 'in';
+              const color = PATIENT_COLORS[patientColorMap[patient.id]];
               
               return `
               <div class="label patient-bracelet" style="left: ${leftPos}; top: ${topPos};">
                 <div class="label-content">
-                  <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
-                  <div class="patient-info">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">
                   <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
@@ -1019,12 +1049,13 @@ const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               }
               const idSuffix = numericCode.toString().padStart(5, '0');
               const barcodeValue = 'M' + namePrefix + idSuffix;
+              const color = PATIENT_COLORS[patientColorMap[medication.patient_id]];
               
               return `
               <div class="label medication-label" style="left: ${leftPos}; top: ${topPos};">
                 <div class="label-content">
                   <div class="medication-name">${medication.medication_name}</div>
-                  <div class="patient-name-med">${medication.patient_name}</div>
+                  <div class="patient-name-med" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${medication.patient_name}</div>
                   <div class="med-id">ID: ${barcodeValue}</div>
                 </div>
                 <div class="barcode-area">
