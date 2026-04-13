@@ -19,7 +19,7 @@ export const nursingAssessmentSchema: AssessmentSchema = {
       required: true,
       disabled: true,
       validation: {
-        pattern: '^PT\\d{5}$'
+        pattern: '^P\\d{5}$'
       }
     },
     assessmentDate: {
@@ -396,7 +396,7 @@ export const bowelAssessmentSchema: AssessmentSchema = {
       title: 'Patient ID',
       required: true,
       validation: {
-        pattern: '^PT\\d{5}$'
+        pattern: '^P\\d{5}$'
       }
     },
     recordedAt: {
