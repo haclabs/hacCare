@@ -97,6 +97,9 @@ interface PatientNoteEntry {
 interface HandoverNoteEntry {
   id: string;
   created_at: string;
+  acknowledged_at?: string | null;
+  updated_at?: string | null;
+  entry_type: 'created' | 'acknowledged';
   nursing_notes?: string;
   situation: string;
   background: string;
@@ -440,13 +443,15 @@ export async function getStudentActivitiesBySimulation(
         .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
-      // Handover Notes (no tenant_id column — filter by all patients in this simulation)
+      // Handover Notes — student created (student_name set, acknowledged_by null)
+      //   OR student acknowledged (student_name set, acknowledged_by not null)
+      // No time filter — already scoped to simulation by patient_id, and template
+      // notes have created_at before simulation start so would be incorrectly excluded.
       supabase
         .from('handover_notes')
         .select('*')
         .in('patient_id', patientIds)
         .not('student_name', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Bowel Records
@@ -764,23 +769,29 @@ export async function getStudentActivitiesBySimulation(
       student.totalEntries++;
     });
 
-    // Process handover notes (only acknowledged ones)
+    // Process handover notes — student_name is set for both created and acknowledged entries.
+    // acknowledged_by null  → student created the note themselves
+    // acknowledged_by set   → student acknowledged an existing instructor/template note
     handoverNotesData.data?.forEach((note: any) => {
-      // Only count handover notes that were acknowledged by a student
-      if (note.student_name) {
-        const student = getOrCreateStudent(note.student_name);
-        student.activities.handoverNotes.push({
-          id: note.id,
-          created_at: note.created_at,
-          nursing_notes: note.nursing_notes,
-          situation: note.situation,
-          background: note.background,
-          assessment: note.assessment,
-          recommendations: note.recommendations,
-          student_name: note.student_name,
-        });
-        student.totalEntries++;
-      }
+      if (!note.student_name) return;
+
+      const baseEntry = {
+        id: note.id,
+        created_at: note.created_at,
+        acknowledged_at: note.acknowledged_at,
+        updated_at: note.updated_at,
+        nursing_notes: note.nursing_notes,
+        situation: note.situation,
+        background: note.background,
+        assessment: note.assessment,
+        recommendations: note.recommendations,
+        student_name: note.student_name,
+        entry_type: note.acknowledged_by ? 'acknowledged' as const : 'created' as const,
+      };
+
+      const student = getOrCreateStudent(note.student_name);
+      student.activities.handoverNotes.push(baseEntry);
+      student.totalEntries++;
     });
 
     // Process devices (from HAC Map)

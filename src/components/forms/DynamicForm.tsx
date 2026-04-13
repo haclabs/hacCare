@@ -154,13 +154,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     // Skip studentName field - it will be rendered in yellow box at bottom
     if (field.name === 'studentName') return null;
 
+    const isDisabled = field.disabled || readOnly;
     const commonProps = {
       field,
       value: formData[field.name],
       onChange: (value: any) => handleFieldChange(field.name, value),
-      error: validation.errors.find(e => e.field === field.name),
-      warning: validation.warnings.find(w => w.field === field.name),
-      disabled: field.disabled || readOnly,
+      error: isDisabled ? undefined : validation.errors.find(e => e.field === field.name),
+      warning: isDisabled ? undefined : validation.warnings.find(w => w.field === field.name),
+      disabled: isDisabled,
       required: field.required
     };
 
