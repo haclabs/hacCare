@@ -141,28 +141,9 @@ ALTER POLICY newborn_assessments_tenant_isolation
     )
   );
 
-ALTER POLICY lab_orders_tenant_isolation
-  ON public.lab_orders
-  USING (
-    tenant_id IN (
-      SELECT tenant_id FROM tenant_users
-      WHERE user_id = (SELECT auth.uid()) AND is_active = true
-    )
-    OR EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE id = (SELECT auth.uid()) AND role = 'super_admin'
-    )
-  )
-  WITH CHECK (
-    tenant_id IN (
-      SELECT tenant_id FROM tenant_users
-      WHERE user_id = (SELECT auth.uid()) AND is_active = true
-    )
-    OR EXISTS (
-      SELECT 1 FROM user_profiles
-      WHERE id = (SELECT auth.uid()) AND role = 'super_admin'
-    )
-  );
+-- lab_orders: handled by the dynamic block (Section 11) because the live DB
+-- policy may be named lab_orders_access OR lab_orders_tenant_isolation
+-- depending on whether migration 002 ran before the initial policy dump.
 
 
 -- ============================================================================
@@ -1071,7 +1052,8 @@ BEGIN
              'simulation_history',
              'simulation_participants',
              'simulation_table_config',
-             'contact_submissions'
+             'contact_submissions',
+             'lab_orders'
            ])
       AND (qual       ~ E'auth\\.uid\\(\\)'
         OR with_check ~ E'auth\\.uid\\(\\)')
