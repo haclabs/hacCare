@@ -82,7 +82,7 @@ export const useTenantNurses = () => {
         .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
 
       setNurses(nurseOptions);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Exception fetching tenant nurses:', err);
       setError('An error occurred while loading nurses');
     } finally {

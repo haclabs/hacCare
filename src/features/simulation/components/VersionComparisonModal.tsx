@@ -68,9 +68,9 @@ export default function VersionComparisonModal({
         ? await compareSimulationVsTemplate(simulationId)
         : await compareTemplateVersions(templateId, versionOld, versionNew);
       setDiff(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error loading version comparison:', err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

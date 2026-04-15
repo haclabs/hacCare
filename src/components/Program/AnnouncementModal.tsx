@@ -120,8 +120,8 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
         author_name: authorName
       } as AnnouncementData);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save announcement');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save announcement');
     } finally {
       setSaving(false);
     }

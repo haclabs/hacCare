@@ -3,7 +3,7 @@
  * Coordinates avatar canvas, mode toggle, and forms
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { systemLogger } from '../../services/monitoring/systemLogger';
@@ -139,24 +139,18 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
   const currentAssessments = selectedRecordType === 'device' ? deviceAssessments : woundAssessments;
   const currentAssessmentCount = currentAssessments.length;
 
-  // Load markers on mount
-  useEffect(() => {
-    if (patientId) {
-      loadMarkers();
-    }
-  }, [patientId]);
-
-  const loadMarkers = async () => {
+  const loadMarkers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await listMarkers(patientId);
       setMarkers(data);
-    } catch (err: any) {
-      secureLogger.error('Error loading markers:', err);
+    } catch (err: unknown) {
+      const error = err as { message?: string; code?: string };
+      secureLogger.error('Error loading markers:', error);
       
       // Check if it's a "table doesn't exist" error
-      if (err?.message?.includes('does not exist') || err?.code === '42P01') {
+      if (error?.message?.includes('does not exist') || error?.code === '42P01') {
         setError('Database tables not found. Please run the hacmap_tables.sql migration first.');
       } else {
         setError('Failed to load markers. Please try again.');
@@ -164,7 +158,14 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [patientId]);
+
+  // Load markers on mount
+  useEffect(() => {
+    if (patientId) {
+      loadMarkers();
+    }
+  }, [patientId, loadMarkers]);
 
   // Handle avatar click - show pending marker and open form
   const handleCreateAt = async (regionKey: RegionKey, coords: Coordinates) => {
@@ -279,7 +280,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       handleClosePanel();
     } catch (err) {
       secureLogger.error('Error saving device:', err);
-      systemLogger.logError(err as Error, {
+      systemLogger.error('Error saving device', err, {
         component: 'AvatarBoard',
         action: panelMode === 'create-device' ? 'create_device' : 'update_device',
         metadata: {
@@ -348,7 +349,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
       handleClosePanel();
     } catch (err) {
       secureLogger.error('Error saving wound:', err);
-      systemLogger.logError(err as Error, {
+      systemLogger.error('Error saving wound', err, {
         component: 'AvatarBoard',
         action: panelMode === 'create-wound' ? 'create_wound' : 'update_wound',
         metadata: {
@@ -1176,28 +1177,32 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
                         </div>
                       )}
                       
-                      {selectedWoundAssessment.wound_appearance && selectedWoundAssessment.wound_appearance.length > 0 && (
+                      {selectedWoundAssessment.wound_appearance && (Array.isArray(selectedWoundAssessment.wound_appearance) ? selectedWoundAssessment.wound_appearance.length > 0 : (selectedWoundAssessment.wound_appearance as string).length > 0) && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Wound Appearance
                           </label>
                           <p className="text-gray-900 capitalize">
-                            {selectedWoundAssessment.wound_appearance.join(', ')}
+                            {Array.isArray(selectedWoundAssessment.wound_appearance)
+                              ? selectedWoundAssessment.wound_appearance.join(', ')
+                              : (selectedWoundAssessment.wound_appearance as string)}
                           </p>
                         </div>
                       )}
 
-                      {selectedWoundAssessment.surrounding_skin && selectedWoundAssessment.surrounding_skin.length > 0 && (
+                      {selectedWoundAssessment.surrounding_skin && (Array.isArray(selectedWoundAssessment.surrounding_skin) ? selectedWoundAssessment.surrounding_skin.length > 0 : (selectedWoundAssessment.surrounding_skin as string).length > 0) && (
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Surrounding Skin
                           </label>
                           <p className="text-gray-900 capitalize">
-                            {selectedWoundAssessment.surrounding_skin.map(s => 
-                              s === 'erythema' ? 'Erythema (Redness)' :
-                              s === 'edema' ? 'Edema (Swelling)' :
-                              s.charAt(0).toUpperCase() + s.slice(1)
-                            ).join(', ')}
+                            {Array.isArray(selectedWoundAssessment.surrounding_skin)
+                              ? selectedWoundAssessment.surrounding_skin.map(s =>
+                                  s === 'erythema' ? 'Erythema (Redness)' :
+                                  s === 'edema' ? 'Edema (Swelling)' :
+                                  s.charAt(0).toUpperCase() + s.slice(1)
+                                ).join(', ')
+                              : (selectedWoundAssessment.surrounding_skin as string)}
                           </p>
                         </div>
                       )}
@@ -1211,13 +1216,15 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
                             <p className="text-gray-900 capitalize">{selectedWoundAssessment.drainage_amount}</p>
                           </div>
                         )}
-                        {selectedWoundAssessment.drainage_type && selectedWoundAssessment.drainage_type.length > 0 && (
+                        {selectedWoundAssessment.drainage_type && (Array.isArray(selectedWoundAssessment.drainage_type) ? selectedWoundAssessment.drainage_type.length > 0 : (selectedWoundAssessment.drainage_type as string).length > 0) && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Drainage Type
                             </label>
                             <p className="text-gray-900 capitalize">
-                              {selectedWoundAssessment.drainage_type.join(', ')}
+                              {Array.isArray(selectedWoundAssessment.drainage_type)
+                                ? selectedWoundAssessment.drainage_type.join(', ')
+                                : (selectedWoundAssessment.drainage_type as string)}
                             </p>
                           </div>
                         )}
