@@ -102,6 +102,7 @@ CREATE OR REPLACE FUNCTION prune_system_logs()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   DELETE FROM system_logs

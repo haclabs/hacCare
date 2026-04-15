@@ -30,9 +30,9 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({
       setError(null);
       const data = await fetchTargetActivity(patientId, 'patient', 20);
       setActivities(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error loading activity:', err);
-      setError(err.message || 'Failed to load activity logs');
+      setError(err instanceof Error ? err.message : 'Failed to load activity logs');
     } finally {
       setLoading(false);
     }

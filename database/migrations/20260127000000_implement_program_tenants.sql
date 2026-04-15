@@ -257,6 +257,7 @@ RETURNS TABLE (
 LANGUAGE sql
 SECURITY DEFINER
 STABLE
+SET search_path = public
 AS $$
   SELECT 
     t.id as tenant_id,
