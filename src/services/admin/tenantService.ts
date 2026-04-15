@@ -558,9 +558,10 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
   try {
     secureLogger.debug('🔍 getCurrentUserTenant: Starting for user:', userId);
     
-    // Try to get access token from sessionStorage (set during login to bypass hanging Supabase client)
-    const accessToken = sessionStorage.getItem('supabase_access_token');
-    
+    // Get access token from Supabase's own session (in-memory / secure storage, no sessionStorage needed)
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token ?? null;
+
     if (accessToken) {
       secureLogger.debug('🔑 Using direct HTTP fetch with stored access token');
       
