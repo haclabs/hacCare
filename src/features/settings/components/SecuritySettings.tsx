@@ -131,9 +131,9 @@ export const SecuritySettings: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
       setSuccess('Password updated successfully');
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error updating password:', err);
-      setError(parseAuthError(err));
+      setError(parseAuthError(err as Error));
     } finally {
       setLoading(false);
     }

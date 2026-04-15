@@ -127,16 +127,16 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
       } else {
         setError(launchResult?.message || 'Failed to launch simulation');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error launching simulation:', err);
-      
+      const errMsg = err instanceof Error ? err.message : '';
       // Provide user-friendly error messages
-      if (err.message?.includes('Template not found or not ready')) {
+      if (errMsg.includes('Template not found or not ready')) {
         setError('This template is not ready to launch. Please save a snapshot first by:\n1. Building your scenario (add patients, medications, etc.)\n2. Click the "Save Snapshot" button on the template\n3. Then try launching again');
-      } else if (err.message?.includes('Template has no snapshot data')) {
+      } else if (errMsg.includes('Template has no snapshot data')) {
         setError('This template has no saved snapshot. Please save a snapshot before launching.');
       } else {
-        setError(err.message || 'An unexpected error occurred');
+        setError(errMsg || 'An unexpected error occurred');
       }
     } finally {
       setLoading(false);

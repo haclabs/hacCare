@@ -95,9 +95,9 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
       } else {
         setError(result.message || 'Failed to create template');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error creating template:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
