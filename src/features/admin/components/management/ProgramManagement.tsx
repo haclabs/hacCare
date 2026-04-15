@@ -113,8 +113,8 @@ export const ProgramManagement: React.FC = () => {
         setShowCreateModal(false);
         setSuccess('');
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to save program');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save program');
     } finally {
       setSubmitting(false);
     }

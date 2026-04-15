@@ -150,8 +150,8 @@ export const BackupManagement: React.FC = () => {
       const metadata = await backupService.createBackup(options, user!.id);
       setSuccess(`Backup created successfully: ${metadata.id}`);
       await loadBackups();
-    } catch (err: any) {
-      setError(`Failed to create backup: ${err.message || 'Unknown error'}`);
+    } catch (err: unknown) {
+      setError(`Failed to create backup: ${err instanceof Error ? err.message : 'Unknown error'}`);
       secureLogger.error('Backup creation error:', err);
     } finally {
       setCreating(false);
@@ -178,8 +178,8 @@ export const BackupManagement: React.FC = () => {
 
       setSuccess('Backup downloaded successfully');
       await loadBackups();
-    } catch (err: any) {
-      setError(`Failed to download backup: ${err.message || 'Unknown error'}`);
+    } catch (err: unknown) {
+      setError(`Failed to download backup: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setDownloading(null);
     }
@@ -194,8 +194,8 @@ export const BackupManagement: React.FC = () => {
       await backupService.deleteBackup(backupId, user!.id);
       setSuccess('Backup deleted successfully');
       await loadBackups();
-    } catch (err: any) {
-      setError(`Failed to delete backup: ${err.message || 'Unknown error'}`);
+    } catch (err: unknown) {
+      setError(`Failed to delete backup: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -207,7 +207,7 @@ export const BackupManagement: React.FC = () => {
     try {
       const log = await backupService.getBackupActivityLog(backupId, user!.id);
       setActivityLog(log);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Failed to load activity log:', err);
       setActivityLog([]);
     } finally {

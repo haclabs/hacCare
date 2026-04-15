@@ -15,6 +15,7 @@ CREATE OR REPLACE FUNCTION reset_simulation_with_template_updates(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_tenant_id uuid;
