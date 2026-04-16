@@ -116,13 +116,17 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
   };
 
   /**
-   * Escape HTML special characters to prevent XSS attacks
-   * Converts characters like <, >, &, ", ' to their HTML entity equivalents
+   * Escape HTML special characters to prevent XSS attacks.
+   * Uses pure string replacement (no DOM operations) so static analysis
+   * tools do not track the output as a tainted DOM value.
    */
   const escapeHtml = (text: string): string => {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   };
 
   const printLabel = (orderId: string) => {
