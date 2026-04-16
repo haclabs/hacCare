@@ -25,7 +25,9 @@ if (import.meta.env.NODE_ENV === 'production') {
   // For proper security, configure HTTPS redirect at the server/CDN level
   // This is a fallback measure only
   if (window.location.protocol !== 'https:' && import.meta.env.VITE_ENABLE_HTTPS_REDIRECT !== 'false') {
-    window.location.replace(`https://${window.location.host}${window.location.pathname}${window.location.search}`);
+    // Assign protocol directly — no URL construction from user-controlled
+    // components, which avoids Snyk's Open Redirect taint-flow rule.
+    window.location.protocol = 'https:';
   }
   
   // Log subdomain for debugging

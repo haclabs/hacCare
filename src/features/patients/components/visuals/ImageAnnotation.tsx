@@ -8,6 +8,16 @@ import { usePatients } from '../../hooks/usePatients';
 import { format } from 'date-fns';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
+/** Only allow http/https URLs in <img src> to prevent javascript: XSS vectors. */
+const safeImageSrc = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    return ['https:', 'http:'].includes(parsed.protocol) ? url : '';
+  } catch {
+    return '';
+  }
+};
+
 interface ImageAnnotationProps {
   patientId: string;
   patientName: string;
@@ -267,7 +277,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
           onClick={() => handleSelectImage(image)}
         >
           <img
-            src={image.image_url}
+            src={safeImageSrc(image.image_url)}
             alt={image.description || 'Patient image'}
             className="w-full h-24 object-cover"
           />
@@ -356,7 +366,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
             <div className="space-y-4">
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <ImageMarker
-                  src={selectedImage.image_url}
+                  src={safeImageSrc(selectedImage.image_url)}
                   markers={markers}
                   onAddMarker={handleAddMarker}
                 />
