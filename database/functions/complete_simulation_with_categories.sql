@@ -17,6 +17,7 @@ CREATE OR REPLACE FUNCTION complete_simulation(
 RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_simulation simulation_active%ROWTYPE;

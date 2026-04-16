@@ -11,6 +11,7 @@ CREATE OR REPLACE FUNCTION compare_simulation_template_patients(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_sim_tenant_id UUID;

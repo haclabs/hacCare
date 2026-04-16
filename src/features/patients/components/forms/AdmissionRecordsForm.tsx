@@ -56,9 +56,9 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       };
       
       setFormData(emptyRecord);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error loading admission record:', err);
-      setError(err.message || 'Failed to load admission record');
+      setError(err instanceof Error ? err.message : 'Failed to load admission record');
     } finally {
       setLoading(false);
     }
@@ -95,9 +95,9 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       } else {
         onClose();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error saving admission record:', err);
-      setError(err.message || 'Failed to save admission record');
+      setError(err instanceof Error ? err.message : 'Failed to save admission record');
     } finally {
       setSaving(false);
     }

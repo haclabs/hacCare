@@ -129,6 +129,18 @@ class SystemLogger {
   private setupGlobalErrorHandlers() {
     // Catch unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
+      // Suppress benign Supabase auth AbortError: the GoTrue client uses the Web Locks
+      // API with steal:true to take over session refresh locks during navigation. The
+      // displaced lock request rejects with this error intentionally — it is harmless.
+      if (
+        event.reason?.name === 'AbortError' &&
+        typeof event.reason?.message === 'string' &&
+        event.reason.message.includes("Lock broken by another request with the 'steal' option")
+      ) {
+        event.preventDefault();
+        return;
+      }
+
       this.error(
         'Unhandled Promise Rejection',
         event.reason,

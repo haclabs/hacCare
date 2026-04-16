@@ -90,6 +90,7 @@ CREATE OR REPLACE FUNCTION save_template_version(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_current_version INT;
@@ -205,6 +206,7 @@ CREATE OR REPLACE FUNCTION restore_template_version(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_snapshot_to_restore JSONB;
@@ -250,6 +252,7 @@ CREATE OR REPLACE FUNCTION compare_template_versions(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_snapshot_old JSONB;

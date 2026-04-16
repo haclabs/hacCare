@@ -157,8 +157,8 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
         scheduled_end: new Date(formData.scheduled_end).toISOString()
       } as ScheduledSimulationData);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save event');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save event');
     } finally {
       setSaving(false);
     }

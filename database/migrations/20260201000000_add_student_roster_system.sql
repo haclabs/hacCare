@@ -193,7 +193,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 CREATE TRIGGER student_roster_updated_at_trigger
   BEFORE UPDATE ON student_roster

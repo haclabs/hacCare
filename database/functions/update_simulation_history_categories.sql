@@ -13,6 +13,7 @@ CREATE OR REPLACE FUNCTION update_simulation_history_categories(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   -- Update the categories in simulation_history
