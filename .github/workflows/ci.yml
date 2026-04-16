@@ -110,14 +110,14 @@ jobs:
           args: --sarif-file-output=snyk-code.sarif
 
       - name: Upload Snyk dependency results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('snyk-deps.sarif') != ''
         with:
           sarif_file: snyk-deps.sarif
           category: snyk-dependencies
 
       - name: Upload Snyk Code results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('snyk-code.sarif') != ''
         with:
           sarif_file: snyk-code.sarif
