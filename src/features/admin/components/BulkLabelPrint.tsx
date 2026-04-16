@@ -9,11 +9,11 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 
 // 5 fluorescent colors for per-patient label color-coding
 const PATIENT_COLORS = [
-  { bg: '#a3f307', border: '#6a9f00', text: '#1a2600' },  // Fluorescent yellow-green
-  { bg: '#05f9e2', border: '#00b8a8', text: '#003530' },  // Fluorescent cyan
-  { bg: '#e2f705', border: '#9aaa00', text: '#2a2a00' },  // Fluorescent yellow
-  { bg: '#f50b86', border: '#b5005f', text: '#000000' },  // Fluorescent pink
-  { bg: '#ff6f00', border: '#c54000', text: '#1a0a00' },  // Fluorescent orange
+  { bg: '#d4f97a', border: '#8ab800', text: '#1a2600' },  // Pastel yellow-green
+  { bg: '#a0fdf7', border: '#00b8a8', text: '#003530' },  // Pastel cyan
+  { bg: '#f5fd8f', border: '#b8c200', text: '#2a2a00' },  // Pastel yellow
+  { bg: '#f9a0d4', border: '#c4006a', text: '#1a0010' },  // Pastel pink
+  { bg: '#ffc299', border: '#cc5500', text: '#1a0a00' },  // Pastel orange
 ];
 
 // Sort patient IDs for deterministic color assignment across bracelets and medication labels
