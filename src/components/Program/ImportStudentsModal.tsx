@@ -136,9 +136,9 @@ export const ImportStudentsModal: React.FC<ImportStudentsModalProps> = ({
         }, 2000);
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Import error:', err);
-      setError(err.message || 'Failed to import students');
+      setError(err instanceof Error ? err.message : 'Failed to import students');
     } finally {
       setLoading(false);
     }

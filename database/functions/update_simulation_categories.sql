@@ -13,6 +13,7 @@ CREATE OR REPLACE FUNCTION update_simulation_categories(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   -- Simply update the categories - doesn't affect any other simulation data

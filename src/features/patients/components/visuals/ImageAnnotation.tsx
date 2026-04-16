@@ -58,9 +58,9 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       if (patientImages.length > 0 && !selectedImage) {
         handleSelectImage(patientImages[0]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error loading images:', err);
-      setError(err.message || 'Failed to load images');
+      setError(err instanceof Error ? err.message : 'Failed to load images');
     } finally {
       setLoading(false);
     }
@@ -109,9 +109,9 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       } catch (refreshError) {
         secureLogger.warn('Failed to refresh patient data after image upload:', refreshError);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error uploading image:', err);
-      setError(err.message || 'Failed to upload image');
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
     } finally {
       setUploading(false);
     }
@@ -148,9 +148,9 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       );
       
       setSelectedImage(updatedImage);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error saving annotations:', err);
-      setError(err.message || 'Failed to save annotations'); 
+      setError(err instanceof Error ? err.message : 'Failed to save annotations'); 
       
       // Refresh patient data to reflect the updated annotations
       try {
@@ -185,9 +185,9 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       } catch (refreshError) {
         secureLogger.warn('Failed to refresh patient data after image deletion:', refreshError);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error deleting image:', err);
-      setError(err.message || 'Failed to delete image');
+      setError(err instanceof Error ? err.message : 'Failed to delete image');
     } finally {
       setUploading(false);
     }

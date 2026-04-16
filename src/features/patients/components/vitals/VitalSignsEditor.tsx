@@ -73,9 +73,9 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
       
       // Call the onSave callback
       onSave(vitalsToSave);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error saving vitals:', err);
-      setError(err.message || 'Failed to save vital signs');
+      setError(err instanceof Error ? err.message : 'Failed to save vital signs');
     } finally {
       setLoading(false);
     }

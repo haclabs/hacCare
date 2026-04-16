@@ -25,9 +25,9 @@ export const BowelRecordsList: React.FC<BowelRecordsListProps> = ({
       setError(null);
       const data = await fetchPatientBowelRecords(patientId);
       setRecords(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error loading bowel records:', err);
-      setError(err.message || 'Failed to load bowel records');
+      setError(err instanceof Error ? err.message : 'Failed to load bowel records');
     } finally {
       setLoading(false);
     }

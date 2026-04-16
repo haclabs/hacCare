@@ -34,9 +34,9 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
       setError(null);
       const data = await fetchPatientAssessments(patientId);
       setAssessments(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error loading assessments:', err);
-      setError(err.message || 'Failed to load assessments');
+      setError(err instanceof Error ? err.message : 'Failed to load assessments');
     } finally {
       setLoading(false);
     }
