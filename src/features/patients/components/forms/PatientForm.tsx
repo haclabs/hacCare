@@ -6,6 +6,7 @@ import { useTenantNurses } from '../../../admin/hooks/useTenantNurses';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
 import { PATIENT_AVATARS, getRandomAvatarId } from '../../../../data/patientAvatars';
 import { secureLogger } from '../../../../lib/security/secureLogger';
+import { sanitizeUserInput } from '../../../../utils/sanitization';
 
 /**
  * Patient Form Component
@@ -151,23 +152,28 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
     setLoading(true);
     
     try {
+      // Sanitize free-text fields before writing to the database.
+      // Supabase uses parameterized queries (SQL injection handled at DB layer);
+      // this strips any HTML/script tags to prevent stored XSS.
+      const sanitize = (v: string) => sanitizeUserInput(v);
+
       // Create complete patient object
       const patientData: Patient = {
         id: patient?.id || uuidv4(), // Generate proper UUID for new patients
         patient_id: formData.patient_id!,
-        first_name: formData.first_name!,
-        last_name: formData.last_name!,
+        first_name: sanitize(formData.first_name!),
+        last_name: sanitize(formData.last_name!),
         date_of_birth: formData.date_of_birth!,
         gender: formData.gender!,
-        room_number: formData.room_number!,
-        bed_number: formData.bed_number!,
+        room_number: sanitize(formData.room_number!),
+        bed_number: sanitize(formData.bed_number!),
         admission_date: formData.admission_date!,
         condition: formData.condition!,
-        diagnosis: formData.diagnosis!,
-        allergies: formData.allergies!,
+        diagnosis: sanitize(formData.diagnosis!),
+        allergies: formData.allergies!.map(sanitize),
         blood_type: formData.blood_type!,
-        emergency_contact_name: formData.emergency_contact_name!,
-        emergency_contact_relationship: formData.emergency_contact_relationship!,
+        emergency_contact_name: sanitize(formData.emergency_contact_name!),
+        emergency_contact_relationship: sanitize(formData.emergency_contact_relationship!),
         emergency_contact_phone: formData.emergency_contact_phone!,
         assigned_nurse: formData.assigned_nurse!,
         avatar_id: formData.avatar_id,

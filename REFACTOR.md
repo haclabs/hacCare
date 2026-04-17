@@ -21,13 +21,18 @@ These are small-effort, high-impact fixes. Do before any structural refactor.
 ---
 
 ### 1.2 — Sanitization audit and duplicate removal
-- [ ] Trace the full chain: form input → `inputValidator.ts` → `security.ts` → sanitization
-- [ ] Confirm sanitization actually fires on patient data submission (MARModule, VitalsModule, PatientForm)
-- [ ] `sanitization.ts` and `sanitization-smart.ts` differ by only 44 lines — delete `sanitization-smart.ts` and consolidate
-- [ ] Verify the retained file has the OWASP-correct SQL injection comment (parameterized queries, not string filtering)
+- [x] Trace the full chain: form input → `inputValidator.ts` → `security.ts` → sanitization
+- [x] Confirm sanitization actually fires on patient data submission (MARModule, VitalsModule, PatientForm)
+- [x] `sanitization.ts` and `sanitization-smart.ts` differ by only 44 lines — delete `sanitization-smart.ts` and consolidate
+- [x] Verify the retained file has the OWASP-correct SQL injection comment (parameterized queries, not string filtering)
 - **Why it matters:** Both files exist but neither is imported by any form component directly — chain may be broken.
 
-> Notes:
+> Notes: Chain was completely broken — none of the 3 utility files (sanitization.ts, sanitization-smart.ts, inputValidator.ts)
+> were imported anywhere. sanitization-smart.ts deleted (inferior duplicate). sanitizeUserInput() now wired into
+> PatientForm.handleSubmit for all free-text fields (first_name, last_name, diagnosis, allergies, room, emergency contact).
+> Supabase parameterized queries handle SQL injection at DB layer; the sanitization adds XSS protection for stored data.
+> All dangerouslySetInnerHTML usages audited — all safe (hardcoded SVG constants or static CSS strings, no user data).
+> inputValidator.ts (InputValidator class w/ DOMPurify) remains available but unused — candidate for Phase 3 cleanup.
 
 ---
 
