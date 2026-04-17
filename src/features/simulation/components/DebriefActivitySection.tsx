@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityItem } from './DebriefActivityItem';
 
 // Activity Section Component
-xport const ActivitySection: React.FC<{
+export const ActivitySection: React.FC<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   section: any;
   isExpanded: boolean;
