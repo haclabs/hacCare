@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Printer, Download, Users, Pill, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../../services/operations/bulkLabelService';
-import { BarcodeGenerator } from '../../clinical/components/BarcodeGenerator';
+import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import { Tenant } from '../../../types';
 import { bcmaService } from '../../../services/clinical/bcmaService';
 import { secureLogger } from '../../../lib/security/secureLogger';

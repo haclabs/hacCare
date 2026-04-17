@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
-import type { LabOrder, CreateLabOrderInput } from '../../features/clinical/types/labOrders';
+import type { LabOrder, CreateLabOrderInput } from '../../features/patients/types/labOrders';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 /**

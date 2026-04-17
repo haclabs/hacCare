@@ -12,9 +12,9 @@ import {
   deleteLabPanel,
 } from '../../../services/clinical/labService';
 import { getLabOrders } from '../../../services/clinical/labOrderService';
-import type { LabPanel, LabCategory } from '../../../features/clinical/types/labs';
-import type { LabOrder } from '../../../features/clinical/types/labOrders';
-import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../../../features/clinical/types/labs';
+import type { LabPanel, LabCategory } from '../types/labs';
+import type { LabOrder } from '../types/labOrders';
+import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../types/labs';
 import { LabPanelDetail } from './LabPanelDetail';
 import { CreateLabPanelModal } from './CreateLabPanelModal';
 import { LabOrderEntryForm } from './LabOrderEntryForm';

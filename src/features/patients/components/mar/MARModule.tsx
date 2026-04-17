@@ -21,7 +21,7 @@ import { formatLocalTime } from '../../../../utils/time';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
-import { BBITTab } from '../../../patients/components/mar/BBITTab';
+import { BBITTab } from './BBITTab';
 import { MedicationHistoryView } from './MedicationHistoryView';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge } from '../../../../utils/vitalRanges';

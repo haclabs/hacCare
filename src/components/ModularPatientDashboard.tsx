@@ -34,8 +34,8 @@ import {
   BookOpen,
   ClipboardList
 } from 'lucide-react';
-import { VitalsModule } from '../features/clinical/components/vitals';
-import { MARModule } from '../features/clinical/components/mar';
+import { VitalsModule } from '../features/patients/components/vitals';
+import { MARModule } from '../features/patients/components/mar';
 import { FormsModule } from '../features/forms';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import { HandoverNotes } from '../features/patients/components/handover/HandoverNotes';
@@ -45,7 +45,7 @@ import { getAvatarById } from '../data/patientAvatars';
 import { AdvancedDirectivesForm } from '../features/patients/components/forms/AdvancedDirectivesForm';
 import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
 import { Labs } from '../features/patients/components/Labs';
-import { IntakeOutputCard } from '../features/clinical/components/intake-output';
+import { IntakeOutputCard } from '../features/patients/components/intake-output';
 import { Patient } from '../types';
 import { fetchPatientById, fetchPatientVitals } from '../services/patient/patientService';
 import { fetchPatientMedications } from '../services/clinical/medicationService';
@@ -56,7 +56,7 @@ import { getPatientHandoverNotes } from '../services/patient/handoverService';
 import { fetchPatientAssessments, createAssessment } from '../services/patient/assessmentService';
 import { fetchPatientBowelRecords, createBowelRecord } from '../services/clinical/bowelRecordService';
 import { getLabPanels, getLabResults, hasUnacknowledgedLabs } from '../services/clinical/labService';
-import type { LabPanel, LabResult } from '../features/clinical/types/labs';
+import type { LabPanel, LabResult } from '../features/patients/types/labs';
 import { useTenant } from '../contexts/TenantContext';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 import { calculatePreciseAge } from '../utils/vitalRanges';

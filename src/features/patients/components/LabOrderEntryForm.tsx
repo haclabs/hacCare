@@ -7,13 +7,13 @@ import React, { useState } from 'react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { createLabOrder } from '../../../services/clinical/labOrderService';
-import type { CreateLabOrderInput } from '../../clinical/types/labOrders';
+import type { CreateLabOrderInput } from '../types/labOrders';
 import {
   getProcedureCategories,
   getProcedureTypes,
   getSourceCategories,
   getSourceTypes
-} from '../../clinical/types/labOrders';
+} from '../types/labOrders';
 import { formatDate } from '../../../utils/time';
 
 interface LabOrderEntryFormProps {

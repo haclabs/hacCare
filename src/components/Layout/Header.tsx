@@ -56,9 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
         : 'Workspace';
 
   return (
-    <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg ${ 
-      sidebarCollapsed ? 'ml-20' : 'ml-64'
-    }`}>
+    <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
       <div className="flex items-center justify-between w-full gap-4">
         {/* Left: Context Info */}
         <div className="flex items-center gap-4 flex-1">

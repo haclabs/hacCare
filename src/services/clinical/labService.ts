@@ -18,7 +18,7 @@ import type {
   EffectiveRange,
   AbnormalResultSummary,
   LabCategory,
-} from '../../features/clinical/types/labs';
+} from '../../features/patients/types/labs';
 
 // ============================================================================
 // FLAG COMPUTATION

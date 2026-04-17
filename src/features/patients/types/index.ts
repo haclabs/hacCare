@@ -4,3 +4,6 @@
  */
 
 export * from './patient';
+export * from './clinical';
+export * from './labs';
+export * from './labOrders';

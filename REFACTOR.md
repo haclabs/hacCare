@@ -59,20 +59,26 @@ These are small-effort, high-impact fixes. Do before any structural refactor.
 ## Phase 2 — Structural Debt (High Priority)
 
 ### 2.1 — Complete `clinical/` → `patients/` migration
-- [ ] `MARModule.tsx` (1,869 lines) — move to `features/patients/components/mar/`
-- [ ] `BCMAAdministration.tsx` (923 lines) — move to `features/patients/components/`
-- [ ] `VitalsModule.tsx` (783 lines) — move to `features/patients/components/vitals/`
-- [ ] `useMedications.ts` (514 lines) — move to `features/patients/hooks/`
-- [ ] `BCMAVerification.tsx`, `BarcodeScanner.tsx`, `BarcodeGenerator.tsx` — move to `features/patients/`
-- [ ] `IntakeOutputCard.tsx`, `AddIntakeOutputModal.tsx` — move to `features/patients/`
-- [ ] Move types: `labs.ts`, `labOrders.ts`, `clinical.ts` → `features/patients/types/`
-- [ ] Update `src/types/index.ts` barrel exports
-- [ ] Update `ModularPatientDashboard.tsx` imports
-- [ ] Update `labService.ts`, `labOrderService.ts` imports
-- [ ] Delete `src/features/clinical/` folder entirely
-- [ ] Run `npm run type-check` to verify zero broken imports
+- [x] `MARModule.tsx` (1,869 lines) — move to `features/patients/components/mar/`
+- [x] `BCMAAdministration.tsx` (923 lines) — move to `features/patients/components/`
+- [x] `VitalsModule.tsx` (783 lines) — move to `features/patients/components/vitals/`
+- [x] `useMedications.ts` (514 lines) — move to `features/patients/hooks/`
+- [x] `BCMAVerification.tsx`, `BarcodeScanner.tsx`, `BarcodeGenerator.tsx` — move to `features/patients/`
+- [x] `IntakeOutputCard.tsx`, `AddIntakeOutputModal.tsx` — move to `features/patients/`
+- [x] Move types: `labs.ts`, `labOrders.ts`, `clinical.ts` → `features/patients/types/`
+- [x] Update `src/types/index.ts` barrel exports
+- [x] Update `ModularPatientDashboard.tsx` imports
+- [x] Update `labService.ts`, `labOrderService.ts` imports
+- [x] Delete `src/features/clinical/` folder entirely
+- [x] Run `npm run type-check` to verify zero broken imports
 
-> Notes:
+> Notes: All 14 source files (types, hooks, components) moved with `git mv` to preserve history.
+> Internal cross-references within the moved files were already correct (same folder depth), except:
+> - `MARModule.tsx`: `../../../patients/components/mar/BBITTab` → `./BBITTab` (now a sibling)
+> - `VitalsModule.tsx`: 3 roundabout `../../../../features/patients/components/vitals/*` → `./` siblings
+> Created barrel index files: `patients/components/mar/index.ts`, `vitals/index.ts`, `intake-output/index.ts`
+> `src/types/index.ts` barrel cleaned up (removed dead `clinical/types` re-export).
+> `tsc --noEmit` clean, lint still at 14 errors (same pre-existing React Compiler issues).
 
 ---
 

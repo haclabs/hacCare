@@ -5,8 +5,8 @@ import React, { useState } from 'react';
 import { X, AlertTriangle, Check } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { acknowledgeLabs } from '../../../services/clinical/labService';
-import type { LabPanel, LabResult } from '../../../features/clinical/types/labs';
-import { getFlagLabel, getFlagColorClass, getEffectiveRangeDisplay } from '../../../features/clinical/types/labs';
+import type { LabPanel, LabResult } from '../types/labs';
+import { getFlagLabel, getFlagColorClass, getEffectiveRangeDisplay } from '../types/labs';
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
