@@ -651,3 +651,5 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     </div>
   );
 };
+
+export default EnhancedDebriefModal;
