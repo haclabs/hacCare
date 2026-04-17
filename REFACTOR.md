@@ -101,12 +101,16 @@ Current state: 13+ useState hooks, manual fetch chains, all logic fused in one f
 ---
 
 ### 2.3 — `PatientDetail.tsx` (1,242 lines → React Query)
-- [ ] Replace `useState` + `useEffect` fetch pattern with `useQuery` for patient, vitals, meds, notes, orders
-- [ ] Extract tab panels to sub-components
-- [ ] Verify tenant_id is included in all queries
-- [ ] Run `npm run type-check`
+- [x] Replace `useState` + `useEffect` fetch pattern with `useQuery` for patient, vitals, meds, notes
+- [x] Extract tab panels to sub-components (`PatientDetailTabs.tsx`)
+- [x] Verify tenant_id is included in all queries
+- [x] Replace 705-line inline `handlePrintRecord` with `printPatientRecord()` from `patientRecordPrinter.ts`
+- [x] Run `npm run type-check`
 
-> Notes:
+> Notes: PatientDetail.tsx: 1242 → 140 lines. PatientDetailTabs.tsx extracted (310 lines).
+> useQuery replaces Promise.all + 7 useState setters + useEffect; refreshes via queryClient.invalidateQueries.
+> Stale imports to clinical/components/mar replaced with patients/components/mar (Phase 2.1 path).
+> tsc --noEmit: clean ✓
 
 ---
 
