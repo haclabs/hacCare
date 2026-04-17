@@ -15,18 +15,6 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    return localStorage.getItem('sidebar-collapsed') === 'true';
-  });
-
-  // Listen for sidebar toggle events
-  useEffect(() => {
-    const handleSidebarToggle = (event: Event) => {
-      setSidebarCollapsed((event as CustomEvent).detail.collapsed);
-    };
-    window.addEventListener('sidebar-toggle', handleSidebarToggle);
-    return () => window.removeEventListener('sidebar-toggle', handleSidebarToggle);
-  }, []);
 
   // Update time every second
   useEffect(() => {

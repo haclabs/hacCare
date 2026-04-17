@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -73,63 +73,14 @@ function App() {
   const { currentTenant } = useTenant();
 
   // Application state management
-  const [activeTab, setActiveTab] = useState('patients');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'patients';
   const [braceletPatient, setBraceletPatient] = useState<Patient | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
-  const [, setEditingTemplate] = useState<{template_id: string, template_name: string} | null>(null);
-
-  // Listen for sidebar toggle events
-  useEffect(() => {
-    const handleSidebarToggle = (event: Event) => {
-      setSidebarCollapsed((event as CustomEvent).detail.collapsed);
-    };
-    window.addEventListener('sidebar-toggle', handleSidebarToggle);
-    return () => window.removeEventListener('sidebar-toggle', handleSidebarToggle);
-  }, []);
-
-  // Listen for tab change events
-  useEffect(() => {
-    const handleTabChange = (event: Event) => {
-      const tab = (event as CustomEvent).detail?.tab;
-      if (tab) setActiveTab(tab);
-    };
-    window.addEventListener('change-tab', handleTabChange);
-    return () => window.removeEventListener('change-tab', handleTabChange);
-  }, []);
-
-  // Check for template editing mode
-  useEffect(() => {
-    const editInfoStr = sessionStorage.getItem('editing_template');
-    if (editInfoStr) {
-      try {
-        const editInfo = JSON.parse(editInfoStr);
-        setEditingTemplate(editInfo);
-      } catch (error) {
-        secureLogger.error('Error parsing editing_template', error);
-      }
-    } else {
-      setEditingTemplate(null);
-    }
-    
-    // Listen for template editing changes
-    const handleTemplateEditChange = () => {
-      const updatedEditInfo = sessionStorage.getItem('editing_template');
-      if (updatedEditInfo) {
-        setEditingTemplate(JSON.parse(updatedEditInfo));
-      } else {
-        setEditingTemplate(null);
-      }
-    };
-    window.addEventListener('template-edit-change', handleTemplateEditChange);
-    return () => {
-      window.removeEventListener('template-edit-change', handleTemplateEditChange);
-    };
-  }, [location.pathname]);
-  // const [isScanning, setIsScanning] = useState<boolean>(false);
 
   // Detect simulation subdomain and redirect to simulation portal
   useEffect(() => {
@@ -167,9 +118,7 @@ function App() {
    * @param {string} tab - The new active tab
    */
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    // Stay within the /app route - just change the active tab state
-    // The route will be handled by the renderContent function
+    setSearchParams({ tab });
   };
 
   /**
@@ -660,6 +609,7 @@ function App() {
       <Sidebar 
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        onCollapsedChange={setSidebarCollapsed}
       />
       
       {/* Main Layout - Offset by sidebar width */}

@@ -37,16 +37,22 @@ These are small-effort, high-impact fixes. Do before any structural refactor.
 ---
 
 ### 1.3 — Replace CustomEvent navigation with React Router
-- [ ] Remove `window.addEventListener('change-tab', ...)` in `App.tsx`
-- [ ] Remove `window.addEventListener('sidebar-toggle', ...)` in `App.tsx`
-- [ ] Remove `window.addEventListener('template-edit-change', ...)` in `App.tsx`
-- [ ] Replace tab navigation with `useSearchParams` or a `NavigationContext`
-- [ ] Identify all `dispatchEvent` call sites (SimulationTemplates.tsx, TemplateEditingBanner.tsx)
-- [ ] Update dispatch sites to use new navigation pattern
-- [ ] Test full template edit flow (Edit → patient editing → Save & Exit)
+- [x] Remove `window.addEventListener('change-tab', ...)` in `App.tsx`
+- [x] Remove `window.addEventListener('sidebar-toggle', ...)` in `App.tsx`
+- [x] Remove `window.addEventListener('template-edit-change', ...)` in `App.tsx` (was dead — never dispatched)
+- [x] Replace tab navigation with `useSearchParams` — `activeTab` is now `/app?tab=<name>` URL param
+- [x] Identify all `dispatchEvent` call sites (SimulationTemplates.tsx, TemplateEditingBanner.tsx, SimulationPortal.tsx)
+- [x] Update dispatch sites to use new navigation pattern
+- [x] Test full template edit flow (Edit → patient editing → Save & Exit)
 - **Why it matters:** CustomEvents don't clean up on remount, fire on unmounted components, and are completely untestable.
 
-> Notes:
+> Notes: `activeTab` state replaced with `useSearchParams` — tab is now a URL param (/app?tab=patients).
+> Back/forward browser navigation and bookmarking now work correctly for tab state.
+> `sidebar-toggle` event replaced with direct `onCollapsedChange` prop: App → Sidebar.
+> Header.tsx sidebarCollapsed state + event listener removed entirely (it was tracked but never rendered).
+> `template-edit-change` event listener removed — it was an orphaned listener (never dispatched anywhere).
+> `template-edit-start` event kept (legitimately consumed by TemplateEditingBanner).
+> SimulationPortal's setTimeout hack around dispatchEvent removed — no longer needed.
 
 ---
 

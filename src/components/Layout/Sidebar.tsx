@@ -26,9 +26,10 @@ const logo = '/images/logo.svg';
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onCollapsedChange }) => {
   const { hasRole, profile } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const navigate = useNavigate();
@@ -49,9 +50,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   // Save collapsed state to localStorage
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', isCollapsed.toString());
-    // Dispatch event so App.tsx can adjust margin
-    window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: { collapsed: isCollapsed } }));
-  }, [isCollapsed]);
+    // Notify parent so the main layout can adjust its margin
+    onCollapsedChange(isCollapsed);
+  }, [isCollapsed, onCollapsedChange]);
 
   // Update active indicator position when activeTab changes
   useEffect(() => {

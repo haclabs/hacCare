@@ -237,20 +237,11 @@ const SimulationPortal: React.FC = () => {
   };
 
   const handleLaunchActiveSimulation = () => {
-    // Navigate to main app and trigger tab change to simulations with active tab
-    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'simulations' } }));
-    setTimeout(() => {
-      navigate('/app', { state: { initialTab: 'active' }, replace: true });
-    }, 0);
+    navigate('/app?tab=simulations', { state: { initialTab: 'active' }, replace: true });
   };
 
   const handleManageSimulations = () => {
-    // Navigate to main app and trigger tab change to simulations with templates tab
-    // Pass initialTab in state so SimulationManager opens to templates instead of active
-    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'simulations' } }));
-    setTimeout(() => {
-      navigate('/app', { state: { initialTab: 'templates' }, replace: true });
-    }, 0);
+    navigate('/app?tab=simulations', { state: { initialTab: 'templates' }, replace: true });
   };
 
   if (authLoading || loading || enteringSimulation) {

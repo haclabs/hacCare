@@ -114,8 +114,7 @@ export const TemplateEditingBanner: React.FC = () => {
       secureLogger.debug('✅ Banner: Successfully exited template tenant');
       
       // Step 4: Navigate back to simulations/templates tab
-      navigate('/app');
-      window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'simulations' } }));
+      navigate('/app?tab=simulations');
       
     } catch (error) {
       secureLogger.error('❌ Banner: Error during save/exit:', error);
