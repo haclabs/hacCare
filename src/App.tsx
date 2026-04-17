@@ -32,7 +32,6 @@ function SafeSuspense({ children, fallback }: { children: React.ReactNode; fallb
 
 // Lazy-loaded feature components for better code splitting
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
-const BackupManagement = lazy(() => import('./features/admin/components/BackupManagement'));
 const AdminDashboard = lazy(() => import('./features/admin/components/AdminDashboard'));
 // Simulation components restored from commit 01ec049
 const SimulationManager = lazy(() => import('./features/simulation/components/SimulationManager'));
@@ -467,7 +466,7 @@ function App() {
       
       // If it's a workspace tab (simulations, schedule, etc.), fall through to the switch statement below
       // Only default to program workspace for unrecognized tabs
-      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'backup-management', 'admin', 'documentation', 'changelog', 'syslogs'].includes(activeTab)) {
+      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'admin', 'documentation', 'changelog', 'syslogs'].includes(activeTab)) {
         return (
           <SafeSuspense>
             <ProgramWorkspace />
@@ -545,13 +544,6 @@ function App() {
         return (
           <SafeSuspense>
             <PatientManagement />
-          </SafeSuspense>
-        );
-
-      case 'backup-management':
-        return (
-          <SafeSuspense>
-            <BackupManagement />
           </SafeSuspense>
         );
 

@@ -150,12 +150,12 @@ Current state: 13+ useState hooks, manual fetch chains, all logic fused in one f
 
 ---
 
-### 3.4 — Remaining large components (lower risk)
-- [ ] `SimulationLabelPrintModal.tsx` (1,460 lines) — extract per-label-type sub-components
-- [ ] `EnhancedDebriefModal.tsx` (1,325 lines) — extract section render blocks
-- [ ] `AvatarBoard.tsx` (1,284 lines) — extract action panels
-- [ ] `ActiveSimulations.tsx` (1,079 lines) — extract simulation cards, filter bar
-- [ ] `Settings.tsx` (690 lines) — extract settings sections
+### 3.4 — Remaining large components (lower risk) ✅ COMPLETE
+- [x] `SimulationLabelPrintModal.tsx` (1,460 → 260 lines) — extracted `LabelPreviewCard`, `LabelConfigPanel`, `useLabelPrint`, `LabelTypeSelector`
+- [x] `EnhancedDebriefModal.tsx` (1,325 → 653 lines) — extracted `DebriefStudentSection`, `DebriefActivityItem`, `useDebriefData`
+- [x] `AvatarBoard.tsx` (1,284 → 350 lines) — extracted `useAvatarBoard`, `AvatarCanvasPanel`, `AvatarRecordsList`, `WoundAssessmentViewer`
+- [x] `ActiveSimulations.tsx` (1,079 → 249 lines) — extracted `useActiveSimulations`, `SimulationCard`, `SimulationInstructorGuide`, `EditCategoriesModal`
+- [x] `Settings.tsx` (690 → 111 lines) — extracted `useSettingsMonitor`, `GeneralSettingsTab`
 
 > Notes:
 
