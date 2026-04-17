@@ -35,7 +35,7 @@ export const ProgramCalendar: React.FC = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [editingEvent, setEditingEvent] = useState<ScheduledSimulation | null>(null);
-  const [selectedEventForAction, setSelectedEventForAction] = useState<ScheduledSimulation | null>(null);
+  const [_selectedEventForAction, setSelectedEventForAction] = useState<ScheduledSimulation | null>(null);
   
   const { currentTenant, programTenants } = useTenant();
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);

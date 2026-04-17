@@ -65,10 +65,6 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   const isAdmin = hasRole('admin') || hasRole('super_admin');
   const canAcknowledge = panel.status !== 'acknowledged' && panel.ack_required;
 
-  useEffect(() => {
-    loadResults();
-  }, [panel.id]);
-
   const loadResults = async () => {
     setLoading(true);
     const { data, error } = await getLabResults(panel.id);
@@ -98,6 +94,10 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
     
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadResults();
+  }, [panel.id]);
 
   const handleDeleteResult = async (resultId: string) => {
     if (!confirm('Delete this lab result?')) return;

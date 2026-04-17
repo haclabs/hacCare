@@ -21,13 +21,11 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
 
   // Listen for sidebar toggle events
   useEffect(() => {
-    const handleSidebarToggle = (e: CustomEvent) => {
-      setSidebarCollapsed(e.detail.collapsed);
+    const handleSidebarToggle = (event: Event) => {
+      setSidebarCollapsed((event as CustomEvent).detail.collapsed);
     };
-    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
-    return () => {
-      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
-    };
+    window.addEventListener('sidebar-toggle', handleSidebarToggle);
+    return () => window.removeEventListener('sidebar-toggle', handleSidebarToggle);
   }, []);
 
   // Update time every second

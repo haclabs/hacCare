@@ -48,7 +48,7 @@ export const SystemStatus: React.FC = () => {
       const ping = Math.round(endTime - startTime);
       
       return { success: isHealthy, ping };
-    } catch (error) {
+    } catch (_error) {
       const endTime = performance.now();
       const ping = Math.round(endTime - startTime);
       return { success: false, ping };

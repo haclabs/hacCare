@@ -38,14 +38,14 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
     comments: '',
   });
 
-  useEffect(() => {
-    loadRefs();
-  }, []);
-
   const loadRefs = async () => {
     const { data } = await getLabResultRefs();
     setRefs(data || []);
   };
+
+  useEffect(() => {
+    loadRefs();
+  }, []);
 
   const handleSelectRef = (ref: LabResultRef) => {
     setSelectedRef(ref);

@@ -5,6 +5,8 @@
  * used throughout the hospital management system.
  */
 
+import type { JSX } from 'react';
+
 /**
  * Code-128 character set mapping
  * Maps characters to their Code-128 values

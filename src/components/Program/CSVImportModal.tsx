@@ -30,7 +30,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const [file, setFile] = useState<File | null>(null);
+  const [_file, setFile] = useState<File | null>(null);
   const [students, setStudents] = useState<StudentData[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [importing, setImporting] = useState(false);

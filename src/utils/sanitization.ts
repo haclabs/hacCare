@@ -560,7 +560,7 @@ export const sanitizeMedicalData = (input: string): string => {
   return input
     .trim()
     // Allow medical terminology and common characters
-    .replace(/[^a-zA-Z0-9\s\-_.,()\/:]/g, '')
+    .replace(/[^a-zA-Z0-9\s\-_.,()/:]/g, '')
     // Normalize whitespace
     .replace(/\s+/g, ' ')
     .trim()
@@ -673,7 +673,7 @@ export const ValidationHelpers = {
   },
 
   isValidPhoneNumber: (phone: string): boolean => {
-    const phoneRegex = /^[\+]?[1-9][\d\-\(\)\s]{7,20}$/;
+    const phoneRegex = /^[+]?[1-9][\d\-()\s]{7,20}$/;
     return phoneRegex.test(phone.replace(/\s/g, ''));
   },
 

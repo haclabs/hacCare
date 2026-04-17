@@ -1,5 +1,6 @@
-import { useState, lazy, Suspense, useEffect } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { QuickStats } from './components/Dashboard/QuickStats';
@@ -14,6 +15,20 @@ import { useAuth } from './hooks/useAuth';
 import { AuthCallback } from './components/Auth/AuthCallback';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 import { secureLogger } from './lib/security/secureLogger';
+
+/**
+ * Combines ErrorBoundary + Suspense so every lazy route fails independently
+ * instead of crashing the entire application tree.
+ */
+function SafeSuspense({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={fallback !== undefined ? fallback : <LoadingSpinner />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
 
 // Lazy-loaded feature components for better code splitting
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
@@ -69,26 +84,21 @@ function App() {
 
   // Listen for sidebar toggle events
   useEffect(() => {
-    const handleSidebarToggle = (e: CustomEvent) => {
-      setSidebarCollapsed(e.detail.collapsed);
+    const handleSidebarToggle = (event: Event) => {
+      setSidebarCollapsed((event as CustomEvent).detail.collapsed);
     };
-    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
-    return () => {
-      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
-    };
+    window.addEventListener('sidebar-toggle', handleSidebarToggle);
+    return () => window.removeEventListener('sidebar-toggle', handleSidebarToggle);
   }, []);
 
   // Listen for tab change events
   useEffect(() => {
-    const handleTabChange = (e: CustomEvent) => {
-      if (e.detail?.tab) {
-        setActiveTab(e.detail.tab);
-      }
+    const handleTabChange = (event: Event) => {
+      const tab = (event as CustomEvent).detail?.tab;
+      if (tab) setActiveTab(tab);
     };
-    window.addEventListener('change-tab', handleTabChange as EventListener);
-    return () => {
-      window.removeEventListener('change-tab', handleTabChange as EventListener);
-    };
+    window.addEventListener('change-tab', handleTabChange);
+    return () => window.removeEventListener('change-tab', handleTabChange);
   }, []);
 
   // Check for template editing mode
@@ -472,18 +482,18 @@ function App() {
       // Program Home - landing page with calendar and announcements
       if (activeTab === 'program-home') {
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <ProgramWorkspace />
-          </Suspense>
+          </SafeSuspense>
         );
       }
       
       // Check if user selected a program management page
       if (activeTab === 'program-students') {
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <ProgramStudents />
-          </Suspense>
+          </SafeSuspense>
         );
       }
       
@@ -500,9 +510,9 @@ function App() {
       // Program tenants don't have patients - they're instructor workspaces
       if (activeTab === 'patients') {
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <ProgramWorkspace />
-          </Suspense>
+          </SafeSuspense>
         );
       }
       
@@ -510,9 +520,9 @@ function App() {
       // Only default to program workspace for unrecognized tabs
       if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'backup-management', 'admin', 'documentation', 'changelog', 'syslogs'].includes(activeTab)) {
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <ProgramWorkspace />
-          </Suspense>
+          </SafeSuspense>
         );
       }
       // Otherwise, fall through to the switch statement below
@@ -563,58 +573,58 @@ function App() {
 
       case 'simulations':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <SimulationManager />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'user-management':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <UserManagement />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'management':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <ManagementDashboard />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'patient-management':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <PatientManagement />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'backup-management':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <BackupManagement />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'admin':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <AdminDashboard />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'documentation':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <Documentation />
-          </Suspense>
+          </SafeSuspense>
         );
 
       case 'changelog':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <Changelog />
-          </Suspense>
+          </SafeSuspense>
         );
       
       case 'schedule':
@@ -627,16 +637,16 @@ function App() {
       
       case 'settings':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <Settings />
-          </Suspense>
+          </SafeSuspense>
         );
       
       case 'syslogs':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <SystemLogsViewer />
-          </Suspense>
+          </SafeSuspense>
         );
       
       default:
@@ -673,22 +683,22 @@ function App() {
               <Route index element={renderContent()} />
               <Route path="auth/callback" element={<AuthCallback />} />
               <Route path="simulation-portal" element={
-                <Suspense fallback={<LoadingSpinner />}>
+                <SafeSuspense>
                   <SimulationRouter />
-                </Suspense>
+                </SafeSuspense>
               } />
               <Route path="patient/:id" element={
-                <Suspense fallback={<LoadingSpinner />}>
+                <SafeSuspense>
                   <ModularPatientDashboard 
                     onShowBracelet={setBraceletPatient}
                     currentUser={currentUser}
                   />
-                </Suspense>
+                </SafeSuspense>
               } />
               <Route path="patient/:id/modular" element={
-                <Suspense fallback={<LoadingSpinner />}>
+                <SafeSuspense>
                   <ModularPatientSystemDemo />
-                </Suspense>
+                </SafeSuspense>
               } />
               <Route path="*" element={renderContent()} />
             </Routes>
@@ -696,19 +706,19 @@ function App() {
         </div>
 
       {/* Program Selector Modal - For instructors with multiple programs */}
-      <Suspense fallback={null}>
+      <SafeSuspense fallback={null}>
         <ProgramSelectorModal />
-      </Suspense>
+      </SafeSuspense>
 
-      {/* Wrap HospitalBracelet in Suspense */}
+      {/* HospitalBracelet - full-screen overlay */}
       {braceletPatient && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <Suspense fallback={<LoadingSpinner />}>
+          <SafeSuspense>
             <HospitalBracelet
               patient={braceletPatient}
               onClose={() => setBraceletPatient(null)}
             />
-          </Suspense>
+          </SafeSuspense>
         </div>
       )}
     </div>
