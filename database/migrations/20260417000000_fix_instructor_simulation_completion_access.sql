@@ -1,12 +1,26 @@
 -- ============================================================================
--- LAUNCH SIMULATION FUNCTION WITH CATEGORIES
+-- FIX: INSTRUCTOR SIMULATION COMPLETION ACCESS
 -- ============================================================================
--- Enhanced version that accepts category tags for better organization
+-- Bug: When an instructor (non-super_admin) completes a simulation, the debrief
+-- captures zero student work. Super admins work correctly.
+--
+-- Root cause: launch_simulation_with_categories only adds *participants* to
+-- tenant_users for the simulation's active tenant — the instructor who launches
+-- and will complete the simulation is never added. When getStudentActivitiesBySimulation
+-- queries clinical tables (patient_vitals, medication_administrations, etc.),
+-- the tenant_users-based RLS policies return empty result sets for instructors.
+-- Super admins bypass RLS entirely, hence they see the full debrief.
+--
+-- Fix applied:
+--   1. Redeploy launch_simulation (via CREATE OR REPLACE) to also add the
+--      launching user (auth.uid()) to tenant_users as 'admin' on launch.
+--      This covers all future simulation launches.
+--
+--   2. The TypeScript handleCompleteWithInstructor (useActiveSimulations.ts)
+--      has been updated to upsert the completing user into tenant_users before
+--      querying activities — this covers already-running simulations that were
+--      launched without the fix.
 -- ============================================================================
-
--- Drop existing function
-DROP FUNCTION IF EXISTS launch_simulation(UUID, TEXT, INTEGER, UUID[], TEXT[]);
-DROP FUNCTION IF EXISTS launch_simulation(UUID, TEXT, INTEGER, UUID[], TEXT[], TEXT[], TEXT[]);
 
 CREATE OR REPLACE FUNCTION launch_simulation(
   p_template_id UUID,
@@ -131,7 +145,7 @@ BEGIN
     auth.uid(),
     'running',
     v_template_snapshot_version,
-    v_template_snapshot_version,  -- Launched at current template version
+    v_template_snapshot_version,
     p_primary_categories,
     p_sub_categories
   );
@@ -141,10 +155,12 @@ BEGIN
     array_to_string(p_primary_categories, ', '), 
     array_to_string(p_sub_categories, ', ');
 
-  -- Add the launching instructor to tenant_users so they can read all clinical
-  -- tables when generating the debrief on completion.  Previously only
-  -- participants were added here; the launcher was omitted, causing RLS to block
-  -- getStudentActivitiesBySimulation for non-super_admin instructors.
+  -- =========================================================================
+  -- FIX: Add the launching instructor to tenant_users so they can read all
+  -- clinical tables when generating the debrief on completion.
+  -- Previously only participants were added here; the launcher was omitted,
+  -- causing RLS to block getStudentActivitiesBySimulation for non-super_admins.
+  -- =========================================================================
   INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
   VALUES (auth.uid(), v_simulation_tenant_id, true, 'admin')
   ON CONFLICT (user_id, tenant_id) DO UPDATE
@@ -197,4 +213,4 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION launch_simulation IS 'Launch simulation with category tags for organization and filtering';
+COMMENT ON FUNCTION launch_simulation IS 'Launch simulation with category tags for organization and filtering. Instructor (launcher) is explicitly added to tenant_users for debrief RLS access.';
