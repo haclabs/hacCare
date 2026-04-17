@@ -3,7 +3,7 @@ import type { StudentActivity } from '../../../services/simulation/studentActivi
 import { ActivitySection } from './DebriefActivitySection';
 
 // Student Activity Section Component
-xport const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded?: boolean }> = ({ student, forceExpanded = false }) => {
+export const StudentActivitySection: React.FC<{ student: StudentActivity; forceExpanded?: boolean }> = ({ student, forceExpanded = false }) => {
   // If forceExpanded, start with all sections expanded
   const sectionsData = [
     { key: 'vitals', title: 'Vital Signs', items: student.activities.vitals || [], color: 'blue', icon: '💓' },
