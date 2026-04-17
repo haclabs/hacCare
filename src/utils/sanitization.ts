@@ -712,3 +712,18 @@ export const ValidationHelpers = {
            !eventHandlerRegex.test(input);
   },
 } as const;
+
+/**
+ * Escapes a string for safe interpolation into an HTML template.
+ * Uses pure string replacement so static analysis tools do not track
+ * the output as a tainted DOM sink value.
+ */
+export const escapeHtml = (value: string | null | undefined): string => {
+  if (value == null) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};

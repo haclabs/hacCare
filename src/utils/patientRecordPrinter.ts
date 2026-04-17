@@ -15,6 +15,7 @@ import { getLabPanels, getLabResults } from '../services/clinical/labService';
 import type { LabPanel, LabResult } from '../features/patients/types/labs';
 import type { Patient } from '../types';
 import { secureLogger } from '../lib/security/secureLogger';
+import { escapeHtml as e } from './sanitization';
 
 export async function printPatientRecord(patient: Patient, tenantId: string): Promise<void> {
   if (!patient?.id) {
@@ -69,7 +70,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Patient Medical Record - ${patient.first_name} ${patient.last_name}</title>
+          <title>Patient Medical Record - ${e(patient.first_name)} ${e(patient.last_name)}</title>
           <style>
             * { box-sizing: border-box; margin: 0; padding: 0; }
             body { font-family: 'Times New Roman', serif; font-size: 12px; line-height: 1.4; color: #000; background: #fff; }
@@ -144,7 +145,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
             </div>
 
             <div class="patient-id-bar">
-              PATIENT: ${patient.first_name?.toUpperCase()} ${patient.last_name?.toUpperCase()} | ID: ${patient.patient_id} | DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}
+              PATIENT: ${e(patient.first_name?.toUpperCase())} ${e(patient.last_name?.toUpperCase())} | ID: ${e(patient.patient_id)} | DOB: ${e(new Date(patient.date_of_birth).toLocaleDateString())}
             </div>
 
             <div class="form-section">
@@ -152,16 +153,16 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
               <div class="section-content">
                 <div class="info-grid">
                   <div>
-                    <div class="info-row"><span class="info-label">Last Name:</span><span class="info-value">${patient.last_name}</span></div>
-                    <div class="info-row"><span class="info-label">First Name:</span><span class="info-value">${patient.first_name}</span></div>
-                    <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${new Date(patient.date_of_birth).toLocaleDateString()}</span></div>
+                    <div class="info-row"><span class="info-label">Last Name:</span><span class="info-value">${e(patient.last_name)}</span></div>
+                    <div class="info-row"><span class="info-label">First Name:</span><span class="info-value">${e(patient.first_name)}</span></div>
+                    <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${e(new Date(patient.date_of_birth).toLocaleDateString())}</span></div>
                     <div class="info-row"><span class="info-label">Age:</span><span class="info-value">${new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} years</span></div>
                   </div>
                   <div>
-                    <div class="info-row"><span class="info-label">Gender:</span><span class="info-value">${patient.gender}</span></div>
-                    <div class="info-row"><span class="info-label">Blood Type:</span><span class="info-value">${patient.blood_type}</span></div>
-                    <div class="info-row"><span class="info-label">Room Number:</span><span class="info-value">${patient.room_number}</span></div>
-                    <div class="info-row"><span class="info-label">Bed Number:</span><span class="info-value">${patient.bed_number}</span></div>
+                    <div class="info-row"><span class="info-label">Gender:</span><span class="info-value">${e(patient.gender)}</span></div>
+                    <div class="info-row"><span class="info-label">Blood Type:</span><span class="info-value">${e(patient.blood_type)}</span></div>
+                    <div class="info-row"><span class="info-label">Room Number:</span><span class="info-value">${e(patient.room_number)}</span></div>
+                    <div class="info-row"><span class="info-label">Bed Number:</span><span class="info-value">${e(patient.bed_number)}</span></div>
                   </div>
                 </div>
               </div>
@@ -170,19 +171,19 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
             <div class="form-section">
               <div class="section-header">Admission Information</div>
               <div class="section-content">
-                <div class="info-row"><span class="info-label">Admission Date:</span><span class="info-value">${new Date(patient.admission_date).toLocaleDateString()}</span></div>
-                <div class="info-row"><span class="info-label">Current Condition:</span><span class="info-value">${patient.condition}</span></div>
-                <div class="info-row"><span class="info-label">Primary Diagnosis:</span><span class="info-value">${patient.diagnosis}</span></div>
-                <div class="info-row"><span class="info-label">Assigned Nurse:</span><span class="info-value">${patient.assigned_nurse || 'No nurse assigned'}</span></div>
+                <div class="info-row"><span class="info-label">Admission Date:</span><span class="info-value">${e(new Date(patient.admission_date).toLocaleDateString())}</span></div>
+                <div class="info-row"><span class="info-label">Current Condition:</span><span class="info-value">${e(patient.condition)}</span></div>
+                <div class="info-row"><span class="info-label">Primary Diagnosis:</span><span class="info-value">${e(patient.diagnosis)}</span></div>
+                <div class="info-row"><span class="info-label">Assigned Nurse:</span><span class="info-value">${e(patient.assigned_nurse || 'No nurse assigned')}</span></div>
               </div>
             </div>
 
             <div class="form-section">
               <div class="section-header">Emergency Contact Information</div>
               <div class="section-content">
-                <div class="info-row"><span class="info-label">Contact Name:</span><span class="info-value">${patient.emergency_contact_name}</span></div>
-                <div class="info-row"><span class="info-label">Relationship:</span><span class="info-value">${patient.emergency_contact_relationship}</span></div>
-                <div class="info-row"><span class="info-label">Phone Number:</span><span class="info-value">${patient.emergency_contact_phone}</span></div>
+                <div class="info-row"><span class="info-label">Contact Name:</span><span class="info-value">${e(patient.emergency_contact_name)}</span></div>
+                <div class="info-row"><span class="info-label">Relationship:</span><span class="info-value">${e(patient.emergency_contact_relationship)}</span></div>
+                <div class="info-row"><span class="info-label">Phone Number:</span><span class="info-value">${e(patient.emergency_contact_phone)}</span></div>
               </div>
             </div>
 
@@ -190,7 +191,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
               <div class="section-header">Allergies and Medical Alerts</div>
               <div class="section-content">
                 ${patient.allergies && patient.allergies.length > 0
-                  ? `<div class="alert-box">⚠️ CRITICAL ALLERGIES: ${patient.allergies.join(' • ')}</div>`
+                  ? `<div class="alert-box">⚠️ CRITICAL ALLERGIES: ${patient.allergies.map((a: string) => e(a)).join(' • ')}</div>`
                   : `<div class="alert-box no-alerts">✓ NO KNOWN ALLERGIES</div>`
                 }
               </div>
@@ -209,7 +210,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                     ${medicationsData.filter(med => med.status === 'Active').length > 0
                       ? medicationsData.filter(med => med.status === 'Active').map(med => `
                           <tr>
-                            <td>${med.name}</td><td>${med.dosage}</td><td>${med.frequency}</td><td>${med.route}</td><td>${med.status}</td>
+                            <td>${e(med.name)}</td><td>${e(med.dosage)}</td><td>${e(med.frequency)}</td><td>${e(med.route)}</td><td>${e(med.status)}</td>
                           </tr>`).join('')
                       : '<tr><td colspan="5" style="text-align:center;font-style:italic;">No active medications recorded</td></tr>'
                     }
@@ -225,10 +226,10 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                   <div style="margin-bottom:25px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
                     <div style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:white;padding:12px 16px;">
                       <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div><strong>Panel Time:</strong> ${new Date(panel.panel_time).toLocaleString()}</div>
-                        <span style="padding:4px 12px;border-radius:4px;font-size:11px;font-weight:bold;background:${panel.status === 'new' ? '#fee2e2' : panel.status === 'partial_ack' ? '#fef3c7' : '#d1fae5'};color:${panel.status === 'new' ? '#dc2626' : panel.status === 'partial_ack' ? '#d97706' : '#065f46'};">${panel.status}</span>
+                        <div><strong>Panel Time:</strong> ${e(new Date(panel.panel_time).toLocaleString())}</div>
+                        <span style="padding:4px 12px;border-radius:4px;font-size:11px;font-weight:bold;background:${panel.status === 'new' ? '#fee2e2' : panel.status === 'partial_ack' ? '#fef3c7' : '#d1fae5'};color:${panel.status === 'new' ? '#dc2626' : panel.status === 'partial_ack' ? '#d97706' : '#065f46'};">${e(panel.status)}</span>
                       </div>
-                      <div style="margin-top:4px;font-size:12px;"><strong>Source:</strong> ${panel.source} | <strong>Entered By:</strong> ${panel.entered_by_name || 'Unknown'}${panel.notes ? ` | <strong>Notes:</strong> ${panel.notes}` : ''}</div>
+                      <div style="margin-top:4px;font-size:12px;"><strong>Source:</strong> ${e(panel.source)} | <strong>Entered By:</strong> ${e(panel.entered_by_name || 'Unknown')}${panel.notes ? ` | <strong>Notes:</strong> ${e(panel.notes)}` : ''}</div>
                     </div>
                     ${panel.results && panel.results.length > 0 ? `
                       <table class="medication-table" style="margin:0;border:none;">
@@ -236,12 +237,12 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                         <tbody>
                           ${panel.results.map((result: LabResult) => `
                             <tr style="background:${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#fee2e2' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#fef3c7' : 'white'};">
-                              <td><strong>${result.test_name}</strong></td>
-                              <td style="font-weight:bold;color:${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#dc2626' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#d97706' : '#065f46'};">${result.value !== null ? result.value : 'N/A'}</td>
-                              <td>${result.units || '-'}</td>
-                              <td>${result.ref_operator === '<=' ? '≤' + result.ref_high : result.ref_operator === '>=' ? '≥' + result.ref_low : (result.ref_low || '-') + ' - ' + (result.ref_high || '-')}</td>
+                              <td><strong>${e(result.test_name)}</strong></td>
+                              <td style="font-weight:bold;color:${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#dc2626' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#d97706' : '#065f46'};">${result.value !== null ? e(String(result.value)) : 'N/A'}</td>
+                              <td>${e(result.units || '-')}</td>
+                              <td>${result.ref_operator === '<=' ? '≤' + e(String(result.ref_high)) : result.ref_operator === '>=' ? '≥' + e(String(result.ref_low)) : e(String(result.ref_low || '-')) + ' - ' + e(String(result.ref_high || '-'))}</td>
                               <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:${result.flag === 'critical_high' || result.flag === 'critical_low' ? '#dc2626' : result.flag === 'abnormal_high' || result.flag === 'abnormal_low' ? '#d97706' : '#10b981'};color:white;">${result.flag === 'normal' ? '✓' : result.flag === 'critical_high' ? '↑↑' : result.flag === 'critical_low' ? '↓↓' : result.flag === 'abnormal_high' ? '↑' : '↓'}</span></td>
-                              <td style="font-size:11px;color:#6b7280;">${result.category}</td>
+                              <td style="font-size:11px;color:#6b7280;">${e(result.category)}</td>
                             </tr>`).join('')}
                         </tbody>
                       </table>` : '<p style="padding:16px;text-align:center;font-style:italic;color:#6b7280;">No test results recorded for this panel</p>'}
@@ -258,12 +259,12 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                     <thead><tr><th>Temperature</th><th>Heart Rate</th><th>Blood Pressure</th><th>Respiratory Rate</th><th>O2 Saturation</th><th>Recorded</th></tr></thead>
                     <tbody>
                       <tr>
-                        <td>${formattedVitalsData[0].temperature}°F</td>
-                        <td>${formattedVitalsData[0].heartRate} bpm</td>
-                        <td>${formattedVitalsData[0].bloodPressureDisplay}</td>
-                        <td>${formattedVitalsData[0].respiratoryRateDisplay}/min</td>
-                        <td>${formattedVitalsData[0].oxygenSaturationDisplay}%${formattedVitalsData[0].roomAirIndicator}</td>
-                        <td>${formattedVitalsData[0].recorded_at ? new Date(formattedVitalsData[0].recorded_at).toLocaleString() : 'Not recorded'}</td>
+                        <td>${e(String(formattedVitalsData[0].temperature))}°F</td>
+                        <td>${e(String(formattedVitalsData[0].heartRate))} bpm</td>
+                        <td>${e(String(formattedVitalsData[0].bloodPressureDisplay))}</td>
+                        <td>${e(String(formattedVitalsData[0].respiratoryRateDisplay))}/min</td>
+                        <td>${e(String(formattedVitalsData[0].oxygenSaturationDisplay))}%${e(formattedVitalsData[0].roomAirIndicator)}</td>
+                        <td>${formattedVitalsData[0].recorded_at ? e(new Date(formattedVitalsData[0].recorded_at).toLocaleString()) : 'Not recorded'}</td>
                       </tr>
                     </tbody>
                   </table>` : '<p style="text-align:center;font-style:italic;margin:20px 0;">No vital signs recorded</p>'}
@@ -279,18 +280,18 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                       <div class="note-header" style="color:#854d0e;">📝 Admission Assessment</div>
                       <div class="note-content">
                         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px;">
-                          ${admissionData.created_at ? `<div><span style="font-weight:600;color:#854d0e;">Admission Date:</span> <span>${new Date(admissionData.created_at).toLocaleString()}</span></div>` : ''}
-                          ${admissionData.admission_type ? `<div><span style="font-weight:600;color:#854d0e;">Admission Type:</span> <span>${admissionData.admission_type}</span></div>` : ''}
-                          ${admissionData.chief_complaint ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#854d0e;">Chief Complaint:</span> <span>${admissionData.chief_complaint}</span></div>` : ''}
-                          ${admissionData.attending_physician ? `<div><span style="font-weight:600;color:#854d0e;">Attending Physician:</span> <span>${admissionData.attending_physician}</span></div>` : ''}
+                          ${admissionData.created_at ? `<div><span style="font-weight:600;color:#854d0e;">Admission Date:</span> <span>${e(new Date(admissionData.created_at).toLocaleString())}</span></div>` : ''}
+                          ${admissionData.admission_type ? `<div><span style="font-weight:600;color:#854d0e;">Admission Type:</span> <span>${e(admissionData.admission_type)}</span></div>` : ''}
+                          ${admissionData.chief_complaint ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#854d0e;">Chief Complaint:</span> <span>${e(admissionData.chief_complaint)}</span></div>` : ''}
+                          ${admissionData.attending_physician ? `<div><span style="font-weight:600;color:#854d0e;">Attending Physician:</span> <span>${e(admissionData.attending_physician)}</span></div>` : ''}
                         </div>
                         ${admissionData.secondary_contact_name ? `
                           <div style="background:#f8fafc;padding:10px;border-radius:6px;margin-top:10px;">
                             <div style="font-weight:600;color:#475569;margin-bottom:6px;">Secondary Contact</div>
                             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px;">
-                              <div><strong>Name:</strong> ${admissionData.secondary_contact_name}</div>
-                              ${admissionData.secondary_contact_phone ? `<div><strong>Phone:</strong> ${admissionData.secondary_contact_phone}</div>` : ''}
-                              ${admissionData.secondary_contact_relationship ? `<div><strong>Relationship:</strong> ${admissionData.secondary_contact_relationship}</div>` : ''}
+                              <div><strong>Name:</strong> ${e(admissionData.secondary_contact_name)}</div>
+                              ${admissionData.secondary_contact_phone ? `<div><strong>Phone:</strong> ${e(admissionData.secondary_contact_phone)}</div>` : ''}
+                              ${admissionData.secondary_contact_relationship ? `<div><strong>Relationship:</strong> ${e(admissionData.secondary_contact_relationship)}</div>` : ''}
                             </div>
                           </div>` : ''}
                       </div>
@@ -300,12 +301,12 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                     <div class="note-entry" style="background:#fef2f2;border:2px solid ${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'};">
                       <div class="note-header" style="color:${directiveData.dnr_status === 'Full Code' ? '#166534' : '#991b1b'};">⚕️ Advanced Directives</div>
                       <div class="note-content">
-                        <strong>DNR Status:</strong> <span style="font-weight:bold;font-size:16px;color:${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'};">${directiveData.dnr_status || 'Not Specified'}</span><br>
-                        <strong>Healthcare Proxy:</strong> ${directiveData.healthcare_proxy_name || 'None designated'}<br>
-                        ${directiveData.healthcare_proxy_phone ? `<strong>Proxy Contact:</strong> ${directiveData.healthcare_proxy_phone}<br>` : ''}
-                        <strong>Organ Donation:</strong> ${directiveData.organ_donation_status || 'Not specified'}<br>
-                        ${directiveData.religious_preference ? `<strong>Religious Preference:</strong> ${directiveData.religious_preference}<br>` : ''}
-                        ${directiveData.special_instructions ? `<strong>Special Instructions:</strong> ${directiveData.special_instructions}` : ''}
+                        <strong>DNR Status:</strong> <span style="font-weight:bold;font-size:16px;color:${directiveData.dnr_status === 'Full Code' ? '#22c55e' : '#ef4444'};">${e(directiveData.dnr_status || 'Not Specified')}</span><br>
+                        <strong>Healthcare Proxy:</strong> ${e(directiveData.healthcare_proxy_name || 'None designated')}<br>
+                        ${directiveData.healthcare_proxy_phone ? `<strong>Proxy Contact:</strong> ${e(directiveData.healthcare_proxy_phone)}<br>` : ''}
+                        <strong>Organ Donation:</strong> ${e(directiveData.organ_donation_status || 'Not specified')}<br>
+                        ${directiveData.religious_preference ? `<strong>Religious Preference:</strong> ${e(directiveData.religious_preference)}<br>` : ''}
+                        ${directiveData.special_instructions ? `<strong>Special Instructions:</strong> ${e(directiveData.special_instructions)}` : ''}
                       </div>
                       <div class="note-meta">End-of-life care preferences and legal healthcare decisions</div>
                     </div>` : '<div class="note-entry"><div class="note-content" style="text-align:center;font-style:italic;">No advanced directives recorded</div></div>'}
@@ -323,32 +324,32 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                               ${idx > 0 ? '<hr style="margin:15px 0;border:none;border-top:1px solid #e5e7eb;">' : ''}
                               <div style="margin-bottom:${idx < assessmentsData.length - 1 ? '15px' : '0'};">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                                  <strong style="font-size:14px;color:#1e40af;font-weight:700;">${parsedData.assessmentType ? parsedData.assessmentType.toUpperCase() : 'NURSING ASSESSMENT'}</strong>
-                                  <span style="font-size:12px;color:#64748b;">${new Date(parsedData.assessmentDate || assessment.created_at || '').toLocaleString()}</span>
+                                  <strong style="font-size:14px;color:#1e40af;font-weight:700;">${parsedData.assessmentType ? e(parsedData.assessmentType.toUpperCase()) : 'NURSING ASSESSMENT'}</strong>
+                                  <span style="font-size:12px;color:#64748b;">${e(new Date(parsedData.assessmentDate || assessment.created_at || '').toLocaleString())}</span>
                                 </div>
                                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-                                  ${parsedData.generalAppearance ? `<div><span style="font-weight:600;color:#475569;">General Appearance:</span> ${parsedData.generalAppearance}</div>` : ''}
-                                  ${parsedData.levelOfConsciousness ? `<div><span style="font-weight:600;color:#475569;">LOC:</span> ${parsedData.levelOfConsciousness}</div>` : ''}
-                                  ${parsedData.respiratoryAssessment ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#475569;">Respiratory:</span> ${parsedData.respiratoryAssessment}</div>` : ''}
-                                  ${parsedData.cardiovascularAssessment ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#475569;">Cardiovascular:</span> ${parsedData.cardiovascularAssessment}</div>` : ''}
-                                  ${parsedData.motorFunction ? `<div><span style="font-weight:600;color:#475569;">Motor Function:</span> ${parsedData.motorFunction}</div>` : ''}
-                                  ${parsedData.cognitiveFunction ? `<div><span style="font-weight:600;color:#475569;">Cognitive Function:</span> ${parsedData.cognitiveFunction}</div>` : ''}
-                                  ${parsedData.skinCondition ? `<div><span style="font-weight:600;color:#475569;">Skin Condition:</span> ${parsedData.skinCondition}</div>` : ''}
-                                  ${parsedData.pressureUlcerRisk ? `<div><span style="font-weight:600;color:${parsedData.pressureUlcerRisk === 'high' ? '#dc2626' : '#475569'};">Pressure Ulcer Risk:</span> ${parsedData.pressureUlcerRisk}</div>` : ''}
-                                  ${parsedData.fallRiskScore != null ? `<div><span style="font-weight:600;color:#475569;">Fall Risk Score:</span> ${parsedData.fallRiskScore}</div>` : ''}
-                                  ${parsedData.fallRiskFactors ? `<div><span style="font-weight:600;color:#475569;">Fall Risk Factors:</span> ${parsedData.fallRiskFactors}</div>` : ''}
+                                  ${parsedData.generalAppearance ? `<div><span style="font-weight:600;color:#475569;">General Appearance:</span> ${e(parsedData.generalAppearance)}</div>` : ''}
+                                  ${parsedData.levelOfConsciousness ? `<div><span style="font-weight:600;color:#475569;">LOC:</span> ${e(parsedData.levelOfConsciousness)}</div>` : ''}
+                                  ${parsedData.respiratoryAssessment ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#475569;">Respiratory:</span> ${e(parsedData.respiratoryAssessment)}</div>` : ''}
+                                  ${parsedData.cardiovascularAssessment ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#475569;">Cardiovascular:</span> ${e(parsedData.cardiovascularAssessment)}</div>` : ''}
+                                  ${parsedData.motorFunction ? `<div><span style="font-weight:600;color:#475569;">Motor Function:</span> ${e(parsedData.motorFunction)}</div>` : ''}
+                                  ${parsedData.cognitiveFunction ? `<div><span style="font-weight:600;color:#475569;">Cognitive Function:</span> ${e(parsedData.cognitiveFunction)}</div>` : ''}
+                                  ${parsedData.skinCondition ? `<div><span style="font-weight:600;color:#475569;">Skin Condition:</span> ${e(parsedData.skinCondition)}</div>` : ''}
+                                  ${parsedData.pressureUlcerRisk ? `<div><span style="font-weight:600;color:${parsedData.pressureUlcerRisk === 'high' ? '#dc2626' : '#475569'};">Pressure Ulcer Risk:</span> ${e(parsedData.pressureUlcerRisk)}</div>` : ''}
+                                  ${parsedData.fallRiskScore != null ? `<div><span style="font-weight:600;color:#475569;">Fall Risk Score:</span> ${e(String(parsedData.fallRiskScore))}</div>` : ''}
+                                  ${parsedData.fallRiskFactors ? `<div><span style="font-weight:600;color:#475569;">Fall Risk Factors:</span> ${e(parsedData.fallRiskFactors)}</div>` : ''}
                                 </div>
-                                ${parsedData.assessmentNotes ? `<div style="background:#f8fafc;padding:10px;border-radius:6px;margin-top:10px;"><div style="font-weight:600;color:#1e40af;margin-bottom:6px;">Assessment Notes</div><div style="font-size:13px;color:#334155;">${parsedData.assessmentNotes}</div></div>` : ''}
-                                ${parsedData.recommendations ? `<div style="background:#f0fdf4;padding:10px;border-radius:6px;margin-top:10px;"><div style="font-weight:600;color:#059669;margin-bottom:6px;">Recommendations</div><div style="font-size:13px;color:#334155;">${parsedData.recommendations}</div></div>` : ''}
-                                <div style="margin-top:10px;font-size:12px;color:#64748b;"><strong>Assessed by:</strong> ${parsedData.nurseName || assessment.nurse_name} • <strong>Priority:</strong> ${parsedData.priorityLevel || assessment.priority_level || 'routine'}</div>
+                                ${parsedData.assessmentNotes ? `<div style="background:#f8fafc;padding:10px;border-radius:6px;margin-top:10px;"><div style="font-weight:600;color:#1e40af;margin-bottom:6px;">Assessment Notes</div><div style="font-size:13px;color:#334155;">${e(parsedData.assessmentNotes)}</div></div>` : ''}
+                                ${parsedData.recommendations ? `<div style="background:#f0fdf4;padding:10px;border-radius:6px;margin-top:10px;"><div style="font-weight:600;color:#059669;margin-bottom:6px;">Recommendations</div><div style="font-size:13px;color:#334155;">${e(parsedData.recommendations)}</div></div>` : ''}
+                                <div style="margin-top:10px;font-size:12px;color:#64748b;"><strong>Assessed by:</strong> ${e(parsedData.nurseName || assessment.nurse_name)} • <strong>Priority:</strong> ${e(parsedData.priorityLevel || assessment.priority_level || 'routine')}</div>
                               </div>`;
                           } else {
                             return `
                               ${idx > 0 ? '<hr style="margin:15px 0;border:none;border-top:1px solid #e5e7eb;">' : ''}
                               <div>
-                                <strong>Assessment #${idx + 1}:</strong> ${new Date(assessment.created_at || '').toLocaleDateString()}<br>
-                                <strong>By:</strong> ${assessment.nurse_name}<br>
-                                <strong>Notes:</strong> ${assessment.assessment_notes || 'No notes provided'}
+                                <strong>Assessment #${idx + 1}:</strong> ${e(new Date(assessment.created_at || '').toLocaleDateString())}<br>
+                                <strong>By:</strong> ${e(assessment.nurse_name)}<br>
+                                <strong>Notes:</strong> ${e(assessment.assessment_notes || 'No notes provided')}
                               </div>`;
                           }
                         }).join('')}
@@ -359,12 +360,12 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                     <div class="note-entry" style="background:#f0fdf4;border-color:#22c55e;">
                       <div class="note-header" style="color:#166534;">📊 Bowel Records (${bowelRecordsData.length} on file)</div>
                       <div class="note-content">
-                        <strong>Latest:</strong> ${new Date(bowelRecordsData[0].recorded_at).toLocaleString()}<br>
-                        <strong>Continence:</strong> ${bowelRecordsData[0].bowel_incontinence} | <strong>Appearance:</strong> ${bowelRecordsData[0].stool_appearance}<br>
-                        <strong>Consistency:</strong> ${bowelRecordsData[0].stool_consistency}, <strong>Colour:</strong> ${bowelRecordsData[0].stool_colour}, <strong>Amount:</strong> ${bowelRecordsData[0].stool_amount}
-                        ${bowelRecordsData[0].notes ? `<br><strong>Notes:</strong> ${bowelRecordsData[0].notes}` : ''}
+                        <strong>Latest:</strong> ${e(new Date(bowelRecordsData[0].recorded_at).toLocaleString())}<br>
+                        <strong>Continence:</strong> ${e(bowelRecordsData[0].bowel_incontinence)} | <strong>Appearance:</strong> ${e(bowelRecordsData[0].stool_appearance)}<br>
+                        <strong>Consistency:</strong> ${e(bowelRecordsData[0].stool_consistency)}, <strong>Colour:</strong> ${e(bowelRecordsData[0].stool_colour)}, <strong>Amount:</strong> ${e(bowelRecordsData[0].stool_amount)}
+                        ${bowelRecordsData[0].notes ? `<br><strong>Notes:</strong> ${e(bowelRecordsData[0].notes)}` : ''}
                       </div>
-                      <div class="note-meta">Recorded by: ${bowelRecordsData[0].nurse_name}</div>
+                      <div class="note-meta">Recorded by: ${e(bowelRecordsData[0].nurse_name)}</div>
                     </div>` : '<div class="note-entry"><div class="note-content" style="text-align:center;font-style:italic;">No bowel records documented</div></div>'}
                 </div>
               </div>
@@ -379,8 +380,8 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                   <tbody>
                     ${ordersData.slice(0, 10).map(order => `
                       <tr>
-                        <td>${order.order_date}</td><td>${order.order_time}</td><td>${order.order_text}</td><td>${order.order_type}</td>
-                        <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:${order.is_acknowledged ? '#d1fae5' : '#fee2e2'};color:${order.is_acknowledged ? '#065f46' : '#dc2626'};">${order.is_acknowledged ? 'Acknowledged' : 'Pending'}</span></td>
+                        <td>${e(order.order_date)}</td><td>${e(order.order_time)}</td><td>${e(order.order_text)}</td><td>${e(order.order_type)}</td>
+                        <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:${order.is_acknowledged ? '#d1fae5' : '#fee2e2'};color:${order.is_acknowledged ? '#065f46' : '#dc2626'};"> ${order.is_acknowledged ? 'Acknowledged' : 'Pending'}</span></td>
                       </tr>`).join('')}
                   </tbody>
                 </table>
@@ -399,7 +400,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
             </div>
 
             <div class="record-footer">
-              <div><strong>Record Generated:</strong> ${new Date().toLocaleString()}</div>
+              <div><strong>Record Generated:</strong> ${e(new Date().toLocaleString())}</div>
               <div><strong>Generated By:</strong> hacCare Medical Records System</div>
               <div class="simulation-disclaimer" style="margin-top:15px;">
                 ⚠️ SIMULATION RECORD DISCLAIMER: This document is a simulated patient record created for healthcare education and training purposes only. It does not represent actual patient data, real medical diagnoses, or genuine clinical encounters. This record should not be used for any actual clinical decision-making, billing, legal purposes, or patient care. All information contained herein is fictional and for instructional use only.
