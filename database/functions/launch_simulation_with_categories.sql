@@ -24,7 +24,6 @@ RETURNS TABLE(
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 DECLARE
   v_simulation_tenant_id UUID;
@@ -142,6 +141,17 @@ BEGIN
     array_to_string(p_primary_categories, ', '), 
     array_to_string(p_sub_categories, ', ');
 
+  -- Add the launching instructor to tenant_users so they can read all clinical
+  -- tables when generating the debrief on completion.  Previously only
+  -- participants were added here; the launcher was omitted, causing RLS to block
+  -- getStudentActivitiesBySimulation for non-super_admin instructors.
+  INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
+  VALUES (auth.uid(), v_simulation_tenant_id, true, 'admin')
+  ON CONFLICT (user_id, tenant_id) DO UPDATE
+    SET is_active = true, role = 'admin';
+
+  RAISE NOTICE '✅ Launching instructor added to simulation tenant_users for debrief access';
+
   -- Add participants if provided
   IF p_participant_user_ids IS NOT NULL AND array_length(p_participant_user_ids, 1) > 0 THEN
     FOR i IN 1..array_length(p_participant_user_ids, 1)
@@ -161,28 +171,20 @@ BEGIN
       );
       
       -- Add to tenant_users for RLS access to simulation tenant data
-      -- This is CRITICAL - without this, participants can't see medications, patients, etc.
       -- Map simulation roles to valid tenant_users roles: instructor→admin, student→nurse
-      BEGIN
-        INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
-        VALUES (
-          p_participant_user_ids[i], 
-          v_simulation_tenant_id, 
-          true,
-          CASE COALESCE(p_participant_roles[i], 'student')
-            WHEN 'instructor' THEN 'admin'
-            WHEN 'student' THEN 'nurse'
-            ELSE 'nurse'
-          END
-        );
-      EXCEPTION
-        WHEN unique_violation THEN
-          -- User already in tenant_users, update to active
-          UPDATE tenant_users tu
-          SET is_active = true
-          WHERE tu.user_id = p_participant_user_ids[i] 
-            AND tu.tenant_id = v_simulation_tenant_id;
-      END;
+      INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
+      VALUES (
+        p_participant_user_ids[i], 
+        v_simulation_tenant_id, 
+        true,
+        CASE COALESCE(p_participant_roles[i], 'student')
+          WHEN 'instructor' THEN 'admin'
+          WHEN 'student' THEN 'nurse'
+          ELSE 'nurse'
+        END
+      )
+      ON CONFLICT (user_id, tenant_id) DO UPDATE
+        SET is_active = true;
     END LOOP;
     
     RAISE NOTICE '✅ Added % participants to simulation with tenant access', array_length(p_participant_user_ids, 1);
