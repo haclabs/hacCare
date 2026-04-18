@@ -55,6 +55,7 @@ export interface MedicationAdministration {
   medication_barcode_scanned?: string; // ✅ Actual medication barcode scanned
   override_reason?: string; // ✅ Reason if BCMA checks were overridden
   witness_name?: string; // ✅ Witness name for manual overrides
+  administered_dose?: string; // ✅ Volume/units drawn up by student (weight-based calc result)
 }
 
 /**
