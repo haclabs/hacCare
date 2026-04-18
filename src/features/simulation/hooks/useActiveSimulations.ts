@@ -191,6 +191,27 @@ export function useActiveSimulations() {
     setCompletingSimulation(null);
 
     try {
+      // Ensure the completing instructor has RLS access to the simulation's tenant.
+      // Simulations launched BEFORE the launch_simulation fix (April 17 2026) won't
+      // have the instructor in tenant_users, so we upsert here as a safety net.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: simRow } = await supabase
+          .from('simulation_active')
+          .select('tenant_id')
+          .eq('id', id)
+          .maybeSingle();
+        if (simRow?.tenant_id) {
+          await supabase
+            .from('tenant_users')
+            .upsert(
+              { user_id: user.id, tenant_id: simRow.tenant_id, is_active: true, role: 'admin' },
+              { onConflict: 'user_id,tenant_id' }
+            );
+          secureLogger.debug('✅ Instructor upserted into simulation tenant_users for debrief access');
+        }
+      }
+
       secureLogger.debug('📊 Generating student activity report...');
       const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
       const activities = await getStudentActivitiesBySimulation(id);
