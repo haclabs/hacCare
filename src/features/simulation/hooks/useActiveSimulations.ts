@@ -186,11 +186,35 @@ export function useActiveSimulations() {
     if (!completingSimulation) return;
 
     const id = completingSimulation.id;
+    const simTenantId = completingSimulation.tenant_id;
     secureLogger.debug('🎯 handleComplete called for:', id, 'Instructor:', instructorName);
     setActionLoading(id);
     setCompletingSimulation(null);
 
     try {
+      // Ensure this user has RLS read access to the simulation's tenant so that
+      // getStudentActivitiesBySimulation can query clinical tables.  Instructors
+      // are not added to tenant_users at launch time (only participants are), so
+      // without this upsert all clinical queries return empty arrays for non-super_admin users.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && simTenantId) {
+        const { error: accessError } = await supabase
+          .from('tenant_users')
+          .upsert({
+            user_id: user.id,
+            tenant_id: simTenantId,
+            is_active: true,
+            role: 'admin'
+          }, { onConflict: 'user_id,tenant_id' });
+
+        if (accessError) {
+          secureLogger.warn('⚠️ Could not grant simulation tenant access:', accessError);
+          // Continue anyway — super_admin bypasses RLS regardless
+        } else {
+          secureLogger.debug('✅ Instructor granted read access to simulation tenant for debrief');
+        }
+      }
+
       secureLogger.debug('📊 Generating student activity report...');
       const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
       const activities = await getStudentActivitiesBySimulation(id);
