@@ -3,7 +3,7 @@
  * Article content for the hacCare KB. Organized by category.
  */
 
-import { BookOpen, Users, Activity, FileText, Shield, PlayCircle, Tag, GraduationCap, Pill } from 'lucide-react';
+import { BookOpen, Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill } from 'lucide-react';
 import type { ElementType } from 'react';
 
 export interface KBArticle {

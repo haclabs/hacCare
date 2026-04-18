@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { createLabResult, getLabResultRefs } from '../../../services/clinical/labService';
-import type { CreateLabResultInput, LabResultRef } from '../../../features/clinical/types/labs';
+import type { CreateLabResultInput, LabResultRef } from '../types/labs';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateLabResultModalProps {
@@ -38,14 +38,14 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
     comments: '',
   });
 
-  useEffect(() => {
-    loadRefs();
-  }, []);
-
   const loadRefs = async () => {
     const { data } = await getLabResultRefs();
     setRefs(data || []);
   };
+
+  useEffect(() => {
+    loadRefs();
+  }, []);
 
   const handleSelectRef = (ref: LabResultRef) => {
     setSelectedRef(ref);

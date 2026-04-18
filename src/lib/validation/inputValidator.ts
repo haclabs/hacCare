@@ -66,7 +66,7 @@ export class InputValidator {
     }
     
     // Only allow letters, numbers, spaces, hyphens, and parentheses
-    const medicationRegex = /^[a-zA-Z0-9\s\-\(\)\.]+$/;
+    const medicationRegex = /^[a-zA-Z0-9\s\-().]+$/;
     if (!medicationRegex.test(sanitized)) {
       errors.push('Medication name contains invalid characters');
       secureLogger.security('Invalid characters in medication name', { name: '[REDACTED]' });

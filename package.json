@@ -26,7 +26,7 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "preview": "vite preview",
     "type-check": "./node_modules/.bin/tsc --noEmit -p tsconfig.app.json",
-    "test": "vitest",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:tenant-isolation": "vite-node test-tenant-isolation.ts",

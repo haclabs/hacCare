@@ -322,8 +322,7 @@ const handleDeleteMedication = async (medicationId: string) => {
               • hasRole(['tenant_admin']): {hasRole(['tenant_admin']) ? '✅ TRUE' : '❌ FALSE'}
             </div>
             
-            {/* Temporarily show buttons for all users - REMOVE IN PRODUCTION */}
-            {(hasRole(['admin', 'super_admin']) || true) && (
+            {hasRole(['admin', 'super_admin']) && (
               <>
                 <button
                   onClick={() => {
@@ -352,7 +351,7 @@ const handleDeleteMedication = async (medicationId: string) => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-        case 'overview':
+        case 'overview': {
             const dueMeds = getDueMedications();
             const overdueMeds = getOverdueMedications();
             return (
@@ -393,7 +392,8 @@ const handleDeleteMedication = async (medicationId: string) => {
                     )}
                 </div>
             );
-        case 'scheduled':
+        }
+        case 'scheduled': {
             const scheduledMeds = filterMedicationsByCategory('scheduled');
             return (
                 <div className="space-y-3">
@@ -407,7 +407,8 @@ const handleDeleteMedication = async (medicationId: string) => {
                     )}
                 </div>
             );
-        case 'prn':
+        }
+        case 'prn': {
             const prnMeds = filterMedicationsByCategory('prn');
             return (
                 <div className="space-y-3 relative">
@@ -421,7 +422,8 @@ const handleDeleteMedication = async (medicationId: string) => {
                     )}
                 </div>
             );
-        case 'continuous':
+        }
+        case 'continuous': {
             const continuousMeds = filterMedicationsByCategory('continuous');
             return (
                 <div className="space-y-3 relative">
@@ -435,6 +437,7 @@ const handleDeleteMedication = async (medicationId: string) => {
                     )}
                 </div>
             );
+        }
         default:
             return null;
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Database, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
@@ -26,9 +26,10 @@ const logo = '/images/logo.svg';
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onCollapsedChange }) => {
   const { hasRole, profile } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const navigate = useNavigate();
@@ -49,9 +50,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   // Save collapsed state to localStorage
   useEffect(() => {
     localStorage.setItem('sidebar-collapsed', isCollapsed.toString());
-    // Dispatch event so App.tsx can adjust margin
-    window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: { collapsed: isCollapsed } }));
-  }, [isCollapsed]);
+    // Notify parent so the main layout can adjust its margin
+    onCollapsedChange(isCollapsed);
+  }, [isCollapsed, onCollapsedChange]);
 
   // Update active indicator position when activeTab changes
   useEffect(() => {
@@ -113,7 +114,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     { id: 'patient-management', label: 'Patient Templates', icon: UserPlus, color: 'text-purple-600' },
     { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
     { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
-    { id: 'backup-management', label: 'Backups', icon: Database, color: 'text-emerald-600' },
   ] : [];
 
   /**
@@ -230,13 +230,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       if ('route' in item && item.route) {
-                        const appRoute = item.route.startsWith('/') 
-                          ? `/app${item.route}` 
+                        const appRoute = item.route.startsWith('/')
+                          ? `/app${item.route}`
                           : `/app/${item.route}`;
                         navigate(appRoute);
                       } else {
-                        onTabChange(item.id);
-                        navigate('/app', { replace: false });
+                        navigate(`/app?tab=${item.id}`);
                       }
                     }}
                     data-active-item={isActive}
@@ -296,8 +295,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        onTabChange(item.id);
-                        navigate('/app', { replace: false });
+                        navigate(`/app?tab=${item.id}`);
                       }}
                       data-active-item={isActive}
                       title={isCollapsed ? item.label : undefined}
@@ -372,8 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                             : `/app/${item.route}`;
                           navigate(appRoute);
                         } else {
-                          onTabChange(item.id);
-                          navigate('/app', { replace: false });
+                          navigate(`/app?tab=${item.id}`);
                         }
                       }}
                       data-active-item={isActive}
@@ -428,8 +425,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
-                      onTabChange(item.id);
-                      navigate('/app', { replace: false });
+                      navigate(`/app?tab=${item.id}`);
                     }}
                     data-active-item={isActive}
                     title={isCollapsed ? item.label : undefined}
@@ -506,7 +502,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       onTabChange(item.id);
-                      navigate('/app', { replace: false });
+                      navigate(`/app?tab=${item.id}`);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150 group ${
                       isActive

@@ -7,7 +7,15 @@ import tsparser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'build', '*.config.js', '*.config.ts'],
+    ignores: [
+      'dist',
+      'node_modules',
+      'build',
+      '*.config.js',
+      '*.config.ts',
+      // Supabase Edge Functions run in Deno — different runtime, not browser/Node
+      'supabase/functions/**',
+    ],
   },
   {
     files: ['**/*.{ts,tsx}'],
@@ -41,9 +49,14 @@ export default [
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
+      // TypeScript's own checker handles undefined references in TS/TSX files.
+      // Leaving no-undef on causes false positives for DOM types (EventListener,
+      // JSX, etc.) that are valid TypeScript but not runtime globals.
+      'no-undef': 'off',
     },
   },
 ];

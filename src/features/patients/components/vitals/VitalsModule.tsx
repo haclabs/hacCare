@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Plus, AlertTriangle, TrendingDown, Minus, Activity } from 'lucide-react';
-import { VitalsTrends } from '../../../../features/patients/components/vitals/VitalsTrends';
+import { VitalsTrends } from './VitalsTrends';
 import { DynamicForm } from '../../../../components/forms/DynamicForm';
 import { schemaEngine } from '../../../../lib/infrastructure/schemaEngine';
 import { vitalsEntrySchema, vitalsReviewSchema } from '../../../../schemas/vitalsSchemas';
@@ -20,8 +20,8 @@ import { Patient, VitalSigns } from '../../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../../../types/schema';
 import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge, assessVitalSign } from '../../../../utils/vitalRanges';
-import { NeuroAssessmentTab } from '../../../../features/patients/components/vitals/NeuroAssessmentTab';
-import { NewbornAssessmentTab } from '../../../../features/patients/components/assessments/NewbornAssessmentTab';
+import { NeuroAssessmentTab } from './NeuroAssessmentTab';
+import { NewbornAssessmentTab } from '../assessments/NewbornAssessmentTab';
 import { FormsModule } from '../../../forms';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 

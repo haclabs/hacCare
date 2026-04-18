@@ -20,6 +20,5 @@ export * from './schema';
 
 // Feature-based types (re-exported for backward compatibility)
 export * from '../features/patients/types';
-export * from '../features/clinical/types';
 export * from '../features/admin/types';
 export * from '../features/simulation/types';

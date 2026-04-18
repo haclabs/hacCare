@@ -101,11 +101,8 @@ const SimulationTemplates: React.FC = () => {
     // Dispatch event to notify TemplateEditingBanner with the template info
     window.dispatchEvent(new CustomEvent('template-edit-start', { detail: editInfo }));
     
-    // Change to patients tab
-    window.dispatchEvent(new CustomEvent('change-tab', { detail: { tab: 'patients' } }));
-    
-    // Navigate to main app view
-    navigate('/app');
+    // Navigate to patients tab in main app view
+    navigate('/app?tab=patients');
   };
   
   const handleLaunch = (template: SimulationTemplateWithDetails) => {

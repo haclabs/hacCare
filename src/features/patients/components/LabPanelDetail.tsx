@@ -21,14 +21,14 @@ import {
   getEffectiveRangeDisplay,
   getPreviousLabResult,
 } from '../../../services/clinical/labService';
-import type { LabPanel, LabResult, LabCategory } from '../../../features/clinical/types/labs';
+import type { LabPanel, LabResult, LabCategory } from '../types/labs';
 import {
   LAB_CATEGORY_TABS,
   getFlagLabel,
   getFlagColorClass,
   getStatusLabel,
   getStatusColorClass,
-} from '../../../features/clinical/types/labs';
+} from '../types/labs';
 import { CreateLabResultModal } from './CreateLabResultModal';
 import { EditLabResultModal } from './EditLabResultModal';
 import { LabAcknowledgeModal } from './LabAcknowledgeModal';
@@ -65,10 +65,6 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   const isAdmin = hasRole('admin') || hasRole('super_admin');
   const canAcknowledge = panel.status !== 'acknowledged' && panel.ack_required;
 
-  useEffect(() => {
-    loadResults();
-  }, [panel.id]);
-
   const loadResults = async () => {
     setLoading(true);
     const { data, error } = await getLabResults(panel.id);
@@ -98,6 +94,10 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
     
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadResults();
+  }, [panel.id]);
 
   const handleDeleteResult = async (resultId: string) => {
     if (!confirm('Delete this lab result?')) return;

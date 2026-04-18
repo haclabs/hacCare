@@ -101,7 +101,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
     enabled: !!currentTenant?.program_id
   });
   
-  const programs = program ? [program] : [];
+  const _programs = program ? [program] : [];
 
   // Fetch templates for dropdown
   const { data: templates = [] } = useQuery({

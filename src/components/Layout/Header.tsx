@@ -15,20 +15,6 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    return localStorage.getItem('sidebar-collapsed') === 'true';
-  });
-
-  // Listen for sidebar toggle events
-  useEffect(() => {
-    const handleSidebarToggle = (e: CustomEvent) => {
-      setSidebarCollapsed(e.detail.collapsed);
-    };
-    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
-    return () => {
-      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
-    };
-  }, []);
 
   // Update time every second
   useEffect(() => {
@@ -70,9 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
         : 'Workspace';
 
   return (
-    <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg ${ 
-      sidebarCollapsed ? 'ml-20' : 'ml-64'
-    }`}>
+    <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
       <div className="flex items-center justify-between w-full gap-4">
         {/* Left: Context Info */}
         <div className="flex items-center gap-4 flex-1">

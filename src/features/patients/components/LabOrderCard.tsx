@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { FileText, Clock } from 'lucide-react';
-import type { LabOrder } from '../../clinical/types/labOrders';
+import type { LabOrder } from '../types/labOrders';
 import { formatDate } from '../../../utils/time';
 
 interface LabOrderCardProps {

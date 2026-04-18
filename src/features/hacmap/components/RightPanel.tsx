@@ -23,6 +23,16 @@ export const RightPanel: React.FC<RightPanelProps> = ({
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const handleClose = () => {
+    if (isDirty) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -35,16 +45,6 @@ export const RightPanel: React.FC<RightPanelProps> = ({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, isDirty]);
-
-  const handleClose = () => {
-    if (isDirty) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-        onClose();
-      }
-    } else {
-      onClose();
-    }
-  };
 
   if (!isOpen) return null;
 

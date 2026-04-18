@@ -28,8 +28,8 @@ import { Patient, VitalSigns, Medication } from '../types';
 
 export class SchemaEngine {
   private schemas: Map<string, JSONSchema> = new Map();
-  private validators: Map<string, Function> = new Map();
-  private clinicalRules: Map<string, Function> = new Map();
+  private validators: Map<string, (...args: unknown[]) => unknown> = new Map();
+  private clinicalRules: Map<string, (...args: unknown[]) => unknown> = new Map();
 
   constructor() {
     this.initializeBuiltInValidators();
@@ -379,7 +379,7 @@ export class SchemaEngine {
 
   private getFieldValue(field: string, data: FormData, context: FormGenerationContext): any {
     // Check form data first
-    if (data.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(data, field)) {
       return data[field];
     }
 
@@ -398,7 +398,7 @@ export class SchemaEngine {
     errors: FieldError[]
   ): Promise<void> {
     schema.required?.forEach(fieldName => {
-      if (!data.hasOwnProperty(fieldName) || data[fieldName] === null || data[fieldName] === '') {
+      if (!Object.prototype.hasOwnProperty.call(data, fieldName) || data[fieldName] === null || data[fieldName] === '') {
         errors.push({
           field: fieldName,
           message: `${fieldName} is required`,

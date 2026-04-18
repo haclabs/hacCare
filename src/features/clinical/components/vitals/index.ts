@@ -1,1 +1,0 @@
-export { VitalsModule } from './VitalsModule';
