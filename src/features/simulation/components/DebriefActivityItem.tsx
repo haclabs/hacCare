@@ -531,4 +531,3 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
   );
 };
 
-export default EnhancedDebriefModal;
