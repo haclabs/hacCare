@@ -26,7 +26,25 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{format(new Date(item.timestamp), 'PPp')}</p>
-            <p className="text-gray-900 mt-1">{item.medication_name} - {item.dosage} via {item.route}</p>
+            <p className="text-gray-900 mt-1 font-semibold">{item.medication_name} via {item.route}</p>
+            <div className="mt-1.5 grid grid-cols-2 gap-2">
+              <div className="p-2 bg-slate-50 border border-slate-200 rounded">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Dose</p>
+                <p className="text-sm font-medium text-slate-800 mt-0.5">{item.dosage || '—'}</p>
+              </div>
+              <div className={`p-2 rounded border ${
+                item.administered_dose
+                  ? 'bg-blue-50 border-blue-300'
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student Administered</p>
+                <p className={`text-sm font-bold mt-0.5 ${
+                  item.administered_dose ? 'text-blue-700' : 'text-gray-400 italic'
+                }`}>
+                  {item.administered_dose || 'Not recorded'}
+                </p>
+              </div>
+            </div>
             <div className="mt-1 flex flex-col space-y-1">
               {item.barcode_scanned ? (
                 <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded inline-block w-fit">✓ BCMA Compliant</span>
@@ -44,11 +62,14 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                 <span className="text-xs text-gray-600">Witnessed by: {item.witness_name}</span>
               )}
             </div>
-            {item.notes && (
-              <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs text-gray-700">
-                <span className="font-semibold">Note:</span> {item.notes}
-              </div>
-            )}
+            {(() => {
+              const userNote = item.notes?.replace(/^BCMA Administration\.\s*/i, '').trim();
+              return userNote ? (
+                <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs text-gray-700">
+                  <span className="font-semibold">Note:</span> {userNote}
+                </div>
+              ) : null;
+            })()}
           </div>
         );
       case 'doctorsOrders':
@@ -530,4 +551,3 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
     </div>
   );
 };
-

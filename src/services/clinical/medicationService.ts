@@ -475,7 +475,8 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       patient_barcode_scanned: administration.patient_barcode_scanned,
       medication_barcode_scanned: administration.medication_barcode_scanned,
       override_reason: administration.override_reason,
-      witness_name: administration.witness_name
+      witness_name: administration.witness_name,
+      administered_dose: administration.administered_dose
     };
     
     // Remove undefined values to avoid Supabase issues

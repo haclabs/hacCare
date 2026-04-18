@@ -193,7 +193,7 @@ export function useActiveSimulations() {
 
     try {
       // Ensure this user has RLS read access to the simulation's tenant so that
-      // getStudentActivitiesBySimulation can query clinical tables.  Instructors
+      // getStudentActivitiesBySimulation can query clinical tables. Instructors
       // are not added to tenant_users at launch time (only participants are), so
       // without this upsert all clinical queries return empty arrays for non-super_admin users.
       const { data: { user } } = await supabase.auth.getUser();

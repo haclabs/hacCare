@@ -49,7 +49,8 @@ interface MedicationAdministrationEntry {
   id: string;
   timestamp: string;
   medication_name: string | null;
-  dosage: string | null;
+  dosage: string | null; // Label concentration (e.g., "500mg/2mL")
+  administered_dose?: string | null; // Student-calculated dose drawn up (e.g., "2 mL")
   route: string | null;
   status: string | null;
   notes: string | null;
@@ -668,6 +669,7 @@ export async function getStudentActivitiesBySimulation(
         timestamp: med.timestamp,
         medication_name: med.medication_name,
         dosage: med.dosage,
+        administered_dose: med.administered_dose,
         route: med.route,
         status: med.status,
         notes: med.notes,
