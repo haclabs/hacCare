@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import type { PatientListComparison } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import type { StudentActivity } from '../../../services/simulation/studentActivityService';
 
 export function useActiveSimulations() {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
@@ -26,6 +27,13 @@ export function useActiveSimulations() {
   const [versionComparisonModal, setVersionComparisonModal] = useState<{
     simulation: SimulationActiveWithDetails;
     patientComparison: PatientListComparison | null;
+  } | null>(null);
+  const [completionSummary, setCompletionSummary] = useState<{
+    simulationName: string;
+    instructorName: string;
+    activities: StudentActivity[];
+    warnings: string[];
+    completed: boolean;
   } | null>(null);
 
   const { filterByPrograms, canSeeAllPrograms, programCodes, isInstructor } = useUserProgramAccess();
@@ -194,6 +202,7 @@ export function useActiveSimulations() {
 
     const id = completingSimulation.id;
     const simTenantId = completingSimulation.tenant_id;
+    const capturedSimName = completingSimulation.name;
     secureLogger.debug('🎯 handleComplete called for:', id, 'Instructor:', instructorName);
     setActionLoading(id);
     setCompletingSimulation(null);
@@ -252,13 +261,24 @@ export function useActiveSimulations() {
       const result = await completeSimulation(id, activities, instructorName);
       secureLogger.debug('✅ Complete simulation result:', result);
 
-      const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
-      alert(`Simulation completed by ${instructorName}!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
+      setCompletionSummary({
+        simulationName: capturedSimName,
+        instructorName,
+        activities,
+        warnings: [],
+        completed: true,
+      });
 
       await loadSimulations();
     } catch (error) {
       secureLogger.error('❌ Error completing simulation:', error);
-      alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
+      setCompletionSummary({
+        simulationName: capturedSimName,
+        instructorName,
+        activities: [],
+        warnings: [error instanceof Error ? error.message : String(error)],
+        completed: false,
+      });
     } finally {
       setActionLoading(null);
     }
@@ -300,16 +320,17 @@ export function useActiveSimulations() {
       ] as const;
 
       const results = await Promise.all(
-        tables.map(table =>
-          supabase
+        tables.map(async (table) => ({
+          table,
+          result: await supabase
             .from(table)
             .update({ student_name: studentName })
             .eq('tenant_id', tenantId)
-            .is('student_name', null)
-        )
+            .is('student_name', null),
+        }))
       );
 
-      const failures = results.filter(r => r.error);
+      const failures = results.filter(r => r.result.error);
       if (failures.length > 0) {
         secureLogger.warn(`⚠️ Backfill partial — ${failures.length} table(s) failed`);
       }
@@ -329,13 +350,28 @@ export function useActiveSimulations() {
       const result = await completeSimulation(simulationId, activities, instructorName);
       secureLogger.debug('✅ Complete simulation result after backfill:', result);
 
-      const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
-      alert(`Simulation completed by ${instructorName}!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
+      const backfillWarnings = failures.map(
+        f => `Table write partially failed (${f.table}): ${f.result.error?.message ?? 'unknown error'}`
+      );
+
+      setCompletionSummary({
+        simulationName: pendingCompletion?.simulationName ?? 'Unknown simulation',
+        instructorName,
+        activities,
+        warnings: backfillWarnings,
+        completed: true,
+      });
 
       await loadSimulations();
     } catch (error) {
       secureLogger.error('❌ Error completing simulation after student name backfill:', error);
-      alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
+      setCompletionSummary({
+        simulationName: pendingCompletion?.simulationName ?? 'Unknown simulation',
+        instructorName: pendingCompletion?.instructorName ?? 'Unknown',
+        activities: [],
+        warnings: [error instanceof Error ? error.message : String(error)],
+        completed: false,
+      });
     } finally {
       setActionLoading(null);
     }
@@ -350,11 +386,23 @@ export function useActiveSimulations() {
     try {
       const result = await completeSimulation(simulationId, [], instructorName);
       secureLogger.debug('✅ Complete simulation (no student data):', result);
-      alert(`Simulation completed by ${instructorName}!\nStudent activities: 0 students, 0 total entries`);
+      setCompletionSummary({
+        simulationName: pendingCompletion?.simulationName ?? 'Unknown simulation',
+        instructorName,
+        activities: [],
+        warnings: [],
+        completed: true,
+      });
       await loadSimulations();
     } catch (error) {
       secureLogger.error('❌ Error completing simulation:', error);
-      alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
+      setCompletionSummary({
+        simulationName: pendingCompletion?.simulationName ?? 'Unknown simulation',
+        instructorName: pendingCompletion?.instructorName ?? 'Unknown',
+        activities: [],
+        warnings: [error instanceof Error ? error.message : String(error)],
+        completed: false,
+      });
     } finally {
       setActionLoading(null);
     }
@@ -448,6 +496,7 @@ export function useActiveSimulations() {
     completingSimulation, setCompletingSimulation,
     pendingCompletion, setPendingCompletion,
     versionComparisonModal, setVersionComparisonModal,
+    completionSummary, setCompletionSummary,
     handlePause,
     handleResume,
     handleReset,

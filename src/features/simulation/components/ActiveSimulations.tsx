@@ -4,6 +4,7 @@ import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
 import { UnnamedStudentModal } from './UnnamedStudentModal';
+import { CompletionSummaryModal } from './CompletionSummaryModal';
 import VersionComparisonModal from './VersionComparisonModal';
 import { SimulationCard } from './SimulationCard';
 import { SimulationInstructorGuide } from './SimulationInstructorGuide';
@@ -24,6 +25,7 @@ const ActiveSimulations: React.FC = () => {
     completingSimulation, setCompletingSimulation,
     pendingCompletion, setPendingCompletion,
     versionComparisonModal, setVersionComparisonModal,
+    completionSummary, setCompletionSummary,
     handlePause,
     handleResume,
     handleReset,
@@ -241,6 +243,18 @@ const ActiveSimulations: React.FC = () => {
           onConfirm={handleCompleteWithStudentName}
           onSkip={handleCompleteSkipStudent}
           onCancel={() => setPendingCompletion(null)}
+        />
+      )}
+
+      {/* Completion Summary Modal — replaces alert() after simulation is completed */}
+      {completionSummary && (
+        <CompletionSummaryModal
+          simulationName={completionSummary.simulationName}
+          instructorName={completionSummary.instructorName}
+          activities={completionSummary.activities}
+          warnings={completionSummary.warnings}
+          completed={completionSummary.completed}
+          onClose={() => setCompletionSummary(null)}
         />
       )}
 

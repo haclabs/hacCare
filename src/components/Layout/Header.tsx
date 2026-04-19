@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, LogOut, Clock, BookOpen } from 'lucide-react';
+import { User, LogOut, Clock, BookOpen, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { format } from 'date-fns';
@@ -15,6 +15,11 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
   const { profile, signOut } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
 
   // Update time every second
   useEffect(() => {
@@ -56,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
         : 'Workspace';
 
   return (
+    <>
     <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
       <div className="flex items-center justify-between w-full gap-4">
         {/* Left: Context Info */}
@@ -136,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
               <User className="h-4 w-4 text-white" />
             </div>
             <button 
-              onClick={signOut}
+              onClick={handleLogoutClick}
               className="p-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               title="Sign Out"
             >
@@ -146,5 +152,44 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
         </div>
       </div>
     </header>
+
+    {/* Shared-account logout confirmation */}
+    {showLogoutConfirm && (
+      <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border-4 border-red-400">
+          <div className="bg-red-50 px-6 py-4 border-b border-red-200 flex items-center gap-3 rounded-t-xl">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-lg font-bold text-red-900">Sign Out Warning</h3>
+          </div>
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-slate-700">
+              This account may be shared across multiple devices. Signing out will immediately disconnect <span className="font-semibold text-red-700">all users</span> currently logged in with this account — including students in other active simulations.
+            </p>
+            <div className="bg-red-50 border-l-4 border-red-500 rounded-r-lg p-3">
+              <p className="text-sm font-semibold text-red-800">
+                If you're not sure, check with your instructor before signing out.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium rounded-lg transition-colors"
+              >
+                Cancel — Stay Logged In
+              </button>
+              <button
+                onClick={() => { setShowLogoutConfirm(false); signOut(); }}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Sign Out Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
