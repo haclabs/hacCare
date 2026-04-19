@@ -514,10 +514,11 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                       {!order.is_acknowledged && (
                         <button
                           onClick={() => handleAcknowledge(order.id)}
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
                           title="Acknowledge Order"
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className="h-3 w-3" />
+                          <span>Acknowledge</span>
                         </button>
                       )}
 
