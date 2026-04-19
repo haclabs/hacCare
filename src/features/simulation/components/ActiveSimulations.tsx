@@ -3,6 +3,7 @@ import { Play, AlertTriangle, X, Filter } from 'lucide-react';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
+import { UnnamedStudentModal } from './UnnamedStudentModal';
 import VersionComparisonModal from './VersionComparisonModal';
 import { SimulationCard } from './SimulationCard';
 import { SimulationInstructorGuide } from './SimulationInstructorGuide';
@@ -21,6 +22,7 @@ const ActiveSimulations: React.FC = () => {
     selectedSubCategories, setSelectedSubCategories,
     editCategoriesModal, setEditCategoriesModal,
     completingSimulation, setCompletingSimulation,
+    pendingCompletion, setPendingCompletion,
     versionComparisonModal, setVersionComparisonModal,
     handlePause,
     handleResume,
@@ -31,6 +33,8 @@ const ActiveSimulations: React.FC = () => {
     handleRelaunchRequired,
     handleComplete,
     handleCompleteWithInstructor,
+    handleCompleteWithStudentName,
+    handleCompleteSkipStudent,
     handleDelete,
     handleEditCategories,
     handleSaveCategories,
@@ -226,6 +230,17 @@ const ActiveSimulations: React.FC = () => {
           programCodes={completingSimulation.primary_categories || []}
           onConfirm={handleCompleteWithInstructor}
           onCancel={() => setCompletingSimulation(null)}
+        />
+      )}
+
+      {/* Unnamed Student Modal — shown when clinical records exist but student_name is blank */}
+      {pendingCompletion && (
+        <UnnamedStudentModal
+          simulationName={pendingCompletion.simulationName}
+          unnamedCount={pendingCompletion.unnamedCount}
+          onConfirm={handleCompleteWithStudentName}
+          onSkip={handleCompleteSkipStudent}
+          onCancel={() => setPendingCompletion(null)}
         />
       )}
 

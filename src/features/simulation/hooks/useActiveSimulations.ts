@@ -16,6 +16,13 @@ export function useActiveSimulations() {
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [editCategoriesModal, setEditCategoriesModal] = useState<{ sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null>(null);
   const [completingSimulation, setCompletingSimulation] = useState<SimulationActiveWithDetails | null>(null);
+  const [pendingCompletion, setPendingCompletion] = useState<{
+    simulationId: string;
+    tenantId: string;
+    instructorName: string;
+    unnamedCount: number;
+    simulationName: string;
+  } | null>(null);
   const [versionComparisonModal, setVersionComparisonModal] = useState<{
     simulation: SimulationActiveWithDetails;
     patientComparison: PatientListComparison | null;
@@ -220,12 +227,130 @@ export function useActiveSimulations() {
       const activities = await getStudentActivitiesBySimulation(id);
       secureLogger.debug('✅ Student activities captured:', activities.length, 'students');
 
+      // If zero named activities, check for unnamed clinical records
+      if (activities.length === 0 && simTenantId) {
+        const { count } = await supabase
+          .from('patient_vitals')
+          .select('*', { count: 'exact', head: true })
+          .eq('tenant_id', simTenantId)
+          .is('student_name', null);
+
+        if (count && count > 0) {
+          secureLogger.debug('⚠️ Found', count, 'unnamed clinical records — prompting instructor for student name');
+          setPendingCompletion({
+            simulationId: id,
+            tenantId: simTenantId,
+            instructorName,
+            unnamedCount: count,
+            simulationName: completingSimulation?.name ?? 'this simulation',
+          });
+          setActionLoading(null);
+          return;
+        }
+      }
+
       const result = await completeSimulation(id, activities, instructorName);
       secureLogger.debug('✅ Complete simulation result:', result);
 
       const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
       alert(`Simulation completed by ${instructorName}!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
 
+      await loadSimulations();
+    } catch (error) {
+      secureLogger.error('❌ Error completing simulation:', error);
+      alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /** Backfill student_name on unnamed records then finalise completion. */
+  const handleCompleteWithStudentName = async (studentName: string) => {
+    if (!pendingCompletion) return;
+    const { simulationId, tenantId, instructorName } = pendingCompletion;
+    setActionLoading(simulationId);
+    setPendingCompletion(null);
+    try {
+      // Re-establish admin access to the simulation tenant so writes are permitted
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('tenant_users')
+          .upsert({ user_id: user.id, tenant_id: tenantId, is_active: true, role: 'admin' },
+            { onConflict: 'user_id,tenant_id' });
+      }
+
+      // Backfill all clinical tables that store student_name AND are scoped by tenant_id.
+      // Excluded: doctors_orders (uses acknowledged_by_student, not student_name)
+      //           handover_notes (scoped by patient_id, not tenant_id)
+      const tables = [
+        'patient_vitals',
+        'medication_administrations',
+        'lab_orders',
+        'lab_ack_events',
+        'patient_notes',
+        'bowel_records',
+        'device_assessments',
+        'wound_assessments',
+        'patient_intake_output_events',
+        'patient_advanced_directives',
+        'patient_neuro_assessments',
+        'patient_bbit_entries',
+        'patient_newborn_assessments',
+      ] as const;
+
+      const results = await Promise.all(
+        tables.map(table =>
+          supabase
+            .from(table)
+            .update({ student_name: studentName })
+            .eq('tenant_id', tenantId)
+            .is('student_name', null)
+        )
+      );
+
+      const failures = results.filter(r => r.error);
+      if (failures.length > 0) {
+        secureLogger.warn(`⚠️ Backfill partial — ${failures.length} table(s) failed`);
+      }
+
+      // Verify the backfill landed before querying activities
+      const { count: namedCount } = await supabase
+        .from('patient_vitals')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .not('student_name', 'is', null);
+
+      secureLogger.debug(`✅ Backfill complete — ${namedCount ?? 0} named vitals now visible`);
+
+      const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
+      // Use early startTimeOverride to bypass starts_at = null time filter
+      const activities = await getStudentActivitiesBySimulation(simulationId, '1970-01-01T00:00:00Z');
+      const result = await completeSimulation(simulationId, activities, instructorName);
+      secureLogger.debug('✅ Complete simulation result after backfill:', result);
+
+      const totalEntries = activities.reduce((sum, s) => sum + s.totalEntries, 0);
+      alert(`Simulation completed by ${instructorName}!\nStudent activities: ${activities.length} students, ${totalEntries} total entries`);
+
+      await loadSimulations();
+    } catch (error) {
+      secureLogger.error('❌ Error completing simulation after student name backfill:', error);
+      alert('Failed to complete simulation: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /** Complete without attributing unnamed records to any student. */
+  const handleCompleteSkipStudent = async () => {
+    if (!pendingCompletion) return;
+    const { simulationId, instructorName } = pendingCompletion;
+    setActionLoading(simulationId);
+    setPendingCompletion(null);
+    try {
+      const result = await completeSimulation(simulationId, [], instructorName);
+      secureLogger.debug('✅ Complete simulation (no student data):', result);
+      alert(`Simulation completed by ${instructorName}!\nStudent activities: 0 students, 0 total entries`);
       await loadSimulations();
     } catch (error) {
       secureLogger.error('❌ Error completing simulation:', error);
@@ -321,6 +446,7 @@ export function useActiveSimulations() {
     selectedSubCategories, setSelectedSubCategories,
     editCategoriesModal, setEditCategoriesModal,
     completingSimulation, setCompletingSimulation,
+    pendingCompletion, setPendingCompletion,
     versionComparisonModal, setVersionComparisonModal,
     handlePause,
     handleResume,
@@ -331,6 +457,8 @@ export function useActiveSimulations() {
     handleRelaunchRequired,
     handleComplete,
     handleCompleteWithInstructor,
+    handleCompleteWithStudentName,
+    handleCompleteSkipStudent,
     handleDelete,
     handleEditCategories,
     handleSaveCategories,
