@@ -16,7 +16,7 @@ interface AuthContextType {
   loading: boolean;                                     // Loading state for auth operations
   isOffline: boolean;                                   // Offline state indicator
   isAnonymous: boolean;                                 // Anonymous simulation user indicator
-  signIn: (email: string, password: string) => Promise<{ error: any }>; // Sign in function
+  signIn: (email: string, password: string) => Promise<{ error: any; profile?: UserProfile | null }>; // Sign in function
   signOut: () => Promise<void>;                        // Sign out function
   hasRole: (roles: string | string[]) => boolean;     // Role-based access control helper
   createProfile: () => Promise<void>;                 // Create user profile function
@@ -596,6 +596,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }, 50);
               
               secureLogger.debug('🏁 User and profile state updated');
+              return { error, profile: profiles[0] };
             } else {
               secureLogger.warn('⚠️ No profile found for user');
               setUser(data.session.user);
