@@ -6,8 +6,6 @@ import { isSupabaseConfigured, supabase } from '../../lib/api/supabase';
 import logo from '../../images/logo.png';
 import { secureLogger } from '../../lib/security/secureLogger';
 import { PrivacyNoticeModal } from './PrivacyNoticeModal';
-import { MFAChallenge } from './MFAChallenge';
-import { MFAEnrollment } from './MFAEnrollment';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,9 +15,7 @@ export const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
-  const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
-  const mfaChecked = useRef(false);
-  const { signIn, signOut, user, profile } = useAuth();
+  const { signIn, user, profile } = useAuth();
 
   const doRedirect = () => {
     if (profile?.simulation_only) {
@@ -293,14 +289,6 @@ export const LoginForm: React.FC = () => {
 
       {showPrivacyNotice && (
         <PrivacyNoticeModal onClose={() => setShowPrivacyNotice(false)} />
-      )}
-
-      {mfaMode === 'challenge' && (
-        <MFAChallenge onSuccess={handleMFASuccess} onCancel={handleMFACancel} />
-      )}
-
-      {mfaMode === 'enroll' && (
-        <MFAEnrollment onSuccess={handleMFASuccess} onCancel={handleMFACancel} />
       )}
     </div>
   );
