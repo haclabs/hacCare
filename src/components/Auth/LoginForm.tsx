@@ -85,7 +85,7 @@ export const LoginForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isSupabaseConfigured) {
       setError('Database connection not configured. Please set up Supabase.');
       return;
@@ -96,22 +96,51 @@ export const LoginForm: React.FC = () => {
 
     try {
       secureLogger.debug('🔐 Attempting to sign in user...');
-      const { error } = await signIn(email, password);
-      
-      if (error) {
-        secureLogger.error('❌ Sign in error:', error);
-        setError(parseAuthError(error));
-        setLoading(false); // Only set loading to false on error
-      } else {
-        secureLogger.debug('✅ Sign in successful, useEffect will handle redirect based on user type...');
-        // Navigation handled by useEffect above based on simulation_only flag
+      const { error: signInError, profile: signedInProfile } = await signIn(email, password);
+
+      if (signInError) {
+        secureLogger.error('❌ Sign in error:', signInError);
+        setError(parseAuthError(signInError));
+        setLoading(false);
+        return;
       }
-    } catch (error: unknown) {
-      secureLogger.error('Login error:', error);
-      setError(parseAuthError(error));
-      setLoading(false); // Only set loading to false on error
+
+      // Non-super_admin: redirect immediately — no MFA required
+      if (!signedInProfile || signedInProfile.role !== 'super_admin') {
+        secureLogger.debug('✅ Non-admin sign in, redirecting...');
+        doRedirect(signedInProfile?.simulation_only);
+        return;
+      }
+
+      // Super admin: check MFA WHILE session is hot (avoids _useSession lock delays)
+      secureLogger.debug('🔐 Super admin — checking MFA assurance level...');
+      try {
+        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalError) throw aalError;
+
+        if (aal.currentLevel === 'aal2') {
+          secureLogger.debug('✅ Super admin already at AAL2');
+          doRedirect(signedInProfile.simulation_only);
+        } else if (aal.nextLevel === 'aal2') {
+          secureLogger.debug('🔐 Showing MFA challenge');
+          setLoading(false);
+          setMfaMode('challenge');
+        } else {
+          secureLogger.debug('🔐 No factors enrolled — showing enrollment');
+          setLoading(false);
+          setMfaMode('enroll');
+        }
+      } catch (aalErr: any) {
+        // Fail CLOSED — sign out rather than silently letting the admin through
+        secureLogger.error('MFA AAL check failed, signing out for safety:', aalErr);
+        setLoading(false);
+        await signOut();
+      }
+    } catch (err: unknown) {
+      secureLogger.error('Login error:', err);
+      setError(parseAuthError(err));
+      setLoading(false);
     }
-    // Removed finally block - let AuthContext manage loading state on success
   };
 
   const handleMicrosoftSignIn = async () => {
