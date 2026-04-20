@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
@@ -17,29 +17,71 @@ export const LoginForm: React.FC = () => {
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const { signIn, user, profile } = useAuth();
 
-  // Redirect based on user type after login
-  useEffect(() => {
-    if (user && profile) {
-      // Use full page reload for ALL users to ensure Supabase session is properly established
-      // This prevents auth race conditions where session token isn't ready for API calls
-      // Without this, tenant switching and logout don't work until manual refresh
-      
-      if (profile.simulation_only) {
-        secureLogger.debug('🎯 Simulation-only user detected, redirecting to lobby...');
-        // Clear any old simulation tenant from localStorage
-        localStorage.removeItem('current_simulation_tenant');
-        setTimeout(() => {
-          window.location.href = '/app/simulation-portal';
-        }, 100);
-      } else {
-        // Regular user - go to main app with full page reload
-        secureLogger.debug('🎯 Regular user detected, redirecting to app...');
-        setTimeout(() => {
-          window.location.href = '/app';
-        }, 100);
-      }
+  const doRedirect = () => {
+    if (profile?.simulation_only) {
+      secureLogger.debug('🎯 Simulation-only user detected, redirecting to lobby...');
+      localStorage.removeItem('current_simulation_tenant');
+      setTimeout(() => {
+        window.location.href = '/app/simulation-portal';
+      }, 100);
+    } else {
+      secureLogger.debug('🎯 Regular user detected, redirecting to app...');
+      setTimeout(() => {
+        window.location.href = '/app';
+      }, 100);
     }
-  }, [user, profile]);
+  };
+
+  // Redirect based on user type after login, with MFA gate for super_admin
+  useEffect(() => {
+    if (!user || !profile) return;
+    if (mfaChecked.current) return;
+    mfaChecked.current = true;
+
+    if (profile.role !== 'super_admin') {
+      doRedirect();
+      return;
+    }
+
+    // Super admin: check MFA assurance level before allowing redirect
+    const checkMFA = async () => {
+      try {
+        const { data, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalError) throw aalError;
+
+        if (data.currentLevel === 'aal2') {
+          // Already fully verified (e.g., session restored)
+          secureLogger.debug('✅ Super admin already at AAL2, proceeding');
+          doRedirect();
+        } else if (data.nextLevel === 'aal2') {
+          // Has enrolled factors but hasn't verified this session
+          secureLogger.debug('🔐 Super admin has MFA enrolled — showing challenge');
+          setMfaMode('challenge');
+        } else {
+          // No factors enrolled yet — force enrollment
+          secureLogger.debug('🔐 Super admin has no MFA factors — showing enrollment');
+          setMfaMode('enroll');
+        }
+      } catch (err: any) {
+        secureLogger.error('MFA AAL check failed, allowing login:', err);
+        // Fail open rather than locking out the admin
+        doRedirect();
+      }
+    };
+
+    checkMFA();
+  }, [user, profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleMFASuccess = () => {
+    setMfaMode(null);
+    doRedirect();
+  };
+
+  const handleMFACancel = async () => {
+    setMfaMode(null);
+    mfaChecked.current = false;
+    await signOut();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
