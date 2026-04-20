@@ -7,6 +7,103 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[5.5.0] - 2026-04-20 - BCMA IMPROVEMENTS, DEBRIEF ENHANCEMENTS, UX + SECURITY
+===============================================================================
+
+NEW FEATURES
+-----------------
+
+* BCMA - Administered dose field
+  - Added "Medication Drawn Up / Administered" input on the Verify step
+  - Only shown for injectable routes (IV, IM, SC) where dose calculation applies
+  - Stored in new administered_dose column on medication_administrations table
+  - Displayed in debrief report under "Student Administered (mL or units)"
+  - MIGRATION: administered_dose column added to medication_administrations
+
+* BCMA - Inline glucose entry
+  - Blood glucose field moved from a pop-up modal to an inline input on the
+    Verify step, keeping the entire BCMA workflow on one screen
+  - Validation enforces 1-35 mmol/L range before allReady gate passes
+
+* BCMA - Post-administration confirmation screen
+  - After submitting, a full confirmation screen summarises what was administered
+  - Left panel hides during confirmation so the summary fills the full width
+  - Student must explicitly click Done to dismiss
+
+* Simulation completion - Summary modal
+  - Replaced plain alert() with a structured CompletionSummaryModal
+  - Shows per-student activity breakdown (vitals, meds, labs, notes, I&O, etc.)
+  - Green/amber/red status indicators based on completion outcome
+  - Red "DO NOT RESET" warning panel displayed when the completion RPC fails,
+    instructing the instructor to contact hacCare support before resetting
+
+* Simulation completion - Unnamed student recovery
+  - If completion detects clinical records where student_name is NULL,
+    UnnamedStudentModal prompts the instructor to enter the student name
+  - All matching clinical tables are then backfilled automatically so no
+    student work is lost from the debrief report
+
+* Debrief - Patient name on every entry
+  - Each clinical entry in the debrief now shows which patient it belongs to
+  - Displayed as a small badge above the entry content
+  - Critical for simulations with multiple patients (e.g. mother + newborn,
+    State 1 + State 2 patients)
+  - Built from already-fetched patient list — no additional database queries
+
+* Header - Logout confirmation modal
+  - All roles now see a confirmation modal before signing out
+  - Warns that signing out disconnects all devices sharing the account,
+    relevant for shared simulation stations
+
+IMPROVEMENTS
+-----------------
+
+* BCMA - Terminology and styling consistency
+  - "Label dose" renamed to "Label concentration" throughout BCMAAdministration
+  - Student sign-off input now uses yellow highlight styling matching all other
+    student name fields across the system
+
+* BCMA - allReady gate tightened
+  - Glucose value must be in valid range (1-35 mmol/L) before Administer enables
+
+* Debrief - Device and wound assessment layout
+  - Expanded assessment fields redesigned from a single-column justify-between
+    list (values pushed far right) to a 2-column stacked grid
+  - Field labels displayed in muted small caps above values in dark bold text
+  - Long values (e.g. reverification methods) wrap naturally within their cell
+  - Notes span full width at the bottom of the grid
+
+* Debrief - Medication administered dose label
+  - "Student Administered" column now labelled "(mL or units)" for clarity
+
+* Doctors Orders - Acknowledge button
+  - Changed from icon-only to green filled button with "Acknowledge" text,
+    matching all other acknowledge buttons in the system
+
+* Handover Notes - Student name required to submit
+  - Save button now disabled until student name field is populated
+  - Consistent with BCMA and all other clinical entry forms
+
+SECURITY
+-----------------
+
+* patientRecordPrinter.ts - Open Redirect false positive (Snyk #51)
+  - Added explicit blob: URL scheme validation before assigning to
+    reportWindow.location.href
+  - URL.createObjectURL always returns a blob: URL, but the explicit check
+    breaks the static-analysis taint chain and ensures no attacker-controlled
+    string can ever reach location.href
+  - If the check fails (should be impossible), URL is revoked and print aborted
+
+BUG FIXES
+-----------------
+
+* Medication label printing - bcmaService not defined crash
+  - MedicationLabelsModal.tsx and AllLabelsModal.tsx were missing imports for
+    bcmaService and Medication type, causing a ReferenceError when the labels
+    modal was opened from an active simulation
+
+===============================================================================
 [5.4.1] - 2026-04-09 - DEBRIEF PDF OVERHAUL
 ===============================================================================
 

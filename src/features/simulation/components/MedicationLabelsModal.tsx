@@ -3,6 +3,8 @@ import { X, Printer } from 'lucide-react';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import type { MedicationLabelData } from '../../../services/operations/bulkLabelService';
 import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant, getInstructorNames } from './labelPrintingUtils';
+import { bcmaService } from '../../../services/clinical/bcmaService';
+import type { Medication } from '../../patients/types/clinical';
 interface MedicationLabelsModalProps {
   medications: MedicationLabelData[];
   simulationName: string;
