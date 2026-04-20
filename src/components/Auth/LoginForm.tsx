@@ -20,39 +20,38 @@ export const LoginForm: React.FC = () => {
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
   const { signIn, signOut, user, profile } = useAuth();
 
-  const doRedirect = () => {
-    if (profile?.simulation_only) {
-      secureLogger.debug('🎯 Simulation-only user detected, redirecting to lobby...');
-      localStorage.removeItem('current_simulation_tenant');
-      setTimeout(() => {
-        window.location.href = '/app/simulation-portal';
-      }, 100);
-    } else {
-      secureLogger.debug('🎯 Regular user detected, redirecting to app...');
-      setTimeout(() => {
-        window.location.href = '/app';
-      }, 100);
-    }
-  };
-
   // Redirect based on user type after login, with MFA gate for super_admin.
-  // Uses a `cancelled` cleanup flag so React StrictMode's double-invoke doesn't
-  // skip the MFA check (the old `mfaChecked` ref persisted across remounts and
-  // caused the second mount to bypass the check entirely).
+  // Deps use primitive values (user.id, profile.role) rather than full objects so that
+  // spurious reference changes from onAuthStateChange(SIGNED_IN) firing after sign-in
+  // don't cancel an in-flight checkMFA via the cleanup function.
   useEffect(() => {
     if (!user || !profile) return;
 
-    if (profile.role !== 'super_admin') {
+    const role = profile.role;
+    const simulationOnly = profile.simulation_only;
+
+    const doRedirect = () => {
+      if (simulationOnly) {
+        secureLogger.debug('🎯 Simulation-only user detected, redirecting to lobby...');
+        localStorage.removeItem('current_simulation_tenant');
+        setTimeout(() => { window.location.href = '/app/simulation-portal'; }, 100);
+      } else {
+        secureLogger.debug('🎯 Regular user detected, redirecting to app...');
+        setTimeout(() => { window.location.href = '/app'; }, 100);
+      }
+    };
+
+    if (role !== 'super_admin') {
       doRedirect();
       return;
     }
 
-    let cancelled = false;
+    let mounted = true;
 
     const checkMFA = async () => {
       try {
         const { data, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (cancelled) return;
+        if (!mounted) return;
         if (aalError) throw aalError;
 
         if (data.currentLevel === 'aal2') {
@@ -66,7 +65,7 @@ export const LoginForm: React.FC = () => {
           setMfaMode('enroll');
         }
       } catch (err: any) {
-        if (cancelled) return;
+        if (!mounted) return;
         // Fail CLOSED — sign out rather than silently letting the admin through
         secureLogger.error('MFA AAL check failed, signing out for safety:', err);
         await signOut();
@@ -74,12 +73,13 @@ export const LoginForm: React.FC = () => {
     };
 
     checkMFA();
-    return () => { cancelled = true; };
-  }, [user, profile]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { mounted = false; };
+  }, [user?.id, profile?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMFASuccess = () => {
     setMfaMode(null);
-    doRedirect();
+    // Trigger redirect by resetting user/profile state — simplest is a full reload
+    window.location.href = '/app';
   };
 
   const handleMFACancel = async () => {
