@@ -5,6 +5,7 @@ import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, supabase } from '../../lib/api/supabase';
 import logo from '../../images/logo.png';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { PrivacyNoticeModal } from './PrivacyNoticeModal';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const { signIn, user, profile } = useAuth();
 
   // Redirect based on user type after login
@@ -229,7 +231,23 @@ export const LoginForm: React.FC = () => {
             <li>• Log out when using shared devices</li>
           </ul>
         </div>
+
+        {/* Privacy Notice link */}
+        <p className="mt-4 text-center text-xs text-gray-400">
+          By signing in you acknowledge our{' '}
+          <button
+            type="button"
+            onClick={() => setShowPrivacyNotice(true)}
+            className="text-blue-500 hover:underline"
+          >
+            Privacy Notice
+          </button>
+        </p>
       </div>
+
+      {showPrivacyNotice && (
+        <PrivacyNoticeModal onClose={() => setShowPrivacyNotice(false)} />
+      )}
     </div>
   );
 };

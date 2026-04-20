@@ -43,6 +43,7 @@ interface VitalsEntry {
   temperature: number | null;
   oxygen_saturation: number | null;
   pain_score: number | null;
+  patient_name?: string;
 }
 
 interface MedicationAdministrationEntry {
@@ -59,6 +60,7 @@ interface MedicationAdministrationEntry {
   medication_barcode_scanned?: string | null; // ✅ Actual medication barcode scanned
   override_reason?: string | null; // ✅ Reason if checks were overridden
   witness_name?: string | null; // ✅ Witness for manual overrides
+  patient_name?: string;
 }
 
 interface LabOrderEntry {
@@ -68,6 +70,7 @@ interface LabOrderEntry {
   priority: string;
   specimen_type: string;
   status: string;
+  patient_name?: string;
 }
 
 interface LabAcknowledgementEntry {
@@ -77,6 +80,7 @@ interface LabAcknowledgementEntry {
   result_value: string;
   abnormal_flag: boolean;
   note?: string | null; // 🆕 Added for notes
+  patient_name?: string;
 }
 
 interface DoctorsOrderEntry {
@@ -85,6 +89,7 @@ interface DoctorsOrderEntry {
   order_type: string;
   order_text: string | null;
   order_details: any;
+  patient_name?: string;
 }
 
 interface PatientNoteEntry {
@@ -93,6 +98,7 @@ interface PatientNoteEntry {
   note_type: string;
   subject: string;
   content: string;
+  patient_name?: string;
 }
 
 interface HandoverNoteEntry {
@@ -107,6 +113,7 @@ interface HandoverNoteEntry {
   assessment: string;
   recommendations: string;
   student_name: string | null;
+  patient_name?: string;
 }
 
 interface NeuroAssessmentEntry {
@@ -131,6 +138,7 @@ interface NeuroAssessmentEntry {
   sensation: string | null;
   speech: string | null;
   pain_score: number | null;
+  patient_name?: string;
 }
 
 interface NewbornAssessmentEntry {
@@ -158,6 +166,7 @@ interface NewbornAssessmentEntry {
   physical_observations: Record<string, Record<string, unknown>> | null;
   completed_by: string | null;
   student_name: string | null;
+  patient_name?: string;
 }
 
 interface HacMapDeviceEntry {
@@ -176,6 +185,7 @@ interface HacMapDeviceEntry {
   number_of_sutures_placed?: number | null;
   securement_method?: string[] | null;
   patient_tolerance?: string | null;
+  patient_name?: string;
 }
 
 interface HacMapWoundEntry {
@@ -191,6 +201,7 @@ interface HacMapWoundEntry {
   drainage_type: string[] | null;
   drainage_amount: string | null;
   location: string | null;
+  patient_name?: string;
 }
 
 interface DeviceAssessmentEntry {
@@ -201,6 +212,7 @@ interface DeviceAssessmentEntry {
   output_amount_ml: number | null;
   notes: string | null;
   assessment_data: any; // JSONB with device-specific fields
+  patient_name?: string;
 }
 
 interface WoundAssessmentEntry {
@@ -214,6 +226,7 @@ interface WoundAssessmentEntry {
   treatment_applied: string | null;
   dressing_type: string | null;
   notes: string | null;
+  patient_name?: string;
 }
 
 interface BowelAssessmentEntry {
@@ -224,6 +237,7 @@ interface BowelAssessmentEntry {
   stool_consistency: string;
   stool_colour: string;
   stool_amount: string;
+  patient_name?: string;
 }
 
 interface IntakeOutputEntry {
@@ -234,6 +248,7 @@ interface IntakeOutputEntry {
   route: string | null;
   description: string | null;
   amount_ml: number;
+  patient_name?: string;
 }
 
 interface AdvancedDirectiveEntry {
@@ -244,6 +259,7 @@ interface AdvancedDirectiveEntry {
   healthcare_proxy_name: string | null;
   organ_donation_status: string | null;
   special_instructions: string | null;
+  patient_name?: string;
 }
 
 interface BBITEntry {
@@ -261,6 +277,7 @@ interface BBITEntry {
   correction_suggested_dose: number | null;
   correction_status: string | null;
   carb_intake: string | null;
+  patient_name?: string;
 }
 
 /**
@@ -343,6 +360,11 @@ export async function getStudentActivitiesBySimulation(
     }
 
     secureLogger.debug('👤 Patients found:', patients?.length || 0, patients?.map(p => `${p.first_name} ${p.last_name}`));
+
+    // Build a map from patient_id → display name for use in activity entries
+    const patientNameMap = new Map<string, string>(
+      (patients || []).map(p => [p.id, `${p.first_name} ${p.last_name}`.trim()])
+    );
 
     if (!patients || patients.length === 0) {
       // No patients found - return empty results instead of error
@@ -644,6 +666,7 @@ export async function getStudentActivitiesBySimulation(
         temperature: vital.temperature,
         oxygen_saturation: vital.oxygen_saturation,
         pain_score: vital.pain_score,
+        patient_name: patientNameMap.get(vital.patient_id),
       });
       student.totalEntries++;
     });
@@ -679,6 +702,7 @@ export async function getStudentActivitiesBySimulation(
         medication_barcode_scanned: med.medication_barcode_scanned,
         override_reason: med.override_reason,
         witness_name: med.witness_name,
+        patient_name: patientNameMap.get(med.patient_id),
       });
       student.totalEntries++;
     });
@@ -693,6 +717,7 @@ export async function getStudentActivitiesBySimulation(
         priority: 'ROUTINE',  // Default priority since not in schema
         specimen_type: lab.source_type,  // Use source_type as specimen
         status: lab.status,
+        patient_name: patientNameMap.get(lab.patient_id),
       });
       student.totalEntries++;
     });
@@ -737,6 +762,7 @@ export async function getStudentActivitiesBySimulation(
             result_value: value + units,
             abnormal_flag: test.flag?.includes('abnormal') || test.flag?.includes('high') || test.flag?.includes('low') || false,
             note: ackEvent.note || null, // 🆕 Note from lab_ack_events
+            patient_name: patientNameMap.get(ackEvent.patient_id),
           });
           student.totalEntries++;
         });
@@ -754,6 +780,7 @@ export async function getStudentActivitiesBySimulation(
         order_type: order.order_type,
         order_text: order.order_text,
         order_details: order.order_details,
+        patient_name: patientNameMap.get(order.patient_id),
       });
       student.totalEntries++;
     });
@@ -767,6 +794,7 @@ export async function getStudentActivitiesBySimulation(
         note_type: note.note_type,
         subject: note.subject,
         content: note.content,
+        patient_name: patientNameMap.get(note.patient_id),
       });
       student.totalEntries++;
     });
@@ -789,6 +817,7 @@ export async function getStudentActivitiesBySimulation(
         recommendations: note.recommendations,
         student_name: note.student_name,
         entry_type: note.acknowledged_by ? 'acknowledged' as const : 'created' as const,
+        patient_name: patientNameMap.get(note.patient_id),
       };
 
       const student = getOrCreateStudent(note.student_name);
@@ -818,6 +847,7 @@ export async function getStudentActivitiesBySimulation(
           number_of_sutures_placed: device.number_of_sutures_placed,
           securement_method: device.securement_method,
           patient_tolerance: device.patient_tolerance,
+          patient_name: patientNameMap.get(device.patient_id),
         });
         student.totalEntries++;
       }
@@ -842,6 +872,7 @@ export async function getStudentActivitiesBySimulation(
           drainage_type: wound.drainage_description,
           drainage_amount: wound.drainage_amount,
           location: wound.location_id,
+          patient_name: patientNameMap.get(wound.patient_id),
         });
         student.totalEntries++;
       }
@@ -858,6 +889,7 @@ export async function getStudentActivitiesBySimulation(
         output_amount_ml: assessment.output_amount_ml,
         notes: assessment.notes,
         assessment_data: assessment.assessment_data, // JSONB with IV/Foley/Feeding Tube specific fields
+        patient_name: patientNameMap.get(assessment.patient_id),
       });
       student.totalEntries++;
     });
@@ -876,6 +908,7 @@ export async function getStudentActivitiesBySimulation(
         treatment_applied: assessment.treatment_applied,
         dressing_type: assessment.dressing_type,
         notes: assessment.notes,
+        patient_name: patientNameMap.get(assessment.patient_id),
       });
       student.totalEntries++;
     });
@@ -891,6 +924,7 @@ export async function getStudentActivitiesBySimulation(
         stool_consistency: bowel.stool_consistency,
         stool_colour: bowel.stool_colour,
         stool_amount: bowel.stool_amount,
+        patient_name: patientNameMap.get(bowel.patient_id),
       });
       student.totalEntries++;
     });
@@ -921,6 +955,7 @@ export async function getStudentActivitiesBySimulation(
         route: io.route,
         description: io.description,
         amount_ml: io.amount_ml,
+        patient_name: patientNameMap.get(io.patient_id),
       });
       student.totalEntries++;
     });
@@ -936,6 +971,7 @@ export async function getStudentActivitiesBySimulation(
         healthcare_proxy_name: directive.healthcare_proxy_name,
         organ_donation_status: directive.organ_donation_status,
         special_instructions: directive.special_instructions,
+        patient_name: patientNameMap.get(directive.patient_id),
       });
       student.totalEntries++;
     });
@@ -965,6 +1001,7 @@ export async function getStudentActivitiesBySimulation(
         sensation: neuro.sensation,
         speech: neuro.speech,
         pain_score: neuro.pain_score,
+        patient_name: patientNameMap.get(neuro.patient_id),
       });
       student.totalEntries++;
     });
@@ -987,6 +1024,7 @@ export async function getStudentActivitiesBySimulation(
         correction_suggested_dose: bbit.correction_suggested_dose,
         correction_status: bbit.correction_status,
         carb_intake: bbit.carb_intake,
+        patient_name: patientNameMap.get(bbit.patient_id),
       });
       student.totalEntries++;
     });
@@ -1018,6 +1056,7 @@ export async function getStudentActivitiesBySimulation(
         physical_observations: nb.physical_observations,
         completed_by: nb.completed_by,
         student_name: nb.student_name,
+        patient_name: patientNameMap.get(nb.patient_id),
       });
       student.totalEntries++;
     });

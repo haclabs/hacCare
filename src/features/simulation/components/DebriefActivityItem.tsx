@@ -37,7 +37,7 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                   ? 'bg-blue-50 border-blue-300'
                   : 'bg-gray-50 border-gray-200'
               }`}>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student Administered</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student Administered <span className="normal-case font-normal">(mL or units)</span></p>
                 <p className={`text-sm font-bold mt-0.5 ${
                   item.administered_dose ? 'text-blue-700' : 'text-gray-400 italic'
                 }`}>
@@ -237,14 +237,14 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                 </button>
                 {showAssessmentData && (
                   <div className="mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                    <div className="grid grid-cols-1 gap-2 text-xs">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                       {Object.entries(item.assessment_data).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span className="font-medium text-indigo-900 capitalize">{key.replace(/_/g, ' ')}:</span>
-                          <span className="text-indigo-700 text-right ml-2">
+                        <div key={key} className="flex flex-col">
+                          <span className="font-semibold text-indigo-400 uppercase tracking-wide mb-0.5">{key.replace(/_/g, ' ')}</span>
+                          <span className="text-indigo-900 font-medium">
                             {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
                              Array.isArray(value) ? value.join(', ') : 
-                             value?.toString() || 'N/A'}
+                             value?.toString() || '—'}
                           </span>
                         </div>
                       ))}
@@ -253,14 +253,14 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                 )}
                 {/* Print view - always show fields */}
                 <div className="hidden print:block mt-2 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                  <div className="grid grid-cols-1 gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                     {Object.entries(item.assessment_data).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="font-medium text-indigo-900 capitalize">{key.replace(/_/g, ' ')}:</span>
-                        <span className="text-indigo-700 text-right ml-2">
+                      <div key={key} className="flex flex-col">
+                        <span className="font-semibold text-indigo-400 uppercase tracking-wide mb-0.5">{key.replace(/_/g, ' ')}</span>
+                        <span className="text-indigo-900 font-medium">
                           {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
                            Array.isArray(value) ? value.join(', ') : 
-                           value?.toString() || 'N/A'}
+                           value?.toString() || '—'}
                         </span>
                       </div>
                     ))}
@@ -275,31 +275,53 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.assessed_at ? format(new Date(item.assessed_at), 'PPp') : 'N/A'}</p>
             <p className="text-gray-900 mt-1 font-medium">🔍 WOUND ASSESSMENT</p>
-            <div className="mt-2 space-y-1 text-xs text-gray-600">
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
               {item.site_condition && (
-                <div><span className="font-semibold">Surrounding Skin:</span> {Array.isArray(item.site_condition) ? item.site_condition.join(', ') : item.site_condition}</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Surrounding Skin</span>
+                  <span className="text-gray-900 font-medium">{Array.isArray(item.site_condition) ? item.site_condition.join(', ') : item.site_condition}</span>
+                </div>
               )}
               {item.pain_level !== null && (
-                <div><span className="font-semibold">Pain Level:</span> {item.pain_level}/10</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Pain Level</span>
+                  <span className="text-gray-900 font-medium">{item.pain_level}/10</span>
+                </div>
               )}
               {item.wound_appearance && (
-                <div><span className="font-semibold">Wound Appearance:</span> {Array.isArray(item.wound_appearance) ? item.wound_appearance.join(', ') : item.wound_appearance}</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Wound Appearance</span>
+                  <span className="text-gray-900 font-medium">{Array.isArray(item.wound_appearance) ? item.wound_appearance.join(', ') : item.wound_appearance}</span>
+                </div>
               )}
               {item.drainage_type && (
-                <div><span className="font-semibold">Drainage Type:</span> {Array.isArray(item.drainage_type) ? item.drainage_type.join(', ') : item.drainage_type}</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Drainage Type</span>
+                  <span className="text-gray-900 font-medium">{Array.isArray(item.drainage_type) ? item.drainage_type.join(', ') : item.drainage_type}</span>
+                </div>
               )}
               {item.drainage_amount && (
-                <div><span className="font-semibold">Drainage Amount:</span> {item.drainage_amount}</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Drainage Amount</span>
+                  <span className="text-gray-900 font-medium">{item.drainage_amount}</span>
+                </div>
               )}
               {item.treatment_applied && (
-                <div><span className="font-semibold">Treatment Applied:</span> {item.treatment_applied}</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Treatment Applied</span>
+                  <span className="text-gray-900 font-medium">{item.treatment_applied}</span>
+                </div>
               )}
               {item.dressing_type && (
-                <div><span className="font-semibold">Dressing Type:</span> {item.dressing_type}</div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Dressing Type</span>
+                  <span className="text-gray-900 font-medium">{item.dressing_type}</span>
+                </div>
               )}
               {item.notes && (
-                <div className="mt-1 p-2 bg-fuchsia-50 border border-fuchsia-200 rounded">
-                  <span className="font-semibold">Assessment Notes:</span> {item.notes}
+                <div className="col-span-2 mt-1 p-2 bg-fuchsia-50 border border-fuchsia-200 rounded">
+                  <span className="font-semibold text-gray-400 uppercase tracking-wide">Assessment Notes</span>
+                  <p className="text-gray-900 font-medium mt-0.5">{item.notes}</p>
                 </div>
               )}
             </div>
@@ -547,6 +569,13 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors activity-item">
+      {item.patient_name && (
+        <div className="mb-2">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
+            👤 {item.patient_name}
+          </span>
+        </div>
+      )}
       {formatItem()}
     </div>
   );
