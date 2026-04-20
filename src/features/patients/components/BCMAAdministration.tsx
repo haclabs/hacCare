@@ -661,6 +661,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                         className={`w-full px-4 py-2.5 text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-colors ${
                           studentName.trim()
                             ? 'border-green-400 bg-white focus:ring-green-300'
+<<<<<<< HEAD
                             : 'border-yellow-300 bg-yellow-50 focus:ring-yellow-500 focus:border-yellow-500'
                         }`}
                         placeholder="Your full name — required to save"
