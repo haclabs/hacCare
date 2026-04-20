@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
@@ -18,7 +18,6 @@ export const LoginForm: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
-  const mfaChecked = useRef(false);
   const { signIn, signOut, user, profile } = useAuth();
 
   const doRedirect = () => {
@@ -36,44 +35,46 @@ export const LoginForm: React.FC = () => {
     }
   };
 
-  // Redirect based on user type after login, with MFA gate for super_admin
+  // Redirect based on user type after login, with MFA gate for super_admin.
+  // Uses a `cancelled` cleanup flag so React StrictMode's double-invoke doesn't
+  // skip the MFA check (the old `mfaChecked` ref persisted across remounts and
+  // caused the second mount to bypass the check entirely).
   useEffect(() => {
     if (!user || !profile) return;
-    if (mfaChecked.current) return;
-    mfaChecked.current = true;
 
     if (profile.role !== 'super_admin') {
       doRedirect();
       return;
     }
 
-    // Super admin: check MFA assurance level before allowing redirect
+    let cancelled = false;
+
     const checkMFA = async () => {
       try {
         const { data, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (cancelled) return;
         if (aalError) throw aalError;
 
         if (data.currentLevel === 'aal2') {
-          // Already fully verified (e.g., session restored)
           secureLogger.debug('✅ Super admin already at AAL2, proceeding');
           doRedirect();
         } else if (data.nextLevel === 'aal2') {
-          // Has enrolled factors but hasn't verified this session
           secureLogger.debug('🔐 Super admin has MFA enrolled — showing challenge');
           setMfaMode('challenge');
         } else {
-          // No factors enrolled yet — force enrollment
           secureLogger.debug('🔐 Super admin has no MFA factors — showing enrollment');
           setMfaMode('enroll');
         }
       } catch (err: any) {
-        secureLogger.error('MFA AAL check failed, allowing login:', err);
-        // Fail open rather than locking out the admin
-        doRedirect();
+        if (cancelled) return;
+        // Fail CLOSED — sign out rather than silently letting the admin through
+        secureLogger.error('MFA AAL check failed, signing out for safety:', err);
+        await signOut();
       }
     };
 
     checkMFA();
+    return () => { cancelled = true; };
   }, [user, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMFASuccess = () => {
@@ -83,7 +84,6 @@ export const LoginForm: React.FC = () => {
 
   const handleMFACancel = async () => {
     setMfaMode(null);
-    mfaChecked.current = false;
     await signOut();
   };
 
