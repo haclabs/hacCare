@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
@@ -15,14 +15,8 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel 
   const [factorId, setFactorId] = useState<string | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [initialising, setInitialising] = useState(true);
-  // Guard against React StrictMode double-invoking the effect (would create two
-  // challenges for the same factor; only the last one is valid causing verify to fail).
-  const hasStartedRef = useRef(false);
 
   useEffect(() => {
-    if (hasStartedRef.current) return;
-    hasStartedRef.current = true;
-
     const initChallenge = async () => {
       try {
         const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
