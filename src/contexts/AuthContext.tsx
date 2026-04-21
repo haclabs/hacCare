@@ -385,6 +385,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fetch the profile immediately so the caller can make role-based decisions
       // (e.g. whether to show MFA challenge) without waiting for the async
       // onAuthStateChange → fetchUserProfile cycle to complete.
+      // NOTE: We intentionally do NOT call setProfile() here. Storing the profile
+      // in context at this point would trigger LoginForm's useEffect (which depends
+      // on profile?.role) while handleSubmit is still mid-execution awaiting the AAL
+      // check. That creates two concurrent getAuthenticatorAssuranceLevel() calls
+      // which contend on Supabase's internal _useSession lock and cause a hang.
+      // The onAuthStateChange → fetchUserProfile pipeline sets profile in context
+      // after the form-submit MFA flow is already in motion.
       let signedInProfile: UserProfile | null = null;
       if (signInData?.user) {
         try {
@@ -394,8 +401,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', signInData.user.id)
             .single();
           signedInProfile = profileData ?? null;
-          // Sync into context state so the rest of the app sees it immediately
-          if (mounted.current) setProfile(signedInProfile);
         } catch (profileErr) {
           secureLogger.error('Profile fetch after sign in failed:', profileErr);
         }
