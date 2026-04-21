@@ -27,15 +27,26 @@ export const LoginForm: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
+  // Tracks whether a form submit is in progress. Prevents the useEffect below
+  // from firing checkRestoredSession() concurrently with handleSubmit's own AAL
+  // check — two simultaneous getAuthenticatorAssuranceLevel() calls contend on
+  // Supabase's internal _useSession lock and cause an indefinite hang.
+  const submitActiveRef = React.useRef(false);
   const { signIn, signOut, user, profile } = useAuth();
 
   // Redirect effect — covers two cases:
-  // 1. Non-super_admin: redirect immediately once user+profile are available.
+  // 1. Non-super_admin: redirect immediately once user+profile are available
+  //    (OAuth sign-in or restored session — handleSubmit handles the direct path).
   // 2. Super_admin with a RESTORED session (page reload / INITIAL_SESSION):
   //    handleSubmit won't have been called, so we still need to gate on MFA here.
+  //
+  // IMPORTANT: submitActiveRef guards against this effect firing while handleSubmit
+  // is already executing the AAL check — that would create two concurrent
+  // getAuthenticatorAssuranceLevel() calls and hang due to _useSession lock.
   useEffect(() => {
     if (!user || !profile) return;
-    if (mfaMode !== null) return; // MFA modal is open, don't redirect yet
+    if (mfaMode !== null) return; // MFA modal already open
+    if (submitActiveRef.current) return; // handleSubmit is driving the MFA flow
 
     if (profile.role !== 'super_admin') {
       doRedirect(profile.simulation_only);
@@ -43,8 +54,6 @@ export const LoginForm: React.FC = () => {
     }
 
     // Super admin with a restored session — check AAL level now.
-    // (When coming through handleSubmit this codepath is skipped because
-    //  mfaMode will already be set before the profile state settles.)
     const checkRestoredSession = async () => {
       try {
         const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -86,6 +95,10 @@ export const LoginForm: React.FC = () => {
       setError('Database connection not configured. Please set up Supabase.');
       return;
     }
+
+    // Mark a form submit as active so the useEffect above won't fire
+    // checkRestoredSession() concurrently with our own AAL check below.
+    submitActiveRef.current = true;
 
     setError('');
     setLoading(true);
