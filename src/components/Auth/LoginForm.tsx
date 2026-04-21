@@ -27,6 +27,9 @@ export const LoginForm: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
+  // Access token stored so MFAChallenge can call listFactors/challenge via
+  // direct fetch (no Supabase lock) to avoid contention with TenantContext.
+  const [mfaAccessToken, setMfaAccessToken] = useState<string | undefined>(undefined);
   // Tracks whether a form submit is in progress. Prevents the useEffect below
   // from firing checkRestoredSession() concurrently with handleSubmit's own AAL
   // check — two simultaneous getAuthenticatorAssuranceLevel() calls contend on
@@ -69,7 +72,7 @@ export const LoginForm: React.FC = () => {
           secureLogger.debug('🔐 Restored super admin session — no factor enrolled, showing enrollment');
           setMfaMode('enroll');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         secureLogger.error('AAL check on restored session failed, signing out:', err);
         await signOut();
       }
@@ -79,11 +82,13 @@ export const LoginForm: React.FC = () => {
   }, [user?.id, profile?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMFASuccess = () => {
+    submitActiveRef.current = false;
     setMfaMode(null);
     window.location.href = '/app';
   };
 
   const handleMFACancel = async () => {
+    submitActiveRef.current = false;
     setMfaMode(null);
     await signOut();
   };
@@ -105,11 +110,12 @@ export const LoginForm: React.FC = () => {
 
     try {
       secureLogger.debug('🔐 Attempting to sign in user...');
-      const { error: signInError, profile: signedInProfile } = await signIn(email, password);
+      const { error: signInError, profile: signedInProfile, accessToken } = await signIn(email, password);
 
       if (signInError) {
         secureLogger.error('❌ Sign in error:', signInError);
         setError(parseAuthError(signInError));
+        submitActiveRef.current = false;
         setLoading(false);
         return;
       }
@@ -121,10 +127,12 @@ export const LoginForm: React.FC = () => {
         return;
       }
 
-      // Super admin: check MFA WHILE session is hot (avoids _useSession lock delays)
+      // Super admin: check MFA using the access_token directly to bypass getSession() → _acquireLock.
+      // Passing the token makes getAuthenticatorAssuranceLevel() decode the JWT synchronously
+      // instead of calling getSession() which contends with any concurrent background lock acquisition.
       secureLogger.debug('🔐 Super admin — checking MFA assurance level...');
       try {
-        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
         if (aalError) throw aalError;
 
         if (aal.currentLevel === 'aal2') {
@@ -132,6 +140,7 @@ export const LoginForm: React.FC = () => {
           doRedirect(signedInProfile.simulation_only);
         } else if (aal.nextLevel === 'aal2') {
           secureLogger.debug('🔐 Showing MFA challenge');
+          setMfaAccessToken(accessToken);
           setLoading(false);
           setMfaMode('challenge');
         } else {
@@ -139,15 +148,17 @@ export const LoginForm: React.FC = () => {
           setLoading(false);
           setMfaMode('enroll');
         }
-      } catch (aalErr: any) {
+      } catch (aalErr: unknown) {
         // Fail CLOSED — sign out rather than silently letting the admin through
         secureLogger.error('MFA AAL check failed, signing out for safety:', aalErr);
+        submitActiveRef.current = false;
         setLoading(false);
         await signOut();
       }
     } catch (err: unknown) {
       secureLogger.error('Login error:', err);
       setError(parseAuthError(err));
+      submitActiveRef.current = false;
       setLoading(false);
     }
   };
@@ -330,7 +341,11 @@ export const LoginForm: React.FC = () => {
       )}
 
       {mfaMode === 'challenge' && (
-        <MFAChallenge onSuccess={handleMFASuccess} onCancel={handleMFACancel} />
+        <MFAChallenge
+          onSuccess={handleMFASuccess}
+          onCancel={handleMFACancel}
+          accessToken={mfaAccessToken}
+        />
       )}
 
       {mfaMode === 'enroll' && (
