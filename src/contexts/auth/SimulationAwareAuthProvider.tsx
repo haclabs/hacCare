@@ -51,15 +51,19 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
       if (event === 'SIGNED_IN') {
         detectUserType();
         
-        // Initialize session tracking for all logins (non-blocking)
+        // Initialize session tracking for all logins (non-blocking).
+        // Pass session.user directly so initializeSessionTracking does NOT call
+        // supabase.auth.getUser() from inside this subscriber — that would queue
+        // another _acquireLock call inside signInWithPassword's drain loop and
+        // delay the subsequent mfa.getAuthenticatorAssuranceLevel() call.
         if (session?.user) {
           secureLogger.debug('👤 User signed in, initializing session tracking for:', session.user.email);
           
-          // Start session tracking in background without blocking auth
-          initializeSessionTracking()
-            .then(() => {
-              secureLogger.debug('✅ Background session tracking completed');
-            })
+          // Pass the access_token directly so initializeSessionTracking → createUserSession
+          // can make a plain fetch() call instead of going through supabase.rpc() →
+          // _getAccessToken() → getSession() → _acquireLock, which would contend with
+          // the MFA challenge flow (listFactors / challenge) that acquires the same lock.
+          initializeSessionTracking(undefined, session.user, session.access_token)
             .catch(error => {
               secureLogger.warn('⚠️ Background session tracking failed (non-critical):', error);
             });
@@ -101,64 +105,9 @@ export const SimulationAwareAuthProvider: React.FC<SimulationAwareAuthProviderPr
   );
 };
 
-// Enhanced useAuth hook that automatically uses the right auth context
-export const useAuth = () => {
-  const { authHook, isSimulationUser } = useSimulationAwareAuth();
-  const authContext = authHook();
-  
-  // Always ensure createProfile function exists
-  const ensureCreateProfile = (context: any) => {
-    if (typeof context.createProfile === 'function') {
-      return context.createProfile;
-    }
-    // Fallback createProfile function
-    return async () => {
-      secureLogger.debug('Using fallback createProfile');
-      // Import and use the standard auth context's createProfile
-      const { supabase } = await import('../../lib/api/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
-      
-      // Basic profile creation logic
-      const { error } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-        
-      if (error) throw error;
-      return Promise.resolve();
-    };
-  };
-  
-  // Normalize the function names and add missing functions between standard and simulation auth
-  if (isSimulationUser) {
-    secureLogger.debug('🔄 Using simulation auth context');
-    // Simulation auth uses 'login', standardize to 'signIn' and add missing functions
-    return {
-      ...authContext,
-      signIn: authContext.login,
-      signOut: authContext.logout,
-      profile: authContext.userProfile, // Normalize profile property name
-      // Add missing functions for simulation context
-      createProfile: ensureCreateProfile(authContext),
-      hasRole: (roles: string | string[]) => {
-        // Check role based on simulation context
-        const userRole = authContext.simulationContext?.role || '';
-        if (Array.isArray(roles)) {
-          return roles.includes(userRole);
-        }
-        return userRole === roles;
-      }
-    };
-  } else {
-    // Standard auth already uses 'signIn' and 'signOut' and has all required functions
-    return {
-      ...authContext,
-      createProfile: ensureCreateProfile(authContext)
-    };
-  }
-};
+// Enhanced useAuth hook that automatically uses the right auth context.
+// Kept as a re-export here for backwards compatibility — any file that imports
+// useAuth from SimulationAwareAuthProvider will still work.
+// NOTE: Vite Fast Refresh requires hook exports to live in a separate file from
+// component exports; the actual implementation lives in useSimAwareAuth.ts.
+export { useAuth } from './useSimAwareAuth';

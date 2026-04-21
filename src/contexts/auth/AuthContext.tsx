@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useCallback, useRef } from '
 import { User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { initializeSessionPersistence, checkSessionWithRetry } from '../../services/auth/authPersistence';
+// authPersistence import removed — initializeAuth now uses a single getSession() call
 import { secureLogger } from '../../lib/security/secureLogger';
 
 /**
@@ -16,7 +16,7 @@ interface AuthContextType {
   loading: boolean;                                     // Loading state for auth operations
   isOffline: boolean;                                   // Offline state indicator
   isAnonymous: boolean;                                 // Anonymous simulation user indicator
-  signIn: (email: string, password: string) => Promise<{ error: any; profile?: UserProfile | null }>; // Sign in function
+  signIn: (email: string, password: string) => Promise<{ error: any; profile?: UserProfile | null; accessToken?: string }>; // Sign in function
   signOut: () => Promise<void>;                        // Sign out function
   hasRole: (roles: string | string[]) => boolean;     // Role-based access control helper
   createProfile: () => Promise<void>;                 // Create user profile function
@@ -87,9 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        // Initialize enhanced session persistence
-        await initializeSessionPersistence();
-
         // Set timeout to prevent infinite loading (15 seconds)
         timeoutId = setTimeout(() => {
           secureLogger.debug('⏰ Auth initialization timeout reached');
@@ -98,50 +95,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }, 15000);
 
-        secureLogger.debug('🔍 Checking session with retry logic...');
-        
-        // Use enhanced session check with retry logic
-        const sessionExists = await checkSessionWithRetry(3);
-        
+        secureLogger.debug('🔍 Checking for existing session...');
+
+        // Single getSession() call — avoids holding the Supabase _acquireLock across
+        // multiple retries, which would block signInWithPassword() and the post-login
+        // MFA/AAL check when the user logs in on the same page load.
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
         // Clear timeout since we got a response
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
 
-        if (sessionExists) {
-          // Get the actual session data
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            secureLogger.error('❌ Error getting session after successful check:', error);
-            
-            // Handle refresh token errors specifically
-            if (error.message?.includes('Invalid Refresh Token') || 
-                error.message?.includes('Refresh Token Not Found') ||
-                error.message?.includes('refresh_token_not_found')) {
-              secureLogger.debug('🔄 Invalid refresh token detected, clearing session...');
-              await signOut();
-            }
-            
-            if (mounted) {
-              setLoading(false);
-            }
-            return;
+        if (sessionError) {
+          secureLogger.error('❌ Error getting session:', sessionError);
+
+          // Handle refresh token errors specifically
+          if (sessionError.message?.includes('Invalid Refresh Token') ||
+              sessionError.message?.includes('Refresh Token Not Found') ||
+              sessionError.message?.includes('refresh_token_not_found')) {
+            secureLogger.debug('🔄 Invalid refresh token detected, clearing session...');
+            await signOut();
           }
 
-          if (session?.user && mounted) {
-            secureLogger.debug('👤 User session restored successfully:', session.user.email);
-            setUser(session.user);
-            
-            // Fetch user profile and wait for completion
-            try {
-              await fetchUserProfile(session.user.id);
-            } catch (error) {
-              secureLogger.error('Profile fetch failed during init:', error);
-            }
-            
-            setLoading(false);
+          if (mounted) setLoading(false);
+          return;
+        }
+
+        if (session?.user && mounted) {
+          secureLogger.debug('👤 User session restored successfully:', session.user.email);
+          setUser(session.user);
+
+          // Fetch user profile and wait for completion
+          try {
+            await fetchUserProfile(session.user.id);
+          } catch (err) {
+            secureLogger.error('Profile fetch failed during init:', err);
           }
+
+          setLoading(false);
         } else {
           secureLogger.debug('👤 No session found, user needs to log in');
           if (mounted) {
@@ -596,7 +588,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }, 50);
               
               secureLogger.debug('🏁 User and profile state updated');
-              return { error, profile: profiles[0] };
+              return { error, profile: profiles[0], accessToken: data.session.access_token };
             } else {
               secureLogger.warn('⚠️ No profile found for user');
               setUser(data.session.user);
