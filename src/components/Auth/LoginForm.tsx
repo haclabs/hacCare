@@ -29,14 +29,44 @@ export const LoginForm: React.FC = () => {
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
   const { signIn, signOut, user, profile } = useAuth();
 
-  // For non-super_admin users the redirect is handled inline in handleSubmit.
-  // This effect is a fallback for OAuth / session-restored users where
-  // handleSubmit was never called (e.g. INITIAL_SESSION on page load).
+  // Redirect effect — covers two cases:
+  // 1. Non-super_admin: redirect immediately once user+profile are available.
+  // 2. Super_admin with a RESTORED session (page reload / INITIAL_SESSION):
+  //    handleSubmit won't have been called, so we still need to gate on MFA here.
   useEffect(() => {
     if (!user || !profile) return;
-    if (profile.role === 'super_admin') return; // handled in handleSubmit
     if (mfaMode !== null) return; // MFA modal is open, don't redirect yet
-    doRedirect(profile.simulation_only);
+
+    if (profile.role !== 'super_admin') {
+      doRedirect(profile.simulation_only);
+      return;
+    }
+
+    // Super admin with a restored session — check AAL level now.
+    // (When coming through handleSubmit this codepath is skipped because
+    //  mfaMode will already be set before the profile state settles.)
+    const checkRestoredSession = async () => {
+      try {
+        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalError) throw aalError;
+
+        if (aal.currentLevel === 'aal2') {
+          secureLogger.debug('✅ Restored super admin session already at AAL2 — redirecting');
+          doRedirect(profile.simulation_only);
+        } else if (aal.nextLevel === 'aal2') {
+          secureLogger.debug('🔐 Restored super admin session needs MFA challenge');
+          setMfaMode('challenge');
+        } else {
+          secureLogger.debug('🔐 Restored super admin session — no factor enrolled, showing enrollment');
+          setMfaMode('enroll');
+        }
+      } catch (err: any) {
+        secureLogger.error('AAL check on restored session failed, signing out:', err);
+        await signOut();
+      }
+    };
+
+    checkRestoredSession();
   }, [user?.id, profile?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMFASuccess = () => {
