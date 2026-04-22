@@ -1,7 +1,27 @@
 import { supabase } from '../../lib/api/supabase';
-import { Patient, VitalSigns, PatientNote, SimulationPatient } from '../../types';
+import { Patient, VitalSigns, PatientNote } from '../../types';
 import { logAction } from '../operations/auditService';
 import { secureLogger } from '../../lib/security/secureLogger';
+
+// Legacy type for simulation_patients table (older approach pre-multi-tenant)
+interface SimulationPatient {
+  id: string;
+  patient_id: string;
+  patient_name: string;
+  date_of_birth: string;
+  gender?: string;
+  room_number?: string;
+  bed_number?: string;
+  admission_date?: string;
+  condition?: string;
+  diagnosis?: string;
+  allergies?: string[];
+  blood_type?: string;
+  emergency_contact_name?: string;
+  emergency_contact_relationship?: string;
+  emergency_contact_phone?: string;
+  assigned_nurse?: string;
+}
 
 /**
  *    // Fetch vitals for all patients

@@ -26,7 +26,7 @@ export function useActiveSimulations() {
   } | null>(null);
   const [versionComparisonModal, setVersionComparisonModal] = useState<{
     simulation: SimulationActiveWithDetails;
-    patientComparison: PatientListComparison | null;
+    patientComparison: PatientListComparison | undefined;
   } | null>(null);
   const [completionSummary, setCompletionSummary] = useState<{
     simulationName: string;
@@ -170,11 +170,11 @@ export function useActiveSimulations() {
       const result = await resetSimulationWithTemplateUpdates(sim.id);
       secureLogger.debug('✅ Simulation synced with template:', result);
 
-      const medsAddedText = result.medications_added > 0
+      const medsAddedText = (result.medications_added ?? 0) > 0
         ? `${result.medications_added} new medication(s) added.`
         : 'No new medications to add.';
 
-      alert(`Simulation synced to template v${result.template_version_synced}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
+      alert(`Simulation synced to template v${result.template_version_synced ?? 'unknown'}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
       await loadSimulations();
     } catch (error: any) {
       secureLogger.error('❌ Error syncing simulation:', error);
@@ -479,7 +479,6 @@ export function useActiveSimulations() {
     totalSimulations: simulations.length,
     filteredSimulations: filteredSimulations.length,
     userProgramCodes: programCodes,
-    isInstructor,
     canSeeAllPrograms
   });
 

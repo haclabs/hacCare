@@ -215,8 +215,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
 
   const calculateDuration = () => {
     // Try different field name combinations for start/end times
-    const startTime = historyRecord.started_at || historyRecord.starts_at || historyRecord.created_at;
-    const endTime = historyRecord.completed_at || historyRecord.ends_at || historyRecord.updated_at;
+    const startTime = historyRecord.started_at || historyRecord.created_at;
+    const endTime = historyRecord.completed_at || historyRecord.created_at;
     
     // If we have duration_minutes field, use that
     if (historyRecord.duration_minutes) {

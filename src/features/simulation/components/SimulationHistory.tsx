@@ -150,8 +150,8 @@ const SimulationHistory: React.FC = () => {
       return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
     }
     // Otherwise calculate from timestamps
-    if (!record.completed_at || !record.started_at) return 'N/A';
-    const start = new Date(record.started_at);
+    if (!record.completed_at || !record.starts_at) return 'N/A';
+    const start = new Date(record.starts_at);
     const end = new Date(record.completed_at);
     const minutes = differenceInMinutes(end, start);
     const hours = Math.floor(minutes / 60);
@@ -804,7 +804,7 @@ const SimulationHistory: React.FC = () => {
       {/* Debrief Modal */}
       {showDebriefModal && selectedHistory && (
         <EnhancedDebriefModal
-          historyRecord={selectedHistory}
+          historyRecord={selectedHistory as any}
           onClose={() => {
             setShowDebriefModal(false);
             setSelectedHistory(null);
