@@ -86,7 +86,7 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
     // Get unique user IDs from sessions, filtering out null values
     const userIds = [...new Set(sessionsData.map(session => session.user_id).filter(id => id !== null))];
     
-    let profilesData: any[] = [];
+    let profilesData: { id: string; email: string; first_name: string; last_name: string }[] = [];
     let profilesError = null;
     
     // Only fetch user profiles if we have valid user IDs
@@ -114,7 +114,7 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
     const tenantIds = [...new Set(sessionsData.map(session => session.tenant_id).filter(id => id !== null))];
     
     // Fetch tenant names
-    let tenantsData: any[] = [];
+    let tenantsData: { id: string; name: string }[] = [];
     if (tenantIds.length > 0) {
       const { data, error: tenantError } = await supabase
         .from('tenants')
@@ -171,20 +171,50 @@ export const getActiveSessions = async (): Promise<UserSession[]> => {
 export const createUserSession = async (
   ipAddress: string | null,
   userAgent?: string,
-  tenantId?: string
+  tenantId?: string,
+  accessToken?: string
 ): Promise<string | null> => {
   try {
     secureLogger.debug('🔐 Creating/updating user session...');
-    
-    const { data, error } = await supabase.rpc('create_user_session', {
-      p_ip_address: ipAddress,
-      p_user_agent: userAgent,
-      p_tenant_id: tenantId
-    });
 
-    if (error) {
-      secureLogger.error('Error creating user session:', error);
-      throw error;
+    let data: string | null = null;
+
+    if (accessToken) {
+      // Use a direct fetch with the already-obtained access token so we never call
+      // supabase.auth.getSession() → _acquireLock, which would contend with the
+      // MFA challenge flow running concurrently on the same lock.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/create_user_session`, {
+        method: 'POST',
+        headers: {
+          'apikey': anonKey,
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          p_ip_address: ipAddress,
+          p_user_agent: userAgent,
+          p_tenant_id: tenantId ?? null,
+        }),
+      });
+      if (!response.ok) {
+        const msg = await response.text();
+        secureLogger.error('Error creating user session (direct fetch):', msg);
+        return null;
+      }
+      data = await response.json();
+    } else {
+      const result = await supabase.rpc('create_user_session', {
+        p_ip_address: ipAddress,
+        p_user_agent: userAgent,
+        p_tenant_id: tenantId,
+      });
+      if (result.error) {
+        secureLogger.error('Error creating user session:', result.error);
+        throw result.error;
+      }
+      data = result.data;
     }
 
     secureLogger.debug('✅ User session created/updated:', data);
@@ -308,95 +338,47 @@ export const cleanupOldSessions = async () => {
 };
 
 /**
- * Get client IP address using external service
+ * Initialize session tracking on login (non-blocking, fire-and-forget).
+ *
+ * @param tenantId - Optional tenant ID
+ * @param preloadedUser - Pass the user from onAuthStateChange session to avoid
+ *   calling supabase.auth.getUser() inside an auth subscriber, which would queue
+ *   another _acquireLock call inside signInWithPassword's drain loop and delay
+ *   the subsequent mfa.getAuthenticatorAssuranceLevel() call.
  */
-export const getClientIpAddress = async (): Promise<string | null> => {
+export const initializeSessionTracking = async (
+  tenantId?: string,
+  preloadedUser?: { id: string; email?: string } | null,
+  accessToken?: string
+) => {
   try {
-    // Try multiple IP detection services for reliability
-    const ipServices = [
-      'https://api.ipify.org?format=json',
-      'https://ipapi.co/json/',
-      'https://api64.ipify.org?format=json'
-    ];
-    
-    for (const service of ipServices) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-        
-        const response = await fetch(service, { 
-          signal: controller.signal,
-          headers: { 'Accept': 'application/json' }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          // Handle different response formats
-          const ip = data.ip || data.query || 'unknown';
-          if (ip && ip !== 'unknown' && ip.length > 6) {
-            secureLogger.debug(`🌐 Detected IP address: ${ip} (via ${service})`);
-            return ip;
-          }
-        }
-      } catch (serviceError) {
-        secureLogger.debug(`IP service ${service} failed:`, serviceError);
-        continue;
-      }
-    }
-    
-    secureLogger.warn('⚠️ Could not detect IP address, using NULL');
-    return null; // Return null for database compatibility
-  } catch (error) {
-    secureLogger.error('❌ IP detection failed:', error);
-    return null; // Return null for database compatibility
-  }
-};
+    let user = preloadedUser ?? null;
 
-/**
- * Initialize session tracking on login
- */
-export const initializeSessionTracking = async (tenantId?: string) => {
-  try {
-    // Check authentication first
-    const { data: { user } } = await supabase.auth.getUser();
+    // Only call getUser() if we weren't given the user — avoids Supabase lock
+    // contention when called from within an onAuthStateChange subscriber.
+    if (!user) {
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    }
+
     if (!user) {
       secureLogger.error('❌ No authenticated user found for session tracking');
       return null;
     }
 
-    secureLogger.debug('👤 Creating session for user:', user.email, 'ID:', user.id);
-
-    // Start IP detection in background - don't wait for it
-    const ipPromise = getClientIpAddress();
-    const userAgent = navigator.userAgent;
-    
-    secureLogger.debug('🔐 Initializing session tracking (async)...');
-    
-    // Create session in background without blocking login
-    ipPromise.then(async (ipAddress) => {
-      try {
-        secureLogger.debug('🌐 Got IP address:', ipAddress, 'creating session...');
-        const sessionId = await createUserSession(ipAddress, userAgent, tenantId);
-        
+    // Pass the access token through so createUserSession can use a direct fetch
+    // instead of supabase.rpc() → _getAccessToken() → getSession() → _acquireLock.
+    createUserSession(null, navigator.userAgent, tenantId, accessToken)
+      .then(sessionId => {
         if (sessionId) {
           secureLogger.debug('✅ Session tracking completed successfully:', sessionId);
-        } else {
-          secureLogger.warn('⚠️ Session creation returned null');
         }
-      } catch (error) {
-        secureLogger.warn('⚠️ Background session creation failed:', error);
-      }
-    }).catch(error => {
-      secureLogger.warn('⚠️ Background session tracking failed:', error);
-    });
-    
-    // Return immediately - don't block login
-    secureLogger.debug('🚀 Login proceeding while session creates in background');
-    return null; // We don't wait for the session ID
-    
+      })
+      .catch(error => {
+        secureLogger.warn('⚠️ Background session tracking failed (non-critical):', error);
+      });
+
+    return null;
   } catch (error) {
     secureLogger.error('❌ Failed to initialize session tracking:', error);
     return null;

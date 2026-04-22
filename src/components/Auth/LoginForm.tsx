@@ -27,24 +27,68 @@ export const LoginForm: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
+  // Access token stored so MFAChallenge can call listFactors/challenge via
+  // direct fetch (no Supabase lock) to avoid contention with TenantContext.
+  const [mfaAccessToken, setMfaAccessToken] = useState<string | undefined>(undefined);
+  // Tracks whether a form submit is in progress. Prevents the useEffect below
+  // from firing checkRestoredSession() concurrently with handleSubmit's own AAL
+  // check — two simultaneous getAuthenticatorAssuranceLevel() calls contend on
+  // Supabase's internal _useSession lock and cause an indefinite hang.
+  const submitActiveRef = React.useRef(false);
   const { signIn, signOut, user, profile } = useAuth();
 
-  // For non-super_admin users the redirect is handled inline in handleSubmit.
-  // This effect is a fallback for OAuth / session-restored users where
-  // handleSubmit was never called (e.g. INITIAL_SESSION on page load).
+  // Redirect effect — covers two cases:
+  // 1. Non-super_admin: redirect immediately once user+profile are available
+  //    (OAuth sign-in or restored session — handleSubmit handles the direct path).
+  // 2. Super_admin with a RESTORED session (page reload / INITIAL_SESSION):
+  //    handleSubmit won't have been called, so we still need to gate on MFA here.
+  //
+  // IMPORTANT: submitActiveRef guards against this effect firing while handleSubmit
+  // is already executing the AAL check — that would create two concurrent
+  // getAuthenticatorAssuranceLevel() calls and hang due to _useSession lock.
   useEffect(() => {
     if (!user || !profile) return;
-    if (profile.role === 'super_admin') return; // handled in handleSubmit
-    if (mfaMode !== null) return; // MFA modal is open, don't redirect yet
-    doRedirect(profile.simulation_only);
+    if (mfaMode !== null) return; // MFA modal already open
+    if (submitActiveRef.current) return; // handleSubmit is driving the MFA flow
+
+    if (profile.role !== 'super_admin') {
+      doRedirect(profile.simulation_only);
+      return;
+    }
+
+    // Super admin with a restored session — check AAL level now.
+    const checkRestoredSession = async () => {
+      try {
+        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalError) throw aalError;
+
+        if (aal.currentLevel === 'aal2') {
+          secureLogger.debug('✅ Restored super admin session already at AAL2 — redirecting');
+          doRedirect(profile.simulation_only);
+        } else if (aal.nextLevel === 'aal2') {
+          secureLogger.debug('🔐 Restored super admin session needs MFA challenge');
+          setMfaMode('challenge');
+        } else {
+          secureLogger.debug('🔐 Restored super admin session — no factor enrolled, showing enrollment');
+          setMfaMode('enroll');
+        }
+      } catch (err: unknown) {
+        secureLogger.error('AAL check on restored session failed, signing out:', err);
+        await signOut();
+      }
+    };
+
+    checkRestoredSession();
   }, [user?.id, profile?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMFASuccess = () => {
+    submitActiveRef.current = false;
     setMfaMode(null);
     window.location.href = '/app';
   };
 
   const handleMFACancel = async () => {
+    submitActiveRef.current = false;
     setMfaMode(null);
     await signOut();
   };
@@ -57,16 +101,21 @@ export const LoginForm: React.FC = () => {
       return;
     }
 
+    // Mark a form submit as active so the useEffect above won't fire
+    // checkRestoredSession() concurrently with our own AAL check below.
+    submitActiveRef.current = true;
+
     setError('');
     setLoading(true);
 
     try {
       secureLogger.debug('🔐 Attempting to sign in user...');
-      const { error: signInError, profile: signedInProfile } = await signIn(email, password);
+      const { error: signInError, profile: signedInProfile, accessToken } = await signIn(email, password);
 
       if (signInError) {
         secureLogger.error('❌ Sign in error:', signInError);
         setError(parseAuthError(signInError));
+        submitActiveRef.current = false;
         setLoading(false);
         return;
       }
@@ -78,10 +127,12 @@ export const LoginForm: React.FC = () => {
         return;
       }
 
-      // Super admin: check MFA WHILE session is hot (avoids _useSession lock delays)
+      // Super admin: check MFA using the access_token directly to bypass getSession() → _acquireLock.
+      // Passing the token makes getAuthenticatorAssuranceLevel() decode the JWT synchronously
+      // instead of calling getSession() which contends with any concurrent background lock acquisition.
       secureLogger.debug('🔐 Super admin — checking MFA assurance level...');
       try {
-        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
         if (aalError) throw aalError;
 
         if (aal.currentLevel === 'aal2') {
@@ -89,6 +140,7 @@ export const LoginForm: React.FC = () => {
           doRedirect(signedInProfile.simulation_only);
         } else if (aal.nextLevel === 'aal2') {
           secureLogger.debug('🔐 Showing MFA challenge');
+          setMfaAccessToken(accessToken);
           setLoading(false);
           setMfaMode('challenge');
         } else {
@@ -96,15 +148,17 @@ export const LoginForm: React.FC = () => {
           setLoading(false);
           setMfaMode('enroll');
         }
-      } catch (aalErr: any) {
+      } catch (aalErr: unknown) {
         // Fail CLOSED — sign out rather than silently letting the admin through
         secureLogger.error('MFA AAL check failed, signing out for safety:', aalErr);
+        submitActiveRef.current = false;
         setLoading(false);
         await signOut();
       }
     } catch (err: unknown) {
       secureLogger.error('Login error:', err);
       setError(parseAuthError(err));
+      submitActiveRef.current = false;
       setLoading(false);
     }
   };
@@ -287,7 +341,11 @@ export const LoginForm: React.FC = () => {
       )}
 
       {mfaMode === 'challenge' && (
-        <MFAChallenge onSuccess={handleMFASuccess} onCancel={handleMFACancel} />
+        <MFAChallenge
+          onSuccess={handleMFASuccess}
+          onCancel={handleMFACancel}
+          accessToken={mfaAccessToken}
+        />
       )}
 
       {mfaMode === 'enroll' && (

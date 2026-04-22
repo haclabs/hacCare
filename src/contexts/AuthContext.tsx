@@ -12,7 +12,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isOffline: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; profile: UserProfile | null }>;
   signOut: () => Promise<void>;
   hasRole: (roles: string | string[]) => boolean;
   createProfile: () => Promise<void>;
@@ -368,10 +368,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Security: Validate input
       if (!email || !password) {
         setLoading(false);
-        return { error: new Error('Email and password are required') };
+        return { error: new Error('Email and password are required'), profile: null };
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(), // Security: Normalize email
         password,
       });
@@ -379,16 +379,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         secureLogger.error('❌ Sign in failed:', error.message);
         setLoading(false);
-        return { error };
+        return { error, profile: null };
       }
       
-      secureLogger.debug('✅ Sign in successful, waiting for auth state change...');
+      // Fetch the profile immediately so the caller can make role-based decisions
+      // (e.g. whether to show MFA challenge) without waiting for the async
+      // onAuthStateChange → fetchUserProfile cycle to complete.
+      // NOTE: We intentionally do NOT call setProfile() here. Storing the profile
+      // in context at this point would trigger LoginForm's useEffect (which depends
+      // on profile?.role) while handleSubmit is still mid-execution awaiting the AAL
+      // check. That creates two concurrent getAuthenticatorAssuranceLevel() calls
+      // which contend on Supabase's internal _useSession lock and cause a hang.
+      // The onAuthStateChange → fetchUserProfile pipeline sets profile in context
+      // after the form-submit MFA flow is already in motion.
+      let signedInProfile: UserProfile | null = null;
+      if (signInData?.user) {
+        try {
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', signInData.user.id)
+            .single();
+          signedInProfile = profileData ?? null;
+        } catch (profileErr) {
+          secureLogger.error('Profile fetch after sign in failed:', profileErr);
+        }
+      }
+
+      secureLogger.debug('✅ Sign in successful, profile fetched:', signedInProfile?.role ?? 'none');
       // Don't set loading to false here - let auth state change handle it
-      return { error: null };
+      return { error: null, profile: signedInProfile };
     } catch (error) {
       secureLogger.error('💥 Exception during sign in:', error);
       setLoading(false);
-      return { error };
+      return { error, profile: null };
     }
   };
 
