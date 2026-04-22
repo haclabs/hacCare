@@ -40,7 +40,7 @@ const defaultForm: MedFormState = {
 
 function calculateNextDue(
   frequency: string,
-  startDate: string,
+  _startDate: string,
   adminTime: string,
   adminTimes?: string[]
 ): string {

@@ -3,7 +3,7 @@
  * Core patient data structures and related types
  */
 
-import type { Medication, WoundAssessment } from '../../clinical/types';
+import type { Medication, WoundAssessment } from './clinical';
 
 /**
  * Main Patient interface representing a patient record

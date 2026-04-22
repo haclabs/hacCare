@@ -76,7 +76,7 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
     setLoading(true);
     setError('');
 
-    const { data, error: err } = await createLabResult(
+    const { error: err } = await createLabResult(
       formData,
       patientId,
       currentTenant.id

@@ -6,7 +6,7 @@
  * This bypasses RLS issues and provides better performance.
  */
 
-import { Alert } from '../../types';
+import { Alert } from '../types';
 import { secureLogger } from '../lib/security/secureLogger';
 
 class SimulationAlertStore {

@@ -82,7 +82,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
   }, [existingEvent, selectedDate]);
 
   // Get program directly using program_id from current tenant
-  const { data: program } = useQuery({
+  useQuery({
     queryKey: ['program', currentTenant?.program_id],
     queryFn: async () => {
       if (!currentTenant?.program_id) return null;
@@ -100,10 +100,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
     },
     enabled: !!currentTenant?.program_id
   });
-  
-  const _programs = program ? [program] : [];
-
-  // Fetch templates for dropdown
+// Fetch templates for dropdown
   const { data: templates = [] } = useQuery({
     queryKey: ['templates'],
     queryFn: () => getSimulationTemplates(),

@@ -36,7 +36,7 @@ export function useActiveSimulations() {
     completed: boolean;
   } | null>(null);
 
-  const { filterByPrograms, canSeeAllPrograms, programCodes, isInstructor } = useUserProgramAccess();
+  const { canSeeAllPrograms, programCodes } = useUserProgramAccess();
 
   useEffect(() => {
     loadSimulations();

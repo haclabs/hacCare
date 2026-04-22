@@ -43,7 +43,7 @@ export const CreateLabPanelModal: React.FC<CreateLabPanelModalProps> = ({
     setLoading(true);
     setError('');
 
-    const { data, error: err } = await createLabPanel(formData, currentTenant.id);
+    const { error: err } = await createLabPanel(formData, currentTenant.id);
 
     if (err) {
       setError('Failed to create lab panel');

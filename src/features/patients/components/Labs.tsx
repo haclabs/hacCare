@@ -316,7 +316,7 @@ interface PanelCardProps {
   isSuperAdmin?: boolean;
 }
 
-const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick, onDelete, isSuperAdmin }) => {
+const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick }) => {
   const [resultStats, setResultStats] = useState<{
     total: number;
     abnormal: number;

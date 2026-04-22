@@ -14,7 +14,7 @@ import { DynamicForm } from '../../../components/forms/DynamicForm';
 import { schemaEngine } from '../../../lib/infrastructure/schemaEngine';
 import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../../schemas/formsSchemas';
 import { Patient } from '../../../types';
-import { FormData, ValidationResult, FormGenerationContext } from '../../types/schema';
+import { FormData, ValidationResult, FormGenerationContext } from '../../../types/schema';
 import { fetchPatientAssessments } from '../../../services/patient/assessmentService';
 import { secureLogger } from '../../../lib/security/secureLogger';
 

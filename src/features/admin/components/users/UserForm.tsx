@@ -138,7 +138,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         // Update existing user using RPC to bypass RLS restrictions
         secureLogger.debug('Updating user profile via RPC', { userId: user.id, role: formData.role });
 
-        const { data: rpcResult, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .rpc('update_user_profile_admin', {
             p_user_id: user.id,
             p_first_name: formData.first_name,
@@ -163,7 +163,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         if (hasRole('super_admin') && selectedTenantId) {
           try {
             // Use RPC function to reassign tenant (bypasses RLS)
-            const { data: result, error: reassignError } = await supabase
+            const { error: reassignError } = await supabase
               .rpc('reassign_user_tenant', {
                 p_user_id: user.id,
                 p_new_tenant_id: selectedTenantId,
@@ -241,7 +241,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           // Use RPC function to update profile (bypasses RLS)
           secureLogger.debug('Updating user profile via RPC for new user');
 
-          const { data: rpcResult, error: rpcError } = await supabase
+          const { error: rpcError } = await supabase
             .rpc('update_user_profile_admin', {
               p_user_id: authData.user.id,
               p_first_name: formData.first_name || null,

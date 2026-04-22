@@ -8,7 +8,7 @@
  * 3. Handles multiple administration times per day
  */
 
-import { supabase } from '../config/database'; // Adjust import path as needed
+import { supabase } from '../lib/api/supabase';
 import { secureLogger } from '../lib/security/secureLogger';
 
 interface OldMedication {

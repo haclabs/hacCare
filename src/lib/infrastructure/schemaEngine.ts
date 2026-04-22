@@ -23,9 +23,7 @@ import {
   FieldWarning,
   ClinicalAlert,
   SchemaCondition
-} from '../types/schema';
-import { Patient, VitalSigns, Medication } from '../types';
-
+} from '../../types/schema';
 export class SchemaEngine {
   private schemas: Map<string, JSONSchema> = new Map();
   private validators: Map<string, (...args: unknown[]) => unknown> = new Map();
@@ -292,7 +290,7 @@ export class SchemaEngine {
    */
   private isFieldVisible(
     field: SchemaField,
-    schema: JSONSchema,
+    _schema: JSONSchema,
     data: FormData,
     context: FormGenerationContext
   ): boolean {
@@ -336,7 +334,7 @@ export class SchemaEngine {
 
   private isFieldDisabled(
     field: SchemaField,
-    schema: JSONSchema,
+    _schema: JSONSchema,
     data: FormData,
     context: FormGenerationContext
   ): boolean {
@@ -369,8 +367,8 @@ export class SchemaEngine {
   }
 
   private loadDynamicOptions(
-    dynamicConfig: any,
-    context: FormGenerationContext
+    _dynamicConfig: any,
+    _context: FormGenerationContext
   ): any[] {
     // Implementation would load options from API, database, or function
     // For now, return empty array - this would be implemented based on specific needs
@@ -449,7 +447,7 @@ export class SchemaEngine {
     schema: JSONSchema,
     data: FormData,
     errors: FieldError[],
-    warnings: FieldWarning[]
+    _warnings: FieldWarning[]
   ): Promise<void> {
     Object.entries(data).forEach(([fieldName, value]) => {
       const field = schema.properties[fieldName];
@@ -489,7 +487,7 @@ export class SchemaEngine {
   }
 
   private async validateClinicalRules(
-    schema: JSONSchema,
+    _schema: JSONSchema,
     data: FormData,
     context: FormGenerationContext,
     alerts: ClinicalAlert[]
@@ -543,7 +541,7 @@ export class SchemaEngine {
   private async validateHealthcareSafety(
     schema: JSONSchema,
     data: FormData,
-    context: FormGenerationContext,
+    _context: FormGenerationContext,
     alerts: ClinicalAlert[]
   ): Promise<void> {
     // Vital signs safety checks
@@ -568,7 +566,7 @@ export class SchemaEngine {
     schema: JSONSchema,
     data: FormData,
     errors: FieldError[],
-    warnings: FieldWarning[]
+    _warnings: FieldWarning[]
   ): Promise<void> {
     schema.validation?.crossField?.forEach(rule => {
       const fieldValues = rule.fields.map(fieldName => data[fieldName]);

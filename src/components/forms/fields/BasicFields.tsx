@@ -117,7 +117,6 @@ export const BooleanField: React.FC<BaseFieldProps> = ({
   value = false,
   onChange,
   error,
-  warning,
   disabled = false
 }) => {
   return (

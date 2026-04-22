@@ -7,7 +7,6 @@ import type {
   LabPanel,
   LabResult,
   LabResultRef,
-  LabAckEvent,
   CreateLabPanelInput,
   CreateLabResultInput,
   AcknowledgeLabsInput,

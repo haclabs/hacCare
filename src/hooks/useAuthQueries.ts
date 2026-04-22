@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../../lib/api/supabase';
-import { queryKeys } from '../../lib/api/queryClient';
-import { secureLogger } from '../../lib/security/secureLogger';
+import { supabase, UserProfile, isSupabaseConfigured, checkDatabaseHealth } from '../lib/api/supabase';
+import { queryKeys } from '../lib/api/queryClient';
+import { secureLogger } from '../lib/security/secureLogger';
 
 // ========================================
 // 🔐 AUTHENTICATION QUERY HOOKS
@@ -161,7 +161,7 @@ export function useSignIn() {
 
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       // Invalidate user queries to fetch fresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.user });
       secureLogger.info('Sign in successful');

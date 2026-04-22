@@ -7,10 +7,10 @@
  * ===========================================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, AlertTriangle, CheckCircle, Plus, Minus } from 'lucide-react';
 import { compareTemplateVersions, compareSimulationVsTemplate } from '../../../services/simulation/simulationService';
-import type {  SimulationTemplateVersion, PatientListComparison } from '../types/simulation';
+import type { PatientListComparison } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface Props {

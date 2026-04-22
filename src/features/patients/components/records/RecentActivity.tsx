@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, User, FileText, RefreshCw, Activity, Edit, Plus, Trash2, Pill, Stethoscope } from 'lucide-react';
 import { parseISO, isValid } from 'date-fns';
-import { fetchTargetActivity, AuditLog } from '../../../../lib/auditService';
+import { fetchTargetActivity, AuditLog } from '../../../../services/operations/auditService';
 import { formatLocalTime } from '../../../../utils/dateUtils';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 

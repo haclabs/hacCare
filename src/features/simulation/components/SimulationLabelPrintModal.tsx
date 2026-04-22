@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, Printer, Users, Pill, AlertTriangle } from 'lucide-react';
 import { fetchAllLabelsForPrinting, BulkLabelData } from '../../../services/operations/bulkLabelService';
 import { secureLogger } from '../../../lib/security/secureLogger';
-import type { SimulationParticipant } from './labelPrintingUtils';
 import { PatientBraceletsModal } from './PatientBraceletsModal';
 import { MedicationLabelsModal } from './MedicationLabelsModal';
 import { AllLabelsModal } from './AllLabelsModal';

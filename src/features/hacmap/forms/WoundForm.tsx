@@ -25,7 +25,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
   onCancel
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
+  const [_isDirty, setIsDirty] = useState(false);
 
   // Form state
   const [woundType, setWoundType] = useState<WoundType>(wound?.wound_type || 'incision');
@@ -52,7 +52,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
 
   const handleArrayToggle = (
     value: string,
-    state: string[],
+    _state: string[],
     setState: React.Dispatch<React.SetStateAction<string[]>>
   ) => {
     setState(prev =>

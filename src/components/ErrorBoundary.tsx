@@ -4,7 +4,7 @@
  * Catches React component errors and logs them to system_logs
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { systemLogger } from '../services/monitoring/systemLogger';
 import { secureLogger } from '../lib/security/secureLogger';

@@ -15,7 +15,7 @@ import { secureLogger } from '../../../lib/security/secureLogger';
  * - Future MFA options
  */
 export const SecuritySettings: React.FC = () => {
-  const { user } = useAuth();
+  useAuth();
   
   // Password change state
   const [currentPassword, setCurrentPassword] = useState('');

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
-import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant, getInstructorNames } from './labelPrintingUtils';
+import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant } from './labelPrintingUtils';
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
   simulationName: string;

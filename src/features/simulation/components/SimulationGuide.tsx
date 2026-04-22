@@ -39,7 +39,7 @@ const SimulationGuide: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Create canvas from the content
-      const canvas = await html2canvas(element, {
+      await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
@@ -55,7 +55,6 @@ const SimulationGuide: React.FC = () => {
       // Calculate PDF dimensions
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const contentStartY = 50; // Start content below header
       
       // Create PDF

@@ -32,7 +32,7 @@ const SimulationHistory: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // Get user's program access
-  const { filterByPrograms, canSeeAllPrograms, programCodes, isInstructor } = useUserProgramAccess();
+  const { canSeeAllPrograms, programCodes } = useUserProgramAccess();
 
   useEffect(() => {
     loadHistory();

@@ -99,10 +99,11 @@ class SecureLogger {
   /**
    * Log debug information (development only)
    */
-  debug(message: string, data?: any, operation?: string): void {
+  debug(message: string, ...args: any[]): void {
     if (!this.isDevelopment || this.logLevel !== 'debug') return;
     
-    const entry = this.createLogEntry('debug', message, data, operation);
+    const data = args.length === 1 ? args[0] : args.length > 1 ? args : undefined;
+    const entry = this.createLogEntry('debug', message, data);
     console.log('🔍 [DEBUG]', entry.message, entry.data ? entry.data : '');
   }
 

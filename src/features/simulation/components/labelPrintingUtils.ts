@@ -1,8 +1,3 @@
-import React, { useState } from 'react';
-import { X, Printer } from 'lucide-react';
-import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
-import type { PatientLabelData, MedicationLabelData } from '../../../services/operations/bulkLabelService';
-
 // 5 fluorescent colors for per-patient label color-coding
 export const PATIENT_COLORS = [
   { bg: '#d4f97a', border: '#8ab800', text: '#1a2600' },  // Pastel yellow-green

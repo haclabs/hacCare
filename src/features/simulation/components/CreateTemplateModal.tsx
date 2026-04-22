@@ -22,7 +22,7 @@ interface CreateTemplateModalProps {
 
 const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSuccess }) => {
   const { currentTenant } = useTenant();
-  const { programCodes, canSeeAllPrograms, isInstructor, isCoordinator } = useUserProgramAccess();
+  const { programCodes, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({

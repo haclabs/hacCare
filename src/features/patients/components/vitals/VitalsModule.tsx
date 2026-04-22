@@ -82,7 +82,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const [showTrendsDetail, setShowTrendsDetail] = useState(false);
   const [activeView, setActiveView] = useState<VitalsView>('trends');
   const [showNeuroForm, setShowNeuroForm] = useState(false);
-  const [showNewbornForm, setShowNewbornForm] = useState(false);
+  const [_showNewbornForm, _setShowNewbornForm] = useState(false);
 
   // Register schemas on component mount
   useEffect(() => {
