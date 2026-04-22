@@ -6,9 +6,15 @@ import { secureLogger } from '../../lib/security/secureLogger';
 interface MFAChallengeProps {
   onSuccess: () => void;
   onCancel: () => void;
+  /**
+   * Access token from the fresh login session. When provided, listFactors and
+   * challenge are called via direct fetch (no Supabase _acquireLock), avoiding
+   * contention with TenantContext queries that fire at the same moment.
+   */
+  accessToken?: string;
 }
 
-export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel }) => {
+export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel, accessToken }) => {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,32 +31,75 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel 
 
     const initChallenge = async () => {
       try {
-        const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
-        if (listError) throw listError;
+        let totpFactorId: string | null = null;
 
-        const totpFactor = factors?.totp?.find((f) => f.status === 'verified');
-        if (!totpFactor) {
-          setError('No verified authenticator found. Please contact your administrator.');
-          return;
+        if (accessToken) {
+          // Use direct fetch with the access token so we never acquire
+          // Supabase's _acquireLock. This avoids the race with TenantContext
+          // which fires supabase.rpc() (via getSession → _acquireLock) at the
+          // same moment this component mounts after a fresh login.
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          const headers = {
+            apikey: anonKey,
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          };
+
+          // listFactors() internally calls getUser() which returns user.factors.
+          // Replicate that with a direct fetch to avoid the lock.
+          const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, { headers });
+          if (!userRes.ok) throw new Error(`Failed to get user: ${userRes.status}`);
+          const userData: { factors?: Array<{ id: string; factor_type: string; status: string }> } =
+            await userRes.json();
+
+          const totpFactor = (userData.factors ?? []).find(
+            (f) => f.factor_type === 'totp' && f.status === 'verified'
+          );
+          if (!totpFactor) {
+            setError('No verified authenticator found. Please contact your administrator.');
+            return;
+          }
+          totpFactorId = totpFactor.id;
+          setFactorId(totpFactorId);
+
+          const challengeRes = await fetch(
+            `${supabaseUrl}/auth/v1/factors/${totpFactorId}/challenge`,
+            { method: 'POST', headers, body: JSON.stringify({}) }
+          );
+          if (!challengeRes.ok) throw new Error(`Failed to create challenge: ${challengeRes.status}`);
+          const challengeData: { id: string } = await challengeRes.json();
+          setChallengeId(challengeData.id);
+        } else {
+          // Fallback: restored session path (no fresh token available) — use Supabase client.
+          const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
+          if (listError) throw listError;
+
+          const totpFactor = factors?.totp?.find((f) => f.status === 'verified');
+          if (!totpFactor) {
+            setError('No verified authenticator found. Please contact your administrator.');
+            return;
+          }
+          totpFactorId = totpFactor.id;
+          setFactorId(totpFactorId);
+
+          const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+            factorId: totpFactorId,
+          });
+          if (challengeError) throw challengeError;
+          setChallengeId(challenge.id);
         }
-
-        setFactorId(totpFactor.id);
-
-        const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
-          factorId: totpFactor.id,
-        });
-        if (challengeError) throw challengeError;
-        setChallengeId(challenge.id);
-      } catch (err: any) {
+      } catch (err: unknown) {
         secureLogger.error('MFA challenge init failed:', err);
-        setError(err.message ?? 'Failed to start authentication challenge.');
+        const msg = err instanceof Error ? err.message : 'Failed to start authentication challenge.';
+        setError(msg);
       } finally {
         setInitialising(false);
       }
     };
 
     initChallenge();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +108,56 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel 
     setError('');
     setLoading(true);
 
+    if (accessToken) {
+      // Direct fetch — bypasses supabase.auth.mfa.verify() → _acquireLock entirely.
+      // TenantContext is still running Supabase queries (which hold the lock) at this
+      // point on a fresh login. Using the Supabase client here would block until
+      // TenantContext's queries finish (same race that caused all the earlier hangs).
+      // After verify succeeds, we write the returned AAL2 session directly to
+      // localStorage using Supabase's own storage key so the client reads it on redirect.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      try {
+        const res = await fetch(`${supabaseUrl}/auth/v1/factors/${factorId}/verify`, {
+          method: 'POST',
+          headers: {
+            apikey: anonKey,
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ challenge_id: challengeId, code }),
+        });
+
+        if (!res.ok) {
+          secureLogger.warn('MFA verify failed:', res.status);
+          setError('Invalid code. Please try again.');
+          setCode('');
+          setLoading(false);
+          return;
+        }
+
+        const session = await res.json();
+        // Persist the AAL2 session so Supabase reads it correctly on next page load.
+        // Mirrors what GoTrueClient._saveSession does: add expires_at then store as JSON.
+        const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+        const sessionToStore = {
+          ...session,
+          expires_at: Math.round(Date.now() / 1000) + session.expires_in,
+        };
+        localStorage.setItem(`sb-${projectRef}-auth-token`, JSON.stringify(sessionToStore));
+
+        secureLogger.debug('✅ MFA verified via direct fetch — session upgraded to AAL2');
+        onSuccess();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Verification failed.';
+        setError(msg);
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Fallback: restored-session path (no fresh accessToken) — Supabase client.
+    // TenantContext has already finished loading in this case so no lock contention.
     const { error: verifyError } = await supabase.auth.mfa.verify({
       factorId,
       challengeId,

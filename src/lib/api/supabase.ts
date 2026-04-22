@@ -110,6 +110,7 @@ export interface UserProfile {
   license_number?: string;
   phone?: string;
   is_active: boolean;
+  simulation_only?: boolean | null;
   created_at: string;
   updated_at: string;
 }
