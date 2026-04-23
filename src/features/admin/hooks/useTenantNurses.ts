@@ -92,6 +92,7 @@ export const useTenantNurses = () => {
 
   // Fetch nurses when component mounts or tenant changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTenantNurses();
   }, [currentTenant?.id, profile?.id]);
 

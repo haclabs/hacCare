@@ -20,6 +20,39 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({ onSuccess, onCance
   // two enroll() calls back-to-back and trigger mfa_factor_name_conflict on the second.
   const hasStartedRef = useRef(false);
 
+  /**
+   * Attempts to enroll a new TOTP factor.
+   * If a stale unverified factor already exists (mfa_factor_name_conflict), it is
+   * unenrolled first and then enrollment is retried once.
+   */
+  const attemptEnroll = async () => {
+    const { data, error: enrollError } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+    });
+
+    if (!enrollError) return data;
+
+    if (enrollError.code === 'mfa_factor_name_conflict') {
+      secureLogger.warn('Stale unverified MFA factor detected — unenrolling and retrying...');
+
+      // Find and remove the conflicting unverified factor
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const stale = factors?.totp?.find((f) => f.status !== 'verified');
+      if (stale) {
+        await supabase.auth.mfa.unenroll({ factorId: stale.id });
+      }
+
+      // Retry enrollment with a clean slate
+      const { data: retryData, error: retryError } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+      });
+      if (retryError) throw retryError;
+      return retryData;
+    }
+
+    throw enrollError;
+  };
+
   useEffect(() => {
     if (hasStartedRef.current) return;
     hasStartedRef.current = true;
@@ -41,39 +74,6 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({ onSuccess, onCance
 
     startEnrollment();
   }, []);
-
-  /**
-   * Attempts to enroll a new TOTP factor.
-   * If a stale unverified factor already exists (mfa_factor_name_conflict), it is
-   * unenrolled first and then enrollment is retried once.
-   */
-  const attemptEnroll = async () => {
-    const { data, error: enrollError } = await supabase.auth.mfa.enroll({
-      factorType: 'totp',
-    });
-
-    if (!enrollError) return data;
-
-    if (enrollError.code === 'mfa_factor_name_conflict') {
-      secureLogger.warn('Stale unverified MFA factor detected — unenrolling and retrying...');
-
-      // Find and remove the conflicting unverified factor
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const stale = factors?.totp?.find((f) => f.status === 'unverified');
-      if (stale) {
-        await supabase.auth.mfa.unenroll({ factorId: stale.id });
-      }
-
-      // Retry enrollment with a clean slate
-      const { data: retryData, error: retryError } = await supabase.auth.mfa.enroll({
-        factorType: 'totp',
-      });
-      if (retryError) throw retryError;
-      return retryData;
-    }
-
-    throw enrollError;
-  };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();

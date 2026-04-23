@@ -24,10 +24,6 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadAssessments();
-  }, [patientId]);
-
   const loadAssessments = async () => {
     try {
       setLoading(true);
@@ -41,6 +37,11 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAssessments();
+  }, [patientId]);
 
   const handleAssessmentSaved = () => {
     setShowAssessmentForm(false);

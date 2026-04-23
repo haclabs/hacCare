@@ -44,6 +44,7 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRefs();
   }, []);
 

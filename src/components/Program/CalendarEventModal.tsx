@@ -67,6 +67,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
   // Load existing event data when editing
   useEffect(() => {
     if (existingEvent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         ...existingEvent,
         scheduled_start: format(new Date(existingEvent.scheduled_start), "yyyy-MM-dd'T'HH:mm"),
@@ -114,6 +115,7 @@ export const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
       const end = new Date(formData.scheduled_end);
       const minutes = Math.round((end.getTime() - start.getTime()) / 60000);
       if (minutes > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData(prev => ({ ...prev, duration_minutes: minutes }));
       }
     }

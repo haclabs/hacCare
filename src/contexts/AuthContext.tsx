@@ -416,7 +416,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
+  async function signOut() {
     try {
       secureLogger.debug('🚪 Signing out...');
       
@@ -439,7 +439,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null);
       setIsOffline(false);
     }
-  };
+  }
 
   const hasRole = (roles: string | string[]): boolean => {
     if (!profile?.role) return false;

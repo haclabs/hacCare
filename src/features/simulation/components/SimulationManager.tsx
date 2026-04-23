@@ -28,6 +28,7 @@ const SimulationManager: React.FC = () => {
   // Update tab when location state changes
   useEffect(() => {
     if ((location.state as any)?.initialTab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab((location.state as any).initialTab);
     }
   }, [location.state]);

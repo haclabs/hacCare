@@ -53,17 +53,6 @@ export const SystemLogsViewer: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>('1h');
   const [autoRefresh, setAutoRefresh] = useState(false);
 
-  useEffect(() => {
-    fetchLogs();
-  }, [selectedLevel, selectedType, timeRange]);
-
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(fetchLogs, 10000); // Refresh every 10s
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, selectedLevel, selectedType, timeRange]);
-
   const fetchLogs = async () => {
     try {
       setIsLoading(true);
@@ -150,6 +139,18 @@ export const SystemLogsViewer: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLogs();
+  }, [selectedLevel, selectedType, timeRange]);
+
+  useEffect(() => {
+    if (autoRefresh) {
+      const interval = setInterval(fetchLogs, 10000); // Refresh every 10s
+      return () => clearInterval(interval);
+    }
+  }, [autoRefresh, selectedLevel, selectedType, timeRange]);
 
   const deleteLogs = async (olderThan: string) => {
     if (!confirm(`Delete all logs older than ${olderThan}? This cannot be undone.`)) {

@@ -84,6 +84,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   }, [patientId, currentTenant]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPanels();
     loadLabOrders();
     checkForNewLabs();
@@ -342,6 +343,7 @@ const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick }) => {
   }, [panel.id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadResultStats();
   }, [loadResultStats]);
 

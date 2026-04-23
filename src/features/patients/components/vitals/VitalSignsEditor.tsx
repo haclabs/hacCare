@@ -40,7 +40,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { refreshPatients } = usePatients();
+  const { refetch: refreshPatients } = usePatients();
 
   // Convert Celsius to Celsius (no conversion needed)
   const formatTemperature = (temp: number) => {
@@ -58,7 +58,7 @@ export const VitalSignsEditor: React.FC<VitalSignsEditorProps> = ({
       // Format temperature (already in Celsius)
       const vitalsToSave = { 
         ...editedVitals,
-        temperature: formatTemperature(editedVitals.temperature)
+        temperature: editedVitals.temperature !== undefined ? formatTemperature(editedVitals.temperature) : undefined
       };
       
       secureLogger.debug('Formatted vitals to save:', vitalsToSave);

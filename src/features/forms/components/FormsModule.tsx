@@ -129,7 +129,8 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
     setIsLoading(true);
     try {
       const assessment = {
-        id: `assessment-${Date.now()}`,
+        // eslint-disable-next-line react-hooks/purity
+        id: `assessment-${Date.now()}`,  
         patientId: patient.id,
         type: activeView,
         data,

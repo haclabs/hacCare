@@ -226,7 +226,8 @@ export const mockAlerts: Alert[] = [
     message: `Ceftriaxone 1g IV due at ${format(getNextMedicationTime('Every 12 hours'), 'HH:mm')}`,
     priority: 'High',
     timestamp: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-    acknowledged: false
+    acknowledged: false,
+    tenant_id: 'mock-tenant-001'
   },
   {
     id: 'alert-002',
@@ -236,7 +237,8 @@ export const mockAlerts: Alert[] = [
     message: 'Temperature elevated to 38.4°C - requires monitoring',
     priority: 'Critical',
     timestamp: format(subHours(new Date(), 1), 'yyyy-MM-dd HH:mm:ss'),
-    acknowledged: false
+    acknowledged: false,
+    tenant_id: 'mock-tenant-001'
   },
   {
     id: 'alert-003',
@@ -246,6 +248,7 @@ export const mockAlerts: Alert[] = [
     message: 'New lab results available for review',
     priority: 'Medium',
     timestamp: format(subHours(new Date(), 2), 'yyyy-MM-dd HH:mm:ss'),
-    acknowledged: false
+    acknowledged: false,
+    tenant_id: 'mock-tenant-001'
   }
 ];

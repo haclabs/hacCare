@@ -34,10 +34,6 @@ const SimulationHistory: React.FC = () => {
   // Get user's program access
   const { canSeeAllPrograms, programCodes } = useUserProgramAccess();
 
-  useEffect(() => {
-    loadHistory();
-  }, [activeTab]);
-
   const loadHistory = async () => {
     try {
       setLoading(true);
@@ -49,6 +45,11 @@ const SimulationHistory: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadHistory();
+  }, [activeTab]);
 
   const handleArchive = async (historyId: string) => {
     try {

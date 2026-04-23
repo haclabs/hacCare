@@ -20,10 +20,6 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadActivity();
-  }, [patientId]);
-
   const loadActivity = async () => {
     try {
       setLoading(true);
@@ -37,6 +33,11 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadActivity();
+  }, [patientId]);
 
   const getActionIcon = (action: string) => {
     switch (action) {

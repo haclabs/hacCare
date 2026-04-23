@@ -33,11 +33,6 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load programs on mount
-  useEffect(() => {
-    loadPrograms();
-  }, [currentTenant]);
-
   const loadPrograms = async () => {
     if (!currentTenant) return;
     
@@ -72,6 +67,12 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
       }
     }
   };
+
+  // Load programs on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPrograms();
+  }, [currentTenant]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

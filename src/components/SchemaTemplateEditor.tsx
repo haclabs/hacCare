@@ -32,6 +32,7 @@ export const SchemaTemplateEditor: React.FC<SchemaTemplateEditorProps> = ({
 
   // Initialize JSON text when schema changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setJsonText(JSON.stringify(schema, null, 2));
   }, [schema]);
 

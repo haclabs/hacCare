@@ -103,7 +103,7 @@ import { secureLogger } from '../../lib/security/secureLogger';
 
     // If there was an error, log it and throw
     if (error) {
-      secureLogger.error('Database error fetching patient medications', error, { patientId });
+      secureLogger.error('Database error fetching patient medications', error);
       throw error;
     }
 
@@ -111,7 +111,7 @@ import { secureLogger } from '../../lib/security/secureLogger';
     return [];
     
   } catch (error) {
-    secureLogger.error('Error fetching patient medications', error, { patientId });
+    secureLogger.error('Error fetching patient medications', error);
     throw error;
   }
 };
@@ -129,9 +129,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       .single();
     
     if (patientError) {
-      secureLogger.error('Error fetching patient tenant for medication creation', patientError, {
-        patientId: medication.patient_id
-      });
+      secureLogger.error('Error fetching patient tenant for medication creation', patientError);
       throw new Error('Could not determine patient tenant');
     }
     
@@ -160,10 +158,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       .single();
 
     if (error) {
-      secureLogger.error('Error creating medication', error, {
-        patientId: medication.patient_id,
-        medicationName: medication.name
-      });
+      secureLogger.error('Error creating medication', error);
       throw error;
     }
 
@@ -203,10 +198,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
 
     return createdMedication;
   } catch (error) {
-    secureLogger.error('Error in createMedication', error, {
-      patientId: medication.patient_id,
-      medicationName: medication.name
-    });
+    secureLogger.error('Error in createMedication', error);
     throw error;
   }
 };

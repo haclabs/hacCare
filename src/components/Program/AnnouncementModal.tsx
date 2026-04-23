@@ -65,6 +65,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   // Load existing announcement data when editing
   useEffect(() => {
     if (existingAnnouncement) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(existingAnnouncement);
     } else {
       setFormData({

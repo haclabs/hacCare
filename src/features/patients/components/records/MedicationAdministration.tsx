@@ -56,6 +56,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   // const { getPatient } = usePatients(); // Commented out as not currently used
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAllMedications(medications);
   }, [medications]);
 
@@ -141,7 +142,7 @@ const handleDeleteMedication = async (medicationId: string) => {
         }
         return isDue;
       } catch (error) {
-        secureLogger.error('Error checking due medication:', error, med);
+        secureLogger.error('Error checking due medication:', error);
         return false;
       }
     });
@@ -175,7 +176,7 @@ const handleDeleteMedication = async (medicationId: string) => {
         }
         return isOverdue;
       } catch (error) {
-        secureLogger.error('Error checking overdue medication:', error, med);
+        secureLogger.error('Error checking overdue medication:', error);
         return false;
       }
     });

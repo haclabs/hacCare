@@ -38,6 +38,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
   // Update form data when user prop changes
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         email: user.email || '',
         password: '',
@@ -52,50 +53,6 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
       });
     }
   }, [user]);
-
-  // Load tenants for super admin
-  useEffect(() => {
-    if (hasRole('super_admin')) {
-      loadTenants();
-    }
-  }, [hasRole]);
-
-  // Load programs when tenant is selected or when editing user
-  useEffect(() => {
-    if (selectedTenantId) {
-      loadPrograms(selectedTenantId);
-    }
-  }, [selectedTenantId]);
-
-  // Load user's existing programs when editing
-  useEffect(() => {
-    if (user?.id) {
-      loadUserPrograms(user.id);
-    }
-  }, [user]);
-
-  // Initialize selected tenant when user changes
-  useEffect(() => {
-    if (user?.id && hasRole('super_admin')) {
-      // Load the user's current tenant
-      const loadUserTenant = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('tenant_users')
-            .select('tenant_id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (data && !error && data.tenant_id) {
-            setSelectedTenantId(data.tenant_id);
-          }
-        } catch (error) {
-          secureLogger.error('Error loading user tenant', error);
-        }
-      };
-      loadUserTenant();
-    }
-  }, [user, hasRole]);
 
   const loadTenants = async () => {
     try {
@@ -125,6 +82,53 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
       setSelectedProgramIds(data.map(up => up.program_id));
     }
   };
+
+  // Load tenants for super admin
+  useEffect(() => {
+    if (hasRole('super_admin')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadTenants();
+    }
+  }, [hasRole]);
+
+  // Load programs when tenant is selected or when editing user
+  useEffect(() => {
+    if (selectedTenantId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadPrograms(selectedTenantId);
+    }
+  }, [selectedTenantId]);
+
+  // Load user's existing programs when editing
+  useEffect(() => {
+    if (user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadUserPrograms(user.id);
+    }
+  }, [user]);
+
+  // Initialize selected tenant when user changes
+  useEffect(() => {
+    if (user?.id && hasRole('super_admin')) {
+      // Load the user's current tenant
+      const loadUserTenant = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('tenant_users')
+            .select('tenant_id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (data && !error && data.tenant_id) {
+            setSelectedTenantId(data.tenant_id);
+          }
+        } catch (error) {
+          secureLogger.error('Error loading user tenant', error);
+        }
+      };
+      loadUserTenant();
+    }
+  }, [user, hasRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

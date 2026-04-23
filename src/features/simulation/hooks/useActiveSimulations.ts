@@ -38,12 +38,6 @@ export function useActiveSimulations() {
 
   const { canSeeAllPrograms, programCodes } = useUserProgramAccess();
 
-  useEffect(() => {
-    loadSimulations();
-    const interval = setInterval(loadSimulations, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   const loadSimulations = async () => {
     try {
       const data = await getActiveSimulations({
@@ -56,6 +50,13 @@ export function useActiveSimulations() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSimulations();
+    const interval = setInterval(loadSimulations, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handlePause = async (id: string) => {
     setActionLoading(id);

@@ -695,13 +695,13 @@ export async function createStandardLabSet(
     test_code: ref.test_code,
     test_name: ref.test_name,
     value: null,
-    units: ref.units,
-    ref_low: ref.ref_low,
-    ref_high: ref.ref_high,
+    units: ref.units ?? undefined,
+    ref_low: ref.ref_low ?? undefined,
+    ref_high: ref.ref_high ?? undefined,
     ref_operator: ref.ref_operator,
-    sex_ref: ref.sex_ref,
-    critical_low: ref.critical_low,
-    critical_high: ref.critical_high,
+    sex_ref: ref.sex_ref ?? undefined,
+    critical_low: ref.critical_low ?? undefined,
+    critical_high: ref.critical_high ?? undefined,
   }));
 
   // Insert all results

@@ -46,7 +46,11 @@ export const ProgramAnnouncements: React.FC = () => {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: createProgramAnnouncement,
+    mutationFn: (data: AnnouncementData) => createProgramAnnouncement({
+      ...data,
+      author_name: data.author_name ?? null,
+      expires_at: data.expires_at ?? null,
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programAnnouncements'] });
     }

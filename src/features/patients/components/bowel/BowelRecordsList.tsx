@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FileText, Clock, User, RefreshCw } from 'lucide-react';
 import { fetchPatientBowelRecords, BowelRecord } from '../../../../services/clinical/bowelRecordService';
 import { formatLocalTime } from '../../../../utils/time';
@@ -15,11 +15,7 @@ export const BowelRecordsList: React.FC<BowelRecordsListProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadRecords();
-  }, [patientId]);
-
-  const loadRecords = async () => {
+  const loadRecords = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -31,7 +27,24 @@ export const BowelRecordsList: React.FC<BowelRecordsListProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [patientId]);
+
+  useEffect(() => {
+    async function run() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchPatientBowelRecords(patientId);
+        setRecords(data);
+      } catch (err: unknown) {
+        secureLogger.error('Error loading bowel records:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load bowel records');
+      } finally {
+        setLoading(false);
+      }
+    }
+    run();
+  }, [patientId]);
 
   const getIncontinenceColor = (incontinence: string) => {
     switch (incontinence) {

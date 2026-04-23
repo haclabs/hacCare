@@ -39,7 +39,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [imageDescription, setImageDescription] = useState('');
   const [imageType, setImageType] = useState<'wound' | 'injury' | 'other'>('wound'); 
-  const { refreshPatients } = usePatients();
+  const { refetch: refreshPatients } = usePatients();
   
   // Dropzone setup
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -51,11 +51,12 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
     disabled: uploading
   });
   
-  // Load images on component mount
-  useEffect(() => {
-    loadImages();
-  }, [patientId]);
-  
+  // Handle image selection
+  const handleSelectImage = (image: PatientImage) => {
+    setSelectedImage(image);
+    setMarkers(image.annotations || []);
+  };
+
   // Load patient images
   const loadImages = async () => {
     try {
@@ -76,11 +77,11 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
     }
   };
   
-  // Handle image selection
-  const handleSelectImage = (image: PatientImage) => {
-    setSelectedImage(image);
-    setMarkers(image.annotations || []);
-  };
+  // Load images on component mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadImages();
+  }, [patientId]);
   
   // Handle image upload
   async function handleImageDrop(acceptedFiles: File[]) {

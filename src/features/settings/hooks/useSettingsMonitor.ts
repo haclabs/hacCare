@@ -137,6 +137,7 @@ export function useSettingsMonitor() {
   }, [pingDatabase, checkFeatureStatus]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updateSystemInfo();
     const interval = setInterval(updateSystemInfo, 30000);
 

@@ -24,11 +24,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedMetric, setSelectedMetric] = useState<string>('temperature');
   const { user } = useAuth();
-  const { refreshPatients } = usePatients();
-
-  useEffect(() => {
-    fetchVitals();
-  }, [patientId]);
+  const { refetch: refreshPatients } = usePatients();
 
   const fetchVitals = async () => {
     try {
@@ -46,6 +42,11 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchVitals();
+  }, [patientId]);
 
   const handleClearVitals = async () => {
     if (!user || !window.confirm('Are you sure you want to clear all vital signs for this patient? This action cannot be undone.')) {

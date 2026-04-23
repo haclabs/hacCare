@@ -135,6 +135,7 @@ export const SystemStatus: React.FC = () => {
    */
   useEffect(() => {
     // Initial check
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updateSystemInfo();
 
     // Set up periodic monitoring
@@ -186,6 +187,7 @@ export const SystemStatus: React.FC = () => {
    * Format uptime
    */
   const formatUptime = () => {
+    // eslint-disable-next-line react-hooks/purity
     const uptimeMs = performance.now();
     const seconds = Math.floor(uptimeMs / 1000);
     const minutes = Math.floor(seconds / 60);

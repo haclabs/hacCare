@@ -87,14 +87,14 @@ export interface DatabaseMedicationAdministration {
 const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
   return dbVitals.map(vital => ({
     id: vital.id,
-    temperature: vital.temperature,
-    bloodPressure: {
+    temperature: vital.temperature ?? undefined,
+    bloodPressure: (vital.blood_pressure_systolic !== null && vital.blood_pressure_diastolic !== null) ? {
       systolic: vital.blood_pressure_systolic,
       diastolic: vital.blood_pressure_diastolic
-    },
-    heartRate: vital.heart_rate,
-    respiratoryRate: vital.respiratory_rate,
-    oxygenSaturation: vital.oxygen_saturation,
+    } : undefined,
+    heartRate: vital.heart_rate ?? undefined,
+    respiratoryRate: vital.respiratory_rate ?? undefined,
+    oxygenSaturation: vital.oxygen_saturation ?? undefined,
     oxygenDelivery: vital.oxygen_delivery || 'Room Air',
     oxygenFlowRate: vital.oxygen_flow_rate || 'N/A',
     recorded_at: vital.recorded_at,

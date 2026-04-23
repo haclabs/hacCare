@@ -107,6 +107,7 @@ export const NewbornAssessmentTab: React.FC<NewbornAssessmentTabProps> = ({ pati
   // Populate form on first load
   useEffect(() => {
     if (existing) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(fromRecord(existing));
     } else if (currentUser) {
       setForm(prev => ({

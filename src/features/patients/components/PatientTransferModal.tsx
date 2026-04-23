@@ -33,6 +33,7 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
     transferAssessments: true,
     transferHandoverNotes: true,
     transferAlerts: true,
+    transferBBITEntries: true,
     transferDiabeticRecords: true,
     transferBowelRecords: true,
     transferWoundCare: true,
@@ -46,38 +47,31 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isOpen && patient) {
-      loadAvailableTenants();
-      checkTransferPermissions();
-    }
-  }, [isOpen, patient]);
+    if (!isOpen || !patient) return;
 
-  const loadAvailableTenants = async () => {
-    if (!patient) return;
-    
-    try {
-      const tenants = await getAvailableTenantsForTransfer(patient.id);
-      setAvailableTenants(tenants);
-    } catch (error) {
-      secureLogger.error('Failed to load tenants:', error);
-      setError('Failed to load available tenants');
-    }
-  };
-
-  const checkTransferPermissions = async () => {
-    if (!patient) return;
-
-    try {
-      const result = await canTransferPatient(patient.id);
-      setCanTransfer(result.canTransfer);
-      if (!result.canTransfer) {
-        setError(result.reason || 'Transfer not allowed');
+    async function initialize() {
+      try {
+        const tenants = await getAvailableTenantsForTransfer(patient!.id);
+        setAvailableTenants(tenants);
+      } catch (err) {
+        secureLogger.error('Failed to load tenants:', err);
+        setError('Failed to load available tenants');
       }
-    } catch (error) {
-      setCanTransfer(false);
-      setError('Failed to check transfer permissions');
+
+      try {
+        const result = await canTransferPatient(patient!.id);
+        setCanTransfer(result.canTransfer);
+        if (!result.canTransfer) {
+          setError(result.reason || 'Transfer not allowed');
+        }
+      } catch (_err) {
+        setCanTransfer(false);
+        setError('Failed to check transfer permissions');
+      }
     }
-  };
+
+    initialize();
+  }, [isOpen, patient]);
 
   const handleTransfer = async () => {
     if (!patient || !targetTenantId) return;
@@ -103,7 +97,7 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
         setError(result.error || result.message);
         onTransferComplete?.(false, result.message);
       }
-    } catch (error) {
+    } catch (_error) {
       const errorMessage = 'Transfer failed unexpectedly';
       setError(errorMessage);
       onTransferComplete?.(false, errorMessage);
@@ -123,6 +117,7 @@ const PatientTransferModal: React.FC<PatientTransferModalProps> = ({
       transferHandoverNotes: true,
       transferAlerts: true,
       transferBBITEntries: true,
+      transferDiabeticRecords: true,
       transferBowelRecords: true,
       transferWoundCare: true,
       transferDoctorsOrders: true,

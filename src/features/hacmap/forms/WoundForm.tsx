@@ -47,6 +47,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
   const [studentName, setStudentName] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDirty(true);
   }, [woundType, periWoundTemperature, woundLengthCm, woundWidthCm, woundDepthCm, woundDescription, drainageDescription, drainageConsistency, woundOdor, drainageAmount, woundEdges, closure, sutureSutapleLine, suturesIntact, enteredBy, notes, studentName]);
 

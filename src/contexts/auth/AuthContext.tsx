@@ -288,7 +288,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @param {string} userId - The user ID to fetch profile for
    * @returns {Promise<void>}
    */
-  const fetchUserProfile = async (userId: string): Promise<void> => {
+  async function fetchUserProfile(userId: string): Promise<void> {
     secureLogger.debug('🎯 fetchUserProfile called for:', userId, 'Guard flag:', fetchingProfile.current);
     
     // Skip if Supabase not configured
@@ -406,7 +406,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfileLoading(false);
       fetchingProfile.current = false; // ✅ ALWAYS reset the guard flag
     }
-  };
+  }
 
   /**
    * Create or update user profile
@@ -639,7 +639,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * 
    * @returns {Promise<void>}
    */
-  const signOut = async () => {
+  async function signOut() {
     secureLogger.debug('🚪 Signing out');
     
     try {
@@ -675,7 +675,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
     }
-  };
+  }
 
   /**
    * Check if current user has specific role(s)

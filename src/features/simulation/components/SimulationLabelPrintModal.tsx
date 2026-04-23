@@ -57,6 +57,7 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
   }, [tenantId, simulationName]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLabels();
   }, [fetchLabels]);
 

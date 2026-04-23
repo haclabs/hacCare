@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    secureLogger.error('React Error Boundary caught error:', error, errorInfo);
+    secureLogger.error('React Error Boundary caught error:', error, errorInfo.componentStack ?? undefined);
 
     // Log to system logs
     systemLogger.error(

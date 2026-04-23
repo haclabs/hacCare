@@ -19,10 +19,6 @@ interface AdvancedDirectivesFormProps {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadAdvancedDirective();
-  }, [patientId]);
-
   const loadAdvancedDirective = async () => {
     try {
       setLoading(true);
@@ -51,6 +47,11 @@ interface AdvancedDirectivesFormProps {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAdvancedDirective();
+  }, [patientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

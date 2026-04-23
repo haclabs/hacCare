@@ -39,14 +39,14 @@ export interface Patient {
  */
 export interface VitalSigns {
   id?: string;
-  temperature: number;
+  temperature?: number;
   bloodPressure?: {
     systolic: number;
     diastolic: number;
   };
-  heartRate: number;
-  respiratoryRate: number;
-  oxygenSaturation: number;
+  heartRate?: number;
+  respiratoryRate?: number;
+  oxygenSaturation?: number;
   oxygenDelivery?: string; // Room Air, Nasal Prongs, Simple Mask, Non-Rebreather, etc.
   oxygenFlowRate?: string; // N/A, <1L, 1L-15L, >15L
   lastUpdated?: string;

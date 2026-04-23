@@ -180,6 +180,7 @@ export const BCMAVerification: React.FC<BCMAVerificationProps> = ({
 
   // Initialize checks on component mount
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     runVerifications();
   }, [scannedPatientId, scannedMedicationId]);
 

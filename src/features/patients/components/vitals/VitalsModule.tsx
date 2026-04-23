@@ -313,7 +313,9 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   const calculateHeartRateVariability = (recentVitals: VitalSigns[]) => {
     if (recentVitals.length < 3) return null;
     
-    const heartRates = recentVitals.slice(0, 10).map(v => v.heartRate);
+    const heartRates = recentVitals.slice(0, 10)
+      .map(v => v.heartRate)
+      .filter((hr): hr is number => hr !== undefined);
     const mean = heartRates.reduce((sum, hr) => sum + hr, 0) / heartRates.length;
     const variance = heartRates.reduce((sum, hr) => sum + Math.pow(hr - mean, 2), 0) / heartRates.length;
     const standardDeviation = Math.sqrt(variance);

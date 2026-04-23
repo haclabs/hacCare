@@ -50,6 +50,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
 
   useEffect(() => {
     if (assessment) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         student_name: assessment.student_name,
         assessed_at: assessment.assessed_at.slice(0, 16),

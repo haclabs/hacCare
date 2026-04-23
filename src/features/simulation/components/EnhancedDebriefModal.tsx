@@ -57,10 +57,41 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
   const [instructorNotes, setInstructorNotes] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
 
-  useEffect(() => {
-    loadStudentActivities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyRecord.id]);
+  function deduplicateStudentActivities(activities: StudentActivity[]): StudentActivity[] {
+    const studentMap = new Map<string, StudentActivity>();
+    
+    activities.forEach((activity) => {
+      const normalizedName = activity.studentName.trim().toLowerCase();
+      const existing = studentMap.get(normalizedName);
+      
+      if (existing) {
+        existing.activities.vitals.push(...activity.activities.vitals);
+        existing.activities.medications.push(...activity.activities.medications);
+        existing.activities.labOrders.push(...activity.activities.labOrders);
+        existing.activities.labAcknowledgements.push(...activity.activities.labAcknowledgements);
+        existing.activities.doctorsOrders.push(...activity.activities.doctorsOrders);
+        existing.activities.patientNotes.push(...activity.activities.patientNotes);
+        existing.activities.handoverNotes.push(...activity.activities.handoverNotes);
+        existing.activities.advancedDirectives.push(...activity.activities.advancedDirectives);
+        existing.activities.hacmapDevices.push(...activity.activities.hacmapDevices);
+        existing.activities.hacmapWounds.push(...activity.activities.hacmapWounds);
+        existing.activities.deviceAssessments.push(...activity.activities.deviceAssessments);
+        existing.activities.woundAssessments.push(...activity.activities.woundAssessments);
+        existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
+        existing.activities.neuroAssessments.push(...(activity.activities.neuroAssessments || []));
+        existing.activities.bbitEntries.push(...(activity.activities.bbitEntries || []));
+        existing.activities.newbornAssessments.push(...(activity.activities.newbornAssessments || []));
+        existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
+        existing.totalEntries += activity.totalEntries;
+      } else {
+        const cloned = JSON.parse(JSON.stringify(activity));
+        cloned.studentName = activity.studentName.trim();
+        studentMap.set(normalizedName, cloned);
+      }
+    });
+    
+    return Array.from(studentMap.values());
+  }
 
   const loadStudentActivities = async () => {
     try {
@@ -98,6 +129,12 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     }
   };
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadStudentActivities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyRecord.id]);
+
   const handleRegenerateFromDatabase = async () => {
     if (!historyRecord.simulation_id || !historyRecord.started_at) {
       alert('Cannot regenerate: missing simulation reference or start time on this history record.');
@@ -118,42 +155,6 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     } finally {
       setIsRegenerating(false);
     }
-  };
-
-  const deduplicateStudentActivities = (activities: StudentActivity[]): StudentActivity[] => {
-    const studentMap = new Map<string, StudentActivity>();
-    
-    activities.forEach((activity) => {
-      const normalizedName = activity.studentName.trim().toLowerCase();
-      const existing = studentMap.get(normalizedName);
-      
-      if (existing) {
-        existing.activities.vitals.push(...activity.activities.vitals);
-        existing.activities.medications.push(...activity.activities.medications);
-        existing.activities.labOrders.push(...activity.activities.labOrders);
-        existing.activities.labAcknowledgements.push(...activity.activities.labAcknowledgements);
-        existing.activities.doctorsOrders.push(...activity.activities.doctorsOrders);
-        existing.activities.patientNotes.push(...activity.activities.patientNotes);
-        existing.activities.handoverNotes.push(...activity.activities.handoverNotes);
-        existing.activities.advancedDirectives.push(...activity.activities.advancedDirectives);
-        existing.activities.hacmapDevices.push(...activity.activities.hacmapDevices);
-        existing.activities.hacmapWounds.push(...activity.activities.hacmapWounds);
-        existing.activities.deviceAssessments.push(...activity.activities.deviceAssessments);
-        existing.activities.woundAssessments.push(...activity.activities.woundAssessments);
-        existing.activities.bowelAssessments.push(...activity.activities.bowelAssessments);
-        existing.activities.neuroAssessments.push(...(activity.activities.neuroAssessments || []));
-        existing.activities.bbitEntries.push(...(activity.activities.bbitEntries || []));
-        existing.activities.newbornAssessments.push(...(activity.activities.newbornAssessments || []));
-        existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
-        existing.totalEntries += activity.totalEntries;
-      } else {
-        const cloned = JSON.parse(JSON.stringify(activity));
-        cloned.studentName = activity.studentName.trim();
-        studentMap.set(normalizedName, cloned);
-      }
-    });
-    
-    return Array.from(studentMap.values());
   };
 
   const calculateMetrics = (): Metrics => {

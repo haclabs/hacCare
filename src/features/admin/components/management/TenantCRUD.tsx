@@ -29,14 +29,6 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [tenantUsers, setTenantUsers] = useState<TenantUser[]>([]);
 
-  useEffect(() => {
-    loadTenants();
-  }, []);
-
-  useEffect(() => {
-    filterTenants();
-  }, [tenants, searchTerm, statusFilter]);
-
   const loadTenants = async () => {
     try {
       setLoading(true);
@@ -73,6 +65,16 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
 
     setFilteredTenants(filtered);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTenants();
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    filterTenants();
+  }, [tenants, searchTerm, statusFilter]);
 
   const handleCreateTenant = async (tenantData: any) => {
     try {

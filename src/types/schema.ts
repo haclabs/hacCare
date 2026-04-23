@@ -75,10 +75,11 @@ export interface HealthcareFieldConfig {
   category: 'demographics' | 'vitals' | 'medications' | 'assessments' | 'clinical';
   units?: string;
   normalRange?: { min: number; max: number };
-  alertThresholds?: { low: number; high: number };
-  requiredFor?: ('admission' | 'discharge' | 'transfer' | 'assessment')[];
+  alertThresholds?: { low: number; high: number } | Record<string, { low: number; high: number }>;
+  requiredFor?: ('admission' | 'discharge' | 'transfer' | 'assessment' | 'administration')[];
   hipaaLevel?: 'standard' | 'sensitive' | 'restricted';
   clinicalContext?: string[];
+  allowPartial?: boolean;
 }
 
 // Field validation rules
@@ -141,7 +142,7 @@ export interface SchemaCondition {
 
 // Form layout and styling
 export interface FormLayout {
-  type: 'vertical' | 'horizontal' | 'grid' | 'tabs' | 'steps' | 'accordion';
+  type: 'vertical' | 'horizontal' | 'grid' | 'tabs' | 'steps' | 'accordion' | 'sections';
   columns?: number;
   sections?: FormSection[];
   steps?: FormStep[];
