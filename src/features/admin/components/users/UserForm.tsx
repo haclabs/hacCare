@@ -110,17 +110,23 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
   // Initialize selected tenant when user changes
   useEffect(() => {
     if (user?.id && hasRole('super_admin')) {
-      // Load the user's current tenant
+      // Load the user's current tenant - may have multiple rows (main tenant + program tenants)
       const loadUserTenant = async () => {
         try {
           const { data, error } = await supabase
             .from('tenant_users')
-            .select('tenant_id')
+            .select('tenant_id, tenants!inner(tenant_type)')
             .eq('user_id', user.id)
-            .maybeSingle();
+            .eq('is_active', true);
           
-          if (data && !error && data.tenant_id) {
-            setSelectedTenantId(data.tenant_id);
+          if (data && !error && data.length > 0) {
+            // Prefer the primary tenant over program/simulation tenants
+            const primaryEntry = data.find((row: any) =>
+              !['program', 'simulation_template', 'simulation_active'].includes(row.tenants?.tenant_type)
+            ) ?? data[0];
+            if (primaryEntry) {
+              setSelectedTenantId(primaryEntry.tenant_id);
+            }
           }
         } catch (error) {
           secureLogger.error('Error loading user tenant', error);
