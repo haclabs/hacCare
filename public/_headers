@@ -1,6 +1,14 @@
 # Netlify Security Headers for hacCare
 # These headers enhance security for your healthcare application
 
+# Static assets — aggressive long-term caching (content-hashed by Vite)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images — cache for 30 days
+/images/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
 # App routes - prevent caching to ensure fresh simulation data
 /app/*
   Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
@@ -12,26 +20,26 @@
   X-XSS-Protection: 1; mode=block
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Permissions-Policy: geolocation=(), microphone=(), camera=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://api.ipify.org https://api64.ipify.org; frame-ancestors 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://api.ipify.org https://api64.ipify.org; frame-src https://player.vimeo.com; frame-ancestors 'none';
 
 /*
   # Prevent clickjacking attacks
   X-Frame-Options: DENY
-  
+
   # Prevent MIME type sniffing
   X-Content-Type-Options: nosniff
-  
+
   # Control referrer information
   Referrer-Policy: strict-origin-when-cross-origin
-  
+
   # Enable XSS protection
   X-XSS-Protection: 1; mode=block
-  
+
   # Force HTTPS connections
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-  
+
   # Control which features and APIs can be used
   Permissions-Policy: geolocation=(), microphone=(), camera=()
-  
-  # Content Security Policy (adjust as needed for your app)
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://api.ipify.org https://api64.ipify.org; frame-ancestors 'none';
+
+  # Content Security Policy — allows Vimeo embeds on the landing page
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://api.ipify.org https://api64.ipify.org https://fresnel.vimeocdn.com; frame-src https://player.vimeo.com; media-src https://vimeo.com https://*.vimeocdn.com; frame-ancestors 'none';

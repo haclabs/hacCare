@@ -2,12 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo copy.png" />
+    <link rel="icon" type="image/png" href="/images/logo.png" />
+    <link rel="apple-touch-icon" href="/images/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Preconnect to improve performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://player.vimeo.com" />
+    <link rel="preconnect" href="https://i.vimeocdn.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fresnel.vimeocdn.com" />
+    <!-- Preload LCP image -->
+    <link rel="preload" as="image" href="/images/bcma.png" fetchpriority="high" />
     
     <!-- Primary Meta Tags -->
     <title>hacCare - Simulated EMR & Training Environment for Healthcare Education</title>
@@ -55,7 +61,45 @@
     <!-- Language alternates (if you plan to add translations) -->
     <link rel="alternate" hreflang="en" href="https://haccare.app/" />
     <link rel="alternate" hreflang="x-default" href="https://haccare.app/" />
-  </head>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://haccare.app/#organization",
+          "name": "hacCare",
+          "url": "https://haccare.app",
+          "logo": "https://haccare.app/images/logo.png",
+          "description": "Healthcare simulation platform for nursing education in Canada.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Lethbridge",
+            "addressRegion": "AB",
+            "addressCountry": "CA"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "support@haccare.app",
+            "contactType": "customer support"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://haccare.app/#software",
+          "name": "hacCare",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web",
+          "url": "https://haccare.app",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CAD" },
+          "description": "High-fidelity simulated EMR platform for healthcare education. BCMA scanning, clinical charting, simulation management, and debrief reporting for Canadian nursing programs.",
+          "publisher": { "@id": "https://haccare.app/#organization" }
+        }
+      ]
+    }
+    </script>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
