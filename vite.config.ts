@@ -19,7 +19,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    target: 'es2020', // Modern browsers for better optimization
+    target: 'es2022', // Modern browsers for better optimization
     sourcemap: false, // Disable source maps in production
     minify: 'terser', // Use terser for better minification
     terserOptions: {
