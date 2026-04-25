@@ -58,7 +58,7 @@ export function usePatientDashboard(patientId: string | undefined) {
     queryFn: async () => {
       if (!patientId) return 0;
       const notes = await getPatientHandoverNotes(patientId);
-      return notes.filter((note: { acknowledged_by: string | null }) => !note.acknowledged_by).length;
+      return notes.filter(note => !note.acknowledged_by).length;
     },
     enabled: !!patientId,
   });

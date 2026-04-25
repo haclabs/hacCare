@@ -23,13 +23,11 @@ import {
   FieldWarning,
   ClinicalAlert,
   SchemaCondition
-} from '../types/schema';
-import { Patient, VitalSigns, Medication } from '../types';
-
+} from '../../types/schema';
 export class SchemaEngine {
   private schemas: Map<string, JSONSchema> = new Map();
-  private validators: Map<string, (...args: unknown[]) => unknown> = new Map();
-  private clinicalRules: Map<string, (...args: unknown[]) => unknown> = new Map();
+  private validators: Map<string, (...args: any[]) => unknown> = new Map();
+  private clinicalRules: Map<string, (...args: any[]) => unknown> = new Map();
 
   constructor() {
     this.initializeBuiltInValidators();
@@ -292,7 +290,7 @@ export class SchemaEngine {
    */
   private isFieldVisible(
     field: SchemaField,
-    schema: JSONSchema,
+    _schema: JSONSchema,
     data: FormData,
     context: FormGenerationContext
   ): boolean {
@@ -336,7 +334,7 @@ export class SchemaEngine {
 
   private isFieldDisabled(
     field: SchemaField,
-    schema: JSONSchema,
+    _schema: JSONSchema,
     data: FormData,
     context: FormGenerationContext
   ): boolean {
@@ -369,8 +367,8 @@ export class SchemaEngine {
   }
 
   private loadDynamicOptions(
-    dynamicConfig: any,
-    context: FormGenerationContext
+    _dynamicConfig: any,
+    _context: FormGenerationContext
   ): any[] {
     // Implementation would load options from API, database, or function
     // For now, return empty array - this would be implemented based on specific needs
@@ -437,9 +435,9 @@ export class SchemaEngine {
       case 'date':
         return !isNaN(Date.parse(value));
       case 'email':
-        return this.validators.get('email')?.(value) || false;
+        return Boolean(this.validators.get('email')?.(value));
       case 'phone':
-        return this.validators.get('phone')?.(value) || false;
+        return Boolean(this.validators.get('phone')?.(value));
       default:
         return true; // String types and others
     }
@@ -449,7 +447,7 @@ export class SchemaEngine {
     schema: JSONSchema,
     data: FormData,
     errors: FieldError[],
-    warnings: FieldWarning[]
+    _warnings: FieldWarning[]
   ): Promise<void> {
     Object.entries(data).forEach(([fieldName, value]) => {
       const field = schema.properties[fieldName];
@@ -489,7 +487,7 @@ export class SchemaEngine {
   }
 
   private async validateClinicalRules(
-    schema: JSONSchema,
+    _schema: JSONSchema,
     data: FormData,
     context: FormGenerationContext,
     alerts: ClinicalAlert[]
@@ -543,14 +541,16 @@ export class SchemaEngine {
   private async validateHealthcareSafety(
     schema: JSONSchema,
     data: FormData,
-    context: FormGenerationContext,
+    _context: FormGenerationContext,
     alerts: ClinicalAlert[]
   ): Promise<void> {
     // Vital signs safety checks
     Object.entries(data).forEach(([fieldName, value]) => {
       const field = schema.properties[fieldName];
       if (field?.healthcare?.alertThresholds && typeof value === 'number') {
-        const { low, high } = field.healthcare.alertThresholds;
+        const thresholds = field.healthcare.alertThresholds;
+        if (!('low' in thresholds) || !('high' in thresholds)) return;
+        const { low, high } = thresholds as { low: number; high: number };
         
         if (value < low || value > high) {
           alerts.push({
@@ -568,7 +568,7 @@ export class SchemaEngine {
     schema: JSONSchema,
     data: FormData,
     errors: FieldError[],
-    warnings: FieldWarning[]
+    _warnings: FieldWarning[]
   ): Promise<void> {
     schema.validation?.crossField?.forEach(rule => {
       const fieldValues = rule.fields.map(fieldName => data[fieldName]);
@@ -599,11 +599,11 @@ export interface ProcessedField extends SchemaField {
   visible: boolean;
   required: boolean;
   disabled: boolean;
-  options: any[];
+  options: any;
 }
 
 export interface ProcessedLayout {
-  type: 'vertical' | 'horizontal' | 'grid' | 'tabs' | 'steps' | 'accordion';
+  type: 'vertical' | 'horizontal' | 'grid' | 'tabs' | 'steps' | 'accordion' | 'sections';
   columns?: number;
   processedSections?: any[];
   processedSteps?: any[];

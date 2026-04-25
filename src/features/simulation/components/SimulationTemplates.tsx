@@ -32,10 +32,6 @@ const SimulationTemplates: React.FC = () => {
   // Get user's program access
   const { filterByPrograms, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
 
-  useEffect(() => {
-    loadTemplates();
-  }, []);
-
   const loadTemplates = async () => {
     try {
       const data = await getSimulationTemplates();
@@ -46,6 +42,11 @@ const SimulationTemplates: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadTemplates();
+  }, []);
 
   const handleSaveSnapshot = async (templateId: string) => {
     setActionLoading(templateId);

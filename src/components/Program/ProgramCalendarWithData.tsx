@@ -91,7 +91,14 @@ export const ProgramCalendar: React.FC = () => {
 
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: (data: ScheduledSimulationData) => createScheduledSimulation(data),
+    mutationFn: (data: ScheduledSimulationData) => createScheduledSimulation({
+      ...data,
+      description: data.description || null,
+      cohort_id: data.cohort_id ?? null,
+      room_location: data.room_location || null,
+      status: data.status ?? 'scheduled',
+      notes: data.notes ?? null,
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-simulations'] });
       setShowEventModal(false);

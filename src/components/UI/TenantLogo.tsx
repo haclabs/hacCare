@@ -81,7 +81,6 @@ export const TenantLogo: React.FC<TenantLogoProps> = ({
   // Tenant-specific branding
   const logoUrl = tenant.settings?.logo_url;
   const primaryColor = tenant.settings?.primary_color || tenant.primary_color || '#3B82F6';
-  const _tenantName = tenant.name || 'Healthcare Organization';
 
   return (
     <div className={`text-center ${config.container} ${className}`}>

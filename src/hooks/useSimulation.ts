@@ -333,6 +333,7 @@ export function useSimRun(runId: string) {
 
   // Initial data fetch
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRunData();
   }, [fetchRunData]);
 
@@ -381,6 +382,7 @@ export function useSimTemplates() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTemplates();
   }, [fetchTemplates]);
 
@@ -440,6 +442,7 @@ export function useSimSnapshots(templateId?: string) {
   }, [fetchSnapshots]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSnapshots();
   }, [fetchSnapshots]);
 
@@ -492,6 +495,7 @@ export function useSimRuns() {
   }, [fetchRuns]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRuns();
   }, [fetchRuns]);
 

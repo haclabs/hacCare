@@ -1,7 +1,7 @@
 import React from 'react';
 import { Patient } from '../../../../types';
 import { User, MapPin, AlertTriangle, QrCode } from 'lucide-react';
-import { format, isValid } from 'date-fns';
+import { isValid } from 'date-fns';
 import { getAvatarById } from '../../../../data/patientAvatars';
 
 /**
@@ -53,7 +53,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
   /**
    * Get card background - clean white
    */
-  const getCardGradient = (condition: Patient['condition']) => {
+  const getCardGradient = (_condition: Patient['condition']) => {
     return 'bg-white';
   };
 
@@ -82,10 +82,6 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
     }
     return years;
   })();
-
-  // Format admission date with validation
-  const admissionDate = new Date(patient.admission_date);
-  const formattedAdmissionDate = isValid(admissionDate) ? format(admissionDate, 'MMM dd') : 'N/A';
 
   return (
     <div 

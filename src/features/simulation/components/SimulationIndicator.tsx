@@ -54,6 +54,7 @@ export const SimulationIndicator: React.FC = () => {
 
   useEffect(() => {
     if (!currentTenant?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSimulation(null);
       return;
     }
@@ -96,6 +97,7 @@ export const SimulationIndicator: React.FC = () => {
 
   useEffect(() => {
     if (!simulation?.ends_at) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeRemaining('');
       return;
     }
@@ -141,6 +143,7 @@ export const SimulationIndicator: React.FC = () => {
   // Grace period countdown and auto-kick
   useEffect(() => {
     if (!gracePeriodEnd || !profile?.simulation_only) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGraceTimeRemaining('');
       return;
     }

@@ -7,10 +7,10 @@
  * ===========================================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, AlertTriangle, CheckCircle, Plus, Minus } from 'lucide-react';
 import { compareTemplateVersions, compareSimulationVsTemplate } from '../../../services/simulation/simulationService';
-import type {  SimulationTemplateVersion, PatientListComparison } from '../types/simulation';
+import type { PatientListComparison } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface Props {
@@ -56,10 +56,6 @@ export default function VersionComparisonModal({
   const [diff, setDiff] = useState<VersionDiff | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadComparison();
-  }, [templateId, versionOld, versionNew, simulationId]);
-
   async function loadComparison() {
     try {
       setLoading(true);
@@ -75,6 +71,11 @@ export default function VersionComparisonModal({
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadComparison();
+  }, [templateId, versionOld, versionNew, simulationId]);
 
   function renderCountChange(label: string, oldCount: number, newCount: number) {
     const change = newCount - oldCount;

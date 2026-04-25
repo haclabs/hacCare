@@ -65,7 +65,13 @@ interface PatientDetailTabsProps {
   onShowBracelet?: (patient: Patient) => void;
 }
 
-const TABS = [
+const TABS: Array<{
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  count?: number;
+  subTabs?: Array<{ id: string; label: string; icon: React.ComponentType<{ className?: string }> }>;
+}> = [
   { id: 'overview',     label: 'Overview',      icon: User },
   { id: 'medications',  label: 'MAR',            icon: Pill },
   { id: 'assessments',  label: 'Assessments',    icon: Stethoscope,

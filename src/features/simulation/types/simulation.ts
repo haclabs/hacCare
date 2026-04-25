@@ -30,6 +30,8 @@ export interface SimulationTemplate {
   created_by: string;
   created_at: string;
   updated_at: string;
+  primary_categories?: string[];
+  sub_categories?: string[];
 }
 
 export interface SimulationActive {
@@ -186,6 +188,8 @@ export interface SimulationHistoryWithDetails extends SimulationHistory {
     last_name: string;
     email: string;
   };
+  student_activities?: any[];
+  metrics?: Record<string, any>;
 }
 
 // Request/Response types
@@ -217,6 +221,15 @@ export interface SimulationFunctionResult {
   tenant_id?: string;
   template_id?: string;
   message: string;
+  // Additional fields returned by specific RPC functions
+  medications_added?: number;
+  template_version_synced?: number;
+  restore_details?: {
+    restored_counts?: Record<string, number>;
+    [key: string]: any;
+  };
+  records_captured?: number;
+  tables_captured?: number;
 }
 
 export interface ActivityLogEntry {

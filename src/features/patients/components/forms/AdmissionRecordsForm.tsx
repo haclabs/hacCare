@@ -21,11 +21,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const { refreshPatients } = usePatients();
-
-  useEffect(() => {
-    loadAdmissionRecord();
-  }, [patientId]);
+  const { refetch: refreshPatients } = usePatients();
 
   const loadAdmissionRecord = async () => {
     try {
@@ -63,6 +59,11 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAdmissionRecord();
+  }, [patientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

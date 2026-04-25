@@ -46,7 +46,7 @@ export const runConnectionTest = async () => {
   
   // Check network connectivity
   try {
-    const networkTest = await fetch(supabaseUrl, { 
+    await fetch(supabaseUrl, { 
       method: 'HEAD',
       mode: 'no-cors'
     });
@@ -60,7 +60,7 @@ export const runConnectionTest = async () => {
   
   // Test auth service
   try {
-    const { data, error } = await supabase.auth.getSession();
+    const { error } = await supabase.auth.getSession();
     results.authServiceWorking = !error;
     
     if (error) {
@@ -76,7 +76,7 @@ export const runConnectionTest = async () => {
   
   // Test database query
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('user_profiles')
       .select('count')
       .limit(1);

@@ -9,7 +9,7 @@
  */
 
 import DOMPurify from 'dompurify';
-import { secureLogger } from './secureLogger';
+import { secureLogger } from '../security/secureLogger';
 
 export interface ValidationResult {
   isValid: boolean;

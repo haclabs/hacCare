@@ -9,7 +9,7 @@
  */
 
 import { supabase } from '../../lib/api/supabase';
-import { secureLogger } from './secureLogger';
+import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface SessionConfig {
   sessionTimeoutMinutes: number;

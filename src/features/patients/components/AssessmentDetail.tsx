@@ -2,6 +2,12 @@ import React from 'react';
 import { X, Brain, Heart, Stethoscope, AlertTriangle, Clock, User } from 'lucide-react';
 import { format } from 'date-fns';
 
+const ASSESSMENT_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  physical: Stethoscope,
+  pain: Heart,
+  neurological: Brain,
+};
+
 interface AssessmentDetailProps {
   assessment: any;
   onClose?: () => void;
@@ -18,16 +24,6 @@ export const AssessmentDetail: React.FC<AssessmentDetailProps> = ({ assessment, 
     );
   }
   
-  // Get icon based on assessment type
-  const getAssessmentIcon = () => {
-    switch (assessment.assessment_type) {
-      case 'physical': return Stethoscope;
-      case 'pain': return Heart;
-      case 'neurological': return Brain;
-      default: return Stethoscope;
-    }
-  };
-
   // Get color based on assessment type
   const getAssessmentColor = () => {
     switch (assessment.assessment_type) {
@@ -48,8 +44,8 @@ export const AssessmentDetail: React.FC<AssessmentDetailProps> = ({ assessment, 
     }
   };
 
-  const Icon = getAssessmentIcon();
   const color = getAssessmentColor();
+  const Icon = ASSESSMENT_ICON_MAP[assessment.assessment_type] || Stethoscope;
 
   // Parse assessment content to extract specific fields
   const parseAssessmentContent = () => {
@@ -59,7 +55,7 @@ export const AssessmentDetail: React.FC<AssessmentDetailProps> = ({ assessment, 
     // Try to extract fields from the content based on common patterns
     const lines = content.split('\n');
     
-    lines.forEach(line => {
+    lines.forEach((line: string) => {
       const match = line.match(/^([^:]+):\s*(.+)$/);
       if (match) {
         const [_, key, value] = match;

@@ -241,6 +241,7 @@ export const NetlifySecurityDiagnostics: React.FC = () => {
 
   // Run diagnostics on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     runSecurityDiagnostics();
   }, []);
 

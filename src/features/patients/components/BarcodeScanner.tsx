@@ -61,6 +61,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
 
   useEffect(() => {
     if (isActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       startCamera();
     } else {
       stopCamera();

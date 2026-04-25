@@ -46,10 +46,6 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
   const loadUsers = async () => {
     try {
       // Get all users from the current tenant
@@ -66,6 +62,11 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
       setLoadingUsers(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUsers();
+  }, []);
 
   const handleUserToggle = (userId: string, role: 'instructor' | 'student') => {
     const index = formData.participant_user_ids.indexOf(userId);

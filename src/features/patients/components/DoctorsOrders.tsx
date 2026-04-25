@@ -68,21 +68,20 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
 
   // Load orders on component mount
   useEffect(() => {
+    async function loadOrders() {
+      try {
+        setLoading(true);
+        const ordersData = await fetchDoctorsOrders(patientId);
+        setOrders(ordersData);
+      } catch (error) {
+        secureLogger.error('Error loading doctors orders:', error);
+        setError('Failed to load doctors orders');
+      } finally {
+        setLoading(false);
+      }
+    }
     loadOrders();
   }, [patientId]);
-
-  const loadOrders = async () => {
-    try {
-      setLoading(true);
-      const ordersData = await fetchDoctorsOrders(patientId);
-      setOrders(ordersData);
-    } catch (error) {
-      secureLogger.error('Error loading doctors orders:', error);
-      setError('Failed to load doctors orders');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

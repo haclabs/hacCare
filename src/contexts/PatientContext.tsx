@@ -134,6 +134,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Initialize patients on mount and when tenant changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPatients();
   }, [currentTenant, isMultiTenantAdmin, selectedTenantId, loadPatients]); // Reload when tenant context changes
 

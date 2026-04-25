@@ -95,7 +95,7 @@ export const isSupabaseConfigured = hasValidConfig;
 /**
  * User Role Types
  */
-export type UserRole = 'nurse' | 'admin' | 'super_admin';
+export type UserRole = 'nurse' | 'admin' | 'super_admin' | 'instructor' | 'coordinator';
 
 /**
  * User Profile Interface

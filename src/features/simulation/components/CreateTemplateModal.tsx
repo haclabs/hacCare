@@ -22,7 +22,7 @@ interface CreateTemplateModalProps {
 
 const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSuccess }) => {
   const { currentTenant } = useTenant();
-  const { programCodes, canSeeAllPrograms, isInstructor, isCoordinator } = useUserProgramAccess();
+  const { programCodes, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
@@ -32,11 +32,6 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Load programs on mount
-  useEffect(() => {
-    loadPrograms();
-  }, [currentTenant]);
 
   const loadPrograms = async () => {
     if (!currentTenant) return;
@@ -72,6 +67,12 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
       }
     }
   };
+
+  // Load programs on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPrograms();
+  }, [currentTenant]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

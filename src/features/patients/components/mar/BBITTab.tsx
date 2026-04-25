@@ -214,6 +214,7 @@ export const BBITTab: React.FC<BBITTabProps> = ({
   // ── Sync external form trigger ─────────────────────────────────────────────
   useEffect(() => {
     if (externalShowForm) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm(emptyForm());
       setShowForm(true);
     }

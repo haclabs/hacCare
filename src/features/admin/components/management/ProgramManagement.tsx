@@ -33,10 +33,6 @@ export const ProgramManagement: React.FC = () => {
   // Check permissions
   const canManage = hasRole(['super_admin', 'coordinator']);
 
-  useEffect(() => {
-    loadPrograms();
-  }, [currentTenant?.id, currentTenant?.parent_tenant_id]);
-
   const loadPrograms = async () => {
     if (!currentTenant) return;
     
@@ -56,6 +52,11 @@ export const ProgramManagement: React.FC = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPrograms();
+  }, [currentTenant?.id, currentTenant?.parent_tenant_id]);
 
   const handleCreate = () => {
     setFormData({ code: '', name: '', description: '' });

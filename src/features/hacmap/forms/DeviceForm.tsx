@@ -81,6 +81,7 @@ export const DeviceForm: React.FC<DeviceFormProps> = ({
   const isDrain = type === 'closed-suction-drain' || type === 'chest-tube';
 
       useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDirty(true);
   }, [type, placementDate, placementTime, placedPreArrival, insertedBy, tubeNumber, orientation, tubeSizeFr, numberOfSutures, reservoirType, reservoirSizeMl, securementMethod, patientTolerance, notes, studentName, gauge, siteSide, siteLocation, route, externalLengthCm, initialXrayConfirmed, initialPh, initialAspirateAppearance, placementConfirmed, ostomyConstruction, stomaSide, ngSecurement, ngAttachedTo, ngExternalLengthMm, ngResidualVolumeMl]);
 

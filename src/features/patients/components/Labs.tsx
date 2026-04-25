@@ -84,6 +84,7 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
   }, [patientId, currentTenant]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPanels();
     loadLabOrders();
     checkForNewLabs();
@@ -316,7 +317,7 @@ interface PanelCardProps {
   isSuperAdmin?: boolean;
 }
 
-const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick, onDelete, isSuperAdmin }) => {
+const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick }) => {
   const [resultStats, setResultStats] = useState<{
     total: number;
     abnormal: number;
@@ -342,6 +343,7 @@ const PanelCard: React.FC<PanelCardProps> = ({ panel, onClick, onDelete, isSuper
   }, [panel.id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadResultStats();
   }, [loadResultStats]);
 

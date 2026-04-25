@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle, AlertCircle } from 'lucide-react';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, sectionKey }) => {

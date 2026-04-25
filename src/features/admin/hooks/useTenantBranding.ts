@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getCurrentSubdomain } from '../../../lib/infrastructure/subdomainService';
 import { secureLogger } from '../../../lib/security/secureLogger';
-import { getTenantBySubdomain } from '../services/admin/tenantService';
+import { getTenantBySubdomain } from '../../../services/admin/tenantService';
 import { Tenant } from '../../../types';
 
 /**

@@ -39,7 +39,7 @@ interface TenantContextType {
   exitTemplateTenant: () => Promise<void>;
   // Program tenant access
   programTenants: ProgramTenant[];
-  loadProgramTenants: () => Promise<void>;
+  loadProgramTenants: () => Promise<ProgramTenant[]>;
 }
 
 /**
@@ -675,6 +675,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCurrentTenant();
   }, [user, isMultiTenantAdmin, authLoading]);
 

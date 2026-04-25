@@ -85,6 +85,7 @@ export const AdminDashboard: React.FC = () => {
   // Initial data load
   useEffect(() => {
     if (hasAdminAccess) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       refreshData();
     }
   }, [hasAdminAccess]);

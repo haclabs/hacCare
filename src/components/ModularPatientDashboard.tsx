@@ -117,6 +117,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
   // Sync local state when React Query refreshes patient
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (patient) setLocalPatient(patient);
   }, [patient]);
 

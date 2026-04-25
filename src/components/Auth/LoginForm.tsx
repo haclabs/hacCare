@@ -52,7 +52,7 @@ export const LoginForm: React.FC = () => {
     if (submitActiveRef.current) return; // handleSubmit is driving the MFA flow
 
     if (profile.role !== 'super_admin') {
-      doRedirect(profile.simulation_only);
+      doRedirect(profile.simulation_only ?? undefined);
       return;
     }
 
@@ -64,7 +64,7 @@ export const LoginForm: React.FC = () => {
 
         if (aal.currentLevel === 'aal2') {
           secureLogger.debug('✅ Restored super admin session already at AAL2 — redirecting');
-          doRedirect(profile.simulation_only);
+          doRedirect(profile.simulation_only ?? undefined);
         } else if (aal.nextLevel === 'aal2') {
           secureLogger.debug('🔐 Restored super admin session needs MFA challenge');
           setMfaMode('challenge');
@@ -123,7 +123,7 @@ export const LoginForm: React.FC = () => {
       // Non-super_admin: redirect immediately — no MFA required
       if (!signedInProfile || signedInProfile.role !== 'super_admin') {
         secureLogger.debug('✅ Non-admin sign in, redirecting...');
-        doRedirect(signedInProfile?.simulation_only);
+        doRedirect(signedInProfile?.simulation_only ?? undefined);
         return;
       }
 
@@ -137,7 +137,7 @@ export const LoginForm: React.FC = () => {
 
         if (aal.currentLevel === 'aal2') {
           secureLogger.debug('✅ Super admin already at AAL2');
-          doRedirect(signedInProfile.simulation_only);
+          doRedirect(signedInProfile.simulation_only ?? undefined);
         } else if (aal.nextLevel === 'aal2') {
           secureLogger.debug('🔐 Showing MFA challenge');
           setMfaAccessToken(accessToken);

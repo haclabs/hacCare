@@ -110,6 +110,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
 
   // Set default shift on component mount
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormData(prev => ({ ...prev, shift: getCurrentShift() }));
   }, []);
 

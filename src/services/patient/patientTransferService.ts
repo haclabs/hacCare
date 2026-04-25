@@ -1,5 +1,4 @@
 import { supabase } from '../../lib/api/supabase';
-import { Patient } from '../../types';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface PatientTransferOptions {

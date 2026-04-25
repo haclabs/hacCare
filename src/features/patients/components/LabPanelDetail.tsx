@@ -96,6 +96,7 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadResults();
   }, [panel.id]);
 

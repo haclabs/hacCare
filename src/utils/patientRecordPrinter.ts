@@ -55,7 +55,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
       respiratoryRateDisplay: vital.respiratoryRate ?? 'N/A',
       oxygenSaturationDisplay: vital.oxygenSaturation ?? 'N/A',
       roomAirIndicator:
-        vital.oxygenSaturation >= 95 && vital.oxygenSaturation <= 100 ? ' (RA)' : '',
+        (vital.oxygenSaturation ?? 0) >= 95 && (vital.oxygenSaturation ?? 0) <= 100 ? ' (RA)' : '',
     }));
 
     const reportWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');

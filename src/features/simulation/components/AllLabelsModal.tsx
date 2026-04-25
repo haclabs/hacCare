@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
-import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
-import type { PatientLabelData, MedicationLabelData } from '../../../services/operations/bulkLabelService';
-import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant, getInstructorNames } from './labelPrintingUtils';
+import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant } from './labelPrintingUtils';
 import { bcmaService } from '../../../services/clinical/bcmaService';
+import type { PatientLabelData, MedicationLabelData } from '../../../services/operations/bulkLabelService';
 import type { Medication } from '../../patients/types/clinical';
 interface AllLabelsModalProps {
   patients: PatientLabelData[];

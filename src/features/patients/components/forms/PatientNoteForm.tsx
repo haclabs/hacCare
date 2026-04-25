@@ -38,7 +38,6 @@ export const PatientNoteForm: React.FC<PatientNoteFormProps> = ({
   note,
   patientId,
   patientName,
-  onClose,
   onSave,
   onCancel
 }) => {

@@ -38,6 +38,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
   // Update form data when user prop changes
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         email: user.email || '',
         password: '',
@@ -52,50 +53,6 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
       });
     }
   }, [user]);
-
-  // Load tenants for super admin
-  useEffect(() => {
-    if (hasRole('super_admin')) {
-      loadTenants();
-    }
-  }, [hasRole]);
-
-  // Load programs when tenant is selected or when editing user
-  useEffect(() => {
-    if (selectedTenantId) {
-      loadPrograms(selectedTenantId);
-    }
-  }, [selectedTenantId]);
-
-  // Load user's existing programs when editing
-  useEffect(() => {
-    if (user?.id) {
-      loadUserPrograms(user.id);
-    }
-  }, [user]);
-
-  // Initialize selected tenant when user changes
-  useEffect(() => {
-    if (user?.id && hasRole('super_admin')) {
-      // Load the user's current tenant
-      const loadUserTenant = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('tenant_users')
-            .select('tenant_id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (data && !error && data.tenant_id) {
-            setSelectedTenantId(data.tenant_id);
-          }
-        } catch (error) {
-          secureLogger.error('Error loading user tenant', error);
-        }
-      };
-      loadUserTenant();
-    }
-  }, [user, hasRole]);
 
   const loadTenants = async () => {
     try {
@@ -126,6 +83,59 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     }
   };
 
+  // Load tenants for super admin
+  useEffect(() => {
+    if (hasRole('super_admin')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadTenants();
+    }
+  }, [hasRole]);
+
+  // Load programs when tenant is selected or when editing user
+  useEffect(() => {
+    if (selectedTenantId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadPrograms(selectedTenantId);
+    }
+  }, [selectedTenantId]);
+
+  // Load user's existing programs when editing
+  useEffect(() => {
+    if (user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadUserPrograms(user.id);
+    }
+  }, [user]);
+
+  // Initialize selected tenant when user changes
+  useEffect(() => {
+    if (user?.id && hasRole('super_admin')) {
+      // Load the user's current tenant - may have multiple rows (main tenant + program tenants)
+      const loadUserTenant = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('tenant_users')
+            .select('tenant_id, tenants!inner(tenant_type)')
+            .eq('user_id', user.id)
+            .eq('is_active', true);
+          
+          if (data && !error && data.length > 0) {
+            // Prefer the primary tenant over program/simulation tenants
+            const primaryEntry = data.find((row: any) =>
+              !['program', 'simulation_template', 'simulation_active'].includes(row.tenants?.tenant_type)
+            ) ?? data[0];
+            if (primaryEntry) {
+              setSelectedTenantId(primaryEntry.tenant_id);
+            }
+          }
+        } catch (error) {
+          secureLogger.error('Error loading user tenant', error);
+        }
+      };
+      loadUserTenant();
+    }
+  }, [user, hasRole]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -138,7 +148,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         // Update existing user using RPC to bypass RLS restrictions
         secureLogger.debug('Updating user profile via RPC', { userId: user.id, role: formData.role });
 
-        const { data: rpcResult, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .rpc('update_user_profile_admin', {
             p_user_id: user.id,
             p_first_name: formData.first_name,
@@ -163,7 +173,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         if (hasRole('super_admin') && selectedTenantId) {
           try {
             // Use RPC function to reassign tenant (bypasses RLS)
-            const { data: result, error: reassignError } = await supabase
+            const { error: reassignError } = await supabase
               .rpc('reassign_user_tenant', {
                 p_user_id: user.id,
                 p_new_tenant_id: selectedTenantId,
@@ -241,7 +251,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           // Use RPC function to update profile (bypasses RLS)
           secureLogger.debug('Updating user profile via RPC for new user');
 
-          const { data: rpcResult, error: rpcError } = await supabase
+          const { error: rpcError } = await supabase
             .rpc('update_user_profile_admin', {
               p_user_id: authData.user.id,
               p_first_name: formData.first_name || null,

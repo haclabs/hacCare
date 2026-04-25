@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Save, Stethoscope, Heart, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { createAssessment, PatientAssessment } from '../../../../services/patient/assessmentService';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../../hooks/useAuth';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 /**
@@ -44,9 +44,11 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
     
     pain_scale: '0',                       // Pain
     pain_location: '',                     // Pain
+    pain_duration: '',                     // Pain
     pain_quality: '',                      // Pain
     
     glasgow_coma_scale: '',                // Neurological
+    pupil_response: 'PERRL',              // Neurological
     motor_function: '',                    // Neurological
     cognitive_function: '',                // Neurological
     
@@ -146,7 +148,8 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
         nurse_name: `${profile.first_name} ${profile.last_name}`,
         assessment_type: assessmentType,
         assessment_date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-        ...formData
+        ...formData,
+        priority_level: formData.priority_level as 'routine' | 'urgent' | 'critical',
       };
 
       secureLogger.debug('Submitting assessment:', assessmentData);

@@ -25,7 +25,7 @@ export const WoundForm: React.FC<WoundFormProps> = ({
   onCancel
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
+  const [_isDirty, setIsDirty] = useState(false);
 
   // Form state
   const [woundType, setWoundType] = useState<WoundType>(wound?.wound_type || 'incision');
@@ -47,12 +47,13 @@ export const WoundForm: React.FC<WoundFormProps> = ({
   const [studentName, setStudentName] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDirty(true);
   }, [woundType, periWoundTemperature, woundLengthCm, woundWidthCm, woundDepthCm, woundDescription, drainageDescription, drainageConsistency, woundOdor, drainageAmount, woundEdges, closure, sutureSutapleLine, suturesIntact, enteredBy, notes, studentName]);
 
   const handleArrayToggle = (
     value: string,
-    state: string[],
+    _state: string[],
     setState: React.Dispatch<React.SetStateAction<string[]>>
   ) => {
     setState(prev =>

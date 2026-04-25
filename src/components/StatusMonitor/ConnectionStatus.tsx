@@ -6,6 +6,12 @@ import {
 import { isSupabaseConfigured, testSupabaseConnection, supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
 
+const STATUS_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  connected: CheckCircle,
+  disconnected: XCircle,
+  checking: RefreshCw,
+};
+
 /**
  * Connection Status Component
  * 
@@ -45,6 +51,7 @@ export const ConnectionStatus: React.FC = () => {
   };
   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkConnection();
     
     // Set up periodic checks
@@ -63,22 +70,12 @@ export const ConnectionStatus: React.FC = () => {
     }
   };
   
-  const getStatusIcon = (status: string) => {
-    if (!isConfigured) return AlertTriangle;
-    switch (status) {
-      case 'connected': return CheckCircle;
-      case 'disconnected': return XCircle;
-      case 'checking': return RefreshCw;
-      default: return AlertTriangle;
-    }
-  };
-  
   const getStatusText = (status: string) => {
     if (!isConfigured) return 'Not Configured';
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
   
-  const StatusIcon = getStatusIcon(status);
+  const StatusIcon = isConfigured ? (STATUS_ICON_MAP[status] || AlertTriangle) : AlertTriangle;
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

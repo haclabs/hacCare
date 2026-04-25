@@ -16,10 +16,6 @@ export const UserManagement: React.FC = () => {
   const [userPrograms, setUserPrograms] = useState<Record<string, string[]>>({});
   const { hasRole } = useAuth();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
@@ -51,6 +47,11 @@ export const UserManagement: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchUsers();
+  }, []);
 
   const handleDeactivateUser = async (userId: string) => {
     if (!confirm('Are you sure you want to deactivate this user? They will be disabled but their data will remain.')) return;

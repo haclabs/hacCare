@@ -34,10 +34,6 @@ export const ManagementDashboard: React.FC = () => {
     recent_admissions: number;
   } | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
   const loadDashboardData = async () => {
     try {
       setLoading(true);
@@ -65,6 +61,11 @@ export const ManagementDashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDashboardData();
+  }, []);
 
   const handleSelectTenant = async (tenant: Tenant) => {
     setSelectedTenant(tenant);
@@ -591,54 +592,52 @@ const CreateTenantModal: React.FC<{
   const [availableAdmins, setAvailableAdmins] = useState<any[]>([]);
   const [loadingAdmins, setLoadingAdmins] = useState(true);
 
-  // Load available admins when component mounts
   useEffect(() => {
+    const loadAvailableAdmins = async () => {
+      try {
+        setLoadingAdmins(true);
+        
+        // Try the new RPC function first
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_available_admin_users');
+        
+        if (!rpcError && rpcData) {
+          setAvailableAdmins(rpcData.map((user: any) => ({
+            id: user.user_id,
+            email: user.email,
+            first_name: user.email.split('@')[0], // Use email prefix as name fallback
+            last_name: '',
+            role: 'admin'
+          })));
+          return;
+        }
+        
+        // Fallback: Try to get users with admin roles from profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, email, first_name, last_name, role')
+          .in('role', ['admin', 'super_admin'])
+          .eq('is_active', true)
+          .order('email');
+        
+        if (!profileError && profileData) {
+          setAvailableAdmins(profileData);
+          return;
+        }
+        
+        secureLogger.error('Error loading admins:', { rpcError, profileError });
+        setError('Could not load available admins. You can still enter an email manually.');
+        setAvailableAdmins([]);
+        
+      } catch (err) {
+        secureLogger.error('Error loading available admins:', err);
+        setError('Could not load available admins. You can still enter an email manually.');
+        setAvailableAdmins([]);
+      } finally {
+        setLoadingAdmins(false);
+      }
+    };
     loadAvailableAdmins();
   }, []);
-
-  const loadAvailableAdmins = async () => {
-    try {
-      setLoadingAdmins(true);
-      
-      // Try the new RPC function first
-      const { data: rpcData, error: rpcError } = await supabase.rpc('get_available_admin_users');
-      
-      if (!rpcError && rpcData) {
-        setAvailableAdmins(rpcData.map((user: any) => ({
-          id: user.user_id,
-          email: user.email,
-          first_name: user.email.split('@')[0], // Use email prefix as name fallback
-          last_name: '',
-          role: 'admin'
-        })));
-        return;
-      }
-      
-      // Fallback: Try to get users with admin roles from profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, first_name, last_name, role')
-        .in('role', ['admin', 'super_admin'])
-        .eq('is_active', true)
-        .order('email');
-      
-      if (!profileError && profileData) {
-        setAvailableAdmins(profileData);
-        return;
-      }
-      
-      secureLogger.error('Error loading admins:', { rpcError, profileError });
-      setError('Could not load available admins. You can still enter an email manually.');
-      setAvailableAdmins([]);
-      
-    } catch (err) {
-      secureLogger.error('Error loading available admins:', err);
-      setError('Could not load available admins. You can still enter an email manually.');
-      setAvailableAdmins([]);
-    } finally {
-      setLoadingAdmins(false);
-    }
-  };
 
   const findUserByEmail = async (email: string): Promise<string | null> => {
     if (!email) return null;

@@ -67,11 +67,6 @@ export const IntakeOutputCard: React.FC<IntakeOutputCardProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [hoursBack, setHoursBack] = useState(8); // Default 8-hour shift
 
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId, hoursBack]);
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -91,6 +86,12 @@ export const IntakeOutputCard: React.FC<IntakeOutputCardProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId, hoursBack]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this entry?')) return;

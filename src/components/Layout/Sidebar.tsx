@@ -365,7 +365,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                       onClick={() => {
                         setIsUserMenuOpen(false);
                         if ('route' in item && item.route) {
-                          const appRoute = item.route.startsWith('/') 
+                          const appRoute = (item.route as string).startsWith('/') 
                             ? `/app${item.route}` 
                             : `/app/${item.route}`;
                           navigate(appRoute);

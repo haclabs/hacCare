@@ -24,7 +24,7 @@ export interface PendingMarker {
   regionKey: RegionKey;
   x: number;
   y: number;
-  view: string;
+  view: 'front' | 'back';
 }
 
 export function useAvatarBoard(patientId: string) {
@@ -78,6 +78,7 @@ export function useAvatarBoard(patientId: string) {
 
   useEffect(() => {
     if (patientId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadMarkers();
     }
   }, [patientId, loadMarkers]);

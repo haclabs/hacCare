@@ -44,7 +44,7 @@ const SimulationPortal: React.FC = () => {
   const [enteringSimulation, setEnteringSimulation] = useState(false);
   const [showQuickIntro, setShowQuickIntro] = useState(false);
 
-  const loadAssignments = React.useCallback(async (retryCount = 0, isBackgroundRefresh = false) => {
+  const loadAssignments = React.useCallback(async function loadAssignments(retryCount = 0, isBackgroundRefresh = false) {
     if (!user) {
       secureLogger.debug('⚠️ loadAssignments: No user, skipping');
       return;
