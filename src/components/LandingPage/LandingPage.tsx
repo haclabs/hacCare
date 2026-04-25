@@ -29,8 +29,7 @@ import {
   ClipboardCheck,
   Cpu,
 } from 'lucide-react';
-import logo from './logo.png';
-import { submitContactForm } from '../../services/contact/contactService';
+import logo from './logo.webp';
 
 // ─── Reusable sub-components ──────────────────────────────────────────────────
 
@@ -80,6 +79,7 @@ export const LandingPage: React.FC = () => {
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus({ type: 'loading' });
+    const { submitContactForm } = await import('../../services/contact/contactService');
     const result = await submitContactForm(formData);
     if (result.success) {
       setFormStatus({ type: 'success', message: result.message || "Thank you — we'll be in touch soon." });
@@ -201,23 +201,14 @@ export const LandingPage: React.FC = () => {
                   ) : (
                     <button
                       onClick={() => setHeroVideoPlaying(true)}
-                      className="absolute inset-0 w-full h-full flex flex-col items-center justify-center group cursor-pointer"
-                      style={{ background: 'linear-gradient(135deg, #07101e 0%, #0c1a2e 60%, #071828 100%)' }}
+                      className="absolute inset-0 w-full h-full cursor-pointer overflow-hidden"
                       aria-label="Play hacCare platform demo video"
                     >
-                      {/* Subtle grid pattern */}
-                      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(#19ADF2 1px, transparent 1px), linear-gradient(90deg, #19ADF2 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-                      {/* Glow behind button */}
-                      <div className="absolute w-40 h-40 rounded-full opacity-20 blur-2xl" style={{ background: '#19ADF2' }} />
-                      {/* Play button */}
-                      <div className="relative w-20 h-20 rounded-full border-2 flex items-center justify-center mb-5 transition-transform duration-200 group-hover:scale-110"
-                        style={{ borderColor: '#19ADF2', background: 'rgba(25,173,242,0.12)' }}>
-                        <svg className="w-8 h-8 ml-1" viewBox="0 0 24 24" fill="#19ADF2">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                      <span className="relative text-white font-semibold text-lg mb-1">Watch the Demo</span>
-                      <span className="relative text-slate-400 text-sm">See hacCare in action &mdash; 2 min overview</span>
+                      <img
+                        src="/images/hacCare_intro.webp"
+                        alt="hacCare platform demo thumbnail"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
                     </button>
                   )}
                 </div>
@@ -298,7 +289,7 @@ export const LandingPage: React.FC = () => {
               {/* Large photo */}
               <div className="lg:col-span-7 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative group">
                 <img
-                  src="/images/nurse-scanning.jpg"
+                  src="/images/nurse-scanning.webp"
                   alt="Student nurse scanning medication barcode at simulated patient bedside in a healthcare simulation lab"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   width={600}
@@ -317,7 +308,7 @@ export const LandingPage: React.FC = () => {
               <div className="lg:col-span-5 flex flex-col gap-4">
                 <div className="rounded-2xl overflow-hidden border border-slate-800 shadow-xl relative group" style={{ height: '240px' }}>
                   <img
-                    src="/images/barcode-scanning.jpg"
+                    src="/images/barcode-scanning.webp"
                     alt="Close-up of student nurse scanning medication barcode label with patient wristband visible"
                     className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     width={600}
@@ -378,7 +369,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="rounded-2xl border border-slate-700 overflow-hidden shadow-2xl">
                 <img
-                  src="/images/bcma.png"
+                  src="/images/bcma.webp"
                   alt="BCMA medication administration interface with Five Rights verification"
                   className="w-full object-cover"
                   width={1009}
@@ -576,7 +567,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <div className="px-4 pb-4">
                   <img
-                    src="/images/template.png"
+                    src="/images/template.webp"
                     alt="Simulation template cards with program tags in hacCare"
                     className="w-full rounded-lg border border-slate-700"
                     width={488}
@@ -606,7 +597,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <div className="px-4 pb-4">
                   <img
-                    src="/images/debrief.png"
+                    src="/images/debrief.webp"
                     alt="Debrief report showing student activity breakdown in hacCare"
                     className="w-full rounded-lg border border-slate-700"
                     width={488}
