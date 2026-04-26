@@ -32,6 +32,7 @@ export interface SimulationTemplate {
   updated_at: string;
   primary_categories?: string[];
   sub_categories?: string[];
+  folder?: string | null;
 }
 
 export interface SimulationActive {

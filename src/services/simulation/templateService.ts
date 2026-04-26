@@ -111,6 +111,27 @@ export async function updateSimulationTemplate(
 }
 
 /**
+ * Update the folder assignment for a template.
+ * Pass null to remove a template from its folder (moves to Uncategorized).
+ */
+export async function updateTemplateFolder(
+  templateId: string,
+  folder: string | null
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('simulation_templates')
+      .update({ folder })
+      .eq('id', templateId);
+
+    if (error) throw error;
+  } catch (error: any) {
+    secureLogger.error('Error updating template folder:', error);
+    throw error;
+  }
+}
+
+/**
  * Delete a template
  */
 export async function deleteSimulationTemplate(templateId: string): Promise<void> {
