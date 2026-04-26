@@ -1,4 +1,13 @@
 // Password generation utility for simulation users
+
+/** Cryptographically secure random integer in [0, max) */
+function cryptoRandInt(max: number): number {
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  // Use modulo — bias is negligible for small max values relative to 2^32
+  return arr[0] % max;
+}
+
 export class PasswordGenerator {
   private static readonly ADJECTIVES = [
     'quick', 'brave', 'smart', 'calm', 'wise', 'bold', 'kind', 'cool', 'warm', 'fresh'
@@ -15,10 +24,10 @@ export class PasswordGenerator {
    * Format: adjective + noun + 2-digit number (e.g., "quicknurse42")
    */
   static generateTemporaryPassword(): string {
-    const adjective = this.ADJECTIVES[Math.floor(Math.random() * this.ADJECTIVES.length)];
-    const noun = this.NOUNS[Math.floor(Math.random() * this.NOUNS.length)];
-    const number1 = this.NUMBERS[Math.floor(Math.random() * this.NUMBERS.length)];
-    const number2 = this.NUMBERS[Math.floor(Math.random() * this.NUMBERS.length)];
+    const adjective = this.ADJECTIVES[cryptoRandInt(this.ADJECTIVES.length)];
+    const noun = this.NOUNS[cryptoRandInt(this.NOUNS.length)];
+    const number1 = this.NUMBERS[cryptoRandInt(this.NUMBERS.length)];
+    const number2 = this.NUMBERS[cryptoRandInt(this.NUMBERS.length)];
     
     return `${adjective}${noun}${number1}${number2}`;
   }
@@ -30,7 +39,7 @@ export class PasswordGenerator {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
     let password = '';
     for (let i = 0; i < length; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+      password += chars.charAt(cryptoRandInt(chars.length));
     }
     return password;
   }

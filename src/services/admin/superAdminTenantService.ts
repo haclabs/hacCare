@@ -314,19 +314,21 @@ class SuperAdminTenantService {
     }
   }
 
-  // Private methods for localStorage management
+  // Private methods for sessionStorage management
+  // Note: sessionStorage (not localStorage) so tenant context doesn't persist across
+  // browser sessions — consistent with auth token storage (C-2 security fix).
   private saveTenantContext(tenantId: string, tenantName: string): void {
-    localStorage.setItem('superAdminTenantId', tenantId);
-    localStorage.setItem('superAdminTenantName', tenantName);
+    sessionStorage.setItem('superAdminTenantId', tenantId);
+    sessionStorage.setItem('superAdminTenantName', tenantName);
   }
 
   private getSavedTenantContext(): string | null {
-    return localStorage.getItem('superAdminTenantId');
+    return sessionStorage.getItem('superAdminTenantId');
   }
 
   private clearSavedTenantContext(): void {
-    localStorage.removeItem('superAdminTenantId');
-    localStorage.removeItem('superAdminTenantName');
+    sessionStorage.removeItem('superAdminTenantId');
+    sessionStorage.removeItem('superAdminTenantName');
   }
 }
 

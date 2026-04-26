@@ -21,8 +21,10 @@ import {
  * @returns {string} Generated patient ID (e.g., "PT12345")
  */
 export const generatePatientId = (): string => {
-  // Generate a 5-digit number for PTXXXXX format
-  const randomNum = Math.floor(Math.random() * 90000) + 10000; // Ensures 5 digits
+  // Generate a 5-digit number for PTXXXXX format using CSPRNG
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  const randomNum = (arr[0] % 90000) + 10000; // Ensures 5 digits (10000–99999)
   return `PT${randomNum}`;
 };
 

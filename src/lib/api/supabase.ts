@@ -75,6 +75,9 @@ export const supabase = createClient(
       autoRefreshToken: true,
       detectSessionInUrl: hasValidConfig,
       flowType: 'pkce',
+      // Use sessionStorage so auth tokens are tab-scoped and not accessible
+      // to other tabs, browser extensions, or cross-site scripts via localStorage.
+      storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
     },
     db: {
       schema: 'public'

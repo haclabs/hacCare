@@ -140,8 +140,8 @@ function App() {
         // Patient barcode - extract patient ID and navigate to patient detail
         const patientId = barcode.substring(2); // Remove 'PT' prefix
 
-        // Only log detailed comparison in debug mode to reduce console spam
-        if (localStorage.getItem('debug-mode') === 'true') {
+        // Only log detailed comparison in dev builds to reduce console spam
+        if (import.meta.env.DEV) {
           patients.forEach(p => {
             secureLogger.debug(`Comparing patient ID vs scanned`, { patient_id: p.patient_id, scanned: patientId });
           });
