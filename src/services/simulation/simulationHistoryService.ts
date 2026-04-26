@@ -4,6 +4,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { getStudentActivitiesBySimulation } from './studentActivityService';
 import type {
   SimulationHistoryWithDetails,
   SimulationActivityLog,
@@ -191,7 +192,6 @@ export async function regenerateDebriefSnapshot(
   simulationId: string,
   startedAt: string
 ): Promise<void> {
-  const { getStudentActivitiesBySimulation } = await import('./studentActivityService');
   const activities = await getStudentActivitiesBySimulation(simulationId, startedAt);
 
   const { error } = await supabase
