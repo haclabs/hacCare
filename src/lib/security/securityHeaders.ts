@@ -37,7 +37,7 @@ export class SecurityHeaders {
   generateCSP(): string {
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co",
+      "script-src 'self' 'unsafe-inline' https://*.supabase.co",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https://*.supabase.co blob:",

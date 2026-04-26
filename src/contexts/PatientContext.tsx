@@ -160,14 +160,15 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       let newPatient: Patient;
       
       if (isMultiTenantAdmin) {
-        // CRITICAL FIX (2025-11-07): Read tenant ID from localStorage at CALL TIME
+        // CRITICAL FIX (2025-11-07): Read tenant ID from sessionStorage at CALL TIME
         // NOTE: This is a fallback for code paths that use PatientContext directly.
         // Most patient creation now goes through React Query -> patientService (see patientService.ts:356)
         // 
         // REASON: TenantContext loads asynchronously, so closure-captured selectedTenantId
-        // may be null/stale when this context initializes. Reading from localStorage
+        // may be null/stale when this context initializes. Reading from sessionStorage
         // at call time ensures we get the current value.
-        const freshTenantId = localStorage.getItem('superAdminTenantId');
+        // Note: sessionStorage (not localStorage) — tenant context must not persist across sessions.
+        const freshTenantId = sessionStorage.getItem('superAdminTenantId');
         
         secureLogger.debug('TENANT CONTEXT CHECK (AT CALL TIME):', {
           isMultiTenantAdmin,

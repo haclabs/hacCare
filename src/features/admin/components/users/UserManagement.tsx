@@ -13,6 +13,8 @@ export const UserManagement: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filterProgram, setFilterProgram] = useState<string>('all');
+  const [filterSimOnly, setFilterSimOnly] = useState(false);
   const [userPrograms, setUserPrograms] = useState<Record<string, string[]>>({});
   const { hasRole } = useAuth();
 
@@ -141,19 +143,31 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  // All unique program codes across all users (for filter dropdown)
+  const allProgramCodes = [...new Set(
+    Object.values(userPrograms).flat()
+  )].sort();
+
   const filteredUsers = users.filter(user => {
-    // Apply search filter
+    // Search filter
     const matchesSearch = user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.role.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Apply status filter
+    // Status filter
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && user.is_active) ||
       (statusFilter === 'inactive' && !user.is_active);
+
+    // Program filter — match if user has the selected program code
+    const matchesProgram = filterProgram === 'all' ||
+      (userPrograms[user.id] || []).includes(filterProgram);
+
+    // Simulation-only filter
+    const matchesSimOnly = !filterSimOnly || !!user.simulation_only;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesProgram && matchesSimOnly;
   });
 
   if (loading) {
@@ -187,8 +201,9 @@ export const UserManagement: React.FC = () => {
 
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
+          <div className="flex flex-wrap gap-3">
+            {/* Search */}
+            <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
@@ -198,26 +213,61 @@ export const UserManagement: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="w-48">
+
+            {/* Status */}
+            <div className="w-40">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Users</option>
-                <option value="active">Active Users</option>
-                <option value="inactive">Inactive Users</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
             </div>
+
+            {/* Program filter */}
+            {allProgramCodes.length > 0 && (
+              <div className="w-40">
+                <select
+                  value={filterProgram}
+                  onChange={(e) => setFilterProgram(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">All Programs</option>
+                  {allProgramCodes.map(code => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Sim-only toggle chip */}
+            <button
+              onClick={() => setFilterSimOnly(v => !v)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                filterSimOnly
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+              title="Show simulation-only users"
+            >
+              <Monitor className="h-4 w-4" />
+              Sim Only
+            </button>
           </div>
           
           {/* Summary */}
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredUsers.length} of {users.length} users
-            {statusFilter !== 'all' && (
-              <span className="ml-2">
-                ({statusFilter === 'active' ? 'active only' : 'inactive only'})
-              </span>
+          <div className="mt-3 flex items-center gap-3 text-sm text-gray-600">
+            <span>Showing {filteredUsers.length} of {users.length} users</span>
+            {(filterProgram !== 'all' || filterSimOnly || statusFilter !== 'all') && (
+              <button
+                onClick={() => { setFilterProgram('all'); setFilterSimOnly(false); setStatusFilter('all'); setSearchTerm(''); }}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                Clear filters
+              </button>
             )}
           </div>
         </div>

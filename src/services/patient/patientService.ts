@@ -387,11 +387,11 @@ export const fetchPatientById = async (patientId: string, simulationId?: string)
  *   2. PatientManagement uses React Query hooks which bypass PatientContext
  *   3. This service had no tenant_id assignment logic for super admin users
  * 
- * SOLUTION: Read superAdminTenantId from localStorage at call time
+ * SOLUTION: Read superAdminTenantId from sessionStorage at call time
  * WHY: Avoids race condition and works for all code paths (context or direct service call)
  * 
  * TESTING:
- *   - Check localStorage.getItem('superAdminTenantId') matches tenant_id in database
+ *   - Check sessionStorage.getItem('superAdminTenantId') matches tenant_id in database
  *   - Verify console logs show correct tenant_id being used
  * 
  * RELATED: src/contexts/PatientContext.tsx (secondary fix), 
@@ -401,12 +401,13 @@ export const createPatient = async (patient: Patient): Promise<Patient> => {
   try {
     const dbPatient = convertToDatabase(patient);
     
-    // CRITICAL: For super admins, read tenant ID from localStorage at call time.
+    // CRITICAL: For super admins, read tenant ID from sessionStorage at call time.
     // This prevents race condition where tenant context isn't initialized yet.
     // React Query hooks call this service directly, bypassing PatientContext.
-    const freshTenantId = localStorage.getItem('superAdminTenantId');
+    // Note: sessionStorage (not localStorage) — tenant context must not persist across sessions.
+    const freshTenantId = sessionStorage.getItem('superAdminTenantId');
     if (freshTenantId && !dbPatient.tenant_id) {
-      secureLogger.debug('PATIENT SERVICE: Setting tenant_id from localStorage:', freshTenantId);
+      secureLogger.debug('PATIENT SERVICE: Setting tenant_id from sessionStorage:', freshTenantId);
       dbPatient.tenant_id = freshTenantId;
     }
     

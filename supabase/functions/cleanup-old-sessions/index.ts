@@ -7,9 +7,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 Deno.serve(async (req) => {
   try {
-    // Verify this is a scheduled request (optional security check)
+    // Verify this is an authorised scheduled request via shared secret
     const authHeader = req.headers.get('Authorization');
-    
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create Supabase client with service role for admin operations
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

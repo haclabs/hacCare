@@ -144,7 +144,12 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel,
           ...session,
           expires_at: Math.round(Date.now() / 1000) + session.expires_in,
         };
-        localStorage.setItem(`sb-${projectRef}-auth-token`, JSON.stringify(sessionToStore));
+        // Write to sessionStorage — the Supabase client is configured with
+        // storage: sessionStorage, so this is where it will read the session from.
+        // Tokens are tab-scoped and not exposed to other tabs, extensions, or XSS
+        // via localStorage. Also clear any stale localStorage copy.
+        sessionStorage.setItem(`sb-${projectRef}-auth-token`, JSON.stringify(sessionToStore));
+        localStorage.removeItem(`sb-${projectRef}-auth-token`);
 
         secureLogger.debug('✅ MFA verified via direct fetch — session upgraded to AAL2');
         onSuccess();

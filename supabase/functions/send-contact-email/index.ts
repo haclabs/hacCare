@@ -39,6 +39,16 @@ serve(async (req) => {
     )
   }
 
+  // Escape user-supplied strings before embedding in HTML
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   try {
     // Parse the request body
     const formData: ContactFormData = await req.json()
@@ -93,11 +103,11 @@ serve(async (req) => {
           subject: `New Contact Form Submission from ${formData.name}`,
           html_body: `
             <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${formData.name}</p>
-            <p><strong>Email:</strong> ${formData.email}</p>
-            <p><strong>Institution:</strong> ${formData.institution || 'Not provided'}</p>
+            <p><strong>Name:</strong> ${escapeHtml(formData.name)}</p>
+            <p><strong>Email:</strong> ${escapeHtml(formData.email)}</p>
+            <p><strong>Institution:</strong> ${escapeHtml(formData.institution || 'Not provided')}</p>
             <p><strong>Message:</strong></p>
-            <p>${formData.message.replace(/\n/g, '<br>')}</p>
+            <p>${escapeHtml(formData.message).replace(/\n/g, '<br>')}</p>
           `,
           text_body: `
 New Contact Form Submission
@@ -152,11 +162,11 @@ ${formData.message}
           subject: `New Contact Form Submission from ${formData.name}`,
           html: `
             <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${formData.name}</p>
-            <p><strong>Email:</strong> ${formData.email}</p>
-            <p><strong>Institution:</strong> ${formData.institution || 'Not provided'}</p>
+            <p><strong>Name:</strong> ${escapeHtml(formData.name)}</p>
+            <p><strong>Email:</strong> ${escapeHtml(formData.email)}</p>
+            <p><strong>Institution:</strong> ${escapeHtml(formData.institution || 'Not provided')}</p>
             <p><strong>Message:</strong></p>
-            <p>${formData.message.replace(/\n/g, '<br>')}</p>
+            <p>${escapeHtml(formData.message).replace(/\n/g, '<br>')}</p>
           `,
         }),
       })

@@ -260,7 +260,8 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION bulk_create_students TO authenticated;
+REVOKE EXECUTE ON FUNCTION bulk_create_students FROM authenticated;
+GRANT EXECUTE ON FUNCTION bulk_create_students TO service_role;
 
 COMMENT ON FUNCTION bulk_create_students IS 
 'Bulk import students from CSV with auto-generated passwords and email confirmations. 

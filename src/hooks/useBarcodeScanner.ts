@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { isBCMACurrentlyActive } from '../services/simulation/bcmaState';
 import { secureLogger } from '../lib/security/secureLogger';
 
+// Debug logging is only active in development builds — not user-controllable
+const IS_DEV = import.meta.env.DEV;
+
 /**
  * Custom hook for barcode scanner integration
  * 
@@ -50,9 +53,8 @@ export const useBarcodeScanner = (
       return;
     }
     
-    // Debug logging
-    const isDebugMode = localStorage.getItem('debug-mode') === 'true';
-    if (isDebugMode) secureLogger.debug('Barcode scanner keydown', { key: event.key, keyCode: event.keyCode });
+    // Debug logging (dev builds only)
+    if (IS_DEV) secureLogger.debug('Barcode scanner keydown', { key: event.key, keyCode: event.keyCode });
     const currentTime = new Date().getTime();
     
     // Check if we're in an input field that should handle its own input
@@ -174,8 +176,8 @@ export const useBarcodeScanner = (
   // Set up reset timeout
   useEffect(() => {
     if (buffer.length > 0) {
-      // Only log in debug mode
-      if (localStorage.getItem('debug-mode') === 'true') {
+      // Only log in debug mode (dev builds only)
+      if (IS_DEV) {
         secureLogger.debug('Setting reset timeout for buffer', { buffer });
       }
       const timeoutId = setTimeout(() => {
