@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Users, Plus, Edit, Trash2, Search, Eye, 
-  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw, ArrowRightLeft 
+  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw, ArrowRightLeft, Building2
 } from 'lucide-react';
 import { Patient } from '../../../types';
 import { usePatients, useCreatePatient, useUpdatePatient, useDeletePatient } from '../hooks/usePatients';
 import { PatientForm } from './forms/PatientForm';
 import PatientTransferModal from './PatientTransferModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { getTenantsForSwitching } from '../../../services/admin/tenantService';
 
 /**
  * Patient Management Component
@@ -42,6 +44,22 @@ export const PatientManagement: React.FC = () => {
   
   const navigate = useNavigate();
   
+  // Fetch all tenants for the tenant filter (super admin cross-tenant view)
+  const { data: tenantsData } = useQuery({
+    queryKey: ['tenants-for-patient-filter'],
+    queryFn: async () => {
+      const { data } = await getTenantsForSwitching();
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Build id → tenant lookup map
+  const tenantMap = useMemo(() => {
+    if (!tenantsData) return {} as Record<string, { name: string; tenant_type?: string }>;
+    return Object.fromEntries(tenantsData.map(t => [t.id, t])) as Record<string, { name: string; tenant_type?: string }>;
+  }, [tenantsData]);
+
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -49,9 +67,43 @@ export const PatientManagement: React.FC = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [patientToTransfer, setPatientToTransfer] = useState<Patient | null>(null);
   const [filterCondition, setFilterCondition] = useState<string>('all');
+  const [filterTenant, setFilterTenant] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'room' | 'admission' | 'condition'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Unique tenants present in the current patient list
+  const tenantOptions = useMemo(() => {
+    const ids = [...new Set((patients || []).map(p => p.tenant_id).filter(Boolean))] as string[];
+    return ids
+      .map(id => ({
+        id,
+        name: tenantMap[id]?.name || id,
+        type: tenantMap[id]?.tenant_type,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [patients, tenantMap]);
+
+  const getTenantBadgeClass = (tenantType?: string) => {
+    switch (tenantType) {
+      case 'simulation_template': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+      case 'simulation_active':   return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+      case 'program':             return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
+      case 'institution':         return 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300';
+      default:                    return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+    }
+  };
+
+  const getTenantTypeLabel = (tenantType?: string) => {
+    switch (tenantType) {
+      case 'simulation_template': return 'Template';
+      case 'simulation_active':   return 'Active Sim';
+      case 'program':             return 'Program';
+      case 'institution':         return 'Institution';
+      case 'production':          return 'Production';
+      default:                    return tenantType || 'Unknown';
+    }
+  };
 
   /**
    * Filter and search patients based on current criteria
@@ -69,7 +121,10 @@ export const PatientManagement: React.FC = () => {
     // Condition filter
     const matchesCondition = filterCondition === 'all' || patient.condition === filterCondition;
 
-    return matchesSearch && matchesCondition;
+    // Tenant filter
+    const matchesTenant = filterTenant === 'all' || patient.tenant_id === filterTenant;
+
+    return matchesSearch && matchesCondition && matchesTenant;
   }).sort((a, b) => {
     // Sorting logic - safely handle undefined properties
     let aValue: string | number;
@@ -390,6 +445,40 @@ export const PatientManagement: React.FC = () => {
           </div>
         </div>
 
+        {/* Tenant Filter Chips (visible when patients span multiple tenants) */}
+        {tenantOptions.length > 1 && (
+          <div className="mt-4 flex flex-wrap gap-2 items-center">
+            <Building2 className="h-4 w-4 text-gray-400 shrink-0" />
+            <button
+              onClick={() => setFilterTenant('all')}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                filterTenant === 'all'
+                  ? 'bg-gray-800 text-white border-gray-800 dark:bg-gray-200 dark:text-gray-900 dark:border-gray-200'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
+              }`}
+            >
+              All tenants ({patients.length})
+            </button>
+            {tenantOptions.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setFilterTenant(t.id)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  filterTenant === t.id
+                    ? getTenantBadgeClass(t.type) + ' border-transparent ring-2 ring-offset-1 ring-current'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
+                }`}
+              >
+                {t.name}
+                <span className="ml-1 opacity-60">[{getTenantTypeLabel(t.type)}]</span>
+                <span className="ml-1 font-bold">
+                  {(patients || []).filter(p => p.tenant_id === t.id).length}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Results Summary */}
         <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <span>
@@ -455,6 +544,11 @@ export const PatientManagement: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Nurse
                   </th>
+                  {tenantOptions.length > 1 && (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Tenant
+                    </th>
+                  )}
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
@@ -505,6 +599,24 @@ export const PatientManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {patient.assigned_nurse || <span className="text-gray-400 dark:text-gray-500 italic">No nurse assigned</span>}
                     </td>
+                    {tenantOptions.length > 1 && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {patient.tenant_id && tenantMap[patient.tenant_id] ? (
+                          <div>
+                            <div className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-tight truncate max-w-[140px]" title={tenantMap[patient.tenant_id].name}>
+                              {tenantMap[patient.tenant_id].name}
+                            </div>
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium mt-0.5 ${getTenantBadgeClass(tenantMap[patient.tenant_id].tenant_type)}`}>
+                              {getTenantTypeLabel(tenantMap[patient.tenant_id].tenant_type)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500 text-xs italic">
+                            {patient.tenant_id ? patient.tenant_id.slice(0, 8) + '…' : 'Unknown'}
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
