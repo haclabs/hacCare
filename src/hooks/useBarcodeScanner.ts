@@ -83,13 +83,13 @@ export const useBarcodeScanner = (
     
     // Allow normal input behavior for barcode-scanner-input class
     if (isInputField && !isBarcodeInput) {
-      if (isDebugMode) secureLogger.debug('Ignoring keydown in standard input element');
+      if (IS_DEV) secureLogger.debug('Ignoring keydown in standard input element');
       return;
     }
     
     // For barcode input fields, we want to allow normal typing but still capture Enter
     if (isBarcodeInput && event.key !== 'Enter') {
-      if (isDebugMode) secureLogger.debug('Allowing typing in barcode input field');
+      if (IS_DEV) secureLogger.debug('Allowing typing in barcode input field');
       return;
     }
 
@@ -98,7 +98,7 @@ export const useBarcodeScanner = (
       (currentTime - lastKeyTime < options.maxInputInterval && buffer.length > 0) || 
       buffer.length === 0;
 
-    if (isDebugMode) {
+    if (IS_DEV) {
       secureLogger.debug('Barcode scanner timing', {
         currentTime,
         lastKeyTime,
@@ -114,14 +114,14 @@ export const useBarcodeScanner = (
 
     // If it's not likely from a scanner, reset
     if (!isLikelyBarcodeScanner && buffer.length > 0) {
-      if (isDebugMode) secureLogger.debug('Not from scanner, clearing buffer');
+      if (IS_DEV) secureLogger.debug('Not from scanner, clearing buffer');
       clearBuffer();
       return; 
     }
 
     // Start scanning mode if not already started
     if (!isScanning) {
-      if (isDebugMode) secureLogger.debug('Starting scanning mode');
+      if (IS_DEV) secureLogger.debug('Starting scanning mode');
       setIsScanning(true);
     }
 
@@ -156,7 +156,7 @@ export const useBarcodeScanner = (
     } else if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
       // Only add printable characters to the buffer
       // Exclude any key combinations that might trigger browser shortcuts
-      if (isDebugMode) secureLogger.debug('Adding character to buffer', { key: event.key });
+      if (IS_DEV) secureLogger.debug('Adding character to buffer', { key: event.key });
       setBuffer(prev => prev + event.key);
     }
   },

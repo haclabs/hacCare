@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.4"
   }
   graphql_public: {
     Tables: {
@@ -435,9 +435,14 @@ export type Database = {
           initial_xray_confirmed: boolean | null
           inserted_by: string | null
           location_id: string
+          ng_attached_to: string | null
+          ng_external_length_mm: number | null
+          ng_residual_volume_ml: number | null
+          ng_securement: string | null
           notes: string | null
           number_of_sutures_placed: number | null
           orientation: Database["public"]["Enums"]["orientation_enum"][] | null
+          ostomy_construction: string | null
           patient_id: string
           patient_tolerance: string | null
           placed_pre_arrival: string | null
@@ -452,6 +457,7 @@ export type Database = {
           securement_method: string[] | null
           site_location: string | null
           site_side: string | null
+          stoma_side: string | null
           tenant_id: string
           tube_number: number | null
           tube_size_fr: string | null
@@ -469,9 +475,14 @@ export type Database = {
           initial_xray_confirmed?: boolean | null
           inserted_by?: string | null
           location_id: string
+          ng_attached_to?: string | null
+          ng_external_length_mm?: number | null
+          ng_residual_volume_ml?: number | null
+          ng_securement?: string | null
           notes?: string | null
           number_of_sutures_placed?: number | null
           orientation?: Database["public"]["Enums"]["orientation_enum"][] | null
+          ostomy_construction?: string | null
           patient_id: string
           patient_tolerance?: string | null
           placed_pre_arrival?: string | null
@@ -486,6 +497,7 @@ export type Database = {
           securement_method?: string[] | null
           site_location?: string | null
           site_side?: string | null
+          stoma_side?: string | null
           tenant_id: string
           tube_number?: number | null
           tube_size_fr?: string | null
@@ -503,9 +515,14 @@ export type Database = {
           initial_xray_confirmed?: boolean | null
           inserted_by?: string | null
           location_id?: string
+          ng_attached_to?: string | null
+          ng_external_length_mm?: number | null
+          ng_residual_volume_ml?: number | null
+          ng_securement?: string | null
           notes?: string | null
           number_of_sutures_placed?: number | null
           orientation?: Database["public"]["Enums"]["orientation_enum"][] | null
+          ostomy_construction?: string | null
           patient_id?: string
           patient_tolerance?: string | null
           placed_pre_arrival?: string | null
@@ -520,6 +537,7 @@ export type Database = {
           securement_method?: string[] | null
           site_location?: string | null
           site_side?: string | null
+          stoma_side?: string | null
           tenant_id?: string
           tube_number?: number | null
           tube_size_fr?: string | null
@@ -790,6 +808,7 @@ export type Database = {
           created_by_name: string
           created_by_role: string
           id: string
+          nursing_notes: string | null
           patient_id: string
           priority: string
           recommendations: string
@@ -808,6 +827,7 @@ export type Database = {
           created_by_name: string
           created_by_role: string
           id?: string
+          nursing_notes?: string | null
           patient_id: string
           priority: string
           recommendations: string
@@ -826,6 +846,7 @@ export type Database = {
           created_by_name?: string
           created_by_role?: string
           id?: string
+          nursing_notes?: string | null
           patient_id?: string
           priority?: string
           recommendations?: string
@@ -1267,6 +1288,7 @@ export type Database = {
         Row: {
           administered_by: string
           administered_by_id: string | null
+          administered_dose: string | null
           barcode_scanned: boolean | null
           created_at: string | null
           dosage: string | null
@@ -1289,6 +1311,7 @@ export type Database = {
         Insert: {
           administered_by: string
           administered_by_id?: string | null
+          administered_dose?: string | null
           barcode_scanned?: boolean | null
           created_at?: string | null
           dosage?: string | null
@@ -1311,6 +1334,7 @@ export type Database = {
         Update: {
           administered_by?: string
           administered_by_id?: string | null
+          administered_dose?: string | null
           barcode_scanned?: boolean | null
           created_at?: string | null
           dosage?: string | null
@@ -1622,6 +1646,116 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_bbit_entries: {
+        Row: {
+          basal_dose: number | null
+          basal_held_other: string | null
+          basal_held_reason: string | null
+          basal_name: string | null
+          basal_status: string | null
+          bolus_dose: number | null
+          bolus_meal: string | null
+          bolus_not_given_reason: string | null
+          bolus_status: string | null
+          carb_intake: string | null
+          correction_dose: number | null
+          correction_status: string | null
+          correction_suggested_dose: number | null
+          created_at: string | null
+          glucose_value: number | null
+          hypo_dextrose_tabs: boolean | null
+          hypo_glucagon: boolean | null
+          hypo_iv_dextrose: boolean | null
+          hypo_juice: boolean | null
+          hypo_other: string | null
+          hypo_recheck_completed: boolean | null
+          id: string
+          note_hyperglycemia_symptoms: boolean | null
+          note_insulin_delay: boolean | null
+          note_other: string | null
+          note_symptomatic_hypo: boolean | null
+          patient_id: string
+          recorded_at: string
+          student_name: string | null
+          tenant_id: string
+          time_label: string | null
+        }
+        Insert: {
+          basal_dose?: number | null
+          basal_held_other?: string | null
+          basal_held_reason?: string | null
+          basal_name?: string | null
+          basal_status?: string | null
+          bolus_dose?: number | null
+          bolus_meal?: string | null
+          bolus_not_given_reason?: string | null
+          bolus_status?: string | null
+          carb_intake?: string | null
+          correction_dose?: number | null
+          correction_status?: string | null
+          correction_suggested_dose?: number | null
+          created_at?: string | null
+          glucose_value?: number | null
+          hypo_dextrose_tabs?: boolean | null
+          hypo_glucagon?: boolean | null
+          hypo_iv_dextrose?: boolean | null
+          hypo_juice?: boolean | null
+          hypo_other?: string | null
+          hypo_recheck_completed?: boolean | null
+          id?: string
+          note_hyperglycemia_symptoms?: boolean | null
+          note_insulin_delay?: boolean | null
+          note_other?: string | null
+          note_symptomatic_hypo?: boolean | null
+          patient_id: string
+          recorded_at?: string
+          student_name?: string | null
+          tenant_id: string
+          time_label?: string | null
+        }
+        Update: {
+          basal_dose?: number | null
+          basal_held_other?: string | null
+          basal_held_reason?: string | null
+          basal_name?: string | null
+          basal_status?: string | null
+          bolus_dose?: number | null
+          bolus_meal?: string | null
+          bolus_not_given_reason?: string | null
+          bolus_status?: string | null
+          carb_intake?: string | null
+          correction_dose?: number | null
+          correction_status?: string | null
+          correction_suggested_dose?: number | null
+          created_at?: string | null
+          glucose_value?: number | null
+          hypo_dextrose_tabs?: boolean | null
+          hypo_glucagon?: boolean | null
+          hypo_iv_dextrose?: boolean | null
+          hypo_juice?: boolean | null
+          hypo_other?: string | null
+          hypo_recheck_completed?: boolean | null
+          id?: string
+          note_hyperglycemia_symptoms?: boolean | null
+          note_insulin_delay?: boolean | null
+          note_other?: string | null
+          note_symptomatic_hypo?: boolean | null
+          patient_id?: string
+          recorded_at?: string
+          student_name?: string | null
+          tenant_id?: string
+          time_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_bbit_entries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
@@ -1944,6 +2078,202 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      patient_neuro_assessments: {
+        Row: {
+          created_at: string | null
+          gcs_eye: number | null
+          gcs_motor: number | null
+          gcs_verbal: number | null
+          id: string
+          level_of_consciousness: string | null
+          oriented_person: boolean | null
+          oriented_place: boolean | null
+          oriented_time: boolean | null
+          pain_score: number | null
+          patient_id: string
+          pupil_left_reaction: string | null
+          pupil_left_size: number | null
+          pupil_right_reaction: string | null
+          pupil_right_size: number | null
+          pupils_equal: boolean | null
+          recorded_at: string
+          sensation: string | null
+          speech: string | null
+          strength_left_arm: number | null
+          strength_left_leg: number | null
+          strength_right_arm: number | null
+          strength_right_leg: number | null
+          student_name: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          gcs_eye?: number | null
+          gcs_motor?: number | null
+          gcs_verbal?: number | null
+          id?: string
+          level_of_consciousness?: string | null
+          oriented_person?: boolean | null
+          oriented_place?: boolean | null
+          oriented_time?: boolean | null
+          pain_score?: number | null
+          patient_id: string
+          pupil_left_reaction?: string | null
+          pupil_left_size?: number | null
+          pupil_right_reaction?: string | null
+          pupil_right_size?: number | null
+          pupils_equal?: boolean | null
+          recorded_at?: string
+          sensation?: string | null
+          speech?: string | null
+          strength_left_arm?: number | null
+          strength_left_leg?: number | null
+          strength_right_arm?: number | null
+          strength_right_leg?: number | null
+          student_name?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string | null
+          gcs_eye?: number | null
+          gcs_motor?: number | null
+          gcs_verbal?: number | null
+          id?: string
+          level_of_consciousness?: string | null
+          oriented_person?: boolean | null
+          oriented_place?: boolean | null
+          oriented_time?: boolean | null
+          pain_score?: number | null
+          patient_id?: string
+          pupil_left_reaction?: string | null
+          pupil_left_size?: number | null
+          pupil_right_reaction?: string | null
+          pupil_right_size?: number | null
+          pupils_equal?: boolean | null
+          recorded_at?: string
+          sensation?: string | null
+          speech?: string | null
+          strength_left_arm?: number | null
+          strength_left_leg?: number | null
+          strength_right_arm?: number | null
+          strength_right_leg?: number | null
+          student_name?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_neuro_assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_newborn_assessments: {
+        Row: {
+          apgar_10min: number | null
+          apgar_1min: number | null
+          apgar_5min: number | null
+          completed_by: string | null
+          completed_initials: string | null
+          created_at: string | null
+          erythromycin_date: string | null
+          erythromycin_given: boolean | null
+          erythromycin_signature: string | null
+          erythromycin_time: string | null
+          head_circumference_1hr_cm: number | null
+          head_circumference_2hr_cm: number | null
+          head_circumference_cm: number | null
+          id: string
+          length_cm: number | null
+          patient_id: string
+          physical_observations: Json | null
+          recorded_at: string
+          student_name: string | null
+          tenant_id: string
+          time_of_birth: string | null
+          vitamin_k_date: string | null
+          vitamin_k_declined: boolean | null
+          vitamin_k_dose: string | null
+          vitamin_k_given: boolean | null
+          vitamin_k_signature: string | null
+          vitamin_k_site: string | null
+          vitamin_k_time: string | null
+          weight_grams: number | null
+        }
+        Insert: {
+          apgar_10min?: number | null
+          apgar_1min?: number | null
+          apgar_5min?: number | null
+          completed_by?: string | null
+          completed_initials?: string | null
+          created_at?: string | null
+          erythromycin_date?: string | null
+          erythromycin_given?: boolean | null
+          erythromycin_signature?: string | null
+          erythromycin_time?: string | null
+          head_circumference_1hr_cm?: number | null
+          head_circumference_2hr_cm?: number | null
+          head_circumference_cm?: number | null
+          id?: string
+          length_cm?: number | null
+          patient_id: string
+          physical_observations?: Json | null
+          recorded_at?: string
+          student_name?: string | null
+          tenant_id: string
+          time_of_birth?: string | null
+          vitamin_k_date?: string | null
+          vitamin_k_declined?: boolean | null
+          vitamin_k_dose?: string | null
+          vitamin_k_given?: boolean | null
+          vitamin_k_signature?: string | null
+          vitamin_k_site?: string | null
+          vitamin_k_time?: string | null
+          weight_grams?: number | null
+        }
+        Update: {
+          apgar_10min?: number | null
+          apgar_1min?: number | null
+          apgar_5min?: number | null
+          completed_by?: string | null
+          completed_initials?: string | null
+          created_at?: string | null
+          erythromycin_date?: string | null
+          erythromycin_given?: boolean | null
+          erythromycin_signature?: string | null
+          erythromycin_time?: string | null
+          head_circumference_1hr_cm?: number | null
+          head_circumference_2hr_cm?: number | null
+          head_circumference_cm?: number | null
+          id?: string
+          length_cm?: number | null
+          patient_id?: string
+          physical_observations?: Json | null
+          recorded_at?: string
+          student_name?: string | null
+          tenant_id?: string
+          time_of_birth?: string | null
+          vitamin_k_date?: string | null
+          vitamin_k_declined?: boolean | null
+          vitamin_k_dose?: string | null
+          vitamin_k_given?: boolean | null
+          vitamin_k_signature?: string | null
+          vitamin_k_site?: string | null
+          vitamin_k_time?: string | null
+          weight_grams?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_newborn_assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_notes: {
         Row: {
@@ -2919,6 +3249,7 @@ export type Database = {
           created_by: string
           default_duration_minutes: number | null
           description: string | null
+          folder: string | null
           id: string
           name: string
           primary_categories: string[] | null
@@ -2938,6 +3269,7 @@ export type Database = {
           created_by: string
           default_duration_minutes?: number | null
           description?: string | null
+          folder?: string | null
           id?: string
           name: string
           primary_categories?: string[] | null
@@ -2957,6 +3289,7 @@ export type Database = {
           created_by?: string
           default_duration_minutes?: number | null
           description?: string | null
+          folder?: string | null
           id?: string
           name?: string
           primary_categories?: string[] | null
@@ -3853,23 +4186,6 @@ export type Database = {
           },
         ]
       }
-      recent_login_history: {
-        Row: {
-          email: string | null
-          first_name: string | null
-          id: string | null
-          ip_address: unknown
-          last_name: string | null
-          login_rank: number | null
-          login_time: string | null
-          logout_time: string | null
-          status: string | null
-          tenant_name: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
       student_roster_with_profiles: {
         Row: {
           cohort_id: string | null
@@ -4020,55 +4336,12 @@ export type Database = {
         Args: { p_alert_id: string; p_tenant_id: string }
         Returns: Json
       }
-      add_simulation_user: {
-        Args: {
-          p_email: string
-          p_password?: string
-          p_role: string
-          p_simulation_tenant_id: string
-          p_username: string
-        }
-        Returns: string
-      }
-      assign_current_user_to_tenant: {
-        Args: { target_tenant_id: string }
-        Returns: string
-      }
-      assign_user_to_tenant: {
-        Args: { tenant_id_param: string; user_id_param: string }
-        Returns: undefined
-      }
-      assign_users_to_simulation: {
-        Args: { p_role?: string; p_run_id: string; p_user_ids: string[] }
-        Returns: number
-      }
-      authenticate_simulation_user: {
-        Args: {
-          p_password: string
-          p_simulation_tenant_id?: string
-          p_username: string
-        }
-        Returns: {
-          email: string
-          is_simulation_user: boolean
-          role: string
-          simulation_id: string
-          tenant_id: string
-          tenant_name: string
-          user_id: string
-          username: string
-        }[]
-      }
       bulk_assign_students_to_simulation: {
         Args: {
           p_role?: string
           p_simulation_id: string
           p_student_user_ids: string[]
         }
-        Returns: Json
-      }
-      bulk_create_students: {
-        Args: { p_program_id: string; p_students: Json }
         Returns: Json
       }
       calculate_simulation_metrics: {
@@ -4106,44 +4379,6 @@ export type Database = {
         Returns: Json
       }
       confirm_user_email: { Args: { target_user_id: string }; Returns: boolean }
-      create_alert_for_tenant: {
-        Args: {
-          p_alert_type: string
-          p_expires_at?: string
-          p_message: string
-          p_patient_id: string
-          p_patient_name: string
-          p_priority?: string
-          p_tenant_id: string
-        }
-        Returns: Json
-      }
-      create_alert_for_tenant_v2: {
-        Args: {
-          p_alert_type: string
-          p_expires_at?: string
-          p_message: string
-          p_patient_id: string
-          p_patient_name?: string
-          p_priority?: string
-          p_tenant_id: string
-        }
-        Returns: Json
-      }
-      create_confirmed_user: {
-        Args: {
-          first_name?: string
-          last_name?: string
-          user_email: string
-          user_password: string
-          user_role?: string
-        }
-        Returns: {
-          email: string
-          message: string
-          user_id: string
-        }[]
-      }
       create_medication_super_admin: {
         Args: {
           p_admin_time?: string
@@ -4177,83 +4412,9 @@ export type Database = {
           tenant_id: string
         }[]
       }
-      create_patient_alert_v2: {
-        Args: {
-          p_alert_type: string
-          p_expires_at?: string
-          p_message?: string
-          p_patient_id: string
-          p_patient_name?: string
-          p_priority?: string
-          p_tenant_id: string
-        }
-        Returns: string
-      }
-      create_patient_alert_v3: {
-        Args: {
-          p_alert_type: string
-          p_expires_at?: string
-          p_message?: string
-          p_patient_id: string
-          p_patient_name?: string
-          p_priority?: string
-          p_tenant_id: string
-        }
-        Returns: string
-      }
-      create_patient_medication: {
-        Args: {
-          p_admin_time?: string
-          p_admin_times?: string[]
-          p_category?: string
-          p_dosage: string
-          p_end_date?: string
-          p_frequency: string
-          p_name: string
-          p_patient_id: string
-          p_prescribed_by?: string
-          p_route?: string
-          p_start_date?: string
-          p_status?: string
-        }
-        Returns: string
-      }
-      create_patient_note: {
-        Args: {
-          p_content: string
-          p_created_by?: string
-          p_note_type: string
-          p_patient_id: string
-          p_priority?: string
-        }
-        Returns: string
-      }
-      create_patient_vitals: {
-        Args: {
-          p_blood_pressure_diastolic?: number
-          p_blood_pressure_systolic?: number
-          p_heart_rate?: number
-          p_oxygen_delivery?: string
-          p_oxygen_saturation?: number
-          p_patient_id: string
-          p_recorded_at?: string
-          p_respiratory_rate?: number
-          p_temperature?: number
-        }
-        Returns: string
-      }
       create_program_tenant: {
         Args: { p_parent_tenant_id: string; p_program_id: string }
         Returns: Json
-      }
-      create_simulation_snapshot: {
-        Args: {
-          p_description?: string
-          p_name: string
-          p_template_id: string
-          p_user_id: string
-        }
-        Returns: string
       }
       create_simulation_subtenant: {
         Args: {
@@ -4320,24 +4481,12 @@ export type Database = {
         Args: { p_medication_id: string }
         Returns: boolean
       }
-      delete_patient_template: {
-        Args: { p_patient_template_id: string }
-        Returns: boolean
-      }
-      delete_scenario_template: {
-        Args: { p_scenario_template_id: string }
-        Returns: boolean
-      }
       delete_simulation: {
         Args: { p_archive_to_history?: boolean; p_simulation_id: string }
         Returns: Json
       }
       delete_simulation_history: {
         Args: { p_history_id: string }
-        Returns: Json
-      }
-      delete_simulation_template: {
-        Args: { p_template_id: string }
         Returns: Json
       }
       delete_tenant_secure: {
@@ -4423,7 +4572,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      fix_user_role_mismatches: { Args: never; Returns: number }
       generate_simulation_id_sets: {
         Args: {
           p_session_count: number
@@ -4461,7 +4609,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_current_user_tenant_id: { Args: never; Returns: string }
       get_secure_alerts: {
         Args: never
         Returns: {
@@ -4521,14 +4668,6 @@ export type Database = {
           template_name: string
         }[]
       }
-      get_user_active_tenants: {
-        Args: { user_uuid?: string }
-        Returns: {
-          tenant_id: string
-          tenant_name: string
-          user_role: string
-        }[]
-      }
       get_user_current_tenant: {
         Args: { target_user_id: string }
         Returns: {
@@ -4555,21 +4694,6 @@ export type Database = {
         Returns: Json
       }
       get_user_simulation_tenant_access: { Args: never; Returns: string }
-      get_user_tenant:
-        | { Args: never; Returns: string }
-        | { Args: { user_uuid: string }; Returns: string }
-      get_user_tenant_assignments: {
-        Args: { target_user_id: string }
-        Returns: {
-          is_active: boolean
-          role: string
-          tenant_id: string
-          tenant_name: string
-        }[]
-      }
-      get_user_tenant_direct: { Args: { user_uuid?: string }; Returns: string }
-      get_user_tenant_id: { Args: never; Returns: string }
-      get_user_tenant_ids: { Args: { user_uuid?: string }; Returns: string[] }
       instantiate_simulation_patients: {
         Args: { p_scenario_template_id: string; p_simulation_id: string }
         Returns: number
@@ -4602,15 +4726,6 @@ export type Database = {
           tenant_id: string
         }[]
       }
-      launch_simulation_instance: {
-        Args: {
-          p_name: string
-          p_snapshot_id: string
-          p_template_id: string
-          p_user_id: string
-        }
-        Returns: string
-      }
       mark_expired_backups: { Args: never; Returns: number }
       move_patient_to_tenant:
         | {
@@ -4630,15 +4745,6 @@ export type Database = {
         Args: { p_new_tenant_id: string; p_role?: string; p_user_id: string }
         Returns: Json
       }
-      record_simulation_activity: {
-        Args: {
-          p_action_data: Json
-          p_action_type: string
-          p_simulation_id: string
-          p_student_id: string
-        }
-        Returns: string
-      }
       refresh_user_tenant_cache: { Args: never; Returns: undefined }
       remove_user_from_tenant: {
         Args: { tenant_uuid: string; user_uuid: string }
@@ -4648,14 +4754,6 @@ export type Database = {
       reset_simulation_for_next_session: {
         Args: { p_simulation_id: string }
         Returns: Json
-      }
-      reset_simulation_for_next_session_v2: {
-        Args: { p_simulation_id: string }
-        Returns: Json
-      }
-      reset_simulation_instance: {
-        Args: { p_instance_id: string; p_user_id: string }
-        Returns: boolean
       }
       reset_simulation_with_template_updates: {
         Args: { p_simulation_id: string }
@@ -4670,10 +4768,6 @@ export type Database = {
           p_snapshot: Json
           p_tenant_id: string
         }
-        Returns: Json
-      }
-      restore_snapshot_to_tenant_v2: {
-        Args: { p_snapshot: Json; p_tenant_id: string }
         Returns: Json
       }
       restore_template_version: {
@@ -4803,6 +4897,8 @@ export type Database = {
         | "iv-port"
         | "other"
         | "feeding-tube"
+        | "ostomy"
+        | "nasogastric"
       lab_category: "chemistry" | "abg" | "hematology"
       lab_flag:
         | "normal"
@@ -5001,6 +5097,8 @@ export const Constants = {
         "iv-port",
         "other",
         "feeding-tube",
+        "ostomy",
+        "nasogastric",
       ],
       lab_category: ["chemistry", "abg", "hematology"],
       lab_flag: [

@@ -223,7 +223,7 @@ export const LandingPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               {[
                 { value: '5', label: 'Active Programs' },
-                { value: '100+', label: 'Simulations Run' },
+                { value: '1,000+', label: 'Simulations Run' },
                 { value: '5 Rights', label: 'BCMA Verification' },
                 { value: 'Canadian', label: 'Clinical Standards' },
               ].map(stat => (
