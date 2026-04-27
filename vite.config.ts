@@ -38,11 +38,7 @@ export default defineConfig({
         manualChunks: (id) => {
           // Vendor libraries - separate chunk for better caching
           if (id.includes('node_modules')) {
-            // React core - most stable, cache-friendly
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            // Supabase - frequently updated
+            // Supabase - frequently updated, own chunk
             if (id.includes('@supabase') || id.includes('supabase-js')) {
               return 'vendor-supabase';
             }
@@ -54,37 +50,30 @@ export default defineConfig({
             if (id.includes('@tanstack')) {
               return 'vendor-query';
             }
-            // UI utilities and icons
-            if (id.includes('lucide-react') || id.includes('date-fns') || id.includes('dompurify')) {
-              return 'vendor-ui';
-            }
-            // Everything else
-            return 'vendor-misc';
+            // Everything else in one stable vendor chunk.
+            // Keeping react, react-dom, react-router, and their transitive deps
+            // (react-big-calendar, prop-types, @restart/*, cookie, uncontrollable, etc.)
+            // together prevents circular chunk warnings from cross-importing packages.
+            return 'vendor-libs';
           }
-          
-          // Application code chunking by feature
-          // Simulation system - large, separate module
-          if (id.includes('/features/simulation/')) {
-            return 'feature-simulation';
+
+          // Shared cross-feature components - must be declared before feature-specific rules.
+          // BarcodeGenerator is statically imported by patients AND simulation AND admin,
+          // so it cannot belong to any single feature chunk without causing a circular.
+          if (id.includes('/features/patients/components/BarcodeGenerator')) {
+            return 'feature-shared';
           }
-          // Admin features - separate for role-based access
-          if (id.includes('/features/admin/')) {
-            return 'feature-admin';
-          }
-          // Clinical features (vitals, medications, etc.)
-          if (id.includes('/features/clinical/')) {
-            return 'feature-clinical';
-          }
-          // Patient management
-          if (id.includes('/features/patients/')) {
-            return 'feature-patients';
-          }
-          // hacMap body marking system
-          if (id.includes('/features/hacmap/')) {
-            return 'feature-hacmap';
-          }
-          // Settings and documentation
-          if (id.includes('/features/settings/') || id.includes('/components/Documentation/') || id.includes('/components/Changelog/')) {
+
+          // Application code: do NOT manually chunk feature folders.
+          // These features have too many cross-imports to be safely split without
+          // circular chunk warnings. React.lazy route boundaries in App.tsx provide
+          // the right code-splitting points automatically.
+          // Settings/docs are genuinely self-contained and safe to keep separate.
+          if (
+            id.includes('/features/settings/') ||
+            id.includes('/components/Documentation/') ||
+            id.includes('/components/Changelog/')
+          ) {
             return 'feature-settings-docs';
           }
         },

@@ -16,8 +16,8 @@
     <link rel="preload" as="image" href="/images/bcma.webp" type="image/webp" fetchpriority="high" />
     
     <!-- Primary Meta Tags -->
-    <title>hacCare - Simulated EMR & Training Environment for Healthcare Education</title>
-    <meta name="title" content="hacCare - Simulated EMR & Training Environment for Healthcare Education" />
+    <title>hacCare | Simulated EMR & Training Environment for Healthcare Education</title>
+    <meta name="title" content="hacCare | Simulated EMR & Training Environment for Healthcare Education" />
     <meta name="description" content="A comprehensive platform built to prepare future healthcare providers. Practice with realistic electronic medical records, BCMA, and clinical workflows in a safe, simulated environment." />
     <meta name="keywords" content="healthcare education, EMR training, medical simulation, BCMA training, electronic medical records, nursing education, clinical training software, medication administration, healthcare simulation, barcode medication administration, electronic health records training, nursing simulation software, medical student training, clinical documentation practice" />
     <meta name="author" content="hacCare - A halabs product" />
@@ -28,14 +28,17 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://haccare.app/" />
-    <meta property="og:title" content="hacCare - Simulated EMR & Training Environment for Healthcare Education" />
+    <meta property="og:title" content="hacCare | Simulated EMR & Training Environment for Healthcare Education" />
     <meta property="og:description" content="A comprehensive platform built to prepare future healthcare providers. Practice with realistic electronic medical records, BCMA, and clinical workflows in a safe, simulated environment." />
     <meta property="og:image" content="https://haccare.app/images/barcode-scanning.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://haccare.app/" />
-    <meta property="twitter:title" content="hacCare - Simulated EMR & Training Environment for Healthcare Education" />
+    <meta property="twitter:title" content="hacCare | Simulated EMR & Training Environment for Healthcare Education" />
     <meta property="twitter:description" content="A comprehensive platform built to prepare future healthcare providers. Practice with realistic electronic medical records, BCMA, and clinical workflows in a safe, simulated environment." />
     <meta property="twitter:image" content="https://haccare.app/images/barcode-scanning.jpg" />
     
@@ -93,9 +96,59 @@
           "applicationCategory": "EducationalApplication",
           "operatingSystem": "Web",
           "url": "https://haccare.app",
-          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CAD" },
+          "offers": {
+            "@type": "Offer",
+            "description": "Licensed to healthcare education institutions. Contact us for pricing.",
+            "availability": "https://schema.org/OnlineOnly"
+          },
           "description": "High-fidelity simulated EMR platform for healthcare education. BCMA scanning, clinical charting, simulation management, and debrief reporting for Canadian nursing programs.",
           "publisher": { "@id": "https://haccare.app/#organization" }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://haccare.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is hacCare?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "hacCare is a high-fidelity simulated Electronic Medical Records (EMR) platform built for healthcare education. It allows nursing students to practice real clinical workflows — including BCMA medication scanning, vital signs charting, lab orders, and shift handover — in a safe, instructor-controlled simulation environment."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which nursing programs use hacCare?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "hacCare is used by Canadian post-secondary healthcare programs including Practical Nursing (PN), Bachelor of Nursing (BN/BNAD), and Simulation Hub programs. It is currently deployed at Lethbridge Polytechnic in Alberta, Canada."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is hacCare HIPAA and privacy compliant?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. hacCare uses multi-tenant architecture with strict Row-Level Security (RLS) policies to isolate all data between institutions. All patient data in simulations is fictional and no real patient information is ever stored. The platform is designed to meet HIPAA and Canadian PIPEDA privacy requirements."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is BCMA training and why does it matter?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "BCMA (Barcode Medication Administration) is a patient safety system that requires nurses to scan both the patient wristband and medication barcode before administering drugs, verifying the Five Rights of medication administration. hacCare includes a full BCMA simulation with real barcode scanning so students can practice this critical safety skill before entering clinical placements."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do instructors manage simulations in hacCare?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Instructors create reusable simulation templates with pre-configured patient scenarios, medications, lab orders, and clinical data. They launch simulations for student groups with one click, monitor progress in real time, and generate automated debrief reports showing each student's clinical documentation activity after the session ends."
+              }
+            }
+          ]
         }
       ]
     }

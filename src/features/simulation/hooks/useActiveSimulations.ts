@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import type { PatientListComparison } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { getStudentActivitiesBySimulation } from '../../../services/simulation/studentActivityService';
 import type { StudentActivity } from '../../../services/simulation/studentActivityService';
 
 export function useActiveSimulations() {
@@ -233,7 +234,6 @@ export function useActiveSimulations() {
       }
 
       secureLogger.debug('📊 Generating student activity report...');
-      const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
       const activities = await getStudentActivitiesBySimulation(id);
       secureLogger.debug('✅ Student activities captured:', activities.length, 'students');
 
@@ -345,7 +345,6 @@ export function useActiveSimulations() {
 
       secureLogger.debug(`✅ Backfill complete — ${namedCount ?? 0} named vitals now visible`);
 
-      const { getStudentActivitiesBySimulation } = await import('../../../services/simulation/studentActivityService');
       // Use early startTimeOverride to bypass starts_at = null time filter
       const activities = await getStudentActivitiesBySimulation(simulationId, '1970-01-01T00:00:00Z');
       const result = await completeSimulation(simulationId, activities, instructorName);
