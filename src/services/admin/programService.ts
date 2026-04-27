@@ -70,19 +70,6 @@ export interface StudentRoster {
   };
 }
 
-export interface BulkCreateStudentsResult {
-  success: boolean;
-  imported_count: number;
-  error_count: number;
-  errors: Array<{
-    email: string;
-    student_number: string;
-    error: string;
-  }>;
-  message?: string;
-  error?: string;
-}
-
 export interface ScheduledSimulation {
   id: string;
   template_id: string;
@@ -591,32 +578,6 @@ export async function addStudentToRoster(
     return { data: data as StudentRoster, error: null };
   } catch (error) {
     secureLogger.error('Error adding student to roster:', error);
-    return { data: null, error };
-  }
-}
-
-/**
- * Bulk create students from CSV
- */
-export async function bulkCreateStudents(
-  programId: string,
-  students: Array<{
-    first_name: string;
-    last_name: string;
-    email: string;
-    student_number: string;
-  }>
-): Promise<{ data: BulkCreateStudentsResult | null; error: any }> {
-  try {
-    const { data, error } = await supabase.rpc('bulk_create_students', {
-      p_program_id: programId,
-      p_students: students
-    });
-
-    if (error) throw error;
-    return { data: data as BulkCreateStudentsResult, error: null };
-  } catch (error) {
-    secureLogger.error('Error bulk creating students:', error);
     return { data: null, error };
   }
 }
