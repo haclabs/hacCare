@@ -191,6 +191,12 @@ class SystemLogger {
         return;
       }
 
+      // Skip DB write when unauthenticated (e.g. login page) — RLS blocks
+      // anonymous inserts and would produce a 401 console error.
+      if (!this.user_id) {
+        return;
+      }
+
       // Write to database
       const { error } = await supabase
         .from('system_logs')

@@ -24,6 +24,29 @@ Allow: /
 User-agent: Slurp
 Allow: /
 
+# Allow AI search engine crawlers so hacCare appears in AI-generated answers
+# (Perplexity, ChatGPT, Google AI Overviews, Claude, Common Crawl)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
 # Block bad bots
 User-agent: AhrefsBot
 Disallow: /
