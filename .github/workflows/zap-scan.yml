@@ -1,0 +1,100 @@
+name: OWASP ZAP Security Scan
+
+# Run manually via GitHub Actions UI (Actions → OWASP ZAP Security Scan → Run workflow)
+# Only runs against a live URL — do NOT point at production without prior notice to users.
+# Target the Netlify preview/staging URL or the production URL for formal assessments.
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Target URL to scan (e.g. https://staging.haccare.app or https://haccare.app)'
+        required: true
+        default: 'https://haccare.app'
+      scan_type:
+        description: 'Scan type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full      # Full active scan — use for formal security assessments
+          - baseline  # Passive crawl only — safe for production, less thorough
+
+# Minimal permissions — read-only code access + ability to open issues for findings
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  zap-scan:
+    name: OWASP ZAP ${{ github.event.inputs.scan_type == 'full' && 'Full Active Scan' || 'Baseline Passive Scan' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github
+
+      # -----------------------------------------------------------------------
+      # BASELINE SCAN (passive only — safe to run against production)
+      # Checks for missing security headers, information disclosure, etc.
+      # -----------------------------------------------------------------------
+      - name: ZAP Baseline Scan
+        if: github.event.inputs.scan_type == 'baseline'
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: ${{ github.event.inputs.target_url }}
+          # Rules file lets you tune false positives over time
+          rules_file_name: '.github/zap-rules.tsv'
+          # Generate all report formats — HTML is most readable for HECVAT
+          cmd_options: '-a -j -r zap-report.html -w zap-report.md -J zap-report.json'
+          # Open a GitHub issue summarising findings
+          issue_title: 'ZAP Baseline Scan — ${{ github.event.inputs.target_url }}'
+          fail_action: false  # Don't fail the workflow — we want the report regardless
+
+      # -----------------------------------------------------------------------
+      # FULL SCAN (active — use for formal assessment reports)
+      # Actively probes the app; do NOT run against production without planning.
+      # -----------------------------------------------------------------------
+      - name: ZAP Full Scan
+        if: github.event.inputs.scan_type == 'full'
+        uses: zaproxy/action-full-scan@v0.13.0
+        with:
+          target: ${{ github.event.inputs.target_url }}
+          rules_file_name: '.github/zap-rules.tsv'
+          cmd_options: '-a -j -r zap-report.html -w zap-report.md -J zap-report.json'
+          issue_title: 'ZAP Full Scan — ${{ github.event.inputs.target_url }}'
+          fail_action: false
+
+      # -----------------------------------------------------------------------
+      # Upload all report formats as downloadable artifacts
+      # Retained for 90 days — download from the Actions run summary page
+      # -----------------------------------------------------------------------
+      - name: Upload ZAP reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-security-report-${{ github.run_number }}
+          path: |
+            zap-report.html
+            zap-report.md
+            zap-report.json
+            report_html.html
+            report_md.md
+            report_json.json
+          retention-days: 90
+
+      - name: Report summary
+        if: always()
+        run: |
+          echo "## ZAP Scan Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ github.event.inputs.target_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan type:** ${{ github.event.inputs.scan_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Reports (HTML, JSON, Markdown) are available as artifacts for 90 days." >> $GITHUB_STEP_SUMMARY
+          echo "Download from: Actions → this run → Artifacts section" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "For HECVAT: attach \`zap-report.html\` to your security assessment package." >> $GITHUB_STEP_SUMMARY
