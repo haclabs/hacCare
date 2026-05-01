@@ -7,6 +7,7 @@ Comprehensive security documentation including RLS policies, hardening, and audi
 - **[Security Audit Analysis](SECURITY_AUDIT_ANALYSIS.md)** - Complete 156-policy audit (14K)
 - **[Security Hardening Risk Analysis](SECURITY_HARDENING_RISK_ANALYSIS.md)** - Risk assessment (20K)
 - **[Security Hardening Complete](SECURITY_HARDENING_COMPLETE.md)** - Implementation summary (8.4K)
+- **[Incident Response Plan](INCIDENT_RESPONSE_PLAN.md)** - IRP with breach notification timelines (PIPEDA/FERPA)
 
 ## 🎯 Key Documents
 
