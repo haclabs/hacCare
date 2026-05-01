@@ -9,6 +9,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { LoginForm } from './components/Auth/LoginForm';
+import { PrivacyPage } from './components/Auth/PrivacyPage';
 import { LandingPage } from './components/LandingPage/LandingPage';
 import { queryClient } from './lib/api/queryClient';
 import { initializeBarcodeScanner } from './lib/barcode/barcodeScanner';
@@ -55,6 +56,7 @@ createRoot(document.getElementById('root')!).render(
               {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginForm />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               
               {/* Protected application routes */}
               <Route path="/app/*" element={
