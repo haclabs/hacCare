@@ -1,68 +1,16 @@
-# ZAP Rules File — hacCare
-# Format: rule_id	IGNORE/WARN/FAIL	optional reason
-#
-# Rules set to IGNORE are suppressed from reports entirely.
-# Rules set to WARN appear in the report but don't affect pass/fail.
-# Rules set to FAIL will fail the workflow if triggered.
-#
-# Rule IDs: https://www.zaproxy.org/docs/alerts/
-#
-# -----------------------------------------------------------------------
-# IGNORED — Known false positives for Supabase SPA architecture
-# -----------------------------------------------------------------------
-
-# "Absence of Anti-CSRF Tokens" — not applicable; app uses JWT Bearer tokens, not cookies
-10202	IGNORE	JWT-based auth; no CSRF tokens needed
-
-# "Cookie Without SameSite Attribute" — Supabase Auth sets its own cookies; not in our control
-10054	IGNORE	Supabase Auth internal cookies
-
-# "Cookie Without Secure Flag" — same as above for Supabase session cookies on localhost/preview
-10011	IGNORE	Supabase Auth internal cookies
-
-# "Timestamp Disclosure" — Vite build timestamps in asset filenames are intentional (cache-busting)
-10096	IGNORE	Intentional Vite content-hash timestamps
-
-# "Information Disclosure - Suspicious Comments" — Vite bundles React dev comments in preview builds
-10027	IGNORE	Vite/React build artifacts
-
-# "Re-examine Cache-control Directives" — /assets/* is intentionally cached aggressively (immutable)
+10202	IGNORE	JWT-based auth - no CSRF tokens needed; app uses Bearer tokens not cookies
+10054	IGNORE	Supabase Auth internal cookies - not in application control
+10011	IGNORE	Supabase Auth internal cookies - not in application control
+10096	IGNORE	Intentional Vite content-hash timestamps for cache-busting
+10027	IGNORE	Vite/React build artifacts - not user-controlled input
 10015	IGNORE	Intentional long-term caching for content-hashed Vite assets
-
-# "Modern Web Application" — ZAP warning that SPA may not be fully crawlable; expected
-10109	IGNORE	Expected for React SPA
-
-# -----------------------------------------------------------------------
-# WARN — Report but don't fail (review each release)
-# -----------------------------------------------------------------------
-
-# "Content Security Policy (CSP) Header Not Set" — should not fire given _headers config
-10038	WARN
-
-# "X-Content-Type-Options Header Missing" — should not fire given _headers config
-10021	WARN
-
-# "Strict-Transport-Security Header Not Set" — should not fire given _headers config
-10035	WARN
-
-# -----------------------------------------------------------------------
-# FAIL — These should never appear; fail the workflow if they do
-# -----------------------------------------------------------------------
-
-# "SQL Injection"
-40018	FAIL
-
-# "Cross Site Scripting (Reflected)"
-40012	FAIL
-
-# "Cross Site Scripting (Persistent)"
-40014	FAIL
-
-# "Remote OS Command Injection"
-90020	FAIL
-
-# "Path Traversal"
-6	FAIL
-
-# "Remote File Inclusion"
-7	FAIL
+10109	IGNORE	Expected for React SPA - ZAP cannot fully crawl client-side routing
+10038	WARN	CSP header check - should be set by Netlify _headers
+10021	WARN	X-Content-Type-Options check - should be set by Netlify _headers
+10035	WARN	HSTS header check - should be set by Netlify _headers
+40018	FAIL	SQL Injection - must not appear
+40012	FAIL	Cross Site Scripting Reflected - must not appear
+40014	FAIL	Cross Site Scripting Persistent - must not appear
+90020	FAIL	Remote OS Command Injection - must not appear
+6	FAIL	Path Traversal - must not appear
+7	FAIL	Remote File Inclusion - must not appear
