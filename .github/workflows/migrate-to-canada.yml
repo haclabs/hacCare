@@ -1,0 +1,64 @@
+# One-time migration workflow: US East → Canada (ca-central-1)
+# Trigger manually from GitHub Actions tab → "Run workflow"
+# DELETE THIS FILE after migration is complete.
+#
+# Required GitHub Secrets:
+#   OLD_DB_URL  = postgresql://postgres:[password]@db.cwhqffubvqolhnkecyck.supabase.co:5432/postgres
+#   NEW_DB_URL  = postgresql://postgres:[password]@db.[canada-ref].supabase.co:5432/postgres
+
+name: Migrate Supabase US → Canada
+
+on:
+  workflow_dispatch:   # Manual trigger only — never runs automatically
+
+jobs:
+  migrate:
+    name: Dump and Restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: Dump from US East project
+        env:
+          PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
+        run: |
+          pg_dump \
+            --format=custom \
+            --no-acl \
+            --no-owner \
+            --schema=public \
+            --schema=auth \
+            --file=haccare_migration.dump \
+            "${{ secrets.OLD_DB_URL }}"
+          echo "Dump size: $(du -sh haccare_migration.dump | cut -f1)"
+
+      - name: Restore to Canada project
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          pg_restore \
+            --verbose \
+            --clean \
+            --if-exists \
+            --no-acl \
+            --no-owner \
+            --dbname="${{ secrets.NEW_DB_URL }}" \
+            haccare_migration.dump
+
+      - name: Verify row counts
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          psql "${{ secrets.NEW_DB_URL }}" <<'SQL'
+            SELECT table_name, 
+                   (xpath('/row/c/text()', query_to_xml('SELECT COUNT(*) AS c FROM public.' || quote_ident(table_name), false, true, '')))[1]::text::int AS row_count
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+            ORDER BY row_count DESC;
+          SQL
