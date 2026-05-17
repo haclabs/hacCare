@@ -17,6 +17,9 @@ name: Migrate Supabase US → Canada
 on:
   workflow_dispatch:   # Manual trigger only — never runs automatically
 
+permissions:
+  contents: read
+
 jobs:
   migrate:
     name: Dump and Restore
