@@ -2,18 +2,18 @@
 # Trigger manually from GitHub Actions tab → "Run workflow"
 # DELETE THIS FILE after migration is complete.
 #
-# Uses Supabase CLI for dumping (HTTPS/443 — avoids IPv6 direct DB connection issues).
-# Uses connection pooler URLs for restore (IPv4 compatible).
+# Uses pg_dump/psql with Supabase connection POOLER URLs (IPv4) for both source and target.
+# No Supabase CLI needed — avoids IPv6 direct DB connection issues in GitHub Actions.
 #
 # Required GitHub Secrets:
-#   SUPABASE_ACCESS_TOKEN = Personal access token from supabase.com/dashboard/account/tokens
-#   OLD_DB_REF            = cwhqffubvqolhnkecyck  (just the project ref, no URL)
-#   OLD_DB_PASSWORD       = old project DB password
-#   NEW_DB_REF            = your Canada project ref (e.g. abcdefghijklmnop)
-#   NEW_DB_PASSWORD       = new Canada project DB password
+#   OLD_DB_REF      = cwhqffubvqolhnkecyck  (just the project ref, no URL)
+#   OLD_DB_PASSWORD = old project DB password
+#   NEW_DB_REF      = your Canada project ref (e.g. abcdefghijklmnop)
+#   NEW_DB_PASSWORD = new Canada project DB password
 #
-# Pooler URLs (IPv4) are built automatically from the ref + password above.
-# Find your pooler host in: Supabase Dashboard → Settings → Database → Connection Pooling
+# Pooler hosts (hardcoded by region — no extra secrets needed):
+#   Old (US East):   aws-0-us-east-1.pooler.supabase.com
+#   New (CA Central): aws-0-ca-central-1.pooler.supabase.com
 
 name: Migrate Supabase US → Canada
 
@@ -33,41 +33,39 @@ jobs:
       - name: Checkout repo (for migration SQL files)
         uses: actions/checkout@v6
 
-      - name: Install Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client
 
-      - name: Dump public schema via Supabase CLI (HTTPS — no IPv6 issues)
+      - name: Dump public schema via pooler (IPv4 — no IPv6 issues)
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
+          OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-1.pooler.supabase.com:5432/postgres
         run: |
-          supabase db dump \
-            --project-ref "${{ secrets.OLD_DB_REF }}" \
+          pg_dump "$OLD_POOLER_URL" \
             --schema public \
+            --no-owner \
+            --no-acl \
             --file haccare_public.sql
           echo "Public dump size: $(du -sh haccare_public.sql | cut -f1)"
 
-      - name: Dump auth users via Supabase CLI (data only)
+      - name: Dump auth users via pooler (data only)
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
+          OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-1.pooler.supabase.com:5432/postgres
         run: |
-          supabase db dump \
-            --project-ref "${{ secrets.OLD_DB_REF }}" \
+          pg_dump "$OLD_POOLER_URL" \
             --schema auth \
             --data-only \
+            --no-owner \
+            --no-acl \
             --file haccare_auth.sql
           echo "Auth dump size: $(du -sh haccare_auth.sql | cut -f1)"
 
       - name: Restore public schema to Canada project (via pooler — IPv4)
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
-          # Pooler URL format: postgresql://postgres.[ref]:[password]@aws-0-ca-central-1.pooler.supabase.com:5432/postgres
           NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-0-ca-central-1.pooler.supabase.com:5432/postgres
         run: |
           psql "$NEW_POOLER_URL" --file=haccare_public.sql
