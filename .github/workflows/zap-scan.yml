@@ -72,7 +72,7 @@ jobs:
       # Retained for 90 days — download from the Actions run summary page
       # -----------------------------------------------------------------------
       - name: Upload ZAP reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: zap-security-report-${{ github.run_number }}
