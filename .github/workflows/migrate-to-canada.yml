@@ -33,11 +33,15 @@ jobs:
       - name: Checkout repo (for migration SQL files)
         uses: actions/checkout@v6
 
-      - name: Install Supabase CLI + PostgreSQL client
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install PostgreSQL client
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client
-          npm install -g supabase@latest
 
       - name: Dump public schema via Supabase CLI (HTTPS — no IPv6 issues)
         env:
