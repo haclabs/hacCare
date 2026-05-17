@@ -1,0 +1,115 @@
+# One-time migration workflow: US East → Canada (ca-central-1)
+# Trigger manually from GitHub Actions tab → "Run workflow"
+# DELETE THIS FILE after migration is complete.
+#
+# Required GitHub Secrets:
+#   OLD_DB_URL      = postgresql://postgres:[password]@db.cwhqffubvqolhnkecyck.supabase.co:5432/postgres
+#   OLD_DB_PASSWORD = old project DB password
+#   NEW_DB_URL      = postgresql://postgres:[password]@db.[canada-ref].supabase.co:5432/postgres
+#   NEW_DB_PASSWORD = new Canada project DB password
+#
+# NOTE: Only the public schema is migrated here. Auth users live in the auth schema,
+# which Supabase manages internally. To migrate users, use the Supabase Dashboard
+# "Move project" feature or migrate auth.users rows separately after this runs.
+
+name: Migrate Supabase US → Canada
+
+on:
+  workflow_dispatch:   # Manual trigger only — never runs automatically
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Dump and Restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo (for migration SQL files)
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: Dump public schema from US East project
+        env:
+          PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
+        run: |
+          pg_dump \
+            --format=custom \
+            --no-acl \
+            --no-owner \
+            --no-tablespaces \
+            --schema=public \
+            --file=haccare_migration.dump \
+            "${{ secrets.OLD_DB_URL }}"
+          echo "Dump size: $(du -sh haccare_migration.dump | cut -f1)"
+
+      - name: Dump auth users (data only) from US East project
+        env:
+          PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
+        run: |
+          pg_dump \
+            --format=plain \
+            --data-only \
+            --no-acl \
+            --no-owner \
+            --schema=auth \
+            --table=auth.users \
+            --table=auth.identities \
+            --file=haccare_auth.sql \
+            "${{ secrets.OLD_DB_URL }}"
+          echo "Auth dump size: $(du -sh haccare_auth.sql | cut -f1)"
+
+      - name: Restore public schema to Canada project
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          pg_restore \
+            --verbose \
+            --no-acl \
+            --no-owner \
+            --no-tablespaces \
+            --dbname="${{ secrets.NEW_DB_URL }}" \
+            haccare_migration.dump
+          echo "Public schema restore complete"
+
+      - name: Restore auth users to Canada project
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          # Truncate first to avoid duplicate key violations
+          psql "${{ secrets.NEW_DB_URL }}" -c "TRUNCATE auth.identities CASCADE; TRUNCATE auth.users CASCADE;"
+          psql "${{ secrets.NEW_DB_URL }}" --file=haccare_auth.sql
+          echo "Auth user restore complete"
+
+      - name: Apply RLS event trigger migration
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          psql "${{ secrets.NEW_DB_URL }}" \
+            --file=database/migrations/20260507000000_enable_automatic_rls_event_trigger.sql
+          echo "RLS event trigger applied"
+
+      - name: Verify row counts
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          psql "${{ secrets.NEW_DB_URL }}" <<'SQL'
+            SELECT table_name,
+                   (xpath('/row/c/text()', query_to_xml('SELECT COUNT(*) AS c FROM public.' || quote_ident(table_name), false, true, '')))[1]::text::int AS row_count
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+            ORDER BY row_count DESC;
+          SQL
+
+      - name: Verify auth users migrated
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+        run: |
+          psql "${{ secrets.NEW_DB_URL }}" -c "SELECT COUNT(*) AS user_count FROM auth.users;"
