@@ -44,13 +44,14 @@ jobs:
           sudo apt-get install -y postgresql-client-17
           /usr/lib/postgresql/17/bin/pg_dump --version
 
-      - name: Dump public schema via pooler (IPv4 — no IPv6 issues)
+      - name: Dump public data only via pooler (IPv4 — no IPv6 issues)
         env:
           PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
           OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           /usr/lib/postgresql/17/bin/pg_dump "$OLD_POOLER_URL" \
             --schema public \
+            --data-only \
             --no-owner \
             --no-acl \
             --file haccare_public.sql
@@ -99,7 +100,9 @@ jobs:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
           NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
+          psql "$NEW_POOLER_URL" -c "SET session_replication_role = replica;" 
           psql "$NEW_POOLER_URL" --file=haccare_public.sql
+          psql "$NEW_POOLER_URL" -c "SET session_replication_role = DEFAULT;"
           echo "Public schema restore complete"
 
       - name: Apply RLS event trigger migration
