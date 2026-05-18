@@ -95,15 +95,18 @@ jobs:
           SQL
           echo "Public tables truncated"
 
-      - name: Restore public schema to Canada project (via pooler — IPv4)
+      - name: Restore public data to Canada project (FK triggers disabled)
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
           NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
-          psql "$NEW_POOLER_URL" -c "SET session_replication_role = replica;" 
-          psql "$NEW_POOLER_URL" --file=haccare_public.sql
-          psql "$NEW_POOLER_URL" -c "SET session_replication_role = DEFAULT;"
-          echo "Public schema restore complete"
+          # Pipe everything through ONE psql call with --single-transaction.
+          # This keeps a single backend connection through PgBouncer so
+          # SET LOCAL session_replication_role=replica actually applies to
+          # every COPY statement (session vars don't survive across connections).
+          { echo "SET LOCAL session_replication_role = replica;"; cat haccare_public.sql; } \
+            | psql "$NEW_POOLER_URL" --single-transaction --echo-errors
+          echo "Public data restore complete"
 
       - name: Apply RLS event trigger migration
         env:
@@ -120,12 +123,11 @@ jobs:
           NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           psql "$NEW_POOLER_URL" <<'SQL'
-            SELECT table_name,
-                   (xpath('/row/c/text()', query_to_xml('SELECT COUNT(*) AS c FROM public.' || quote_ident(table_name), false, true, '')))[1]::text::int AS row_count
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-              AND table_type = 'BASE TABLE'
-            ORDER BY row_count DESC;
+            SELECT relname AS table_name, reltuples::bigint AS approx_row_count
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public' AND c.relkind = 'r'
+            ORDER BY reltuples DESC;
           SQL
 
       - name: Verify auth users migrated
