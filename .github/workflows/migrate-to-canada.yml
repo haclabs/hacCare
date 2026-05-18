@@ -33,10 +33,16 @@ jobs:
       - name: Checkout repo (for migration SQL files)
         uses: actions/checkout@v6
 
-      - name: Install PostgreSQL client
+      - name: Install PostgreSQL 17 client
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y curl ca-certificates
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
 
       - name: Dump public schema via pooler (IPv4 — no IPv6 issues)
         env:
