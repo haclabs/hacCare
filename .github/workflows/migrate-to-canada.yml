@@ -13,7 +13,7 @@
 #   NEW_DB_REF          = your Canada project ref (e.g. abcdefghijklmnop)
 #   NEW_DB_PASSWORD     = new Canada project DB password
 #
-# New Canada pooler host is hardcoded: aws-0-ca-central-1.pooler.supabase.com
+# New Canada pooler host is hardcoded: aws-1-ca-central-1.pooler.supabase.com
 
 name: Migrate Supabase US → Canada
 
@@ -72,7 +72,7 @@ jobs:
       - name: Restore public schema to Canada project (via pooler — IPv4)
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
-          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           psql "$NEW_POOLER_URL" --file=haccare_public.sql
           echo "Public schema restore complete"
@@ -80,7 +80,7 @@ jobs:
       - name: Restore auth users to Canada project
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
-          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           psql "$NEW_POOLER_URL" -c "TRUNCATE auth.identities CASCADE; TRUNCATE auth.users CASCADE;"
           psql "$NEW_POOLER_URL" --file=haccare_auth.sql
@@ -89,7 +89,7 @@ jobs:
       - name: Apply RLS event trigger migration
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
-          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           psql "$NEW_POOLER_URL" \
             --file=database/migrations/20260507000000_enable_automatic_rls_event_trigger.sql
@@ -98,7 +98,7 @@ jobs:
       - name: Verify row counts
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
-          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           psql "$NEW_POOLER_URL" <<'SQL'
             SELECT table_name,
@@ -112,6 +112,6 @@ jobs:
       - name: Verify auth users migrated
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
-          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
           psql "$NEW_POOLER_URL" -c "SELECT COUNT(*) AS user_count FROM auth.users;"
