@@ -6,14 +6,14 @@
 # No Supabase CLI needed — avoids IPv6 direct DB connection issues in GitHub Actions.
 #
 # Required GitHub Secrets:
-#   OLD_DB_REF      = cwhqffubvqolhnkecyck  (just the project ref, no URL)
-#   OLD_DB_PASSWORD = old project DB password
-#   NEW_DB_REF      = your Canada project ref (e.g. abcdefghijklmnop)
-#   NEW_DB_PASSWORD = new Canada project DB password
+#   OLD_DB_REF          = cwhqffubvqolhnkecyck  (just the project ref, no URL)
+#   OLD_DB_PASSWORD     = old project DB password
+#   OLD_DB_POOLER_HOST  = find in: Supabase Dashboard → old project → Settings → Database → Connection Pooling
+#                         e.g. aws-0-us-east-2.pooler.supabase.com
+#   NEW_DB_REF          = your Canada project ref (e.g. abcdefghijklmnop)
+#   NEW_DB_PASSWORD     = new Canada project DB password
 #
-# Pooler hosts (hardcoded by region — no extra secrets needed):
-#   Old (US East):   aws-0-us-east-1.pooler.supabase.com
-#   New (CA Central): aws-0-ca-central-1.pooler.supabase.com
+# New Canada pooler host is hardcoded: aws-0-ca-central-1.pooler.supabase.com
 
 name: Migrate Supabase US → Canada
 
@@ -41,7 +41,7 @@ jobs:
       - name: Dump public schema via pooler (IPv4 — no IPv6 issues)
         env:
           PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
-          OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+          OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-2.pooler.supabase.com:5432/postgres
         run: |
           pg_dump "$OLD_POOLER_URL" \
             --schema public \
@@ -53,7 +53,7 @@ jobs:
       - name: Dump auth users via pooler (data only)
         env:
           PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
-          OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+          OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-2.pooler.supabase.com:5432/postgres
         run: |
           pg_dump "$OLD_POOLER_URL" \
             --schema auth \
