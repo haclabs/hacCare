@@ -78,6 +78,22 @@ jobs:
           psql "$NEW_POOLER_URL" --file=haccare_auth.sql
           echo "Auth user restore complete"
 
+      - name: Truncate all public tables (clean slate before restore)
+        env:
+          PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
+          NEW_POOLER_URL: postgresql://postgres.${{ secrets.NEW_DB_REF }}:${{ secrets.NEW_DB_PASSWORD }}@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+        run: |
+          psql "$NEW_POOLER_URL" <<'SQL'
+            DO $$
+            DECLARE r RECORD;
+            BEGIN
+              FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
+                EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' CASCADE';
+              END LOOP;
+            END $$;
+          SQL
+          echo "Public tables truncated"
+
       - name: Restore public schema to Canada project (via pooler — IPv4)
         env:
           PGPASSWORD: ${{ secrets.NEW_DB_PASSWORD }}
