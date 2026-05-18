@@ -1,6 +1,6 @@
 # hacCare
 
-Version 5.3.0
+Version 5.5.0
 
 A multi-tenant healthcare simulation platform for clinical education. Built with React, TypeScript, and Supabase.
 
@@ -63,6 +63,14 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 - React Router 7.13 for navigation
 
 ## Version History
+
+### 5.5.0 (May 2026)
+- Migrated infrastructure to Canada (ca-central-1) region for data residency compliance
+- Fixed critical security vulnerabilities (jspdf HTML injection, flatted prototype pollution)
+- Optional vital signs fields to support clinical edge cases (newborns, partial assessments)
+- Fixed empty array handling in snapshot restore function
+- Redeployed reset simulation functions with BBIT entries support
+- Dependency and environment variable cleanup
 
 ### 5.3.0 (March 2026)
 - Made assigned nurse field optional for simulation workflows
