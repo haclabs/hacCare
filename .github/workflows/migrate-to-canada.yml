@@ -42,14 +42,14 @@ jobs:
           sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: Dump public schema via pooler (IPv4 — no IPv6 issues)
         env:
           PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
           OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
-          pg_dump "$OLD_POOLER_URL" \
+          /usr/lib/postgresql/17/bin/pg_dump "$OLD_POOLER_URL" \
             --schema public \
             --no-owner \
             --no-acl \
@@ -61,7 +61,7 @@ jobs:
           PGPASSWORD: ${{ secrets.OLD_DB_PASSWORD }}
           OLD_POOLER_URL: postgresql://postgres.${{ secrets.OLD_DB_REF }}:${{ secrets.OLD_DB_PASSWORD }}@aws-0-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require
         run: |
-          pg_dump "$OLD_POOLER_URL" \
+          /usr/lib/postgresql/17/bin/pg_dump "$OLD_POOLER_URL" \
             --schema auth \
             --data-only \
             --no-owner \
