@@ -55,12 +55,37 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 
 ## Technical Stack
 
-- React 19.2 with TypeScript 5.3
-- Vite 7.3 for build tooling
-- Supabase (PostgreSQL 15) with Row Level Security
-- Tailwind CSS 4.2 for responsive design
-- TanStack Query 5.90 for data synchronization
-- React Router 7.13 for navigation
+### Frontend
+- **React 19.2** with **TypeScript 6.0** (strict mode)
+- **Vite 8.0** (Rolldown-based bundler) with `@vitejs/plugin-react` 6.0 (Oxc-powered React Refresh, no Babel)
+- **Tailwind CSS 4.1** via PostCSS
+- **React Router 7.15** for client-side navigation
+- **TanStack Query 5.100** for server state, caching, and background sync
+- **Lucide React 1.14** for icons
+- **React Big Calendar 1.19** for scheduling views
+
+### Backend & Database
+- **Supabase** (PostgreSQL 15) hosted in **ca-central-1** (Canada) for data residency
+- **Row Level Security (RLS)** enforcing multi-tenant isolation on every table
+- **SECURITY DEFINER** functions for privileged cross-tenant operations
+- **Supabase JS 2.105** client SDK
+
+### Document & Barcode Generation
+- **jsPDF 4.1** + **html2canvas 1.4** for PDF export
+- **@react-pdf/renderer 4.5** for structured PDF reports
+- **JsBarcode 3.12** for Code128 barcode generation
+- **PapaParse 5.5** for CSV import/export
+
+### Utilities
+- **date-fns 4.1** for date formatting
+- **DOMPurify 3.4** for XSS sanitisation
+- **UUID 14.0** for identifier generation
+
+### Dev Tooling
+- **Vitest 4.1** for unit testing
+- **ESLint 10.3** with TypeScript and React Hooks plugins
+- **Terser 5.47** for production minification
+- **rollup-plugin-visualizer 7.0** for bundle analysis (`npm run build -- --analyze`)
 
 ## Version History
 
@@ -136,13 +161,25 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ## Security
 
-This application handles simulated protected health information (PHI) for educational purposes. All security features follow HIPAA compliance guidelines including:
+This application handles simulated protected health information (PHI) for educational purposes. All security features follow HIPAA compliance guidelines.
 
-- End-to-end encryption for sensitive data
-- Comprehensive audit logging
-- Role-based access controls
-- Secure session management
-- Automatic PHI redaction in logs
+### Continuous Security Scanning
+
+- **GitHub CodeQL** — static analysis runs on every PR and push, scanning JavaScript/TypeScript and Python for vulnerabilities (SQL injection, XSS, path traversal, insecure randomness, etc.)
+- **Snyk** — dependency vulnerability scanning on every PR, with results uploaded to the GitHub Security tab as SARIF reports
+- **`npm audit`** — run locally and in CI to catch known CVEs in the dependency tree
+
+All findings are reviewed before merging. Security alerts are visible under the **Security** tab of this repository.
+
+### Application Security Controls
+
+- **Multi-tenant Row Level Security** — every table enforces `tenant_id` isolation via PostgreSQL RLS; cross-tenant data leakage is blocked at the database layer
+- **Role-based access control** — five-tier hierarchy (Super Admin → Coordinator → Admin → Instructor → Nurse) with program-scoped permissions
+- **SECURITY DEFINER functions** — privileged operations (simulation launch, tenant creation) run as controlled database functions, not ad-hoc queries
+- **DOMPurify sanitisation** — all user-supplied HTML is sanitised before rendering
+- **Secure session management** — automatic timeout, token rotation via Supabase Auth
+- **Comprehensive audit trails** — all clinical actions logged with user, timestamp, and tenant context
+- **PHI redaction** — simulated patient data only; no real PHI is stored or transmitted
 
 Report security issues to the repository maintainers.
 
