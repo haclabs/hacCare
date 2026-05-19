@@ -102,11 +102,8 @@ jspm_packages/
 tmp/
 temp/
 
-# Supabase
+# Supabase local dev state (not migrations — those are tracked)
 .supabase/
-
-# Database migrations (if using local development)
-supabase/migrations/
 
 # OS generated files
 Thumbs.db
