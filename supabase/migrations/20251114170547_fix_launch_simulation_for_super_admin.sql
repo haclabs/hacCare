@@ -1,0 +1,3 @@
+-- This migration was applied to the linked project before the baseline was
+-- established. Its changes are included in 20251113000000_initial_schema.sql.
+-- Kept as a no-op so Supabase migration history stays consistent.
