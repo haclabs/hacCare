@@ -16,6 +16,7 @@ import { HandoverNotes } from '../components/handover/HandoverNotes';
 import { AdvancedDirectivesForm } from '../components/forms/AdvancedDirectivesForm';
 import { IntakeOutputCard } from '../components/intake-output';
 import { AvatarBoard } from '../../hacmap/AvatarBoard';
+import { FlowsheetsHub } from '../../flowsheets';
 import type { Patient } from '../../../types';
 
 type ActiveModule =
@@ -26,7 +27,8 @@ type ActiveModule =
   | 'handover'
   | 'advanced-directives'
   | 'hacmap'
-  | 'intake-output';
+  | 'intake-output'
+  | 'flowsheets';
 
 interface NavProps {
   onChartClick: () => void;
@@ -37,6 +39,7 @@ interface NavProps {
   onHacMapClick: () => void;
   onIOClick: () => void;
   onNotesClick: () => void;
+  onFlowsheetsClick?: () => void;
   vitalsCount: number;
   medsCount: number;
   hasNewLabs: boolean;
@@ -59,6 +62,7 @@ interface ModuleContentProps extends NavProps {
   onHandoverRefresh: () => void;
   onNavigateToOverview: () => void;
   onLastUpdated: () => void;
+  onModuleChange: (module: ActiveModule) => void;
 }
 
 export const ModuleContent: React.FC<ModuleContentProps> = ({
@@ -71,6 +75,7 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
   onHandoverRefresh,
   onNavigateToOverview,
   onLastUpdated,
+  onModuleChange,
   ...navProps
 }) => {
   if (activeModule === 'vitals') {
@@ -169,6 +174,17 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
           {...navProps}
         />
       </div>
+    );
+  }
+
+  if (activeModule === 'flowsheets') {
+    return (
+      <FlowsheetsHub
+        patient={patient}
+        currentUser={currentUser ? { id: currentUser.id, name: currentUser.name, role: currentUser.role } : undefined}
+        onNavigateToModule={(target) => onModuleChange(target as ActiveModule)}
+        onNavigateToOverview={onNavigateToOverview}
+      />
     );
   }
 

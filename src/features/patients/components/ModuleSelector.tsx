@@ -17,6 +17,7 @@ import {
   FlaskConical,
   MapPin,
   Droplets,
+  LayoutGrid,
 } from 'lucide-react';
 import type { Patient } from '../../../types';
 
@@ -28,7 +29,8 @@ type ActiveModule =
   | 'handover'
   | 'advanced-directives'
   | 'hacmap'
-  | 'intake-output';
+  | 'intake-output'
+  | 'flowsheets';
 
 interface ModuleSelectorProps {
   patient: Patient;
@@ -244,6 +246,13 @@ export const ModuleSelector: React.FC<ModuleSelectorProps> = ({
       icon: Droplets,
       color: 'cyan',
     },
+    {
+      id: 'flowsheets' as ActiveModule,
+      title: 'Clinical Flowsheets',
+      description: 'All assessments, system reviews, risk tools, and TRG documentation in one hub',
+      icon: LayoutGrid,
+      color: 'violet',
+    },
   ];
 
   const actionCards = [
@@ -287,7 +296,7 @@ export const ModuleSelector: React.FC<ModuleSelectorProps> = ({
     ['patient-record', 'advanced-directives', 'hacmap'],
     ['doctors-orders', 'labs', 'vitals'],
     ['handover', 'medications', 'forms'],
-    ['intake-output', 'discharge-summary'],
+    ['intake-output', 'discharge-summary', 'flowsheets'],
   ];
 
   const renderCard = (moduleId: string) => {

@@ -15,7 +15,8 @@ import {
   MapPin, 
   Droplets, 
   MessageSquare,
-  ClipboardList
+  ClipboardList,
+  LayoutGrid
 } from 'lucide-react';
 
 export interface PatientActionBarProps {
@@ -28,6 +29,7 @@ export interface PatientActionBarProps {
   onHacMapClick?: () => void;
   onIOClick?: () => void;
   onNotesClick?: () => void;
+  onFlowsheetsClick?: () => void;
 
   // Badge counts
   vitalsCount?: number;
@@ -39,7 +41,7 @@ export interface PatientActionBarProps {
   hasNewNotes?: boolean;
 
   // Active state
-  activeAction?: 'vitals' | 'meds' | 'labs' | 'orders' | 'hacmap' | 'io' | 'notes' | null;
+  activeAction?: 'vitals' | 'meds' | 'labs' | 'orders' | 'hacmap' | 'io' | 'notes' | 'flowsheets' | null;
 }
 
 export const PatientActionBar: React.FC<PatientActionBarProps> = ({
@@ -51,6 +53,7 @@ export const PatientActionBar: React.FC<PatientActionBarProps> = ({
   onHacMapClick,
   onIOClick,
   onNotesClick,
+  onFlowsheetsClick,
   vitalsCount = 0,
   medsCount = 0,
   hasNewLabs = false,
@@ -73,6 +76,21 @@ export const PatientActionBar: React.FC<PatientActionBarProps> = ({
           >
             <FileText className="h-5 w-5 text-blue-600 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600">Chart</span>
+          </button>
+        )}
+
+        {/* Flowsheets */}
+        {onFlowsheetsClick && (
+          <button 
+            onClick={onFlowsheetsClick}
+            className={`flex flex-col items-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 group ${
+              activeAction === 'flowsheets' 
+                ? 'bg-violet-50 dark:bg-violet-900/20' 
+                : 'hover:bg-violet-50 dark:hover:bg-violet-900/20'
+            }`}
+          >
+            <LayoutGrid className="h-5 w-5 text-violet-600 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-violet-600 whitespace-nowrap">Flowsheets</span>
           </button>
         )}
 
@@ -208,6 +226,7 @@ export const PatientActionBar: React.FC<PatientActionBarProps> = ({
             )}
           </button>
         )}
+
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ import {
   Droplets,
   BookOpen,
   ClipboardList,
+  LayoutGrid,
 } from 'lucide-react';
 import { getAvatarById } from '../../../data/patientAvatars';
 import { calculatePreciseAge } from '../../../utils/vitalRanges';
@@ -38,7 +39,8 @@ type ActiveModule =
   | 'handover'
   | 'advanced-directives'
   | 'hacmap'
-  | 'intake-output';
+  | 'intake-output'
+  | 'flowsheets';
 
 interface PatientOverviewProps {
   patient: Patient;
@@ -207,6 +209,17 @@ export const PatientOverview: React.FC<PatientOverviewProps> = ({
               </span>
             </button>
 
+            {/* Flowsheets */}
+            <button
+              onClick={() => onModuleChange('flowsheets')}
+              className="flex flex-col items-center gap-2 px-4 py-3 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all duration-200 group"
+            >
+              <LayoutGrid className="h-5 w-5 text-violet-600 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-violet-600 whitespace-nowrap">
+                Flowsheets
+              </span>
+            </button>
+
             {/* Vitals & Assessments */}
             <button
               onClick={() => onModuleChange('vitals')}
@@ -311,6 +324,7 @@ export const PatientOverview: React.FC<PatientOverviewProps> = ({
                 </span>
               )}
             </button>
+
           </div>
         </div>
       </div>

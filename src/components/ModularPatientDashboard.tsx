@@ -49,7 +49,8 @@ type ActiveModule =
   | 'handover'
   | 'advanced-directives'
   | 'hacmap'
-  | 'intake-output';
+  | 'intake-output'
+  | 'flowsheets';
 
 const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
   vitals: 'Vitals & Assessments',
@@ -59,6 +60,7 @@ const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
   'advanced-directives': 'Advanced Directives',
   hacmap: 'hacMap - Device & Wound Care',
   'intake-output': 'Intake & Output',
+  flowsheets: 'Clinical Flowsheets',
 };
 
 export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = ({
@@ -252,6 +254,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     onHacMapClick: () => setActiveModule('hacmap'),
     onIOClick: () => setActiveModule('intake-output'),
     onNotesClick: () => setActiveModule('handover'),
+    onFlowsheetsClick: () => setActiveModule('flowsheets'),
     vitalsCount: activePatient.vitals?.length || 0,
     medsCount: activePatient.medications?.length || 0,
     hasNewLabs: unacknowledgedLabsCount > 0,
@@ -317,6 +320,7 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 onAssessmentSave={handleAssessmentSave}
                 onHandoverRefresh={handleHandoverRefresh}
                 onNavigateToOverview={() => setActiveModule('overview')}
+                onModuleChange={setActiveModule}
                 onLastUpdated={() => setLastUpdated(new Date())}
                 {...navProps}
               />
