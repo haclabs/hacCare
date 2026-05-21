@@ -93,15 +93,17 @@ export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
       // Native form
       if (sheet.status === 'active') {
         setHubView({ mode: 'form', formId: sheet.id });
+        scrollToTop();
       }
       // coming-soon: no-op (card is disabled, shouldn't reach here)
     },
-    [onNavigateToModule]
+    [onNavigateToModule, scrollToTop]
   );
 
   const handleBackToGrid = useCallback(() => {
     setHubView({ mode: 'grid' });
-  }, []);
+    scrollToTop();
+  }, [scrollToTop]);
 
   // ── Form view helpers ────────────────────────────────────────────────────
   const activeSheet =
