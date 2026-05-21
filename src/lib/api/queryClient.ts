@@ -16,17 +16,17 @@ export const queryClient = new QueryClient({
       // Keep data in cache for 10 minutes
       gcTime: 10 * 60 * 1000,
       // Custom retry logic for healthcare data
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: Error & { status?: number }) => {
         // Never retry on authentication/authorization errors
         if (error?.status === 401 || error?.status === 403) {
           return false;
         }
-        
+
         // Don't retry on client errors (4xx)
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
-        
+
         // Retry up to 3 times for server errors and network issues
         return failureCount < 3;
       },
@@ -35,7 +35,7 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       // Retry mutations once on network errors
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: Error & { status?: number }) => {
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
@@ -84,6 +84,14 @@ export const queryKeys = {
   dueMedications: (patientId: string) => ['medications', 'due', patientId] as const,
   overdueMedications: (patientId: string) => ['medications', 'overdue', patientId] as const,
   
+  // Flowsheet system assessments
+  systemAssessments: (patientId: string, tenantId: string) =>
+    ['system-assessments', patientId, tenantId] as const,
+  systemAssessment: (patientId: string, tenantId: string, systemType: string) =>
+    ['system-assessments', patientId, tenantId, systemType] as const,
+  systemAssessmentHistory: (patientId: string, tenantId: string, systemType: string) =>
+    ['system-assessments', patientId, tenantId, systemType, 'history'] as const,
+
   // User management queries
   users: ['users'] as const,
   user: (id: string) => ['user', id] as const,

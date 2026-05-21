@@ -50,6 +50,12 @@ export interface FlowsheetFormProps {
   patient: Patient;
   tenantId: string;
   currentUser?: { id: string; name: string; role: string };
+  /**
+   * True when the form is opened inside a simulation template tenant.
+   * Causes the saved row to have is_baseline = true, which preserves it
+   * across reset_simulation_for_next_session calls.
+   */
+  isBaseline?: boolean;
   /** Called after a successful save. Hub returns to grid view. */
   onSaved: () => void;
   /** Called when the user cancels without saving. Hub returns to grid view. */
@@ -94,6 +100,41 @@ export type ModuleShortcutDefinition = FlowsheetBase & {
 
 /** Discriminated union — use sheet.linkType to narrow. */
 export type FlowsheetDefinition = NativeFlowsheetDefinition | ModuleShortcutDefinition;
+
+// ── System assessment data ──────────────────────────────────────────────────────
+
+/**
+ * A row from patient_system_assessments as returned by Supabase.
+ * assessment_data is a JSONB payload keyed by the form's own field names.
+ */
+export interface SystemAssessmentRow {
+  id: string;
+  patient_id: string;
+  tenant_id: string;
+  system_type: string;
+  assessment_data: Record<string, unknown>;
+  nurse_id: string | null;
+  nurse_name: string | null;
+  is_baseline: boolean;
+  recorded_at: string;
+  created_at: string;
+}
+
+/**
+ * Input for inserting a new system assessment row.
+ * nurse_id / nurse_name should come from the currentUser prop passed to every
+ * FlowsheetFormProps-implementing component.
+ */
+export interface SaveSystemAssessmentInput {
+  patient_id: string;
+  tenant_id: string;
+  system_type: string;
+  assessment_data: Record<string, unknown>;
+  nurse_id?: string | null;
+  nurse_name?: string | null;
+  /** True for instructor-entered baseline entries in template tenants. */
+  is_baseline?: boolean;
+}
 
 // ── Category display metadata ─────────────────────────────────────────────────
 

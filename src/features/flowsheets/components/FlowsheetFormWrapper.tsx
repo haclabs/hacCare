@@ -7,8 +7,8 @@
  * are responsible for their own data logic and save/cancel callbacks.
  */
 
-import React from 'react';
-import { ChevronLeft } from 'lucide-react';
+import React, { Suspense } from 'react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { CATEGORY_META } from '../registry';
 import type { NativeFlowsheetDefinition } from '../types';
 import type { Patient } from '../../../types';
@@ -32,7 +32,7 @@ export const FlowsheetFormWrapper: React.FC<FlowsheetFormWrapperProps> = ({
   const CategoryIcon = meta.icon;
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <>
       {/* Breadcrumb + form header */}
       <div className="bg-white border-b border-gray-200 px-8 py-5">
         {/* Breadcrumb row */}
@@ -65,8 +65,19 @@ export const FlowsheetFormWrapper: React.FC<FlowsheetFormWrapperProps> = ({
         </div>
       </div>
 
-      {/* Form content */}
-      <div className="px-8 py-6">{children}</div>
-    </div>
+      {/* Form content — Suspense boundary here keeps the header visible during lazy load */}
+      <div className="px-8 py-6">
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-16 text-gray-400">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="ml-2 text-sm">Loading form…</span>
+            </div>
+          }
+        >
+          {children}
+        </Suspense>
+      </div>
+    </>
   );
 };

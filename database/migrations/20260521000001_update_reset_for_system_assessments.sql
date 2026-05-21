@@ -1,9 +1,11 @@
--- ============================================================================
--- RESET SIMULATION FOR NEXT SESSION
--- ============================================================================
--- Smart reset that preserves patient & medication barcodes
--- Sets status to 'pending' so instructor can manually start when ready
--- ============================================================================
+-- Migration: Wire patient_system_assessments into reset_simulation_for_next_session
+-- Date: 2026-05-21
+--
+-- Two changes to the reset function:
+--   1. DELETE only student entries (is_baseline = false) — baseline context survives
+--   2. Strip patient_system_assessments from the snapshot before restore —
+--      baseline rows are already in place so restore must not duplicate them.
+--      (Same pattern used for patient_medications.)
 
 CREATE OR REPLACE FUNCTION reset_simulation_for_next_session(
   p_simulation_id UUID

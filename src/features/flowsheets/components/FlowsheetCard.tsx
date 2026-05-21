@@ -17,27 +17,16 @@ interface FlowsheetCardProps {
   meta: FlowsheetCategoryMeta;
   /** Hub calls this when a card is clicked; hub decides what to do based on linkType. */
   onOpen: (sheet: FlowsheetDefinition) => void;
-  /**
-   * ISO timestamp of the last recorded entry for this flowsheet.
-   * Passed by the hub once data-fetching is wired (Phase 2).
-   * Shows '—' when null/undefined.
-   */
-  lastRecorded?: string | null;
 }
 
 export const FlowsheetCard: React.FC<FlowsheetCardProps> = ({
   sheet,
   meta,
   onOpen,
-  lastRecorded,
 }) => {
   const Icon = sheet.icon;
   const isComingSoon = sheet.linkType === 'native' && sheet.status === 'coming-soon';
   const isModuleShortcut = sheet.linkType === 'module-shortcut';
-
-  const lastLabel = lastRecorded
-    ? new Date(lastRecorded).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : '—';
 
   return (
     <button
@@ -76,12 +65,7 @@ export const FlowsheetCard: React.FC<FlowsheetCardProps> = ({
               />
             )}
           </div>
-          <p className="mt-0.5 text-[10px] font-medium text-gray-400 tracking-wide uppercase">
-            LAST{' '}
-            <span className={lastRecorded ? meta.textColor : 'text-gray-400'}>
-              · {lastLabel}
-            </span>
-          </p>
+
         </div>
       </div>
 
