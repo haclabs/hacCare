@@ -43,6 +43,7 @@ interface VitalsModuleProps {
   onHacMapClick?: () => void;
   onIOClick?: () => void;
   onNotesClick?: () => void;
+  onFlowsheetsClick?: () => void;
   // Badge data
   vitalsCount?: number;
   medsCount?: number;
@@ -68,6 +69,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
   onHacMapClick,
   onIOClick,
   onNotesClick,
+  onFlowsheetsClick,
   vitalsCount = 0,
   medsCount = 0,
   hasNewLabs = false,
@@ -577,6 +579,7 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         onHacMapClick={onHacMapClick}
         onIOClick={onIOClick}
         onNotesClick={onNotesClick}
+        onFlowsheetsClick={onFlowsheetsClick}
         vitalsCount={vitalsCount}
         medsCount={medsCount}
         hasNewLabs={hasNewLabs}

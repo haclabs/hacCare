@@ -51,8 +51,6 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [instructorName, setInstructorName] = useState('');
-  const [instructorNotes, setInstructorNotes] = useState('');
   function deduplicateStudentActivities(activities: StudentActivity[]): StudentActivity[] {
     const studentMap = new Map<string, StudentActivity>();
     
@@ -554,40 +552,6 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   {studentActivities.map((student, index) => (
                     <StudentActivitySection key={`print-${index}`} student={student} forceExpanded={true} />
                   ))}
-                </div>
-              </div>
-
-              {/* Instructor Notes Section */}
-              <div className="p-6 border-t border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Instructor Notes & Feedback</h3>
-                <div className="space-y-4">
-                  {/* Instructor Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Instructor Name
-                    </label>
-                    <input
-                      type="text"
-                      value={instructorName}
-                      onChange={(e) => setInstructorName(e.target.value)}
-                      placeholder="Enter instructor name..."
-                      className="w-full px-4 py-2 border-2 border-yellow-300 bg-yellow-50 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors"
-                    />
-                  </div>
-                  
-                  {/* Instructor Notes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Notes & Comments
-                    </label>
-                    <textarea
-                      value={instructorNotes}
-                      onChange={(e) => setInstructorNotes(e.target.value)}
-                      placeholder="Enter notes about the simulation, student performance, areas for improvement, or other observations..."
-                      rows={3}
-                      className="w-full px-4 py-3 border-2 border-yellow-300 bg-yellow-50 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors resize-none"
-                    />
-                  </div>
                 </div>
               </div>
 

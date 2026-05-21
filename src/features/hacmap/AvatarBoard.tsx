@@ -23,6 +23,7 @@ interface AvatarBoardProps {
   onHacMapClick?: () => void;
   onIOClick?: () => void;
   onNotesClick?: () => void;
+  onFlowsheetsClick?: () => void;
   vitalsCount?: number;
   medsCount?: number;
   hasNewLabs?: boolean;
@@ -42,6 +43,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
   onHacMapClick,
   onIOClick,
   onNotesClick,
+  onFlowsheetsClick,
   vitalsCount = 0,
   medsCount = 0,
   hasNewLabs = false,
@@ -118,6 +120,7 @@ export const AvatarBoard: React.FC<AvatarBoardProps> = ({
         onHacMapClick={onHacMapClick}
         onIOClick={onIOClick}
         onNotesClick={onNotesClick}
+        onFlowsheetsClick={onFlowsheetsClick}
         vitalsCount={vitalsCount}
         medsCount={medsCount}
         hasNewLabs={hasNewLabs}
