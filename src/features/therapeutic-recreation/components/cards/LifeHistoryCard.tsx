@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useAllAssessmentScores } from '../../hooks/useAssessmentScores';
 import { useActiveLivingProfile, useSaveActiveLivingProfile } from '../../hooks/useActiveLivingProfile';
 import { ReadOnlyField } from '../shared/ReadOnlyField';
@@ -26,11 +26,13 @@ export const LifeHistoryCard: React.FC<Props> = ({
   const { save, isSaving, error } = useSaveActiveLivingProfile(patient.id, tenantId);
 
   const [narrative, setNarrative] = useState('');
+  const [studentName, setStudentName] = useState('');
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!alp) return;
     setNarrative(alp.narrative ?? '');
+    setStudentName(alp.recorded_by ?? '');
     setSavedAt(alp.updated_at ?? alp.created_at ?? null);
   }, [alp]);
 
@@ -46,7 +48,7 @@ export const LifeHistoryCard: React.FC<Props> = ({
       patient_id: patient.id,
       tenant_id: tenantId,
       is_baseline: isBaseline,
-      recorded_by: currentUser.name,
+      recorded_by: studentName.trim() || currentUser.name,
       recorded_by_user_id: currentUser.id,
       narrative,
     });
@@ -65,19 +67,6 @@ export const LifeHistoryCard: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-emerald-100 rounded-lg">
-          <BookOpen className="h-5 w-5 text-emerald-700" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-gray-900">Life History &amp; Leisure Profile</h2>
-          <p className="text-sm text-gray-500">
-            Client background, leisure history, and Active Living Profile
-          </p>
-        </div>
-      </div>
-
       {/* Life History — pre-filled from baseline */}
       {lifeHistoryBaseline ? (
         <div className="space-y-3">
@@ -160,6 +149,24 @@ export const LifeHistoryCard: React.FC<Props> = ({
           {(error as Error).message}
         </p>
       )}
+
+      {/* Student name — required for debrief report */}
+      <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 px-5 py-4 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Student Name <span className="text-red-500 ml-1">*</span>
+        </label>
+        <input
+          type="text"
+          value={studentName}
+          onChange={(e) => setStudentName(e.target.value)}
+          placeholder="e.g. Jane Smith"
+          autoComplete="off"
+          className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"
+        />
+        <p className="text-xs text-gray-500">
+          By entering your name, you confirm you authored this profile narrative.
+        </p>
+      </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
         {savedAt ? (

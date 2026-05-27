@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useAllAssessmentScores, useSaveAssessmentScore } from '../../hooks/useAssessmentScores';
 import { LCMTable } from '../shared/LCMTable';
 import { IALBScorePanel } from '../shared/IALBScorePanel';
@@ -70,6 +70,7 @@ export const AssessmentBatteryCard: React.FC<Props> = ({
   const allScores = useAllAssessmentScores(patient.id, tenantId);
   const { isLoading } = allScores;
   const { save, isSaving, error } = useSaveAssessmentScore(patient.id, tenantId);
+  const [studentName, setStudentName] = useState('');
 
   // LCM baseline (pre-filled by instructor)
   const lcmBaseline = allScores.getBaseline('lcm');
@@ -103,7 +104,7 @@ export const AssessmentBatteryCard: React.FC<Props> = ({
       total_score: null,
       interpretation: limInterp,
       date_administered: limDate || null,
-      recorded_by: currentUser.name,
+      recorded_by: studentName.trim() || currentUser.name,
       recorded_by_user_id: currentUser.id,
       administered_by: null,
     });
@@ -119,7 +120,7 @@ export const AssessmentBatteryCard: React.FC<Props> = ({
       total_score: ftbScores.total ? Number(ftbScores.total) : null,
       interpretation: ftbInterp,
       date_administered: ftbDate || null,
-      recorded_by: currentUser.name,
+      recorded_by: studentName.trim() || currentUser.name,
       recorded_by_user_id: currentUser.id,
       administered_by: null,
     });
@@ -135,15 +136,22 @@ export const AssessmentBatteryCard: React.FC<Props> = ({
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-emerald-100 rounded-lg">
-          <BarChart3 className="h-5 w-5 text-emerald-700" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Assessment Battery</h2>
-          <p className="text-sm text-gray-500">IALB subscale assessments and activity analysis</p>
-        </div>
+      {/* Student name — required for debrief report */}
+      <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 px-5 py-4 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Student Name <span className="text-red-500 ml-1">*</span>
+        </label>
+        <input
+          type="text"
+          value={studentName}
+          onChange={(e) => setStudentName(e.target.value)}
+          placeholder="e.g. Jane Smith"
+          autoComplete="off"
+          className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"
+        />
+        <p className="text-xs text-gray-500">
+          By entering your name, you confirm you conducted these assessments and recorded these findings.
+        </p>
       </div>
 
       {/* Tab bar */}

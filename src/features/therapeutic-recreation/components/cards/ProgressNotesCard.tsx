@@ -34,12 +34,12 @@ function nowTime(): string {
   return new Date().toTimeString().slice(0, 5);
 }
 
-function emptyForm(user: TRCurrentUser): NoteFormState {
+function emptyForm(): NoteFormState {
   return {
     note_type: 'soap',
     note_date: todayDate(),
     note_time: nowTime(),
-    clinician_name: user.name,
+    clinician_name: '',
     subjective: '',
     objective: '',
     assessment: '',
@@ -124,10 +124,16 @@ export const ProgressNotesCard: React.FC<Props> = ({ patient, tenantId, currentU
   const { save, isSaving, error, reset } = useSaveProgressNote(patient.id, tenantId);
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<NoteFormState>(emptyForm(currentUser));
+  const [studentName, setStudentName] = useState('');
+  const [form, setForm] = useState<NoteFormState>(emptyForm());
 
   const handleField = (field: keyof NoteFormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const openForm = () => {
+    setForm({ ...emptyForm(), clinician_name: studentName });
+    setShowForm(true);
   };
 
   const handleSubmit = async () => {
@@ -145,18 +151,36 @@ export const ProgressNotesCard: React.FC<Props> = ({ patient, tenantId, currentU
       narrative: form.note_type === 'narrative' ? form.narrative : null,
       recorded_by_user_id: currentUser.id,
     });
-    setForm(emptyForm(currentUser));
+    setForm(emptyForm());
     setShowForm(false);
     reset();
   };
 
   return (
     <div className="space-y-5">
+      {/* Student name — required for debrief report */}
+      <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 px-5 py-4 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Student Name <span className="text-red-500 ml-1">*</span>
+        </label>
+        <input
+          type="text"
+          value={studentName}
+          onChange={(e) => setStudentName(e.target.value)}
+          placeholder="e.g. Jane Smith"
+          autoComplete="off"
+          className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"
+        />
+        <p className="text-xs text-gray-500">
+          By entering your name, you confirm you authored these progress notes.
+        </p>
+      </div>
+
       {/* New note button */}
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => setShowForm((v) => !v)}
+          onClick={openForm}
           className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
@@ -188,31 +212,22 @@ export const ProgressNotesCard: React.FC<Props> = ({ patient, tenantId, currentU
           </div>
 
           {/* Date, time, clinician */}
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
-              <input
-                type="date"
-                value={form.note_date}
-                onChange={(e) => handleField('note_date', e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
-              <input
-                type="time"
-                value={form.note_time}
-                onChange={(e) => handleField('note_time', e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Clinician</label>
-              <input
-                type="text"
-                value={form.clinician_name}
-                onChange={(e) => handleField('clinician_name', e.target.value)}
+<div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={form.note_date}
+                  onChange={(e) => handleField('note_date', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+                <input
+                  type="time"
+                  value={form.note_time}
+                  onChange={(e) => handleField('note_time', e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
@@ -272,7 +287,7 @@ export const ProgressNotesCard: React.FC<Props> = ({ patient, tenantId, currentU
               type="button"
               onClick={() => {
                 setShowForm(false);
-                setForm(emptyForm(currentUser));
+                setForm(emptyForm());
                 reset();
               }}
               className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
