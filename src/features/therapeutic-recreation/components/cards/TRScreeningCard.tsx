@@ -60,7 +60,7 @@ export const TRScreeningCard: React.FC<Props> = ({
   // Recommendation
   const [recommendation, setRecommendation] = useState<'treatment' | 'independent' | 'not_priority' | null>(null);
   const [clinicianSignature, setClinicianSignature] = useState('');
-  const [studentName, setStudentName] = useState(currentUser.name);
+  const [studentName, setStudentName] = useState('');
 
   const [savedAt, setSavedAt] = useState<string | null>(null);
 

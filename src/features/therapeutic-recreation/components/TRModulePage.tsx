@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
   ClipboardCheck,
@@ -58,6 +58,25 @@ export const TRModulePage: React.FC<TRModulePageProps> = ({
 }) => {
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState<TabId>('screening');
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTop = useCallback(() => {
+    let node: Element | null = headerRef.current?.parentElement ?? null;
+    while (node) {
+      const { overflow, overflowY } = window.getComputedStyle(node);
+      if (/auto|scroll/.test(overflow + overflowY)) {
+        node.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      node = node.parentElement;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleTabChange = (tab: TabId) => {
+    setActiveTab(tab);
+    scrollToTop();
+  };
 
   const tenantId = currentTenant?.id ?? '';
   const isBaseline = currentTenant?.tenant_type === 'simulation_template';
@@ -74,7 +93,7 @@ export const TRModulePage: React.FC<TRModulePageProps> = ({
   return (
     <div className="min-h-full bg-gray-50">
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6">
+      <div ref={headerRef} className="bg-white border-b border-gray-200 px-8 py-6">
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0 p-3 bg-emerald-100 rounded-xl">
             <Leaf className="h-6 w-6 text-emerald-600" />
@@ -123,7 +142,7 @@ export const TRModulePage: React.FC<TRModulePageProps> = ({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 text-xs font-medium group ${
                   active
                     ? 'bg-emerald-50 text-emerald-700'
@@ -143,7 +162,7 @@ export const TRModulePage: React.FC<TRModulePageProps> = ({
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <span className="hover:text-emerald-600 cursor-pointer transition-colors" onClick={onNavigateToFlowsheets}>Flowsheets</span>
           <span className="text-gray-300">›</span>
-          <span className="hover:text-emerald-600 cursor-pointer transition-colors" onClick={() => setActiveTab('screening')}>Therapeutic Recreation</span>
+          <span className="hover:text-emerald-600 cursor-pointer transition-colors" onClick={() => handleTabChange('screening')}>Therapeutic Recreation</span>
           <span className="text-gray-300">›</span>
           <span className="text-gray-900 font-medium">{activeTabMeta.label}</span>
         </div>
