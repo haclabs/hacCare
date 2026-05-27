@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardCheck, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useTRScreening, useSaveTRScreening } from '../../hooks/useTRScreening';
 import { PreFilledBadge } from '../shared/PreFilledBadge';
 import type { Patient } from '../../../../types';
@@ -60,6 +60,7 @@ export const TRScreeningCard: React.FC<Props> = ({
   // Recommendation
   const [recommendation, setRecommendation] = useState<'treatment' | 'independent' | 'not_priority' | null>(null);
   const [clinicianSignature, setClinicianSignature] = useState('');
+  const [studentName, setStudentName] = useState(currentUser.name);
 
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
@@ -82,6 +83,7 @@ export const TRScreeningCard: React.FC<Props> = ({
     setLcmCommunity(existing.lcm_community_participation_score != null ? String(existing.lcm_community_participation_score) : '');
     setRecommendation(existing.tr_recommendation ?? null);
     setClinicianSignature(existing.clinician_signature ?? '');
+    setStudentName(existing.recorded_by ?? currentUser.name);
     setSavedAt(existing.updated_at ?? existing.created_at ?? null);
   }, [existing]);
 
@@ -90,7 +92,7 @@ export const TRScreeningCard: React.FC<Props> = ({
       patient_id: patient.id,
       tenant_id: tenantId,
       is_baseline: isBaseline,
-      recorded_by: currentUser.name,
+      recorded_by: studentName.trim() || currentUser.name,
       experiences_boredom: experiencesBoredom,
       boredom_frequency: boredomFrequency || null,
       takes_initiative: takesInitiative,
@@ -131,34 +133,16 @@ export const TRScreeningCard: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-emerald-100 rounded-lg">
-          <ClipboardCheck className="h-5 w-5 text-emerald-700" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-gray-900">TR Screening Tool</h2>
-          <p className="text-sm text-gray-500">
-            Initial identification of TR needs and suitability for the TR program
-          </p>
-        </div>
-        {existing && (
-          <PreFilledBadge />
-        )}
-      </div>
-
-      {/* Patient Info (read-only) */}
-      <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      {/* Patient info row */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
         <div>
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Patient</p>
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-sm font-semibold text-gray-800">
             {patient.first_name} {patient.last_name}
+            {patient.patient_id && <span className="ml-2 font-normal text-gray-400 font-mono">{patient.patient_id}</span>}
           </p>
         </div>
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Screened by</p>
-          <p className="text-sm font-medium text-gray-800">{currentUser.name}</p>
-        </div>
+        {existing && <PreFilledBadge />}
       </div>
 
       {/* Part 1 — Leisure Participation */}
@@ -352,13 +336,22 @@ export const TRScreeningCard: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Clinician signature */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Clinician Signature</label>
-        <input type="text" value={clinicianSignature}
-          onChange={(e) => setClinicianSignature(e.target.value)}
-          placeholder={currentUser.name}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500" />
+      {/* Student name — required for debrief report */}
+      <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 px-5 py-4 space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Student Name <span className="text-red-500 ml-1">*</span>
+        </label>
+        <input
+          type="text"
+          value={studentName}
+          onChange={(e) => setStudentName(e.target.value)}
+          placeholder="e.g. Jane Smith"
+          autoComplete="off"
+          className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"
+        />
+        <p className="text-xs text-gray-500">
+          By entering your name, you confirm you conducted this screening and recorded these findings.
+        </p>
       </div>
 
       {/* Error */}
