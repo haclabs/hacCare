@@ -82,22 +82,10 @@ export const FORM_COMPONENTS: Readonly<Partial<Record<string, LazyFormComponent>
   'mood': React.lazy(() =>
     import('./forms/MoodAssessmentForm').then(({ MoodAssessmentForm }) => ({ default: MoodAssessmentForm }))
   ),
-  'tr-leisure-interest': React.lazy(() =>
-    import('./forms/TRLeisureInterestForm').then(({ TRLeisureInterestForm }) => ({ default: TRLeisureInterestForm }))
+  'consents': React.lazy(() =>
+    import('./forms/ConsentForm').then(({ ConsentForm }) => ({ default: ConsentForm }))
   ),
-  'tr-functional': React.lazy(() =>
-    import('./forms/TRFunctionalAssessmentForm').then(({ TRFunctionalAssessmentForm }) => ({ default: TRFunctionalAssessmentForm }))
-  ),
-  'tr-social': React.lazy(() =>
-    import('./forms/TRSocialParticipationForm').then(({ TRSocialParticipationForm }) => ({ default: TRSocialParticipationForm }))
-  ),
-  'tr-goals': React.lazy(() =>
-    import('./forms/TRGoalSettingForm').then(({ TRGoalSettingForm }) => ({ default: TRGoalSettingForm }))
-  ),
-  'tr-participation': React.lazy(() =>
-    import('./forms/TRActivityNoteForm').then(({ TRActivityNoteForm }) => ({ default: TRActivityNoteForm }))
-  ),
-  'tr-qol': React.lazy(() =>
-    import('./forms/TRQualityOfLifeForm').then(({ TRQualityOfLifeForm }) => ({ default: TRQualityOfLifeForm }))
+  'bpmh': React.lazy(() =>
+    import('./forms/BPMHForm').then(({ BPMHForm }) => ({ default: BPMHForm }))
   ),
 };

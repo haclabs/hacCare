@@ -177,12 +177,11 @@ const { data: assessments } = await supabase
 // In EnhancedDebriefModal, loop over FLOWSHEET_REGISTRY to auto-generate sections
 ```
 
-### 4. consents and bpmh forms — FUTURE
-These two cards are `status: 'coming-soon'` in registry.ts. When building them,
-follow the same pattern as the other 19 forms:
-- Create component in `src/features/flowsheets/forms/`
-- Add to `formRegistry.ts`
-- Flip to `status: 'active'` in `registry.ts`
+### 4. consents and bpmh forms — ✅ DONE (May 27, 2026)
+Both forms built and wired up:
+- `src/features/flowsheets/forms/ConsentForm.tsx` — Canadian informed consent (type, procedure, disclosure, capacity/SDM, interpreter, decision, witness)
+- `src/features/flowsheets/forms/BPMHForm.tsx` — Best Possible Medication History with dynamic multi-row medication list (generic/brand name, dosage + unit, route, formulation, frequency, verification source), history sources, allergy confirmation, discrepancy notes
+- Both added to `formRegistry.ts` and flipped to `status: 'active'` in `registry.ts`
 
 ---
 

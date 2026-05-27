@@ -92,6 +92,22 @@ export const queryKeys = {
   systemAssessmentHistory: (patientId: string, tenantId: string, systemType: string) =>
     ['system-assessments', patientId, tenantId, systemType, 'history'] as const,
 
+  // TR Module queries
+  trScreening: (patientId: string, tenantId: string) =>
+    ['tr', 'screening', patientId, tenantId] as const,
+  trActiveLivingProfile: (patientId: string, tenantId: string) =>
+    ['tr', 'alp', patientId, tenantId] as const,
+  trAssessmentScores: (patientId: string, tenantId: string) =>
+    ['tr', 'scores', patientId, tenantId] as const,
+  trAssessmentScore: (patientId: string, tenantId: string, toolName: string) =>
+    ['tr', 'scores', patientId, tenantId, toolName] as const,
+  trTreatmentPlan: (patientId: string, tenantId: string) =>
+    ['tr', 'plan', patientId, tenantId] as const,
+  trInterpretations: (patientId: string, tenantId: string) =>
+    ['tr', 'interps', patientId, tenantId] as const,
+  trProgressNotes: (patientId: string, tenantId: string) =>
+    ['tr', 'notes', patientId, tenantId] as const,
+
   // User management queries
   users: ['users'] as const,
   user: (id: string) => ['user', id] as const,
