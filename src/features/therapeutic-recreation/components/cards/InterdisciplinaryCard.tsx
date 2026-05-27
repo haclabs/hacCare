@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { useAllAssessmentScores } from '../../hooks/useAssessmentScores';
 import { useTRInterpretations, useSaveTRInterpretation } from '../../hooks/useTRInterpretations';
@@ -74,11 +74,8 @@ export const InterdisciplinaryCard: React.FC<Props> = ({
   const { getInterp, isLoading: interpsLoading } = useTRInterpretations(patient.id, tenantId);
   const { save, isSaving, error } = useSaveTRInterpretation(patient.id, tenantId);
 
-  const [interpValues, setInterpValues] = useState<Record<ScoreGroup, string>>({
-    berg: '',
-    rai_mds: '',
-    fitness: '',
-  });
+  // Edit-override pattern: track only what the user has typed
+  const [interpEdits, setInterpEdits] = useState<Partial<Record<ScoreGroup, string>>>({});
 
   const [studentName, setStudentName] = useState('');
 
@@ -88,22 +85,13 @@ export const InterdisciplinaryCard: React.FC<Props> = ({
     fitness: false,
   });
 
-  useEffect(() => {
-    if (interpsLoading) return;
-    setInterpValues({
-      berg: getInterp('berg'),
-      rai_mds: getInterp('rai_mds'),
-      fitness: getInterp('fitness'),
-    });
-  }, [interpsLoading, getInterp]);
-
   const handleSave = async (group: ScoreGroup) => {
     await save({
       patient_id: patient.id,
       tenant_id: tenantId,
       is_baseline: isBaseline,
       score_group: group,
-      interpretation: interpValues[group],
+      interpretation: interpEdits[group] ?? getInterp(group),
       recorded_by: studentName.trim() || currentUser.name,
       recorded_by_user_id: currentUser.id,
     });
@@ -181,9 +169,9 @@ export const InterdisciplinaryCard: React.FC<Props> = ({
               </label>
               <textarea
                 rows={4}
-                value={interpValues[section.id]}
+                value={interpEdits[section.id] ?? getInterp(section.id)}
                 onChange={(e) =>
-                  setInterpValues((prev) => ({ ...prev, [section.id]: e.target.value }))
+                  setInterpEdits((prev) => ({ ...prev, [section.id]: e.target.value }))
                 }
                 placeholder={section.placeholder}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"

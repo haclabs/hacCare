@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Save, Loader2 } from 'lucide-react';
 import { useAllAssessmentScores } from '../../hooks/useAssessmentScores';
 import { useActiveLivingProfile, useSaveActiveLivingProfile } from '../../hooks/useActiveLivingProfile';
@@ -25,16 +25,15 @@ export const LifeHistoryCard: React.FC<Props> = ({
   const { data: alp, isLoading: alpLoading } = useActiveLivingProfile(patient.id, tenantId);
   const { save, isSaving, error } = useSaveActiveLivingProfile(patient.id, tenantId);
 
-  const [narrative, setNarrative] = useState('');
-  const [studentName, setStudentName] = useState('');
-  const [savedAt, setSavedAt] = useState<string | null>(null);
+  // Edit-override pattern: undefined means "not yet edited, show server value"
+  const [editedNarrative, setEditedNarrative] = useState<string | undefined>(undefined);
+  const [editedStudentName, setEditedStudentName] = useState<string | undefined>(undefined);
+  const [optimisticSavedAt, setOptimisticSavedAt] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!alp) return;
-    setNarrative(alp.narrative ?? '');
-    setStudentName(alp.recorded_by ?? '');
-    setSavedAt(alp.updated_at ?? alp.created_at ?? null);
-  }, [alp]);
+  // Derived values — user edits take priority over server data
+  const narrative = editedNarrative ?? alp?.narrative ?? '';
+  const studentName = editedStudentName ?? alp?.recorded_by ?? '';
+  const savedAt = optimisticSavedAt ?? alp?.updated_at ?? alp?.created_at ?? null;
 
   // Get baseline data from instructor-seeded life_history and rii tools
   const lifeHistoryBaseline = allScores.getBaseline('life_history');
@@ -52,7 +51,7 @@ export const LifeHistoryCard: React.FC<Props> = ({
       recorded_by_user_id: currentUser.id,
       narrative,
     });
-    setSavedAt(new Date().toISOString());
+    setOptimisticSavedAt(new Date().toISOString());
   };
 
   const isLoading = scoresLoading || alpLoading;
@@ -138,7 +137,7 @@ export const LifeHistoryCard: React.FC<Props> = ({
         <textarea
           rows={8}
           value={narrative}
-          onChange={(e) => setNarrative(e.target.value)}
+          onChange={(e) => setEditedNarrative(e.target.value)}
           placeholder={`Describe ${patient.first_name}'s leisure history, current participation barriers and enablers, personal interests, and motivations for TR engagement…`}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
         />
@@ -158,7 +157,7 @@ export const LifeHistoryCard: React.FC<Props> = ({
         <input
           type="text"
           value={studentName}
-          onChange={(e) => setStudentName(e.target.value)}
+          onChange={(e) => setEditedStudentName(e.target.value)}
           placeholder="e.g. Jane Smith"
           autoComplete="off"
           className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"

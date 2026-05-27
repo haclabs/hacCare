@@ -64,6 +64,9 @@ export const TRScreeningCard: React.FC<Props> = ({
 
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional server state
+     hydration: all setStates are batched by React 18 into a single render.
+     Refactoring 15+ fields to useReducer adds complexity with no practical benefit. */
   useEffect(() => {
     if (!existing) return;
     setExperiencesBoredom(existing.experiences_boredom);
@@ -86,6 +89,7 @@ export const TRScreeningCard: React.FC<Props> = ({
     setStudentName(existing.recorded_by ?? currentUser.name);
     setSavedAt(existing.updated_at ?? existing.created_at ?? null);
   }, [existing]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSave = async () => {
     await save({
