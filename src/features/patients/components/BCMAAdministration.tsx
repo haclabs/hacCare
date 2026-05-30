@@ -122,17 +122,17 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     
     // Detect barcode type
     const isPatientBarcode = barcode.startsWith('PT') || barcode.startsWith('PAT-');
-    // New format: M + letter + 5 digits (e.g., MA26325) OR legacy MED format
-    const medicationRegex = /^M[A-Z]\d{5}$/;
+    // New format: M + letter + 5 digits (e.g., MA26325) OR catalog format MZ + 3+ digits (e.g., MZ001) OR legacy MED format
+    const medicationRegex = /^M[A-Z]\d{5}$|^MZ\d{3,}$/;
     const isMedicationBarcode = barcode.startsWith('MED') || medicationRegex.test(barcode);
     
-    secureLogger.debug('� BCMA: Barcode detection details:');
+    secureLogger.debug('🔵 BCMA: Barcode detection details:');
     secureLogger.debug('  - Barcode value:', barcode);
     secureLogger.debug('  - Starts with PT:', barcode.startsWith('PT'));
     secureLogger.debug('  - Starts with PAT-:', barcode.startsWith('PAT-'));
     secureLogger.debug('  - Starts with MED:', barcode.startsWith('MED'));
     secureLogger.debug('  - Starts with M:', barcode.startsWith('M'));
-    secureLogger.debug('  - Regex test /^M[A-Z]\\d{5}$/:', medicationRegex.test(barcode));
+    secureLogger.debug('  - Regex test /^M[A-Z]\\d{5}$|^MZ\\d{3,}$/:', medicationRegex.test(barcode));
     secureLogger.debug('  - Final: isPatientBarcode =', isPatientBarcode);
     secureLogger.debug('  - Final: isMedicationBarcode =', isMedicationBarcode);
     

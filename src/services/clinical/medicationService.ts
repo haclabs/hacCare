@@ -7,6 +7,32 @@ import { secureLogger } from '../../lib/security/secureLogger';
  * Handles database operations for medications and medication administrations
  */
 
+export interface CatalogEntry {
+  id: string;
+  barcode: string;
+  name: string;
+  generic_name: string | null;
+  formulation: string;
+  strength: string;
+  route: string;
+  category: string;
+  display_order: number | null;
+}
+
+export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
+  const { data, error } = await supabase
+    .from('medications_catalog')
+    .select('id, barcode, name, generic_name, formulation, strength, route, category, display_order')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true, nullsFirst: false });
+
+  if (error) {
+    secureLogger.error('Error fetching medication catalog', error);
+    throw error;
+  }
+  return (data as CatalogEntry[]) || [];
+};
+
 /**
  * Medication Service
  * Handles database operations for medications and medication administrations
@@ -148,7 +174,9 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       status: medication.status || 'Active',
       category: medication.category || 'scheduled',
       admin_time: medication.admin_time || '09:00', // Default administration time
-      tenant_id: patientData?.tenant_id // Explicitly set tenant_id from patient
+      tenant_id: patientData?.tenant_id, // Explicitly set tenant_id from patient
+      catalog_id: medication.catalog_id || null,
+      barcode: medication.barcode || null,
     };
     
     const { data, error } = await supabase
@@ -177,7 +205,9 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       admin_time: data.admin_time,
       last_administered: data.last_administered,
       next_due: data.next_due || new Date().toISOString(),
-      status: data.status || 'Active'
+      status: data.status || 'Active',
+      catalog_id: data.catalog_id ?? null,
+      barcode: data.barcode ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs
@@ -276,6 +306,8 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.last_administered !== undefined) dbUpdates.last_administered = updates.last_administered;
     if (updates.admin_time !== undefined) dbUpdates.admin_time = updates.admin_time;
     if (updates.admin_times !== undefined) dbUpdates.admin_times = updates.admin_times;
+    if (updates.catalog_id !== undefined) dbUpdates.catalog_id = updates.catalog_id;
+    if (updates.barcode !== undefined) dbUpdates.barcode = updates.barcode;
     
     secureLogger.debug('Database updates:', dbUpdates);
     
@@ -331,7 +363,9 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       admin_times: data.admin_times,
       last_administered: data.last_administered,
       next_due: nextDueTime || data.next_due || '',
-      status: data.status || 'Active' // Use 'status' column directly
+      status: data.status || 'Active', // Use 'status' column directly
+      catalog_id: data.catalog_id ?? null,
+      barcode: data.barcode ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs

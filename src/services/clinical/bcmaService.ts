@@ -43,6 +43,9 @@ export interface BCMAValidationResult {
 class BCMAService {
   // Generate medication barcode ID - ULTRA-SHORT for heavy label scanning
   generateMedicationBarcode(medication: Medication): string {
+    // Catalog medications have a pre-assigned stable barcode (MZ001-MZ999)
+    if (medication.barcode) return medication.barcode;
+
     // Create ultra-short medication code for maximum bar width
     // Format: M + 1 char + 5 digits = 7 total characters (optimal for scanning)
     
@@ -148,10 +151,12 @@ class BCMAService {
     const generatedBarcode = this.generateMedicationBarcode(medication);
     const validIds = [
       medication.id,                // Direct medication ID
-      generatedBarcode,             // New format (MEDASPF646A3)
+      generatedBarcode,             // Computed hash barcode or stored catalog barcode
       `MED-${medication.id}`,       // Legacy format
       `RX-${medication.id}`         // Alternative legacy format
     ];
+    // Also accept the stored catalog barcode directly (MZ001-MZ999)
+    if (medication.barcode) validIds.push(medication.barcode);
     
     secureLogger.debug('🔵 Validating medication barcode:', scannedId);
     secureLogger.debug('🔵 Valid medication IDs:', validIds);

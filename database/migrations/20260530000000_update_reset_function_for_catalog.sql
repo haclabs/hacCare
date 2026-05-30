@@ -1,15 +1,35 @@
--- ============================================================================
--- RESET SIMULATION WITH TEMPLATE UPDATES (Property-Based Medication Sync)
--- ============================================================================
--- Smart reset that syncs simulation with updated template
--- Preserves existing medication barcodes, adds NEW medications with NEW barcodes
--- 
--- KEY INSIGHT: Simulation launch creates NEW UUIDs for all data (can't compare by ID)
--- Solution: Match medications by properties (patient barcode + name + dosage + route)
--- New medications get NEW UUIDs = NEW barcodes (instructor prints labels for new ones only)
+-- Migration: Update reset_simulation_with_template_updates to propagate catalog_id + barcode
+-- Date: 2026-05-30
+-- Branch: feature/medication-catalog-qr
+--
+-- Context:
+--   Phase 6 of the medication catalog QR feature.
+--   After migration 20260528000000, patient_medications has two new columns:
+--     • catalog_id  UUID  FK → medications_catalog
+--     • barcode     TEXT  stable QR code string (MZ-series for catalog meds)
+--
+--   When reset_simulation_with_template_updates inserts NEW medications that
+--   were added to a template since the last reset, it must also copy catalog_id
+--   and barcode from the snapshot so physical QR labels printed for those
+--   medications remain valid across resets.
+--
+-- What this migration changes:
+--   • Redeploys reset_simulation_with_template_updates with the new INSERT
+--     that includes catalog_id and barcode columns (STEP 3).
+--
+-- What does NOT need to change:
+--   • restore_snapshot_to_tenant — already schema-agnostic (reads column names
+--     from information_schema dynamically); catalog_id/barcode in the snapshot
+--     JSONB are automatically included in the INSERT once the columns exist.
+--     This covers the simulation LAUNCH path.
+--   • reset_simulation_for_next_session — preserves all medication rows intact;
+--     does not delete/recreate them, so catalog_id/barcode are untouched.
+--
+-- NOTE: Editing database/functions/*.sql files locally does NOT update the live
+-- database. This migration is required to redeploy the function.
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION reset_simulation_with_template_updates(
+CREATE OR REPLACE FUNCTION public.reset_simulation_with_template_updates(
   p_simulation_id UUID
 )
 RETURNS JSONB
@@ -124,8 +144,9 @@ BEGIN
   -- STEP 3: INSERT NEW MEDICATIONS (Property-based matching)
   -- =====================================================
   -- Since simulation launch creates NEW UUIDs, we can't compare by ID
-  -- Instead: match by patient barcode + medication properties
-  -- New meds get NEW UUIDs = NEW barcodes (print labels for these only)
+  -- Instead: match by patient demographics + medication properties
+  -- New meds copy catalog_id + barcode from template snapshot so
+  -- physical QR labels remain valid across resets.
   
   v_template_meds := v_snapshot->'patient_medications';
   IF v_template_meds IS NOT NULL THEN
@@ -342,6 +363,10 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION reset_simulation_with_template_updates TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reset_simulation_with_template_updates(uuid) TO authenticated;
 
-COMMENT ON FUNCTION reset_simulation_with_template_updates IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged.';
+COMMENT ON FUNCTION public.reset_simulation_with_template_updates(uuid) IS
+  'Smart template sync: Matches medications by properties (patient+name+dosage+route), '
+  'not UUIDs. Inserts NEW medications with NEW UUIDs; copies catalog_id + barcode from '
+  'the template snapshot so physical QR labels printed for those medications remain valid '
+  'across resets. Instructor only needs to print labels for newly added medications.';
