@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit,
+  FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit, Clock,
   Search, LayoutGrid, List, ChevronDown, HelpCircle, FolderOpen, Folder, X, Check,
 } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate, updateTemplateFolder } from '../../../services/simulation/simulationService';
@@ -28,6 +28,20 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 function getTemplateInitial(name: string): string {
   const match = name.match(/[—–-]+\s*(\S)/);
   return match ? match[1].toUpperCase() : name.charAt(0).toUpperCase();
+}
+
+interface SnapshotPatient { first_name: string; last_name: string; }
+
+/** Pull patients array out of snapshot_data — zero extra DB calls, already fetched */
+function getSnapshotPatients(template: { snapshot_data: any }): SnapshotPatient[] {
+  try {
+    const data = template.snapshot_data;
+    if (!data) return [];
+    const patients = Array.isArray(data.patients) ? data.patients : [];
+    return patients.filter((p: any) => p?.first_name || p?.last_name);
+  } catch {
+    return [];
+  }
 }
 
 /** Deterministic avatar color based on the patient name character, cycles through a palette */
@@ -230,27 +244,27 @@ const SimulationTemplates: React.FC = () => {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-gray-800">
               Simulation Templates
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-gray-500 mt-0.5">
               Create and manage simulation scenarios
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowImportModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
             >
-              <Upload className="h-4 w-4" />
-              + Import
+              <Upload className="h-3.5 w-3.5" />
+              Import
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
-              <Plus className="h-4 w-4" />
-              + Create Template
+              <Plus className="h-3.5 w-3.5" />
+              Create Template
             </button>
           </div>
         </div>
@@ -259,13 +273,13 @@ const SimulationTemplates: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search */}
           <div className="relative min-w-[180px] max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search templates…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
 
@@ -277,11 +291,11 @@ const SimulationTemplates: React.FC = () => {
               className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
                 statusFilter === s
                   ? s === 'all'
-                    ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 border-transparent'
+                    ? 'bg-gray-800 text-white border-transparent'
                     : s === 'ready'
                     ? 'bg-green-600 text-white border-transparent'
                     : 'bg-amber-500 text-white border-transparent'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
               }`}
             >
               {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -296,7 +310,7 @@ const SimulationTemplates: React.FC = () => {
               className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
                 groupFilter === g
                   ? 'bg-purple-600 text-white border-transparent'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
               }`}
             >
               <Folder className="h-3 w-3" />
@@ -307,13 +321,13 @@ const SimulationTemplates: React.FC = () => {
           <div className="flex-1" />
 
           {/* List / grid toggle */}
-          <div className="flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+          <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5">
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-md transition-colors ${
                 viewMode === 'list'
-                  ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'
-                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-400 hover:text-gray-600'
               }`}
               title="List view"
             >
@@ -323,8 +337,8 @@ const SimulationTemplates: React.FC = () => {
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-md transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'
-                  : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-400 hover:text-gray-600'
               }`}
               title="Grid view"
             >
@@ -335,7 +349,7 @@ const SimulationTemplates: React.FC = () => {
 
         {/* ── Instructor notice ────────────────────────────────────────────── */}
         {isInstructor && !canSeeAllPrograms && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
             <FileText className="h-3.5 w-3.5 flex-shrink-0" />
             Admins and coordinators can create templates. Instructors see only their assigned programs.
           </div>
@@ -344,13 +358,13 @@ const SimulationTemplates: React.FC = () => {
         {/* ── Empty state ──────────────────────────────────────────────────── */}
         {totalFiltered === 0 && (
           <div className="text-center py-12">
-            <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-sm font-semibold text-gray-700 mb-1">
               {search || statusFilter !== 'all' || groupFilter !== 'all'
                 ? 'No templates match your filters'
                 : isInstructor ? 'No Templates in Your Program' : 'No Templates Yet'}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            <p className="text-xs text-gray-500 mb-4">
               {search || statusFilter !== 'all' || groupFilter !== 'all'
                 ? 'Try clearing the search or filters'
                 : isInstructor
@@ -372,17 +386,17 @@ const SimulationTemplates: React.FC = () => {
             LIST VIEW
         ══════════════════════════════════════════════════════════════════ */}
         {viewMode === 'list' && totalFiltered > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {sortedGroups.map((group, gIdx) => (
               <div key={group}>
                 {/* Group header */}
-                <div className={`px-4 py-2.5 flex items-center gap-3 bg-slate-100/80 dark:bg-slate-700/50 ${
-                  gIdx > 0 ? 'border-t border-slate-200 dark:border-slate-700' : ''
+                <div className={`px-4 py-2.5 flex items-center gap-3 bg-gray-50 ${
+                  gIdx > 0 ? 'border-t border-gray-200' : ''
                 }`}>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                     {group}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-200">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-500">
                     {grouped[group].length}
                   </span>
                 </div>
@@ -397,14 +411,10 @@ const SimulationTemplates: React.FC = () => {
                         ? 'border-l-green-500'
                         : template.status === 'draft'
                         ? 'border-l-amber-400'
-                        : 'border-l-slate-300 dark:border-l-slate-600'
-                    } ${
-                      tIdx % 2 === 0
-                        ? 'bg-white dark:bg-slate-800'
-                        : 'bg-slate-100/80 dark:bg-slate-700/40'
-                    } hover:bg-blue-50/60 dark:hover:bg-slate-700/50 ${
+                        : 'border-l-gray-300'
+                    } bg-white hover:bg-gray-50 ${
                       tIdx < grouped[group].length - 1
-                        ? 'border-b border-slate-100 dark:border-slate-700/50'
+                        ? 'border-b border-gray-100'
                         : ''
                     }`}
                   >
@@ -416,7 +426,7 @@ const SimulationTemplates: React.FC = () => {
                     {/* Name + description */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                        <span className="text-sm font-medium text-gray-900 truncate">
                           {template.name}
                         </span>
                         {template.primary_categories && template.primary_categories.length > 0 && (
@@ -424,7 +434,7 @@ const SimulationTemplates: React.FC = () => {
                             {template.primary_categories.map(c => (
                               <span
                                 key={c}
-                                className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                                className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700"
                               >
                                 {c}
                               </span>
@@ -433,34 +443,82 @@ const SimulationTemplates: React.FC = () => {
                         )}
                       </div>
                       {template.description && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                        <p className="text-xs text-gray-400 truncate mt-0.5">
                           {template.description}
                         </p>
                       )}
+
+                      {/* Patient roster from snapshot — zero extra DB calls */}
+                      {(() => {
+                        const pts = getSnapshotPatients(template);
+                        if (pts.length === 0) return null;
+                        const shown = pts.slice(0, 4);
+                        const overflow = pts.length - shown.length;
+                        return (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <div className="flex items-center -space-x-1.5">
+                              {shown.map((p, i) => {
+                                const initials = `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase();
+                                const colors = ['bg-blue-400','bg-violet-400','bg-emerald-400','bg-rose-400'];
+                                return (
+                                  <div
+                                    key={i}
+                                    title={`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()}
+                                    className={`h-4 w-4 rounded-full ${colors[i % colors.length]} ring-1 ring-white flex items-center justify-center text-white font-bold`}
+                                    style={{ fontSize: '7px' }}
+                                  >
+                                    {initials}
+                                  </div>
+                                );
+                              })}
+                              {overflow > 0 && (
+                                <div
+                                  className="h-4 w-4 rounded-full bg-gray-300 ring-1 ring-white flex items-center justify-center text-gray-600 font-bold"
+                                  style={{ fontSize: '7px' }}
+                                  title={`${overflow} more patient${overflow > 1 ? 's' : ''}`}
+                                >
+                                  +{overflow}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-gray-400">
+                              {pts.length} patient{pts.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Expand chevron */}
-                    <ChevronDown className={`h-3.5 w-3.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:text-slate-600 dark:group-hover:text-slate-300 ${
+                    <ChevronDown className={`h-3.5 w-3.5 text-gray-400 flex-shrink-0 transition-transform duration-200 group-hover:text-gray-600 ${
                       expandedTemplate === template.id ? 'rotate-180' : ''
                     }`} />
 
                     {/* Right-side meta — visible at rest, fades on hover */}
-                    <div className="hidden sm:flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500 transition-opacity duration-150 group-hover:opacity-0 pointer-events-none shrink-0">
+                    <div className="hidden sm:flex items-center gap-4 text-xs text-gray-400 transition-opacity duration-150 group-hover:opacity-0 pointer-events-none shrink-0">
+                      {(() => {
+                        const pts = getSnapshotPatients(template);
+                        return pts.length > 0 ? (
+                          <span className="flex items-center gap-1">
+                            <span>{pts.length}p</span>
+                          </span>
+                        ) : null;
+                      })()}
                       <span>{template.default_duration_minutes} min</span>
                       {template.snapshot_taken_at ? (
-                        <span className="flex items-center gap-1 text-green-600 dark:text-green-500">
+                        <span className="flex items-center gap-1 text-green-600">
                           <Camera className="h-3 w-3" />
                           {formatDistanceToNow(new Date(template.snapshot_taken_at), { addSuffix: true })}
                         </span>
                       ) : (
-                        <span className="text-amber-500 dark:text-amber-400">No snapshot</span>
+                        <span className="text-amber-500">No snapshot</span>
                       )}
                       <span className={`capitalize px-2 py-0.5 rounded-full font-medium ${
                         template.status === 'ready'
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                          ? 'bg-green-100 text-green-700'
                           : template.status === 'draft'
-                          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-gray-100 text-gray-500'
                       }`}>
                         {template.status}
                       </span>
@@ -483,7 +541,7 @@ const SimulationTemplates: React.FC = () => {
                             }}
                             placeholder="Folder name…"
                             list={`folders-${template.id}`}
-                            className="w-40 px-2 py-1 text-xs bg-white dark:bg-slate-700 border border-amber-400 rounded-md text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                            className="w-40 px-2 py-1 text-xs bg-white border border-amber-400 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
                           />
                           {existingFolders.length > 0 && (
                             <datalist id={`folders-${template.id}`}>
@@ -493,14 +551,14 @@ const SimulationTemplates: React.FC = () => {
                         </div>
                         <button
                           onClick={() => handleSaveFolder(template.id)}
-                          className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 rounded-md"
+                          className="p-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-md"
                           title="Save folder"
                         >
                           <Check className="h-3 w-3" />
                         </button>
                         <button
                           onClick={() => { setEditingFolderFor(null); setFolderInput(''); }}
-                          className="p-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200 rounded-md"
+                          className="p-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-md"
                           title="Cancel"
                         >
                           <X className="h-3 w-3" />
@@ -511,7 +569,7 @@ const SimulationTemplates: React.FC = () => {
                         <button
                           onClick={() => handleEditTemplate(template)}
                           disabled={actionLoading === template.id}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 rounded-md disabled:opacity-50 transition-colors"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-md disabled:opacity-50 transition-colors"
                           title="Edit template patients and data"
                         >
                           <Edit className="h-3 w-3" />
@@ -520,7 +578,7 @@ const SimulationTemplates: React.FC = () => {
                         <button
                           onClick={() => handleSaveSnapshot(template.id)}
                           disabled={actionLoading === template.id}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-md disabled:opacity-50 transition-colors"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md disabled:opacity-50 transition-colors"
                           title="Save current state as snapshot"
                         >
                           <Save className="h-3 w-3" />
@@ -529,7 +587,7 @@ const SimulationTemplates: React.FC = () => {
                         <button
                           onClick={() => handleLaunch(template)}
                           disabled={!template.snapshot_data || actionLoading === template.id}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           title={!template.snapshot_data ? 'Save snapshot first' : 'Launch simulation'}
                         >
                           <Play className="h-3 w-3" />
@@ -537,7 +595,7 @@ const SimulationTemplates: React.FC = () => {
                         </button>
                         <button
                           onClick={() => { setEditingFolderFor(template.id); setFolderInput(template.folder || ''); }}
-                          className="p-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 rounded-md transition-colors"
+                          className="p-1.5 bg-amber-100 text-amber-600 hover:bg-amber-200 rounded-md transition-colors"
                           title={template.folder ? `Folder: ${template.folder} — click to change` : 'Assign to folder'}
                         >
                           <Folder className="h-3 w-3" />
@@ -550,7 +608,7 @@ const SimulationTemplates: React.FC = () => {
                         <button
                           onClick={() => handleDelete(template.id)}
                           disabled={actionLoading === template.id}
-                          className="p-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-md disabled:opacity-50 transition-colors"
+                          className="p-1.5 text-xs font-medium bg-red-100 text-red-600 hover:bg-red-200 rounded-md disabled:opacity-50 transition-colors"
                           title="Delete template"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -565,24 +623,22 @@ const SimulationTemplates: React.FC = () => {
                   {/* Expanded description panel */}
                   {expandedTemplate === template.id && (
                     <div className={`px-4 py-3 border-l-4 ${
-                      template.status === 'ready' ? 'border-l-green-500' : template.status === 'draft' ? 'border-l-amber-400' : 'border-l-slate-300 dark:border-l-slate-600'
-                    } ${
-                      tIdx % 2 === 0 ? 'bg-blue-50/40 dark:bg-slate-700/30' : 'bg-blue-50/60 dark:bg-slate-700/50'
-                    } ${
-                      tIdx < grouped[group].length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''
+                      template.status === 'ready' ? 'border-l-green-500' : template.status === 'draft' ? 'border-l-amber-400' : 'border-l-gray-300'
+                    } bg-gray-50 ${
+                      tIdx < grouped[group].length - 1 ? 'border-b border-gray-100' : ''
                     }`}>
                       <div className="ml-11 space-y-2">
                         {template.description ? (
-                          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                          <p className="text-sm text-gray-700 leading-relaxed">
                             {template.description}
                           </p>
                         ) : (
-                          <p className="text-sm text-slate-400 dark:text-slate-500 italic">No description provided.</p>
+                          <p className="text-sm text-gray-400 italic">No description provided.</p>
                         )}
-                        <div className="flex flex-wrap gap-3 pt-1 text-xs text-slate-500 dark:text-slate-400">
-                          <span>Duration: <strong className="text-slate-700 dark:text-slate-300">{template.default_duration_minutes} min</strong></span>
+                        <div className="flex flex-wrap gap-3 pt-1 text-xs text-gray-500">
+                          <span>Duration: <strong className="text-gray-700">{template.default_duration_minutes} min</strong></span>
                           <span>Status: <strong className={`${
-                            template.status === 'ready' ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+                            template.status === 'ready' ? 'text-green-600' : 'text-amber-600'
                           } capitalize`}>{template.status}</strong></span>
                           {template.snapshot_taken_at && (
                             <span className="flex items-center gap-1">
@@ -597,6 +653,31 @@ const SimulationTemplates: React.FC = () => {
                             </span>
                           )}
                         </div>
+
+                        {/* Patient roster in expanded panel */}
+                        {(() => {
+                          const pts = getSnapshotPatients(template);
+                          if (pts.length === 0) return null;
+                          return (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                Patients in snapshot ({pts.length})
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {pts.map((p, i) => {
+                                  const initials = `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase();
+                                  const colors = ['bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700','bg-amber-100 text-amber-700','bg-cyan-100 text-cyan-700'];
+                                  return (
+                                    <span key={i} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colors[i % colors.length]}`}>
+                                      <span className="font-bold">{initials}</span>
+                                      {`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
@@ -608,156 +689,205 @@ const SimulationTemplates: React.FC = () => {
         )}
 
         {/* ══════════════════════════════════════════════════════════════════
-            GRID VIEW (original card layout)
+            GRID VIEW
         ══════════════════════════════════════════════════════════════════ */}
         {viewMode === 'grid' && totalFiltered > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {displayedTemplates.map((template) => (
-              <div
-                key={template.id}
-                className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-                      {template.name}
-                    </h3>
-                    <span
-                      className={`
-                        inline-block px-2 py-1 rounded text-xs font-medium
-                        ${
-                          template.status === 'ready'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            : template.status === 'draft'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                            : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400'
-                        }
-                      `}
-                    >
-                      {template.status}
-                    </span>
-                  </div>
-                </div>
+            {displayedTemplates.map((template) => {
+              const pts = getSnapshotPatients(template);
+              const shownPts = pts.slice(0, 4);
+              const overflowPts = pts.length - shownPts.length;
+              const ptColors = ['bg-blue-400','bg-violet-400','bg-emerald-400','bg-rose-400'];
+              return (
+                <div
+                  key={template.id}
+                  className="group rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-150 flex flex-col overflow-hidden"
+                >
+                  {/* Status accent bar */}
+                  <div className={`h-1 flex-shrink-0 ${
+                    template.status === 'ready' ? 'bg-green-400'
+                    : template.status === 'draft' ? 'bg-amber-400'
+                    : 'bg-gray-200'
+                  }`} />
 
-                {template.description && (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
-                    {template.description}
-                  </p>
-                )}
+                  <div className="p-4 flex flex-col flex-1 gap-3">
 
-                {/* Program Category Badges */}
-                {template.primary_categories && template.primary_categories.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {template.primary_categories.map((category) => (
-                      <span
-                        key={category}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                      >
-                        📚 {category}
+                    {/* Header: avatar + name + status */}
+                    <div className="flex items-start gap-3">
+                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0 ${getAvatarColor(template.name)}`}>
+                        {getTemplateInitial(template.name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">
+                          {template.name}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${
+                            template.status === 'ready' ? 'bg-green-100 text-green-700'
+                            : template.status === 'draft' ? 'bg-amber-100 text-amber-700'
+                            : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {template.status}
+                          </span>
+                          {template.folder && (
+                            <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+                              <Folder className="h-2.5 w-2.5" />
+                              {template.folder}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {template.description && (
+                      <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
+                        {template.description}
+                      </p>
+                    )}
+
+                    {/* Patient roster */}
+                    {pts.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center -space-x-1.5">
+                          {shownPts.map((p, i) => {
+                            const initials = `${p.first_name?.[0] ?? ''}${p.last_name?.[0] ?? ''}`.toUpperCase();
+                            return (
+                              <div
+                                key={i}
+                                title={`${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()}
+                                className={`h-5 w-5 rounded-full ${ptColors[i % ptColors.length]} ring-1 ring-white flex items-center justify-center text-white font-bold`}
+                                style={{ fontSize: '8px' }}
+                              >
+                                {initials}
+                              </div>
+                            );
+                          })}
+                          {overflowPts > 0 && (
+                            <div
+                              className="h-5 w-5 rounded-full bg-gray-200 ring-1 ring-white flex items-center justify-center text-gray-500 font-bold"
+                              style={{ fontSize: '8px' }}
+                            >
+                              +{overflowPts}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-gray-400">
+                          {pts.length} patient{pts.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Program category badges */}
+                    {template.primary_categories && template.primary_categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {template.primary_categories.map((cat) => (
+                          <span key={cat} className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700">
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Meta row */}
+                    <div className="flex items-center gap-3 text-[11px] text-gray-400 mt-auto">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {template.default_duration_minutes} min
                       </span>
-                    ))}
-                  </div>
-                )}
-
-                <div className="text-xs text-slate-500 dark:text-slate-500 mb-4 space-y-1">
-                  <div>Default duration: {template.default_duration_minutes} minutes</div>
-                  <div>Created {formatDistanceToNow(new Date(template.created_at), { addSuffix: true })}</div>
-                  {template.snapshot_data && template.snapshot_taken_at && (
-                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                      <Camera className="h-3 w-3" />
-                      <span>Snapshot saved {formatDistanceToNow(new Date(template.snapshot_taken_at), { addSuffix: true })}</span>
+                      {template.snapshot_taken_at ? (
+                        <span className="flex items-center gap-1 text-green-600">
+                          <Camera className="h-3 w-3" />
+                          {formatDistanceToNow(new Date(template.snapshot_taken_at), { addSuffix: true })}
+                        </span>
+                      ) : (
+                        <span className="text-amber-500">No snapshot</span>
+                      )}
                     </div>
-                  )}
-                  {template.snapshot_data && !template.snapshot_taken_at && (
-                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                      <Camera className="h-3 w-3" />
-                      <span>Snapshot saved</span>
-                    </div>
-                  )}
-                </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditTemplate(template)}
-                      disabled={actionLoading === template.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                      title="Edit template patients and data"
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleLaunch(template)}
-                      disabled={!template.snapshot_data || actionLoading === template.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                      title={!template.snapshot_data ? 'Save snapshot first' : 'Launch simulation'}
-                    >
-                      <Play className="h-4 w-4" />
-                      <span className="hidden sm:inline">Launch</span>
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleSaveSnapshot(template.id)}
-                      disabled={actionLoading === template.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg disabled:opacity-50 text-sm"
-                      title="Save current state as snapshot"
-                    >
-                      <Save className="h-4 w-4" />
-                      <span className="hidden sm:inline">Save</span>
-                    </button>
-                    <TemplateExportButton
-                      templateId={template.id}
-                      templateName={template.name}
-                      disabled={!template.snapshot_data || actionLoading === template.id}
-                    />
-                    <button
-                      onClick={() => handleDelete(template.id)}
-                      disabled={actionLoading === template.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg disabled:opacity-50 text-sm"
-                      title="Delete template"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Delete</span>
-                    </button>
+                    {/* Action strip */}
+                    <div className="pt-3 border-t border-gray-100 flex items-center gap-1">
+                      <button
+                        onClick={() => handleEditTemplate(template)}
+                        disabled={actionLoading === template.id}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title="Edit template"
+                      >
+                        <Edit className="h-3 w-3" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleLaunch(template)}
+                        disabled={!template.snapshot_data || actionLoading === template.id}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title={!template.snapshot_data ? 'Save a snapshot first' : 'Launch simulation'}
+                      >
+                        <Play className="h-3 w-3" />
+                        Launch
+                      </button>
+                      <div className="flex-1" />
+                      <button
+                        onClick={() => handleSaveSnapshot(template.id)}
+                        disabled={actionLoading === template.id}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50 transition-colors"
+                        title="Save snapshot"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                      </button>
+                      <TemplateExportButton
+                        templateId={template.id}
+                        templateName={template.name}
+                        disabled={!template.snapshot_data || actionLoading === template.id}
+                      />
+                      <button
+                        onClick={() => handleDelete(template.id)}
+                        disabled={actionLoading === template.id}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                        title="Delete template"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      {actionLoading === template.id && (
+                        <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-blue-600" />
+                      )}
+                    </div>
+
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* ── How to Use (collapsible) ─────────────────────────────────────── */}
-        <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setShowHowTo(v => !v)}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
+            className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
           >
             <HelpCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <span className="text-sm font-medium text-gray-700">
               How to Use Simulation Templates
             </span>
-            <ChevronDown className={`h-4 w-4 text-slate-400 ml-auto transition-transform duration-200 ${showHowTo ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 text-gray-400 ml-auto transition-transform duration-200 ${showHowTo ? 'rotate-180' : ''}`} />
           </button>
 
           {showHowTo && (
-            <div className="px-6 py-5 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 space-y-4 text-sm text-slate-700 dark:text-slate-300">
+            <div className="px-6 py-5 bg-blue-50 space-y-4 text-sm text-gray-700">
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 bg-blue-600 text-white rounded-full text-xs">1</span>
                   Create a Template
                 </h4>
                 <p className="ml-7">
                   Click "+ Create Template" above. Give it a name, description, and default duration.
                   The template starts with{' '}
-                  <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-700 dark:text-blue-300 font-mono text-xs">draft</span>{' '}
+                  <span className="px-1.5 py-0.5 bg-blue-100 rounded text-blue-700 font-mono text-xs">draft</span>{' '}
                   status.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 bg-blue-600 text-white rounded-full text-xs">2</span>
                   Build Your Scenario
                 </h4>
@@ -766,17 +896,17 @@ const SimulationTemplates: React.FC = () => {
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 bg-blue-600 text-white rounded-full text-xs">3</span>
                   Save Snapshot
                 </h4>
                 <p className="ml-7">
                   Click <strong>Snapshot</strong> once your scenario is ready. This captures all data and marks the template as{' '}
-                  <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded text-green-700 dark:text-green-300 font-mono text-xs">ready</span>.
+                  <span className="px-1.5 py-0.5 bg-green-100 rounded text-green-700 font-mono text-xs">ready</span>.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                <h4 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 bg-green-600 text-white rounded-full text-xs">4</span>
                   Launch Simulation
                 </h4>
@@ -785,8 +915,8 @@ const SimulationTemplates: React.FC = () => {
                   Each launch creates a separate, isolated environment from the snapshot.
                 </p>
               </div>
-              <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                <p className="text-xs text-yellow-900 dark:text-yellow-100">
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-900">
                   <strong>💡 Tip:</strong> You can launch the same template multiple times to run parallel simulations with different groups.
                   Each launch creates a separate, isolated environment.
                 </p>

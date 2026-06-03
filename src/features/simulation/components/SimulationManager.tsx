@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Beaker, FileText, History, AlertCircle, BookOpen } from 'lucide-react';
+import { Beaker, FileText, History, BookOpen } from 'lucide-react';
 import ActiveSimulations from './ActiveSimulations';
 import SimulationTemplates from './SimulationTemplates';
 import SimulationHistory from './SimulationHistory';
@@ -41,70 +41,52 @@ const SimulationManager: React.FC = () => {
   ];
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-              <Beaker className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Simulation Training System
-              </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Create templates, run simulations, and review performance
-              </p>
-            </div>
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-200 px-8 py-6 flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex-shrink-0 p-3 bg-violet-100 rounded-xl">
+            <Beaker className="h-6 w-6 text-violet-600" />
           </div>
-
-          {/* Info Banner */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-900 dark:text-blue-100">
-                <strong>Simulation Management:</strong> Admins, coordinators, and instructors can create templates and manage simulations.
-                Instructors see only simulations for their assigned programs.
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              const isGuide = tab.id === 'guide';
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
-                    ${
-                      isActive && isGuide
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
-                        : isActive
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
-                        : isGuide
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 border-2 border-emerald-300 dark:border-emerald-700'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                    }
-                  `}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 leading-tight">Simulation Training System</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Create templates, run simulations, and review performance
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Tab Content */}
+      {/* Sticky tab navigation */}
+      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-0.5 px-4 py-1.5 overflow-x-auto scrollbar-none">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            const isGuide = tab.id === 'guide';
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 text-xs font-medium ${
+                  isActive && isGuide
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : isActive
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tab content */}
       <div className="flex-1 overflow-auto">
-        <div className="p-6">
+        <div className="px-8 py-6">
           {activeTab === 'active' && <ActiveSimulations />}
           {activeTab === 'templates' && <SimulationTemplates />}
           {activeTab === 'history' && <SimulationHistory />}

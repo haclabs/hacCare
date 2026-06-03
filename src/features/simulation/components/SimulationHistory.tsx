@@ -270,26 +270,26 @@ const SimulationHistory: React.FC = () => {
         {/* Left Column - History List */}
         <div className="lg:col-span-2 space-y-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-gray-800">
               Debrief Reports
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-gray-500 mt-0.5">
               View completed simulations and performance reports
             </p>
           </div>
 
           {/* Auto-Archive Notice - Only on Active Tab */}
           {activeTab === 'active' && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start gap-2">
-              <Archive className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
+              <Archive className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-700">
                 <strong>Note:</strong> Reports are automatically moved to the Archived tab after 24 hours and organized by instructor and date.
               </p>
             </div>
           )}
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex gap-2 border-b border-gray-200">
             <button
               onClick={() => {
                 setActiveTab('active');
@@ -298,13 +298,13 @@ const SimulationHistory: React.FC = () => {
               }}
               className={`px-4 py-2 font-medium text-sm transition-colors relative ${
                 activeTab === 'active'
-                  ? 'text-purple-600 dark:text-purple-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'text-purple-600'
+                  : 'text-gray-500 hover:text-gray-800'
               }`}
             >
               Active
               {activeTab === 'active' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600" />
               )}
             </button>
             <button
@@ -315,14 +315,14 @@ const SimulationHistory: React.FC = () => {
               }}
               className={`px-4 py-2 font-medium text-sm transition-colors relative flex items-center gap-2 ${
                 activeTab === 'archived'
-                  ? 'text-purple-600 dark:text-purple-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'text-purple-600'
+                  : 'text-gray-500 hover:text-gray-800'
               }`}
             >
               <Archive className="h-4 w-4" />
               Archived
               {activeTab === 'archived' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600" />
               )}
             </button>
           </div>
@@ -330,20 +330,20 @@ const SimulationHistory: React.FC = () => {
           {/* Search and Filter Controls */}
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search by participant name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
             </div>
             {uniqueInstructors.length > 0 && (
               <select
                 value={instructorFilter}
                 onChange={(e) => setInstructorFilter(e.target.value)}
-                className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 min-w-[200px]"
+                className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 min-w-[200px]"
               >
                 <option value="">All Instructors</option>
                 {uniqueInstructors.map(instructor => (
@@ -377,11 +377,11 @@ const SimulationHistory: React.FC = () => {
 
           {/* Folder Browser for Archived Tab */}
           {activeTab === 'archived' && Object.keys(folderStructure).length > 0 && (
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Archive className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">
+                  <Archive className="h-5 w-5 text-emerald-600" />
+                  <h3 className="font-semibold text-emerald-900">
                     Browse by Instructor
                   </h3>
                 </div>
@@ -391,7 +391,7 @@ const SimulationHistory: React.FC = () => {
                       setSelectedInstructor(null);
                       setSelectedDate(null);
                     }}
-                    className="text-xs px-3 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors font-medium"
+                    className="text-xs px-3 py-1 bg-white border border-emerald-200 text-emerald-700 rounded-md hover:bg-emerald-50 transition-colors font-medium"
                   >
                     ← Back to All
                   </button>
@@ -400,23 +400,23 @@ const SimulationHistory: React.FC = () => {
 
               {/* Breadcrumb Navigation */}
               {(selectedInstructor || selectedDate) && (
-                <div className="flex items-center gap-2 text-sm mb-3 px-3 py-2 bg-white/60 dark:bg-slate-800/60 rounded-lg">
-                  <Archive className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <div className="flex items-center gap-2 text-sm mb-3 px-3 py-2 bg-white/80 rounded-lg">
+                  <Archive className="h-3.5 w-3.5 text-emerald-600" />
                   <button
                     onClick={() => {
                       setSelectedInstructor(null);
                       setSelectedDate(null);
                     }}
-                    className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium"
+                    className="text-gray-500 hover:text-emerald-600 font-medium"
                   >
                     Archives
                   </button>
                   {selectedInstructor && (
                     <>
-                      <span className="text-slate-400">/</span>
+                      <span className="text-gray-400">/</span>
                       <button
                         onClick={() => setSelectedDate(null)}
-                        className="text-emerald-700 dark:text-emerald-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold"
+                        className="text-emerald-700 hover:text-emerald-600 font-semibold"
                       >
                         {selectedInstructor}
                       </button>
@@ -424,8 +424,8 @@ const SimulationHistory: React.FC = () => {
                   )}
                   {selectedDate && (
                     <>
-                      <span className="text-slate-400">/</span>
-                      <span className="text-emerald-800 dark:text-emerald-200 font-bold">
+                      <span className="text-gray-400">/</span>
+                      <span className="text-emerald-800 font-bold">
                         {format(new Date(selectedDate), 'MMM dd, yyyy')}
                       </span>
                     </>
@@ -435,7 +435,7 @@ const SimulationHistory: React.FC = () => {
 
               {/* Quick Stats */}
               {!selectedInstructor && !selectedDate && (
-                <div className="mb-3 text-xs text-emerald-700 dark:text-emerald-300 bg-white/60 dark:bg-slate-800/60 px-3 py-2 rounded-lg">
+                <div className="mb-3 text-xs text-emerald-700 bg-white/80 px-3 py-2 rounded-lg">
                   📂 {Object.keys(folderStructure).length} instructor{Object.keys(folderStructure).length !== 1 ? 's' : ''} with archived reports
                 </div>
               )}
@@ -452,7 +452,7 @@ const SimulationHistory: React.FC = () => {
                           placeholder="Search instructors..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-3 py-2 text-sm bg-white border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                         />
                       </div>
                     )}
@@ -477,24 +477,24 @@ const SimulationHistory: React.FC = () => {
                                 setSelectedInstructor(instructor);
                                 setSearchQuery(''); // Clear search when selecting
                               }}
-                              className="w-full flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all text-left group shadow-sm hover:shadow"
+                              className="w-full flex items-center justify-between gap-3 p-3 bg-white border border-emerald-100 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-all text-left group shadow-sm hover:shadow"
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1">
-                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg group-hover:bg-emerald-200 dark:group-hover:bg-emerald-800/50 transition-colors">
-                                  <UserCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
+                                  <UserCheck className="h-5 w-5 text-emerald-600" />
                                 </div>
                                 <div className="min-w-0">
-                                  <div className="font-semibold text-slate-900 dark:text-white truncate">{instructor}</div>
-                                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  <div className="font-semibold text-gray-900 truncate">{instructor}</div>
+                                  <div className="text-xs text-gray-400">
                                     {dates.length} {dates.length === 1 ? 'session date' : 'session dates'}
                                   </div>
                                 </div>
                               </div>
                               <div className="flex flex-col items-end gap-1">
-                                <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full font-semibold">
+                                <span className="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full font-semibold">
                                   {totalReports} {totalReports === 1 ? 'report' : 'reports'}
                                 </span>
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500">→ Open</span>
+                                <span className="text-[10px] text-gray-400">→ Open</span>
                               </div>
                             </button>
                           );
@@ -514,15 +514,15 @@ const SimulationHistory: React.FC = () => {
                       <button
                         key={date}
                         onClick={() => setSelectedDate(date)}
-                        className="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all text-left group shadow-sm hover:shadow"
+                        className="flex items-center justify-between gap-3 p-3 bg-white border border-emerald-100 rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-all text-left group shadow-sm hover:shadow"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                          <span className="font-medium text-slate-900 dark:text-white">
+                          <Calendar className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                          <span className="font-medium text-gray-900">
                             {format(new Date(date), 'MMM dd, yyyy')}
                           </span>
                         </div>
-                        <span className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-full flex-shrink-0 font-semibold">
+                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full flex-shrink-0 font-semibold">
                           {simCount}
                         </span>
                       </button>
@@ -540,11 +540,11 @@ const SimulationHistory: React.FC = () => {
             </div>
           ) : filteredHistory.length === 0 ? (
             <div className="text-center py-12">
-              <History className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+              <History className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-sm font-semibold text-gray-700 mb-1">
                 {searchQuery ? 'No Matching Simulations' : activeTab === 'archived' ? 'No Archived Simulations' : 'No History Yet'}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-xs text-gray-500">
                 {searchQuery 
                   ? 'Try a different participant name'
                   : activeTab === 'archived' 
@@ -558,12 +558,12 @@ const SimulationHistory: React.FC = () => {
             {filteredHistory.map((record) => (
             <div
               key={record.id}
-              className="bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 p-6"
+              className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-sm font-semibold text-gray-900">
                       {record.name}
                     </h3>
                     <span
@@ -571,10 +571,10 @@ const SimulationHistory: React.FC = () => {
                         px-3 py-1 rounded-full text-xs font-medium
                         ${
                           record.status === 'completed'
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            ? 'bg-green-100 text-green-700'
                             : record.status === 'expired'
-                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-orange-100 text-orange-700'
+                            : 'bg-red-100 text-red-700'
                         }
                       `}
                     >
@@ -584,15 +584,15 @@ const SimulationHistory: React.FC = () => {
 
                   {/* Completed Date/Time - Bold and prominent in MST */}
                   {record.completed_at && (
-                    <div className="mb-3 inline-block px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-0.5">COMPLETED (MST)</div>
-                      <div className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                    <div className="mb-3 inline-block px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+                      <div className="text-xs text-blue-600 font-medium mb-0.5">COMPLETED (MST)</div>
+                      <div className="text-sm font-bold text-blue-800">
                         {format(new Date(record.completed_at), 'PPP')} at {format(new Date(record.completed_at), 'HH:mm')} MST
                       </div>
                     </div>
                   )}
 
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                  <p className="text-xs text-gray-500 mb-2">
                     Template: {record.template?.name}
                   </p>
 
@@ -619,7 +619,7 @@ const SimulationHistory: React.FC = () => {
                   )}
 
                   <div className="space-y-2">
-                    <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
                         <span>Duration: {calculateDuration(record)}</span>
@@ -634,31 +634,31 @@ const SimulationHistory: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-slate-500 dark:text-slate-500">Students:</span>
-                      <span className="text-slate-700 dark:text-slate-300 font-medium">{getParticipantNames(record)}</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400">Students:</span>
+                      <span className="text-gray-700 font-medium">{getParticipantNames(record)}</span>
                     </div>
                     {record.instructor_name && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <UserCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        <span className="text-slate-500 dark:text-slate-500">Instructor:</span>
-                        <span className="text-purple-700 dark:text-purple-300 font-semibold">{record.instructor_name}</span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <UserCheck className="h-4 w-4 text-purple-600" />
+                        <span className="text-gray-400">Instructor:</span>
+                        <span className="text-purple-700 font-semibold">{record.instructor_name}</span>
                       </div>
                     )}
                     {activeTab === 'archived' && record.archive_folder && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Archive className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-slate-500 dark:text-slate-500">Archive Folder:</span>
-                        <span className="text-emerald-700 dark:text-emerald-300 font-mono text-xs bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded">{record.archive_folder}</span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Archive className="h-4 w-4 text-emerald-600" />
+                        <span className="text-gray-400">Archive Folder:</span>
+                        <span className="text-emerald-700 font-mono text-xs bg-emerald-50 px-2 py-0.5 rounded">{record.archive_folder}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Metrics Summary */}
                   {record.metrics && (
-                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-                        <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <TrendingUp className="h-4 w-4 text-blue-600" />
                         <span className="font-medium">Performance Metrics Available</span>
                       </div>
                     </div>
@@ -669,7 +669,7 @@ const SimulationHistory: React.FC = () => {
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={() => handleViewDebrief(record)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md"
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors shadow-sm"
                   >
                     <FileText className="h-4 w-4" />
                     View Debrief
@@ -681,10 +681,10 @@ const SimulationHistory: React.FC = () => {
                         onClick={() => handleArchive(record.id)}
                         disabled={archiving === record.id}
                         title="Archive this simulation"
-                        className="flex items-center justify-center p-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {archiving === record.id ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600 dark:border-slate-300" />
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500" />
                         ) : (
                           <Archive className="h-5 w-5" />
                         )}
@@ -694,10 +694,10 @@ const SimulationHistory: React.FC = () => {
                         onClick={() => handleUnarchive(record.id)}
                         disabled={archiving === record.id}
                         title="Restore to active"
-                        className="flex items-center justify-center p-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {archiving === record.id ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600 dark:border-slate-300" />
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500" />
                         ) : (
                           <ArchiveRestore className="h-5 w-5" />
                         )}
@@ -708,10 +708,10 @@ const SimulationHistory: React.FC = () => {
                       onClick={() => handleDelete(record.id, record.name)}
                       disabled={deleting === record.id}
                       title="Delete permanently"
-                      className="flex items-center justify-center p-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {deleting === record.id ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600 dark:border-red-400" />
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-500" />
                       ) : (
                         <Trash2 className="h-5 w-5" />
                       )}
@@ -727,10 +727,10 @@ const SimulationHistory: React.FC = () => {
 
         {/* Right Column - Instructor Guide */}
         <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg border-2 border-emerald-200 dark:border-emerald-800 p-6 sticky top-6">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 sticky top-6">
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="font-bold text-emerald-900 dark:text-emerald-100">
+              <FileText className="h-5 w-5 text-emerald-600" />
+              <h3 className="font-bold text-emerald-900">
                 Instructor Quick Guide
               </h3>
             </div>
@@ -738,14 +738,14 @@ const SimulationHistory: React.FC = () => {
             <div className="space-y-6 text-sm">
               {/* Viewing Debrief Reports */}
               <div>
-                <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-emerald-800 mb-2 flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   View Debrief Report
                 </h4>
-                <p className="text-slate-700 dark:text-slate-300 mb-2">
+                <p className="text-gray-600 mb-2">
                   Click <strong>View Debrief</strong> on any completed simulation to access:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-400 ml-2">
+                <ul className="list-disc list-inside space-y-1 text-gray-500 ml-2">
                   <li>Session overview metrics</li>
                   <li>BCMA compliance percentage</li>
                   <li>Student activity timeline</li>
@@ -756,43 +756,43 @@ const SimulationHistory: React.FC = () => {
               </div>
 
               {/* Best Practices */}
-              <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
-                <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+              <div className="pt-4 border-t border-emerald-200">
+                <h4 className="font-semibold text-emerald-800 mb-2">
                   Debrief Best Practices
                 </h4>
-                <ul className="space-y-2 text-slate-600 dark:text-slate-400">
+                <ul className="space-y-2 text-gray-500">
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span className="text-emerald-600 mt-0.5">•</span>
                     <span>Review report immediately after completion</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span className="text-emerald-600 mt-0.5">•</span>
                     <span>Use metrics to guide discussion (BCMA, documentation gaps)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span className="text-emerald-600 mt-0.5">•</span>
                     <span>Note both strengths and improvement areas</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                    <span className="text-emerald-600 mt-0.5">•</span>
                     <span>Save or print report for student records</span>
                   </li>
                 </ul>
               </div>
 
               {/* Tips */}
-              <div className="pt-4 border-t border-emerald-200 dark:border-emerald-800">
-                <h4 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+              <div className="pt-4 border-t border-emerald-200">
+                <h4 className="font-semibold text-emerald-800 mb-2">
                   💡 Quick Tips
                 </h4>
-                <div className="space-y-2 text-slate-600 dark:text-slate-400">
-                  <p className="bg-white dark:bg-slate-800 rounded p-2 text-xs">
+                <div className="space-y-2 text-gray-500">
+                  <p className="bg-white rounded p-2 text-xs">
                     <strong>Activity Log:</strong> Expand student sections to see individual actions with timestamps
                   </p>
-                  <p className="bg-white dark:bg-slate-800 rounded p-2 text-xs">
+                  <p className="bg-white rounded p-2 text-xs">
                     <strong>Progress Bars:</strong> Visual breakdown shows intervention distribution by category
                   </p>
-                  <p className="bg-white dark:bg-slate-800 rounded p-2 text-xs">
+                  <p className="bg-white rounded p-2 text-xs">
                     <strong>Print Ready:</strong> Use the Print/PDF button for record keeping
                   </p>
                 </div>
