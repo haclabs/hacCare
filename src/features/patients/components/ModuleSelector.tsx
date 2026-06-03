@@ -30,7 +30,8 @@ type ActiveModule =
   | 'advanced-directives'
   | 'hacmap'
   | 'intake-output'
-  | 'flowsheets';
+  | 'flowsheets'
+  | 'therapeutic-recreation';
 
 interface ModuleSelectorProps {
   patient: Patient;

@@ -15,10 +15,6 @@ export function buildPatientColorMap(patientIds: string[]): Record<string, numbe
   return map;
 }
 
-export interface WindowWithJsBarcode extends Window {
-  JsBarcode: (canvas: HTMLElement, text: string, options: Record<string, unknown>) => void;
-}
-
 export type SimulationParticipant = {
   user_profiles?: { first_name?: string; last_name?: string } | null;
   role?: string;
@@ -33,4 +29,25 @@ export function getInstructorNames(participants: SimulationParticipant[]): strin
       return `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Instructor';
     });
   return names.length > 0 ? names.join(', ') : 'No Instructor Assigned';
+}
+
+/**
+ * Generate a QR code as a data URL string.
+ * Used to pre-render QR codes before writing to print windows,
+ * eliminating the need for CDN scripts or polling.
+ */
+export async function generateQRDataURL(text: string, size = 80): Promise<string> {
+  const QRCode = await import('qrcode');
+  return QRCode.toDataURL(text, {
+    width: size,
+    margin: 1,
+    color: { dark: '#000000', light: '#ffffff' },
+  });
+}
+
+/**
+ * Generate QR data URLs for an array of texts in parallel.
+ */
+export async function generateQRDataURLs(texts: string[], size = 80): Promise<string[]> {
+  return Promise.all(texts.map(t => generateQRDataURL(t, size)));
 }

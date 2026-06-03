@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home } from 'lucide-react';
+import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
@@ -114,6 +114,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     { id: 'patient-management', label: 'Patient Templates', icon: UserPlus, color: 'text-purple-600' },
     { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
     { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
+    ...(hasRole('super_admin') ? [
+      { id: 'med-catalog', label: 'Med Catalog', icon: Package, color: 'text-blue-600' },
+    ] : []),
   ] : [];
 
   /**

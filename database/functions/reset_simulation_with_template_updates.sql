@@ -120,6 +120,17 @@ BEGIN
   DELETE FROM devices WHERE tenant_id = v_tenant_id;
   DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id;
 
+  -- 📋 Flowsheet system assessments: delete ONLY student entries (was ON HOLD, now active)
+  DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id AND is_baseline = false;
+
+  -- 🧩 TR module tables: delete student entries, preserve instructor baselines
+  DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id;
+
   -- =====================================================
   -- STEP 3: INSERT NEW MEDICATIONS (Property-based matching)
   -- =====================================================
@@ -189,11 +200,13 @@ BEGIN
           v_template_med->>'name', v_template_med->>'dosage', v_template_med->>'route', v_barcode;
         
         BEGIN
-          -- Insert with NEW UUID (generates NEW barcode automatically)
+          -- Insert with NEW UUID. Copy catalog_id + barcode from template so
+          -- physical QR labels printed for this medication remain valid.
           INSERT INTO patient_medications (
             tenant_id, patient_id, name, dosage, route, frequency,
             admin_time, admin_times, category, start_date, end_date,
-            next_due, prescribed_by, status, last_administered
+            next_due, prescribed_by, status, last_administered,
+            catalog_id, barcode
           ) VALUES (
             v_tenant_id,
             v_patient_id,  -- Mapped to simulation patient
@@ -213,7 +226,11 @@ BEGIN
                  ELSE NULL END,
             v_template_med->>'prescribed_by',
             COALESCE(v_template_med->>'status', 'active'),
-            NULL
+            NULL,  -- last_administered
+            CASE WHEN v_template_med->>'catalog_id' IS NOT NULL
+                 THEN (v_template_med->>'catalog_id')::uuid
+                 ELSE NULL END,
+            v_template_med->>'barcode'  -- NULL for free-entry meds
           );
           
           v_meds_added := v_meds_added + 1;
@@ -281,7 +298,16 @@ BEGIN
   
   -- Remove patient_medications from snapshot (we handled it above)
   v_snapshot := v_snapshot - 'patient_medications';
-  
+
+  -- Strip PSA and TR tables — baseline rows preserved in-place, restore would duplicate
+  v_snapshot := v_snapshot - 'patient_system_assessments';
+  v_snapshot := v_snapshot - 'tr_screening_entries';
+  v_snapshot := v_snapshot - 'tr_active_living_profiles';
+  v_snapshot := v_snapshot - 'tr_assessment_scores';
+  v_snapshot := v_snapshot - 'tr_treatment_plan_rows';
+  v_snapshot := v_snapshot - 'tr_interdisciplinary_interps';
+  v_snapshot := v_snapshot - 'tr_progress_notes';
+
   -- Build barcode mapping for restore_snapshot_to_tenant (sim patient UUID → barcode)
   FOR v_patient_id, v_barcode IN 
     SELECT id, patient_id FROM patients WHERE tenant_id = v_tenant_id ORDER BY created_at

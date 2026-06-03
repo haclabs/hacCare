@@ -4,7 +4,6 @@ import { useAuth } from '../../../hooks/useAuth';
 import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../../services/operations/bulkLabelService';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import { Tenant } from '../../../types';
-import { bcmaService } from '../../../services/clinical/bcmaService';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 // 5 fluorescent colors for per-patient label color-coding
@@ -40,54 +39,38 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
 
   const patientColorMap = buildPatientColorMap(patients.map(p => p.id));
 
-  const handlePrint = () => {
-    // Create a new window with only the labels for printing
+  const handlePrint = async () => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
+
+    // Pre-generate QR data URLs before building print content
+    const patientBarcodeValues = duplicatedPatients.map(p => `PT${p.patient_id.slice(-8).toUpperCase()}`);
+    const QRCode = await import('qrcode');
+    const patientQRs = await Promise.all(patientBarcodeValues.map(v =>
+      QRCode.toDataURL(v, { width: 80, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
+    ));
 
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Patient Labels - Avery 5160</title>
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
           <style>
-            @page { 
-              size: 8.5in 11in; 
-              margin: 0; 
-            }
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 0; 
-              padding: 0; 
-              font-size: 8px;
-            }
-            .labels-grid {
-              position: relative;
-              width: 8.5in;
-              height: 11in;
-              margin: 0;
-              padding: 0;
-            }
+            @page { size: 8.5in 11in; margin: 0; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 8px; }
+            .labels-grid { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; }
             .label {
               position: absolute;
-              width: 2.625in;
-              height: 1in;
+              width: 2.625in; height: 1in;
               border: ${debugMode ? '2px solid #ff0000' : '1px solid #dee2e6'};
-              padding: 0;
-              box-sizing: border-box;
+              padding: 0; box-sizing: border-box;
               ${debugMode ? 'background-color: rgba(255, 0, 0, 0.1);' : 'background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);'}
-              display: flex;
-              flex-direction: row;
-              align-items: stretch;
-              overflow: hidden;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-              border-radius: 3px;
+              display: flex; flex-direction: row; align-items: stretch;
+              overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 3px;
             }
-            /* Avery 5160 perfect positioning - restored */
-            .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
-            .label:nth-child(3n+2) { left: 3.0375in; } /* Column 2 */
-            .label:nth-child(3n+3) { left: 5.7875in; } /* Column 3 */
+            .label:nth-child(3n+1) { left: 0.1875in; }
+            .label:nth-child(3n+2) { left: 3.0375in; }
+            .label:nth-child(3n+3) { left: 5.7875in; }
             .label:nth-child(-n+3) { top: 0.5in; }
             .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
             .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }
@@ -99,80 +82,30 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
             .label-content {
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              padding: 0.08in;
-              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+              flex: 1; display: flex; flex-direction: column; justify-content: center;
+              padding: 0.08in; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             }
             .patient-name {
-              font-size: 16px;
-              font-weight: 900;
-              margin-bottom: 6px;
-              line-height: 1.2;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              padding: 4px 8px;
-              border-left: 4px solid;
-              border-radius: 3px;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
+              font-size: 16px; font-weight: 900; margin-bottom: 6px; line-height: 1.2;
+              text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 8px;
+              border-left: 4px solid; border-radius: 3px;
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
             .patient-info {
-              font-size: 12px;
-              line-height: 1.3;
-              padding: 3px 8px;
-              color: #333;
-              font-weight: 700;
-              border-left: 3px solid;
-              border-radius: 2px;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
+              font-size: 12px; line-height: 1.3; padding: 3px 8px; color: #333;
+              font-weight: 700; border-left: 3px solid; border-radius: 2px;
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
             .barcode-area {
-              width: 0.99in;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              background: #ffffff;
-              padding: 0.05in 0.1in 0.05in 0.05in;
+              width: 0.99in; display: flex; justify-content: center; align-items: center;
+              background: #ffffff; padding: 0.05in 0.1in 0.05in 0.05in;
               border-left: 1px solid #e0e0e0;
             }
-            .barcode-canvas {
-              max-width: 0.89in;
-              max-height: 0.85in;
-            }
+            .qr-img { width: 0.85in; height: 0.85in; image-rendering: pixelated; }
             @media print {
-              .label {
-                border: 1px solid #dee2e6 !important;
-                box-shadow: none !important;
-                background: #ffffff !important;
-              }
-              .labels-grid {
-                width: 8.5in !important;
-                height: 11in !important;
-              }
-              .barcode-canvas {
-                max-width: 2.2in !important;
-                max-height: 0.45in !important;
-                width: auto !important;
-                height: auto !important;
-              }
-              .barcode-area {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                background: #ffffff !important;
-              }
-              .patient-name {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-              .patient-info {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
+              .label { border: 1px solid #dee2e6 !important; box-shadow: none !important; background: #ffffff !important; }
+              .labels-grid { width: 8.5in !important; height: 11in !important; }
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
           </style>
         </head>
@@ -187,14 +120,11 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
                   <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">
-                  <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
+                  <img class="qr-img" src="${patientQRs[index]}" alt="QR" />
                 </div>
-              </div>
-              `;
+              </div>`;
             }).join('')}
-            ${Array(Math.max(0, 30 - duplicatedPatients.length)).fill(0).map(() => `
-              <div class="label"></div>
-            `).join('')}
+            ${Array(Math.max(0, 30 - duplicatedPatients.length)).fill(0).map(() => `<div class="label"></div>`).join('')}
           </div>
         </body>
       </html>
@@ -203,44 +133,11 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
-    
-    // Generate barcodes after content loads
-    printWindow.onload = () => {
-      // Wait for JsBarcode to be available
-      const checkJsBarcode = () => {
-        const windowWithBarcode = printWindow as any;
-        if (windowWithBarcode.JsBarcode) {
-          // Generate patient barcodes
-          duplicatedPatients.forEach((patient, index) => {
-            const canvas = printWindow.document.getElementById(`patient-barcode-${index}`);
-            if (canvas) {
-              const barcodeValue = `PT${patient.patient_id.slice(-8).toUpperCase()}`;
-              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
-                format: "CODE128",
-                width: 1,
-                height: 40,
-                displayValue: true,
-                fontSize: 8,
-                margin: 3,
-                background: "#ffffff",
-                lineColor: "#000000"
-              });
-            }
-          });
-          
-          // Print after barcodes are generated
-          setTimeout(() => {
-            printWindow.print();
-          }, 100);
-        } else {
-          // Retry if JsBarcode not ready
-          setTimeout(checkJsBarcode, 50);
-        }
-      };
-      checkJsBarcode();
-    };
-  };
 
+    if (!debugMode) {
+      setTimeout(() => printWindow.print(), 250);
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -344,42 +241,44 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
 
   const patientColorMap = buildPatientColorMap(medications.map(m => m.patient_id));
 
-  const handlePrint = () => {
-    // Create a new window with only the labels for printing
+  // Generate barcode value (catalog barcode first, else hash)
+  const getMedBarcodeValue = (medication: MedicationLabelData): string => {
+    if (medication.barcode) return medication.barcode;
+    const cleanName = (medication.medication_name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const namePrefix = cleanName.charAt(0) || 'X';
+    const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+    let numericCode = 0;
+    for (let i = 0; i < cleanId.length; i++) {
+      numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+    }
+    return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
+  };
+
+  const handlePrint = async () => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
+
+    // Pre-generate QR data URLs before building print content
+    const medBarcodeValues = duplicatedMedications.map(m => getMedBarcodeValue(m));
+    const QRCode = await import('qrcode');
+    const medQRs = await Promise.all(medBarcodeValues.map(v =>
+      QRCode.toDataURL(v, { width: 80, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
+    ));
 
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Medication Labels - Avery 5160</title>
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
           <style>
-            @page { 
-              size: 8.5in 11in; 
-              margin: 0; 
-            }
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 0; 
-              padding: 0; 
-              font-size: 7px;
-            }
-            .labels-grid {
-              position: relative;
-              width: 8.5in;
-              height: 11in;
-              margin: 0;
-              padding: 0;
-            }
+            @page { size: 8.5in 11in; margin: 0; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 7px; }
+            .labels-grid { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; }
             .label {
               position: absolute;
-              width: 2.625in;
-              height: 1in;
+              width: 2.625in; height: 1in;
               border: 1px solid #dee2e6;
-              padding: 3px;
-              box-sizing: border-box;
+              padding: 3px; box-sizing: border-box;
               display: block;
               text-align: left;
               overflow: visible;
@@ -387,10 +286,9 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
               box-shadow: 0 1px 3px rgba(0,0,0,0.08);
               border-radius: 3px;
             }
-            /* Avery 5160 perfect positioning - restored */
-            .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
-            .label:nth-child(3n+2) { left: 3.0375in; } /* Column 2 */
-            .label:nth-child(3n+3) { left: 5.7875in; } /* Column 3 */
+            .label:nth-child(3n+1) { left: 0.1875in; }
+            .label:nth-child(3n+2) { left: 3.0375in; }
+            .label:nth-child(3n+3) { left: 5.7875in; }
             .label:nth-child(-n+3) { top: 0.5in; }
             .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
             .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }
@@ -402,145 +300,58 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
             .label-content {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              padding: 0.1in 0.05in;
-              padding-right: 0.65in;
-              width: 100%;
-              height: 100%;
-              box-sizing: border-box;
-              background: #ffffff;
+              display: flex; flex-direction: column; justify-content: center;
+              padding: 0.1in 0.05in; padding-right: 0.65in;
+              width: 100%; height: 100%; box-sizing: border-box;
             }
             .medication-name {
-              font-size: 14px;
-              font-weight: 800;
-              margin-bottom: 4px;
-              line-height: 1.3;
-              color: #1a1a1a;
-              word-wrap: break-word;
-              text-transform: uppercase;
-              letter-spacing: 0.3px;
-              padding: 4px 6px;
-              background: #ffffff;
-              border-left: 3px solid #000000;
-              border-radius: 2px;
+              font-size: 14px; font-weight: 800; margin-bottom: 4px;
+              line-height: 1.3; color: #1a1a1a; word-wrap: break-word;
+              text-transform: uppercase; letter-spacing: 0.3px;
+              padding: 4px 6px; border-left: 3px solid #000000; border-radius: 2px;
             }
             .patient-name {
-              font-size: 13px;
-              font-weight: 700;
-              margin-top: 2px;
-              line-height: 1.3;
-              word-wrap: break-word;
-              padding: 3px 6px;
-              border-left: 2px solid;
-              border-radius: 2px;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
+              font-size: 13px; font-weight: 700; margin-top: 2px;
+              line-height: 1.3; word-wrap: break-word;
+              padding: 3px 6px; border-left: 2px solid; border-radius: 2px;
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
             .med-id {
-              font-size: 11px;
-              font-weight: 700;
-              color: #000000;
-              margin-top: 3px;
-              line-height: 1.2;
-              padding: 3px 6px;
-              background: #ffffff;
-              border-left: 2px solid #666666;
-              border-radius: 1px;
-              font-family: monospace;
-              letter-spacing: 0.8px;
+              font-size: 11px; font-weight: 700; color: #000; margin-top: 3px;
+              padding: 3px 6px; border-left: 2px solid #666; border-radius: 1px;
+              font-family: monospace; letter-spacing: 0.8px;
             }
             .barcode-area {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              width: 0.94in;
-              height: 0.6in;
-              transform: rotate(90deg);
-              transform-origin: center;
-              background: #ffffff;
-              border: none;
-              padding: 0;
-              position: absolute;
-              right: 0.05in;
-              top: 50%;
-              margin-top: -0.3in;
+              display: flex; justify-content: center; align-items: center;
+              width: 0.94in; height: 0.6in;
+              transform: rotate(90deg); transform-origin: center;
+              position: absolute; right: 0.05in; top: 50%; margin-top: -0.3in;
             }
-            .barcode-canvas {
-              width: 0.92in;
-              height: 0.58in;
-              background: #ffffff;
-              border: none;
-            }
+            .qr-img { width: 0.85in; height: 0.85in; image-rendering: pixelated; }
             @media print {
-              .label {
-                border: 1px solid #dee2e6 !important;
-                box-shadow: none !important;
-              }
-              .labels-grid {
-                width: 8.5in !important;
-                height: 11in !important;
-              }
-              .barcode-canvas {
-                width: 0.92in !important;
-                height: 0.58in !important;
-              }
-              .barcode-area {
-                width: 0.94in !important;
-                height: 0.6in !important;
-                transform: rotate(90deg) !important;
-                transform-origin: center !important;
-              }
-              .med-id {
-                background: #ffffff !important;
-              }
-              .label-content {
-                background: #ffffff !important;
-              }
-              .medication-name {
-                background: #ffffff !important;
-              }
-              .patient-name {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
+              .label { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+              -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
           </style>
         </head>
         <body>
           <div class="labels-grid">
             ${duplicatedMedications.map((medication, index) => {
-              // Use BCMA service to generate the correct barcode that matches the medication records
-              const med = { id: medication.id, name: medication.medication_name || 'Unknown' };
-              // Generate barcode ID using the same logic as bcmaService
-              const cleanName = med.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-              const namePrefix = cleanName.charAt(0) || 'X';
-              const cleanId = med.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
-              let numericCode = 0;
-              for (let i = 0; i < cleanId.length; i++) {
-                numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
-              }
-              const idSuffix = numericCode.toString().padStart(5, '0');
-              const barcodeValue = 'M' + namePrefix + idSuffix;
+              const barcodeValue = medBarcodeValues[index];
               const color = PATIENT_COLORS[patientColorMap[medication.patient_id]];
-              
               return `
               <div class="label">
                 <div class="label-content">
                   <div class="medication-name">${medication.medication_name}</div>
-                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${medication.patient_name}</div>
+                  <div class="patient-name" style="background:${color.bg};border-color:${color.border};color:${color.text};">${medication.patient_name}</div>
                   <div class="med-id">ID: ${barcodeValue}</div>
                 </div>
                 <div class="barcode-area">
-                  <canvas id="medication-barcode-${index}" class="barcode-canvas"></canvas>
+                  <img class="qr-img" src="${medQRs[index]}" alt="QR" />
                 </div>
-              </div>
-              `;
+              </div>`;
             }).join('')}
-            ${Array(Math.max(0, 30 - duplicatedMedications.length)).fill(0).map(() => `
-              <div class="label"></div>
-            `).join('')}
+            ${Array(Math.max(0, 30 - duplicatedMedications.length)).fill(0).map(() => `<div class="label"></div>`).join('')}
           </div>
         </body>
       </html>
@@ -549,45 +360,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
-    
-    // Generate barcodes after content loads
-    printWindow.onload = () => {
-      // Wait for JsBarcode to be available
-      const checkJsBarcode = () => {
-        const windowWithBarcode = printWindow as any;
-        if (windowWithBarcode.JsBarcode) {
-          // Generate medication barcodes
-          duplicatedMedications.forEach((medication, index) => {
-            const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
-            if (canvas) {
-              // Generate short, scannable barcode using BCMA service
-              const barcodeValue = bcmaService.generateMedicationBarcode({
-                id: medication.id,
-                name: medication.medication_name || 'Unknown'
-              } as any);
-              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
-                format: "CODE128",
-                width: 5, // Extra thick bars for junky 1D scanners
-                height: 100, // Maximum height fills 0.97in width
-                displayValue: false, // Hide text
-                margin: 5, // Good margin for scanner lock-on
-                background: "#ffffff",
-                lineColor: "#000000"
-              });
-            }
-          });
-          
-          // Print after barcodes are generated
-          setTimeout(() => {
-            printWindow.print();
-          }, 100);
-        } else {
-          // Retry if JsBarcode not ready
-          setTimeout(checkJsBarcode, 50);
-        }
-      };
-      checkJsBarcode();
-    };
+    setTimeout(() => printWindow.print(), 250);
   };
 
   return (
@@ -639,10 +412,7 @@ const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medicatio
                 <div className="w-20 h-full flex justify-center items-center">
                   <div className="transform rotate-90 origin-center">
                     <BarcodeGenerator
-                      data={bcmaService.generateMedicationBarcode({
-                        id: medication.id,
-                        name: medication.medication_name || 'Unknown'
-                      } as any)}
+                      data={getMedBarcodeValue(medication)}
                       type="medication"
                       vertical={true}
                     />

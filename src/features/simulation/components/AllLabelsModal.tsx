@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
-import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant } from './labelPrintingUtils';
-import { bcmaService } from '../../../services/clinical/bcmaService';
+import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
 import type { PatientLabelData, MedicationLabelData } from '../../../services/operations/bulkLabelService';
-import type { Medication } from '../../patients/types/clinical';
 interface AllLabelsModalProps {
   patients: PatientLabelData[];
   medications: MedicationLabelData[];
@@ -58,16 +56,40 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
   const labelsToSkip = (startRow - 1) * 3;
   const totalLabels = 1 + duplicatedPatients.length + duplicatedMedications.length; // 1 for header
   
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
+
+    // Helper: hash-based barcode for free-entry medications (same algorithm as bcmaService)
+    const getMedBarcodeValue = (medication: { id: string; medication_name: string; barcode?: string | null }) => {
+      if (medication.barcode) return medication.barcode;
+      const cleanName = (medication.medication_name || 'Unknown').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      const namePrefix = cleanName.charAt(0) || 'X';
+      const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+      let numericCode = 0;
+      for (let i = 0; i < cleanId.length; i++) {
+        numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+      }
+      return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
+    };
+
+    // Pre-generate all QR data URLs before writing to the print window (no CDN needed)
+    const [patientQRs, medicationQRs] = await Promise.all([
+      generateQRDataURLs(
+        duplicatedPatients.map(p => `PT${p.patient_id.slice(-8).toUpperCase()}`),
+        80
+      ),
+      generateQRDataURLs(
+        duplicatedMedications.map(m => getMedBarcodeValue(m)),
+        80
+      ),
+    ]);
 
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>All Labels - ${simulationName}</title>
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
           <style>
             @page { 
               size: 8.5in 11in; 
@@ -145,29 +167,23 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               justify-content: center;
               align-items: center;
               background: #ffffff;
-              padding: 0.05in 0.1in 0.05in 0.05in;
+              padding: 0.05in;
               border-left: 1px solid #e0e0e0;
-              transform: none;
-            }
-            .patient-bracelet .barcode-canvas {
-              max-width: 0.9in;
-              max-height: 0.9in;
             }
             
-            /* Medication label styles - vertical barcode layout */
+            /* Medication label styles */
             .label.medication-label {
               padding: 3px;
-              display: block;
+              display: flex;
+              flex-direction: row;
+              align-items: stretch;
             }
             .medication-label .label-content {
+              flex: 1;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 0.1in 0.05in;
-              padding-right: 0.65in;
-              width: 100%;
-              height: 100%;
-              box-sizing: border-box;
+              padding: 0.08in 0.05in;
             }
             .medication-label .medication-name {
               font-size: 14px;
@@ -209,26 +225,19 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               letter-spacing: 0.8px;
             }
             .medication-label .barcode-area {
+              width: 1.0in;
               display: flex;
               justify-content: center;
               align-items: center;
-              width: 0.94in;
-              height: 0.6in;
-              transform: rotate(90deg);
-              transform-origin: center;
               background: #ffffff;
-              border: none;
-              padding: 0;
-              position: absolute;
-              right: 0.05in;
-              top: 50%;
-              margin-top: -0.3in;
+              padding: 0.05in;
+              border-left: 1px solid #e0e0e0;
             }
-            .medication-label .barcode-canvas {
-              width: 0.92in;
-              height: 0.58in;
-              background: #ffffff;
-              border: none;
+            
+            .qr-img {
+              width: 0.85in;
+              height: 0.85in;
+              image-rendering: pixelated;
             }
             
             @media print {
@@ -276,7 +285,6 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
             
             <!-- Patient Bracelet Labels -->
             ${duplicatedPatients.map((patient, index) => {
-              // Calculate position: skip labels + 1 header + current index
               const position = labelsToSkip + 1 + index;
               const col = position % 3;
               const row = Math.floor(position / 3);
@@ -291,7 +299,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
                   <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">
-                  <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
+                  <img class="qr-img" src="${patientQRs[index]}" alt="QR" />
                 </div>
               </div>
               `;
@@ -299,23 +307,12 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
             
             <!-- Medication Labels -->
             ${duplicatedMedications.map((medication, index) => {
-              // Calculate position: skip labels + 1 header + patient count + current index
               const position = labelsToSkip + 1 + duplicatedPatients.length + index;
               const col = position % 3;
               const row = Math.floor(position / 3);
               const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
               const topPos = (0.5 + row * 1.0) + 'in';
-              
-              const med = { id: medication.id, name: medication.medication_name || 'Unknown' };
-              const cleanName = med.name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-              const namePrefix = cleanName.charAt(0) || 'X';
-              const cleanId = med.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
-              let numericCode = 0;
-              for (let i = 0; i < cleanId.length; i++) {
-                numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
-              }
-              const idSuffix = numericCode.toString().padStart(5, '0');
-              const barcodeValue = 'M' + namePrefix + idSuffix;
+              const barcodeValue = getMedBarcodeValue(medication);
               const color = PATIENT_COLORS[patientColorMap[medication.patient_id]];
               
               return `
@@ -326,7 +323,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
                   <div class="med-id">ID: ${barcodeValue}</div>
                 </div>
                 <div class="barcode-area">
-                  <canvas id="medication-barcode-${index}" class="barcode-canvas"></canvas>
+                  <img class="qr-img" src="${medicationQRs[index]}" alt="QR" />
                 </div>
               </div>
               `;
@@ -349,62 +346,10 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
-    
-    // Generate barcodes after content loads
-    printWindow.onload = () => {
-      const checkJsBarcode = () => {
-        const windowWithBarcode = printWindow as unknown as WindowWithJsBarcode;
-        if (windowWithBarcode.JsBarcode) {
-          // Generate patient barcodes
-          duplicatedPatients.forEach((patient, index) => {
-            const canvas = printWindow.document.getElementById(`patient-barcode-${index}`);
-            if (canvas) {
-              const barcodeValue = `PT${patient.patient_id.slice(-8).toUpperCase()}`;
-              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
-                format: "CODE128",
-                width: 1,
-                height: 40,
-                displayValue: true,
-                fontSize: 8,
-                margin: 3,
-                background: "#ffffff",
-                lineColor: "#000000"
-              });
-            }
-          });
-          
-          // Generate medication barcodes
-          duplicatedMedications.forEach((medication, index) => {
-            const canvas = printWindow.document.getElementById(`medication-barcode-${index}`);
-            if (canvas) {
-              const barcodeValue = bcmaService.generateMedicationBarcode({
-                id: medication.id,
-                name: medication.medication_name || 'Unknown'
-              } as unknown as Medication);
-              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
-                format: "CODE128",
-                width: 1,
-                height: 40,
-                displayValue: true,
-                fontSize: 8,
-                margin: 3,
-                background: "#ffffff",
-                lineColor: "#000000"
-              });
-            }
-          });
-          
-          if (!debugMode) {
-            setTimeout(() => {
-              printWindow.print();
-            }, 500);
-          }
-        } else {
-          setTimeout(checkJsBarcode, 50);
-        }
-      };
-      checkJsBarcode();
-    };
+
+    if (!debugMode) {
+      setTimeout(() => printWindow.print(), 250);
+    }
   };
 
   return (

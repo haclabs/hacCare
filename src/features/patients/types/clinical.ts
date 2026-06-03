@@ -23,6 +23,8 @@ export interface Medication {
   next_due: string;
   status: 'Active' | 'Completed' | 'Discontinued';
   administrations?: MedicationAdministration[];
+  catalog_id?: string | null; // FK to medications_catalog (null = free-entry)
+  barcode?: string | null;    // Pre-resolved stable barcode (catalog entry) or hash-generated (free-entry)
 }
 
 /**
