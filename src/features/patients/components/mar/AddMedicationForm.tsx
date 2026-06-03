@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, Lock } from 'lucide-react';
 
 import type { Patient, Medication } from '../../../../types';
-import { createMedication } from '../../../../services/clinical/medicationService';
+import { createMedication, fetchMedicationCatalog } from '../../../../services/clinical/medicationService';
+import { CatalogMedicationPicker } from './CatalogMedicationPicker';
+import type { CatalogEntry } from './CatalogMedicationPicker';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AddMedicationFormProps {
@@ -23,6 +25,8 @@ interface MedFormState {
   prescribed_by: string;
   start_date: string;
   end_date: string;
+  catalog_id: string | null;
+  barcode: string | null;
 }
 
 const defaultForm: MedFormState = {
@@ -36,7 +40,32 @@ const defaultForm: MedFormState = {
   prescribed_by: '',
   start_date: new Date().toISOString().split('T')[0],
   end_date: '',
+  catalog_id: null,
+  barcode: null,
 };
+
+/** Generate a random M-series barcode for free-entry (non-catalog) medications. */
+function generateFreeEntryBarcode(name: string): string {
+  const prefix = (name.replace(/[^A-Za-z]/g, '').charAt(0) || 'X').toUpperCase();
+  const code = Math.floor(10000 + Math.random() * 90000);
+  return `M${prefix}${code}`;
+}
+
+/** Map catalog route (lowercase) → Add form route value */
+function mapCatalogRoute(catalogRoute: string): string {
+  const map: Record<string, string> = {
+    oral: 'Oral',
+    intravenous: 'IV',
+    intramuscular: 'IM',
+    subcutaneous: 'SC',
+    topical: 'Topical',
+    inhalation: 'Inhalation',
+    rectal: 'Rectal',
+    transdermal: 'Topical',
+    sublingual: 'Oral',
+  };
+  return map[catalogRoute.toLowerCase()] ?? '';
+}
 
 function calculateNextDue(
   frequency: string,
@@ -231,9 +260,39 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
   onMedicationAdded,
   onClose,
 }) => {
-  const [form, setForm] = useState<MedFormState>(defaultForm);
+  const [form, setForm] = useState<MedFormState>(() => ({
+    ...defaultForm,
+    barcode: generateFreeEntryBarcode(''),
+  }));
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [selectedCatalog, setSelectedCatalog] = useState<CatalogEntry | null>(null);
+
+  useEffect(() => {
+    fetchMedicationCatalog()
+      .then(setCatalog)
+      .catch((err) => secureLogger.error('Failed to load medication catalog', err))
+      .finally(() => setCatalogLoading(false));
+  }, []);
+
+  const handleCatalogSelect = (entry: CatalogEntry) => {
+    setSelectedCatalog(entry);
+    setForm((prev) => ({
+      ...prev,
+      name: entry.name,
+      route: mapCatalogRoute(entry.route),
+      category: entry.category,
+      catalog_id: entry.id,
+      barcode: entry.barcode,
+    }));
+  };
+
+  const handleCatalogClear = () => {
+    setSelectedCatalog(null);
+    setForm((prev) => ({ ...prev, catalog_id: null, barcode: generateFreeEntryBarcode(prev.name) }));
+  };
 
   const updateField = (field: string, value: string) => {
     if (field === 'frequency') {
@@ -292,6 +351,8 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
         last_administered: undefined,
         admin_time: form.admin_time,
         admin_times: form.admin_times.length > 1 ? form.admin_times : null,
+        catalog_id: form.catalog_id,
+        barcode: form.barcode,
       };
 
       secureLogger.debug('Creating medication in database:', medicationData);
@@ -337,12 +398,53 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Catalog Lookup
+              </label>
+              <CatalogMedicationPicker
+                catalog={catalog}
+                selected={selectedCatalog}
+                onSelect={handleCatalogSelect}
+                onClear={handleCatalogClear}
+                isLoading={catalogLoading}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Select from catalog for a stable QR barcode, or fill in manually below
+              </p>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                <Lock className="h-3.5 w-3.5 text-gray-400" />
+                QR Barcode
+              </label>
+              <input
+                type="text"
+                value={form.barcode ?? ''}
+                readOnly
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-500 font-mono text-sm cursor-not-allowed select-all"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                {form.catalog_id
+                  ? 'Catalog barcode — stable across resets'
+                  : 'Auto-assigned — locked to prevent duplicate scanning'}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Medication Name *
               </label>
               <input
                 type="text"
                 value={form.name}
-                onChange={(e) => updateField('name', e.target.value)}
+                onChange={(e) => {
+                  updateField('name', e.target.value);
+                  // If user manually edits name after catalog selection, detach from catalog
+                  if (selectedCatalog && e.target.value !== selectedCatalog.name) {
+                    setSelectedCatalog(null);
+                    setForm((prev) => ({ ...prev, name: e.target.value, catalog_id: null, barcode: generateFreeEntryBarcode(e.target.value) }));
+                  }
+                }}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter medication name"

@@ -20,6 +20,7 @@ export interface MedicationLabelData {
   route: string;
   prescriber: string;
   date_prescribed: string;
+  barcode?: string | null; // Stable catalog barcode (e.g. MZ003) or null for free-entry
 }
 
 export interface BulkLabelData {
@@ -134,6 +135,7 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         prescribed_by,
         start_date,
         status,
+        barcode,
         patients!inner (
           first_name,
           last_name,
@@ -176,7 +178,8 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         frequency: med.frequency,
         route: med.route,
         prescriber: med.prescribed_by,
-        date_prescribed: med.start_date
+        date_prescribed: med.start_date,
+        barcode: (med as unknown as { barcode?: string | null }).barcode ?? null
       };
     });
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
-import { PATIENT_COLORS, buildPatientColorMap, WindowWithJsBarcode, SimulationParticipant } from './labelPrintingUtils';
+import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
   simulationName: string;
@@ -14,7 +14,7 @@ interface PatientBraceletsModalProps {
 
 /**
  * Patient Bracelets Modal - Exact copy from BulkLabelPrint.tsx
- * Uses the same Avery 5160 positioning and JsBarcode generation
+ * Uses the same Avery 5160 positioning and QR code generation
  */
 export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, simulationName, participants, onClose, quantity, startRow }) => {
   const [debugMode, setDebugMode] = useState(false);
@@ -43,7 +43,14 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
   // Each row has 3 labels, so skip (startRow - 1) * 3 labels
   const labelsToSkip = (startRow - 1) * 3;
   
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    // Pre-generate all QR code data URLs before opening the print window.
+    // This eliminates the CDN dependency and the polling loop.
+    const qrDataURLs = await generateQRDataURLs(
+      duplicatedPatients.map(p => `PT${p.patient_id.slice(-8).toUpperCase()}`),
+      80
+    );
+
     // Create a new window with only the labels for printing
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
@@ -53,7 +60,6 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
       <html>
         <head>
           <title>Patient Labels - Avery 5160</title>
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
           <style>
             @page { 
               size: 8.5in 11in; 
@@ -139,12 +145,13 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
               justify-content: center;
               align-items: center;
               background: #ffffff;
-              padding: 0.05in 0.1in 0.05in 0.05in;
+              padding: 0.05in;
               border-left: 1px solid #e0e0e0;
             }
-            .barcode-canvas {
-              max-width: 0.89in;
-              max-height: 0.85in;
+            .qr-img {
+              width: 0.85in;
+              height: 0.85in;
+              image-rendering: pixelated;
             }
             @media print {
               .label {
@@ -155,18 +162,6 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
               .labels-grid {
                 width: 8.5in !important;
                 height: 11in !important;
-              }
-              .barcode-canvas {
-                max-width: 2.2in !important;
-                max-height: 0.45in !important;
-                width: auto !important;
-                height: auto !important;
-              }
-              .barcode-area {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                background: #ffffff !important;
               }
               .patient-name {
                 -webkit-print-color-adjust: exact !important;
@@ -202,7 +197,7 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
                   <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">
-                  <canvas id="patient-barcode-${index}" class="barcode-canvas"></canvas>
+                  <img class="qr-img" src="${qrDataURLs[index]}" alt="QR" />
                 </div>
               </div>
               `;
@@ -218,44 +213,12 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
-    
-    // Generate barcodes after content loads
-    printWindow.onload = () => {
-      // Wait for JsBarcode to be available
-      const checkJsBarcode = () => {
-        const windowWithBarcode = printWindow as unknown as WindowWithJsBarcode;
-        if (windowWithBarcode.JsBarcode) {
-          // Generate patient barcodes
-          duplicatedPatients.forEach((patient, index) => {
-            const canvas = printWindow.document.getElementById(`patient-barcode-${index}`);
-            if (canvas) {
-              const barcodeValue = `PT${patient.patient_id.slice(-8).toUpperCase()}`;
-              windowWithBarcode.JsBarcode(canvas, barcodeValue, {
-                format: "CODE128",
-                width: 1,
-                height: 40,
-                displayValue: true,
-                fontSize: 8,
-                margin: 3,
-                background: "#ffffff",
-                lineColor: "#000000"
-              });
-            }
-          });
-          
-          // Print after barcodes are generated
-          setTimeout(() => {
-            printWindow.print();
-          }, 100);
-        } else {
-          // Retry if JsBarcode not ready
-          setTimeout(checkJsBarcode, 50);
-        }
-      };
-      checkJsBarcode();
-    };
-  };
 
+    if (!debugMode) {
+      // Small delay for the DOM to fully render before printing
+      setTimeout(() => printWindow.print(), 250);
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">

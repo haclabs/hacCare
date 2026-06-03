@@ -1,29 +1,13 @@
 /**
- * Barcode Generator Component
- * Generates and di      } : {
-        format: "CODE128",
-        width: 2,
-        height: 50,
-        displayValue: true,
-        font: "monospace",
-        fontSize: 10,
-        textAlign: "center",
-        textPosition: "bottom",
-        textMargin: 2,
-        fontOptions: "",
-        background: "#ffffff",
-        lineColor: "#000000",
-        margin: 8,
-        marginTop: 8,
-        marginBottom: 15,
-        marginLeft: 8,
-        marginRight: 8
-      };128 barcodes for medications and patient wristbands
+ * QR Code Generator Component
+ * Generates and displays QR codes for medications and patient wristbands.
+ * QR scanners use the same HID keyboard emulation as 1D scanners — no
+ * scanning infrastructure changes needed.
  */
 
 import React, { useRef, useEffect } from 'react';
 import { Printer, Download } from 'lucide-react';
-import JsBarcode from 'jsbarcode';
+import QRCode from 'qrcode';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface BarcodeGeneratorProps {
@@ -43,85 +27,19 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const generateBarcode = () => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !data) return;
 
-    try {
-      // Configure barcode based on orientation
-      const barcodeConfig = vertical ? {
-        format: "CODE128",
-        width: 1,            // Back to standard width - thick bars can cause scan issues
-        height: 60,
-        displayValue: true,
-        font: "monospace",
-        fontSize: 8,
-        textAlign: "center",
-        textPosition: "bottom",
-        textMargin: 2,
-        fontOptions: "",
-        background: "#ffffff",
-        lineColor: "#000000",
-        margin: 0,           
-        marginTop: 0,        
-        marginBottom: 8,     // Keep bottom margin for text spacing
-        marginLeft: 0,       
-        marginRight: 0       
-      } : {
-        format: "CODE128",
-        width: 1,
-        height: 40,
-        displayValue: true,
-        font: "monospace",
-        fontSize: 10,
-        textAlign: "center",
-        textPosition: "bottom",
-        textMargin: 2,
-        fontOptions: "",
-        background: "#ffffff",
-        lineColor: "#000000",
-        margin: 5,
-        marginTop: 5,
-        marginBottom: 10,
-        marginLeft: 5,
-        marginRight: 5
-      };
-
-      // Generate proper Code 128 barcode using JsBarcode
-      JsBarcode(canvas, data, barcodeConfig);
-
-      // Add additional label if provided
-      if (label) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = 'black';
-          ctx.font = vertical ? '8px sans-serif' : '10px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(label, canvas.width / 2, canvas.height - 5);
-        }
-      }
-    } catch (error) {
-      secureLogger.error('Error generating barcode:', error);
-      
-      // Fallback: Draw error message
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        canvas.width = vertical ? 160 : 300;  // Increased from 140 to 160 for even wider vertical barcodes
-        canvas.height = vertical ? 180 : 100;
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Error generating barcode', canvas.width / 2, canvas.height / 2);
-        ctx.fillText(`Data: ${data}`, canvas.width / 2, 60);
-      }
-    }
-  };
-
-  useEffect(() => {
-    generateBarcode();
-  }, [data]);
+    const size = vertical ? 80 : 120;
+    QRCode.toCanvas(canvas, data, {
+      width: size,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' },
+    }).catch((err) => {
+      secureLogger.error('Error generating QR code:', err);
+    });
+  }, [data, vertical]);
 
   const handlePrint = () => {
     const canvas = canvasRef.current;
@@ -134,7 +52,7 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
     printWindow.document.write(`
       <html>
         <head>
-          <title>Barcode Label - ${type === 'medication' ? 'Medication' : 'Patient'}</title>
+          <title>QR Code Label - ${type === 'medication' ? 'Medication' : 'Patient'}</title>
           <style>
             body { 
               margin: 0; 
@@ -162,7 +80,7 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
         <body>
           <div class="label">
             <div class="info">
-              ${type === 'medication' ? 'MEDICATION' : 'PATIENT'} BARCODE
+              ${type === 'medication' ? 'MEDICATION' : 'PATIENT'} QR CODE
             </div>
             <div class="barcode">
               <img src="${canvas.toDataURL()}" alt="Barcode" />
