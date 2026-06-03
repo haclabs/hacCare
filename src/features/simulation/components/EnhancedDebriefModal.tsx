@@ -293,11 +293,11 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
             <div className="bg-white rounded-t-xl shadow-lg p-6 print:hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center">
+                    <BarChart3 className="w-6 h-6 text-violet-600" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Clinical Simulation Debrief</h2>
+                    <h2 className="text-xl font-bold text-gray-900">Clinical Simulation Debrief</h2>
                     <p className="text-sm text-gray-500">{historyRecord.name}</p>
                   </div>
                 </div>
@@ -305,7 +305,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   <button
                     onClick={handleExportPdf}
                     disabled={isExporting}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-4 h-4" />
                     <span>{isExporting ? 'Generating PDF...' : 'Download PDF'}</span>
@@ -354,7 +354,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
               {/* Simulation Overview */}
               <div className="p-6 border-b border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-1">
                       <Clock className="w-4 h-4 text-blue-600" />
                       <span className="text-xs font-medium text-blue-900 uppercase tracking-wide">Duration</span>
@@ -363,7 +363,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                     <p className="text-xs text-blue-700 mt-1">{format(new Date(historyRecord.started_at || ''), 'MMM dd, yyyy')}</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                  <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-1">
                       <Users className="w-4 h-4 text-purple-600" />
                       <span className="text-xs font-medium text-purple-900 uppercase tracking-wide">Students</span>
@@ -376,7 +376,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                     </p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                  <div className="bg-green-50 border border-green-100 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-1">
                       <Activity className="w-4 h-4 text-green-600" />
                       <span className="text-xs font-medium text-green-900 uppercase tracking-wide">Total Entries</span>
@@ -387,7 +387,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                     <p className="text-xs text-green-700 mt-1">Clinical actions</p>
                   </div>
 
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4">
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-1">
                       <TrendingUp className="w-4 h-4 text-amber-600" />
                       <span className="text-xs font-medium text-amber-900 uppercase tracking-wide">Avg/Student</span>
@@ -399,7 +399,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
               </div>
 
               {/* Executive Summary */}
-              <div className="p-6 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+              <div className="p-6 border-b border-gray-200 bg-gray-50">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                   <Award className="w-5 h-5 mr-2 text-indigo-600" />
                   Performance Metrics

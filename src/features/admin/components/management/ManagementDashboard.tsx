@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3, Settings, Printer, Tag } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Users, Building2, TrendingUp, AlertCircle, Trash2, Edit3, Settings, Tag, Play, FileText } from 'lucide-react';
 import { Tenant, ManagementDashboardStats, TenantUser } from '../../../../types';
 import { supabase } from '../../../../lib/api/supabase';
 import {
@@ -14,12 +14,75 @@ import {
 import { getTenantPatientStats } from '../../../../services/patient/multiTenantPatientService';
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 import { TenantSettings } from './TenantSettings';
-import BulkLabelPrint from '../BulkLabelPrint';
 import ProgramManagement from './ProgramManagement';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
+// ── Tenant row sub-component ────────────────────────────────────────────────
+interface TenantRowProps {
+  tenant: Tenant;
+  isSelected: boolean;
+  onSelect: (tenant: Tenant) => void;
+  onEdit: (tenant: Tenant) => void;
+  onDelete: (id: string, permanent: boolean) => void;
+}
+
+const TenantRow: React.FC<TenantRowProps> = ({ tenant, isSelected, onSelect, onEdit, onDelete }) => (
+  <div
+    className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+      isSelected ? 'bg-violet-50 border-l-2 border-violet-500' : 'border-l-2 border-transparent'
+    }`}
+    onClick={() => onSelect(tenant)}
+  >
+    <div className="min-w-0">
+      <p className="text-sm font-medium text-gray-900 truncate">{tenant.name}</p>
+      <p className="text-xs text-gray-400 truncate">{tenant.subdomain}</p>
+    </div>
+    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+      <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+        tenant.status === 'active' ? 'bg-green-100 text-green-700'
+        : tenant.status === 'inactive' ? 'bg-gray-100 text-gray-500'
+        : 'bg-red-100 text-red-600'
+      }`}>{tenant.status}</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onEdit(tenant); }}
+        className="p-1 text-gray-300 hover:text-blue-600 transition-colors"
+        title="Edit"
+      >
+        <Edit3 className="h-3.5 w-3.5" />
+      </button>
+      <div className="relative group">
+        <button
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 text-gray-300 hover:text-red-600 transition-colors"
+          title="Delete options"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+        <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
+          <div className="py-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(tenant.id, false); }}
+              className="block w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Deactivate
+              <div className="text-[10px] text-gray-400">Hide tenant, keep data</div>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(tenant.id, true); }}
+              className="block w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50"
+            >
+              Delete Permanently
+              <div className="text-[10px] text-red-400">Remove all data forever</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export const ManagementDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'programs' | 'settings' | 'bulk-print'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'programs' | 'settings'>('overview');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [stats, setStats] = useState<ManagementDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -149,6 +212,15 @@ export const ManagementDashboard: React.FC = () => {
     }
   };
 
+  const groupedTenants = useMemo(() => ({
+    institutions: tenants.filter(t =>
+      t.tenant_type === 'institution' || t.tenant_type === 'production' ||
+      t.tenant_type === 'hospital'    || t.tenant_type === 'clinic'
+    ),
+    templates: tenants.filter(t => t.tenant_type === 'simulation_template'),
+    activeSimulations: tenants.filter(t => t.tenant_type === 'simulation_active'),
+  }), [tenants]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -169,410 +241,289 @@ export const ManagementDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Management Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage tenants and monitor system health</p>
+    <div className="min-h-full bg-gray-50">
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-200 px-8 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 p-3 bg-violet-100 rounded-xl">
+              <Building2 className="h-6 w-6 text-violet-600" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 leading-tight">Management Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Manage tenants and monitor system health</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Tenant
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all shadow-md"
-        >
-          <Plus className="h-5 w-5" />
-          Add Tenant
-        </button>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <nav className="flex space-x-1 p-1">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'overview'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Building2 className="h-4 w-4" />
-              <span>Tenant Overview</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('programs')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'programs'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Tag className="h-4 w-4" />
-              <span>Programs</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'settings'
-                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>Tenant Settings</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('bulk-print')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
-              activeTab === 'bulk-print'
-                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2">
-              <Printer className="h-4 w-4" />
-              <span>Bulk Label Print</span>
-            </div>
-          </button>
-        </nav>
+      {/* Tab navigation */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="flex items-center gap-0.5 px-8">
+          {([
+            { id: 'overview' as const,  label: 'Tenant Overview',  Icon: Building2 },
+            { id: 'programs' as const,  label: 'Programs',          Icon: Tag },
+            { id: 'settings' as const,  label: 'Tenant Settings',   Icon: Settings },
+          ]).map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`flex items-center gap-2 px-4 py-3.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === id
+                  ? 'border-violet-600 text-violet-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === 'overview' ? (
-        <>
-          {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl shadow-lg border border-blue-200 dark:border-blue-800 p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-blue-600 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Building2 className="h-6 w-6" />
+      {/* Content */}
+      <div className="p-8">
+        {activeTab === 'overview' ? (
+          <>
+            {/* Stats row */}
+            {stats && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg"><Building2 className="h-5 w-5 text-blue-600" /></div>
+                    <div>
+                      <p className="text-xs text-gray-500">Total Tenants</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.total_tenants}</p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tenants</p>
-              </div>
-              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">{stats.total_tenants}</p>
-            </div>
-          </div>
-
-          <div className="group relative bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl shadow-lg border border-green-200 dark:border-green-800 p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-600/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-green-600 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="h-6 w-6" />
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-50 rounded-lg"><TrendingUp className="h-5 w-5 text-green-600" /></div>
+                    <div>
+                      <p className="text-xs text-gray-500">Active Tenants</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.active_tenants}</p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Tenants</p>
-              </div>
-              <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.active_tenants}</p>
-            </div>
-          </div>
-
-          <div className="group relative bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl shadow-lg border border-purple-200 dark:border-purple-800 p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-3 bg-purple-600 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Users className="h-6 w-6" />
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-50 rounded-lg"><Users className="h-5 w-5 text-purple-600" /></div>
+                    <div>
+                      <p className="text-xs text-gray-500">Total Users</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.total_users}</p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
-              </div>
-              <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">{stats.total_users}</p>
-            </div>
-          </div>
-
-          <div className={`group relative rounded-xl shadow-lg border p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 ${
-            stats.system_health === 'healthy'
-              ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800'
-              : stats.system_health === 'warning'
-              ? 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-yellow-200 dark:border-yellow-800'
-              : 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200 dark:border-red-800'
-          }`}>
-            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500 ${
-              stats.system_health === 'healthy' ? 'bg-green-600/5' :
-              stats.system_health === 'warning' ? 'bg-yellow-600/5' : 'bg-red-600/5'
-            }`} />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-3 text-white rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 ${
-                  stats.system_health === 'healthy' ? 'bg-green-600' :
-                  stats.system_health === 'warning' ? 'bg-yellow-600' : 'bg-red-600'
-                }`}>
-                  <AlertCircle className="h-6 w-6" />
-                </div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">System Health</p>
-              </div>
-              <p className={`text-4xl font-bold capitalize ${
-                stats.system_health === 'healthy' ? 'text-green-600 dark:text-green-400' :
-                stats.system_health === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
-                'text-red-600 dark:text-red-400'
-              }`}>
-                {stats.system_health}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Tenants List */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 p-6">
-            <h2 className="text-xl font-bold text-white">Tenants</h2>
-          </div>
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {tenants.map((tenant) => (
-              <div
-                key={tenant.id}
-                className={`p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-all ${
-                  selectedTenant?.id === tenant.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600' : ''
-                }`}
-                onClick={() => handleSelectTenant(tenant)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <Building2 className="h-6 w-6 text-white" />
-                      </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      stats.system_health === 'healthy' ? 'bg-green-50' :
+                      stats.system_health === 'warning' ? 'bg-amber-50' : 'bg-red-50'
+                    }`}>
+                      <AlertCircle className={`h-5 w-5 ${
+                        stats.system_health === 'healthy' ? 'text-green-600' :
+                        stats.system_health === 'warning' ? 'text-amber-600' : 'text-red-600'
+                      }`} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{tenant.name}</h3>
-                        {tenant.tenant_type === 'simulation_template' && (
-                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full shadow-sm">
-                            📝 Template
-                          </span>
-                        )}
-                        {tenant.tenant_type === 'simulation_active' && (
-                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full shadow-sm">
-                            🎮 Active Sim
-                          </span>
-                        )}
-                        {(tenant.tenant_type === 'institution' || tenant.tenant_type === 'production') && (
-                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-sm">
-                            🏢 Organization
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{tenant.subdomain}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">Plan: {tenant.subscription_plan}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      tenant.status === 'active' 
-                        ? 'bg-green-100 text-green-800'
-                        : tenant.status === 'inactive'
-                        ? 'bg-gray-100 text-gray-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {tenant.status}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedTenant(tenant);
-                        setShowEditForm(true);
-                      }}
-                      className="p-1 text-gray-400 hover:text-blue-600"
-                      title="Edit tenant"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </button>
-                    
-                    {/* Dropdown for delete options */}
-                    <div className="relative group">
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1 text-gray-400 hover:text-red-600"
-                        title="Delete options"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                      
-                      {/* Dropdown menu */}
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                        <div className="py-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteTenant(tenant.id, false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Deactivate
-                            <div className="text-xs text-gray-500">Hide tenant, keep data</div>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteTenant(tenant.id, true);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                          >
-                            Delete Permanently
-                            <div className="text-xs text-red-500">Remove all data forever</div>
-                          </button>
-                        </div>
-                      </div>
+                      <p className="text-xs text-gray-500">System Health</p>
+                      <p className={`text-lg font-bold capitalize ${
+                        stats.system_health === 'healthy' ? 'text-green-600' :
+                        stats.system_health === 'warning' ? 'text-amber-600' : 'text-red-600'
+                      }`}>{stats.system_health}</p>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
 
-        {/* Tenant Details */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-800 dark:to-pink-800 p-6">
-            <h2 className="text-xl font-bold text-white">
-              {selectedTenant ? 'Tenant Details' : 'Select a Tenant'}
-            </h2>
-          </div>
-          {selectedTenant ? (
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">Name</label>
-                <p className="text-gray-900">{selectedTenant.name}</p>
+            {/* Grouped tenant list + detail panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left: grouped lists */}
+              <div className="lg:col-span-2 space-y-4">
+
+                {/* Organizations */}
+                {groupedTenants.institutions.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
+                      <div className="p-1.5 bg-blue-50 rounded-lg"><Building2 className="h-4 w-4 text-blue-600" /></div>
+                      <span className="text-sm font-semibold text-gray-900">Organizations</span>
+                      <span className="ml-auto text-xs text-gray-400 font-medium">{groupedTenants.institutions.length}</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {groupedTenants.institutions.map((tenant) => (
+                        <TenantRow
+                          key={tenant.id}
+                          tenant={tenant}
+                          isSelected={selectedTenant?.id === tenant.id}
+                          onSelect={handleSelectTenant}
+                          onEdit={(t) => { setSelectedTenant(t); setShowEditForm(true); }}
+                          onDelete={handleDeleteTenant}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Simulation Templates */}
+                {groupedTenants.templates.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
+                      <div className="p-1.5 bg-amber-50 rounded-lg"><FileText className="h-4 w-4 text-amber-600" /></div>
+                      <span className="text-sm font-semibold text-gray-900">Simulation Templates</span>
+                      <span className="ml-auto text-xs text-gray-400 font-medium">{groupedTenants.templates.length}</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {groupedTenants.templates.map((tenant) => (
+                        <TenantRow
+                          key={tenant.id}
+                          tenant={tenant}
+                          isSelected={selectedTenant?.id === tenant.id}
+                          onSelect={handleSelectTenant}
+                          onEdit={(t) => { setSelectedTenant(t); setShowEditForm(true); }}
+                          onDelete={handleDeleteTenant}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Simulations */}
+                {groupedTenants.activeSimulations.length > 0 && (
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
+                      <div className="p-1.5 bg-green-50 rounded-lg"><Play className="h-4 w-4 text-green-600" /></div>
+                      <span className="text-sm font-semibold text-gray-900">Active Simulations</span>
+                      <span className="ml-auto text-xs text-gray-400 font-medium">{groupedTenants.activeSimulations.length}</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {groupedTenants.activeSimulations.map((tenant) => (
+                        <TenantRow
+                          key={tenant.id}
+                          tenant={tenant}
+                          isSelected={selectedTenant?.id === tenant.id}
+                          onSelect={handleSelectTenant}
+                          onEdit={(t) => { setSelectedTenant(t); setShowEditForm(true); }}
+                          onDelete={handleDeleteTenant}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Subdomain</label>
-                <p className="text-gray-900">{selectedTenant.subdomain}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Subscription Plan</label>
-                <p className="text-gray-900 capitalize">{selectedTenant.subscription_plan}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Users</label>
-                <p className="text-gray-900">
-                  {tenantUsers.length} / {selectedTenant.max_users}
-                  {tenantUsers.length >= selectedTenant.max_users && (
-                    <span className="text-red-600 text-sm ml-1">(At Limit)</span>
-                  )}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Patients</label>
-                <p className="text-gray-900">
-                  {tenantPatientStats?.total || 0} / {selectedTenant.max_patients}
-                  {(tenantPatientStats?.total || 0) >= selectedTenant.max_patients && (
-                    <span className="text-red-600 text-sm ml-1">(At Limit)</span>
-                  )}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Created</label>
-                <p className="text-gray-900">{new Date(selectedTenant.created_at).toLocaleDateString()}</p>
-              </div>
-              
-              {/* Tenant Users */}
-              <div className="mt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Users ({tenantUsers.length})</h3>
-                <div className="space-y-2">
-                  {tenantUsers.length > 0 ? (
-                    tenantUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {user.user_profiles?.full_name || 'Unknown User'}
-                          </p>
-                          <p className="text-sm text-gray-500">{user.user_profiles?.email || 'No email'}</p>
-                        </div>
-                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                          {user.role}
+
+              {/* Right: detail panel */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                {selectedTenant ? (
+                  <>
+                    <div className="px-5 py-4 border-b border-gray-100">
+                      <h2 className="text-sm font-semibold text-gray-900">{selectedTenant.name}</h2>
+                      <p className="text-xs text-gray-400 mt-0.5">{selectedTenant.subdomain}</p>
+                    </div>
+                    <div className="p-5 space-y-2.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Plan</span>
+                        <span className="font-medium text-gray-900 capitalize">{selectedTenant.subscription_plan}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Users</span>
+                        <span className={`font-medium ${
+                          tenantUsers.length >= selectedTenant.max_users ? 'text-red-600' : 'text-gray-900'
+                        }`}>
+                          {tenantUsers.length} / {selectedTenant.max_users}
+                          {tenantUsers.length >= selectedTenant.max_users && <span className="ml-1 text-xs">(limit)</span>}
                         </span>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm">No users assigned to this tenant</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Tenant Patients Summary */}
-              {tenantPatientStats && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Patients ({tenantPatientStats.total})</h3>
-                  {tenantPatientStats.total > 0 ? (
-                    <div className="space-y-2">
-                      {Object.entries(tenantPatientStats.by_condition).map(([condition, count]) => (
-                        <div key={condition} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="text-sm text-gray-700">{condition}</span>
-                          <span className="text-sm font-medium text-gray-900">{count}</span>
-                        </div>
-                      ))}
-                      <div className="mt-2 p-2 bg-blue-50 rounded">
-                        <span className="text-xs text-blue-600">Recent admissions (30 days): {tenantPatientStats.recent_admissions}</span>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Patients</span>
+                        <span className={`font-medium ${
+                          (tenantPatientStats?.total || 0) >= selectedTenant.max_patients ? 'text-red-600' : 'text-gray-900'
+                        }`}>
+                          {tenantPatientStats?.total || 0} / {selectedTenant.max_patients}
+                        </span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Created</span>
+                        <span className="font-medium text-gray-900">{new Date(selectedTenant.created_at).toLocaleDateString()}</span>
+                      </div>
+
+                      {/* Users list */}
+                      {tenantUsers.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Users ({tenantUsers.length})</p>
+                          <div className="space-y-1.5">
+                            {tenantUsers.map((user) => (
+                              <div key={user.id} className="flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-lg">
+                                <div>
+                                  <p className="text-xs font-medium text-gray-900">{user.user_profiles?.full_name || 'Unknown'}</p>
+                                  <p className="text-[11px] text-gray-400">{user.user_profiles?.email || '—'}</p>
+                                </div>
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded">{user.role}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Patient breakdown */}
+                      {tenantPatientStats && tenantPatientStats.total > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Patients by Condition</p>
+                          <div className="space-y-1">
+                            {Object.entries(tenantPatientStats.by_condition).map(([cond, count]) => (
+                              <div key={cond} className="flex items-center justify-between text-xs">
+                                <span className="text-gray-600">{cond}</span>
+                                <span className="font-medium text-gray-900">{count}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[11px] text-blue-600 mt-2">Recent (30d): {tenantPatientStats.recent_admissions}</p>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      <Building2 className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm">No patients in this tenant</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-64">
+                    <Building2 className="h-10 w-10 mb-3 text-gray-200" />
+                    <p className="text-sm text-gray-400">Select a tenant to view details</p>
+                  </div>
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="p-6 text-center text-gray-500">
-              <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>Select a tenant to view details</p>
-            </div>
-          )}
-        </div>
+
+            {/* Modals */}
+            {showCreateForm && (
+              <CreateTenantModal
+                onClose={() => setShowCreateForm(false)}
+                onSuccess={() => { setShowCreateForm(false); loadDashboardData(); }}
+              />
+            )}
+            {showEditForm && selectedTenant && (
+              <EditTenantModal
+                tenant={selectedTenant}
+                onClose={() => setShowEditForm(false)}
+                onSuccess={() => { setShowEditForm(false); loadDashboardData(); }}
+              />
+            )}
+          </>
+        ) : activeTab === 'programs' ? (
+          <ProgramManagement />
+        ) : (
+          <TenantSettings />
+        )}
       </div>
-
-      {/* Create Tenant Modal */}
-      {showCreateForm && (
-        <CreateTenantModal
-          onClose={() => setShowCreateForm(false)}
-          onSuccess={() => {
-            setShowCreateForm(false);
-            loadDashboardData();
-          }}
-        />
-      )}
-
-      {/* Edit Tenant Modal */}
-      {showEditForm && selectedTenant && (
-        <EditTenantModal
-          tenant={selectedTenant}
-          onClose={() => setShowEditForm(false)}
-          onSuccess={() => {
-            setShowEditForm(false);
-            loadDashboardData();
-          }}
-        />
-      )}
-        </>
-      ) : activeTab === 'programs' ? (
-        /* Program Management Tab */
-        <ProgramManagement />
-      ) : activeTab === 'settings' ? (
-        /* Tenant Settings Tab */
-        <TenantSettings />
-      ) : (
-        /* Bulk Label Print Tab */
-        <BulkLabelPrint selectedTenant={selectedTenant} />
-      )}
     </div>
   );
 };
+
 
 // Create Tenant Modal Component
 const CreateTenantModal: React.FC<{
