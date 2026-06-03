@@ -227,6 +227,14 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           return;
         }
 
+        // Supabase returns null user (no error) when the email already exists.
+        // This is intentional on their end to prevent email enumeration, but we
+        // need to surface it clearly here.
+        if (!authData.user) {
+          setError('Unable to create user. The email address may already be registered. Check Supabase Auth > Users to confirm.');
+          return;
+        }
+
         if (authData.user) {
           // For admin-created users, immediately confirm their email so they can login
           try {

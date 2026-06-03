@@ -50,7 +50,8 @@ type ActiveModule =
   | 'advanced-directives'
   | 'hacmap'
   | 'intake-output'
-  | 'flowsheets';
+  | 'flowsheets'
+  | 'therapeutic-recreation';
 
 const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
   vitals: 'Vitals & Assessments',
@@ -61,6 +62,7 @@ const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
   hacmap: 'hacMap - Device & Wound Care',
   'intake-output': 'Intake & Output',
   flowsheets: 'Clinical Flowsheets',
+  'therapeutic-recreation': 'Therapeutic Recreation',
 };
 
 export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = ({

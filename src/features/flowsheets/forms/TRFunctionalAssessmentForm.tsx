@@ -45,6 +45,27 @@ const RECOMMENDED_ACTIVITIES = [
   'Sensory stimulation', 'Horticulture therapy', 'Technology / tablet use',
 ];
 
+interface IndependenceSelectorProps {
+  field: 'adlCapacity' | 'mobilityForRecreation';
+  label: string;
+  value: IndependenceLevel;
+  onSelect: (value: IndependenceLevel) => void;
+}
+
+const IndependenceSelector: React.FC<IndependenceSelectorProps> = ({ field, label, value, onSelect }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <div className="flex gap-2 flex-wrap">
+      {INDEPENDENCE_OPTIONS.map(({ v, l }) => (
+        <button key={`${field}-${v}`} type="button" onClick={() => onSelect(v)}
+          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${value === v ? v === 'independent' || v === 'modified-independent' ? 'bg-green-100 border-green-400 text-green-800' : v === 'dependent' ? 'bg-red-100 border-red-400 text-red-800' : 'bg-amber-100 border-amber-400 text-amber-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+          {l}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 function validate(form: TRFunctionalFormData): string | null {
   if (!form.studentName.trim()) return 'Enter your name before saving.';
   if (!form.physicalEndurance) return 'Document physical endurance level.';
@@ -92,28 +113,14 @@ export const TRFunctionalAssessmentForm: React.FC<FlowsheetFormProps> = ({
     onSaved();
   };
 
-  const IndependenceSelector = ({ field, label }: { field: 'adlCapacity' | 'mobilityForRecreation'; label: string }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <div className="flex gap-2 flex-wrap">
-        {INDEPENDENCE_OPTIONS.map(({ v, l }) => (
-          <button key={v} type="button" onClick={() => set(field, v)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${form[field] === v ? v === 'independent' || v === 'modified-independent' ? 'bg-green-100 border-green-400 text-green-800' : v === 'dependent' ? 'bg-red-100 border-red-400 text-red-800' : 'bg-amber-100 border-amber-400 text-amber-800' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-            {l}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <AssessmentHistoryStrip patientId={patient.id} tenantId={tenantId} systemType={SYSTEM_TYPE} formatSummary={formatTRFunctionalSummary} />
 
       <FlowsheetFormSection title="Physical Function">
         <div className="space-y-4">
-          <IndependenceSelector field="adlCapacity" label="ADL Capacity" />
-          <IndependenceSelector field="mobilityForRecreation" label="Mobility for Recreation" />
+          <IndependenceSelector field="adlCapacity" label="ADL Capacity" value={form.adlCapacity} onSelect={(value) => set('adlCapacity', value)} />
+          <IndependenceSelector field="mobilityForRecreation" label="Mobility for Recreation" value={form.mobilityForRecreation} onSelect={(value) => set('mobilityForRecreation', value)} />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Physical Endurance <span className="text-red-500">*</span></label>

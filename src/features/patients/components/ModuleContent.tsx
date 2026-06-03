@@ -8,7 +8,7 @@
  * Extracted from ModularPatientDashboard.tsx to keep that file under 350 lines.
  */
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { VitalsModule } from '../components/vitals';
 import { MARModule } from '../components/mar';
 import { FormsModule } from '../../forms';
@@ -17,6 +17,10 @@ import { AdvancedDirectivesForm } from '../components/forms/AdvancedDirectivesFo
 import { IntakeOutputCard } from '../components/intake-output';
 import { AvatarBoard } from '../../hacmap/AvatarBoard';
 import { FlowsheetsHub } from '../../flowsheets';
+
+const TherapeuticRecreationModule = React.lazy(
+  () => import('../../therapeutic-recreation').then((m) => ({ default: m.TherapeuticRecreationModule }))
+);
 import type { Patient } from '../../../types';
 
 type ActiveModule =
@@ -28,7 +32,8 @@ type ActiveModule =
   | 'advanced-directives'
   | 'hacmap'
   | 'intake-output'
-  | 'flowsheets';
+  | 'flowsheets'
+  | 'therapeutic-recreation';
 
 interface NavProps {
   onChartClick: () => void;
@@ -185,6 +190,19 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
         onNavigateToModule={(target) => onModuleChange(target as ActiveModule)}
         onNavigateToOverview={onNavigateToOverview}
       />
+    );
+  }
+
+  if (activeModule === 'therapeutic-recreation') {
+    return (
+      <Suspense fallback={<div className="flex items-center justify-center py-24 text-gray-500">Loading Therapeutic Recreation…</div>}>
+        <TherapeuticRecreationModule
+          patient={patient}
+          currentUser={currentUser}
+          onNavigateToOverview={onNavigateToOverview}
+          onNavigateToFlowsheets={() => onModuleChange('flowsheets')}
+        />
+      </Suspense>
     );
   }
 

@@ -147,7 +147,32 @@ BEGIN
     AND is_baseline = false;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % system assessments (student entries only, baseline preserved)', v_count;
-  
+
+  -- 🧩 TR module tables: delete student entries, preserve instructor baselines
+  DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR screening entries (student only)', v_count;
+
+  DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR active living profiles (student only)', v_count;
+
+  DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR assessment scores (student only)', v_count;
+
+  DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR treatment plan rows (student only)', v_count;
+
+  DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR interdisciplinary interpretations (student only)', v_count;
+
+  DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR progress notes', v_count;
+
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % doctors orders', v_count;
@@ -206,6 +231,15 @@ BEGIN
   -- in-place (is_baseline = true), so restoring from snapshot would duplicate them.
   v_snapshot := v_snapshot - 'patient_system_assessments';
   RAISE NOTICE '📋 Removed system assessments from snapshot (baseline rows preserved in-place)';
+
+  -- Strip TR tables from snapshot — baseline rows preserved in-place
+  v_snapshot := v_snapshot - 'tr_screening_entries';
+  v_snapshot := v_snapshot - 'tr_active_living_profiles';
+  v_snapshot := v_snapshot - 'tr_assessment_scores';
+  v_snapshot := v_snapshot - 'tr_treatment_plan_rows';
+  v_snapshot := v_snapshot - 'tr_interdisciplinary_interps';
+  v_snapshot := v_snapshot - 'tr_progress_notes';
+  RAISE NOTICE '🧩 Removed TR module tables from snapshot (baseline rows preserved in-place)';
 
   RAISE NOTICE '👥 Keeping patients in snapshot for ID mapping (will not create new patients due to preserve_barcodes flag)';
   
