@@ -35,6 +35,41 @@ const QOL_DOMAINS: { key: keyof Pick<TRQoLFormData, 'physicalWellbeing' | 'socia
   { key: 'overallQoL', label: 'Overall Quality of Life', description: 'Global rating of overall life quality today' },
 ];
 
+type QoLField = keyof Pick<TRQoLFormData, 'physicalWellbeing' | 'socialWellbeing' | 'emotionalWellbeing' | 'functionalWellbeing' | 'overallQoL'>;
+
+interface ScoreSelectorProps {
+  field: QoLField;
+  label: string;
+  description: string;
+  value: number | null;
+  onSelect: (field: QoLField, score: number) => void;
+}
+
+const ScoreSelector: React.FC<ScoreSelectorProps> = ({ field, label, description, value, onSelect }) => (
+  <div>
+    <div className="flex items-baseline justify-between mb-2">
+      <div>
+        <span className="text-sm font-medium text-gray-700">{label}</span>
+        {field === 'overallQoL' && <span className="text-red-500 ml-1">*</span>}
+        <p className="text-xs text-gray-400">{description}</p>
+      </div>
+      <span className={`text-xl font-bold min-w-[3ch] text-right ${scoreColor(value)}`}>{value ?? '—'}</span>
+    </div>
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+        <button key={n} type="button" onClick={() => onSelect(field, n)}
+          className={`flex-1 h-9 rounded text-xs font-medium border transition-all ${value === n ? n >= 7 ? 'bg-green-500 border-green-500 text-white' : n >= 4 ? 'bg-amber-500 border-amber-500 text-white' : 'bg-red-500 border-red-500 text-white' : n >= 7 ? 'bg-green-50 border-green-200 text-green-600 hover:bg-green-100' : n >= 4 ? 'bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100' : 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'}`}>
+          {n}
+        </button>
+      ))}
+    </div>
+    <div className="flex justify-between mt-0.5">
+      <span className="text-xs text-gray-400">Poor</span>
+      <span className="text-xs text-gray-400">Excellent</span>
+    </div>
+  </div>
+);
+
 function scoreColor(score: number | null): string {
   if (score === null) return 'text-gray-400';
   if (score >= 7) return 'text-green-600';
@@ -86,34 +121,6 @@ export const TRQualityOfLifeForm: React.FC<FlowsheetFormProps> = ({
     onSaved();
   };
 
-  const ScoreSelector = ({ field, label, description }: { field: keyof Pick<TRQoLFormData, 'physicalWellbeing' | 'socialWellbeing' | 'emotionalWellbeing' | 'functionalWellbeing' | 'overallQoL'>; label: string; description: string }) => {
-    const value = form[field];
-    return (
-      <div>
-        <div className="flex items-baseline justify-between mb-2">
-          <div>
-            <span className="text-sm font-medium text-gray-700">{label}</span>
-            {field === 'overallQoL' && <span className="text-red-500 ml-1">*</span>}
-            <p className="text-xs text-gray-400">{description}</p>
-          </div>
-          <span className={`text-xl font-bold min-w-[3ch] text-right ${scoreColor(value)}`}>{value ?? '—'}</span>
-        </div>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-            <button key={n} type="button" onClick={() => set(field, n)}
-              className={`flex-1 h-9 rounded text-xs font-medium border transition-all ${value === n ? n >= 7 ? 'bg-green-500 border-green-500 text-white' : n >= 4 ? 'bg-amber-500 border-amber-500 text-white' : 'bg-red-500 border-red-500 text-white' : n >= 7 ? 'bg-green-50 border-green-200 text-green-600 hover:bg-green-100' : n >= 4 ? 'bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100' : 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'}`}>
-              {n}
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-between mt-0.5">
-          <span className="text-xs text-gray-400">Poor</span>
-          <span className="text-xs text-gray-400">Excellent</span>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <AssessmentHistoryStrip patientId={patient.id} tenantId={tenantId} systemType={SYSTEM_TYPE} formatSummary={formatTRQoLSummary} />
@@ -137,7 +144,7 @@ export const TRQualityOfLifeForm: React.FC<FlowsheetFormProps> = ({
       <FlowsheetFormSection title="Quality of Life Ratings">
         <div className="space-y-5">
           {QOL_DOMAINS.map(({ key, label, description }) => (
-            <ScoreSelector key={key} field={key} label={label} description={description} />
+          <ScoreSelector key={key} field={key} label={label} description={description} value={form[key]} onSelect={(field, score) => set(field, score)} />
           ))}
         </div>
       </FlowsheetFormSection>

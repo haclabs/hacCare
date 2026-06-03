@@ -26,7 +26,8 @@ export type FlowsheetModuleTarget =
   | 'handover'
   | 'advanced-directives'
   | 'hacmap'
-  | 'intake-output';
+  | 'intake-output'
+  | 'therapeutic-recreation';
 
 // ── Hub view state machine ────────────────────────────────────────────────────
 
