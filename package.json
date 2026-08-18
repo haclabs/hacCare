@@ -55,7 +55,7 @@
     "react-dropzone": "^19.1.1",
     "react-image-marker": "^1.2.0",
     "react-router-dom": "^7.18.2",
-    "run": "^1.5.0",
+    "run": "^2.0.0",
     "uuid": "^14.0.1"
   },
   "devDependencies": {
