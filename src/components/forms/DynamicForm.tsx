@@ -315,14 +315,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           </div>
 
           {/* Step content */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {currentStepData.title}
-            </h3>
-            {currentStepData.description && (
-              <p className="text-gray-600 mb-6">{currentStepData.description}</p>
-            )}
-            <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+              <h3 className="text-sm font-semibold text-gray-800">{currentStepData.title}</h3>
+              {currentStepData.description && (
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{currentStepData.description}</p>
+              )}
+            </div>
+            <div className="px-5 py-4 space-y-4">
               {stepFields.map(renderField)}
             </div>
           </div>
@@ -367,14 +367,14 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             );
 
             return (
-              <div key={section.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {section.title}
-                </h3>
-                {section.description && (
-                  <p className="text-gray-600 mb-6">{section.description}</p>
-                )}
-                <div className="space-y-4">
+              <div key={section.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+                  <h3 className="text-sm font-semibold text-gray-800">{section.title}</h3>
+                  {section.description && (
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{section.description}</p>
+                  )}
+                </div>
+                <div className="px-5 py-4 space-y-4">
                   {sectionFields.map(renderField)}
                 </div>
               </div>
@@ -415,12 +415,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     <div className={`max-w-4xl mx-auto ${className}`}>
       <form onSubmit={handleSubmit}>
         {/* Form header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 leading-tight">
             {formConfig.schema.title}
           </h2>
           {formConfig.schema.description && (
-            <p className="text-gray-600 mt-2">{formConfig.schema.description}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{formConfig.schema.description}</p>
           )}
         </div>
 
@@ -432,25 +432,25 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
         {/* Student Verification - render studentName field in yellow box if present */}
         {formConfig.fields.find(f => f.name === 'studentName') && (
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <label className="block text-sm font-medium text-yellow-900 mb-2">
+          <div className="mt-6 rounded-xl border-2 border-yellow-300 bg-yellow-50 px-5 py-4 space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
               Student Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.studentName || ''}
               onChange={(e) => handleFieldChange('studentName', e.target.value)}
-              className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"
               placeholder="e.g. Jane Smith"
               required
               disabled={readOnly}
             />
             {validation.errors.find(e => e.field === 'studentName') && (
-              <p className="text-red-600 text-xs mt-1">
+              <p className="text-red-600 text-xs">
                 {validation.errors.find(e => e.field === 'studentName')?.message}
               </p>
             )}
-            <p className="text-xs text-yellow-700 mt-2">
+            <p className="text-xs text-gray-500">
               By entering your name, you verify that all information above is correct and you recorded these vital signs.
             </p>
           </div>
@@ -458,11 +458,11 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
         {/* Form actions */}
         {!readOnly && (
-          <div className="mt-8 flex justify-end space-x-4">
+          <div className="mt-6 flex justify-end space-x-4">
             <button
               type="submit"
               disabled={isSubmitting || !validation.valid}
-              className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Save className="h-4 w-4 mr-2" />
               {isSubmitting ? 'Submitting...' : 'Submit'}

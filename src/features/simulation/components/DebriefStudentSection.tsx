@@ -22,7 +22,14 @@ export const StudentActivitySection: React.FC<{ student: StudentActivity; forceE
     { key: 'bowelAssessments', title: 'Bowel Assessments', items: student.activities.bowelAssessments || [], color: 'amber', icon: '📊' },
     { key: 'neuroAssessments', title: 'Neuro Assessments', items: student.activities.neuroAssessments || [], color: 'violet', icon: '🧠' },
     { key: 'bbitEntries', title: 'BBIT Chart', items: student.activities.bbitEntries || [], color: 'purple', icon: '🩸' },
-    { key: 'newbornAssessments', title: 'Newborn Assessment', items: student.activities.newbornAssessments || [], color: 'cyan', icon: '👶' }
+    { key: 'newbornAssessments', title: 'Newborn Assessment', items: student.activities.newbornAssessments || [], color: 'cyan', icon: '👶' },
+    { key: 'systemAssessments', title: 'System Assessments (Flowsheets)', items: student.activities.systemAssessments || [], color: 'sky', icon: '🗂️' },
+    { key: 'trScreenings', title: 'TR Screening Tool', items: student.activities.trScreenings || [], color: 'lime', icon: '🎯' },
+    { key: 'trActiveLivingProfiles', title: 'TR Active Living Profile', items: student.activities.trActiveLivingProfiles || [], color: 'violet', icon: '📖' },
+    { key: 'trAssessmentScores', title: 'TR Assessment Scores', items: student.activities.trAssessmentScores || [], color: 'slate', icon: '📈' },
+    { key: 'trTreatmentPlanRows', title: 'TR Treatment Plan (LAS)', items: student.activities.trTreatmentPlanRows || [], color: 'teal', icon: '🗒️' },
+    { key: 'trInterdisciplinaryInterps', title: 'TR Interdisciplinary Interpretations', items: student.activities.trInterdisciplinaryInterps || [], color: 'orange', icon: '🧩' },
+    { key: 'trProgressNotes', title: 'TR Progress Notes', items: student.activities.trProgressNotes || [], color: 'emerald', icon: '📔' }
   ].filter(s => s.items.length > 0);
   
   const initialExpanded = forceExpanded 

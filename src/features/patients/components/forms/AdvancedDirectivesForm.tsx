@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, FileCheck, Shield, Heart, AlertTriangle } from 'lucide-react';
+import { X, Save, AlertTriangle } from 'lucide-react';
 import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -108,7 +108,7 @@ interface AdvancedDirectivesFormProps {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl p-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Loading advanced directives...</p>
@@ -121,7 +121,7 @@ interface AdvancedDirectivesFormProps {
   if (!formData) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl p-8">
           <div className="text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400">Failed to load advanced directives</p>
@@ -136,9 +136,9 @@ interface AdvancedDirectivesFormProps {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Update Advanced Directives - {patientName}
           </h2>
           <button
@@ -150,7 +150,7 @@ interface AdvancedDirectivesFormProps {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-8">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center space-x-2">
@@ -162,13 +162,11 @@ interface AdvancedDirectivesFormProps {
           )}
 
           {/* Legal Documents */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-              <FileCheck className="h-5 w-5 mr-2 text-blue-600" />
-              Legal Documents & Directives
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Legal Documents & Directives</h3>
+            </div>
+            <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Living Will Status
@@ -250,13 +248,11 @@ interface AdvancedDirectivesFormProps {
           </div>
 
           {/* Organ Donation */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-              <Heart className="h-5 w-5 mr-2 text-red-600" />
-              Organ Donation Preferences
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Organ Donation Preferences</h3>
+            </div>
+            <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Organ Donation Status
@@ -287,13 +283,12 @@ interface AdvancedDirectivesFormProps {
           </div>
 
           {/* Religious and Personal Preferences */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-              <Shield className="h-5 w-5 mr-2 text-purple-600" />
-              Religious & Personal Preferences
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Religious & Personal Preferences</h3>
+            </div>
+            <div className="px-5 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Religious Preference
@@ -308,22 +303,23 @@ interface AdvancedDirectivesFormProps {
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Special Instructions
-              </label>
-              <textarea
-                value={formData.special_instructions}
-                onChange={(e) => updateField('special_instructions', e.target.value)}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Any special instructions for care, family involvement, religious considerations, etc."
-              />
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Special Instructions
+                </label>
+                <textarea
+                  value={formData.special_instructions}
+                  onChange={(e) => updateField('special_instructions', e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Any special instructions for care, family involvement, religious considerations, etc."
+                />
+              </div>
             </div>
           </div>
 
           {/* Important Notes */}
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
             <div className="flex items-center space-x-2 mb-2">
               <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
               <p className="text-yellow-800 dark:text-yellow-300 font-medium text-sm">Important Notes</p>
@@ -337,7 +333,7 @@ interface AdvancedDirectivesFormProps {
           </div>
 
           {/* Student Name - Required for Verification */}
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
             <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">
               Student Name <span className="text-red-500">*</span>
             </label>

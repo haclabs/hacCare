@@ -22,7 +22,11 @@ export const ActivitySection: React.FC<{
     rose: 'bg-rose-50 border-rose-200 text-rose-700',
     amber: 'bg-amber-50 border-amber-200 text-amber-700',
     indigo: 'bg-indigo-50 border-indigo-200 text-indigo-700',
-    fuchsia: 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700'
+    fuchsia: 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700',
+    violet: 'bg-violet-50 border-violet-200 text-violet-700',
+    sky: 'bg-sky-50 border-sky-200 text-sky-700',
+    lime: 'bg-lime-50 border-lime-200 text-lime-700',
+    slate: 'bg-slate-50 border-slate-200 text-slate-700'
   };
 
   return (

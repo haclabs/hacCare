@@ -120,17 +120,19 @@ export const DeviceAssessmentForm: React.FC<DeviceAssessmentFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-4 text-sm text-blue-800">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
         <p className="font-medium">Assessment Information</p>
         <p>All measurements use metric units (mL, cm). Times are in 24-hour format.</p>
       </div>
 
       {/* Device Information Header (Read-Only) */}
-      <div className="p-4 bg-gray-100 border border-gray-300 rounded-md">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Device Being Assessed</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+          <h3 className="text-sm font-semibold text-gray-800">Device Being Assessed</h3>
+        </div>
+        <div className="px-5 py-4 grid grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-700">Type:</span>{' '}
             <span className="text-gray-900">{DEVICE_TYPE_LABELS[device.type]}</span>

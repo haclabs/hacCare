@@ -30,6 +30,13 @@ export interface StudentActivity {
     advancedDirectives: AdvancedDirectiveEntry[]; // 🆕 NEW
     bbitEntries: BBITEntry[];
     newbornAssessments: NewbornAssessmentEntry[];
+    systemAssessments: SystemAssessmentEntry[]; // 🆕 Flowsheets Hub native forms (patient_system_assessments)
+    trScreenings: TRScreeningEntry[]; // 🆕 Therapeutic Recreation module
+    trActiveLivingProfiles: TRActiveLivingProfileEntry[];
+    trAssessmentScores: TRAssessmentScoreEntry[];
+    trTreatmentPlanRows: TRTreatmentPlanRowEntry[];
+    trInterdisciplinaryInterps: TRInterdisciplinaryInterpEntry[];
+    trProgressNotes: TRProgressNoteEntry[];
   };
 }
 
@@ -280,6 +287,94 @@ interface BBITEntry {
   patient_name?: string;
 }
 
+// 🆕 Flowsheets Hub — native form entry (14 assessment types, one shared table)
+interface SystemAssessmentEntry {
+  id: string;
+  system_type: string;
+  recorded_at: string;
+  nurse_name: string | null;
+  assessment_data: Record<string, unknown>;
+  patient_name?: string;
+}
+
+// 🆕 Therapeutic Recreation module — 6 dedicated tables
+interface TRScreeningEntry {
+  id: string;
+  created_at: string;
+  recorded_by: string | null;
+  tr_recommendation: string | null;
+  leisure_satisfaction_rating: number | null;
+  readiness_to_participate: number | null;
+  social_engagement_rating: number | null;
+  community_frequency: string | null;
+  boredom_frequency: string | null;
+  lcm_leisure_attitude_score: number | null;
+  lcm_social_contact_score: number | null;
+  lcm_community_participation_score: number | null;
+  leisure_barriers_description: string | null;
+  completed_at: string | null;
+  patient_name?: string;
+}
+
+interface TRActiveLivingProfileEntry {
+  id: string;
+  created_at: string;
+  recorded_by: string | null;
+  narrative: string | null;
+  patient_name?: string;
+}
+
+interface TRAssessmentScoreEntry {
+  id: string;
+  created_at: string;
+  recorded_by: string | null;
+  tool_name: string;
+  subscale_scores: Record<string, number> | null;
+  total_score: number | null;
+  interpretation: string | null;
+  date_administered: string | null;
+  patient_name?: string;
+}
+
+interface TRTreatmentPlanRowEntry {
+  id: string;
+  created_at: string;
+  recorded_by: string | null;
+  sort_order: number;
+  target_area: string | null;
+  goal: string | null;
+  objective_1: string | null;
+  objective_2: string | null;
+  objective_3: string | null;
+  intervention: string | null;
+  plan_date: string | null;
+  patient_name?: string;
+}
+
+interface TRInterdisciplinaryInterpEntry {
+  id: string;
+  created_at: string;
+  recorded_by: string | null;
+  score_group: string;
+  interpretation: string | null;
+  patient_name?: string;
+}
+
+interface TRProgressNoteEntry {
+  id: string;
+  created_at: string;
+  clinician_name: string | null;
+  note_type: string;
+  subjective: string | null;
+  objective: string | null;
+  assessment: string | null;
+  plan: string | null;
+  narrative: string | null;
+  note_date: string;
+  note_time: string | null;
+  patient_name?: string;
+}
+
 /**
  * Get all activities for a specific simulation grouped by student.
  * @param simulationId  ID of the simulation_active (or simulation_history) record.
@@ -395,6 +490,13 @@ export async function getStudentActivitiesBySimulation(
       neuroAssessmentsData,
       bbitData,
       newbornAssessmentData,
+      systemAssessmentsData, // 🆕 Flowsheets Hub native forms
+      trScreeningsData, // 🆕 Therapeutic Recreation module
+      trActiveLivingProfilesData,
+      trAssessmentScoresData,
+      trTreatmentPlanRowsData,
+      trInterdisciplinaryInterpsData,
+      trProgressNotesData,
     ] = await Promise.all([
       // Vitals
       supabase
@@ -614,6 +716,68 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null),
+
+      // 🆕 System Assessments (Flowsheets Hub — 14 native forms, one shared table)
+      supabase
+        .from('patient_system_assessments')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_baseline', false)
+        .not('nurse_name', 'is', null)
+        .order('recorded_at', { ascending: false }),
+
+      // 🆕 TR Screening Entries
+      supabase
+        .from('tr_screening_entries')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_baseline', false)
+        .not('recorded_by', 'is', null)
+        .order('created_at', { ascending: false }),
+
+      // 🆕 TR Active Living Profiles
+      supabase
+        .from('tr_active_living_profiles')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_baseline', false)
+        .not('recorded_by', 'is', null)
+        .order('created_at', { ascending: false }),
+
+      // 🆕 TR Assessment Scores
+      supabase
+        .from('tr_assessment_scores')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_baseline', false)
+        .not('recorded_by', 'is', null)
+        .order('created_at', { ascending: false }),
+
+      // 🆕 TR Treatment Plan Rows
+      supabase
+        .from('tr_treatment_plan_rows')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_baseline', false)
+        .not('recorded_by', 'is', null)
+        .order('sort_order', { ascending: true }),
+
+      // 🆕 TR Interdisciplinary Interpretations
+      supabase
+        .from('tr_interdisciplinary_interps')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_baseline', false)
+        .not('recorded_by', 'is', null)
+        .order('created_at', { ascending: false }),
+
+      // 🆕 TR Progress Notes (no is_baseline — always student entries)
+      supabase
+        .from('tr_progress_notes')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .not('clinician_name', 'is', null)
+        .order('created_at', { ascending: false }),
     ]);
 
     // Group all activities by student name
@@ -647,6 +811,13 @@ export async function getStudentActivitiesBySimulation(
             advancedDirectives: [], // 🆕 NEW
             bbitEntries: [],
             newbornAssessments: [],
+            systemAssessments: [], // 🆕 Flowsheets Hub native forms
+            trScreenings: [], // 🆕 Therapeutic Recreation module
+            trActiveLivingProfiles: [],
+            trAssessmentScores: [],
+            trTreatmentPlanRows: [],
+            trInterdisciplinaryInterps: [],
+            trProgressNotes: [],
           },
         });
       }
@@ -1057,6 +1228,134 @@ export async function getStudentActivitiesBySimulation(
         completed_by: nb.completed_by,
         student_name: nb.student_name,
         patient_name: patientNameMap.get(nb.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process system assessments (Flowsheets Hub native forms) - 🆕 NEW
+    systemAssessmentsData.data?.forEach((sa: any) => {
+      if (!sa.nurse_name) return;
+      const student = getOrCreateStudent(sa.nurse_name);
+      student.activities.systemAssessments.push({
+        id: sa.id,
+        system_type: sa.system_type,
+        recorded_at: sa.recorded_at,
+        nurse_name: sa.nurse_name,
+        assessment_data: sa.assessment_data,
+        patient_name: patientNameMap.get(sa.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process TR screening entries - 🆕 NEW
+    trScreeningsData.data?.forEach((entry: any) => {
+      if (!entry.recorded_by) return;
+      const student = getOrCreateStudent(entry.recorded_by);
+      student.activities.trScreenings.push({
+        id: entry.id,
+        created_at: entry.created_at,
+        recorded_by: entry.recorded_by,
+        tr_recommendation: entry.tr_recommendation,
+        leisure_satisfaction_rating: entry.leisure_satisfaction_rating,
+        readiness_to_participate: entry.readiness_to_participate,
+        social_engagement_rating: entry.social_engagement_rating,
+        community_frequency: entry.community_frequency,
+        boredom_frequency: entry.boredom_frequency,
+        lcm_leisure_attitude_score: entry.lcm_leisure_attitude_score,
+        lcm_social_contact_score: entry.lcm_social_contact_score,
+        lcm_community_participation_score: entry.lcm_community_participation_score,
+        leisure_barriers_description: entry.leisure_barriers_description,
+        completed_at: entry.completed_at,
+        patient_name: patientNameMap.get(entry.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process TR active living profiles - 🆕 NEW
+    trActiveLivingProfilesData.data?.forEach((entry: any) => {
+      if (!entry.recorded_by) return;
+      const student = getOrCreateStudent(entry.recorded_by);
+      student.activities.trActiveLivingProfiles.push({
+        id: entry.id,
+        created_at: entry.created_at,
+        recorded_by: entry.recorded_by,
+        narrative: entry.narrative,
+        patient_name: patientNameMap.get(entry.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process TR assessment scores - 🆕 NEW
+    trAssessmentScoresData.data?.forEach((entry: any) => {
+      if (!entry.recorded_by) return;
+      const student = getOrCreateStudent(entry.recorded_by);
+      student.activities.trAssessmentScores.push({
+        id: entry.id,
+        created_at: entry.created_at,
+        recorded_by: entry.recorded_by,
+        tool_name: entry.tool_name,
+        subscale_scores: entry.subscale_scores,
+        total_score: entry.total_score,
+        interpretation: entry.interpretation,
+        date_administered: entry.date_administered,
+        patient_name: patientNameMap.get(entry.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process TR treatment plan rows - 🆕 NEW
+    trTreatmentPlanRowsData.data?.forEach((entry: any) => {
+      if (!entry.recorded_by) return;
+      const student = getOrCreateStudent(entry.recorded_by);
+      student.activities.trTreatmentPlanRows.push({
+        id: entry.id,
+        created_at: entry.created_at,
+        recorded_by: entry.recorded_by,
+        sort_order: entry.sort_order,
+        target_area: entry.target_area,
+        goal: entry.goal,
+        objective_1: entry.objective_1,
+        objective_2: entry.objective_2,
+        objective_3: entry.objective_3,
+        intervention: entry.intervention,
+        plan_date: entry.plan_date,
+        patient_name: patientNameMap.get(entry.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process TR interdisciplinary interpretations - 🆕 NEW
+    trInterdisciplinaryInterpsData.data?.forEach((entry: any) => {
+      if (!entry.recorded_by) return;
+      const student = getOrCreateStudent(entry.recorded_by);
+      student.activities.trInterdisciplinaryInterps.push({
+        id: entry.id,
+        created_at: entry.created_at,
+        recorded_by: entry.recorded_by,
+        score_group: entry.score_group,
+        interpretation: entry.interpretation,
+        patient_name: patientNameMap.get(entry.patient_id),
+      });
+      student.totalEntries++;
+    });
+
+    // Process TR progress notes - 🆕 NEW
+    trProgressNotesData.data?.forEach((entry: any) => {
+      if (!entry.clinician_name) return;
+      const student = getOrCreateStudent(entry.clinician_name);
+      student.activities.trProgressNotes.push({
+        id: entry.id,
+        created_at: entry.created_at,
+        clinician_name: entry.clinician_name,
+        note_type: entry.note_type,
+        subjective: entry.subjective,
+        objective: entry.objective,
+        assessment: entry.assessment,
+        plan: entry.plan,
+        narrative: entry.narrative,
+        note_date: entry.note_date,
+        note_time: entry.note_time,
+        patient_name: patientNameMap.get(entry.patient_id),
       });
       student.totalEntries++;
     });

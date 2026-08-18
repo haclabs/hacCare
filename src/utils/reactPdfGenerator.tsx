@@ -467,6 +467,85 @@ const formatAdvancedDirective = (a: Record<string, unknown>): string[] => [
   a.special_instructions ? `Special Instructions: ${String(a.special_instructions)}` : null,
 ].filter((item): item is string => Boolean(item));
 
+const formatSystemAssessment = (s: Record<string, unknown>): string[] => {
+  const label = String(s.system_type || 'Assessment').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const lines: string[] = [`Type: ${label}`];
+  const data = s.assessment_data as Record<string, unknown> | null | undefined;
+  if (data && typeof data === 'object') {
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') return;
+      const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      let display: string;
+      if (Array.isArray(value)) {
+        if (value.length === 0) return;
+        display = value.join(', ');
+      } else if (typeof value === 'boolean') {
+        display = value ? 'Yes' : 'No';
+      } else if (typeof value === 'object') {
+        display = JSON.stringify(value);
+      } else {
+        display = String(value);
+      }
+      lines.push(`${fieldLabel}: ${display}`);
+    });
+  }
+  return lines;
+};
+
+const formatTRScreening = (t: Record<string, unknown>): string[] => [
+  t.tr_recommendation ? `Recommendation: ${t.tr_recommendation}` : null,
+  t.leisure_satisfaction_rating != null ? `Leisure Satisfaction: ${t.leisure_satisfaction_rating}/4` : null,
+  t.readiness_to_participate != null ? `Readiness: ${t.readiness_to_participate}/10` : null,
+  t.social_engagement_rating != null ? `Social Engagement: ${t.social_engagement_rating}/5` : null,
+  t.community_frequency ? `Community Frequency: ${t.community_frequency}` : null,
+  t.boredom_frequency ? `Boredom Frequency: ${t.boredom_frequency}` : null,
+  (t.lcm_leisure_attitude_score != null || t.lcm_social_contact_score != null || t.lcm_community_participation_score != null)
+    ? `LCM Screen: Attitude ${t.lcm_leisure_attitude_score ?? '—'}/7, Social ${t.lcm_social_contact_score ?? '—'}/7, Community ${t.lcm_community_participation_score ?? '—'}/7`
+    : null,
+  t.leisure_barriers_description ? `Barriers: ${String(t.leisure_barriers_description)}` : null,
+].filter((item): item is string => Boolean(item));
+
+const formatTRActiveLivingProfile = (t: Record<string, unknown>): string[] =>
+  t.narrative ? [String(t.narrative)] : ['Active Living Profile recorded'];
+
+const formatTRAssessmentScore = (t: Record<string, unknown>): string[] => {
+  const lines: string[] = [`Tool: ${String(t.tool_name || 'N/A').toUpperCase()}`];
+  if (t.total_score != null) lines.push(`Total Score: ${t.total_score}`);
+  if (t.date_administered) lines.push(`Administered: ${t.date_administered}`);
+  const subscales = t.subscale_scores as Record<string, unknown> | null | undefined;
+  if (subscales && typeof subscales === 'object') {
+    Object.entries(subscales).forEach(([key, value]) => lines.push(`${key}: ${value}`));
+  }
+  if (t.interpretation) lines.push(`Interpretation: ${String(t.interpretation)}`);
+  return lines;
+};
+
+const formatTRTreatmentPlanRow = (t: Record<string, unknown>): string[] => [
+  t.target_area ? `Target Area: ${t.target_area}` : null,
+  t.goal ? `Goal: ${t.goal}` : null,
+  t.objective_1 ? `Objective 1: ${t.objective_1}` : null,
+  t.objective_2 ? `Objective 2: ${t.objective_2}` : null,
+  t.objective_3 ? `Objective 3: ${t.objective_3}` : null,
+  t.intervention ? `Intervention: ${t.intervention}` : null,
+].filter((item): item is string => Boolean(item));
+
+const formatTRInterdisciplinaryInterp = (t: Record<string, unknown>): string[] => [
+  `Score Group: ${String(t.score_group || 'N/A').toUpperCase()}`,
+  ...(t.interpretation ? [`Interpretation: ${String(t.interpretation)}`] : []),
+];
+
+const formatTRProgressNote = (t: Record<string, unknown>): string[] => {
+  if (t.note_type === 'soap') {
+    return [
+      t.subjective ? `S: ${t.subjective}` : null,
+      t.objective ? `O: ${t.objective}` : null,
+      t.assessment ? `A: ${t.assessment}` : null,
+      t.plan ? `P: ${t.plan}` : null,
+    ].filter((item): item is string => Boolean(item));
+  }
+  return t.narrative ? [String(t.narrative)] : ['Progress note recorded'];
+};
+
 const formatHacmapDevice = (d: Record<string, unknown>): string[] => {
   const lines: string[] = [
     `${d.type || 'Device'}${d.location ? ` — ${d.location}` : ''}${d.site ? ` / ${d.site}` : ''}`,
@@ -766,6 +845,55 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
             title="HacMap Wounds" 
             items={student.activities.hacmapWounds || []} 
             formatter={formatHacmapWound}
+            color="#059669"
+          />
+
+          <ActivitySection 
+            title="System Assessments (Flowsheets)" 
+            items={student.activities.systemAssessments || []} 
+            formatter={formatSystemAssessment}
+            color="#0284c7"
+          />
+
+          <ActivitySection 
+            title="TR Screening Tool" 
+            items={student.activities.trScreenings || []} 
+            formatter={formatTRScreening}
+            color="#65a30d"
+          />
+
+          <ActivitySection 
+            title="TR Active Living Profile" 
+            items={student.activities.trActiveLivingProfiles || []} 
+            formatter={formatTRActiveLivingProfile}
+            color="#7c3aed"
+          />
+
+          <ActivitySection 
+            title="TR Assessment Scores" 
+            items={student.activities.trAssessmentScores || []} 
+            formatter={formatTRAssessmentScore}
+            color="#475569"
+          />
+
+          <ActivitySection 
+            title="TR Treatment Plan (LAS)" 
+            items={student.activities.trTreatmentPlanRows || []} 
+            formatter={formatTRTreatmentPlanRow}
+            color="#0d9488"
+          />
+
+          <ActivitySection 
+            title="TR Interdisciplinary Interpretations" 
+            items={student.activities.trInterdisciplinaryInterps || []} 
+            formatter={formatTRInterdisciplinaryInterp}
+            color="#f97316"
+          />
+
+          <ActivitySection 
+            title="TR Progress Notes" 
+            items={student.activities.trProgressNotes || []} 
+            formatter={formatTRProgressNote}
             color="#059669"
           />
           
