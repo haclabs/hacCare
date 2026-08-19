@@ -175,6 +175,15 @@ Current state: 13+ useState hooks, manual fetch chains, all logic fused in one f
 ### Database
 - [ ] 69 migrations — review for consolidation opportunity in next quarterly window
 - [ ] Document any new clinical table additions against the 4-part checklist (reset function, table config, debrief service, debrief modal)
+- [ ] Post-1.0: migrate `patient_advanced_directives` + `patient_admission_records` into the generic
+      `patient_system_assessments` (system_type + JSONB) pattern already proven by `consents`/`bpmh`.
+      Both are true one-row-per-patient config records with no relational/numeric-graphing needs —
+      collapsing them eliminates the manual 4-part wiring entirely and the orphaned-row duplicate-key
+      class of bug (Aug 18, 2026 incident). Do NOT do this for vitals/meds/labs/wounds/devices/TR —
+      those need typed columns or relational structure.
+- [ ] Build a dev-only "seed all 28 flowsheets + validate lifecycle" harness (seeder using real
+      save hooks + a report checking template → snapshot → launch → debrief → reset per table) so new
+      flowsheet wiring can be regression-tested without manually filling every form each time.
 
 ---
 

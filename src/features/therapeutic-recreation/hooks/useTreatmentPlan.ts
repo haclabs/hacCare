@@ -21,7 +21,8 @@ async function fetchTreatmentPlanRows(
   return data ?? [];
 }
 
-async function insertTreatmentPlanRow(
+/** Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function insertTreatmentPlanRow(
   input: PlanRowInput,
 ): Promise<TRTreatmentPlanRow> {
   const { data, error } = await supabase

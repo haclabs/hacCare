@@ -41,8 +41,9 @@ async function fetchLatestToolScore(
   return data;
 }
 
-/** Always INSERT a new score row — history is preserved. */
-async function insertAssessmentScore(
+/** Always INSERT a new score row — history is preserved.
+ *  Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function insertAssessmentScore(
   input: ScoreInput,
 ): Promise<TRAssessmentScore> {
   const { data, error } = await supabase

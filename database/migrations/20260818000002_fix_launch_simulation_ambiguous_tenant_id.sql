@@ -1,30 +1,37 @@
--- ============================================================================
--- LAUNCH SIMULATION FUNCTION WITH CATEGORIES
--- ============================================================================
--- Enhanced version that accepts category tags for better organization
--- ============================================================================
+-- Migration: Fix ambiguous "tenant_id" column reference in launch_simulation()
+-- Date: 2026-08-18
+--
+-- Bug: launch_simulation() is declared RETURNS TABLE(simulation_id uuid,
+-- tenant_id uuid, message text) — this implicitly declares "tenant_id" as a
+-- PL/pgSQL variable for the entire function body (an OUT-parameter-style
+-- name from the RETURNS TABLE list). Two INSERT statements inside the
+-- function reference a bare "tenant_id" in their ON CONFLICT target list:
+--
+--   INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
+--   VALUES (...)
+--   ON CONFLICT (user_id, tenant_id) DO UPDATE ...
+--
+-- Because "tenant_id" here could refer to either the function's own
+-- RETURNS TABLE variable or the tenant_users.tenant_id column, Postgres
+-- raises 42702 "column reference tenant_id is ambiguous" — confirmed by
+-- running the identical INSERT/ON CONFLICT statement standalone (outside
+-- the function), which succeeds without ambiguity.
+--
+-- Fix: replace the bare column-list ON CONFLICT target with
+-- ON CONFLICT ON CONSTRAINT tenant_users_tenant_id_user_id_key, which
+-- resolves the arbiter index by name instead of by (ambiguous) column list.
 
--- Drop existing function
-DROP FUNCTION IF EXISTS launch_simulation(UUID, TEXT, INTEGER, UUID[], TEXT[]);
-DROP FUNCTION IF EXISTS launch_simulation(UUID, TEXT, INTEGER, UUID[], TEXT[], TEXT[], TEXT[]);
-
-CREATE OR REPLACE FUNCTION launch_simulation(
-  p_template_id UUID,
-  p_name TEXT,
-  p_duration_minutes INTEGER,
-  p_participant_user_ids UUID[],
-  p_participant_roles TEXT[] DEFAULT NULL,
-  p_primary_categories TEXT[] DEFAULT '{}',
-  p_sub_categories TEXT[] DEFAULT '{}'
-)
-RETURNS TABLE(
-  simulation_id UUID,
-  tenant_id UUID,
-  message TEXT
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+CREATE OR REPLACE FUNCTION public.launch_simulation(
+  p_template_id uuid,
+  p_name text,
+  p_duration_minutes integer,
+  p_participant_user_ids uuid[],
+  p_participant_roles text[] DEFAULT NULL::text[],
+  p_primary_categories text[] DEFAULT '{}'::text[],
+  p_sub_categories text[] DEFAULT '{}'::text[]
+) RETURNS TABLE(simulation_id uuid, tenant_id uuid, message text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
 DECLARE
   v_simulation_tenant_id UUID;
   v_home_tenant_id UUID;
@@ -174,6 +181,7 @@ BEGIN
       
       -- Add to tenant_users for RLS access to simulation tenant data
       -- Map simulation roles to valid tenant_users roles: instructor→admin, student→nurse
+      -- Fixed 2026-08-18: ON CONSTRAINT instead of bare (user_id, tenant_id) list.
       INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
       VALUES (
         p_participant_user_ids[i], 
@@ -199,4 +207,4 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION launch_simulation IS 'Launch simulation with category tags for organization and filtering';
+COMMENT ON FUNCTION public.launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[], p_primary_categories text[], p_sub_categories text[]) IS 'Launch simulation with category tags for organization and filtering. Instructor (launcher) is explicitly added to tenant_users for debrief RLS access. Fixed 2026-08-18: ON CONFLICT ON CONSTRAINT instead of bare (user_id, tenant_id) column list — bare "tenant_id" was ambiguous against this function''s own RETURNS TABLE column (42702).';

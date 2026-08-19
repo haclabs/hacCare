@@ -22,7 +22,8 @@ async function fetchActiveLivingProfile(
   return data;
 }
 
-async function upsertActiveLivingProfile(
+/** Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function upsertActiveLivingProfile(
   input: ALPInput,
 ): Promise<TRActiveLivingProfile> {
   const { data: existing } = await supabase

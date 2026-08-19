@@ -1,5 +1,6 @@
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { UserPlus } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -14,6 +15,7 @@ import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
 import { AuthCallback } from './components/Auth/AuthCallback';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
+import { PatientForm } from './features/patients/components/forms/PatientForm';
 import { secureLogger } from './lib/security/secureLogger';
 
 /**
@@ -100,7 +102,8 @@ function App() {
   }, [location.pathname, navigate]);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
-  const { patients = [], error: dbError } = useMultiTenantPatients();
+  const { patients = [], error: dbError, createPatient } = useMultiTenantPatients();
+  const [showAddPatientForm, setShowAddPatientForm] = useState(false);
 
   // Create currentUser object for components that need it
   const currentUser = user && profile ? {
@@ -489,8 +492,19 @@ function App() {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Patients</h2>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {patients.length} patients assigned
+                <div className="flex items-center gap-3">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {patients.length} patients assigned
+                  </div>
+                  {currentTenant?.tenant_type === 'simulation_template' && (
+                    <button
+                      onClick={() => setShowAddPatientForm(true)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Add Patient
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -517,6 +531,16 @@ function App() {
                 </div>
               )}
             </div>
+
+            {showAddPatientForm && (
+              <PatientForm
+                onClose={() => setShowAddPatientForm(false)}
+                onSave={async (newPatient) => {
+                  await createPatient(newPatient);
+                  setShowAddPatientForm(false);
+                }}
+              />
+            )}
           </div>
         );
 

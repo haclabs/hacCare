@@ -20,8 +20,9 @@ async function fetchAllInterpretations(
   return data ?? [];
 }
 
-/** Upsert — one interpretation per score_group per patient per tenant. */
-async function upsertInterpretation(
+/** Upsert — one interpretation per score_group per patient per tenant.
+ *  Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function upsertInterpretation(
   input: InterpInput,
 ): Promise<TRInterdisciplinaryInterp> {
   const { data: existing } = await supabase

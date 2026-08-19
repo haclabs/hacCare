@@ -5527,7 +5527,7 @@ BEGIN
   -- =========================================================================
   INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
   VALUES (auth.uid(), v_simulation_tenant_id, true, 'admin')
-  ON CONFLICT (user_id, tenant_id) DO UPDATE
+  ON CONFLICT ON CONSTRAINT tenant_users_tenant_id_user_id_key DO UPDATE
     SET is_active = true, role = 'admin';
 
   RAISE NOTICE '✅ Launching instructor added to simulation tenant_users for debrief access';
@@ -5563,7 +5563,7 @@ BEGIN
           ELSE 'nurse'
         END
       )
-      ON CONFLICT (user_id, tenant_id) DO UPDATE
+      ON CONFLICT ON CONSTRAINT tenant_users_tenant_id_user_id_key DO UPDATE
         SET is_active = true;
     END LOOP;
     
@@ -5582,7 +5582,7 @@ $$;
 -- Name: FUNCTION launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[], p_primary_categories text[], p_sub_categories text[]); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[], p_primary_categories text[], p_sub_categories text[]) IS 'Launch simulation with category tags for organization and filtering. Instructor (launcher) is explicitly added to tenant_users for debrief RLS access.';
+COMMENT ON FUNCTION public.launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[], p_primary_categories text[], p_sub_categories text[]) IS 'Launch simulation with category tags for organization and filtering. Instructor (launcher) is explicitly added to tenant_users for debrief RLS access. Fixed 2026-08-18: ON CONFLICT ON CONSTRAINT instead of bare (user_id, tenant_id) column list — bare "tenant_id" was ambiguous against this function''s own RETURNS TABLE column (42702).';
 
 
 --
@@ -6677,6 +6677,7 @@ DECLARE
   v_column_type text;
   v_udt_name text;
   v_mapped_count integer;
+  v_has_patient_id_unique boolean;
 BEGIN
   RAISE NOTICE '🔄 Schema-agnostic restore to tenant % (skip_patients=%, preserve_barcodes=%)', 
     p_tenant_id, p_skip_patients, p_preserve_barcodes;
@@ -6831,6 +6832,24 @@ BEGIN
     IF jsonb_array_length(v_table_data) > 0 THEN
       RAISE NOTICE '📦 Restoring % (% records)...', v_table_name, jsonb_array_length(v_table_data);
       v_count := 0;
+      
+      -- Detect tables that only ever allow one row per patient (e.g.
+      -- patient_advanced_directives, patient_admission_records) so the
+      -- INSERT below can be made idempotent via ON CONFLICT instead of
+      -- erroring when a snapshot's fallback mapping assigns two rows to
+      -- the same patient.
+      SELECT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON t.oid = c.conrelid
+        WHERE t.relname = v_actual_table_name
+          AND c.contype = 'u'
+          AND array_length(c.conkey, 1) = 1
+          AND c.conkey = ARRAY[(
+            SELECT a.attnum FROM pg_attribute a
+            WHERE a.attrelid = t.oid AND a.attname = 'patient_id'
+          )]
+      ) INTO v_has_patient_id_unique;
       
       FOR v_record IN SELECT * FROM jsonb_array_elements(v_table_data)
       LOOP
@@ -6996,10 +7015,11 @@ BEGIN
             CONTINUE;
           END IF;
           
-          v_sql := format('INSERT INTO %I (%s) VALUES (%s)',
+          v_sql := format('INSERT INTO %I (%s) VALUES (%s)%s',
             v_actual_table_name,
             array_to_string(v_columns, ', '),
-            array_to_string(v_values, ', ')
+            array_to_string(v_values, ', '),
+            CASE WHEN v_has_patient_id_unique THEN ' ON CONFLICT (patient_id) DO NOTHING' ELSE '' END
           );
           
           EXECUTE v_sql;
@@ -7032,7 +7052,7 @@ $_$;
 -- Name: FUNCTION restore_snapshot_to_tenant(p_tenant_id uuid, p_snapshot jsonb, p_id_mappings jsonb, p_barcode_mappings jsonb, p_preserve_barcodes boolean, p_skip_patients boolean); Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.restore_snapshot_to_tenant(p_tenant_id uuid, p_snapshot jsonb, p_id_mappings jsonb, p_barcode_mappings jsonb, p_preserve_barcodes boolean, p_skip_patients boolean) IS 'Restores snapshot data to a tenant. FIXED: Patient mapping uses demographics (first/last/dob) instead of positional ORDER BY created_at OFFSET — the old approach was non-deterministic because simulation patients share the same created_at from being inserted in one transaction.';
+COMMENT ON FUNCTION public.restore_snapshot_to_tenant(p_tenant_id uuid, p_snapshot jsonb, p_id_mappings jsonb, p_barcode_mappings jsonb, p_preserve_barcodes boolean, p_skip_patients boolean) IS 'Restores snapshot data to a tenant. Fixed 2026-08-18: tables with a UNIQUE(patient_id) constraint (patient_advanced_directives, patient_admission_records) now use ON CONFLICT (patient_id) DO NOTHING to avoid duplicate-key failures when the fallback single-patient mapping assigns more than one snapshot row to the same patient.';
 
 
 --

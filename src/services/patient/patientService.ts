@@ -526,7 +526,8 @@ export const createPatientNote = async (note: any): Promise<PatientNote> => {
         nurse_name: note.nurse_name,
         type: note.type,
         content: note.content,
-        priority: note.priority
+        priority: note.priority,
+        student_name: note.student_name
       })
       .select()
       .single();
