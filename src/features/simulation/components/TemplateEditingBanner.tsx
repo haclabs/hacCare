@@ -5,10 +5,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Save, BookOpen, Loader2 } from 'lucide-react';
+import { Edit, Save, BookOpen, Loader2, FlaskConical, X, CheckCircle2, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../contexts/auth/useAuth';
 import { saveTemplateSnapshot } from '../../../services/simulation/simulationService';
+import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface TemplateEditingInfo {
@@ -20,8 +22,11 @@ interface TemplateEditingInfo {
 export const TemplateEditingBanner: React.FC = () => {
   const [editingInfo, setEditingInfo] = useState<TemplateEditingInfo | null>(null);
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
+  const { profile } = useAuth();
 
   useEffect(() => {
     // Check if we're editing a template on mount
@@ -124,6 +129,33 @@ export const TemplateEditingBanner: React.FC = () => {
     }
   };
 
+  const handleSeedTestData = async () => {
+    if (!editingInfo || !profile) return;
+
+    const confirmed = window.confirm(
+      'This will insert one QA_VALIDATION-tagged test row into every clinical table ' +
+      'for each patient in this template, using the real save functions (vitals, meds, ' +
+      'labs, wounds/devices, admission/directives, BBIT/neuro/newborn, all 15 flowsheet ' +
+      'assessments, and the 6 TR module tables).\n\nContinue?'
+    );
+    if (!confirmed) return;
+
+    setSeeding(true);
+    setSeedResults(null);
+    try {
+      const results = await seedTestDataForTenant(editingInfo.tenant_id, {
+        id: profile.id,
+        name: `${profile.first_name} ${profile.last_name}`,
+      });
+      setSeedResults(results);
+    } catch (error) {
+      secureLogger.error('❌ Banner: Error seeding test data:', error);
+      alert(`Error seeding test data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (!editingInfo) {
     return null;
   }
@@ -146,28 +178,83 @@ export const TemplateEditingBanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Save Button */}
-          <button
-            onClick={handleExitTemplate}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="hidden sm:inline">Saving...</span>
-                <span className="sm:hidden">...</span>
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                <span className="hidden sm:inline">Save & Exit</span>
-                <span className="sm:hidden">Save</span>
-              </>
+          {/* Right: Seed Test Data (super_admin only) + Save Button */}
+          <div className="flex items-center gap-2">
+            {profile?.role === 'super_admin' && (
+              <button
+                onClick={handleSeedTestData}
+                disabled={seeding || saving}
+                title="Seed one QA_VALIDATION test row into every clinical table (dev validation tool)"
+                className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
+              >
+                {seeding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FlaskConical className="h-4 w-4" />
+                )}
+                <span className="hidden lg:inline">{seeding ? 'Seeding...' : 'Seed Test Data'}</span>
+              </button>
             )}
-          </button>
+            <button
+              onClick={handleExitTemplate}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">Saving...</span>
+                  <span className="sm:hidden">...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span className="hidden sm:inline">Save & Exit</span>
+                  <span className="sm:hidden">Save</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Seed results panel */}
+      {seedResults && (
+        <div className="bg-white/95 text-gray-800 border-t border-white/30">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 xl:px-12 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold">Seed Test Data Results</h3>
+              <button onClick={() => setSeedResults(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-4 max-h-80 overflow-y-auto">
+              {seedResults.map((patientResult) => {
+                const failedCount = patientResult.results.filter((r) => !r.success).length;
+                return (
+                  <div key={patientResult.patientId}>
+                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                      {patientResult.patientName} — {patientResult.results.length - failedCount}/{patientResult.results.length} succeeded
+                    </p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-0.5">
+                      {patientResult.results.map((r) => (
+                        <li key={r.domain} className="flex items-center gap-1.5 text-xs" title={r.error}>
+                          {r.success ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
+                          )}
+                          <span className={r.success ? 'text-gray-600' : 'text-red-700 font-medium'}>{r.domain}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

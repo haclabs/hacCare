@@ -22,6 +22,7 @@ export interface BowelRecord {
   
   // Additional fields
   notes: string;
+  student_name?: string; // Optional — attributes the entry to a simulation student for debrief reporting
   
   created_at?: string;
   updated_at?: string;
@@ -47,7 +48,8 @@ export const createBowelRecord = async (record: BowelRecord): Promise<BowelRecor
         stool_consistency: record.stool_consistency,
         stool_colour: record.stool_colour,
         stool_amount: record.stool_amount,
-        notes: record.notes
+        notes: record.notes,
+        student_name: record.student_name
       })
       .select()
       .single();

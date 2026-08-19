@@ -76,6 +76,13 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.bbitEntries.push(...(activity.activities.bbitEntries || []));
         existing.activities.newbornAssessments.push(...(activity.activities.newbornAssessments || []));
         existing.activities.intakeOutput.push(...activity.activities.intakeOutput);
+        existing.activities.systemAssessments.push(...(activity.activities.systemAssessments || []));
+        existing.activities.trScreenings.push(...(activity.activities.trScreenings || []));
+        existing.activities.trActiveLivingProfiles.push(...(activity.activities.trActiveLivingProfiles || []));
+        existing.activities.trAssessmentScores.push(...(activity.activities.trAssessmentScores || []));
+        existing.activities.trTreatmentPlanRows.push(...(activity.activities.trTreatmentPlanRows || []));
+        existing.activities.trInterdisciplinaryInterps.push(...(activity.activities.trInterdisciplinaryInterps || []));
+        existing.activities.trProgressNotes.push(...(activity.activities.trProgressNotes || []));
         existing.totalEntries += activity.totalEntries;
       } else {
         const cloned = JSON.parse(JSON.stringify(activity));

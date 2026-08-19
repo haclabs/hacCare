@@ -22,7 +22,8 @@ async function fetchLatestScreening(
   return data;
 }
 
-async function upsertScreening(input: ScreeningInput): Promise<TRScreeningEntry> {
+/** Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function upsertScreening(input: ScreeningInput): Promise<TRScreeningEntry> {
   const { data: existing } = await supabase
     .from('tr_screening_entries')
     .select('id')

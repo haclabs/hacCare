@@ -166,7 +166,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                   ? 'STAT'
                   : category}
               </span>
-              {shouldAlert && isDue && (
+              {shouldAlert && isDue && category !== 'scheduled' && (
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
                     category === 'continuous'
@@ -204,12 +204,6 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">
                 Prescribed by: {medication.prescribed_by}
-              </p>
-              <p className="text-sm text-gray-500">
-                {new Date(medication.start_date).toLocaleDateString()} -{' '}
-                {medication.end_date
-                  ? new Date(medication.end_date).toLocaleDateString()
-                  : 'Ongoing'}
               </p>
             </div>
 

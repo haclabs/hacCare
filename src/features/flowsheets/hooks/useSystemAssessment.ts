@@ -46,7 +46,8 @@ async function fetchLatestSystemAssessment(
   return data;
 }
 
-async function insertSystemAssessment(
+/** Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function insertSystemAssessment(
   input: SaveSystemAssessmentInput,
 ): Promise<SystemAssessmentRow> {
   const { data, error } = await supabase

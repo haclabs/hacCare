@@ -21,7 +21,8 @@ async function fetchProgressNotes(
   return data ?? [];
 }
 
-async function insertProgressNote(input: NoteInput): Promise<TRProgressNote> {
+/** Exported so the dev-only test-data seeder can call it without React hook context. */
+export async function insertProgressNote(input: NoteInput): Promise<TRProgressNote> {
   const { data, error } = await supabase
     .from('tr_progress_notes')
     .insert(input)

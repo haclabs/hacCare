@@ -549,6 +549,169 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
           </div>
         );
       }
+      case 'systemAssessments': {
+        const label = (item.system_type as string)?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        const data = item.assessment_data as Record<string, unknown> | null;
+        const entries = data ? Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '') : [];
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.recorded_at ? format(new Date(item.recorded_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">🗂️ {label}</p>
+            {entries.length > 0 && (
+              <div className="mt-2">
+                <button
+                  onClick={() => setShowAssessmentData(!showAssessmentData)}
+                  className="text-xs font-medium text-sky-600 hover:text-sky-800 flex items-center space-x-1 print:hidden"
+                >
+                  <span>+ {entries.length} detailed assessment fields</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showAssessmentData ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {(showAssessmentData) && (
+                  <div className="mt-2 p-3 bg-sky-50 rounded-lg border border-sky-200">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                      {entries.map(([key, value]) => (
+                        <div key={key} className="flex flex-col">
+                          <span className="font-semibold text-sky-400 uppercase tracking-wide mb-0.5">{key.replace(/_/g, ' ')}</span>
+                          <span className="text-sky-900 font-medium">
+                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
+                             Array.isArray(value) ? value.join(', ') :
+                             value?.toString() || '—'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="hidden print:block mt-2 p-3 bg-sky-50 rounded-lg border border-sky-200">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                    {entries.map(([key, value]) => (
+                      <div key={key} className="flex flex-col">
+                        <span className="font-semibold text-sky-400 uppercase tracking-wide mb-0.5">{key.replace(/_/g, ' ')}</span>
+                        <span className="text-sky-900 font-medium">
+                          {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
+                           Array.isArray(value) ? value.join(', ') :
+                           value?.toString() || '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+      case 'trScreenings':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">🎯 TR SCREENING TOOL</p>
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-700">
+              {item.tr_recommendation && <span><span className="font-semibold">Recommendation:</span> {item.tr_recommendation}</span>}
+              {item.leisure_satisfaction_rating != null && <span><span className="font-semibold">Leisure Satisfaction:</span> {item.leisure_satisfaction_rating}/4</span>}
+              {item.readiness_to_participate != null && <span><span className="font-semibold">Readiness:</span> {item.readiness_to_participate}/10</span>}
+              {item.social_engagement_rating != null && <span><span className="font-semibold">Social Engagement:</span> {item.social_engagement_rating}/5</span>}
+              {item.community_frequency && <span><span className="font-semibold">Community Frequency:</span> {item.community_frequency}</span>}
+              {item.boredom_frequency && <span><span className="font-semibold">Boredom Frequency:</span> {item.boredom_frequency}</span>}
+            </div>
+            {(item.lcm_leisure_attitude_score != null || item.lcm_social_contact_score != null || item.lcm_community_participation_score != null) && (
+              <div className="mt-1 text-xs text-gray-600">
+                <span className="font-semibold">LCM Screen: </span>
+                Attitude {item.lcm_leisure_attitude_score ?? '—'}/7 · Social {item.lcm_social_contact_score ?? '—'}/7 · Community {item.lcm_community_participation_score ?? '—'}/7
+              </div>
+            )}
+            {item.leisure_barriers_description && (
+              <div className="mt-2 p-2 bg-lime-50 border border-lime-200 rounded text-xs text-gray-700">
+                <span className="font-semibold">Barriers:</span> {item.leisure_barriers_description}
+              </div>
+            )}
+          </div>
+        );
+      case 'trActiveLivingProfiles':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">📖 ACTIVE LIVING PROFILE</p>
+            {item.narrative && (
+              <p className="mt-2 text-gray-700 whitespace-pre-wrap">{item.narrative}</p>
+            )}
+          </div>
+        );
+      case 'trAssessmentScores':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">📈 {item.tool_name?.toUpperCase()} SCORE</p>
+            <div className="mt-1 flex items-center gap-3 text-xs text-gray-700">
+              {item.total_score != null && <span><span className="font-semibold">Total:</span> {item.total_score}</span>}
+              {item.date_administered && <span><span className="font-semibold">Administered:</span> {item.date_administered}</span>}
+            </div>
+            {item.subscale_scores && Object.keys(item.subscale_scores).length > 0 && (
+              <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+                {Object.entries(item.subscale_scores).map(([key, value]) => (
+                  <span key={key}>{key}: {value as React.ReactNode}</span>
+                ))}
+              </div>
+            )}
+            {item.interpretation && (
+              <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded text-xs text-gray-700">
+                <span className="font-semibold">Interpretation:</span> {item.interpretation}
+              </div>
+            )}
+          </div>
+        );
+      case 'trTreatmentPlanRows':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.plan_date || (item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A')}</p>
+            <p className="text-gray-900 mt-1 font-medium">🗒️ TREATMENT PLAN {item.target_area ? `— ${item.target_area}` : ''}</p>
+            {item.goal && <p className="mt-1 text-xs text-gray-700"><span className="font-semibold">Goal:</span> {item.goal}</p>}
+            <div className="mt-1 space-y-0.5 text-xs text-gray-600">
+              {item.objective_1 && <p>1. {item.objective_1}</p>}
+              {item.objective_2 && <p>2. {item.objective_2}</p>}
+              {item.objective_3 && <p>3. {item.objective_3}</p>}
+            </div>
+            {item.intervention && (
+              <div className="mt-2 p-2 bg-teal-50 border border-teal-200 rounded text-xs text-gray-700">
+                <span className="font-semibold">Intervention:</span> {item.intervention}
+              </div>
+            )}
+          </div>
+        );
+      case 'trInterdisciplinaryInterps':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">🧩 {item.score_group?.toUpperCase()} INTERPRETATION</p>
+            {item.interpretation && (
+              <p className="mt-1 text-gray-700 whitespace-pre-wrap">{item.interpretation}</p>
+            )}
+          </div>
+        );
+      case 'trProgressNotes':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">📔 {item.note_type === 'soap' ? 'SOAP NOTE' : 'PROGRESS NOTE'}</p>
+            {item.note_type === 'soap' ? (
+              <div className="mt-2 space-y-1.5">
+                {item.subjective && <div><span className="text-xs font-semibold text-gray-500 uppercase">S:</span> <span className="text-gray-900">{item.subjective}</span></div>}
+                {item.objective && <div><span className="text-xs font-semibold text-gray-500 uppercase">O:</span> <span className="text-gray-900">{item.objective}</span></div>}
+                {item.assessment && <div><span className="text-xs font-semibold text-gray-500 uppercase">A:</span> <span className="text-gray-900">{item.assessment}</span></div>}
+                {item.plan && <div><span className="text-xs font-semibold text-gray-500 uppercase">P:</span> <span className="text-gray-900">{item.plan}</span></div>}
+              </div>
+            ) : (
+              item.narrative && <p className="mt-1 text-gray-700 whitespace-pre-wrap">{item.narrative}</p>
+            )}
+          </div>
+        );
       default: {
         // Safely get timestamp with fallback chain and null check
         const timestamp = item.created_at || item.recorded_at || item.timestamp || item.event_timestamp || item.ordered_at || item.acknowledged_at;

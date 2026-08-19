@@ -11,13 +11,8 @@ import {
   User, 
   Clock, 
   AlertTriangle, 
-  FileText, 
   Save,
-  Info,
-  Activity,
-  Target,
-  MessageSquare,
-  NotebookPen
+  MessageSquare
 } from 'lucide-react';
 import { CreateHandoverNoteData } from '../../../../services/patient/handoverService';
 import { secureLogger } from '../../../../lib/security/secureLogger';
@@ -120,76 +115,67 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
     {
       key: 'situation',
       title: 'Situation',
-      icon: Info,
       placeholder: 'Briefly identify the current situation and purpose of communication. Include patient name, reason for handover, current status...',
-      description: 'What is happening right now? State the facts clearly and concisely.',
-      color: 'blue'
+      description: 'What is happening right now? State the facts clearly and concisely.'
     },
     {
       key: 'background',
       title: 'Background',
-      icon: FileText,
       placeholder: 'Provide relevant context - patient history, current symptoms, recent treatments, medications, test results...',
-      description: 'What led to the current situation? Include relevant medical history and context.',
-      color: 'green'
+      description: 'What led to the current situation? Include relevant medical history and context.'
     },
     {
       key: 'assessment',
       title: 'Assessment',
-      icon: Activity,
       placeholder: 'Present your professional assessment and clinical judgment of the patient\'s condition and concerns...',
-      description: 'What do you think is happening? Share your professional clinical assessment.',
-      color: 'yellow'
+      description: 'What do you think is happening? Share your professional clinical assessment.'
     },
     {
       key: 'recommendations',
       title: 'Recommendations',
-      icon: Target,
       placeholder: 'Propose specific actions, interventions, follow-up care, monitoring requirements, or next steps...',
-      description: 'What should be done? Provide clear, actionable recommendations.',
-      color: 'purple'
+      description: 'What should be done? Provide clear, actionable recommendations.'
     }
   ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl">
+        <div className="border-b border-gray-200 px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <MessageSquare className="h-6 w-6" />
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 p-3 rounded-xl bg-blue-50">
+                <MessageSquare className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">SBAR Handover Notes</h2>
-                <p className="text-blue-100">Situation • Background • Assessment • Recommendations</p>
+                <h2 className="text-xl font-bold text-gray-900 leading-tight">SBAR Handover Notes</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Situation · Background · Assessment · Recommendations</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
           </div>
-          
+
           {/* Patient Info */}
-          <div className="mt-4 p-4 bg-white/10 rounded-lg">
-            <div className="flex items-center space-x-4">
-              <User className="h-5 w-5 text-blue-200" />
-              <span className="font-semibold">Patient: {patientName}</span>
-              <Clock className="h-5 w-5 text-blue-200 ml-4" />
-              <span>Created: {new Date().toLocaleString()}</span>
-              <User className="h-5 w-5 text-blue-200 ml-4" />
-              <span>By: {currentUser.name} ({currentUser.role})</span>
-            </div>
+          <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+            <span className="flex items-center gap-1.5"><User className="h-4 w-4" />{patientName}</span>
+            <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{new Date().toLocaleString()}</span>
+            <span className="flex items-center gap-1.5"><User className="h-4 w-4" />{currentUser.name} ({currentUser.role})</span>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
           {/* Metadata Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+              <h3 className="text-sm font-semibold text-gray-800">Handover Details</h3>
+            </div>
+            <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Clock className="inline h-4 w-4 mr-1" />
@@ -222,49 +208,35 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
                 <option value="urgent">Urgent - Immediate action required</option>
               </select>
             </div>
+            </div>
           </div>
 
           {/* Nursing Notes */}
-          <div className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="p-2 rounded-lg bg-teal-100 text-teal-600">
-                <NotebookPen className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Nursing Notes</h3>
-                <p className="text-sm text-gray-600">General nursing observations and clinical notes.</p>
-              </div>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+              <h3 className="text-sm font-semibold text-gray-800">Nursing Notes</h3>
+              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">General nursing observations and clinical notes.</p>
             </div>
+            <div className="px-5 py-4">
             <textarea
               value={formData.nursingNotes}
               onChange={(e) => setFormData(prev => ({ ...prev, nursingNotes: e.target.value }))}
               placeholder="Document general nursing observations, care provided, patient response..."
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
+            </div>
           </div>
 
           {/* SBAR Sections */}
-          <div className="space-y-6">
-            {sbarSections.map((section) => {
-              const IconComponent = section.icon;
-              return (
-                <div key={section.key} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className={`p-2 rounded-lg ${
-                      section.color === 'blue' ? 'bg-blue-100 text-blue-600' :
-                      section.color === 'green' ? 'bg-green-100 text-green-600' :
-                      section.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-purple-100 text-purple-600'
-                    }`}>
-                      <IconComponent className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
-                      <p className="text-sm text-gray-600">{section.description}</p>
-                    </div>
+          <div className="space-y-4">
+            {sbarSections.map((section) => (
+                <div key={section.key} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+                    <h3 className="text-sm font-semibold text-gray-800">{section.title}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{section.description}</p>
                   </div>
-                  
+                  <div className="px-5 py-4">
                   <textarea
                     value={formData[section.key as keyof typeof formData] as string}
                     onChange={(e) => setFormData(prev => ({ 
@@ -273,33 +245,33 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
                     }))}
                     placeholder={section.placeholder}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                   />
+                  </div>
                 </div>
-              );
-            })}
+            ))}
           </div>
 
           {/* Student Verification */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <label className="block text-sm font-medium text-yellow-900 mb-2">
+          <div className="rounded-xl border-2 border-yellow-300 bg-yellow-50 px-5 py-4 space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
               Student Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.studentName}
               onChange={(e) => setFormData(prev => ({ ...prev, studentName: e.target.value }))}
-              className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-400 outline-none"
               placeholder="Enter your full name"
               required
             />
-            <p className="text-xs text-yellow-700 mt-2">
+            <p className="text-xs text-gray-500">
               By entering your name, you verify that all information above is correct and you performed this handover.
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
@@ -310,7 +282,7 @@ export const HandoverNotesForm: React.FC<HandoverNotesFormProps> = ({
             <button
               type="submit"
               disabled={loading || !formData.studentName.trim()}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

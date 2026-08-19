@@ -11,6 +11,7 @@ import { PatientForm } from './forms/PatientForm';
 import PatientTransferModal from './PatientTransferModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { getTenantsForSwitching } from '../../../services/admin/tenantService';
+import { useTenant } from '../../../contexts/TenantContext';
 
 /**
  * Patient Management Component
@@ -41,6 +42,11 @@ export const PatientManagement: React.FC = () => {
   const createPatientMutation = useCreatePatient();
   const updatePatientMutation = useUpdatePatient();
   const deletePatientMutation = useDeletePatient();
+
+  // Current tenant context (correctly tracks template-editing tenant switches via
+  // enterTemplateTenant() — unlike the legacy superAdminTenantId sessionStorage
+  // fallback in patientService.createPatient, which enterTemplateTenant() never updates)
+  const { currentTenant } = useTenant();
   
   const navigate = useNavigate();
   
@@ -200,7 +206,12 @@ export const PatientManagement: React.FC = () => {
         });
       } else {
         // Create new patient
-        await createPatientMutation.mutateAsync(patientData);
+        // Explicitly pin tenant_id to the current tenant (e.g. the template tenant
+        // being edited) rather than relying on the stale superAdminTenantId fallback.
+        const newPatientData = currentTenant?.id
+          ? { ...patientData, tenant_id: currentTenant.id }
+          : patientData;
+        await createPatientMutation.mutateAsync(newPatientData);
       }
 
       setShowForm(false);
