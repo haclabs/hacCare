@@ -1,12 +1,30 @@
 # hacCare
 
-Version 5.5.0
+Version 6.0 (Preview)
+
+> This is a **preview build** ahead of the full 6.0 release. Core functionality is stable and in
+> active use, with a few finishing touches still being polished before general availability.
 
 A multi-tenant healthcare simulation platform for clinical education. Built with React, TypeScript, and Supabase.
 
 ## Overview
 
 hacCare is a simulated Electronic Medical Record (EMR) system designed for healthcare education and clinical training. It provides realistic patient care workflows including barcode medication administration (BCMA), vital signs monitoring, clinical documentation, and simulation management with role-based access control.
+
+## What's New in 6.0 (Preview)
+
+- **More complete debrief reports** — Admission records are now fully included in student debrief
+  reports and reset alongside every other chart entry, giving instructors a more complete picture
+  of student activity during a simulation.
+- **Stronger data isolation between simulations** — Hardened the safeguards that keep each
+  simulation's patient data separate from every other tenant, reducing the chance of data ever
+  appearing in the wrong place.
+- **More reliable template management** — Deleting a simulation template now fully cleans up
+  everything associated with it, so templates no longer leave behind leftover data.
+- **Better cleanup on patient deletion** — Removing a patient now also cleans up related records
+  (like admission info and advance directives) automatically, preventing orphaned data.
+- **New instructor testing tools** — Added the ability to seed sample data directly into a running
+  simulation, making it easier to validate a session's debrief report before students begin.
 
 ## Core Features
 
@@ -57,37 +75,46 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 
 ### Frontend
 - **React 19.2** with **TypeScript 6.0** (strict mode)
-- **Vite 8.0** (Rolldown-based bundler) with `@vitejs/plugin-react` 6.0 (Oxc-powered React Refresh, no Babel)
+- **Vite 8.2** (Rolldown-based bundler) with `@vitejs/plugin-react` 6.0 (Oxc-powered React Refresh, no Babel)
 - **Tailwind CSS 4.1** via PostCSS
-- **React Router 7.15** for client-side navigation
-- **TanStack Query 5.100** for server state, caching, and background sync
-- **Lucide React 1.14** for icons
-- **React Big Calendar 1.19** for scheduling views
+- **React Router 7.18** for client-side navigation
+- **TanStack Query 5.101** for server state, caching, and background sync
+- **Lucide React 1.31** for icons
+- **React Big Calendar 1.20** for scheduling views
+- **React Dropzone 20.1** for drag-and-drop file uploads
+- **React Image Marker 1.2** for body mapping (device/wound placement)
 
 ### Backend & Database
 - **Supabase** (PostgreSQL 15) hosted in **ca-central-1** (Canada) for data residency
 - **Row Level Security (RLS)** enforcing multi-tenant isolation on every table
 - **SECURITY DEFINER** functions for privileged cross-tenant operations
-- **Supabase JS 2.105** client SDK
+- **Supabase JS 2.112** client SDK
 
 ### Document & Barcode Generation
 - **jsPDF 4.1** + **html2canvas 1.4** for PDF export
-- **@react-pdf/renderer 4.5** for structured PDF reports
-- **JsBarcode 3.12** for Code128 barcode generation
-- **PapaParse 5.5** for CSV import/export
+- **@react-pdf/renderer 4.6** for structured PDF reports
+- **qrcode 1.5** for QR-based patient and medication label generation
+- **PapaParse 5.6** for CSV import/export
 
 ### Utilities
-- **date-fns 4.1** for date formatting
+- **date-fns 4.4** for date formatting
 - **DOMPurify 3.4** for XSS sanitisation
 - **UUID 14.0** for identifier generation
 
 ### Dev Tooling
 - **Vitest 4.1** for unit testing
-- **ESLint 10.3** with TypeScript and React Hooks plugins
-- **Terser 5.47** for production minification
-- **rollup-plugin-visualizer 7.0** for bundle analysis (`npm run build -- --analyze`)
+- **ESLint 10.8** with TypeScript and React Hooks plugins
+- **Terser 5.50** for production minification
+- **rollup-plugin-visualizer 7.1** for bundle analysis (`npm run build -- --analyze`)
 
 ## Version History
+
+### 6.0 (Preview — August 2026)
+- Admission records now fully tracked in simulation debrief reports and reset between sessions
+- Hardened multi-tenant data isolation safeguards across clinical record types
+- Deleting a simulation template now fully cleans up all associated data
+- Deleting a patient now automatically cleans up related records to prevent orphaned data
+- New instructor tool to seed sample data into a running simulation for debrief testing
 
 ### 5.5.0 (May 2026)
 - Migrated infrastructure to Canada (ca-central-1) region for data residency compliance
@@ -191,4 +218,4 @@ See LICENSE file for details.
 
 For issues, questions, or contributions, please use the GitHub issue tracker.
 
-Built with ❤️ by the hacCare Team | A haclabs product
+Built with ❤️ by the hacCare Team | A haclabs Inc. Product
