@@ -467,6 +467,13 @@ const formatAdvancedDirective = (a: Record<string, unknown>): string[] => [
   a.special_instructions ? `Special Instructions: ${String(a.special_instructions)}` : null,
 ].filter((item): item is string => Boolean(item));
 
+const formatAdmissionRecord = (a: Record<string, unknown>): string[] => [
+  a.admission_type ? `Admission Type: ${a.admission_type}` : null,
+  a.attending_physician ? `Attending: ${a.attending_physician}` : null,
+  a.admission_source ? `Source: ${a.admission_source}` : null,
+  a.chief_complaint ? `Chief Complaint: ${String(a.chief_complaint)}` : null,
+].filter((item): item is string => Boolean(item));
+
 const formatSystemAssessment = (s: Record<string, unknown>): string[] => {
   const label = String(s.system_type || 'Assessment').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   const lines: string[] = [`Type: ${label}`];
@@ -832,6 +839,13 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
             items={student.activities.advancedDirectives || []} 
             formatter={formatAdvancedDirective}
             color="#64748b"
+          />
+
+          <ActivitySection 
+            title="Admission Records" 
+            items={student.activities.admissionRecords || []} 
+            formatter={formatAdmissionRecord}
+            color="#2563eb"
           />
 
           <ActivitySection 

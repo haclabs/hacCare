@@ -337,6 +337,13 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Functions must be declared here to be automatically deployed to preview branches.
+[functions.cleanup-old-sessions]
+enabled = true
+
+[functions.send-contact-email]
+enabled = true
+
 [analytics]
 enabled = true
 port = 54327

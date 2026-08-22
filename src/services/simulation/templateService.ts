@@ -132,16 +132,20 @@ export async function updateTemplateFolder(
 }
 
 /**
- * Delete a template
+ * Delete a template — also deletes its backing tenant (patients, meds, notes,
+ * everything). A raw `DELETE FROM simulation_templates` alone leaves the tenant
+ * orphaned forever since patients.tenant_id is ON DELETE SET NULL, not CASCADE.
  */
 export async function deleteSimulationTemplate(templateId: string): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('simulation_templates')
-      .delete()
-      .eq('id', templateId);
+    const { data, error } = await supabase.rpc('delete_simulation_template', {
+      p_template_id: templateId,
+    });
 
     if (error) throw error;
+    if (data && (data as any).success === false) {
+      throw new Error((data as any).message || 'Failed to delete template');
+    }
   } catch (error: any) {
     secureLogger.error('Error deleting simulation template:', error);
     throw error;

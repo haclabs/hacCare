@@ -3048,6 +3048,110 @@ Uses SECURITY DEFINER to bypass RLS for complete cleanup.';
 
 
 --
+-- Name: delete_simulation_template(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.delete_simulation_template(p_template_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $function$
+DECLARE
+  v_template_name text;
+  v_tenant_id uuid;
+  v_active_simulations_count integer;
+  v_deleted_patients integer := 0;
+BEGIN
+  SELECT name, tenant_id INTO v_template_name, v_tenant_id
+  FROM simulation_templates
+  WHERE id = p_template_id;
+
+  IF v_template_name IS NULL THEN
+    RAISE EXCEPTION 'Template not found: %', p_template_id;
+  END IF;
+
+  SELECT COUNT(*) INTO v_active_simulations_count
+  FROM simulation_active
+  WHERE template_id = p_template_id;
+
+  IF v_active_simulations_count > 0 THEN
+    RAISE WARNING 'Template % has % active simulations that will continue running',
+      v_template_name, v_active_simulations_count;
+  END IF;
+
+  IF v_tenant_id IS NOT NULL THEN
+    SELECT COUNT(*) INTO v_deleted_patients FROM patients WHERE tenant_id = v_tenant_id;
+
+    BEGIN DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_notes WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_images WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wound_treatments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM device_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_results WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_panels WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_ack_events WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_orders WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id); EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_newborn_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM bowel_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM diabetic_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_intake_output_events WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wounds WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM devices WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_medications WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+
+    DELETE FROM patients WHERE tenant_id = v_tenant_id;
+    DELETE FROM tenant_users WHERE tenant_id = v_tenant_id;
+    DELETE FROM simulation_templates WHERE id = p_template_id;
+    DELETE FROM tenants WHERE id = v_tenant_id;
+  ELSE
+    DELETE FROM simulation_templates WHERE id = p_template_id;
+  END IF;
+
+  RAISE NOTICE 'Deleted template % (%) with tenant % — removed % patients',
+    p_template_id, v_template_name, v_tenant_id, v_deleted_patients;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'template_id', p_template_id,
+    'template_name', v_template_name,
+    'tenant_id', v_tenant_id,
+    'deleted_patients', v_deleted_patients,
+    'active_simulations_warning', v_active_simulations_count > 0,
+    'active_simulations_count', v_active_simulations_count
+  );
+END;
+$function$;
+
+
+--
+-- Name: FUNCTION delete_simulation_template(p_template_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.delete_simulation_template(p_template_id uuid) IS 'Deletes a simulation template AND its backing tenant (patients, meds, notes, everything).
+Mirrors the delete_simulation() pattern since patients.tenant_id is ON DELETE SET NULL
+(not CASCADE) and several clinical tables have no cascade at all, so a raw tenant delete
+would either orphan patients (tenant_id -> NULL) or fail with a FK violation.
+Warns (does not block) if active simulations still reference this template.
+Uses SECURITY DEFINER to bypass RLS for complete cleanup.';
+
+
+--
 -- Name: delete_simulation_history(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6188,6 +6292,10 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % advanced directives', v_count;
   
+  DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % admission records', v_count;
+  
   DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % lab orders', v_count;
@@ -6415,6 +6523,7 @@ BEGIN
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
   DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id;
+  DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id;
   DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM bowel_records WHERE tenant_id = v_tenant_id;
   DELETE FROM wounds WHERE tenant_id = v_tenant_id;
@@ -11589,7 +11698,8 @@ CREATE TABLE public.patient_admission_records (
     current_medications text,
     emergency_contact_name text,
     emergency_contact_phone text,
-    emergency_contact_relationship text
+    emergency_contact_relationship text,
+    student_name text
 );
 
 

@@ -1,12 +1,350 @@
+-- Migration: Wire patient_admission_records into the simulation debrief/reset pipeline
+-- Date: 2026-08-22
+--
+-- Bug: patient_admission_records was never wired into the 4-part simulation
+-- checklist (see .github/copilot-instructions.md):
+--   1. Reset functions — table was completely absent from both
+--      reset_simulation_for_next_session and reset_simulation_with_template_updates,
+--      so admission records never got reset between sessions (unlike the
+--      identical singleton-per-patient patient_advanced_directives table).
+--   2. simulation_table_config — N/A here: save_template_snapshot_v2 /
+--      restore_snapshot_to_tenant are schema-agnostic (auto-discover any table
+--      with a tenant_id column), so snapshot capture/restore already worked.
+--   3. studentActivityService.ts — table was never queried for debrief data.
+--   4. EnhancedDebriefModal.tsx — no render wiring.
+--
+-- Root cause for (3)/(4) being impossible in the first place: the table had
+-- no student_name column at all, so there was nothing to attribute a debrief
+-- entry to.
+--
+-- Fix: add student_name column, and redeploy both reset functions with a
+-- DELETE FROM patient_admission_records line (mirrors the existing
+-- patient_advanced_directives handling exactly). TypeScript-side wiring for
+-- (3)/(4) is a separate, non-DB change.
+
+ALTER TABLE patient_admission_records ADD COLUMN IF NOT EXISTS student_name text;
+
 -- ============================================================================
--- RESET SIMULATION WITH TEMPLATE UPDATES (Property-Based Medication Sync)
+-- RESET SIMULATION FOR NEXT SESSION (redeployed with patient_admission_records)
 -- ============================================================================
--- Smart reset that syncs simulation with updated template
--- Preserves existing medication barcodes, adds NEW medications with NEW barcodes
--- 
--- KEY INSIGHT: Simulation launch creates NEW UUIDs for all data (can't compare by ID)
--- Solution: Match medications by properties (patient barcode + name + dosage + route)
--- New medications get NEW UUIDs = NEW barcodes (instructor prints labels for new ones only)
+
+CREATE OR REPLACE FUNCTION reset_simulation_for_next_session(
+  p_simulation_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_tenant_id uuid;
+  v_template_id uuid;
+  v_snapshot jsonb;
+  v_snapshot_original jsonb;  -- Keep original snapshot with medications
+  v_duration_minutes integer;
+  v_result jsonb;
+  v_patient_barcodes jsonb := '{}'::jsonb;
+  v_patient_id uuid;
+  v_barcode text;
+  v_count integer;
+  v_stats jsonb := '{}'::jsonb;
+BEGIN
+  RAISE NOTICE '🔄 Starting session reset for simulation: %', p_simulation_id;
+  
+  -- Get simulation details
+  SELECT 
+    sa.tenant_id,
+    sa.template_id,
+    sa.duration_minutes,
+    st.snapshot_data
+  INTO 
+    v_tenant_id,
+    v_template_id,
+    v_duration_minutes,
+    v_snapshot
+  FROM simulation_active sa
+  JOIN simulation_templates st ON st.id = sa.template_id
+  WHERE sa.id = p_simulation_id;
+  
+  -- Save original snapshot (before we remove medications)
+  v_snapshot_original := v_snapshot;
+
+  IF v_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Simulation not found: %', p_simulation_id;
+  END IF;
+
+  IF v_snapshot IS NULL THEN
+    RAISE EXCEPTION 'Template has no snapshot data';
+  END IF;
+
+  RAISE NOTICE '✅ Found simulation - tenant: %, template: %', v_tenant_id, v_template_id;
+  
+  -- =====================================================
+  -- STEP 1: SAVE PATIENT & MEDICATION BARCODE IDs (CRITICAL!)
+  -- =====================================================
+  -- These are printed on labels and CANNOT change
+  
+  -- Save patient barcodes
+  FOR v_patient_id, v_barcode IN 
+    SELECT id, patient_id 
+    FROM patients 
+    WHERE tenant_id = v_tenant_id
+    ORDER BY created_at
+  LOOP
+    v_patient_barcodes := v_patient_barcodes || jsonb_build_object(v_patient_id::text, v_barcode);
+    RAISE NOTICE '💾 Saving patient barcode: % has barcode %', v_patient_id, v_barcode;
+  END LOOP;
+  
+
+
+  -- =====================================================
+  -- STEP 2: DELETE STUDENT WORK (preserve medications!)
+  -- =====================================================
+  -- Delete student-added data but KEEP medications (preserve UUIDs for barcodes)
+  
+  DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % medication administrations', v_count;
+  
+  -- 🆕 DON'T delete medications - preserve them like we preserve patients!
+  -- DELETE FROM patient_medications WHERE tenant_id = v_tenant_id;
+  RAISE NOTICE '💊 Preserving medications (like patients) - UUIDs and barcodes stay consistent';
+  
+  -- 🔄 Reset medication administration timing (for back-to-back sessions)
+  UPDATE patient_medications
+  SET last_administered = NULL
+  WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🔄 Reset % medication administration times for new session', v_count;
+  
+  DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % vitals', v_count;
+  
+  DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % neuro assessments', v_count;
+  
+  DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % notes', v_count;
+  
+  DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % alerts', v_count;
+  
+  DELETE FROM patient_images WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % images', v_count;
+  
+  DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % wound assessments', v_count;
+  
+  DELETE FROM device_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % device assessments', v_count;
+  
+  DELETE FROM lab_results WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % lab results', v_count;
+  
+  DELETE FROM lab_panels WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % lab panels', v_count;
+  
+  DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % BBIT entries', v_count;
+  
+  DELETE FROM patient_newborn_assessments WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % newborn assessments', v_count;
+
+  -- 📋 Flowsheet system assessments: delete ONLY student entries.
+  -- Instructor-set baseline entries (is_baseline = true) survive the reset so
+  -- that clinical context (e.g. "patient has chronic pain, baseline 7/10")
+  -- is still visible to students in the next session.
+  DELETE FROM patient_system_assessments
+  WHERE tenant_id = v_tenant_id
+    AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % system assessments (student entries only, baseline preserved)', v_count;
+
+  -- 🧩 TR module tables: delete student entries, preserve instructor baselines
+  DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR screening entries (student only)', v_count;
+
+  DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR active living profiles (student only)', v_count;
+
+  DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR assessment scores (student only)', v_count;
+
+  DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR treatment plan rows (student only)', v_count;
+
+  DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR interdisciplinary interpretations (student only)', v_count;
+
+  DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR progress notes', v_count;
+
+  DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % doctors orders', v_count;
+  
+  DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % handover notes', v_count;
+  
+  DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % advanced directives', v_count;
+  
+  DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % admission records', v_count;
+  
+  DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % lab orders', v_count;
+  
+  DELETE FROM bowel_records WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % bowel records', v_count;
+  
+  -- Try tenant_id first, fall back to patient_id if column doesn't exist
+  BEGIN
+    DELETE FROM patient_intake_output_events WHERE tenant_id = v_tenant_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RAISE NOTICE '🗑️  Deleted % intake/output events (via tenant_id)', v_count;
+  EXCEPTION WHEN undefined_column THEN
+    DELETE FROM patient_intake_output_events WHERE patient_id IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RAISE NOTICE '🗑️  Deleted % intake/output events (via patient_id)', v_count;
+  END;
+  
+  -- Delete baseline items too (will be restored from snapshot)
+  DELETE FROM wounds WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % wounds', v_count;
+  
+  DELETE FROM devices WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % devices', v_count;
+  
+  DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % avatar locations', v_count;
+  
+  RAISE NOTICE '✅ All data deleted (except patients and medications)';
+
+  -- =====================================================
+  -- STEP 3: RESTORE FROM SNAPSHOT WITH BARCODE PRESERVATION
+  -- =====================================================
+  -- Remove medications from snapshot - they're preserved like patients
+  -- KEEP patients in snapshot - restore function needs them to build patient mapping!
+  v_snapshot := v_snapshot - 'patient_medications';
+  RAISE NOTICE '💊 Removed medications from snapshot (preserved with their UUIDs)';
+
+  -- Remove system assessments from snapshot - baseline rows are preserved
+  -- in-place (is_baseline = true), so restoring from snapshot would duplicate them.
+  v_snapshot := v_snapshot - 'patient_system_assessments';
+  RAISE NOTICE '📋 Removed system assessments from snapshot (baseline rows preserved in-place)';
+
+  -- Strip TR tables from snapshot — baseline rows preserved in-place
+  v_snapshot := v_snapshot - 'tr_screening_entries';
+  v_snapshot := v_snapshot - 'tr_active_living_profiles';
+  v_snapshot := v_snapshot - 'tr_assessment_scores';
+  v_snapshot := v_snapshot - 'tr_treatment_plan_rows';
+  v_snapshot := v_snapshot - 'tr_interdisciplinary_interps';
+  v_snapshot := v_snapshot - 'tr_progress_notes';
+  RAISE NOTICE '🧩 Removed TR module tables from snapshot (baseline rows preserved in-place)';
+
+  RAISE NOTICE '👥 Keeping patients in snapshot for ID mapping (will not create new patients due to preserve_barcodes flag)';
+  
+  -- Restore all baseline data, mapping to existing patients
+  SELECT restore_snapshot_to_tenant(
+    p_tenant_id := v_tenant_id,
+    p_snapshot := v_snapshot,
+    p_barcode_mappings := v_patient_barcodes,
+    p_preserve_barcodes := true
+  ) INTO v_result;
+  
+  RAISE NOTICE '✅ Restored snapshot with preserved barcodes';
+  RAISE NOTICE '📊 Restore result: %', jsonb_pretty(v_result);
+  RAISE NOTICE '💊 Medications preserved unchanged (like patients) - UUIDs and barcodes stay consistent';
+
+  -- =====================================================
+  -- STEP 4: SET STATUS TO PENDING (Ready to start, NOT auto-start)
+  -- =====================================================
+  
+  UPDATE simulation_active
+  SET
+    status = 'pending',
+    starts_at = NULL,
+    ends_at = NULL,
+    completed_at = NULL,
+    updated_at = NOW()
+  WHERE id = p_simulation_id;
+  
+  RAISE NOTICE '✅ Status set to PENDING - simulation ready to start manually';
+  RAISE NOTICE '⏱️  Timer will be set when instructor clicks Play';
+
+  -- =====================================================
+  -- STEP 5: LOG THE RESET
+  -- =====================================================
+  
+  INSERT INTO simulation_activity_log (
+    simulation_id,
+    user_id,
+    action_type,
+    action_details,
+    notes
+  )
+  VALUES (
+    p_simulation_id,
+    auth.uid(),
+    'simulation_reset',
+    v_result,
+    'Simulation reset for next session - status set to pending, ready for manual start'
+  );
+
+  RAISE NOTICE '🎉 Session reset complete! Simulation ready to start.';
+  
+  -- Return success with pending status message and detailed restore info
+  RETURN jsonb_build_object(
+    'success', true,
+    'simulation_id', p_simulation_id,
+    'status', 'pending',
+    'message', 'Simulation reset successfully. Click Play to start when ready.',
+    'restore_details', v_result,
+    'restored_counts', COALESCE(v_result->'restored_counts', '{}'::jsonb),
+    'patients_preserved', (SELECT COUNT(*) FROM patients WHERE tenant_id = v_tenant_id),
+    'medications_preserved', (SELECT COUNT(*) FROM patient_medications WHERE tenant_id = v_tenant_id)
+  );
+
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE '❌ Error during reset: %', SQLERRM;
+  RETURN jsonb_build_object(
+    'success', false,
+    'error', SQLERRM,
+    'detail', SQLSTATE
+  );
+END;
+$$;
+
+COMMENT ON FUNCTION reset_simulation_for_next_session IS 'Reset simulation for next session - preserves patient/medication barcodes, sets status to pending (manual start required). Updated 2026-08-22: now also resets patient_admission_records.';
+
+-- ============================================================================
+-- RESET SIMULATION WITH TEMPLATE UPDATES (redeployed with patient_admission_records)
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION reset_simulation_with_template_updates(
@@ -365,4 +703,4 @@ $$;
 
 GRANT EXECUTE ON FUNCTION reset_simulation_with_template_updates TO authenticated;
 
-COMMENT ON FUNCTION reset_simulation_with_template_updates IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged.';
+COMMENT ON FUNCTION reset_simulation_with_template_updates IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged. Updated 2026-08-22: now also resets patient_admission_records.';

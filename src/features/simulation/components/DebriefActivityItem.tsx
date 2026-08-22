@@ -383,6 +383,19 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
             </div>
           </div>
         );
+      case 'admissionRecords':
+        return (
+          <div className="text-sm">
+            <p className="font-medium text-gray-700">{item.created_at ? format(new Date(item.created_at), 'PPp') : 'N/A'}</p>
+            <p className="text-gray-900 mt-1 font-medium">🏥 ADMISSION RECORD UPDATED</p>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-gray-600">
+              {item.admission_type && <span>Admission Type: {item.admission_type}</span>}
+              {item.attending_physician && <span>Attending: {item.attending_physician}</span>}
+              {item.admission_source && <span>Source: {item.admission_source}</span>}
+              {item.chief_complaint && <span className="col-span-2">Chief Complaint: {item.chief_complaint}</span>}
+            </div>
+          </div>
+        );
       case 'neuroAssessments': {
         const gcsTot = (item.gcs_eye ?? 0) + (item.gcs_verbal ?? 0) + (item.gcs_motor ?? 0);
         const aOrientCount = [item.oriented_person, item.oriented_place, item.oriented_time].filter(Boolean).length;

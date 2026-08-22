@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2 } from 'lucide-react';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +15,9 @@ interface SimulationCardProps {
   onEditCategories: (sim: SimulationActiveWithDetails) => void;
   onPrintLabels: (sim: SimulationActiveWithDetails) => void;
   onViewTemplateChanges: (sim: SimulationActiveWithDetails) => void;
+  /** Dev validation tool (super_admin only) — seeds QA_VALIDATION rows into this simulation's live tenant. */
+  onSeedTestData?: (sim: SimulationActiveWithDetails) => void;
+  seeding?: boolean;
 }
 
 export const SimulationCard: React.FC<SimulationCardProps> = ({
@@ -28,6 +31,8 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
   onEditCategories,
   onPrintLabels,
   onViewTemplateChanges,
+  onSeedTestData,
+  seeding,
 }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all duration-150">
@@ -114,6 +119,16 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          {onSeedTestData && (
+            <button
+              onClick={() => onSeedTestData(sim)}
+              disabled={seeding || actionLoading === sim.id}
+              className="p-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors disabled:opacity-50"
+              title="Seed QA_VALIDATION test data into this simulation (dev validation tool)"
+            >
+              {seeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+            </button>
+          )}
           <button
             onClick={() => onEditCategories(sim)}
             className="p-1.5 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"

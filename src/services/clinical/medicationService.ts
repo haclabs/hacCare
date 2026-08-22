@@ -480,6 +480,23 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
     if (!administration.timestamp) {
       administration.timestamp = new Date().toISOString();
     }
+
+    // Derive tenant_id from the patient record when not explicitly provided —
+    // relying on the auto_set_tenant_id trigger's auth.uid() fallback silently
+    // mis-attributes the row to the acting user's own tenant if they aren't a
+    // tenant_users member of this patient's tenant (e.g. super_admin cross-tenant access).
+    if (!administration.tenant_id) {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', administration.patient_id)
+        .single();
+      if (patientError) {
+        secureLogger.error('Error fetching patient for tenant_id:', patientError);
+        throw patientError;
+      }
+      administration.tenant_id = patient?.tenant_id;
+    }
     
     // Create a clean object without undefined values and ensure no id field
     // Ensure we have all required fields with proper types

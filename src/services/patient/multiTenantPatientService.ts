@@ -175,6 +175,11 @@ export async function deletePatientWithTenant(patientId: string, tenantId: strin
       return { error: { message: 'Patient not found or access denied' } };
     }
 
+    // patient_id on these two tables is text (not a real FK), so no ON DELETE
+    // CASCADE exists — clean them up explicitly or they become permanent orphans.
+    await supabase.from('patient_advanced_directives').delete().eq('patient_id', patientId);
+    await supabase.from('patient_admission_records').delete().eq('patient_id', patientId);
+
     const { error } = await supabase
       .from('patients')
       .delete()

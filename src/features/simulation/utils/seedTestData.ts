@@ -236,6 +236,7 @@ export async function seedTestDataForTenant(
     results.push(await attempt('patient_admission_records', () =>
       upsertAdmissionRecord({
         patient_id: patientId,
+        student_name: QA_MARKER,
         admission_type: 'Elective',
         attending_physician: QA_MARKER,
         insurance_provider: QA_MARKER,

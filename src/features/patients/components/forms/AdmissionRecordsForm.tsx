@@ -30,6 +30,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
       // Always start with a completely empty form
       const emptyRecord = {
         patient_id: patientId,
+        student_name: '', // Will be filled by student manually
         admission_type: '',
         attending_physician: '',
         insurance_provider: '',
@@ -72,6 +73,12 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
     try {
       setSaving(true);
       setError('');
+      
+      if (!formData.student_name?.trim()) {
+        setError('Please enter your full name to verify this action');
+        setSaving(false);
+        return;
+      }
       
       // Make sure all required fields are filled
       const requiredFields = ['admission_type', 'attending_physician', 'chief_complaint'];
@@ -451,6 +458,24 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Student Name - Required for Verification */}
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
+            <label className="block text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">
+              Student Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.student_name || ''}
+              onChange={(e) => updateField('student_name', e.target.value)}
+              className="w-full px-3 py-2 border border-yellow-300 dark:border-yellow-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Enter your full name"
+              required
+            />
+            <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
+              By entering your name, you verify that you reviewed and acknowledge this action.
+            </p>
           </div>
 
           {/* Form Actions */}

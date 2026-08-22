@@ -9,6 +9,8 @@ import { secureLogger } from '../../lib/security/secureLogger';
 export interface AdmissionRecord {
   id?: string;
   patient_id: string;
+  tenant_id?: string;
+  student_name?: string; // Track which student filled this out
   admission_type: string;
   attending_physician: string;
   insurance_provider: string;
@@ -80,10 +82,28 @@ export const fetchAdmissionRecord = async (patientId: string): Promise<Admission
 export const upsertAdmissionRecord = async (admissionRecord: AdmissionRecord): Promise<AdmissionRecord> => {
   try {
     secureLogger.debug('Upserting admission record:', admissionRecord);
+
+    // Derive tenant_id from the patient record when not explicitly provided —
+    // relying on the auto_set_tenant_id trigger's auth.uid() fallback silently
+    // mis-attributes the row to the acting user's own tenant if they aren't a
+    // tenant_users member of this patient's tenant (e.g. super_admin cross-tenant access).
+    let tenantId = admissionRecord.tenant_id;
+    if (!tenantId) {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', admissionRecord.patient_id)
+        .single();
+      if (patientError) {
+        secureLogger.error('Error fetching patient for tenant_id:', patientError);
+        throw patientError;
+      }
+      tenantId = patient?.tenant_id;
+    }
     
     const { data, error } = await supabase
       .from('patient_admission_records')
-      .upsert(admissionRecord, {
+      .upsert({ ...admissionRecord, tenant_id: tenantId }, {
         onConflict: 'patient_id'
       })
       .select()

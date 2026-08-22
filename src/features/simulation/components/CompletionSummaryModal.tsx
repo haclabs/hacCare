@@ -41,6 +41,7 @@ function entryBreakdown(activity: StudentActivity): Array<{ label: string; count
     { label: 'BBIT', count: a.bbitEntries.length, icon: <Activity className="h-3 w-3" /> },
     { label: 'Newborn', count: a.newbornAssessments.length, icon: <Heart className="h-3 w-3" /> },
     { label: 'Adv. Directives', count: a.advancedDirectives.length, icon: <FileText className="h-3 w-3" /> },
+    { label: 'Admission Records', count: a.admissionRecords.length, icon: <FileText className="h-3 w-3" /> },
     { label: 'System Assessments', count: a.systemAssessments.length, icon: <Activity className="h-3 w-3" /> },
     { label: 'TR Screening', count: a.trScreenings.length, icon: <FileText className="h-3 w-3" /> },
     { label: 'TR Active Living', count: a.trActiveLivingProfiles.length, icon: <FileText className="h-3 w-3" /> },
