@@ -23,6 +23,7 @@ export interface BowelRecord {
   // Additional fields
   notes: string;
   student_name?: string; // Optional — attributes the entry to a simulation student for debrief reporting
+  tenant_id?: string;
   
   created_at?: string;
   updated_at?: string;
@@ -36,10 +37,29 @@ export const createBowelRecord = async (record: BowelRecord): Promise<BowelRecor
   try {
     secureLogger.debug('Creating bowel record:', record);
 
+    // Derive tenant_id from the patient record when not explicitly provided —
+    // relying on the auto_set_tenant_id trigger's auth.uid() fallback silently
+    // mis-attributes the row to the acting user's own tenant if they aren't a
+    // tenant_users member of this patient's tenant (e.g. super_admin cross-tenant access).
+    let tenantId = record.tenant_id;
+    if (!tenantId) {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', record.patient_id)
+        .single();
+      if (patientError) {
+        secureLogger.error('Error fetching patient for tenant_id:', patientError);
+        throw new Error(`Failed to look up tenant_id: ${patientError.message}`);
+      }
+      tenantId = patient?.tenant_id;
+    }
+
     const { data, error } = await supabase
       .from('bowel_records')
       .insert({
         patient_id: record.patient_id,
+        tenant_id: tenantId,
         nurse_id: record.nurse_id,
         nurse_name: record.nurse_name,
         recorded_at: record.recorded_at,

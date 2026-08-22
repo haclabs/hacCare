@@ -15,6 +15,7 @@ export const StudentActivitySection: React.FC<{ student: StudentActivity; forceE
     { key: 'patientNotes', title: 'Patient Notes', items: student.activities.patientNotes || [], color: 'yellow', icon: '📝' },
     { key: 'handoverNotes', title: 'Handover Notes', items: student.activities.handoverNotes || [], color: 'orange', icon: '🤝' },
     { key: 'advancedDirectives', title: 'Advanced Directives', items: student.activities.advancedDirectives || [], color: 'red', icon: '⚕️' },
+    { key: 'admissionRecords', title: 'Admission Records', items: student.activities.admissionRecords || [], color: 'blue', icon: '🏥' },
     { key: 'hacmapDevices', title: 'hacMap - Add Device', items: student.activities.hacmapDevices || [], color: 'emerald', icon: '🔧' },
     { key: 'hacmapWounds', title: 'hacMap - Add Wound', items: student.activities.hacmapWounds || [], color: 'rose', icon: '🩹' },
     { key: 'deviceAssessments', title: 'Device Assessments', items: student.activities.deviceAssessments || [], color: 'indigo', icon: '🩺' },

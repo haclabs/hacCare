@@ -4,6 +4,7 @@ import { secureLogger } from '../lib/security/secureLogger';
 export interface AdvancedDirective {
   id?: string;
   patient_id: string;
+  tenant_id?: string;
   student_name?: string; // 🆕 Track which student filled this out
   dnr_status: boolean | string; // Now accepts string values (R1, R2, R3, M1, M2, C1, C2)
   dnr_date?: string;
@@ -51,9 +52,27 @@ export async function fetchAdvancedDirective(patientId: string): Promise<Advance
 
 export async function upsertAdvancedDirective(directive: AdvancedDirective): Promise<AdvancedDirective | null> {
   try {
+    // Derive tenant_id from the patient record when not explicitly provided —
+    // relying on the auto_set_tenant_id trigger's auth.uid() fallback silently
+    // mis-attributes the row to the acting user's own tenant if they aren't a
+    // tenant_users member of this patient's tenant (e.g. super_admin cross-tenant access).
+    let tenantId = directive.tenant_id;
+    if (!tenantId) {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', directive.patient_id)
+        .single();
+      if (patientError) {
+        secureLogger.error('Error fetching patient for tenant_id:', patientError);
+        throw patientError;
+      }
+      tenantId = patient?.tenant_id;
+    }
+
     const { data, error } = await supabase
       .from('patient_advanced_directives')
-      .upsert(directive, {
+      .upsert({ ...directive, tenant_id: tenantId }, {
         onConflict: 'patient_id'
       })
       .select()

@@ -67,6 +67,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
         existing.activities.patientNotes.push(...activity.activities.patientNotes);
         existing.activities.handoverNotes.push(...activity.activities.handoverNotes);
         existing.activities.advancedDirectives.push(...activity.activities.advancedDirectives);
+        existing.activities.admissionRecords.push(...(activity.activities.admissionRecords || []));
         existing.activities.hacmapDevices.push(...activity.activities.hacmapDevices);
         existing.activities.hacmapWounds.push(...activity.activities.hacmapWounds);
         existing.activities.deviceAssessments.push(...activity.activities.deviceAssessments);

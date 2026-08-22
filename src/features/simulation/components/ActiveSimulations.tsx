@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Play, AlertTriangle, X, Filter } from 'lucide-react';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
+import type { SimulationActiveWithDetails } from '../types/simulation';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
 import { UnnamedStudentModal } from './UnnamedStudentModal';
@@ -9,9 +10,16 @@ import VersionComparisonModal from './VersionComparisonModal';
 import { SimulationCard } from './SimulationCard';
 import { SimulationInstructorGuide } from './SimulationInstructorGuide';
 import { EditCategoriesModal } from './EditCategoriesModal';
+import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
+import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
+import { useAuth } from '../../../contexts/auth/useAuth';
+import { secureLogger } from '../../../lib/security/secureLogger';
 import { useActiveSimulations } from '../hooks/useActiveSimulations';
 
 const ActiveSimulations: React.FC = () => {
+  const { profile } = useAuth();
+  const [seedingSimId, setSeedingSimId] = useState<string | null>(null);
+  const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
   const {
     simulations,
     filteredSimulations,
@@ -41,6 +49,33 @@ const ActiveSimulations: React.FC = () => {
     handleEditCategories,
     handleSaveCategories,
   } = useActiveSimulations();
+
+  const handleSeedTestData = async (sim: SimulationActiveWithDetails) => {
+    if (!profile) return;
+
+    const confirmed = window.confirm(
+      `This will insert one QA_VALIDATION-tagged test row into every clinical table \n` +
+      `for each patient in "${sim.name}" (the LIVE simulation tenant, not the template).\n\n` +
+      `Use this to verify only student work is captured in the debrief, and that \n` +
+      `resetting the simulation returns it to the template baseline.\n\nContinue?`
+    );
+    if (!confirmed) return;
+
+    setSeedingSimId(sim.id);
+    setSeedResults(null);
+    try {
+      const results = await seedTestDataForTenant(sim.tenant_id, {
+        id: profile.id,
+        name: `${profile.first_name} ${profile.last_name}`,
+      });
+      setSeedResults(results);
+    } catch (error) {
+      secureLogger.error('❌ Error seeding test data into active simulation:', error);
+      alert(`Error seeding test data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSeedingSimId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -152,6 +187,8 @@ const ActiveSimulations: React.FC = () => {
               onEditCategories={handleEditCategories}
               onPrintLabels={setPrintLabelsSimulation}
               onViewTemplateChanges={handleViewTemplateChanges}
+              onSeedTestData={profile?.role === 'super_admin' ? handleSeedTestData : undefined}
+              seeding={seedingSimId === sim.id}
             />
           ))}
         </div>
@@ -159,6 +196,13 @@ const ActiveSimulations: React.FC = () => {
         {/* Right Column - Instructor Guide */}
         <SimulationInstructorGuide />
       </div>
+
+      {/* Seed Test Data Results */}
+      {seedResults && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <SeedTestDataResultsPanel results={seedResults} onClose={() => setSeedResults(null)} />
+        </div>
+      )}
 
       {/* Label Printing Modal */}
       {printLabelsSimulation && (

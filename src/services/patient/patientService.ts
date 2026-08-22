@@ -487,6 +487,11 @@ export const deletePatient = async (patientId: string): Promise<void> => {
       .eq('id', patientId)
       .single();
 
+    // patient_id on these two tables is text (not a real FK), so no ON DELETE
+    // CASCADE exists — clean them up explicitly or they become permanent orphans.
+    await supabase.from('patient_advanced_directives').delete().eq('patient_id', patientId);
+    await supabase.from('patient_admission_records').delete().eq('patient_id', patientId);
+
     const { error } = await supabase
       .from('patients')
       .delete()
@@ -517,11 +522,30 @@ export const deletePatient = async (patientId: string): Promise<void> => {
 export const createPatientNote = async (note: any): Promise<PatientNote> => {
   try {
     secureLogger.debug('Creating patient note:', note);
+
+    // Derive tenant_id from the patient record when not explicitly provided —
+    // relying on the auto_set_tenant_id trigger's auth.uid() fallback silently
+    // mis-attributes the row to the acting user's own tenant if they aren't a
+    // tenant_users member of this patient's tenant (e.g. super_admin cross-tenant access).
+    let tenantId = note.tenant_id;
+    if (!tenantId) {
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('tenant_id')
+        .eq('id', note.patient_id)
+        .single();
+      if (patientError) {
+        secureLogger.error('Error fetching patient for tenant_id:', patientError);
+        throw patientError;
+      }
+      tenantId = patient?.tenant_id;
+    }
     
     const { data, error } = await supabase
       .from('patient_notes')
       .insert({
         patient_id: note.patient_id,
+        tenant_id: tenantId,
         nurse_id: note.nurse_id,
         nurse_name: note.nurse_name,
         type: note.type,

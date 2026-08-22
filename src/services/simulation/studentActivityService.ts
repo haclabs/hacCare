@@ -28,6 +28,7 @@ export interface StudentActivity {
     neuroAssessments: NeuroAssessmentEntry[];
     intakeOutput: IntakeOutputEntry[];
     advancedDirectives: AdvancedDirectiveEntry[]; // 🆕 NEW
+    admissionRecords: AdmissionRecordEntry[];
     bbitEntries: BBITEntry[];
     newbornAssessments: NewbornAssessmentEntry[];
     systemAssessments: SystemAssessmentEntry[]; // 🆕 Flowsheets Hub native forms (patient_system_assessments)
@@ -269,6 +270,16 @@ interface AdvancedDirectiveEntry {
   patient_name?: string;
 }
 
+interface AdmissionRecordEntry {
+  id: string;
+  created_at: string;
+  admission_type: string | null;
+  attending_physician: string | null;
+  chief_complaint: string | null;
+  admission_source: string | null;
+  patient_name?: string;
+}
+
 interface BBITEntry {
   id: string;
   recorded_at: string;
@@ -487,6 +498,7 @@ export async function getStudentActivitiesBySimulation(
       woundAssessmentsData, // ✅ NEW: hacMap v2
       intakeOutputData,
       advancedDirectivesData, // 🆕 NEW: Advanced Directives
+      admissionRecordsData,
       neuroAssessmentsData,
       bbitData,
       newbornAssessmentData,
@@ -692,6 +704,15 @@ export async function getStudentActivitiesBySimulation(
           return result;
         }),
 
+      // Admission Records
+      supabase
+        .from('patient_admission_records')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .not('student_name', 'is', null)
+        .gte('created_at', simulationStartTime || '1970-01-01')
+        .order('created_at', { ascending: false }),
+
       // Neuro Assessments
       supabase
         .from('patient_neuro_assessments')
@@ -809,6 +830,7 @@ export async function getStudentActivitiesBySimulation(
             neuroAssessments: [],
             intakeOutput: [],
             advancedDirectives: [], // 🆕 NEW
+            admissionRecords: [],
             bbitEntries: [],
             newbornAssessments: [],
             systemAssessments: [], // 🆕 Flowsheets Hub native forms
@@ -1147,6 +1169,21 @@ export async function getStudentActivitiesBySimulation(
       student.totalEntries++;
     });
 
+    // Process admission records
+    admissionRecordsData.data?.forEach((record: any) => {
+      const student = getOrCreateStudent(record.student_name);
+      student.activities.admissionRecords.push({
+        id: record.id,
+        created_at: record.created_at,
+        admission_type: record.admission_type,
+        attending_physician: record.attending_physician,
+        chief_complaint: record.chief_complaint,
+        admission_source: record.admission_source,
+        patient_name: patientNameMap.get(record.patient_id),
+      });
+      student.totalEntries++;
+    });
+
     // Process neuro assessments
     neuroAssessmentsData.data?.forEach((neuro: any) => {
       const student = getOrCreateStudent(neuro.student_name);
@@ -1376,6 +1413,7 @@ export async function getStudentActivitiesBySimulation(
         patientNotes: student.activities.patientNotes.length,
         handoverNotes: student.activities.handoverNotes.length,
         advancedDirectives: student.activities.advancedDirectives.length,
+        admissionRecords: student.activities.admissionRecords.length,
       });
       
       // Debug: Show lab acknowledgement details with notes
