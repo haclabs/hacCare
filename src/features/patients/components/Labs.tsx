@@ -20,6 +20,7 @@ import { CreateLabPanelModal } from './CreateLabPanelModal';
 import { LabOrderEntryForm } from './LabOrderEntryForm';
 import { LabOrderCard } from './LabOrderCard';
 import { LabOrderLabelModal } from './LabOrderLabelModal';
+import { PatientActionBar } from '../../../components/PatientActionBar';
 import { format24HourDateTime } from '../../../utils/time';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -29,9 +30,42 @@ interface LabsProps {
   patientName?: string;
   patientDOB?: string;
   onLabsChange?: () => void;
+  // Top PatientActionBar nav — same props every other module receives
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  onFlowsheetsClick?: () => void;
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
-export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientName, patientDOB, onLabsChange }) => {
+export const Labs: React.FC<LabsProps> = ({
+  patientId,
+  patientNumber,
+  patientName,
+  patientDOB,
+  onLabsChange,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  onFlowsheetsClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewOrders = false,
+  hasNewNotes = false,
+}) => {
   const { hasRole } = useAuth();
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState<LabCategory | 'all' | 'order'>('all');
@@ -120,24 +154,48 @@ export const Labs: React.FC<LabsProps> = ({ patientId, patientNumber, patientNam
     return true;
   });
 
+  const actionBar = (
+    <PatientActionBar
+      onChartClick={onChartClick}
+      onVitalsClick={onVitalsClick}
+      onMedsClick={onMedsClick}
+      onLabsClick={onLabsClick}
+      onOrdersClick={onOrdersClick}
+      onHacMapClick={onHacMapClick}
+      onIOClick={onIOClick}
+      onNotesClick={onNotesClick}
+      onFlowsheetsClick={onFlowsheetsClick}
+      vitalsCount={vitalsCount}
+      medsCount={medsCount}
+      hasNewLabs={hasNewLabs}
+      hasNewOrders={hasNewOrders}
+      hasNewNotes={hasNewNotes}
+      activeAction="labs"
+    />
+  );
+
   if (selectedPanel) {
     return (
-      <LabPanelDetail
-        panel={selectedPanel}
-        patientId={patientId}
-        patientNumber={patientNumber}
-        patientName={patientName}
-        onBack={() => {
-          setSelectedPanel(null);
-          handlePanelUpdated();
-        }}
-        onUpdate={handlePanelUpdated}
-      />
+      <div className="p-6 space-y-6">
+        {actionBar}
+        <LabPanelDetail
+          panel={selectedPanel}
+          patientId={patientId}
+          patientNumber={patientNumber}
+          patientName={patientName}
+          onBack={() => {
+            setSelectedPanel(null);
+            handlePanelUpdated();
+          }}
+          onUpdate={handlePanelUpdated}
+        />
+      </div>
     );
   }
 
   return (
     <div className="p-6 space-y-6">
+      {actionBar}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

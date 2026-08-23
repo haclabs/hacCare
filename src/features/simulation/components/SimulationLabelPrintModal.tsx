@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, Printer, Users, Pill, AlertTriangle } from 'lucide-react';
-import { fetchAllLabelsForPrinting, BulkLabelData } from '../../../services/operations/bulkLabelService';
+import { fetchAllLabelsForPrinting, BulkLabelData, dedupeMedicationLabels } from '../../../services/operations/bulkLabelService';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { PatientBraceletsModal } from './PatientBraceletsModal';
 import { MedicationLabelsModal } from './MedicationLabelsModal';
@@ -30,6 +30,11 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
   const [patientQuantity, setPatientQuantity] = useState(1);
   const [startRow, setStartRow] = useState(1);
   const [medicationQuantity, setMedicationQuantity] = useState(1);
+
+  const medicationLabelItems = useMemo(
+    () => (labels ? dedupeMedicationLabels(labels.medications) : []),
+    [labels]
+  );
 
   const fetchLabels = useCallback(async () => {
     try {
@@ -157,10 +162,10 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
                       <h3 className="font-semibold text-green-900">Medication Labels</h3>
                     </div>
                     <p className="text-2xl font-bold text-green-900 mb-1">
-                      {labels.medications.length}
+                      {medicationLabelItems.length}
                     </p>
                     <p className="text-sm text-green-700 mb-4">
-                      MAR medication labels
+                      One label per distinct medication
                     </p>
                     <div className="flex items-center gap-2 mb-3">
                       <label className="text-sm font-medium text-green-900">Qty per medication:</label>
@@ -173,12 +178,12 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
                         className="w-16 px-2 py-1 border border-green-300 rounded text-center font-medium"
                       />
                       <span className="text-sm text-green-700 font-medium">
-                        = {labels.medications.length * medicationQuantity} labels
+                        = {medicationLabelItems.length * medicationQuantity} labels
                       </span>
                     </div>
                     <button
                       onClick={() => setShowMedicationLabels(true)}
-                      disabled={labels.medications.length === 0}
+                      disabled={medicationLabelItems.length === 0}
                       className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       <Printer className="h-4 w-4" />
@@ -191,11 +196,11 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
                 <div className="mt-4">
                   <button
                     onClick={() => setShowAllLabels(true)}
-                    disabled={labels.patients.length === 0 && labels.medications.length === 0}
+                    disabled={labels.patients.length === 0 && medicationLabelItems.length === 0}
                     className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-medium text-base"
                   >
                     <Printer className="h-5 w-5" />
-                    Print All Labels (1 header + {labels.patients.length * patientQuantity} bracelets + {labels.medications.length * medicationQuantity} medications = {1 + labels.patients.length * patientQuantity + labels.medications.length * medicationQuantity} labels)
+                    Print All Labels (1 header + {labels.patients.length * patientQuantity} bracelets + {medicationLabelItems.length * medicationQuantity} medications = {1 + labels.patients.length * patientQuantity + medicationLabelItems.length * medicationQuantity} labels)
                   </button>
                 </div>
 
@@ -231,9 +236,9 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
       )}
 
       {/* Medication Labels Modal */}
-      {showMedicationLabels && labels && labels.medications.length > 0 && (
+      {showMedicationLabels && medicationLabelItems.length > 0 && (
         <MedicationLabelsModal
-          medications={labels.medications}
+          items={medicationLabelItems}
           simulationName={simulationName}
           participants={participants}
           onClose={() => setShowMedicationLabels(false)}
@@ -246,7 +251,7 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
       {showAllLabels && labels && (
         <AllLabelsModal
           patients={labels.patients}
-          medications={labels.medications}
+          medicationItems={medicationLabelItems}
           simulationName={simulationName}
           participants={participants}
           onClose={() => setShowAllLabels(false)}

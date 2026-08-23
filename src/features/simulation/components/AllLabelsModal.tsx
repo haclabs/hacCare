@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
-import type { PatientLabelData, MedicationLabelData } from '../../../services/operations/bulkLabelService';
+import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, getMedicationAccentColor } from '../../../services/operations/bulkLabelService';
 interface AllLabelsModalProps {
   patients: PatientLabelData[];
-  medications: MedicationLabelData[];
+  medicationItems: BarcodeLabelItem[];
   simulationName: string;
   participants: SimulationParticipant[];
   onClose: () => void;
@@ -18,7 +19,7 @@ interface AllLabelsModalProps {
  */
 export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({ 
   patients, 
-  medications, 
+  medicationItems, 
   simulationName, 
   participants, 
   onClose, 
@@ -46,8 +47,8 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
     Array(patientQuantity).fill(patient)
   );
   
-  const duplicatedMedications = medications.flatMap(medication => 
-    Array(medicationQuantity).fill(medication)
+  const duplicatedMedications = medicationItems.flatMap(item => 
+    Array(medicationQuantity).fill(item)
   );
 
   // Build color map keyed by patient id — same sort order as individual modals
@@ -60,19 +61,6 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
 
-    // Helper: hash-based barcode for free-entry medications (same algorithm as bcmaService)
-    const getMedBarcodeValue = (medication: { id: string; medication_name: string; barcode?: string | null }) => {
-      if (medication.barcode) return medication.barcode;
-      const cleanName = (medication.medication_name || 'Unknown').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-      const namePrefix = cleanName.charAt(0) || 'X';
-      const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
-      let numericCode = 0;
-      for (let i = 0; i < cleanId.length; i++) {
-        numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
-      }
-      return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
-    };
-
     // Pre-generate all QR data URLs before writing to the print window (no CDN needed)
     const [patientQRs, medicationQRs] = await Promise.all([
       generateQRDataURLs(
@@ -80,7 +68,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
         80
       ),
       generateQRDataURLs(
-        duplicatedMedications.map(m => getMedBarcodeValue(m)),
+        duplicatedMedications.map(m => m.barcode),
         80
       ),
     ]);
@@ -199,17 +187,15 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               border-left: 3px solid #000000;
               border-radius: 2px;
             }
-            .medication-label .patient-name-med {
-              font-size: 13px;
+            .medication-label .med-subtitle {
+              font-size: 11px;
               font-weight: 700;
               margin-top: 2px;
-              line-height: 1.3;
-              word-wrap: break-word;
-              padding: 3px 6px;
-              border-left: 2px solid;
+              line-height: 1.2;
+              color: #333;
+              padding: 2px 6px;
+              border-left: 2px solid #666;
               border-radius: 2px;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
             }
             .medication-label .med-id {
               font-size: 11px;
@@ -306,21 +292,19 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
             }).join('')}
             
             <!-- Medication Labels -->
-            ${duplicatedMedications.map((medication, index) => {
+            ${duplicatedMedications.map((item, index) => {
               const position = labelsToSkip + 1 + duplicatedPatients.length + index;
               const col = position % 3;
               const row = Math.floor(position / 3);
               const leftPos = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
               const topPos = (0.5 + row * 1.0) + 'in';
-              const barcodeValue = getMedBarcodeValue(medication);
-              const color = PATIENT_COLORS[patientColorMap[medication.patient_id]];
               
               return `
               <div class="label medication-label" style="left: ${leftPos}; top: ${topPos};">
                 <div class="label-content">
-                  <div class="medication-name">${medication.medication_name}</div>
-                  <div class="patient-name-med" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${medication.patient_name}</div>
-                  <div class="med-id">ID: ${barcodeValue}</div>
+                  <div class="medication-name" style="border-left-color: ${getMedicationAccentColor(item.category)};">${item.name}</div>
+                  <div class="med-subtitle">${item.subtitle}</div>
+                  <div class="med-id">${item.barcode}</div>
                 </div>
                 <div class="barcode-area">
                   <img class="qr-img" src="${medicationQRs[index]}" alt="QR" />
@@ -403,7 +387,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
             
             <div className="p-3 bg-green-50 border border-green-200 rounded">
               <h4 className="font-medium text-green-900 mb-2">Medication Labels</h4>
-              <p className="text-sm text-green-700">{medications.length} medications × {medicationQuantity} = {duplicatedMedications.length} labels</p>
+              <p className="text-sm text-green-700">{medicationItems.length} medications × {medicationQuantity} = {duplicatedMedications.length} labels</p>
             </div>
           </div>
           

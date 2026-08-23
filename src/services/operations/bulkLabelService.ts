@@ -21,6 +21,7 @@ export interface MedicationLabelData {
   prescriber: string;
   date_prescribed: string;
   barcode?: string | null; // Stable catalog barcode (e.g. MZ003) or null for free-entry
+  category?: string | null; // scheduled | prn | continuous | diabetic | stat | unscheduled
 }
 
 export interface BulkLabelData {
@@ -28,6 +29,61 @@ export interface BulkLabelData {
   medications: MedicationLabelData[];
   totalCount: number;
   timestamp: string;
+}
+
+// Medication label item — no patient-specific info, since dispensing is verified
+// via the medication admin system rather than a per-patient label.
+export interface BarcodeLabelItem {
+  id: string;
+  barcode: string;
+  name: string;
+  subtitle: string; // e.g. "25 mg · tablet"
+  category?: string | null;
+}
+
+// Accent colors matching the Medication Catalog admin table's category colors
+export const CATEGORY_ACCENT_COLORS: Record<string, string> = {
+  scheduled: '#2563eb',
+  prn: '#d97706',
+  continuous: '#9333ea',
+  diabetic: '#dc2626',
+  stat: '#ea580c',
+  unscheduled: '#4b5563',
+};
+
+export function getMedicationAccentColor(category?: string | null): string {
+  return (category && CATEGORY_ACCENT_COLORS[category]) || '#000000';
+}
+
+/** Stable barcode for a medication label (catalog barcode if set, else a fallback hash). */
+export function getMedicationBarcodeValue(medication: Pick<MedicationLabelData, 'id' | 'medication_name' | 'barcode'>): string {
+  if (medication.barcode) return medication.barcode;
+  const cleanName = (medication.medication_name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const namePrefix = cleanName.charAt(0) || 'X';
+  const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+  let numericCode = 0;
+  for (let i = 0; i < cleanId.length; i++) {
+    numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+  }
+  return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
+}
+
+// Medication labels are no longer patient-specific — dedupe to one label per distinct medication
+export function dedupeMedicationLabels(medications: MedicationLabelData[]): BarcodeLabelItem[] {
+  const byBarcode = new Map<string, BarcodeLabelItem>();
+  medications.forEach((medication) => {
+    const barcode = getMedicationBarcodeValue(medication);
+    if (!byBarcode.has(barcode)) {
+      byBarcode.set(barcode, {
+        id: barcode,
+        barcode,
+        name: medication.medication_name,
+        subtitle: `${medication.dosage} · ${medication.route}`,
+        category: medication.category,
+      });
+    }
+  });
+  return Array.from(byBarcode.values());
 }
 
 // Helper function to get current tenant ID
@@ -136,6 +192,7 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         start_date,
         status,
         barcode,
+        category,
         patients!inner (
           first_name,
           last_name,
@@ -179,7 +236,8 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         route: med.route,
         prescriber: med.prescribed_by,
         date_prescribed: med.start_date,
-        barcode: (med as unknown as { barcode?: string | null }).barcode ?? null
+        barcode: (med as unknown as { barcode?: string | null }).barcode ?? null,
+        category: (med as unknown as { category?: string | null }).category ?? null
       };
     });
 
