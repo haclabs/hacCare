@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Printer, Download, Users, Pill, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../../services/operations/bulkLabelService';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
+import { BarcodeLabelSheetModal, type BarcodeLabelItem } from './BarcodeLabelSheetModal';
 import { Tenant } from '../../../types';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -227,227 +228,36 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
   );
 };
 
-interface MedicationLabelsModalProps {
-  medications: MedicationLabelData[];
-  onClose: () => void;
-  quantity: number;
+// Generate a stable barcode value for a medication (catalog barcode first, else a fallback hash)
+function getMedBarcodeValue(medication: MedicationLabelData): string {
+  if (medication.barcode) return medication.barcode;
+  const cleanName = (medication.medication_name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const namePrefix = cleanName.charAt(0) || 'X';
+  const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
+  let numericCode = 0;
+  for (let i = 0; i < cleanId.length; i++) {
+    numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+  }
+  return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
 }
 
-const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ medications, onClose, quantity }) => {
-  // Duplicate each medication label based on quantity
-  const duplicatedMedications = medications.flatMap(medication => 
-    Array(quantity).fill(medication)
-  );
-
-  const patientColorMap = buildPatientColorMap(medications.map(m => m.patient_id));
-
-  // Generate barcode value (catalog barcode first, else hash)
-  const getMedBarcodeValue = (medication: MedicationLabelData): string => {
-    if (medication.barcode) return medication.barcode;
-    const cleanName = (medication.medication_name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    const namePrefix = cleanName.charAt(0) || 'X';
-    const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
-    let numericCode = 0;
-    for (let i = 0; i < cleanId.length; i++) {
-      numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
+// Medication labels are no longer patient-specific — dedupe to one label per distinct medication
+function dedupeMedicationsForLabels(medications: MedicationLabelData[]): BarcodeLabelItem[] {
+  const byBarcode = new Map<string, BarcodeLabelItem>();
+  medications.forEach((medication) => {
+    const barcode = getMedBarcodeValue(medication);
+    if (!byBarcode.has(barcode)) {
+      byBarcode.set(barcode, {
+        id: barcode,
+        barcode,
+        name: medication.medication_name,
+        subtitle: `${medication.dosage} · ${medication.route}`,
+        category: medication.category,
+      });
     }
-    return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
-  };
-
-  const handlePrint = async () => {
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) return;
-
-    // Pre-generate QR data URLs before building print content
-    const medBarcodeValues = duplicatedMedications.map(m => getMedBarcodeValue(m));
-    const QRCode = await import('qrcode');
-    const medQRs = await Promise.all(medBarcodeValues.map(v =>
-      QRCode.toDataURL(v, { width: 80, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
-    ));
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Medication Labels - Avery 5160</title>
-          <style>
-            @page { size: 8.5in 11in; margin: 0; }
-            body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 7px; }
-            .labels-grid { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; }
-            .label {
-              position: absolute;
-              width: 2.625in; height: 1in;
-              border: 1px solid #dee2e6;
-              padding: 3px; box-sizing: border-box;
-              display: block;
-              text-align: left;
-              overflow: visible;
-              background: #ffffff;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-              border-radius: 3px;
-            }
-            .label:nth-child(3n+1) { left: 0.1875in; }
-            .label:nth-child(3n+2) { left: 3.0375in; }
-            .label:nth-child(3n+3) { left: 5.7875in; }
-            .label:nth-child(-n+3) { top: 0.5in; }
-            .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
-            .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }
-            .label:nth-child(n+10):nth-child(-n+12) { top: 3.5in; }
-            .label:nth-child(n+13):nth-child(-n+15) { top: 4.5in; }
-            .label:nth-child(n+16):nth-child(-n+18) { top: 5.5in; }
-            .label:nth-child(n+19):nth-child(-n+21) { top: 6.5in; }
-            .label:nth-child(n+22):nth-child(-n+24) { top: 7.5in; }
-            .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
-            .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
-            .label-content {
-              display: flex; flex-direction: column; justify-content: center;
-              padding: 0.1in 0.05in; padding-right: 0.65in;
-              width: 100%; height: 100%; box-sizing: border-box;
-            }
-            .medication-name {
-              font-size: 14px; font-weight: 800; margin-bottom: 4px;
-              line-height: 1.3; color: #1a1a1a; word-wrap: break-word;
-              text-transform: uppercase; letter-spacing: 0.3px;
-              padding: 4px 6px; border-left: 3px solid #000000; border-radius: 2px;
-            }
-            .patient-name {
-              font-size: 13px; font-weight: 700; margin-top: 2px;
-              line-height: 1.3; word-wrap: break-word;
-              padding: 3px 6px; border-left: 2px solid; border-radius: 2px;
-              -webkit-print-color-adjust: exact; print-color-adjust: exact;
-            }
-            .med-id {
-              font-size: 11px; font-weight: 700; color: #000; margin-top: 3px;
-              padding: 3px 6px; border-left: 2px solid #666; border-radius: 1px;
-              font-family: monospace; letter-spacing: 0.8px;
-            }
-            .barcode-area {
-              display: flex; justify-content: center; align-items: center;
-              width: 0.94in; height: 0.6in;
-              transform: rotate(90deg); transform-origin: center;
-              position: absolute; right: 0.05in; top: 50%; margin-top: -0.3in;
-            }
-            .qr-img { width: 0.85in; height: 0.85in; image-rendering: pixelated; }
-            @media print {
-              .label { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
-              -webkit-print-color-adjust: exact; print-color-adjust: exact;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="labels-grid">
-            ${duplicatedMedications.map((medication, index) => {
-              const barcodeValue = medBarcodeValues[index];
-              const color = PATIENT_COLORS[patientColorMap[medication.patient_id]];
-              return `
-              <div class="label">
-                <div class="label-content">
-                  <div class="medication-name">${medication.medication_name}</div>
-                  <div class="patient-name" style="background:${color.bg};border-color:${color.border};color:${color.text};">${medication.patient_name}</div>
-                  <div class="med-id">ID: ${barcodeValue}</div>
-                </div>
-                <div class="barcode-area">
-                  <img class="qr-img" src="${medQRs[index]}" alt="QR" />
-                </div>
-              </div>`;
-            }).join('')}
-            ${Array(Math.max(0, 30 - duplicatedMedications.length)).fill(0).map(() => `<div class="label"></div>`).join('')}
-          </div>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 250);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Medication Labels</h2>
-            <p className="text-sm text-gray-600 mt-1">All active medications with patient names and vertical barcodes for round containers</p>
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={handlePrint}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </button>
-            <button
-              onClick={onClose}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Close
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-            <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format - Optimized for Round Containers</h3>
-            <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
-            <p className="text-xs text-blue-600 mt-1">• Moderately wide vertical barcodes for reliable scanning on round containers</p>
-            <p className="text-xs text-blue-600">• Equal-sized medication and patient names for consistent readability</p>
-            <p className="text-xs text-blue-600">• Balanced barcode width for optimal scan success and label space usage</p>
-          </div>
-          <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded">
-            <p className="text-sm text-purple-700">
-              <strong>Quantity: {quantity}×</strong> - Each medication will have {quantity} label{quantity !== 1 ? 's' : ''} printed ({medications.length} medication{medications.length !== 1 ? 's' : ''} × {quantity} = {duplicatedMedications.length} total labels)
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
-            {duplicatedMedications.slice(0, 15).map((medication, idx) => (
-              <div key={`${medication.id}-${idx}`} className="border border-gray-300 p-1 bg-white flex items-stretch rounded shadow-sm" style={{width: '2.625in', height: '1in'}}>
-                <div className="flex-1 flex flex-col justify-center px-2 bg-gradient-to-br from-gray-50 to-white border-r-2 border-gray-200" style={{minWidth: '1.6in'}}>
-                  <div className="font-extrabold text-sm mb-1 leading-tight uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-blue-50 to-transparent border-l-3 border-blue-500 rounded" style={{borderLeftWidth: '3px'}}>{medication.medication_name}</div>
-                  <div className="text-xs font-semibold leading-tight mt-1 px-2 py-1 rounded" style={{borderLeft: `2px solid ${PATIENT_COLORS[patientColorMap[medication.patient_id]].border}`, background: PATIENT_COLORS[patientColorMap[medication.patient_id]].bg, color: PATIENT_COLORS[patientColorMap[medication.patient_id]].text}}>{medication.patient_name}</div>
-                </div>
-                <div className="w-20 h-full flex justify-center items-center">
-                  <div className="transform rotate-90 origin-center">
-                    <BarcodeGenerator
-                      data={getMedBarcodeValue(medication)}
-                      type="medication"
-                      vertical={true}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {duplicatedMedications.length > 15 && (
-            <div className="mt-4 text-center text-gray-500 text-sm">
-              Preview showing first 15 labels. Print will include all {duplicatedMedications.length} medication labels.
-            </div>
-          )}
-        </div>
-        
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            @media print {
-              .fixed { position: relative !important; }
-              .bg-black { background: white !important; }
-              .shadow-xl { box-shadow: none !important; }
-              .rounded-lg { border-radius: 0 !important; }
-              .border-b { display: none !important; }
-              .overflow-hidden { overflow: visible !important; }
-              .p-6 { padding: 0 !important; }
-              .max-h-\\[90vh\\] { max-height: none !important; }
-              .overflow-y-auto { overflow: visible !important; }
-              .max-h-\\[70vh\\] { max-height: none !important; }
-            }
-          `
-        }} />
-      </div>
-    </div>
-  );
-};
+  });
+  return Array.from(byBarcode.values());
+}
 
 interface BulkLabelPrintProps {
   selectedTenant?: Tenant | null;
@@ -462,6 +272,11 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
   const [showPatientBracelets, setShowPatientBracelets] = useState(false);
   const [patientQuantity, setPatientQuantity] = useState(1);
   const [medicationQuantity, setMedicationQuantity] = useState(1);
+
+  const medicationLabelItems: BarcodeLabelItem[] = useMemo(
+    () => (labels ? dedupeMedicationsForLabels(labels.medications) : []),
+    [labels]
+  );
 
   const fetchLabels = async () => {
     if (!profile || !hasRole(['admin', 'super_admin'])) {
@@ -616,7 +431,7 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
                   </div>
                   <div>
                     <h4 className="font-medium text-green-900">Medication Labels</h4>
-                    <p className="text-sm text-green-700">MAR medication labels</p>
+                    <p className="text-sm text-green-700">One label per distinct medication (no patient info)</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -632,11 +447,11 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
                     />
                   </div>
                   <div className="text-sm text-green-700 font-medium">
-                    = {labels.medications.length * medicationQuantity} labels
+                    = {medicationLabelItems.length * medicationQuantity} labels
                   </div>
                   <button
                     onClick={() => setShowMedicationLabels(true)}
-                    disabled={labels.medications.length === 0}
+                    disabled={medicationLabelItems.length === 0}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Printer className="w-4 h-4" />
@@ -664,9 +479,9 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
                 <Pill className="w-4 h-4" />
                 Medication Labels
               </h4>
-              <p className="text-green-800">Count: {labels.medications.length}</p>
-              <p className="text-green-700 text-xs mt-1">MAR-compatible medication labels with vertical barcodes for round containers</p>
-              {labels.medications.length === 0 && (
+              <p className="text-green-800">Count: {medicationLabelItems.length}</p>
+              <p className="text-green-700 text-xs mt-1">One label per distinct medication with a vertical barcode for round containers</p>
+              {medicationLabelItems.length === 0 && (
                 <p className="text-green-600 text-xs mt-2 italic">No active medications found in this tenant</p>
               )}
             </div>
@@ -710,12 +525,14 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
         </div>
       )}
       
-      {/* MAR Medication Labels Modal */}
-      {showMedicationLabels && labels && labels.medications.length > 0 && (
-        <MedicationLabelsModal
-          medications={labels.medications}
-          onClose={() => setShowMedicationLabels(false)}
+      {/* Medication Labels Modal */}
+      {showMedicationLabels && medicationLabelItems.length > 0 && (
+        <BarcodeLabelSheetModal
+          items={medicationLabelItems}
+          title="Medication Labels"
+          description="One label per distinct medication in use — no patient-specific info"
           quantity={medicationQuantity}
+          onClose={() => setShowMedicationLabels(false)}
         />
       )}
       

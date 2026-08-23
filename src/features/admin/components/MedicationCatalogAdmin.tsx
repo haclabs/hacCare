@@ -7,12 +7,14 @@ import {
   CheckCircle,
   AlertCircle,
   Tag,
+  Printer,
 } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
 import { useAuth } from '../../../hooks/useAuth';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 import type { CatalogEntry } from '../../patients/components/mar/CatalogMedicationPicker';
+import { BarcodeLabelSheetModal, type BarcodeLabelItem } from './BarcodeLabelSheetModal';
 
 const ROUTES = [
   { value: 'oral',         label: 'Oral' },
@@ -94,6 +96,8 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [filterText, setFilterText] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   const isSuperAdmin = hasRole('super_admin');
 
@@ -236,6 +240,39 @@ export const MedicationCatalogAdmin: React.FC = () => {
       )
     : entries;
 
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((e) => selectedIds.has(e.id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (allFilteredSelected) {
+        const next = new Set(prev);
+        filtered.forEach((e) => next.delete(e.id));
+        return next;
+      }
+      const next = new Set(prev);
+      filtered.forEach((e) => next.add(e.id));
+      return next;
+    });
+  };
+
+  const selectedEntries: BarcodeLabelItem[] = entries
+    .filter((e) => selectedIds.has(e.id))
+    .map((e) => ({
+      id: e.id,
+      barcode: e.barcode,
+      name: e.name,
+      subtitle: `${e.strength} · ${e.formulation}`,
+      category: e.category,
+    }));
+
   if (!isSuperAdmin) {
     return (
       <div className="p-8 text-center">
@@ -259,13 +296,23 @@ export const MedicationCatalogAdmin: React.FC = () => {
             <p className="text-sm text-gray-500">Global QR-barcode medication reference · {entries.length} entries</p>
           </div>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-        >
-          <Plus className="h-4 w-4" />
-          Add Entry
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPrintModal(true)}
+            disabled={selectedEntries.length === 0}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Printer className="h-4 w-4" />
+            Print Labels{selectedEntries.length > 0 ? ` (${selectedEntries.length})` : ''}
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <Plus className="h-4 w-4" />
+            Add Entry
+          </button>
+        </div>
       </div>
 
       {/* Global feedback */}
@@ -295,6 +342,14 @@ export const MedicationCatalogAdmin: React.FC = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
+                <th className="px-4 py-3 text-left w-8">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleSelectAll}
+                    className="rounded border-gray-300"
+                  />
+                </th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Barcode</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Name</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600 hidden md:table-cell">Strength · Form</th>
@@ -306,13 +361,21 @@ export const MedicationCatalogAdmin: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                     {filterText ? 'No matches found' : 'No catalog entries yet'}
                   </td>
                 </tr>
               )}
               {filtered.map((entry) => (
                 <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(entry.id)}
+                      onChange={() => toggleSelected(entry.id)}
+                      className="rounded border-gray-300"
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <span className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-semibold">
                       {entry.barcode}
@@ -541,6 +604,15 @@ export const MedicationCatalogAdmin: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showPrintModal && (
+        <BarcodeLabelSheetModal
+          items={selectedEntries}
+          title="Medication Labels"
+          description={`${selectedEntries.length} selected medication${selectedEntries.length !== 1 ? 's' : ''} from the catalog`}
+          onClose={() => setShowPrintModal(false)}
+        />
       )}
     </div>
   );
