@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Printer, Download, Users, Pill, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
-import { fetchAllLabelsForPrinting, BulkLabelData, MedicationLabelData, PatientLabelData } from '../../../services/operations/bulkLabelService';
+import { fetchAllLabelsForPrinting, BulkLabelData, PatientLabelData, dedupeMedicationLabels } from '../../../services/operations/bulkLabelService';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import { BarcodeLabelSheetModal, type BarcodeLabelItem } from './BarcodeLabelSheetModal';
 import { Tenant } from '../../../types';
@@ -228,37 +228,6 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
   );
 };
 
-// Generate a stable barcode value for a medication (catalog barcode first, else a fallback hash)
-function getMedBarcodeValue(medication: MedicationLabelData): string {
-  if (medication.barcode) return medication.barcode;
-  const cleanName = (medication.medication_name || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  const namePrefix = cleanName.charAt(0) || 'X';
-  const cleanId = medication.id.replace(/[^A-Z0-9]/g, '').toUpperCase();
-  let numericCode = 0;
-  for (let i = 0; i < cleanId.length; i++) {
-    numericCode = (numericCode * 37 + cleanId.charCodeAt(i)) % 100000;
-  }
-  return 'M' + namePrefix + numericCode.toString().padStart(5, '0');
-}
-
-// Medication labels are no longer patient-specific — dedupe to one label per distinct medication
-function dedupeMedicationsForLabels(medications: MedicationLabelData[]): BarcodeLabelItem[] {
-  const byBarcode = new Map<string, BarcodeLabelItem>();
-  medications.forEach((medication) => {
-    const barcode = getMedBarcodeValue(medication);
-    if (!byBarcode.has(barcode)) {
-      byBarcode.set(barcode, {
-        id: barcode,
-        barcode,
-        name: medication.medication_name,
-        subtitle: `${medication.dosage} · ${medication.route}`,
-        category: medication.category,
-      });
-    }
-  });
-  return Array.from(byBarcode.values());
-}
-
 interface BulkLabelPrintProps {
   selectedTenant?: Tenant | null;
 }
@@ -274,7 +243,7 @@ export const BulkLabelPrint: React.FC<BulkLabelPrintProps> = ({ selectedTenant }
   const [medicationQuantity, setMedicationQuantity] = useState(1);
 
   const medicationLabelItems: BarcodeLabelItem[] = useMemo(
-    () => (labels ? dedupeMedicationsForLabels(labels.medications) : []),
+    () => (labels ? dedupeMedicationLabels(labels.medications) : []),
     [labels]
   );
 

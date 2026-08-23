@@ -1,29 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Printer, X } from 'lucide-react';
+import { type BarcodeLabelItem, getMedicationAccentColor } from '../../../services/operations/bulkLabelService';
 
-// Standard medication label item — no patient-specific info, since dispensing
-// is verified by the medication admin system rather than a per-patient label.
-export interface BarcodeLabelItem {
-  id: string;
-  barcode: string;
-  name: string;
-  subtitle: string; // e.g. "25 mg · tablet"
-  category?: string | null; // scheduled | prn | continuous | diabetic | stat | unscheduled
-}
-
-// Matches the category colors used in the Medication Catalog admin table
-const CATEGORY_ACCENT_COLORS: Record<string, string> = {
-  scheduled: '#2563eb',
-  prn: '#d97706',
-  continuous: '#9333ea',
-  diabetic: '#dc2626',
-  stat: '#ea580c',
-  unscheduled: '#4b5563',
-};
-
-function getAccentColor(category?: string | null): string {
-  return (category && CATEGORY_ACCENT_COLORS[category]) || '#000000';
-}
+export type { BarcodeLabelItem };
 
 interface BarcodeLabelSheetModalProps {
   items: BarcodeLabelItem[];
@@ -34,7 +13,7 @@ interface BarcodeLabelSheetModalProps {
 }
 
 // Bare QR code preview (no header/print/download chrome) matching what actually prints on the label
-const QrThumbnail: React.FC<{ data: string; size?: number }> = ({ data, size = 70 }) => {
+export const QrThumbnail: React.FC<{ data: string; size?: number }> = ({ data, size = 70 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -168,7 +147,7 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
                 (item) => `
               <div class="label">
                 <div class="label-content">
-                  <div class="medication-name" style="border-left-color: ${getAccentColor(item.category)};">${item.name}</div>
+                  <div class="medication-name" style="border-left-color: ${getMedicationAccentColor(item.category)};">${item.name}</div>
                   <div class="med-subtitle">${item.subtitle}</div>
                   <div class="med-id">${item.barcode}</div>
                 </div>
@@ -247,7 +226,7 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
                 >
                   <div
                     className="font-extrabold text-sm mb-1 leading-tight uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-blue-50 to-transparent border-l-3 rounded"
-                    style={{ borderLeftWidth: '3px', borderLeftColor: getAccentColor(item.category) }}
+                    style={{ borderLeftWidth: '3px', borderLeftColor: getMedicationAccentColor(item.category) }}
                   >
                     {item.name}
                   </div>

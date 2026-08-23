@@ -17,6 +17,8 @@ import { AdvancedDirectivesForm } from '../components/forms/AdvancedDirectivesFo
 import { IntakeOutputCard } from '../components/intake-output';
 import { AvatarBoard } from '../../hacmap/AvatarBoard';
 import { FlowsheetsHub } from '../../flowsheets';
+import { DoctorsOrders } from '../components/DoctorsOrders';
+import { Labs } from '../components/Labs';
 
 const TherapeuticRecreationModule = React.lazy(
   () => import('../../therapeutic-recreation').then((m) => ({ default: m.TherapeuticRecreationModule }))
@@ -33,6 +35,8 @@ type ActiveModule =
   | 'hacmap'
   | 'intake-output'
   | 'flowsheets'
+  | 'labs'
+  | 'doctors-orders'
   | 'therapeutic-recreation';
 
 interface NavProps {
@@ -65,6 +69,8 @@ interface ModuleContentProps extends NavProps {
   onMedicationUpdate: (medications: any[]) => void;
   onAssessmentSave: (assessment: any) => void;
   onHandoverRefresh: () => void;
+  onOrdersChange?: () => void;
+  onLabsChange?: () => void;
   onNavigateToOverview: () => void;
   onLastUpdated: () => void;
   onModuleChange: (module: ActiveModule) => void;
@@ -78,6 +84,8 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
   onMedicationUpdate,
   onAssessmentSave,
   onHandoverRefresh,
+  onOrdersChange,
+  onLabsChange,
   onNavigateToOverview,
   onLastUpdated,
   onModuleChange,
@@ -169,6 +177,34 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
     );
   }
 
+  if (activeModule === 'labs') {
+    return (
+      <Labs
+        patientId={patient.id}
+        patientNumber={patient.patient_id}
+        patientName={`${patient.first_name} ${patient.last_name}`}
+        patientDOB={patient.date_of_birth}
+        onLabsChange={onLabsChange}
+        {...navProps}
+      />
+    );
+  }
+
+  if (activeModule === 'doctors-orders') {
+    return (
+      <DoctorsOrders
+        patientId={patient.id}
+        currentUser={{
+          id: currentUser?.id || 'unknown',
+          name: currentUser?.name || 'Unknown User',
+          role: (currentUser?.role as 'nurse' | 'admin' | 'super_admin') || 'nurse',
+        }}
+        onOrdersChange={onOrdersChange}
+        {...navProps}
+      />
+    );
+  }
+
   if (activeModule === 'hacmap') {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -189,6 +225,7 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
         currentUser={currentUser ? { id: currentUser.id, name: currentUser.name, role: currentUser.role } : undefined}
         onNavigateToModule={(target) => onModuleChange(target as ActiveModule)}
         onNavigateToOverview={onNavigateToOverview}
+        {...navProps}
       />
     );
   }

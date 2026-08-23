@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Check, Clock, Phone, MessageSquare, FileText, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Clock, Phone, MessageSquare, FileText } from 'lucide-react';
 import { DoctorsOrder } from '../../../types';
 import { 
   fetchDoctorsOrders, 
@@ -17,6 +17,7 @@ import {
   acknowledgeDoctorsOrder
 } from '../../../services/clinical/doctorsOrdersService';
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
+import { PatientActionBar } from '../../../components/PatientActionBar';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface DoctorsOrdersProps {
@@ -26,8 +27,22 @@ interface DoctorsOrdersProps {
     name: string;
     role: 'nurse' | 'admin' | 'super_admin';
   };
-  onClose: () => void;
   onOrdersChange?: () => void; // Callback to notify parent of order changes
+  // Top PatientActionBar nav — same props every other module receives
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  onFlowsheetsClick?: () => void;
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 interface OrderFormData {
@@ -43,8 +58,21 @@ interface OrderFormData {
 export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   patientId,
   currentUser,
-  onClose,
-  onOrdersChange
+  onOrdersChange,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  onFlowsheetsClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false,
 }) => {
   const [orders, setOrders] = useState<DoctorsOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,56 +256,62 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-        {/* Header - Matching Labs Page Style */}
-        <div className="border-b border-gray-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <FileText className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-900">Doctors Orders</h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
+    <div className="p-6 space-y-6">
+      <PatientActionBar
+        onChartClick={onChartClick}
+        onVitalsClick={onVitalsClick}
+        onMedsClick={onMedsClick}
+        onLabsClick={onLabsClick}
+        onOrdersClick={onOrdersClick}
+        onHacMapClick={onHacMapClick}
+        onIOClick={onIOClick}
+        onNotesClick={onNotesClick}
+        onFlowsheetsClick={onFlowsheetsClick}
+        vitalsCount={vitalsCount}
+        medsCount={medsCount}
+        hasNewLabs={hasNewLabs}
+        hasNewOrders={hasNewOrders}
+        hasNewNotes={hasNewNotes}
+        activeAction="orders"
+      />
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center space-x-3">
+            <FileText className="h-6 w-6 text-blue-600" />
+            <h2 className="text-2xl font-bold text-gray-900">Doctors Orders</h2>
           </div>
           <p className="text-gray-600 mt-1">
             Patient Orders ({orders.length})
           </p>
         </div>
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors space-x-2"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add {currentUser.role === 'nurse' ? 'Phone/Verbal' : 'Order'}</span>
+        </button>
+      </div>
 
-        <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
-          {/* Add Order Button */}
-          <div className="mb-6 flex justify-end">
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add {currentUser.role === 'nurse' ? 'Phone/Verbal' : 'Order'}</span>
-            </button>
-          </div>
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Add/Edit Form */}
-          {showAddForm && (
-            <div className="mb-6 bg-gray-50 rounded-lg p-6 border">
-              <h4 className="text-md font-medium text-gray-900 mb-4">
-                {editingOrder ? 'Edit Order' : 'Add New Order'}
-              </h4>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Order Type - Only show for nurses or when editing */}
+      {/* Add/Edit Form */}
+      {showAddForm && (
+        <div className="bg-gray-50 rounded-lg p-6 border">
+          <h4 className="text-md font-medium text-gray-900 mb-4">
+            {editingOrder ? 'Edit Order' : 'Add New Order'}
+          </h4>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Order Type - Only show for nurses or when editing */}
                   {(currentUser.role === 'nurse' || editingOrder) && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -548,9 +582,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
               ))}
             </div>
           )}
-        </div>
-      </div>
-      
+
       {/* Student Acknowledge Modal */}
       {acknowledgingOrderId && (
         <StudentAcknowledgeModal

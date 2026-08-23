@@ -15,8 +15,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { SchemaTemplateEditor } from './SchemaTemplateEditor';
 import StudentQuickIntro from './StudentQuickIntro';
-import { DoctorsOrders } from '../features/patients/components/DoctorsOrders';
-import { Labs } from '../features/patients/components/Labs';
 import { PatientOverview } from '../features/patients/components/PatientOverview';
 import { ModuleSelector } from '../features/patients/components/ModuleSelector';
 import { ModuleContent } from '../features/patients/components/ModuleContent';
@@ -51,6 +49,8 @@ type ActiveModule =
   | 'hacmap'
   | 'intake-output'
   | 'flowsheets'
+  | 'labs'
+  | 'doctors-orders'
   | 'therapeutic-recreation';
 
 const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
@@ -62,6 +62,8 @@ const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
   hacmap: 'hacMap - Device & Wound Care',
   'intake-output': 'Intake & Output',
   flowsheets: 'Clinical Flowsheets',
+  labs: 'Laboratory Results',
+  'doctors-orders': 'Doctors Orders',
   'therapeutic-recreation': 'Therapeutic Recreation',
 };
 
@@ -91,8 +93,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   // ─── UI state ──────────────────────────────────────────────────────────────
   const [activeModule, setActiveModule] = useState<ActiveModule>('overview');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [showDoctorsOrders, setShowDoctorsOrders] = useState(false);
-  const [showLabs, setShowLabs] = useState(false);
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
   const [showQuickIntro, setShowQuickIntro] = useState(false);
 
@@ -251,8 +251,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     onChartClick: () => printPatientRecord(activePatient, currentTenant?.id || ''),
     onVitalsClick: () => setActiveModule('vitals'),
     onMedsClick: () => setActiveModule('medications'),
-    onLabsClick: () => setShowLabs(true),
-    onOrdersClick: () => setShowDoctorsOrders(true),
+    onLabsClick: () => setActiveModule('labs'),
+    onOrdersClick: () => setActiveModule('doctors-orders'),
     onHacMapClick: () => setActiveModule('hacmap'),
     onIOClick: () => setActiveModule('intake-output'),
     onNotesClick: () => setActiveModule('handover'),
@@ -277,8 +277,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               unacknowledgedCount={unacknowledgedCount}
               unacknowledgedHandoverCount={unacknowledgedHandoverCount}
               onModuleChange={setActiveModule}
-              onShowLabs={() => setShowLabs(true)}
-              onShowDoctorsOrders={() => setShowDoctorsOrders(true)}
+              onShowLabs={() => setActiveModule('labs')}
+              onShowDoctorsOrders={() => setActiveModule('doctors-orders')}
               onPrintRecord={() => printPatientRecord(activePatient, currentTenant?.id || '')}
               onShowBracelet={onShowBracelet}
               onShowQuickIntro={() => setShowQuickIntro(true)}
@@ -287,8 +287,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
               patient={activePatient}
               activeModule={activeModule}
               onModuleChange={setActiveModule}
-              onShowDoctorsOrders={() => setShowDoctorsOrders(true)}
-              onShowLabs={() => setShowLabs(true)}
+              onShowDoctorsOrders={() => setActiveModule('doctors-orders')}
+              onShowLabs={() => setActiveModule('labs')}
               onPrintRecord={() => printPatientRecord(activePatient, currentTenant?.id || '')}
               unacknowledgedCount={unacknowledgedCount}
               unacknowledgedLabsCount={unacknowledgedLabsCount}
@@ -321,6 +321,8 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 onMedicationUpdate={handleMedicationUpdate}
                 onAssessmentSave={handleAssessmentSave}
                 onHandoverRefresh={handleHandoverRefresh}
+                onOrdersChange={handleOrdersChange}
+                onLabsChange={handleLabsChange}
                 onNavigateToOverview={() => setActiveModule('overview')}
                 onModuleChange={setActiveModule}
                 onLastUpdated={() => setLastUpdated(new Date())}
@@ -330,49 +332,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
           </div>
         )}
       </div>
-
-      {/* Doctors Orders Modal */}
-      {showDoctorsOrders && activePatient && (
-        <DoctorsOrders
-          patientId={activePatient.id}
-          currentUser={{
-            id: currentUser?.id || 'unknown',
-            name: currentUser?.name || 'Unknown User',
-            role: (currentUser?.role as 'nurse' | 'admin' | 'super_admin') || 'nurse',
-          }}
-          onClose={() => setShowDoctorsOrders(false)}
-          onOrdersChange={handleOrdersChange}
-        />
-      )}
-
-      {/* Labs Modal */}
-      {showLabs && activePatient && currentTenant && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Laboratory Results</h2>
-              <button
-                onClick={() => setShowLabs(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-              <Labs
-                patientId={activePatient.id}
-                patientNumber={activePatient.patient_id}
-                patientName={`${activePatient.first_name} ${activePatient.last_name}`}
-                patientDOB={activePatient.date_of_birth}
-                onLabsChange={handleLabsChange}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Schema Template Editor */}
       <SchemaTemplateEditor

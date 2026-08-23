@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronUp, LayoutGrid } from 'lucide-react';
 import { FLOWSHEET_REGISTRY, CATEGORY_META, CATEGORY_ORDER } from '../registry';
 import { FlowsheetCard } from './FlowsheetCard';
 import { FlowsheetFormWrapper } from './FlowsheetFormWrapper';
+import { PatientActionBar } from '../../../components/PatientActionBar';
 import type {
   FlowsheetCategory,
   FlowsheetDefinition,
@@ -37,15 +38,44 @@ interface FlowsheetsHubProps {
   onNavigateToModule: (target: FlowsheetModuleTarget) => void;
   /** Returns to the patient overview tab. */
   onNavigateToOverview: () => void;
+  // Top PatientActionBar nav — same props every other module receives, so the
+  // bar stays visible and consistent whether you're in Vitals, Meds, or here.
+  onChartClick?: () => void;
+  onVitalsClick?: () => void;
+  onMedsClick?: () => void;
+  onLabsClick?: () => void;
+  onOrdersClick?: () => void;
+  onHacMapClick?: () => void;
+  onIOClick?: () => void;
+  onNotesClick?: () => void;
+  vitalsCount?: number;
+  medsCount?: number;
+  hasNewLabs?: boolean;
+  hasNewOrders?: boolean;
+  hasNewNotes?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
 
 export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
   patient,
   currentUser,
   onNavigateToModule,
   onNavigateToOverview,
+  onChartClick,
+  onVitalsClick,
+  onMedsClick,
+  onLabsClick,
+  onOrdersClick,
+  onHacMapClick,
+  onIOClick,
+  onNotesClick,
+  vitalsCount = 0,
+  medsCount = 0,
+  hasNewLabs = false,
+  hasNewOrders = false,
+  hasNewNotes = false,
 }) => {
   const { currentTenant } = useTenant();
   const tenantId = currentTenant?.id ?? '';
@@ -78,11 +108,6 @@ export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
     }
     return map;
   }, []);
-
-  const totalForms = FLOWSHEET_REGISTRY.length;
-  const activeForms = FLOWSHEET_REGISTRY.filter(
-    (s) => s.linkType === 'module-shortcut' || s.status === 'active'
-  ).length;
 
   const handleCardOpen = useCallback(
     (sheet: FlowsheetDefinition) => {
@@ -124,6 +149,27 @@ export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
   // ── Unified render ────────────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-gray-50">
+      {/* Same top nav bar every other patient module shows — kept visible in both grid and form views */}
+      <div className="px-8 pt-6">
+        <PatientActionBar
+          onChartClick={onChartClick}
+          onVitalsClick={onVitalsClick}
+          onMedsClick={onMedsClick}
+          onLabsClick={onLabsClick}
+          onOrdersClick={onOrdersClick}
+          onHacMapClick={onHacMapClick}
+          onIOClick={onIOClick}
+          onNotesClick={onNotesClick}
+          onFlowsheetsClick={handleBackToGrid}
+          vitalsCount={vitalsCount}
+          medsCount={medsCount}
+          hasNewLabs={hasNewLabs}
+          hasNewOrders={hasNewOrders}
+          hasNewNotes={hasNewNotes}
+          activeAction="flowsheets"
+        />
+      </div>
+
       {/* Page header — always visible */}
       <div ref={headerRef} className="bg-white border-b border-gray-200 px-8 py-6">
         <div className="flex items-center gap-4">
@@ -134,10 +180,6 @@ export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
             <h1 className="text-xl font-bold text-gray-900 leading-tight">Clinical Flowsheets</h1>
             <p className="text-sm text-gray-500 mt-0.5">
               {patient.first_name} {patient.last_name}
-              <span className="mx-2 text-gray-300">·</span>
-              <span className="text-green-600 font-medium">{activeForms} active</span>
-              <span className="mx-1 text-gray-300">·</span>
-              <span className="text-gray-400">{totalForms - activeForms} in development</span>
             </p>
           </div>
         </div>
@@ -227,21 +269,15 @@ export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
 
           const meta = CATEGORY_META[catId];
           const CategoryIcon = meta.icon;
-          const activeCount = sheets.filter(
-            (s) => s.linkType === 'module-shortcut' || s.status === 'active'
-          ).length;
 
           return (
             <section key={catId} id={`flowsheet-cat-${catId}`} className="scroll-mt-16">
-              {/* Section header — matches screenshot: label + "X/N ACTIVE" count */}
+              {/* Section header */}
               <div className="flex items-center gap-2.5 mb-3">
                 <div className={`flex-shrink-0 p-1.5 rounded-lg ${meta.iconBg}`}>
                   <CategoryIcon className={`h-3.5 w-3.5 ${meta.iconColor}`} />
                 </div>
                 <h2 className="text-sm font-bold text-gray-800">{meta.label}</h2>
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  {activeCount}/{sheets.length} active
-                </span>
               </div>
 
               {/* Horizontal scroll strip */}
