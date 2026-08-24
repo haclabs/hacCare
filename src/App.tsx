@@ -42,6 +42,7 @@ const SimulationRouter = lazy(() => import('./features/simulation/components/Sim
 const HospitalBracelet = lazy(() => import('./features/patients/components/visuals/HospitalBracelet'));
 const UserManagement = lazy(() => import('./features/admin/components/users/UserManagement'));
 const PatientManagement = lazy(() => import('./features/patients/components/PatientManagement'));
+const PatientTemplates = lazy(() => import('./features/simulation/components/PatientTemplates'));
 const ManagementDashboard = lazy(() => import('./features/admin/components/management/ManagementDashboard'));
 const Documentation = lazy(() => import('./components/Documentation/Documentation'));
 const Changelog = lazy(() => import('./components/Changelog/Changelog'));
@@ -102,7 +103,7 @@ function App() {
   }, [location.pathname, navigate]);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
-  const { patients = [], error: dbError, createPatient } = useMultiTenantPatients();
+  const { patients = [], error: dbError, createPatient, deletePatient } = useMultiTenantPatients();
   const [showAddPatientForm, setShowAddPatientForm] = useState(false);
 
   // Create currentUser object for components that need it
@@ -470,7 +471,7 @@ function App() {
       
       // If it's a workspace tab (simulations, schedule, etc.), fall through to the switch statement below
       // Only default to program workspace for unrecognized tabs
-      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'admin', 'documentation', 'changelog', 'syslogs', 'med-catalog'].includes(activeTab)) {
+      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'patient-library', 'admin', 'documentation', 'changelog', 'syslogs', 'med-catalog'].includes(activeTab)) {
         return (
           <SafeSuspense>
             <ProgramWorkspace />
@@ -526,6 +527,13 @@ function App() {
                       key={patient.id}
                       patient={patient}
                       onClick={() => handlePatientSelect(patient)}
+                      onDelete={currentTenant?.tenant_type === 'simulation_template' ? () => {
+                        if (!confirm(`Remove ${patient.first_name} ${patient.last_name} from this simulation template? This cannot be undone.`)) return;
+                        deletePatient(patient.id).catch((err) => {
+                          secureLogger.error('Error removing patient from template:', err);
+                          alert('Failed to remove patient. Please try again.');
+                        });
+                      } : undefined}
                     />
                   ))}
                 </div>
@@ -548,6 +556,13 @@ function App() {
         return (
           <SafeSuspense>
             <SimulationManager />
+          </SafeSuspense>
+        );
+
+      case 'patient-library':
+        return (
+          <SafeSuspense>
+            <PatientTemplates />
           </SafeSuspense>
         );
 

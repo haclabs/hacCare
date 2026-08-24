@@ -7,8 +7,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, FileText, AlertCircle, Tag } from 'lucide-react';
+import { X, FileText, AlertCircle, Tag, UserCog } from 'lucide-react';
 import { createSimulationTemplate } from '../../../services/simulation/simulationService';
+import { getPatientTemplates, addPatientTemplateToSimulationTemplate } from '../../../services/simulation/patientTemplateService';
+import type { PatientTemplate } from '../types/patientTemplate';
 import { getPrograms, type Program } from '../../../services/admin/programService';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
@@ -22,9 +24,11 @@ interface CreateTemplateModalProps {
 
 const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSuccess }) => {
   const { currentTenant } = useTenant();
-  const { programCodes, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
+  const { programCodes, canSeeAllPrograms, isInstructor, filterByPrograms } = useUserProgramAccess();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
+  const [patientTemplates, setPatientTemplates] = useState<PatientTemplate[]>([]);
+  const [selectedPatientTemplateIds, setSelectedPatientTemplateIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -74,6 +78,19 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
     loadPrograms();
   }, [currentTenant]);
 
+  // Load available patient templates (ready + within the user's program access) on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getPatientTemplates();
+        setPatientTemplates(filterByPrograms(data).filter(t => t.status === 'ready'));
+      } catch (err) {
+        secureLogger.error('Error loading patient templates:', err);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -91,6 +108,11 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
       });
       
       if (result.success) {
+        if (selectedPatientTemplateIds.length > 0 && result.template_id) {
+          for (const patientTemplateId of selectedPatientTemplateIds) {
+            await addPatientTemplateToSimulationTemplate(patientTemplateId, result.template_id);
+          }
+        }
         alert(`Template created successfully!\n\nTemplate ID: ${result.template_id}\nTenant ID: ${result.tenant_id}\n\nYou can now build your scenario in this template tenant, then save a snapshot.`);
         onSuccess();
       } else {
@@ -249,6 +271,38 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
                   ⚠️ No programs selected - template will be visible to ALL instructors
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Patient Library selector */}
+          {patientTemplates.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <UserCog className="inline h-4 w-4 mr-1" />
+                Include Patients from Library
+              </label>
+              <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-600 rounded-lg p-4 space-y-2 max-h-40 overflow-y-auto">
+                {patientTemplates.map((pt) => (
+                  <label key={pt.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedPatientTemplateIds.includes(pt.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedPatientTemplateIds([...selectedPatientTemplateIds, pt.id]);
+                        } else {
+                          setSelectedPatientTemplateIds(selectedPatientTemplateIds.filter(id => id !== pt.id));
+                        }
+                      }}
+                      className="rounded border-slate-300 text-fuchsia-600 focus:ring-fuchsia-500"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{pt.name}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Each selected patient is copied in with a fresh id/barcode. More can be added later while editing the template.
+              </p>
             </div>
           )}
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Patient } from '../../../../types';
-import { User, MapPin, AlertTriangle, QrCode } from 'lucide-react';
+import { User, MapPin, AlertTriangle, QrCode, Trash2 } from 'lucide-react';
 import { isValid } from 'date-fns';
 import { getAvatarById } from '../../../../data/patientAvatars';
 
@@ -13,15 +13,17 @@ import { getAvatarById } from '../../../../data/patientAvatars';
  * @param {Patient} patient - Patient data object
  * @param {Function} onClick - Callback function when card is clicked
  * @param {Function} onShowBracelet - Optional callback to show patient bracelet
+ * @param {Function} onDelete - Optional callback to remove the patient (e.g. while editing a simulation template); omit to hide the action entirely
  * @returns {JSX.Element} Patient card component
  */
 interface PatientCardProps {
   patient: Patient;
   onClick: () => void;
   onShowBracelet?: () => void;
+  onDelete?: () => void;
 }
 
-const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet, onDelete }) => {
   /**
    * Get CSS classes for patient condition styling - clean readable theme
    * @param {Patient['condition']} condition - Patient's current condition
@@ -130,18 +132,32 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
           <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${getConditionColor(patient.condition)} transition-all duration-300`}>
             {patient.condition}
           </span>
-          {onShowBracelet && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onShowBracelet();
-              }}
-              className="p-2 text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all duration-200"
-              title="Generate Patient Bracelet"
-            >
-              <QrCode className="h-4 w-4" />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {onShowBracelet && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowBracelet();
+                }}
+                className="p-2 text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all duration-200"
+                title="Generate Patient Bracelet"
+              >
+                <QrCode className="h-4 w-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                title="Remove Patient"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
