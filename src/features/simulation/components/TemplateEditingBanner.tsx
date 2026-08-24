@@ -5,19 +5,23 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Save, BookOpen, Loader2, FlaskConical } from 'lucide-react';
+import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/auth/useAuth';
 import { saveTemplateSnapshot } from '../../../services/simulation/simulationService';
+import { savePatientTemplateSnapshot } from '../../../services/simulation/patientTemplateService';
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
+import { AddPatientFromLibraryModal } from './AddPatientFromLibraryModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface TemplateEditingInfo {
   template_id: string;
   template_name: string;
   tenant_id: string;
+  /** 'simulation' (default, backward compatible) or 'patient' for the Patient Library */
+  kind?: 'simulation' | 'patient';
 }
 
 export const TemplateEditingBanner: React.FC = () => {
@@ -25,9 +29,11 @@ export const TemplateEditingBanner: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
+  const [showAddFromLibrary, setShowAddFromLibrary] = useState(false);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
   const { profile } = useAuth();
+  const isPatientTemplate = editingInfo?.kind === 'patient';
 
   useEffect(() => {
     // Check if we're editing a template on mount
@@ -92,9 +98,11 @@ export const TemplateEditingBanner: React.FC = () => {
     setSaving(true);
     
     try {
-      // Step 1: Save the snapshot
+      // Step 1: Save the snapshot (right RPC depending on what's being edited)
       secureLogger.debug('💾 Banner: Saving template snapshot...');
-      const result = await saveTemplateSnapshot(editingInfo.template_id);
+      const result = isPatientTemplate
+        ? await savePatientTemplateSnapshot(editingInfo.template_id)
+        : await saveTemplateSnapshot(editingInfo.template_id);
       
       if (result.success) {
         secureLogger.debug('✅ Banner: Snapshot saved successfully');
@@ -119,8 +127,8 @@ export const TemplateEditingBanner: React.FC = () => {
       await exitTemplateTenant();
       secureLogger.debug('✅ Banner: Successfully exited template tenant');
       
-      // Step 4: Navigate back to simulations/templates tab
-      navigate('/app?tab=simulations');
+      // Step 4: Navigate back to the right list screen
+      navigate(isPatientTemplate ? '/app?tab=patient-library' : '/app?tab=simulations');
       
     } catch (error) {
       secureLogger.error('❌ Banner: Error during save/exit:', error);
@@ -170,7 +178,7 @@ export const TemplateEditingBanner: React.FC = () => {
             <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
               <Edit className="h-4 w-4 animate-pulse" />
               <span className="text-sm font-bold uppercase tracking-wide">
-                Editing Template
+                {isPatientTemplate ? 'Editing Patient Template' : 'Editing Template'}
               </span>
             </div>
             <div className="hidden md:flex items-center gap-2">
@@ -179,8 +187,18 @@ export const TemplateEditingBanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Seed Test Data (super_admin only) + Save Button */}
+          {/* Right: Add Patient from Library (simulation templates only) + Seed Test Data (super_admin only) + Save Button */}
           <div className="flex items-center gap-2">
+            {!isPatientTemplate && (
+              <button
+                onClick={() => setShowAddFromLibrary(true)}
+                title="Add a patient from the Patient Library into this simulation template"
+                className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden lg:inline">Add Patient from Library</span>
+              </button>
+            )}
             {profile?.role === 'super_admin' && (
               <button
                 onClick={handleSeedTestData}
@@ -222,6 +240,14 @@ export const TemplateEditingBanner: React.FC = () => {
       {/* Seed results panel */}
       {seedResults && (
         <SeedTestDataResultsPanel results={seedResults} onClose={() => setSeedResults(null)} />
+      )}
+
+      {/* Add Patient from Library modal */}
+      {showAddFromLibrary && (
+        <AddPatientFromLibraryModal
+          simulationTemplateId={editingInfo.template_id}
+          onClose={() => setShowAddFromLibrary(false)}
+        />
       )}
     </div>
   );
