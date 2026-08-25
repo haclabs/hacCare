@@ -7,6 +7,16 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-08-25 - DATABASE CLEANUP
+===============================================================================
+
+* Removed legacy backup system tables
+  - Dropped `backup_metadata` and `backup_files` (unused since backupService.ts
+    was removed from the codebase)
+  - `backup_audit_log` retained as historical audit trail
+  - File: database/migrations/20260825000000_drop_legacy_backup_tables.sql
+
+===============================================================================
 [5.5.0] - 2026-04-20 - BCMA IMPROVEMENTS, DEBRIEF ENHANCEMENTS, UX + SECURITY
 ===============================================================================
 
