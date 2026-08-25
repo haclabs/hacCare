@@ -207,7 +207,8 @@ const SimulationTemplates: React.FC = () => {
     const editInfo = {
       template_id: template.id,
       template_name: template.name,
-      tenant_id: template.tenant_id
+      tenant_id: template.tenant_id,
+      kind: 'simulation' as const,
     };
     secureLogger.debug('💾 Storing edit info:', editInfo);
     sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
