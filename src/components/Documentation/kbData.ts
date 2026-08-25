@@ -43,22 +43,49 @@ Step 1 — Create the Template
 4. Click Create — this creates an isolated tenant for the template
 
 Step 2 — Build Your Scenario
-Switch to the template tenant using the tenant switcher (top of screen), or click the Edit button on the template card. You'll see a purple "Template Editing" banner at the top confirming you're working in the template.
+Click the Edit button on the template card. An orange "Editing Template" banner appears at the top confirming you're now working inside the template's tenant.
 
-From here, use the normal hacCare interface to:
-• Add patients with realistic medical histories
-• Set up medications and prescriptions
-• Configure vitals and assessment data
-• Add wound care, diabetic records, or specialty data
-• Set up advanced directives or orders as needed
+From here, use the normal hacCare interface — the same Overview action bar and Clinical Flowsheets hub students use — to:
+• Add patients with realistic medical histories (or pull one in from the Patient Library — see the Patient Library article)
+• Set up medications and prescriptions (Meds)
+• Configure vitals and assessment data (Vitals & Assess. and the Flowsheets hub)
+• Add device/wound placements (HacMap), intake & output baselines (I&O), and handover notes (Notes)
+• Set up advanced directives or orders as needed (Orders)
+
+Anything you enter while the orange banner is showing is saved as baseline data — it will be there every time the simulation launches or resets.
 
 Step 3 — Save a Snapshot
 When the scenario is ready:
-1. Click "Save & Exit Editing" in the purple banner
+1. Click "Save & Exit" in the orange banner
 2. The system captures all template data into a snapshot
 3. Template status changes from Draft → Ready ✓
 
 A snapshot is the frozen copy used when launching simulations. You must save a snapshot before you can launch.`,
+      },
+      {
+        id: 'patient-library',
+        title: 'Patient Library: Reusable Patients Across Templates',
+        content: `The Patient Library lets you build a single patient once — full chart and all — and reuse it in any number of simulation templates, instead of recreating the same patient from scratch every time.
+
+Creating a Patient Template
+1. Navigate to Simulations → Patient Library tab
+2. Click "Create Patient Template"
+3. Fill in the patient's demographics: name, DOB, gender, room/bed, condition, diagnosis, allergies, and emergency contact
+4. Click Create — this creates a dedicated tenant with the patient already in it, and opens it in the orange "Editing Patient Template" banner
+5. Build out the rest of the chart using the standard action bar and Flowsheets hub (meds, orders, labs, vitals, assessments, wounds/devices)
+6. Click "Save & Exit" to capture a snapshot — the template's status changes to Ready
+
+Adding a Library Patient into a Simulation Template
+1. Open (Edit) the simulation template you want to add the patient to — the orange banner appears
+2. Click "Add Patient from Library"
+3. Pick any Ready patient template from the list and click Add
+4. The patient is copied into your simulation template with a brand-new patient ID and barcode
+
+Important notes:
+• This is a one-time copy, not a live link — editing the original Patient Library entry afterward will NOT update copies already placed in simulation templates
+• Only Ready (snapshot-saved) patient templates can be added
+• Instructors only see patient templates tagged with their assigned program(s); admins/coordinators see all
+• Remember to click "Save & Exit" on the simulation template afterward so the newly added patient is captured in its snapshot too`,
       },
       {
         id: 'launch-simulation',
@@ -362,19 +389,37 @@ Clicking a patient card opens their full record with tabbed navigation.`,
       {
         id: 'patient-record',
         title: 'The Patient Record',
-        content: `The patient record is organized into tabs:
+        content: `Opening a patient always lands you on the Overview screen. Below the patient's name and status is the action bar — one-click access to every module:
 
-Overview — Demographics, allergies, condition summary
-Vitals — Vital sign history and trends
-MAR — Medication administration record
-Assessments — Nursing, pain, and neurological assessments
-Forms — Clinical assessment forms (nursing assessment, admission, bowel record)
-Labs — Laboratory orders and results
-hacMap — Visual body diagram for wounds and device management
-Advanced Directives — Patient wishes and legal documents
-BBIT — Blood glucose / insulin tracking
+Chart — Full printable patient record (history, assessments, all documentation)
+Flowsheets — Opens the Clinical Flowsheets hub, the central library of assessment and documentation forms (see the Clinical Flowsheets article)
+Vitals & Assess. — Record and review vital signs plus head-to-toe and focused assessments
+Meds — The Medication Administration Record (MAR); review orders and document administration (BCMA scanning happens here)
+Labs — Laboratory results; a "NEW" badge flags unacknowledged results
+Orders — Physician's orders for medications, treatments, and diagnostic tests; a "NEW" badge flags unacknowledged orders
+HacMap — Interactive body diagram for documenting devices (IVs, catheters, tubes) and wound assessments by location
+I&O — Intake & output tracking for fluid balance
+Notes — Handover (SBAR) notes for shift-to-shift communication; a "NEW" badge flags unread notes
 
-Each tab is self-contained. Changes saved in one tab don't affect other tabs, but all data is linked to the same patient record.`,
+Below the action bar are two buttons: ID Bracelet (view/print the patient's identification bracelet) and Quick Intro (reopens the in-app student guide any time).
+
+Each module is self-contained — changes saved in one don't affect another, but all data is linked to the same patient record.`,
+      },
+      {
+        id: 'clinical-flowsheets',
+        title: 'Clinical Flowsheets Hub',
+        content: `The Flowsheets hub (opened from the Flowsheets icon in the action bar) is a single library for every assessment and documentation form, grouped into categories. Some cards open a form directly inline; others shortcut to an existing module (e.g. Vitals, HacMap, I&O).
+
+Categories:
+• Monitoring & Vitals — Vital signs, neurological, newborn, and pain assessments
+• Systems Assessment — Respiratory, cardiovascular, GI, GU, musculoskeletal, and integumentary
+• Risk & Safety — Fall risk (Morse), pressure injury risk (Braden), and restraint documentation
+• Wound & Device Care — Device placement and wound assessment, both plotted on HacMap
+• Fluid & Metabolic — Intake & output, bedside blood glucose (BBIT), and bowel assessment
+• Mental Health & Cognition — Biopsychosocial, cognitive screening, and mood/affect assessments
+• Clinical Documentation — Handover notes, advanced directives, nursing/admission assessments, consents, and BPMH
+
+Use the sticky category nav at the top of the hub to jump straight to a section, or click "Patient Overview" to leave the hub.`,
       },
       {
         id: 'patient-labels',
@@ -486,6 +531,35 @@ Each entry shows:
 • Status (Due, Overdue, Upcoming, Administered)
 
 Overdue medications are highlighted in red. Upcoming medications (due within the hour) are shown in amber.`,
+      },
+      {
+        id: 'medication-catalog',
+        title: 'The Medication Catalog',
+        content: `The Medication Catalog is a master list of drugs with stable barcodes (MZ-series), so a medication's printed label barcode stays the same across simulation resets and relaunches — no reprinting needed every session.
+
+Two tiers:
+• Global entries — shared starter pack (MZ001–MZ020), managed by super_admin
+• Institution entries — additions scoped to a specific tenant
+
+Accessing it:
+Sidebar → Med Catalog (currently visible to super_admin only).
+
+Each catalog entry has:
+• Name and generic name
+• Formulation (tablet, capsule, IV solution, injection, cream, patch, inhaler, drops, suppository, spray)
+• Strength (e.g. "25mg", "10mg/mL")
+• Route (oral, intravenous, intramuscular, subcutaneous, topical, inhalation, rectal, sublingual, nasal, transdermal)
+• Category (scheduled, PRN, continuous, diabetic, STAT, unscheduled)
+• A unique barcode
+
+Managing entries:
+1. Click "Add Entry" to create a new catalog medication, or the edit icon on an existing row
+2. Fill in the fields above and Save
+3. Use the search box to filter the list by name or barcode
+4. Select entries with the checkboxes and click "Print Labels" to generate a barcode label sheet for printing
+
+How it's used when prescribing:
+When adding or editing a patient's medication (Meds → Add Medication), a catalog search box lets you pick an existing entry instead of typing everything manually — it auto-fills name, strength, route, and formulation, and attaches the catalog's stable barcode. If you skip the catalog and enter a medication manually (free-entry), the system generates a one-off barcode for it instead, which is fine for one-time simulations but won't produce a reusable printed label.`,
       },
       {
         id: 'bcma',

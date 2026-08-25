@@ -178,92 +178,6 @@ export type Database = {
         }
         Relationships: []
       }
-      backup_files: {
-        Row: {
-          backup_id: string
-          compression_type: string | null
-          created_at: string
-          file_data: string
-          file_hash: string | null
-          id: string
-        }
-        Insert: {
-          backup_id: string
-          compression_type?: string | null
-          created_at?: string
-          file_data: string
-          file_hash?: string | null
-          id?: string
-        }
-        Update: {
-          backup_id?: string
-          compression_type?: string | null
-          created_at?: string
-          file_data?: string
-          file_hash?: string | null
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "backup_files_backup_id_fkey"
-            columns: ["backup_id"]
-            isOneToOne: false
-            referencedRelation: "backup_metadata"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      backup_metadata: {
-        Row: {
-          backup_type: string
-          checksum: string
-          created_at: string
-          created_by: string
-          download_count: number
-          encrypted: boolean
-          expiry_date: string
-          file_size: number
-          id: string
-          last_downloaded: string | null
-          options: Json
-          record_count: number
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          backup_type: string
-          checksum: string
-          created_at?: string
-          created_by: string
-          download_count?: number
-          encrypted?: boolean
-          expiry_date: string
-          file_size?: number
-          id: string
-          last_downloaded?: string | null
-          options?: Json
-          record_count?: number
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          backup_type?: string
-          checksum?: string
-          created_at?: string
-          created_by?: string
-          download_count?: number
-          encrypted?: boolean
-          expiry_date?: string
-          file_size?: number
-          id?: string
-          last_downloaded?: string | null
-          options?: Json
-          record_count?: number
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       bowel_records: {
         Row: {
           bowel_incontinence: string | null
@@ -4596,7 +4510,6 @@ export type Database = {
           tenant_name: string
         }[]
       }
-      get_backup_statistics: { Args: never; Returns: Json }
       get_cohort_students: {
         Args: { p_cohort_id: string }
         Returns: {
@@ -4726,7 +4639,6 @@ export type Database = {
           tenant_id: string
         }[]
       }
-      mark_expired_backups: { Args: never; Returns: number }
       move_patient_to_tenant:
         | {
             Args: { p_patient_id: string; p_target_tenant_id: string }

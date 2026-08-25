@@ -98,6 +98,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),
+    ...(hasRole(['super_admin', 'admin', 'instructor']) ? [
+      { id: 'med-catalog', label: 'Med Catalog', icon: Package, color: 'text-blue-600' }
+    ] : []),
   ];
 
   /**
@@ -117,9 +120,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     { id: 'patient-management', label: 'Patient Templates', icon: UserPlus, color: 'text-purple-600' },
     { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
     { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
-    ...(hasRole('super_admin') ? [
-      { id: 'med-catalog', label: 'Med Catalog', icon: Package, color: 'text-blue-600' },
-    ] : []),
   ] : [];
 
   /**

@@ -99,7 +99,8 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showPrintModal, setShowPrintModal] = useState(false);
 
-  const isSuperAdmin = hasRole('super_admin');
+  const canView = hasRole(['super_admin', 'admin', 'instructor']);
+  const canManage = hasRole(['super_admin', 'admin']);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -273,12 +274,12 @@ export const MedicationCatalogAdmin: React.FC = () => {
       category: e.category,
     }));
 
-  if (!isSuperAdmin) {
+  if (!canView) {
     return (
       <div className="p-8 text-center">
         <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-gray-800">Access Denied</h2>
-        <p className="text-gray-500 mt-2">Medication catalog management requires super_admin privileges.</p>
+        <p className="text-gray-500 mt-2">Medication catalog access requires the instructor, admin, or super_admin role.</p>
       </div>
     );
   }
@@ -305,13 +306,15 @@ export const MedicationCatalogAdmin: React.FC = () => {
             <Printer className="h-4 w-4" />
             Print Labels{selectedEntries.length > 0 ? ` (${selectedEntries.length})` : ''}
           </button>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            <Plus className="h-4 w-4" />
-            Add Entry
-          </button>
+          {canManage && (
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <Plus className="h-4 w-4" />
+              Add Entry
+            </button>
+          )}
         </div>
       </div>
 
@@ -355,13 +358,15 @@ export const MedicationCatalogAdmin: React.FC = () => {
                 <th className="px-4 py-3 text-left font-semibold text-gray-600 hidden md:table-cell">Strength · Form</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600 hidden sm:table-cell">Route</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Category</th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-600">Actions</th>
+                {canManage && (
+                  <th className="px-4 py-3 text-right font-semibold text-gray-600">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={canManage ? 7 : 6} className="px-4 py-8 text-center text-gray-400">
                     {filterText ? 'No matches found' : 'No catalog entries yet'}
                   </td>
                 </tr>
@@ -400,41 +405,43 @@ export const MedicationCatalogAdmin: React.FC = () => {
                       {entry.category}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(entry)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      {deleteConfirm === entry.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleDelete(entry.id)}
-                            className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(null)}
-                            className="text-xs px-2 py-1 border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
+                  {canManage && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => setDeleteConfirm(entry.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Deactivate"
+                          onClick={() => openEdit(entry)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          title="Edit"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Edit2 className="h-4 w-4" />
                         </button>
-                      )}
-                    </div>
-                  </td>
+                        {deleteConfirm === entry.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleDelete(entry.id)}
+                              className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(null)}
+                              className="text-xs px-2 py-1 border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteConfirm(entry.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Deactivate"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
