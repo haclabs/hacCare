@@ -4,7 +4,6 @@ import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Pl
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
-const logo = '/images/logo.svg';
 
 /**
  * Sidebar Navigation Component
@@ -141,31 +140,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ] : []),
   ];
   return (
-    <aside className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen fixed top-0 left-0 transition-all duration-300 ease-in-out flex flex-col overflow-y-auto shadow-xl ${
+    <aside className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 border-r border-gray-200 dark:border-gray-800 fixed top-16 left-0 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out flex flex-col overflow-y-auto scrollbar-hide shadow-xl z-30 ${
       isCollapsed ? 'w-20' : 'w-64'
     }`}>
-      {/* Logo at top of sidebar - Reduced padding */}
-      <div className={`transition-all duration-300 ${
-        isCollapsed ? 'px-3 py-4' : 'px-6 py-4'
-      }`}>
-        {isCollapsed ? (
-          <div className="flex justify-center">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-              HC
-            </div>
-          </div>
-        ) : (
-          <img 
-            src={logo} 
-            alt="HacCare Logo" 
-            className="transition-all duration-300"
-            style={{ width: '100%', height: 'auto', maxWidth: '190px' }}
-          />
-        )}
-      </div>
-      
       {/* Collapse/Expand Button */}
-      <div className={`px-3 pb-2 ${
+      <div className={`px-3 pt-3 pb-2 ${
         isCollapsed ? 'flex justify-center' : 'flex justify-end'
       }`}>
         <button

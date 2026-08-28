@@ -5,13 +5,15 @@ import { useTenant } from '../../contexts/TenantContext';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
 import { TenantSwitcher } from './TenantSwitcher';
+import { HacCareLogo } from './HacCareLogo';
 
 interface HeaderProps {
   onAlertsClick?: () => void;
   onBarcodeScan?: (barcode: string) => void;
+  sidebarCollapsed?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
+export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed = false }) => {
   const { profile, signOut } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -62,8 +64,19 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
 
   return (
     <>
-    <header className={`bg-gradient-to-r from-slate-700 to-slate-800 dark:from-slate-900 dark:to-slate-950 border-b border-slate-600 dark:border-slate-800 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
-      <div className="flex items-center justify-between w-full gap-4">
+    <header className={`fixed top-0 left-0 right-0 z-40 h-16 flex items-stretch border-b border-black/30 transition-all duration-300 shadow-lg`} style={{ backgroundColor: '#2a2a28' }}>
+      {/* Logo panel - matches sidebar width so the two columns line up */}
+      <div className={`flex items-center justify-center flex-shrink-0 border-r border-white/10 transition-all duration-300 ${
+        sidebarCollapsed ? 'w-20' : 'w-64'
+      }`}>
+        {sidebarCollapsed ? (
+          <HacCareLogo variant="dark" size="20px" />
+        ) : (
+          <HacCareLogo variant="dark" size="30px" withBar />
+        )}
+      </div>
+
+      <div className="flex items-center justify-between flex-1 min-w-0 gap-4 px-6 lg:px-8 xl:px-12">
         {/* Left: Context Info */}
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-3">

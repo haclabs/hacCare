@@ -636,15 +636,21 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
-      {/* Sidebar Navigation - Fixed full height */}
+      {/* Application Header - Fixed full-width top bar */}
+      <Header 
+        onBarcodeScan={handleBarcodeScan}
+        sidebarCollapsed={sidebarCollapsed}
+      />
+
+      {/* Sidebar Navigation - Fixed, starts below the header */}
       <Sidebar 
         activeTab={activeTab}
         onTabChange={handleTabChange}
         onCollapsedChange={setSidebarCollapsed}
       />
       
-      {/* Main Layout - Offset by sidebar width */}
-      <div className={`transition-all duration-300 ${ 
+      {/* Main Layout - Offset by sidebar width and header height */}
+      <div className={`pt-16 transition-all duration-300 ${ 
         sidebarCollapsed ? 'ml-20' : 'ml-64'
       }`}>
         {/* Template Editing Banner - Shows when editing a template */}
@@ -652,11 +658,6 @@ function App() {
         
         {/* Simulation Mode Banner */}
         <SimulationBanner />
-        
-        {/* Application Header */}
-        <Header 
-          onBarcodeScan={handleBarcodeScan}
-        />
         
         {/* Main Content Area */}
         <main className="p-8 pl-16">
