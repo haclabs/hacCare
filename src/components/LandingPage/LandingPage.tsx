@@ -29,14 +29,14 @@ import {
   ClipboardCheck,
   Cpu,
 } from 'lucide-react';
-import logo from './logo.webp';
+import { HacCareLogo } from '../Layout/HacCareLogo';
 
 // ─── Reusable sub-components ──────────────────────────────────────────────────
 
 function FeatureTag({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-sm text-slate-300">
-      <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+      <CheckCircle2 className="w-4 h-4 text-[#3fbf9a] flex-shrink-0" />
       {text}
     </span>
   );
@@ -92,8 +92,8 @@ export const LandingPage: React.FC = () => {
 
   // ─── Shared style helpers ─────────────────────────────────────────────────
   const primaryBtn = 'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 text-sm';
-  const outlineBtn = 'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 text-sm border border-slate-600 text-slate-300 hover:border-cyan-400 hover:text-cyan-400';
-  const inputCls = 'w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors disabled:opacity-50';
+  const outlineBtn = 'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 text-sm border border-slate-600 text-slate-300 hover:border-[#3fbf9a] hover:text-[#3fbf9a]';
+  const inputCls = 'w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-[#3fbf9a] focus:ring-1 focus:ring-[#3fbf9a] transition-colors disabled:opacity-50';
   const labelCls = 'block text-sm font-medium text-slate-400 mb-2';
 
   return (
@@ -103,7 +103,7 @@ export const LandingPage: React.FC = () => {
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <img src={logo} alt="hacCare" className="h-10 w-auto brightness-0 invert" />
+            <HacCareLogo variant="dark" size="30px" withBar />
             <div className="hidden md:flex items-center gap-8">
               {(['features', 'simulation', 'security', 'contact'] as const).map(s => (
                 <button key={s} onClick={() => scrollToSection(s)}
@@ -116,8 +116,8 @@ export const LandingPage: React.FC = () => {
                 Login
               </button>
               <button onClick={() => scrollToSection('contact')}
-                className={`${primaryBtn} bg-cyan-500 hover:bg-cyan-400`}
-                style={{ backgroundColor: '#19ADF2' }}>
+                className={`${primaryBtn}`}
+                style={{ backgroundColor: '#3fbf9a' }}>
                 Request Access <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -140,7 +140,7 @@ export const LandingPage: React.FC = () => {
               Login
             </button>
             <button onClick={() => scrollToSection('contact')}
-              className={`${primaryBtn} w-full justify-center`} style={{ backgroundColor: '#19ADF2' }}>
+              className={`${primaryBtn} w-full justify-center`} style={{ backgroundColor: '#3fbf9a' }}>
               Request Access
             </button>
           </div>
@@ -154,23 +154,23 @@ export const LandingPage: React.FC = () => {
           {/* Background glow */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-10"
-              style={{ background: 'radial-gradient(ellipse, #19ADF2 0%, transparent 70%)' }} />
+              style={{ background: 'radial-gradient(ellipse, #3fbf9a 0%, transparent 70%)' }} />
           </div>
           <div className="relative max-w-7xl mx-auto">
             <div className="text-center max-w-4xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-semibold tracking-wide uppercase mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#3fbf9a]/30 bg-[#3fbf9a]/10 text-[#3fbf9a] text-xs font-semibold tracking-wide uppercase mb-6">
                 <Zap className="w-3 h-3" /> Built for Canadian Healthcare Education
               </div>
               <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 text-white">
                 Where Future Nurses<br />
-                <span style={{ color: '#19ADF2' }}>Learn to Care</span>
+                <span style={{ color: '#3fbf9a' }}>Learn to Care</span>
               </h1>
               <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
                 hacCare is a high-fidelity simulated EMR platform built for healthcare education. Students practice real clinical workflows — BCMA scanning, charting, alerts — in a safe, instructor-controlled environment.
               </p>
               <div className="flex flex-wrap gap-4 justify-center mt-10">
                 <button onClick={() => scrollToSection('contact')}
-                  className={`${primaryBtn} text-base px-8 py-4`} style={{ backgroundColor: '#19ADF2' }}>
+                  className={`${primaryBtn} text-base px-8 py-4`} style={{ backgroundColor: '#3fbf9a' }}>
                   Request a Demo <ArrowRight className="w-5 h-5" />
                 </button>
                 <button onClick={() => scrollToSection('features')} className={`${outlineBtn} text-base px-8 py-4`}>
@@ -181,7 +181,7 @@ export const LandingPage: React.FC = () => {
             {/* Hero screenshot */}
             <div className="relative max-w-5xl mx-auto">
               <div className="absolute -inset-1 rounded-2xl opacity-30 blur-xl"
-                style={{ background: 'linear-gradient(135deg, #19ADF2, #0ea5e9)' }} />
+                style={{ background: 'linear-gradient(135deg, #3fbf9a, #2f9d7e)' }} />
               <div className="relative rounded-2xl border border-slate-700 overflow-hidden shadow-2xl bg-slate-900">
                 <div className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-b border-slate-700">
                   <div className="w-3 h-3 rounded-full bg-red-500/70" />
@@ -192,7 +192,7 @@ export const LandingPage: React.FC = () => {
                 <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                   {heroVideoPlaying ? (
                     <iframe
-                      src="https://player.vimeo.com/video/1162063037?badge=0&autopause=0&autoplay=1&title=0&byline=0&portrait=0&color=19ADF2"
+                      src="https://player.vimeo.com/video/1162063037?badge=0&autopause=0&autoplay=1&title=0&byline=0&portrait=0&color=3fbf9a"
                       className="absolute inset-0 w-full h-full"
                       allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                       allowFullScreen
@@ -228,7 +228,7 @@ export const LandingPage: React.FC = () => {
                 { value: 'Canadian', label: 'Clinical Standards' },
               ].map(stat => (
                 <div key={stat.label}>
-                  <div className="text-3xl font-bold text-white mb-1" style={{ color: '#19ADF2' }}>{stat.value}</div>
+                  <div className="text-3xl font-bold text-white mb-1" style={{ color: '#3fbf9a' }}>{stat.value}</div>
                   <div className="text-sm text-slate-500">{stat.label}</div>
                 </div>
               ))}
@@ -248,7 +248,7 @@ export const LandingPage: React.FC = () => {
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
-                  icon: Stethoscope, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20',
+                  icon: Stethoscope, color: 'text-[#3fbf9a]', bg: 'bg-[#3fbf9a]/10 border-[#3fbf9a]/20',
                   title: 'Real Clinical Workflows',
                   body: 'Students work inside a fully functional EMR — real charting, real medication records, real alerts. Nothing is simplified or abstracted away.',
                 },
@@ -299,7 +299,7 @@ export const LandingPage: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                 <div className="absolute bottom-5 left-5 right-5">
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-sm border border-slate-700 text-slate-200 text-xs font-medium">
-                    <span className="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-[#3fbf9a] flex-shrink-0" />
                     BCMA dual-scan workflow — Lethbridge Polytechnic Simulation Lab
                   </span>
                 </div>
@@ -318,16 +318,16 @@ export const LandingPage: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                 </div>
                 {/* Pull-quote — flex-1 fills remaining height to match left photo */}
-                <div className="flex-1 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-7 flex flex-col justify-between">
+                <div className="flex-1 rounded-2xl border border-[#3fbf9a]/20 bg-[#3fbf9a]/5 p-7 flex flex-col justify-between">
                   <div>
-                    <div className="text-5xl text-cyan-400/30 font-serif leading-none mb-4">&ldquo;</div>
+                    <div className="text-5xl text-[#3fbf9a]/30 font-serif leading-none mb-4">&ldquo;</div>
                     <p className="text-slate-200 text-lg leading-relaxed italic mb-6">
                       Students can make every mistake safely — wrong patient, wrong dose, wrong time. The system catches it, they learn it, and no one gets hurt.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center flex-shrink-0">
-                      <GraduationCap className="w-5 h-5 text-cyan-400" />
+                    <div className="w-10 h-10 rounded-full bg-[#3fbf9a]/15 border border-[#3fbf9a]/25 flex items-center justify-center flex-shrink-0">
+                      <GraduationCap className="w-5 h-5 text-[#3fbf9a]" />
                     </div>
                     <div>
                       <div className="text-white text-sm font-semibold">Nursing Instructor</div>
@@ -345,7 +345,7 @@ export const LandingPage: React.FC = () => {
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wide mb-5">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3fbf9a]/10 border border-[#3fbf9a]/20 text-[#3fbf9a] text-xs font-semibold uppercase tracking-wide mb-5">
                   <Scan className="w-3 h-3" /> BCMA
                 </div>
                 <h2 className="text-4xl font-bold text-white mb-5">Five Rights. Every Time.</h2>
@@ -363,7 +363,7 @@ export const LandingPage: React.FC = () => {
                   ].map(f => <FeatureTag key={f} text={f} />)}
                 </div>
                 <button onClick={() => scrollToSection('contact')}
-                  className={`${primaryBtn}`} style={{ backgroundColor: '#19ADF2' }}>
+                  className={`${primaryBtn}`} style={{ backgroundColor: '#3fbf9a' }}>
                   See It In Action <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -414,7 +414,7 @@ export const LandingPage: React.FC = () => {
         <section className="py-24 px-4" style={{ background: 'linear-gradient(180deg, #07101e 0%, #0f172a 100%)' }}>
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-14">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wide mb-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3fbf9a]/10 border border-[#3fbf9a]/20 text-[#3fbf9a] text-xs font-semibold uppercase tracking-wide mb-5">
                 <Cpu className="w-3 h-3" /> Full Clinical Toolkit
               </div>
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Every Module. Every Shift.</h2>
@@ -521,17 +521,17 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-cyan-500/8 to-slate-900/50 p-7 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
-                <div className="text-4xl font-black text-cyan-500/15 leading-none mb-4 select-none">02</div>
-                <div className="w-11 h-11 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center mb-4">
-                  <ClipboardCheck className="w-5 h-5 text-cyan-400" />
+              <div className="rounded-2xl border border-[#3fbf9a]/25 bg-gradient-to-b from-[#3fbf9a]/8 to-slate-900/50 p-7 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#3fbf9a] to-transparent" />
+                <div className="text-4xl font-black text-[#3fbf9a]/15 leading-none mb-4 select-none">02</div>
+                <div className="w-11 h-11 rounded-xl bg-[#3fbf9a]/15 border border-[#3fbf9a]/25 flex items-center justify-center mb-4">
+                  <ClipboardCheck className="w-5 h-5 text-[#3fbf9a]" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-3">Testing & Evaluation</h3>
                 <p className="text-slate-400 text-sm leading-relaxed mb-5">Run graded assessment scenarios for individuals or entire cohorts. Every clinical action is timestamped and attributed to a specific student, generating detailed evidence for competency evaluation and program accreditation.</p>
                 <div className="flex flex-wrap gap-1.5">
                   {['Per-Student Logs', 'Timestamped Actions', 'Competency Tracking', 'PDF Debrief Reports'].map(t => (
-                    <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">{t}</span>
+                    <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-[#3fbf9a]/10 border border-[#3fbf9a]/20 text-[#3fbf9a]">{t}</span>
                   ))}
                 </div>
               </div>
@@ -560,7 +560,7 @@ export const LandingPage: React.FC = () => {
               <div className="rounded-xl border border-slate-700 bg-slate-800/30 overflow-hidden">
                 <div className="p-6">
                   <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center mb-4">
-                    <FileText className="w-5 h-5 text-cyan-400" />
+                    <FileText className="w-5 h-5 text-[#3fbf9a]" />
                   </div>
                   <h3 className="font-semibold text-white mb-2">Template Library</h3>
                   <p className="text-slate-400 text-sm leading-relaxed">Build patient scenarios once — complete with history, medications, orders, labs, and wounds. Save as reusable templates. Tag by program (NESA, PN, SIM Hub, BNAD).</p>
@@ -622,7 +622,7 @@ export const LandingPage: React.FC = () => {
                     {i < 3 && <div className="hidden md:block absolute top-6 left-full w-full h-px bg-slate-700 z-0" />}
                     <div className="relative z-10">
                       <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center font-bold text-sm mb-4"
-                        style={{ borderColor: '#19ADF2', color: '#19ADF2' }}>
+                        style={{ borderColor: '#3fbf9a', color: '#3fbf9a' }}>
                         {step.n}
                       </div>
                       <h4 className="font-semibold text-white mb-2">{step.title}</h4>
@@ -773,7 +773,7 @@ export const LandingPage: React.FC = () => {
                 <div className="space-y-6">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-5 h-5 text-cyan-400" />
+                      <Mail className="w-5 h-5 text-[#3fbf9a]" />
                     </div>
                     <div>
                       <div className="text-sm text-slate-500">Email</div>
@@ -782,7 +782,7 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-cyan-400" />
+                      <MapPin className="w-5 h-5 text-[#3fbf9a]" />
                     </div>
                     <div>
                       <div className="text-sm text-slate-500">Location</div>
@@ -830,7 +830,7 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <button type="submit" disabled={formStatus.type === 'loading'}
                     className={`${primaryBtn} w-full justify-center text-base py-3.5 disabled:opacity-50`}
-                    style={{ backgroundColor: '#19ADF2' }}>
+                    style={{ backgroundColor: '#3fbf9a' }}>
                     {formStatus.type === 'loading' ? 'Sending...' : 'Send Message'}
                     {formStatus.type !== 'loading' && <ArrowRight className="w-4 h-4" />}
                   </button>
@@ -847,7 +847,9 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-2">
-              <img src={logo} alt="hacCare" className="h-10 w-auto brightness-0 invert mb-4" />
+              <div className="mb-4">
+                <HacCareLogo variant="dark" size="26px" withBar />
+              </div>
               <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
                 A high-fidelity simulated EMR platform for healthcare education. Built in Lethbridge, Alberta. A haclabs product.
               </p>

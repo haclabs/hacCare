@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { isSupabaseConfigured, supabase } from '../../lib/api/supabase';
-const logo = '/images/logo.svg';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { HacCareLogo } from '../Layout/HacCareLogo';
 import { PrivacyNoticeModal } from './PrivacyNoticeModal';
 import { MFAChallenge } from './MFAChallenge';
 import { MFAEnrollment } from './MFAEnrollment';
@@ -213,14 +213,7 @@ export const LoginForm: React.FC = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-5">
-            <div className="bg-white rounded-2xl px-10 py-5 shadow-[0_0_40px_rgba(25,173,242,0.2)]">
-              <img
-                src={logo}
-                alt="hacCare"
-                className="w-auto"
-                style={{ height: '90px' }}
-              />
-            </div>
+            <HacCareLogo variant="dark" size="38px" withBar />
           </div>
           <p className="text-slate-400 text-sm">Secure Portal Access</p>
         </div>
