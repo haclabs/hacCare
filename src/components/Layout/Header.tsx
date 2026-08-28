@@ -62,14 +62,14 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
 
   return (
     <>
-    <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
+    <header className={`bg-gradient-to-r from-slate-700 to-slate-800 dark:from-slate-900 dark:to-slate-950 border-b border-slate-600 dark:border-slate-800 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
       <div className="flex items-center justify-between w-full gap-4">
         {/* Left: Context Info */}
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-3">
             <BookOpen className="h-5 w-5 text-white" />
             <div className="flex flex-col leading-tight">
-              <span className="text-xs text-blue-100 font-medium">{contextType}</span>
+              <span className="text-xs text-slate-300 font-medium">{contextType}</span>
               <span className="text-sm font-bold text-white">{contextName}</span>
             </div>
           </div>
@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
               <span className="text-sm font-bold text-white tracking-tight font-mono">
                 {format(currentTime, 'HH:mm:ss')}
               </span>
-              <span className="text-xs text-blue-100 font-medium">
+              <span className="text-xs text-slate-300 font-medium">
                 {format(currentTime, 'MMM dd, yyyy')}
               </span>
             </div>
@@ -123,15 +123,15 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
         {/* Right: User Info */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="text-right">
-            <p className="text-xs text-blue-100 font-medium mb-0.5">Logged in as</p>
+            <p className="text-xs text-slate-300 font-medium mb-0.5">Logged in as</p>
             <p className="text-sm font-bold text-white">
               {profile?.first_name} {profile?.last_name}
             </p>
-            <p className="text-xs text-blue-200 flex items-center gap-1">
+            <p className="text-xs text-slate-300 flex items-center gap-1">
               {getRoleLabel(profile?.role || '')}
               {currentProgram && (
                 <>
-                  <span className="text-blue-300">•</span>
+                  <span className="text-slate-400">•</span>
                   <span>{currentProgram.program_code}</span>
                 </>
               )}
@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
             </div>
             <button 
               onClick={handleLogoutClick}
-              className="p-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               title="Sign Out"
             >
               <LogOut className="h-4 w-4" />

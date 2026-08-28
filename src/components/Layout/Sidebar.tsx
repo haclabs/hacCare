@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
+import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
@@ -92,9 +92,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ...(currentTenant?.tenant_type !== 'program' ? [
       { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' }
     ] : []),
-    { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
-    { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
+    { id: 'simulations', label: 'Manage Sim', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),
@@ -527,6 +526,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
               })}
             </div>
           )}
+        </div>
+
+        {/* Build Version */}
+        <div className={`pt-3 mt-3 border-t border-gray-200 dark:border-gray-800 text-center ${isCollapsed ? 'px-0' : ''}`}>
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-600" title={`hacCare v${__APP_VERSION__}`}>
+            {isCollapsed ? `v${__APP_VERSION__.split('.')[0]}` : `v${__APP_VERSION__}`}
+          </span>
         </div>
       </nav>
     </aside>

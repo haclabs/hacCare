@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
-import { type BarcodeLabelItem, getMedicationAccentColor } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, getMedicationAccentColor, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
 interface AllLabelsModalProps {
   patients: PatientLabelData[];
   medicationItems: BarcodeLabelItem[];
@@ -161,55 +161,58 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
             
             /* Medication label styles */
             .label.medication-label {
-              padding: 3px;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+            }
+            .medication-label .label-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              height: 0.24in;
+              padding: 0 7px;
+              box-sizing: border-box;
+              color: #ffffff;
+            }
+            .medication-label .label-header .med-name {
+              font-size: 11px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            .medication-label .label-header .med-barcode-id {
+              font-size: 8px;
+              font-family: monospace;
+              opacity: 0.85;
+              margin-left: 6px;
+              white-space: nowrap;
+            }
+            .medication-label .label-body {
+              flex: 1;
               display: flex;
               flex-direction: row;
               align-items: stretch;
+              min-height: 0;
             }
             .medication-label .label-content {
-              flex: 1;
+              flex: 1 1 auto;
+              min-width: 0;
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 0.08in 0.05in;
+              padding: 2px 7px;
+              box-sizing: border-box;
+              overflow: hidden;
             }
-            .medication-label .medication-name {
-              font-size: 14px;
-              font-weight: 800;
-              margin-bottom: 4px;
-              line-height: 1.3;
-              color: #1a1a1a;
-              word-wrap: break-word;
-              text-transform: uppercase;
-              letter-spacing: 0.3px;
-              padding: 4px 6px;
-              background: #ffffff;
-              border-left: 3px solid #000000;
-              border-radius: 2px;
-            }
-            .medication-label .med-subtitle {
-              font-size: 11px;
-              font-weight: 700;
-              margin-top: 2px;
-              line-height: 1.2;
-              color: #333;
-              padding: 2px 6px;
-              border-left: 2px solid #666;
-              border-radius: 2px;
-            }
-            .medication-label .med-id {
-              font-size: 11px;
-              font-weight: 700;
-              color: #000000;
-              margin-top: 3px;
-              line-height: 1.2;
-              padding: 3px 6px;
-              background: #ffffff;
-              border-left: 2px solid #666666;
-              border-radius: 1px;
-              font-family: monospace;
-              letter-spacing: 0.8px;
-            }
+            .medication-label .dose-row { display: flex; flex-direction: column; align-items: flex-start; }
+            .medication-label .dose-value { font-size: 17px; font-weight: 800; color: #14776a; line-height: 1; }
+            .medication-label .dose-form { font-size: 8px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+            .medication-label .brand-footer { font-size: 8px; color: #9ca3af; margin-top: 3px; }
+            .medication-label .brand-footer strong { color: #1e3a5f; }
+            .medication-label .brand-footer .mint { color: #3EB489; }
             .medication-label .barcode-area {
               width: 1.0in;
               display: flex;
@@ -224,6 +227,10 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               width: 0.85in;
               height: 0.85in;
               image-rendering: pixelated;
+            }
+            .medication-label .qr-img {
+              width: 0.78in;
+              height: 0.78in;
             }
             
             @media print {
@@ -301,13 +308,21 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               
               return `
               <div class="label medication-label" style="left: ${leftPos}; top: ${topPos};">
-                <div class="label-content">
-                  <div class="medication-name" style="border-left-color: ${getMedicationAccentColor(item.category)};">${item.name}</div>
-                  <div class="med-subtitle">${item.subtitle}</div>
-                  <div class="med-id">${item.barcode}</div>
+                <div class="label-header" style="background-color: ${getMedicationAccentColor(item.category)};">
+                  <span class="med-name">${item.name}</span>
+                  <span class="med-barcode-id">${item.barcode}</span>
                 </div>
-                <div class="barcode-area">
-                  <img class="qr-img" src="${medicationQRs[index]}" alt="QR" />
+                <div class="label-body">
+                  <div class="label-content">
+                    <div class="dose-row">
+                      <span class="dose-value">${splitMedicationSubtitle(item.subtitle).dose}</span>
+                      <span class="dose-form">${splitMedicationSubtitle(item.subtitle).form}</span>
+                    </div>
+                    <div class="brand-footer"><strong>hac</strong><strong class="mint">Care</strong> EMR Simulation</div>
+                  </div>
+                  <div class="barcode-area">
+                    <img class="qr-img" src="${medicationQRs[index]}" alt="QR" />
+                  </div>
                 </div>
               </div>
               `;

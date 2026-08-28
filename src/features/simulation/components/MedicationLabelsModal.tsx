@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { QrThumbnail } from '../../admin/components/BarcodeLabelSheetModal';
-import { type BarcodeLabelItem, getMedicationAccentColor } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, getMedicationAccentColor, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
 import { generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
 interface MedicationLabelsModalProps {
   items: BarcodeLabelItem[];
@@ -62,38 +62,42 @@ export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ it
               width: 2.625in; height: 1in;
               border: 1px solid #dee2e6;
               box-sizing: border-box;
-              display: flex; flex-direction: row; align-items: stretch;
+              display: flex; flex-direction: column;
               overflow: hidden; background: #ffffff;
               box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 3px;
+            }
+            .label-header {
+              display: flex; align-items: center; justify-content: space-between;
+              height: 0.24in; padding: 0 7px; box-sizing: border-box; color: #ffffff;
+            }
+            .label-header .med-name {
+              font-size: 11px; font-weight: 800; text-transform: uppercase;
+              letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .label-header .med-barcode-id {
+              font-size: 8px; font-family: monospace; opacity: 0.85; margin-left: 6px; white-space: nowrap;
+            }
+            .label-body {
+              flex: 1; display: flex; flex-direction: row; align-items: stretch; min-height: 0;
             }
             .label-content {
               flex: 1 1 auto; min-width: 0;
               display: flex; flex-direction: column; justify-content: center;
-              padding: 0.06in 0.08in; box-sizing: border-box; overflow: hidden;
+              padding: 2px 8px; box-sizing: border-box; overflow: hidden;
             }
-            .medication-name {
-              font-size: 13px; font-weight: 800; margin-bottom: 2px;
-              line-height: 1.2; color: #1a1a1a; word-wrap: break-word;
-              text-transform: uppercase; letter-spacing: 0.3px;
-              padding: 3px 6px; border-left: 3px solid #000000; border-radius: 2px;
-            }
-            .med-subtitle {
-              font-size: 11px; font-weight: 700; margin-top: 2px;
-              line-height: 1.2; color: #333; padding: 2px 6px;
-              border-left: 2px solid #666; border-radius: 2px;
-            }
-            .med-id {
-              font-size: 10px; font-weight: 700; color: #000; margin-top: 2px;
-              padding: 2px 6px; border-left: 2px solid #666; border-radius: 1px;
-              font-family: monospace; letter-spacing: 0.8px;
-            }
+            .dose-row { display: flex; flex-direction: column; align-items: flex-start; }
+            .dose-value { font-size: 19px; font-weight: 800; color: #14776a; line-height: 1; }
+            .dose-form { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
+            .brand-footer { font-size: 8.5px; color: #9ca3af; margin-top: 4px; }
+            .brand-footer strong { color: #1e3a5f; }
+            .brand-footer .mint { color: #3EB489; }
             .barcode-area {
               flex: 0 0 auto;
               display: flex; justify-content: center; align-items: center;
               width: 0.9in; background: #ffffff;
               border-left: 1px solid #e0e0e0;
             }
-            .qr-img { width: 0.8in; height: 0.8in; image-rendering: pixelated; }
+            .qr-img { width: 0.66in; height: 0.66in; image-rendering: pixelated; }
             @media print {
               .label { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
               .labels-grid { width: 8.5in !important; height: 11in !important; }
@@ -130,15 +134,22 @@ export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ it
               const row = Math.floor(pos / 3);
               const left = col === 0 ? '0.1875in' : col === 1 ? '3.0375in' : '5.7875in';
               const top = (0.5 + row * 1.0) + 'in';
-              return `
-              <div class="label" style="left:${left};top:${top};">
-                <div class="label-content">
-                  <div class="medication-name" style="border-left-color: ${getMedicationAccentColor(item.category)};">${item.name}</div>
-                  <div class="med-subtitle">${item.subtitle}</div>
-                  <div class="med-id">${item.barcode}</div>
+              return `<div class="label" style="left:${left};top:${top};">
+                <div class="label-header" style="background-color: ${getMedicationAccentColor(item.category)};">
+                  <span class="med-name">${item.name}</span>
+                  <span class="med-barcode-id">${item.barcode}</span>
                 </div>
-                <div class="barcode-area">
-                  <img class="qr-img" src="${medQRs[index]}" alt="QR" />
+                <div class="label-body">
+                  <div class="label-content">
+                    <div class="dose-row">
+                      <span class="dose-value">${splitMedicationSubtitle(item.subtitle).dose}</span>
+                      <span class="dose-form">${splitMedicationSubtitle(item.subtitle).form}</span>
+                    </div>
+                    <div class="brand-footer"><strong>hac</strong><strong class="mint">Care</strong> EMR Simulation</div>
+                  </div>
+                  <div class="barcode-area">
+                    <img class="qr-img" src="${medQRs[index]}" alt="QR" />
+                  </div>
                 </div>
               </div>`;
             }).join('')}
@@ -210,23 +221,34 @@ export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ it
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
-            {duplicatedItems.slice(0, 15).map((item, idx) => (
-              <div key={`${item.id}-${idx}`} className="border border-gray-300 p-1 bg-white flex items-stretch rounded shadow-sm" style={{width: '2.625in', height: '1in'}}>
-                <div className="flex-1 flex flex-col justify-center px-2 bg-gradient-to-br from-gray-50 to-white border-r-2 border-gray-200" style={{minWidth: '1.6in'}}>
+            {duplicatedItems.slice(0, 15).map((item, idx) => {
+              const { dose, form } = splitMedicationSubtitle(item.subtitle);
+              return (
+                <div key={`${item.id}-${idx}`} className="border border-gray-300 bg-white flex flex-col rounded shadow-sm overflow-hidden" style={{width: '2.625in', height: '1in'}}>
                   <div
-                    className="font-extrabold text-sm mb-1 leading-tight uppercase tracking-wide px-2 py-1 bg-gradient-to-r from-blue-50 to-transparent border-l-3 rounded"
-                    style={{ borderLeftWidth: '3px', borderLeftColor: getMedicationAccentColor(item.category) }}
+                    className="flex items-center justify-between px-2 shrink-0"
+                    style={{ height: '0.24in', backgroundColor: getMedicationAccentColor(item.category) }}
                   >
-                    {item.name}
+                    <span className="text-[11px] font-extrabold uppercase tracking-wide text-white truncate">{item.name}</span>
+                    <span className="text-[8px] font-mono text-white/85 ml-1 whitespace-nowrap">{item.barcode}</span>
                   </div>
-                  <div className="text-xs font-semibold leading-tight mt-1 px-2 py-1 rounded text-gray-700">{item.subtitle}</div>
-                  <div className="text-xs font-mono mt-1 px-2 text-gray-500">{item.barcode}</div>
+                  <div className="flex-1 flex items-stretch min-h-0">
+                    <div className="flex-1 flex flex-col justify-center px-2 min-w-0">
+                      <div className="flex flex-col items-start">
+                        <span className="text-lg font-extrabold leading-none" style={{ color: '#14776a' }}>{dose}</span>
+                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{form}</span>
+                      </div>
+                      <div className="text-[8.5px] text-gray-400 mt-1">
+                        <strong className="text-[#1e3a5f]">hac</strong><strong className="text-[#3EB489]">Care</strong> EMR Simulation
+                      </div>
+                    </div>
+                    <div className="w-20 h-full flex justify-center items-center border-l border-gray-200">
+                      <QrThumbnail data={item.barcode} size={60} />
+                    </div>
+                  </div>
                 </div>
-                <div className="w-20 h-full flex justify-center items-center border-l border-gray-200">
-                  <QrThumbnail data={item.barcode} size={70} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {duplicatedItems.length > 15 && (
             <div className="mt-4 text-center text-gray-500 text-sm">
