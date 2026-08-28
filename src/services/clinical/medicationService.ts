@@ -92,7 +92,9 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         prescribed_by: dbMed.prescribed_by || '',
         last_administered: dbMed.last_administered,
         next_due: dbMed.next_due || new Date().toISOString(),
-        status: dbMed.status || 'Active'
+        status: dbMed.status || 'Active',
+        catalog_id: dbMed.catalog_id ?? null,
+        barcode: dbMed.barcode ?? null,
       } as Medication));
 
       secureLogger.debug('Found', medications.length, 'simulation medications');
@@ -121,7 +123,9 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         prescribed_by: dbMed.prescribed_by || '',
         last_administered: dbMed.last_administered,
         next_due: dbMed.next_due || new Date().toISOString(),
-        status: dbMed.status || 'Active'
+        status: dbMed.status || 'Active',
+        catalog_id: dbMed.catalog_id ?? null,
+        barcode: dbMed.barcode ?? null,
       } as Medication));
 
       return medications;
