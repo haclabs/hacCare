@@ -117,6 +117,9 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
 
   const handleMedicationUpdate = (medications: any[]) => {
     handlePatientUpdate({ medications });
+    // Local state is optimistic only — invalidate so the cached ['patient', id]
+    // query doesn't resurrect stale medications on the next refetch/remount.
+    invalidatePatient();
   };
 
   // Sync local state when React Query refreshes patient
