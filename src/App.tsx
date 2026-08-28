@@ -471,7 +471,7 @@ function App() {
       
       // If it's a workspace tab (simulations, schedule, etc.), fall through to the switch statement below
       // Only default to program workspace for unrecognized tabs
-      if (!['simulations', 'schedule', 'settings', 'user-management', 'management', 'patient-management', 'patient-library', 'admin', 'documentation', 'changelog', 'syslogs', 'med-catalog'].includes(activeTab)) {
+      if (!['simulations', 'settings', 'user-management', 'management', 'patient-management', 'patient-library', 'admin', 'documentation', 'changelog', 'syslogs', 'med-catalog'].includes(activeTab)) {
         return (
           <SafeSuspense>
             <ProgramWorkspace />
@@ -615,14 +615,6 @@ function App() {
           </SafeSuspense>
         );
       
-      case 'schedule':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Schedule Management</h2>
-            <p className="text-gray-600 dark:text-gray-400">Shift scheduling and task management system coming soon...</p>
-          </div>
-        );
-      
       case 'settings':
         return (
           <SafeSuspense>
@@ -644,15 +636,21 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
-      {/* Sidebar Navigation - Fixed full height */}
+      {/* Application Header - Fixed full-width top bar */}
+      <Header 
+        onBarcodeScan={handleBarcodeScan}
+        sidebarCollapsed={sidebarCollapsed}
+      />
+
+      {/* Sidebar Navigation - Fixed, starts below the header */}
       <Sidebar 
         activeTab={activeTab}
         onTabChange={handleTabChange}
         onCollapsedChange={setSidebarCollapsed}
       />
       
-      {/* Main Layout - Offset by sidebar width */}
-      <div className={`transition-all duration-300 ${ 
+      {/* Main Layout - Offset by sidebar width and header height */}
+      <div className={`pt-16 transition-all duration-300 ${ 
         sidebarCollapsed ? 'ml-20' : 'ml-64'
       }`}>
         {/* Template Editing Banner - Shows when editing a template */}
@@ -660,11 +658,6 @@ function App() {
         
         {/* Simulation Mode Banner */}
         <SimulationBanner />
-        
-        {/* Application Header */}
-        <Header 
-          onBarcodeScan={handleBarcodeScan}
-        />
         
         {/* Main Content Area */}
         <main className="p-8 pl-16">

@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
+import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
-const logo = '/images/logo.svg';
 
 /**
  * Sidebar Navigation Component
@@ -92,9 +91,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ...(currentTenant?.tenant_type !== 'program' ? [
       { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' }
     ] : []),
-    { id: 'schedule', label: 'Schedule', icon: Calendar, color: 'text-green-600' },
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
-    { id: 'simulations', label: 'Simulations', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
+    { id: 'simulations', label: 'Manage Sim', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),
@@ -142,31 +140,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ] : []),
   ];
   return (
-    <aside className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen fixed top-0 left-0 transition-all duration-300 ease-in-out flex flex-col overflow-y-auto shadow-xl ${
+    <aside className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 border-r border-gray-200 dark:border-gray-800 fixed top-16 left-0 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out flex flex-col overflow-y-auto scrollbar-hide shadow-xl z-30 ${
       isCollapsed ? 'w-20' : 'w-64'
     }`}>
-      {/* Logo at top of sidebar - Reduced padding */}
-      <div className={`transition-all duration-300 ${
-        isCollapsed ? 'px-3 py-4' : 'px-6 py-4'
-      }`}>
-        {isCollapsed ? (
-          <div className="flex justify-center">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-              HC
-            </div>
-          </div>
-        ) : (
-          <img 
-            src={logo} 
-            alt="HacCare Logo" 
-            className="transition-all duration-300"
-            style={{ width: '100%', height: 'auto', maxWidth: '190px' }}
-          />
-        )}
-      </div>
-      
       {/* Collapse/Expand Button */}
-      <div className={`px-3 pb-2 ${
+      <div className={`px-3 pt-3 pb-2 ${
         isCollapsed ? 'flex justify-center' : 'flex justify-end'
       }`}>
         <button
@@ -527,6 +505,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
               })}
             </div>
           )}
+        </div>
+
+        {/* Build Version */}
+        <div className={`pt-3 mt-3 border-t border-gray-200 dark:border-gray-800 text-center ${isCollapsed ? 'px-0' : ''}`}>
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-600" title={`hacCare v${__APP_VERSION__}`}>
+            {isCollapsed ? `v${__APP_VERSION__.split('.')[0]}` : `v${__APP_VERSION__}`}
+          </span>
         </div>
       </nav>
     </aside>

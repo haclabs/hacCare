@@ -13,4 +13,13 @@
   .btn {
     @apply px-4 py-2 rounded-lg transition-colors;
   }
+
+  /* Hides the scrollbar visually while the element remains scrollable (wheel/trackpad/keyboard) */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

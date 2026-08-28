@@ -5,13 +5,15 @@ import { useTenant } from '../../contexts/TenantContext';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
 import { TenantSwitcher } from './TenantSwitcher';
+import { HacCareLogo } from './HacCareLogo';
 
 interface HeaderProps {
   onAlertsClick?: () => void;
   onBarcodeScan?: (barcode: string) => void;
+  sidebarCollapsed?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
+export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed = false }) => {
   const { profile, signOut } = useAuth();
   const { currentTenant, programTenants } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -62,14 +64,25 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
 
   return (
     <>
-    <header className={`bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800 border-b border-blue-700 dark:border-blue-900 px-6 lg:px-8 xl:px-12 py-3 transition-all duration-300 shadow-lg`}>
-      <div className="flex items-center justify-between w-full gap-4">
+    <header className={`fixed top-0 left-0 right-0 z-40 h-16 flex items-stretch border-b border-black/30 transition-all duration-300 shadow-lg`} style={{ backgroundColor: '#2a2a28' }}>
+      {/* Logo panel - matches sidebar width so the two columns line up */}
+      <div className={`flex items-center justify-center flex-shrink-0 border-r border-white/10 transition-all duration-300 ${
+        sidebarCollapsed ? 'w-20' : 'w-64'
+      }`}>
+        {sidebarCollapsed ? (
+          <HacCareLogo variant="dark" size="20px" />
+        ) : (
+          <HacCareLogo variant="dark" size="30px" withBar />
+        )}
+      </div>
+
+      <div className="flex items-center justify-between flex-1 min-w-0 gap-4 px-6 lg:px-8 xl:px-12">
         {/* Left: Context Info */}
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-3">
             <BookOpen className="h-5 w-5 text-white" />
             <div className="flex flex-col leading-tight">
-              <span className="text-xs text-blue-100 font-medium">{contextType}</span>
+              <span className="text-xs text-slate-300 font-medium">{contextType}</span>
               <span className="text-sm font-bold text-white">{contextName}</span>
             </div>
           </div>
@@ -110,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
               <span className="text-sm font-bold text-white tracking-tight font-mono">
                 {format(currentTime, 'HH:mm:ss')}
               </span>
-              <span className="text-xs text-blue-100 font-medium">
+              <span className="text-xs text-slate-300 font-medium">
                 {format(currentTime, 'MMM dd, yyyy')}
               </span>
             </div>
@@ -123,15 +136,15 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
         {/* Right: User Info */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="text-right">
-            <p className="text-xs text-blue-100 font-medium mb-0.5">Logged in as</p>
+            <p className="text-xs text-slate-300 font-medium mb-0.5">Logged in as</p>
             <p className="text-sm font-bold text-white">
               {profile?.first_name} {profile?.last_name}
             </p>
-            <p className="text-xs text-blue-200 flex items-center gap-1">
+            <p className="text-xs text-slate-300 flex items-center gap-1">
               {getRoleLabel(profile?.role || '')}
               {currentProgram && (
                 <>
-                  <span className="text-blue-300">•</span>
+                  <span className="text-slate-400">•</span>
                   <span>{currentProgram.program_code}</span>
                 </>
               )}
@@ -143,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan }) => {
             </div>
             <button 
               onClick={handleLogoutClick}
-              className="p-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               title="Sign Out"
             >
               <LogOut className="h-4 w-4" />

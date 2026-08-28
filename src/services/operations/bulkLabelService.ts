@@ -55,6 +55,12 @@ export function getMedicationAccentColor(category?: string | null): string {
   return (category && CATEGORY_ACCENT_COLORS[category]) || '#000000';
 }
 
+/** Splits a label's "dosage · route" subtitle into its dose/form parts for the label header design. */
+export function splitMedicationSubtitle(subtitle: string): { dose: string; form: string } {
+  const [dose = '', form = ''] = subtitle.split(' · ');
+  return { dose, form };
+}
+
 /** Stable barcode for a medication label (catalog barcode if set, else a fallback hash). */
 export function getMedicationBarcodeValue(medication: Pick<MedicationLabelData, 'id' | 'medication_name' | 'barcode'>): string {
   if (medication.barcode) return medication.barcode;
