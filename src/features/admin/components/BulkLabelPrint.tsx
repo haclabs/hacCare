@@ -70,8 +70,8 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 3px;
             }
             .label:nth-child(3n+1) { left: 0.1875in; }
-            .label:nth-child(3n+2) { left: 3.0375in; }
-            .label:nth-child(3n+3) { left: 5.7875in; }
+            .label:nth-child(3n+2) { left: 2.9375in; }
+            .label:nth-child(3n+3) { left: 5.6875in; }
             .label:nth-child(-n+3) { top: 0.5in; }
             .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
             .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }

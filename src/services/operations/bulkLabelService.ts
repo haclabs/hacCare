@@ -41,19 +41,8 @@ export interface BarcodeLabelItem {
   category?: string | null;
 }
 
-// Accent colors matching the Medication Catalog admin table's category colors
-export const CATEGORY_ACCENT_COLORS: Record<string, string> = {
-  scheduled: '#2563eb',
-  prn: '#d97706',
-  continuous: '#9333ea',
-  diabetic: '#dc2626',
-  stat: '#ea580c',
-  unscheduled: '#4b5563',
-};
-
-export function getMedicationAccentColor(category?: string | null): string {
-  return (category && CATEGORY_ACCENT_COLORS[category]) || '#000000';
-}
+// Single accent color for the label's left stripe (no longer varies by category)
+export const MEDICATION_LABEL_ACCENT_COLOR = '#3fbf9a';
 
 /** Splits a label's "dosage · route" subtitle into its dose/form parts for the label header design. */
 export function splitMedicationSubtitle(subtitle: string): { dose: string; form: string } {
