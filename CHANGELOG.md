@@ -7,6 +7,41 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-08-29 - MEDICATION LABEL REDESIGN
+===============================================================================
+
+* Redesigned medication print labels (Avery 5160 catalog/simulation labels)
+  - Left accent stripe (fixed teal #3fbf9a) replaces the old category-colored
+    header bar; med name in bold black, dose/form stacked, QR moved to a
+    top-right corner, brand footer shortened to "hacCare EMR Sim"
+  - Removed unused `getMedicationAccentColor`/`CATEGORY_ACCENT_COLORS` in favor
+    of a single `MEDICATION_LABEL_ACCENT_COLOR` constant
+  - Files: BarcodeLabelSheetModal.tsx, MedicationLabelsModal.tsx,
+    AllLabelsModal.tsx, bulkLabelService.ts
+
+* Fixed Avery 5160 column spacing bug
+  - Columns 2 and 3 were offset 0.1in too far right, making the column
+    1-to-2 gutter 0.225in wide vs. the correct 0.125in used between columns
+    2 and 3. Corrected across all label print components (including
+    BulkLabelPrint.tsx and PatientBraceletsModal.tsx)
+
+* Fixed print media query clobbering the label accent border
+  - `@media print { .label { border: ... !important } }` was resetting all
+    four border sides, wiping out the left accent stripe when actually
+    printed. Now only top/right/bottom are forced in print media queries
+
+* Added small vial label test print (Avery 5167, 1/2" x 1-3/4", 80/sheet)
+  - New `SmallVialLabelSheetModal.tsx`, wired into Medication Catalog admin
+    as "Print Small Labels (5167)" — no brand footer/barcode text, just
+    name, dose/form, and QR code to fit the smaller label size
+  - Column/row spacing is a best estimate; verify against real label stock
+    before production use
+
+* Fixed QR thumbnail preview clipping
+  - `QrThumbnail` canvas now scales to its container via CSS instead of
+    relying on the raw `size` prop matching the wrapper's dimensions
+
+===============================================================================
 [Unreleased] - 2026-08-25 - DATABASE CLEANUP
 ===============================================================================
 

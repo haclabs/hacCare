@@ -15,6 +15,7 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 import type { CatalogEntry } from '../../patients/components/mar/CatalogMedicationPicker';
 import { BarcodeLabelSheetModal, type BarcodeLabelItem } from './BarcodeLabelSheetModal';
+import { SmallVialLabelSheetModal } from './SmallVialLabelSheetModal';
 
 const ROUTES = [
   { value: 'oral',         label: 'Oral' },
@@ -98,6 +99,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [filterText, setFilterText] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showSmallPrintModal, setShowSmallPrintModal] = useState(false);
 
   const canView = hasRole(['super_admin', 'admin', 'instructor']);
   const canManage = hasRole(['super_admin', 'admin']);
@@ -305,6 +307,14 @@ export const MedicationCatalogAdmin: React.FC = () => {
           >
             <Printer className="h-4 w-4" />
             Print Labels{selectedEntries.length > 0 ? ` (${selectedEntries.length})` : ''}
+          </button>
+          <button
+            onClick={() => setShowSmallPrintModal(true)}
+            disabled={selectedEntries.length === 0}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Printer className="h-4 w-4" />
+            Print Small Labels (5167)
           </button>
           {canManage && (
             <button
@@ -619,6 +629,13 @@ export const MedicationCatalogAdmin: React.FC = () => {
           title="Medication Labels"
           description={`${selectedEntries.length} selected medication${selectedEntries.length !== 1 ? 's' : ''} from the catalog`}
           onClose={() => setShowPrintModal(false)}
+        />
+      )}
+
+      {showSmallPrintModal && (
+        <SmallVialLabelSheetModal
+          items={selectedEntries}
+          onClose={() => setShowSmallPrintModal(false)}
         />
       )}
     </div>

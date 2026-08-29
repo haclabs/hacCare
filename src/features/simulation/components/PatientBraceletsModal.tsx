@@ -95,8 +95,8 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
             }
             /* Avery 5160 perfect positioning - restored */
             .label:nth-child(3n+1) { left: 0.1875in; } /* Left margin */
-            .label:nth-child(3n+2) { left: 3.0375in; } /* Column 2 */
-            .label:nth-child(3n+3) { left: 5.7875in; } /* Column 3 */
+            .label:nth-child(3n+2) { left: 2.9375in; } /* Column 2 */
+            .label:nth-child(3n+3) { left: 5.6875in; } /* Column 3 */
             .label:nth-child(-n+3) { top: 0.5in; }
             .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
             .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }

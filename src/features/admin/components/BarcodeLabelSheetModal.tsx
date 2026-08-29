@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Printer, X } from 'lucide-react';
-import { type BarcodeLabelItem, getMedicationAccentColor, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
 
 export type { BarcodeLabelItem };
 
@@ -31,7 +31,7 @@ export const QrThumbnail: React.FC<{ data: string; size?: number }> = ({ data, s
     return () => { cancelled = true; };
   }, [data, size]);
 
-  return <canvas ref={canvasRef} style={{ imageRendering: 'pixelated' }} />;
+  return <canvas ref={canvasRef} style={{ imageRendering: 'pixelated', width: '100%', height: '100%', display: 'block' }} />;
 };
 
 /**
@@ -81,8 +81,10 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
               position: absolute;
               width: 2.625in; height: 1in;
               border: 1px solid #dee2e6;
+              border-left-width: 4px;
               box-sizing: border-box;
-              display: flex; flex-direction: column;
+              display: flex; flex-direction: column; justify-content: space-between;
+              padding: 0.07in 0.08in 0.05in 0.11in;
               text-align: left;
               overflow: hidden;
               background: #ffffff;
@@ -90,8 +92,8 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
               border-radius: 3px;
             }
             .label:nth-child(3n+1) { left: 0.1875in; }
-            .label:nth-child(3n+2) { left: 3.0375in; }
-            .label:nth-child(3n+3) { left: 5.7875in; }
+            .label:nth-child(3n+2) { left: 2.9375in; }
+            .label:nth-child(3n+3) { left: 5.6875in; }
             .label:nth-child(-n+3) { top: 0.5in; }
             .label:nth-child(n+4):nth-child(-n+6) { top: 1.5in; }
             .label:nth-child(n+7):nth-child(-n+9) { top: 2.5in; }
@@ -102,40 +104,23 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
             .label:nth-child(n+22):nth-child(-n+24) { top: 7.5in; }
             .label:nth-child(n+25):nth-child(-n+27) { top: 8.5in; }
             .label:nth-child(n+28):nth-child(-n+30) { top: 9.5in; }
-            .label-header {
-              display: flex; align-items: center; justify-content: space-between;
-              height: 0.24in; padding: 0 7px; box-sizing: border-box; color: #ffffff;
+            .med-name {
+              font-size: 12px; font-weight: 800; color: #111827; text-transform: uppercase;
+              letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+              max-width: 1.75in;
             }
-            .label-header .med-name {
-              font-size: 11px; font-weight: 800; text-transform: uppercase;
-              letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            }
-            .label-header .med-barcode-id {
-              font-size: 8px; font-family: monospace; opacity: 0.85; margin-left: 6px; white-space: nowrap;
-            }
-            .label-body {
-              flex: 1; display: flex; flex-direction: row; align-items: stretch; min-height: 0;
-            }
-            .label-content {
-              flex: 1 1 auto; min-width: 0;
-              display: flex; flex-direction: column; justify-content: center;
-              padding: 2px 8px; box-sizing: border-box; overflow: hidden;
-            }
-            .dose-row { display: flex; flex-direction: column; align-items: flex-start; }
-            .dose-value { font-size: 19px; font-weight: 800; color: #14776a; line-height: 1; }
+            .dose-line { display: flex; flex-direction: column; align-items: flex-start; margin-top: 2px; }
+            .dose-value { font-size: 17px; font-weight: 800; color: #14776a; line-height: 1; }
             .dose-form { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
-            .brand-footer { font-size: 8.5px; color: #9ca3af; margin-top: 4px; }
+            .qr-corner { position: absolute; top: 0.07in; right: 0.07in; width: 0.6in; height: 0.6in; }
+            .qr-corner .qr-img { width: 100%; height: 100%; image-rendering: pixelated; }
+            .brand-footer { display: flex; align-items: baseline; justify-content: space-between; color: #9ca3af; }
+            .brand-footer .brand-name { font-size: 9.5px; }
             .brand-footer strong { color: #1e3a5f; }
             .brand-footer .mint { color: #3EB489; }
-            .barcode-area {
-              flex: 0 0 auto;
-              display: flex; justify-content: center; align-items: center;
-              width: 0.9in; background: #ffffff;
-              border-left: 1px solid #e0e0e0;
-            }
-            .qr-img { width: 0.66in; height: 0.66in; image-rendering: pixelated; }
+            .brand-footer .barcode-id { font-size: 8px; font-family: monospace; color: #9ca3af; }
             @media print {
-              .label { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+              .label { border-top: 1px solid #dee2e6 !important; border-right: 1px solid #dee2e6 !important; border-bottom: 1px solid #dee2e6 !important; box-shadow: none !important; }
               .labels-grid:not(:last-child) { page-break-after: always; }
               -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
@@ -149,22 +134,16 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
             ${page
               .map(
                 (item) => `
-              <div class="label">
-                <div class="label-header" style="background-color: ${getMedicationAccentColor(item.category)};">
-                  <span class="med-name">${item.name}</span>
-                  <span class="med-barcode-id">${item.barcode}</span>
+              <div class="label" style="border-left-color: ${MEDICATION_LABEL_ACCENT_COLOR};">
+                <div class="med-name">${item.name}</div>
+                <div class="dose-line">
+                  <span class="dose-value">${splitMedicationSubtitle(item.subtitle).dose}</span>
+                  <span class="dose-form">${splitMedicationSubtitle(item.subtitle).form}</span>
                 </div>
-                <div class="label-body">
-                  <div class="label-content">
-                    <div class="dose-row">
-                      <span class="dose-value">${splitMedicationSubtitle(item.subtitle).dose}</span>
-                      <span class="dose-form">${splitMedicationSubtitle(item.subtitle).form}</span>
-                    </div>
-                    <div class="brand-footer"><strong>hac</strong><strong class="mint">Care</strong> EMR Simulation</div>
-                  </div>
-                  <div class="barcode-area">
-                    <img class="qr-img" src="${qrByBarcode.get(item.barcode)}" alt="QR" />
-                  </div>
+                <div class="qr-corner"><img class="qr-img" src="${qrByBarcode.get(item.barcode)}" alt="QR" /></div>
+                <div class="brand-footer">
+                  <span class="brand-name"><strong>hac</strong><strong class="mint">Care</strong> EMR Sim</span>
+                  <span class="barcode-id">${item.barcode}</span>
                 </div>
               </div>`
               )
@@ -231,29 +210,20 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
               return (
                 <div
                   key={item.id}
-                  className="border border-gray-300 bg-white flex flex-col rounded shadow-sm overflow-hidden"
-                  style={{ width: '2.625in', height: '1in' }}
+                  className="relative border border-gray-300 bg-white flex flex-col justify-between rounded shadow-sm overflow-hidden px-3 py-2"
+                  style={{ width: '2.625in', height: '1in', borderLeftWidth: '4px', borderLeftColor: MEDICATION_LABEL_ACCENT_COLOR }}
                 >
-                  <div
-                    className="flex items-center justify-between px-2 shrink-0"
-                    style={{ height: '0.24in', backgroundColor: getMedicationAccentColor(item.category) }}
-                  >
-                    <span className="text-[11px] font-extrabold uppercase tracking-wide text-white truncate">{item.name}</span>
-                    <span className="text-[8px] font-mono text-white/85 ml-1 whitespace-nowrap">{item.barcode}</span>
+                  <span className="text-xs font-extrabold uppercase tracking-wide text-gray-900 truncate pr-16">{item.name}</span>
+                  <div className="flex flex-col items-start mt-0.5">
+                    <span className="text-lg font-extrabold leading-none" style={{ color: '#14776a' }}>{dose}</span>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{form}</span>
                   </div>
-                  <div className="flex-1 flex items-stretch min-h-0">
-                    <div className="flex-1 flex flex-col justify-center px-2 min-w-0">
-                      <div className="flex flex-col items-start">
-                        <span className="text-lg font-extrabold leading-none" style={{ color: '#14776a' }}>{dose}</span>
-                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{form}</span>
-                      </div>
-                      <div className="text-[8.5px] text-gray-400 mt-1">
-                        <strong className="text-[#1e3a5f]">hac</strong><strong className="text-[#3EB489]">Care</strong> EMR Simulation
-                      </div>
-                    </div>
-                    <div className="w-20 h-full flex justify-center items-center border-l border-gray-200">
-                      <QrThumbnail data={item.barcode} size={60} />
-                    </div>
+                  <div className="absolute top-1.5 right-1.5 w-14 h-14">
+                    <QrThumbnail data={item.barcode} size={56} />
+                  </div>
+                  <div className="flex items-baseline justify-between text-gray-400">
+                    <span className="text-[9.5px]"><strong className="text-[#1e3a5f]">hac</strong><strong className="text-[#3EB489]">Care</strong> EMR Sim</span>
+                    <span className="text-[8px] font-mono">{item.barcode}</span>
                   </div>
                 </div>
               );
