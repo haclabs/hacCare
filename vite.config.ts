@@ -99,5 +99,15 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: []
+  },
+  // Bind to all interfaces (IPv4 + IPv6) so Codespaces port forwarding can reach it
+  server: {
+    host: true,
+    // Codespaces forwards requests with a *.app.github.dev Host header; Vite's
+    // DNS-rebinding protection blocks unrecognized hosts by default (403).
+    allowedHosts: ['.app.github.dev']
+  },
+  preview: {
+    host: true
   }
 })
