@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Printer, X } from 'lucide-react';
-import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, paginateLabelsByItem } from '../../../services/operations/bulkLabelService';
 
 export type { BarcodeLabelItem };
 
@@ -63,11 +63,9 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
       })
     );
 
-    // Avery 5160 fits 30 labels per sheet — split into multiple sheets beyond that
-    const pages: BarcodeLabelItem[][] = [];
-    for (let i = 0; i < duplicated.length; i += 30) {
-      pages.push(duplicated.slice(i, i + 30));
-    }
+    // Avery 5160 fits 30 labels per sheet — split into multiple sheets beyond that;
+    // each item's labels always get their own sheet(s), never mixed with another item's
+    const pages: BarcodeLabelItem[][] = paginateLabelsByItem(duplicated, 30);
 
     const printContent = `
       <!DOCTYPE html>
@@ -77,7 +75,7 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
           <style>
             @page { size: 8.5in 11in; margin: 0; }
             body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 7px; }
-            .labels-grid { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; }
+            .labels-grid { position: relative; width: 8.5in; height: 10.95in; overflow: hidden; margin: 0; padding: 0; }
             .label {
               position: absolute;
               width: 2.625in; height: 1in;

@@ -59,7 +59,8 @@ export function validateTemplateExport(
   const hasSnapshot = !!exportPackage.snapshot?.data;
   const snapshotData = exportPackage.snapshot?.data || {};
   const patientCount = snapshotData.patients?.length || 0;
-  const medicationCount = snapshotData.medications?.length || 0;
+  // Key is 'patient_medications' in the dynamic snapshot (save_template_snapshot_v2), not 'medications'
+  const medicationCount = snapshotData.patient_medications?.length || 0;
 
   // Check for patient data
   if (hasSnapshot && patientCount === 0) {

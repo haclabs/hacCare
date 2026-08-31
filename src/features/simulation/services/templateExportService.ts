@@ -122,6 +122,8 @@ export async function getExportSummary(templateId: string): Promise<{
   has_snapshot: boolean;
   snapshot_date: string | null;
   estimated_size_kb: number;
+  table_count: number;
+  record_count: number;
 }> {
   try {
     const { data: template, error } = await supabase
@@ -135,8 +137,14 @@ export async function getExportSummary(templateId: string): Promise<{
 
     const snapshotData = template.snapshot_data || {};
     const patientCount = snapshotData.patients?.length || 0;
-    const medicationCount = snapshotData.medications?.length || 0;
-    
+    // Key is 'patient_medications' in the dynamic snapshot (save_template_snapshot_v2), not 'medications'
+    const medicationCount = snapshotData.patient_medications?.length || 0;
+    // save_template_snapshot_v2 auto-discovers every tenant table and records these totals —
+    // surface them so the export confirmation reflects everything actually captured, not just patients/meds
+    const metadata = snapshotData.snapshot_metadata || {};
+    const tableCount = metadata.total_tables_scanned ?? 0;
+    const recordCount = metadata.total_records_captured ?? 0;
+
     // Estimate size
     const jsonString = JSON.stringify(snapshotData);
     const estimatedSizeKb = Math.round((jsonString.length / 1024) * 100) / 100;
@@ -148,9 +156,12 @@ export async function getExportSummary(templateId: string): Promise<{
       has_snapshot: !!template.snapshot_data,
       snapshot_date: template.snapshot_taken_at,
       estimated_size_kb: estimatedSizeKb,
+      table_count: tableCount,
+      record_count: recordCount,
     };
   } catch (error: any) {
     secureLogger.error('Error getting export summary:', error);
     throw error;
   }
 }
+

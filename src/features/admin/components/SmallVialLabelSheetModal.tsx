@@ -1,7 +1,7 @@
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import { QrThumbnail } from './BarcodeLabelSheetModal';
-import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, paginateLabelsByItem } from '../../../services/operations/bulkLabelService';
 
 interface SmallVialLabelSheetModalProps {
   items: BarcodeLabelItem[];
@@ -12,10 +12,6 @@ interface SmallVialLabelSheetModalProps {
  * Small vial label sheet for Avery 5167 (1/2" x 1-3/4", 80 per sheet — 4 columns x 20 rows).
  * Stripped-down content vs. the standard Avery 5160 label: no brand footer, no
  * barcode text — just name, dose/form, and a QR code, since there's no room.
- *
- * NOTE: column/row offsets below are a best estimate (0.3in side margins,
- * 0.3in gutters, 0.5in top/bottom margins, no vertical gap) — verify alignment
- * against real 5167 stock before relying on it.
  */
 export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> = ({ items, onClose }) => {
   // Each item may override the label count via its own `quantity`; defaults to 1
@@ -36,11 +32,9 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
       })
     );
 
-    // Avery 5167 fits 80 labels per sheet (4 cols x 20 rows)
-    const pages: BarcodeLabelItem[][] = [];
-    for (let i = 0; i < duplicated.length; i += 80) {
-      pages.push(duplicated.slice(i, i + 80));
-    }
+    // Avery 5167 fits 80 labels per sheet (4 cols x 20 rows); each item's labels always
+    // get their own sheet(s), never mixed with another item's
+    const pages: BarcodeLabelItem[][] = paginateLabelsByItem(duplicated, 80);
 
     const printContent = `
       <!DOCTYPE html>
@@ -50,7 +44,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
           <style>
             @page { size: 8.5in 11in; margin: 0; }
             body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 6px; }
-            .labels-grid { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; }
+            .labels-grid { position: relative; width: 8.5in; height: 10.95in; overflow: hidden; margin: 0; padding: 0; }
             .vlabel {
               position: absolute;
               width: 1.75in; height: 0.5in;
@@ -145,12 +139,6 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[70vh]">
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
-            <p className="text-sm text-amber-800">
-              <strong>Unverified layout:</strong> column/row spacing is a best estimate for Avery 5167. Print this on
-              plain paper first and check it against real label stock before printing directly onto labels.
-            </p>
-          </div>
           <div className="grid grid-cols-4 gap-2" style={{ gridTemplateColumns: 'repeat(4, 1.75in)' }}>
             {items.slice(0, 20).map((item) => {
               const { dose, form } = splitMedicationSubtitle(item.subtitle);

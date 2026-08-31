@@ -8,11 +8,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Printer, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award, RefreshCw } from 'lucide-react';
+import { X, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award } from 'lucide-react';
 import { format, differenceInMinutes } from 'date-fns';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
-import { regenerateDebriefSnapshot } from '../../../services/simulation/simulationService';
-import { generateStudentActivityPDF, generateStudentActivityPDFBlob } from '../../../utils/reactPdfGenerator';
+import { generateStudentActivityPDF } from '../../../utils/reactPdfGenerator';
 import type { Database } from '../../../types/supabase';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { StudentActivitySection } from './DebriefStudentSection';
@@ -48,7 +47,6 @@ interface Metrics {
 const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyRecord, onClose }) => {
   const [studentActivities, setStudentActivities] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isRegenerating, setIsRegenerating] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   function deduplicateStudentActivities(activities: StudentActivity[]): StudentActivity[] {
@@ -136,28 +134,6 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     loadStudentActivities();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyRecord.id]);
-
-  const handleRegenerateFromDatabase = async () => {
-    if (!historyRecord.simulation_id || !historyRecord.started_at) {
-      alert('Cannot regenerate: missing simulation reference or start time on this history record.');
-      return;
-    }
-    setIsRegenerating(true);
-    try {
-      await regenerateDebriefSnapshot(
-        historyRecord.id,
-        historyRecord.simulation_id,
-        historyRecord.started_at
-      );
-      // Re-run load — snapshot is now fresh so it will be picked up
-      await loadStudentActivities();
-    } catch (error) {
-      secureLogger.error('Failed to regenerate debrief snapshot:', error);
-      alert('Failed to refresh report data: ' + (error instanceof Error ? error.message : String(error)));
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
 
   const calculateMetrics = (): Metrics => {
     let totalVitals = 0, totalMeds = 0, totalOrders = 0, totalNotes = 0, totalIO = 0;
@@ -258,22 +234,6 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     }
   };
 
-  const handlePrint = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      const blob = await generateStudentActivityPDFBlob(buildPdfData());
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      // Revoke after delay to allow the browser to load the PDF
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-    } catch (error) {
-      secureLogger.error('Print PDF failed:', error);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -317,23 +277,6 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
                   >
                     <Download className="w-4 h-4" />
                     <span>{isExporting ? 'Generating PDF...' : 'Download PDF'}</span>
-                  </button>
-                  <button
-                    onClick={handlePrint}
-                    disabled={isExporting}
-                    className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Printer className="w-4 h-4" />
-                    <span>{isExporting ? 'Generating PDF...' : 'Print / View PDF'}</span>
-                  </button>
-                  <button
-                    onClick={handleRegenerateFromDatabase}
-                    disabled={isRegenerating}
-                    title="Re-query live database and refresh this report"
-                    className="flex items-center space-x-2 px-4 py-2 bg-white border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-                    <span>{isRegenerating ? 'Refreshing...' : 'Refresh from DB'}</span>
                   </button>
                   <button
                     onClick={onClose}

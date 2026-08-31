@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Home, ChevronRight } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -123,6 +123,18 @@ function App() {
    */
   const handleTabChange = (tab: string) => {
     setSearchParams({ tab });
+  };
+
+  /** Human-readable label for the breadcrumb trail, matching the Sidebar's own labels */
+  const PROGRAM_TAB_LABELS: Record<string, string> = {
+    'program-students': 'Students',
+    'program-settings': 'Settings',
+    'simulations': 'Manage Sim',
+    'documentation': 'Help & Docs',
+    'changelog': "What's New",
+    'settings': 'Settings',
+    'patient-library': 'Patient Library',
+    'med-catalog': 'Med Catalog',
   };
 
   /**
@@ -658,7 +670,20 @@ function App() {
         
         {/* Simulation Mode Banner */}
         <SimulationBanner />
-        
+
+        {/* Breadcrumb back to Workspace Home — only for program tenants, away from the home tab */}
+        {currentTenant?.tenant_type === 'program' && activeTab !== 'program-home' && (
+          <button
+            onClick={() => handleTabChange('program-home')}
+            className="w-full flex items-center gap-1.5 px-8 pl-16 py-2 text-xs bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            <Home className="h-3.5 w-3.5" />
+            <span className="font-medium">Workspace Home</span>
+            <ChevronRight className="h-3 w-3" />
+            <span>{PROGRAM_TAB_LABELS[activeTab] || 'Page'}</span>
+          </button>
+        )}
+
         {/* Main Content Area */}
         <main className="p-8 pl-16">
             <Routes>

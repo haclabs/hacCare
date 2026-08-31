@@ -214,19 +214,21 @@ const SimulationGuide: React.FC = () => {
     <div className="max-w-5xl mx-auto">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-lg">
+        <div className="border-b border-slate-200 dark:border-slate-700 p-6 rounded-t-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BookOpen className="h-8 w-8" />
+              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
+                <BookOpen className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold">Simulation Training System - Instructor Guide</h1>
-                <p className="text-emerald-100 mt-1">Quick Reference Guide for Creating and Managing Clinical Simulations</p>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">Simulation Training System - Instructor Guide</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Quick Reference Guide for Creating and Managing Clinical Simulations</p>
               </div>
             </div>
             <button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPdf}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-5 w-5" />
               <span>{isGeneratingPdf ? 'Generating...' : 'Download PDF'}</span>
@@ -556,23 +558,23 @@ const SimulationGuide: React.FC = () => {
           <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-700">
             <div className="text-center mb-6">
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                <strong>Document Version:</strong> 1.0 | <strong>Last Updated:</strong> November 17, 2025
+                <strong>Document Version:</strong> 1.02 | <strong>Last Updated:</strong> August 31, 2026
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
                 For technical documentation, see <code>/docs/operations/SIMULATION_RESET_SYSTEM.md</code>
               </p>
             </div>
             
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-black rounded-lg p-6 text-center">
+            <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-6 text-center">
               <div className="flex flex-col items-center space-y-3">
-                <p className="text-slate-300 dark:text-slate-400 text-sm">
-                  © hacCare 2025 - A <span className="font-semibold text-white">haclabs</span> Product
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
+                  © hacCare 2026 - A <span className="font-semibold text-slate-800 dark:text-white">haclabs</span> Product
                 </p>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-400">Need assistance?</span>
+                  <span className="text-slate-500 dark:text-slate-400">Need assistance?</span>
                   <a 
                     href="mailto:support@haccare.app" 
-                    className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors underline decoration-emerald-400/50 hover:decoration-emerald-300"
+                    className="text-blue-600 dark:text-blue-400 font-medium transition-colors hover:underline"
                   >
                     support@haccare.app
                   </a>
