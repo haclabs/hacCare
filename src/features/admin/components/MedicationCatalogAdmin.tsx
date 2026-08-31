@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Tag,
   Printer,
+  X,
 } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
 import { useAuth } from '../../../hooks/useAuth';
@@ -98,6 +99,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [filterText, setFilterText] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [printQuantity, setPrintQuantity] = useState(1);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showSmallPrintModal, setShowSmallPrintModal] = useState(false);
 
@@ -266,6 +268,10 @@ export const MedicationCatalogAdmin: React.FC = () => {
     });
   };
 
+  const setPrintQuantityFromInput = (raw: string) => {
+    setPrintQuantity(Math.max(1, Math.min(999, parseInt(raw, 10) || 1)));
+  };
+
   const selectedEntries: BarcodeLabelItem[] = entries
     .filter((e) => selectedIds.has(e.id))
     .map((e) => ({
@@ -274,6 +280,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
       name: e.name,
       subtitle: `${e.strength} · ${e.formulation}`,
       category: e.category,
+      quantity: printQuantity,
     }));
 
   if (!canView) {
@@ -327,6 +334,52 @@ export const MedicationCatalogAdmin: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Selected for printing — per-item quantity */}
+      {selectedEntries.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-blue-900">
+              Selected for printing ({selectedEntries.length})
+            </p>
+            <button
+              onClick={() => { setSelectedIds(new Set()); setPrintQuantity(1); }}
+              className="text-xs text-blue-700 hover:underline"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <label htmlFor="print-quantity" className="text-sm text-blue-900">Qty per medication</label>
+            <input
+              id="print-quantity"
+              type="number"
+              min={1}
+              max={999}
+              value={printQuantity}
+              onChange={(e) => setPrintQuantityFromInput(e.target.value)}
+              className="w-16 text-sm text-center border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <span className="text-xs text-blue-700">
+              = {printQuantity * selectedEntries.length} total labels
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedEntries.map((item) => (
+              <div key={item.id} className="flex items-center gap-2 bg-white border border-blue-200 rounded-full pl-3 pr-1.5 py-1">
+                <span className="text-sm text-gray-800 truncate max-w-[10rem]">{item.name}</span>
+                <button
+                  onClick={() => toggleSelected(item.id)}
+                  className="p-1 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                  title="Remove from selection"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Global feedback */}
       {error && !showModal && (

@@ -11,9 +11,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit, Clock,
-  Search, LayoutGrid, List, ChevronDown, HelpCircle, FolderOpen, Folder, X, Check,
+  Search, LayoutGrid, List, ChevronDown, HelpCircle, FolderOpen, Folder, X, Check, ClipboardList,
 } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate, updateTemplateFolder } from '../../../services/simulation/simulationService';
+import { printMedicationChecklist } from '../../../utils/medicationChecklistPrinter';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import CreateTemplateModal from './CreateTemplateModal';
 import LaunchSimulationModal from './LaunchSimulationModal';
@@ -226,6 +227,15 @@ const SimulationTemplates: React.FC = () => {
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
     setSelectedTemplate(template);
     setShowLaunchModal(true);
+  };
+
+  const handlePrintChecklist = async (template: SimulationTemplateWithDetails) => {
+    setActionLoading(template.id);
+    try {
+      await printMedicationChecklist(template);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (loading) {
@@ -601,6 +611,14 @@ const SimulationTemplates: React.FC = () => {
                         >
                           <Folder className="h-3 w-3" />
                         </button>
+                        <button
+                          onClick={() => handlePrintChecklist(template)}
+                          disabled={actionLoading === template.id}
+                          className="p-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-md disabled:opacity-50 transition-colors"
+                          title="Print medication checklist"
+                        >
+                          <ClipboardList className="h-3 w-3" />
+                        </button>
                         <TemplateExportButton
                           templateId={template.id}
                           templateName={template.name}
@@ -834,6 +852,14 @@ const SimulationTemplates: React.FC = () => {
                         title="Save snapshot"
                       >
                         <Save className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handlePrintChecklist(template)}
+                        disabled={actionLoading === template.id}
+                        className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg disabled:opacity-50 transition-colors"
+                        title="Print medication checklist"
+                      >
+                        <ClipboardList className="h-3.5 w-3.5" />
                       </button>
                       <TemplateExportButton
                         templateId={template.id}

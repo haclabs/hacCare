@@ -42,7 +42,8 @@ const TemplateExportButton: React.FC<TemplateExportButtonProps> = ({
       const confirmMessage = `Export template "${summary.template_name}"?\n\n` +
         `📦 Patients: ${summary.patient_count}\n` +
         `💊 Medications: ${summary.medication_count}\n` +
-        `📏 Size: ~${summary.estimated_size_kb} KB\n\n` +
+        `�️ Tables captured: ${summary.table_count} (${summary.record_count} total records)\n` +
+        `�📏 Size: ~${summary.estimated_size_kb} KB\n\n` +
         `A JSON file will be downloaded to your computer.`;
 
       if (!confirm(confirmMessage)) {

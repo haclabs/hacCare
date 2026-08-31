@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
-import pkg from './package.json'
+import pkg from './package.json' with { type: 'json' }
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -35,7 +35,7 @@ export default defineConfig({
     },
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html')
+        main: path.resolve(import.meta.dirname, 'index.html')
       },
       output: {
         // Manual chunking strategy for optimal bundle splitting
@@ -56,7 +56,6 @@ export default defineConfig({
             }
             // Everything else in one stable vendor chunk.
             // Keeping react, react-dom, react-router, and their transitive deps
-            // (react-big-calendar, prop-types, @restart/*, cookie, uncontrollable, etc.)
             // together prevents circular chunk warnings from cross-importing packages.
             return 'vendor-libs';
           }
@@ -92,12 +91,22 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(import.meta.dirname, './src')
     }
   },
   // Optimize dependencies
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: []
+  },
+  // Bind to all interfaces (IPv4 + IPv6) so Codespaces port forwarding can reach it
+  server: {
+    host: true,
+    // Codespaces forwards requests with a *.app.github.dev Host header; Vite's
+    // DNS-rebinding protection blocks unrecognized hosts by default (403).
+    allowedHosts: ['.app.github.dev']
+  },
+  preview: {
+    host: true
   }
 })

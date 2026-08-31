@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BookOpen, Search, ChevronRight, ArrowLeft, FileText } from 'lucide-react';
 import { KB_CATEGORIES, type KBCategory, type KBArticle } from './kbData';
+import WalkthroughsSection from './WalkthroughsSection';
 
 type KBView = 'home' | 'category' | 'article';
 
@@ -145,7 +146,9 @@ export const Documentation: React.FC = () => {
 
           {/* Home — category cards */}
           {view === 'home' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <>
+              <WalkthroughsSection />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {KB_CATEGORIES.map((cat) => {
                 const Icon = cat.icon;
                 return (
@@ -173,7 +176,8 @@ export const Documentation: React.FC = () => {
                   </button>
                 );
               })}
-            </div>
+              </div>
+            </>
           )}
 
           {/* Category — article list */}

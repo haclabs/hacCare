@@ -39,6 +39,7 @@ export interface BarcodeLabelItem {
   name: string;
   subtitle: string; // e.g. "25 mg · tablet"
   category?: string | null;
+  quantity?: number; // per-item label count override; falls back to the sheet's global quantity
 }
 
 // Single accent color for the label's left stripe (no longer varies by category)
@@ -49,6 +50,48 @@ export function splitMedicationSubtitle(subtitle: string): { dose: string; form:
   const [dose = '', form = ''] = subtitle.split(' · ');
   return { dose, form };
 }
+
+/**
+ * Splits a flattened (per-item duplicated) label array into fixed-size sheet pages,
+ * packing different items onto the same sheet when they fit, but never splitting a
+ * single item's labels across a sheet boundary next to a different item's labels —
+ * if an item's remaining labels don't fit in what's left on the current sheet, a
+ * fresh sheet is started for it first.
+ */
+export function paginateLabelsByItem(duplicated: BarcodeLabelItem[], pageSize: number): BarcodeLabelItem[][] {
+  const pages: BarcodeLabelItem[][] = [];
+  let currentPage: BarcodeLabelItem[] = [];
+  let i = 0;
+
+  while (i < duplicated.length) {
+    const itemId = duplicated[i].id;
+    let runEnd = i;
+    while (runEnd < duplicated.length && duplicated[runEnd].id === itemId) runEnd++;
+    let runLength = runEnd - i;
+
+    // Only break to a fresh sheet if this item wouldn't fully fit in the space left —
+    // otherwise let it join whatever's already on the current sheet.
+    if (currentPage.length > 0 && runLength > pageSize - currentPage.length) {
+      pages.push(currentPage);
+      currentPage = [];
+    }
+
+    while (runLength > 0) {
+      const take = Math.min(pageSize - currentPage.length, runLength);
+      currentPage.push(...duplicated.slice(i, i + take));
+      i += take;
+      runLength -= take;
+      if (currentPage.length === pageSize) {
+        pages.push(currentPage);
+        currentPage = [];
+      }
+    }
+  }
+
+  if (currentPage.length > 0) pages.push(currentPage);
+  return pages;
+}
+
 
 /** Stable barcode for a medication label (catalog barcode if set, else a fallback hash). */
 export function getMedicationBarcodeValue(medication: Pick<MedicationLabelData, 'id' | 'medication_name' | 'barcode'>): string {

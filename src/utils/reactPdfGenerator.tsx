@@ -8,12 +8,9 @@
  */
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image, pdf } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import type { StudentActivity } from '../services/simulation/studentActivityService';
-
-// Import logo (will be bundled as base64)
-import logo from '/public/images/logo.png';
 
 interface StudentReportData {
   simulationName: string;
@@ -35,11 +32,29 @@ const styles = StyleSheet.create({
   },
   
   // Header
-  logo: {
-    width: 120,
-    height: 40,
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    justifyContent: 'center',
     marginBottom: 20,
-    alignSelf: 'center',
+  },
+
+  logoBar: {
+    width: 3,
+    backgroundColor: '#3fbf9a',
+    marginRight: 8,
+  },
+
+  logoHac: {
+    fontSize: 22,
+    fontFamily: 'Helvetica-Bold',
+    color: '#4a4a46',
+  },
+
+  logoCare: {
+    fontSize: 22,
+    fontFamily: 'Helvetica-Bold',
+    color: '#3fbf9a',
   },
   
   title: {
@@ -667,7 +682,10 @@ const DebriefReportDocument: React.FC<{ data: StudentReportData }> = ({ data }) 
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Logo */}
-        <Image src={logo} style={styles.logo} />
+        <View style={styles.logoContainer}>
+          <View style={styles.logoBar} />
+          <Text style={styles.logoHac}>hac<Text style={styles.logoCare}>Care</Text></Text>
+        </View>
         
         {/* Title */}
         <Text style={styles.title}>Clinical Simulation</Text>
