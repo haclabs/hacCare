@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Tag,
   Printer,
+  X,
 } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
 import { useAuth } from '../../../hooks/useAuth';
@@ -98,6 +99,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [filterText, setFilterText] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showSmallPrintModal, setShowSmallPrintModal] = useState(false);
 
@@ -244,10 +246,18 @@ export const MedicationCatalogAdmin: React.FC = () => {
     : entries;
 
   const toggleSelected = (id: string) => {
+    const wasSelected = selectedIds.has(id);
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (wasSelected) next.delete(id); else next.add(id);
       return next;
+    });
+    setQuantities((prev) => {
+      if (wasSelected) {
+        const { [id]: _omit, ...rest } = prev;
+        return rest;
+      }
+      return prev[id] ? prev : { ...prev, [id]: 1 };
     });
   };
 
@@ -264,6 +274,20 @@ export const MedicationCatalogAdmin: React.FC = () => {
       filtered.forEach((e) => next.add(e.id));
       return next;
     });
+    setQuantities((prev) => {
+      const next = { ...prev };
+      if (allFilteredSelected) {
+        filtered.forEach((e) => { delete next[e.id]; });
+      } else {
+        filtered.forEach((e) => { if (!next[e.id]) next[e.id] = 1; });
+      }
+      return next;
+    });
+  };
+
+  const setQuantityFor = (id: string, raw: string) => {
+    const parsed = Math.max(1, Math.min(999, parseInt(raw, 10) || 1));
+    setQuantities((prev) => ({ ...prev, [id]: parsed }));
   };
 
   const selectedEntries: BarcodeLabelItem[] = entries
@@ -274,6 +298,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
       name: e.name,
       subtitle: `${e.strength} · ${e.formulation}`,
       category: e.category,
+      quantity: quantities[e.id] ?? 1,
     }));
 
   if (!canView) {
@@ -327,6 +352,45 @@ export const MedicationCatalogAdmin: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Selected for printing — per-item quantity */}
+      {selectedEntries.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-blue-900">
+              Selected for printing ({selectedEntries.length}) · set quantity per medication
+            </p>
+            <button
+              onClick={() => { setSelectedIds(new Set()); setQuantities({}); }}
+              className="text-xs text-blue-700 hover:underline"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedEntries.map((item) => (
+              <div key={item.id} className="flex items-center gap-2 bg-white border border-blue-200 rounded-full pl-3 pr-1.5 py-1">
+                <span className="text-sm text-gray-800 truncate max-w-[10rem]">{item.name}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={999}
+                  value={quantities[item.id] ?? 1}
+                  onChange={(e) => setQuantityFor(item.id, e.target.value)}
+                  className="w-14 text-sm text-center border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => toggleSelected(item.id)}
+                  className="p-1 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                  title="Remove from selection"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Global feedback */}
       {error && !showModal && (

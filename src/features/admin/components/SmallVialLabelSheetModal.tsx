@@ -9,15 +9,18 @@ interface SmallVialLabelSheetModalProps {
 }
 
 /**
- * Test print for Avery 5167 (1/2" x 1-3/4", 80 per sheet — 4 columns x 20 rows).
+ * Small vial label sheet for Avery 5167 (1/2" x 1-3/4", 80 per sheet — 4 columns x 20 rows).
  * Stripped-down content vs. the standard Avery 5160 label: no brand footer, no
  * barcode text — just name, dose/form, and a QR code, since there's no room.
  *
  * NOTE: column/row offsets below are a best estimate (0.3in side margins,
- * 0.3in gutters, 0.5in top/bottom margins, no vertical gap) — print one test
- * sheet on plain paper and hold it against real 5167 stock before relying on it.
+ * 0.3in gutters, 0.5in top/bottom margins, no vertical gap) — verify alignment
+ * against real 5167 stock before relying on it.
  */
 export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> = ({ items, onClose }) => {
+  // Each item may override the label count via its own `quantity`; defaults to 1
+  const duplicated = items.flatMap((item) => Array(item.quantity && item.quantity > 0 ? item.quantity : 1).fill(item));
+
   const handlePrint = async () => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
@@ -25,7 +28,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
     const QRCode = await import('qrcode');
     const qrByBarcode = new Map<string, string>();
     await Promise.all(
-      [...new Set(items.map((item) => item.barcode))].map(async (barcode) => {
+      [...new Set(duplicated.map((item) => item.barcode))].map(async (barcode) => {
         qrByBarcode.set(
           barcode,
           await QRCode.toDataURL(barcode, { width: 60, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
@@ -35,8 +38,8 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
 
     // Avery 5167 fits 80 labels per sheet (4 cols x 20 rows)
     const pages: BarcodeLabelItem[][] = [];
-    for (let i = 0; i < items.length; i += 80) {
-      pages.push(items.slice(i, i + 80));
+    for (let i = 0; i < duplicated.length; i += 80) {
+      pages.push(duplicated.slice(i, i + 80));
     }
 
     const printContent = `
@@ -120,7 +123,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Small Vial Labels (Test)</h2>
+            <h2 className="text-xl font-bold text-gray-900">Small Vial Labels</h2>
             <p className="text-sm text-gray-600 mt-1">Avery 5167 — 1/2" × 1-3/4" (80 per sheet)</p>
           </div>
           <div className="flex space-x-2">
@@ -129,7 +132,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
             >
               <Printer className="h-4 w-4 mr-2" />
-              Print Test Sheet
+              Print Labels
             </button>
             <button
               onClick={onClose}
@@ -154,7 +157,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
               return (
                 <div
                   key={item.id}
-                  className="border border-gray-300 bg-white flex items-center justify-between rounded overflow-hidden px-2 py-1"
+                  className="relative border border-gray-300 bg-white flex items-center justify-between rounded overflow-hidden px-2 py-1"
                   style={{ width: '1.75in', height: '0.5in', borderLeftWidth: '3px', borderLeftColor: MEDICATION_LABEL_ACCENT_COLOR }}
                 >
                   <div className="flex flex-col justify-center min-w-0 overflow-hidden">
@@ -167,13 +170,23 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
                   <div className="shrink-0 ml-1" style={{ width: '0.44in', height: '0.44in' }}>
                     <QrThumbnail data={item.barcode} size={44} />
                   </div>
+                  {(item.quantity ?? 1) > 1 && (
+                    <span className="absolute top-0 left-0 text-[8px] font-bold text-white bg-[#14776a] rounded-br px-1 py-0.5">
+                      ×{item.quantity}
+                    </span>
+                  )}
                 </div>
               );
             })}
           </div>
+          {duplicated.length !== items.length && (
+            <div className="mt-2 text-center text-blue-700 text-sm">
+              <strong>{duplicated.length} total labels</strong> from {items.length} selected item{items.length !== 1 ? 's' : ''}
+            </div>
+          )}
           {items.length > 20 && (
             <div className="mt-4 text-center text-gray-500 text-sm">
-              Preview showing first 20 labels. Print will include all {items.length} labels.
+              Preview showing first 20 labels. Print will include all {duplicated.length} labels.
             </div>
           )}
         </div>

@@ -39,6 +39,7 @@ export interface BarcodeLabelItem {
   name: string;
   subtitle: string; // e.g. "25 mg · tablet"
   category?: string | null;
+  quantity?: number; // per-item label count override; falls back to the sheet's global quantity
 }
 
 // Single accent color for the label's left stripe (no longer varies by category)

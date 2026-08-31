@@ -45,7 +45,8 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
   quantity = 1,
   onClose,
 }) => {
-  const duplicated = items.flatMap((item) => Array(quantity).fill(item));
+  // Each item may override the label count via its own `quantity`; otherwise falls back to the sheet-wide default
+  const duplicated = items.flatMap((item) => Array(item.quantity && item.quantity > 0 ? item.quantity : quantity).fill(item));
 
   const handlePrint = async () => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -196,11 +197,10 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
             <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
             <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
           </div>
-          {quantity > 1 && (
+          {duplicated.length !== items.length && (
             <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded">
               <p className="text-sm text-purple-700">
-                <strong>Quantity: {quantity}×</strong> - Each item will have {quantity} labels printed (
-                {items.length} × {quantity} = {duplicated.length} total labels)
+                <strong>{duplicated.length} total labels</strong> from {items.length} selected item{items.length !== 1 ? 's' : ''}
               </p>
             </div>
           )}
@@ -221,6 +221,11 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
                   <div className="absolute top-1.5 right-1.5 w-14 h-14">
                     <QrThumbnail data={item.barcode} size={56} />
                   </div>
+                  {(item.quantity ?? quantity) > 1 && (
+                    <span className="absolute top-1.5 left-1.5 text-[9px] font-bold text-white bg-[#14776a] rounded-full px-1.5 py-0.5">
+                      ×{item.quantity ?? quantity}
+                    </span>
+                  )}
                   <div className="flex items-baseline justify-between text-gray-400">
                     <span className="text-[9.5px]"><strong className="text-[#1e3a5f]">hac</strong><strong className="text-[#3EB489]">Care</strong> EMR Sim</span>
                     <span className="text-[8px] font-mono">{item.barcode}</span>
