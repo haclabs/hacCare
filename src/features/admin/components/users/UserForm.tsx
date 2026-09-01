@@ -5,6 +5,7 @@ import { parseAuthError } from '../../../../utils/authErrorParser';
 import { useAuth } from '../../../../hooks/useAuth';
 import { getAllTenants } from '../../../../services/admin/tenantService';
 import { getPrograms, getUserPrograms, bulkAssignUserToPrograms, type Program } from '../../../../services/admin/programService';
+import { inviteUser } from '../../../../services/admin/inviteUserService';
 import { Tenant } from '../../../../types';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -142,6 +143,64 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     setLoading(true);
 
     let authData: Awaited<ReturnType<typeof supabase.auth.signUp>>['data'] | null = null;
+    let invitedUserId: string | undefined;
+
+    // Shared post-creation steps (profile fields + tenant assignment) used by
+    // both the manual-password and invite-email creation paths.
+    const finalizeNewUser = async (newUserId: string): Promise<boolean> => {
+      // Wait for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      const { error: rpcError } = await supabase
+        .rpc('update_user_profile_admin', {
+          p_user_id: newUserId,
+          p_first_name: formData.first_name || null,
+          p_last_name: formData.last_name || null,
+          p_role: formData.role,
+          p_department: formData.department || null,
+          p_license_number: formData.license_number || null,
+          p_phone: formData.phone || null,
+          p_is_active: formData.is_active,
+          p_simulation_only: formData.simulation_only
+        });
+
+      if (rpcError) {
+        secureLogger.error('Profile update error for new user', rpcError);
+        setError('User created but profile update failed: ' + parseAuthError(rpcError));
+      } else {
+        secureLogger.debug('Profile updated via RPC for new user');
+      }
+
+      // Assign user to tenant (for super admin or default tenant)
+      const tenantToAssign = hasRole('super_admin') ? selectedTenantId : null;
+      if (tenantToAssign) {
+        try {
+          // Use upsert in case a trigger already created an entry
+          const { error: assignError } = await supabase
+            .from('tenant_users')
+            .upsert({
+              user_id: newUserId,
+              tenant_id: tenantToAssign,
+              is_active: true,
+              role: formData.role === 'super_admin' ? 'admin' : formData.role
+            }, {
+              onConflict: 'user_id,tenant_id'
+            });
+
+          if (assignError) {
+            secureLogger.error('Error assigning new user to tenant', assignError);
+            setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
+            return false;
+          }
+        } catch (assignError: any) {
+          secureLogger.error('Error in new user tenant assignment', assignError);
+          setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
+          return false;
+        }
+      }
+
+      return true;
+    };
 
     try {
       if (user) {
@@ -195,8 +254,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         }
       } else {
         // Create new user
-        if (!formData.email || !formData.password) {
-          setError('Email and password are required');
+        if (!formData.email) {
+          setError('Email is required');
           return;
         }
 
@@ -206,36 +265,61 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           return;
         }
 
-        // Log what we're about to send
-        secureLogger.debug('Creating new user', { email: formData.email });
+        if (formData.role === 'instructor') {
+          // Invite flow: no manual password - send a branded welcome email
+          // with a link that lets the instructor set their own password.
+          secureLogger.debug('Inviting new instructor', { email: formData.email });
 
-        const signUpResult = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              first_name: formData.first_name,
-              last_name: formData.last_name,
-            }
+          const { data: inviteResult, error: inviteError } = await inviteUser({
+            email: formData.email,
+            firstName: formData.first_name,
+            lastName: formData.last_name,
+          });
+
+          if (inviteError || !inviteResult) {
+            setError(inviteError || 'Failed to send invitation email');
+            return;
           }
-        });
-        authData = signUpResult.data;
-        const authError = signUpResult.error;
 
-        if (authError) {
-          setError(parseAuthError(authError));
-          return;
-        }
+          invitedUserId = inviteResult.userId;
 
-        // Supabase returns null user (no error) when the email already exists.
-        // This is intentional on their end to prevent email enumeration, but we
-        // need to surface it clearly here.
-        if (!authData.user) {
-          setError('Unable to create user. The email address may already be registered. Check Supabase Auth > Users to confirm.');
-          return;
-        }
+          const finalized = await finalizeNewUser(invitedUserId);
+          if (!finalized) return;
+        } else {
+          if (!formData.password) {
+            setError('Password is required');
+            return;
+          }
 
-        if (authData.user) {
+          // Log what we're about to send
+          secureLogger.debug('Creating new user', { email: formData.email });
+
+          const signUpResult = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              data: {
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+              }
+            }
+          });
+          authData = signUpResult.data;
+          const authError = signUpResult.error;
+
+          if (authError) {
+            setError(parseAuthError(authError));
+            return;
+          }
+
+          // Supabase returns null user (no error) when the email already exists.
+          // This is intentional on their end to prevent email enumeration, but we
+          // need to surface it clearly here.
+          if (!authData.user) {
+            setError('Unable to create user. The email address may already be registered. Check Supabase Auth > Users to confirm.');
+            return;
+          }
+
           // For admin-created users, immediately confirm their email so they can login
           try {
             const { error: confirmError } = await supabase
@@ -253,65 +337,13 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             // Continue with user creation even if confirmation fails
           }
 
-          // Wait for the trigger to create the profile
-          await new Promise(resolve => setTimeout(resolve, 800));
-
-          // Use RPC function to update profile (bypasses RLS)
-          secureLogger.debug('Updating user profile via RPC for new user');
-
-          const { error: rpcError } = await supabase
-            .rpc('update_user_profile_admin', {
-              p_user_id: authData.user.id,
-              p_first_name: formData.first_name || null,
-              p_last_name: formData.last_name || null,
-              p_role: formData.role,
-              p_department: formData.department || null,
-              p_license_number: formData.license_number || null,
-              p_phone: formData.phone || null,
-              p_is_active: formData.is_active,
-              p_simulation_only: formData.simulation_only
-            });
-
-          if (rpcError) {
-            secureLogger.error('Profile update error for new user', rpcError);
-            setError('User created but profile update failed: ' + parseAuthError(rpcError));
-            // Don't return - continue with tenant assignment
-          } else {
-            secureLogger.debug('Profile updated via RPC for new user');
-          }
-
-          // Assign user to tenant (for super admin or default tenant)
-          const tenantToAssign = hasRole('super_admin') ? selectedTenantId : null;
-          if (tenantToAssign) {
-            try {
-              // Use upsert in case a trigger already created an entry
-              const { error: assignError } = await supabase
-                .from('tenant_users')
-                .upsert({
-                  user_id: authData.user.id,
-                  tenant_id: tenantToAssign,
-                  is_active: true,
-                  role: formData.role === 'super_admin' ? 'admin' : formData.role
-                }, {
-                  onConflict: 'user_id,tenant_id'
-                });
-
-              if (assignError) {
-                secureLogger.error('Error assigning new user to tenant', assignError);
-                setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
-                return;
-              }
-            } catch (assignError: any) {
-              secureLogger.error('Error in new user tenant assignment', assignError);
-              setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
-              return;
-            }
-          }
+          const finalized = await finalizeNewUser(authData.user.id);
+          if (!finalized) return;
         }
       }
 
       // Handle program assignments for instructors and coordinators
-      const userId = user?.id || authData?.user?.id;
+      const userId = user?.id || authData?.user?.id || invitedUserId;
       if (userId && (formData.role === 'instructor' || formData.role === 'coordinator')) {
         // Always run bulkAssignUserToPrograms - it will clear old assignments if empty
         secureLogger.debug('Assigning programs to user');
@@ -413,7 +445,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             </div>
           </div>
 
-          {!user && (
+          {!user && formData.role !== 'instructor' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -426,6 +458,14 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
                 minLength={6}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+          )}
+
+          {!user && formData.role === 'instructor' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                A welcome email will be sent to {formData.email || 'this address'} with a link for them to set their own password.
+              </p>
             </div>
           )}
 
