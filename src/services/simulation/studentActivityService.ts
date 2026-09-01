@@ -516,7 +516,10 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('recorded_at', simulationStartTime || '1970-01-01')
+        // Strict > : restored template-baseline rows get created_at/recorded_at
+        // exactly equal to starts_at (Postgres now() is frozen per-transaction),
+        // so >= would wrongly include them as "student" activity.
+        .gt('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
 
       // Medication Administrations (BCMA)
@@ -525,7 +528,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('timestamp', simulationStartTime || '1970-01-01')
+        .gt('timestamp', simulationStartTime || '1970-01-01')
         .order('timestamp', { ascending: false })
         .then(result => {
           secureLogger.debug('💊 Medications query result:', { 
@@ -542,7 +545,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Lab Acknowledgements - get from lab_ack_events where student_name and note are stored
@@ -568,7 +571,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('acknowledged_by_student', 'is', null)
-        .gte('acknowledged_at', simulationStartTime || '1970-01-01')
+        .gt('acknowledged_at', simulationStartTime || '1970-01-01')
         .order('acknowledged_at', { ascending: false }),
 
       // Patient Notes
@@ -577,7 +580,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Handover Notes — student created (student_name set, acknowledged_by null)
@@ -597,7 +600,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Devices (from HAC Map) - query devices table directly
@@ -606,7 +609,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('inserted_by', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
           secureLogger.debug('🔧 Devices query result:', {
@@ -623,7 +626,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('entered_by', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
           secureLogger.debug('🩹 Wounds query result:', {
@@ -640,7 +643,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('assessed_at', simulationStartTime || '1970-01-01')
+        .gt('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
         .then(result => {
           secureLogger.debug('🔧📋 Device Assessments query result:', {
@@ -657,7 +660,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('assessed_at', simulationStartTime || '1970-01-01')
+        .gt('assessed_at', simulationStartTime || '1970-01-01')
         .order('assessed_at', { ascending: false })
         .then(result => {
           secureLogger.debug('🩹📋 Wound Assessments query result:', {
@@ -693,7 +696,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false })
         .then(result => {
           secureLogger.debug('📜 Advanced Directives query result:', {
@@ -710,7 +713,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('created_at', simulationStartTime || '1970-01-01')
+        .gt('created_at', simulationStartTime || '1970-01-01')
         .order('created_at', { ascending: false }),
 
       // Neuro Assessments
@@ -719,7 +722,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('recorded_at', simulationStartTime || '1970-01-01')
+        .gt('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
 
       // BBIT Entries
@@ -728,7 +731,7 @@ export async function getStudentActivitiesBySimulation(
         .select('*')
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null)
-        .gte('recorded_at', simulationStartTime || '1970-01-01')
+        .gt('recorded_at', simulationStartTime || '1970-01-01')
         .order('recorded_at', { ascending: false }),
 
       // Newborn Assessment

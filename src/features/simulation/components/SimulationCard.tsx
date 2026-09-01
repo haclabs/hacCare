@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound } from 'lucide-react';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +15,8 @@ interface SimulationCardProps {
   onEditCategories: (sim: SimulationActiveWithDetails) => void;
   onPrintLabels: (sim: SimulationActiveWithDetails) => void;
   onViewTemplateChanges: (sim: SimulationActiveWithDetails) => void;
+  /** Opens the auto-generated student logins modal for this simulation. */
+  onViewLogins: (sim: SimulationActiveWithDetails) => void;
   /** Dev validation tool (super_admin only) — seeds QA_VALIDATION rows into this simulation's live tenant. */
   onSeedTestData?: (sim: SimulationActiveWithDetails) => void;
   seeding?: boolean;
@@ -31,6 +33,7 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
   onEditCategories,
   onPrintLabels,
   onViewTemplateChanges,
+  onViewLogins,
   onSeedTestData,
   seeding,
 }) => {
@@ -142,6 +145,13 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
             title="Print patient and medication labels"
           >
             <Printer className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onViewLogins(sim)}
+            className="p-1.5 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors"
+            title="View auto-generated student logins"
+          >
+            <KeyRound className="h-4 w-4" />
           </button>
           {sim.status === 'running' ? (
             <button
