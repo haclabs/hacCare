@@ -14,7 +14,6 @@ import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
 import { AuthCallback } from './components/Auth/AuthCallback';
-import { SetNewPassword } from './components/Auth/SetNewPassword';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 import { PatientForm } from './features/patients/components/forms/PatientForm';
 import { secureLogger } from './lib/security/secureLogger';
@@ -694,7 +693,6 @@ function App() {
             <Routes>
               <Route index element={renderContent()} />
               <Route path="auth/callback" element={<AuthCallback />} />
-              <Route path="set-password" element={<SetNewPassword />} />
               <Route path="simulation-portal" element={
                 <SafeSuspense>
                   <SimulationRouter />

@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'A valid email address is required' }, 400)
   }
 
-  const redirectTo = `${SITE_URL.replace(/\/$/, '')}/app/set-password`
+  const redirectTo = `${SITE_URL.replace(/\/$/, '')}/set-password`
 
   let linkResult = await supabaseAdmin.auth.admin.generateLink({
     type: 'invite',
