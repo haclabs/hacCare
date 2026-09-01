@@ -140,12 +140,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               {creatingProfile ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creating Profile...</span>
+                  <span>Setting Up...</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">
                   <User className="h-5 w-5" />
-                  <span>Create Hospital Profile</span>
+                  <span>Finish Setting Up Your Profile & Log In</span>
                 </div>
               )}
             </button>
