@@ -35,6 +35,7 @@ export interface SimulationAutoStudent {
 // Avoid visually ambiguous characters (0/O, 1/l/I) since these get read aloud/typed
 const READABLE_LETTERS = 'abcdefghjkmnpqrstuvwxyz';
 const READABLE_DIGITS = '23456789';
+const READABLE_SYMBOLS = '!@#$%&*';
 
 function randomFrom(chars: string, length: number): string {
   // crypto.getRandomValues, not Math.random() — this backs actual login passwords.
@@ -47,9 +48,9 @@ function randomFrom(chars: string, length: number): string {
   return out;
 }
 
-/** Short, easy-to-read password, e.g. "Mud72567" (1 upper + 2 lower + 5 digits). */
+/** Short, easy-to-read password, e.g. "Mud7256!" (1 upper + 2 lower + 4 digits + 1 symbol) - satisfies any Supabase complexity policy. */
 function generatePassword(): string {
-  return `${randomFrom(READABLE_LETTERS, 1).toUpperCase()}${randomFrom(READABLE_LETTERS, 2)}${randomFrom(READABLE_DIGITS, 5)}`;
+  return `${randomFrom(READABLE_LETTERS, 1).toUpperCase()}${randomFrom(READABLE_LETTERS, 2)}${randomFrom(READABLE_DIGITS, 4)}${randomFrom(READABLE_SYMBOLS, 1)}`;
 }
 
 /** Short numeric code shared by the email and student number, e.g. "247". */
