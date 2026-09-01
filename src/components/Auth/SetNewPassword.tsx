@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Mail } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import { supabase } from '../../lib/api/supabase';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { HacCareLogo } from '../Layout/HacCareLogo';
 
-const MIN_PASSWORD_LENGTH = 12;
+const MIN_PASSWORD_LENGTH = 8;
+
+function getPasswordError(password: string): string | null {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must include at least one uppercase letter';
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return 'Password must include at least one symbol';
+  }
+  return null;
+}
 
 /**
  * Landing page for invite/recovery links - lets a new or reset user pick a
@@ -71,8 +85,9 @@ export const SetNewPassword: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+    const passwordError = getPasswordError(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
     if (password !== confirmPassword) {
@@ -99,30 +114,37 @@ export const SetNewPassword: React.FC = () => {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
       </div>
     );
   }
 
   if (!hasSession && tokenHash && otpType) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
-          <Mail className="h-10 w-10 text-blue-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome to hacCare</h2>
-          <p className="text-gray-600 mb-6">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+          <div className="flex justify-center mb-5">
+            <HacCareLogo variant="dark" size="38px" withBar />
+          </div>
+          <Mail className="h-10 w-10 text-cyan-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Welcome to hacCare</h2>
+          <p className="text-slate-400 mb-6">
             Click below to activate your account and set your password.
           </p>
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-left">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 mb-4 text-left flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
           <button
             onClick={handleActivate}
             disabled={activating}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#19ADF2' }}
+            onMouseEnter={(e) => !activating && (e.currentTarget.style.backgroundColor = '#1598D6')}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
           >
             {activating ? 'Activating...' : 'Activate Account'}
           </button>
@@ -133,16 +155,16 @@ export const SetNewPassword: React.FC = () => {
 
   if (!hasSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
-          <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Invite link invalid or expired</h2>
-          <p className="text-gray-600 mb-6">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+          <AlertCircle className="h-10 w-10 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Invite link invalid or expired</h2>
+          <p className="text-slate-400 mb-6">
             Please ask your administrator to resend the invitation email.
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-cyan-400 hover:text-cyan-300 font-medium"
           >
             Go to login
           </button>
@@ -152,68 +174,70 @@ export const SetNewPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Welcome to hacCare</h1>
-          <p className="text-gray-600 mt-2">Set a password to finish creating your account</p>
+          <div className="flex justify-center mb-5">
+            <HacCareLogo variant="dark" size="38px" withBar />
+          </div>
+          <p className="text-slate-400 text-sm">Set a password to finish creating your account</p>
         </div>
 
         {success ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <p className="text-green-800 text-sm">Password set! Redirecting you into hacCare...</p>
+          <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-400" />
+            <p className="text-green-300 text-sm">Password set! Redirecting you into hacCare...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-700 text-sm">{error}</p>
+              <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                <p className="text-red-300 text-sm">{error}</p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-sm font-medium text-slate-400 mb-2">New Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={MIN_PASSWORD_LENGTH}
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors pr-12"
+                  placeholder={`At least ${MIN_PASSWORD_LENGTH} characters, 1 uppercase, 1 symbol`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={MIN_PASSWORD_LENGTH}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">Confirm Password</label>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={MIN_PASSWORD_LENGTH}
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors"
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#19ADF2' }}
+              onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#1598D6')}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
             >
               {loading ? 'Setting password...' : 'Set Password & Continue'}
             </button>
