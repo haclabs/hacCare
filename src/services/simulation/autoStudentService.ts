@@ -37,9 +37,12 @@ const READABLE_LETTERS = 'abcdefghjkmnpqrstuvwxyz';
 const READABLE_DIGITS = '23456789';
 
 function randomFrom(chars: string, length: number): string {
+  // crypto.getRandomValues, not Math.random() — this backs actual login passwords.
+  const bytes = new Uint32Array(length);
+  crypto.getRandomValues(bytes);
   let out = '';
   for (let i = 0; i < length; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
+    out += chars[bytes[i] % chars.length];
   }
   return out;
 }

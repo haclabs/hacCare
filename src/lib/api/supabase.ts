@@ -116,7 +116,7 @@ export function createEphemeralAuthClient() {
         persistSession: false,
         autoRefreshToken: false,
         detectSessionInUrl: false,
-        storageKey: `sb-ephemeral-${Math.random().toString(36).slice(2)}`,
+        storageKey: `sb-ephemeral-${crypto.randomUUID()}`,
       }
     }
   );
