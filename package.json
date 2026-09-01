@@ -29,7 +29,6 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "test:tenant-isolation": "vite-node test-tenant-isolation.ts",
     "supabase:types": "supabase gen types typescript --linked > src/types/supabase.ts",
     "clean": "rm -rf dist node_modules/.vite",
     "deps:update": "ncu -u && npm install",

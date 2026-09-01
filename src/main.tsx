@@ -11,6 +11,7 @@ import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { LoginForm } from './components/Auth/LoginForm';
 import { PrivacyPage } from './components/Auth/PrivacyPage';
 import { LandingPage } from './components/LandingPage/LandingPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { queryClient } from './lib/api/queryClient';
 import { initializeBarcodeScanner } from './lib/barcode/barcodeScanner';
 import App from './App.tsx';
@@ -48,33 +49,37 @@ testSupabaseConnection().then((isConnected) => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <SimulationAwareAuthProvider>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              
-              {/* Protected application routes */}
-              <Route path="/app/*" element={
-                <TenantProvider>
-                  <PatientProvider>
-                    <ProtectedRoute>
-                      <App />
-                    </ProtectedRoute>
-                  </PatientProvider>
-                </TenantProvider>
-              } />
-            </Routes>
-          </SimulationAwareAuthProvider>
-        </ThemeProvider>
-        {/* ReactQueryDevtools hidden - uncomment to show TanStack devtools */}
-        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-      </QueryClientProvider>
-    </BrowserRouter>
+    {/* Top-level safety net: catches any render error not already caught by
+        a route-level boundary, so the whole app can't go blank. */}
+    <ErrorBoundary>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <SimulationAwareAuthProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                
+                {/* Protected application routes */}
+                <Route path="/app/*" element={
+                  <TenantProvider>
+                    <PatientProvider>
+                      <ProtectedRoute>
+                        <App />
+                      </ProtectedRoute>
+                    </PatientProvider>
+                  </TenantProvider>
+                } />
+              </Routes>
+            </SimulationAwareAuthProvider>
+          </ThemeProvider>
+          {/* ReactQueryDevtools hidden - uncomment to show TanStack devtools */}
+          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+        </QueryClientProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>
 );
 
