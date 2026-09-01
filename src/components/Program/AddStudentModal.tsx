@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Hash } from 'lucide-react';
 import { addStudentToRoster } from '../../services/admin/programService';
-import { supabase } from '../../lib/api/supabase';
+import { supabase, createEphemeralAuthClient } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 interface AddStudentModalProps {
@@ -33,8 +33,10 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
     setLoading(true);
 
     try {
-      // 1. Create auth user account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // 1. Create auth user account via an isolated client — signUp() on the
+      // shared `supabase` client would swap the instructor's active session
+      // to this new student, breaking every call after it (steps 3 and 4).
+      const { data: authData, error: authError } = await createEphemeralAuthClient().auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -66,7 +68,14 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
 
       if (profileError) throw profileError;
 
-      // 4. Add to student roster
+      // 4. Mark confirmed so the student can sign in immediately without
+      // needing to click an email confirmation link.
+      const { error: confirmError } = await supabase.rpc('confirm_simulation_student_email', {
+        p_user_id: authData.user.id
+      });
+      if (confirmError) throw confirmError;
+
+      // 5. Add to student roster
       const { error: rosterError } = await addStudentToRoster(
         programId,
         authData.user.id,

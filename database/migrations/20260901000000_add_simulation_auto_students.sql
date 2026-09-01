@@ -1,9 +1,72 @@
 -- ============================================================================
--- FIX: DELETE SIMULATION WITH CHILD TENANTS
+-- AUTO-GENERATED SIMULATION-ONLY STUDENT LOGINS
 -- ============================================================================
--- Problem: delete_simulation fails when simulation tenant has child tenants
---          (foreign key constraint violation on parent_tenant_id)
--- Solution: Delete child tenants before deleting the parent simulation tenant
+-- Tracks throwaway "simulation-only" student accounts created via the
+-- "auto-generate student" checkbox on Launch Simulation. Each account is
+-- tied 1:1 to the simulation_active row it was created for, persists through
+-- pause/resume/reset/complete, and is only removed (account + row) when the
+-- owning active simulation is deleted — see delete_simulation() below.
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.simulation_auto_students (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  simulation_id UUID NOT NULL REFERENCES public.simulation_active(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  program_id UUID REFERENCES public.programs(id) ON DELETE SET NULL,
+  student_number TEXT NOT NULL,
+  email TEXT NOT NULL,
+  -- Plaintext initial password so an instructor can hand it to a student at a
+  -- shared workstation. Accepted tradeoff: these are disposable, no-PII,
+  -- simulation-scoped accounts (no access outside this simulation's tenant),
+  -- the row is locked down by RLS to users with access to that tenant, and
+  -- the account + row are hard-deleted together when the simulation is
+  -- deleted. Do not reuse this pattern for real user accounts.
+  temp_password TEXT NOT NULL,
+  label TEXT,
+  created_by UUID NOT NULL REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_simulation_auto_students_simulation_id
+  ON public.simulation_auto_students(simulation_id);
+
+ALTER TABLE public.simulation_auto_students ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS simulation_auto_students_select ON public.simulation_auto_students;
+CREATE POLICY simulation_auto_students_select
+  ON public.simulation_auto_students
+  FOR SELECT
+  TO authenticated
+  USING (
+    created_by = auth.uid()
+    OR EXISTS (
+      SELECT 1
+      FROM public.simulation_active sa
+      JOIN public.tenant_users tu ON tu.tenant_id = sa.tenant_id
+      WHERE sa.id = simulation_auto_students.simulation_id
+        AND tu.user_id = auth.uid()
+        AND tu.is_active = true
+    )
+  );
+
+DROP POLICY IF EXISTS simulation_auto_students_insert ON public.simulation_auto_students;
+CREATE POLICY simulation_auto_students_insert
+  ON public.simulation_auto_students
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (created_by = auth.uid());
+
+GRANT SELECT, INSERT ON public.simulation_auto_students TO authenticated;
+
+COMMENT ON TABLE public.simulation_auto_students IS
+'Auto-generated simulation-only student logins created from Launch Simulation. Row (and the underlying auth.users account) is only removed when the owning simulation_active row is deleted, via delete_simulation().';
+
+-- ============================================================================
+-- REDEPLOY delete_simulation() — also removes auto-generated student accounts
+-- ============================================================================
+-- ⚠️ The live database runs its own compiled copy of this function — editing
+-- database/functions/delete_simulation.sql locally does NOT update it.
+-- This CREATE OR REPLACE is what actually ships the change.
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.delete_simulation(
@@ -144,7 +207,7 @@ BEGIN
   -- Delete tenant users
   DELETE FROM tenant_users WHERE tenant_id = v_simulation_tenant_id;
 
-  -- ⚠️ NEW: Delete any child tenants BEFORE deleting the parent simulation tenant
+  -- ⚠️ Delete any child tenants BEFORE deleting the parent simulation tenant
   -- This prevents foreign key violations on parent_tenant_id
   FOR v_child_tenant_id IN 
     SELECT id FROM tenants WHERE parent_tenant_id = v_simulation_tenant_id

@@ -96,6 +96,33 @@ export const supabase = createClient(
 export const isSupabaseConfigured = hasValidConfig;
 
 /**
+ * Creates a throwaway Supabase client for one-off `auth.signUp()` calls made
+ * while an admin/instructor is already logged in (e.g. creating a student
+ * account for someone else). Calling `signUp()` on the shared `supabase`
+ * client silently swaps its active session to the newly created user —
+ * this isolated client has no persisted/shared session, so it can't do that.
+ *
+ * Must use a distinct `storageKey` (not just `persistSession: false`) —
+ * GoTrueClient coordinates cross-instance locks by storage key, so sharing
+ * the main client's key here corrupts its session on the very next request
+ * ("Multiple GoTrueClient instances detected... same storage key").
+ */
+export function createEphemeralAuthClient() {
+  return createClient(
+    supabaseUrl || 'https://placeholder.supabase.co',
+    supabaseAnonKey || 'placeholder-key',
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storageKey: `sb-ephemeral-${crypto.randomUUID()}`,
+      }
+    }
+  );
+}
+
+/**
  * User Role Types
  */
 export type UserRole = 'nurse' | 'admin' | 'super_admin' | 'instructor' | 'coordinator';

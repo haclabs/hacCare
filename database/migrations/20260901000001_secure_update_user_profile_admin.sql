@@ -1,21 +1,30 @@
--- Function to update user profile (bypasses RLS for admins)
--- This allows admins to set first_name, last_name, and other fields when creating users
+-- ============================================================================
+-- SECURITY FIX: update_user_profile_admin had no caller permission check
+-- ============================================================================
+-- Found via Supabase security advisor while testing the auto-generate-student
+-- feature. This SECURITY DEFINER function updated ANY user_profiles row
+-- (including `role`) for ANY caller — a brand-new, freshly signed-up account
+-- (role defaults to 'nurse') could call this RPC directly from the browser
+-- console and set its own role to 'super_admin'. UI buttons that call this
+-- were role-gated, but the RPC itself enforced nothing.
 --
--- SECURITY: caller must already hold super_admin/coordinator/admin/instructor role.
--- Instructors are further capped to only assign student/nurse roles, and
--- admins/coordinators cannot assign roles above their own tier. See migration
--- 20260901000001_secure_update_user_profile_admin.sql for the fix history —
--- this function previously had NO caller permission check at all.
-
--- Drop old version if exists (without simulation_only parameter)
-DROP FUNCTION IF EXISTS public.update_user_profile_admin(uuid, text, text, text, text, text, text, boolean);
+-- Fix: require the caller to already hold a role that legitimately manages
+-- other users, and cap which target roles each caller tier may assign —
+-- mirroring the exact hierarchy already enforced client-side in UserForm.tsx:
+--   super_admin -> can assign any role
+--   coordinator -> coordinator, instructor, nurse, student (not admin/super_admin)
+--   admin       -> admin, instructor, nurse, student (not coordinator/super_admin)
+--   instructor  -> student, nurse only (its only legitimate use: creating
+--                  students via AddStudentModal / autoStudentService)
+--   anyone else -> rejected outright
+-- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.update_user_profile_admin(
   p_user_id uuid,
   p_first_name text,
   p_last_name text,
   p_role text,
-  p_department text DEFAULT NULL, -- DEPRECATED: kept for backwards compatibility, maps to primary_program
+  p_department text DEFAULT NULL,
   p_license_number text DEFAULT NULL,
   p_phone text DEFAULT NULL,
   p_is_active boolean DEFAULT true,
@@ -69,7 +78,6 @@ BEGIN
     simulation_only = EXCLUDED.simulation_only,
     updated_at      = NOW();
 
-  -- Return the updated profile
   SELECT json_build_object(
     'success', true,
     'user_id', p_user_id,
@@ -82,7 +90,6 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION public.update_user_profile_admin TO authenticated;
 
 COMMENT ON FUNCTION public.update_user_profile_admin IS

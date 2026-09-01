@@ -525,16 +525,15 @@ export async function addStudentToRoster(
   studentNumber: string
 ): Promise<{ data: StudentRoster | null; error: any }> {
   try {
+    // Uses a SECURITY DEFINER RPC rather than a direct table insert so this
+    // doesn't depend on student_roster's RLS policy exactly matching what's
+    // tracked in migrations (see add_student_to_roster_admin for context).
     const { data, error } = await supabase
-      .from('student_roster')
-      .insert({
-        program_id: programId,
-        user_id: userId,
-        student_number: studentNumber,
-        enrollment_date: new Date().toISOString().split('T')[0],
-        created_by: (await supabase.auth.getUser()).data.user?.id
+      .rpc('add_student_to_roster_admin', {
+        p_program_id: programId,
+        p_user_id: userId,
+        p_student_number: studentNumber
       })
-      .select()
       .single();
 
     if (error) throw error;

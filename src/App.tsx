@@ -533,22 +533,26 @@ function App() {
                   <p className="text-gray-600 dark:text-gray-400">No patients are currently assigned to you.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {patients.map((patient) => (
-                    <PatientCard
-                      key={patient.id}
-                      patient={patient}
-                      onClick={() => handlePatientSelect(patient)}
-                      onDelete={currentTenant?.tenant_type === 'simulation_template' ? () => {
-                        if (!confirm(`Remove ${patient.first_name} ${patient.last_name} from this simulation template? This cannot be undone.`)) return;
-                        deletePatient(patient.id).catch((err) => {
-                          secureLogger.error('Error removing patient from template:', err);
-                          alert('Failed to remove patient. Please try again.');
-                        });
-                      } : undefined}
-                    />
-                  ))}
-                </div>
+                // PatientCard is lazy-loaded — must stay inside a Suspense/ErrorBoundary
+                // boundary or a chunk-load hiccup here has nothing to catch it.
+                <SafeSuspense>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {patients.map((patient) => (
+                      <PatientCard
+                        key={patient.id}
+                        patient={patient}
+                        onClick={() => handlePatientSelect(patient)}
+                        onDelete={currentTenant?.tenant_type === 'simulation_template' ? () => {
+                          if (!confirm(`Remove ${patient.first_name} ${patient.last_name} from this simulation template? This cannot be undone.`)) return;
+                          deletePatient(patient.id).catch((err) => {
+                            secureLogger.error('Error removing patient from template:', err);
+                            alert('Failed to remove patient. Please try again.');
+                          });
+                        } : undefined}
+                      />
+                    ))}
+                  </div>
+                </SafeSuspense>
               )}
             </div>
 

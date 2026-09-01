@@ -10,6 +10,7 @@ import VersionComparisonModal from './VersionComparisonModal';
 import { SimulationCard } from './SimulationCard';
 import { SimulationInstructorGuide } from './SimulationInstructorGuide';
 import { EditCategoriesModal } from './EditCategoriesModal';
+import { SimulationAutoStudentsModal } from './SimulationAutoStudentsModal';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { useAuth } from '../../../contexts/auth/useAuth';
@@ -20,6 +21,7 @@ const ActiveSimulations: React.FC = () => {
   const { profile } = useAuth();
   const [seedingSimId, setSeedingSimId] = useState<string | null>(null);
   const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
+  const [viewLoginsSimulation, setViewLoginsSimulation] = useState<SimulationActiveWithDetails | null>(null);
   const {
     simulations,
     filteredSimulations,
@@ -187,6 +189,7 @@ const ActiveSimulations: React.FC = () => {
               onEditCategories={handleEditCategories}
               onPrintLabels={setPrintLabelsSimulation}
               onViewTemplateChanges={handleViewTemplateChanges}
+              onViewLogins={setViewLoginsSimulation}
               onSeedTestData={profile?.role === 'super_admin' ? handleSeedTestData : undefined}
               seeding={seedingSimId === sim.id}
             />
@@ -221,6 +224,15 @@ const ActiveSimulations: React.FC = () => {
           setEditCategoriesModal={setEditCategoriesModal}
           actionLoading={actionLoading}
           onSave={handleSaveCategories}
+        />
+      )}
+
+      {/* Auto-Generated Student Logins Modal */}
+      {viewLoginsSimulation && (
+        <SimulationAutoStudentsModal
+          simulationId={viewLoginsSimulation.id}
+          simulationName={viewLoginsSimulation.name}
+          onClose={() => setViewLoginsSimulation(null)}
         />
       )}
 
