@@ -10,6 +10,7 @@ import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { LoginForm } from './components/Auth/LoginForm';
 import { PrivacyPage } from './components/Auth/PrivacyPage';
+import { SetNewPassword } from './components/Auth/SetNewPassword';
 import { LandingPage } from './components/LandingPage/LandingPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { queryClient } from './lib/api/queryClient';
@@ -61,6 +62,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/set-password" element={<SetNewPassword />} />
                 
                 {/* Protected application routes */}
                 <Route path="/app/*" element={
