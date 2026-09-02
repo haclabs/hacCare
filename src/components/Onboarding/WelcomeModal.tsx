@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { HacCareLogo } from '../Layout/HacCareLogo';
 
 interface Slide {
   icon: LucideIcon;
@@ -95,24 +96,29 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ onSkip, onFinish }) 
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onSkip}
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to hacCare"
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 w-full max-w-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={`bg-gradient-to-r ${slide.gradient} px-8 py-10 text-white relative`}>
+        {/* Brand bar - matches the app header's dark theme */}
+        <div className="flex items-center justify-between px-6 py-3.5" style={{ backgroundColor: '#2a2a28' }}>
+          <HacCareLogo variant="dark" size="22px" withBar />
           <button
             onClick={onSkip}
-            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+            className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Skip for now"
           >
             <X className="h-4 w-4" />
           </button>
+        </div>
+
+        <div className={`bg-gradient-to-r ${slide.gradient} px-8 py-8 text-white relative`}>
           <div className="p-3 bg-white/20 rounded-xl w-fit mb-4">
             <Icon className="h-7 w-7" />
           </div>
@@ -141,8 +147,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ onSkip, onFinish }) 
                 key={s.title}
                 onClick={() => setIndex(i)}
                 className={`h-2 rounded-full transition-all ${
-                  i === index ? 'w-6 bg-blue-600' : 'w-2 bg-gray-300 hover:bg-gray-400'
+                  i === index ? 'w-6' : 'w-2 bg-gray-300 hover:bg-gray-400'
                 }`}
+                style={i === index ? { backgroundColor: '#19ADF2' } : undefined}
                 aria-label={`Go to step ${i + 1}`}
               />
             ))}
@@ -161,14 +168,20 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ onSkip, onFinish }) 
             {isLast ? (
               <button
                 onClick={onFinish}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                style={{ backgroundColor: '#19ADF2' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1598D6')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#19ADF2')}
               >
                 Got it, don't show again
               </button>
             ) : (
               <button
                 onClick={() => setIndex(index + 1)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                style={{ backgroundColor: '#19ADF2' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1598D6')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#19ADF2')}
               >
                 Next
                 <ArrowRight className="h-4 w-4" />
