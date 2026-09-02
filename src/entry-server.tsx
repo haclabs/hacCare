@@ -10,7 +10,6 @@
  * client uses createRoot (not hydrateRoot) — React replaces the DOM on
  * first render but the content is identical so users see no flash.
  */
-import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router';
 import { LandingPage } from './components/LandingPage/LandingPage';
