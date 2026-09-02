@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Beaker, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
+import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Beaker, History, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
@@ -94,6 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
     { id: 'sim-templates', label: 'Sim Templates', icon: FileText, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'templates' } },
     { id: 'active-sims', label: 'Active Sims', icon: Beaker, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'active' } },
+    { id: 'debrief-reports', label: 'Debrief Reports', icon: History, color: 'text-green-600', tab: 'simulations', tabState: { initialTab: 'history' } },
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),

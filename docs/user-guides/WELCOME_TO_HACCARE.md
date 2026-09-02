@@ -137,7 +137,7 @@ Below the counters are the six places you'll actually spend your time.
 | **Knowledge Base** | Searchable how-to articles, including this guide. |
 | **Instructor Guide** | A walkthrough of the full simulation workflow. |
 
-The same destinations are in the left sidebar, under labels like **Sim Templates**, **Active Sims**, **Students**, and **Help & Docs**. Use whichever you prefer.
+The same destinations are in the left sidebar, under labels like **Sim Templates**, **Active Sims**, **Debrief Reports**, **Students**, and **Help & Docs**. Use whichever you prefer.
 
 > **Note:** Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations, not in the workspace itself.
 

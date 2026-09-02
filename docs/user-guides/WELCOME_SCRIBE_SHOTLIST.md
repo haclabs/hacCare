@@ -76,7 +76,7 @@ Navigation only — don't create or change anything, so the recording stays reus
 | 8 | History | Return to the workspace | |
 | 9 | Quick links | Click **Students** | Your program's simulation roster. |
 | 10 | Students | Return to the workspace | |
-| 11 | Sidebar | Point at the sidebar | The same destinations live here — Sim Templates, Active Sims, Students, Help & Docs. |
+| 11 | Sidebar | Point at the sidebar | The same destinations live here — Sim Templates, Active Sims, Debrief Reports, Students, Help & Docs. |
 | 12 | Workspace | Note there are no patients | Your workspace has no patients, and that's correct — patients live inside templates and simulations. |
 
 ---

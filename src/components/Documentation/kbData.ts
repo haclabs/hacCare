@@ -111,7 +111,7 @@ The six quick links
 • Knowledge Base — searchable how-to articles, including this one.
 • Instructor Guide — a walkthrough of the full simulation workflow.
 
-The same destinations are in the left sidebar under labels like Sim Templates, Active Sims, Students, and Help & Docs. Use whichever you prefer.
+The same destinations are in the left sidebar under labels like Sim Templates, Active Sims, Debrief Reports, Students, and Help & Docs. Use whichever you prefer.
 
 Why there are no patients here
 Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations, not in the workspace itself.`,
