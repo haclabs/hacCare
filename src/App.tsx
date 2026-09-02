@@ -132,7 +132,7 @@ function App() {
   const PROGRAM_TAB_LABELS: Record<string, string> = {
     'program-students': 'Students',
     'program-settings': 'Settings',
-    'simulations': 'Manage Sim',
+    'simulations': 'Simulations',
     'documentation': 'Help & Docs',
     'changelog': "What's New",
     'settings': 'Settings',

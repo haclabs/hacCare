@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Play, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
+import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Beaker, Shield, ChevronDown, ChevronLeft, ChevronRight, Lock, MonitorPlay, Home, Package, UserCog } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
@@ -92,7 +92,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
       { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' }
     ] : []),
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
-    { id: 'simulations', label: 'Manage Sim', icon: Play, color: 'text-violet-600', route: '/simulation-portal' },
+    { id: 'sim-templates', label: 'Sim Templates', icon: FileText, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'templates' } },
+    { id: 'active-sims', label: 'Active Sims', icon: Beaker, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'active' } },
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),
@@ -206,14 +207,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
           <ul className="space-y-1">
             {workspaceItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              
+              const isActive = 'tab' in item ? activeTab === item.tab : activeTab === item.id;
+
               return (
                 <li key={item.id}>
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
-                      if ('route' in item && item.route) {
+                      if ('tab' in item) {
+                        navigate(`/app?tab=${item.tab}`, { state: item.tabState });
+                      } else if ('route' in item && item.route) {
                         const appRoute = item.route.startsWith('/')
                           ? `/app${item.route}`
                           : `/app/${item.route}`;

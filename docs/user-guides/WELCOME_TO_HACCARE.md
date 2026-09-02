@@ -137,7 +137,7 @@ Below the counters are the six places you'll actually spend your time.
 | **Knowledge Base** | Searchable how-to articles, including this guide. |
 | **Instructor Guide** | A walkthrough of the full simulation workflow. |
 
-The same destinations are in the left sidebar, under labels like **Manage Sim**, **Students**, and **Help & Docs**. Use whichever you prefer.
+The same destinations are in the left sidebar, under labels like **Sim Templates**, **Active Sims**, **Students**, and **Help & Docs**. Use whichever you prefer.
 
 > **Note:** Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations, not in the workspace itself.
 
@@ -166,7 +166,7 @@ Part 2 of this series walks through all four stages in detail.
 - **Articles** — short how-to guides, searchable by keyword
 - **Walkthroughs** — recorded click-by-click screen captures of common tasks
 
-The **Instructor Guide** tab inside Manage Sim covers the simulation workflow end to end.
+The **Instructor Guide** tab inside Sim Templates covers the simulation workflow end to end.
 
 And this welcome tour reappears any time you want it — there's a **Replay welcome tour** button at the top of Help & Docs.
 

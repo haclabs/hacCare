@@ -111,7 +111,7 @@ The six quick links
 • Knowledge Base — searchable how-to articles, including this one.
 • Instructor Guide — a walkthrough of the full simulation workflow.
 
-The same destinations are in the left sidebar under labels like Manage Sim, Students, and Help & Docs. Use whichever you prefer.
+The same destinations are in the left sidebar under labels like Sim Templates, Active Sims, Students, and Help & Docs. Use whichever you prefer.
 
 Why there are no patients here
 Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations, not in the workspace itself.`,
@@ -134,7 +134,7 @@ They chart, scan, and administer inside their copy. Their work is theirs alone a
 Reset wipes the students' work and returns the scenario to its starting point, ready for the next group — printed barcode labels keep working, so you can reuse them all semester.
 Complete ends the session and generates the debrief report.
 
-For the full detail on each stage, see the Simulations category and the Instructor Guide tab under Manage Sim.`,
+For the full detail on each stage, see the Simulations category and the Instructor Guide tab under Sim Templates.`,
       },
       {
         id: 'where-to-get-help',
@@ -143,7 +143,7 @@ For the full detail on each stage, see the Simulations category and the Instruct
 • Articles — short how-to guides, searchable by keyword. Search looks inside the full text of every article, not just the titles.
 • Walkthroughs — recorded click-by-click screen captures of common tasks.
 
-The Instructor Guide tab inside Manage Sim covers the simulation workflow end to end.
+The Instructor Guide tab inside Sim Templates covers the simulation workflow end to end.
 
 The welcome tour you saw when you first signed in can be reopened any time using the "Replay welcome tour" button at the top of this page.
 

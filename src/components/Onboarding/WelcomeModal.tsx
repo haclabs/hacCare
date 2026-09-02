@@ -64,7 +64,7 @@ const SLIDES: Slide[] = [
       'Help & Docs in the sidebar has searchable articles and recorded click-by-click walkthroughs.',
     points: [
       'Start with the Getting Started category — it covers everything in this tour in more detail',
-      'The Instructor Guide under Manage Sim walks through the full simulation workflow',
+      'The Instructor Guide under Sim Templates walks through the full simulation workflow',
       'Replay this tour any time from the button at the top of Help & Docs',
     ],
   },
