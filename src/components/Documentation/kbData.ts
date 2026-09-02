@@ -3,7 +3,7 @@
  * Article content for the hacCare KB. Organized by category.
  */
 
-import { BookOpen, Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill } from 'lucide-react';
+import { BookOpen, Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill, Rocket } from 'lucide-react';
 import type { ElementType } from 'react';
 
 export interface KBArticle {
@@ -23,6 +23,134 @@ export interface KBCategory {
 }
 
 export const KB_CATEGORIES: KBCategory[] = [
+  {
+    id: 'getting-started',
+    title: 'Getting Started',
+    description: 'New to hacCare? Activate your account, sign in, and find your way around.',
+    icon: Rocket,
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-700',
+    articles: [
+      {
+        id: 'welcome',
+        title: 'Welcome to hacCare',
+        content: `hacCare is a clinical simulation platform. Students use it exactly the way nurses use a real electronic health record — they open a patient chart, review orders, scan a wristband, administer medications, chart vitals, and document assessments.
+
+The difference is that everything happens inside a sealed practice environment that you build and control. Nothing a student does in a simulation can reach real patient data, and nothing from one class section can reach another. hacCare contains no real patient information — every chart you see is one an instructor built.
+
+As an instructor you work on the other side of that glass: you build the scenario, launch it for a class, watch it run, and afterwards review a report of everything each student did.
+
+Your Role
+Your account has a role attached to it, and that role decides what appears in your sidebar and which simulations you can open.
+• Instructor — templates and simulations tagged with the program(s) you're assigned to
+• Coordinator — everything within your institution
+• Admin — everything within your institution, plus user management
+• Super Admin — everything, across all institutions
+
+Programs are the groupings your institution uses (for example NESA, PN, BNAD, or SIM Hub). You may be assigned to one or several.
+
+If a colleague mentions a template you can't find, it is almost always because that template is tagged for a program you aren't assigned to. Your coordinator can add you to it.`,
+      },
+      {
+        id: 'activate-account',
+        title: 'Activating Your Account',
+        content: `Your account is created by an administrator, not by you. You'll receive an email from noreply@haccare.app with the subject "Welcome to hacCare — Set up your account". Inside is a button that takes you to a page where you choose your own password.
+
+No one at your institution ever sees or sets your password. The invite link is the only way in, and it's yours alone.
+
+Step 1 — Activate
+Clicking the button in the email opens the hacCare activation page, which shows a single "Activate Account" button. Click it.
+
+Nothing happens until you click, and that's deliberate. Many school email systems automatically open every link in every incoming message to scan it for threats. A normal one-time activation link would be silently used up by that scanner before you ever saw the email, and you'd arrive to find a dead link. Putting a button in the way means the scanner sees a harmless page, and only a real human click activates the account.
+
+Step 2 — Choose a password
+You'll be asked to create a password twice — once to set it, once to confirm. It must have:
+• At least 8 characters
+• At least one uppercase letter
+• At least one symbol, for example ! ? # or $
+
+The page tells you immediately if something is missing, so you won't lose your work by submitting and starting over. Use a password you don't use anywhere else, and let your browser or password manager save it.
+
+When both fields match and the rules are satisfied, click the button to finish. You'll be signed in automatically — there's no need to go back to the login page.
+
+Troubleshooting
+• Can't find the email — check your junk or clutter folder. The first message from a new sender often lands there. If it isn't there either, ask your administrator to resend the invitation.
+• "Link expired" or "invalid" — the link has a limited lifetime and can only be used once. Ask your administrator to send a fresh invitation. This is normal and isn't a sign anything is broken.`,
+      },
+      {
+        id: 'first-login',
+        title: 'Your First Login and Choosing a Program',
+        content: `The first time you land in hacCare, one of two things happens.
+
+If you're assigned to one program, hacCare opens straight into it.
+
+If you're assigned to several, a chooser appears asking which program you want to work in. Pick one — you aren't locked in. You can switch at any time from the coloured bar at the top of the screen, and hacCare remembers your last choice for next time.
+
+The program bar
+A blue-to-purple band runs across the top of the screen showing "Program Workspace" followed by the program you're currently in and its short code. This bar is your orientation: whenever you're unsure which program's material you're looking at, glance at it.
+
+If you belong to more than one program, a "Switch Program" button sits at the right end of the bar.`,
+      },
+      {
+        id: 'workspace-tour',
+        title: 'Touring Your Program Workspace',
+        content: `Your program workspace is your home screen, and it's the same screen you'll land on every time you sign in.
+
+The three counters
+• Templates — scenarios available to you, ready to be launched
+• Students — students on your program's roster
+• Sessions — simulations completed this semester
+
+These are live. If a number looks wrong, it's usually a program-tagging question rather than missing data.
+
+The six quick links
+• Templates — build and manage simulation scenarios. This is where a scenario is born: you create a template, fill in a patient chart, and save it.
+• Active Simulations — monitor and launch running sessions. Once a template is launched for a class, it lives here.
+• Debrief Reports — review completed session activity. Every action every student took, grouped by student.
+• Students — manage your simulation student roster.
+• Knowledge Base — searchable how-to articles, including this one.
+• Instructor Guide — a walkthrough of the full simulation workflow.
+
+The same destinations are in the left sidebar under labels like Manage Sim, Students, and Help & Docs. Use whichever you prefer.
+
+Why there are no patients here
+Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations, not in the workspace itself.`,
+      },
+      {
+        id: 'how-simulations-work',
+        title: 'How a Simulation Works (The Short Version)',
+        content: `Knowing the shape of the workflow makes everything else easier to follow. There are four stages.
+
+1. Build a template
+A template is a complete practice hospital with your patient in it. You enter the chart once — history, medications, orders, vitals, wounds, devices — and save a snapshot. That snapshot is the frozen starting point.
+
+2. Launch it
+Launching creates a fresh, private copy of the template for one class session and gives your students access. The original template is untouched, so you can launch the same scenario as many times as you like.
+
+3. Students work
+They chart, scan, and administer inside their copy. Their work is theirs alone and never touches your template.
+
+4. Reset or complete
+Reset wipes the students' work and returns the scenario to its starting point, ready for the next group — printed barcode labels keep working, so you can reuse them all semester.
+Complete ends the session and generates the debrief report.
+
+For the full detail on each stage, see the Simulations category and the Instructor Guide tab under Manage Sim.`,
+      },
+      {
+        id: 'where-to-get-help',
+        title: 'Where to Get Help',
+        content: `Help & Docs in the sidebar is the first place to look. It has:
+• Articles — short how-to guides, searchable by keyword. Search looks inside the full text of every article, not just the titles.
+• Walkthroughs — recorded click-by-click screen captures of common tasks.
+
+The Instructor Guide tab inside Manage Sim covers the simulation workflow end to end.
+
+The welcome tour you saw when you first signed in can be reopened any time using the "Replay welcome tour" button at the top of this page.
+
+Still stuck? Contact your program coordinator.`,
+      },
+    ],
+  },
   {
     id: 'simulations',
     title: 'Simulations',

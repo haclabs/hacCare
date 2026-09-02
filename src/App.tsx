@@ -13,6 +13,7 @@ import { getPatientByMedicationId } from './services/clinical/medicationService'
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
+import { useWelcomeModal } from './hooks/useWelcomeModal';
 import { AuthCallback } from './components/Auth/AuthCallback';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 import { PatientForm } from './features/patients/components/forms/PatientForm';
@@ -53,6 +54,7 @@ const MedicationCatalogAdmin = lazy(() => import('./features/admin/components/Me
 const ProgramWorkspace = lazy(() => import('./components/Program/ProgramWorkspace'));
 const ProgramSelectorModal = lazy(() => import('./components/Program/ProgramSelectorModal'));
 const ProgramStudents = lazy(() => import('./components/Program/ProgramStudents'));
+const WelcomeModal = lazy(() => import('./components/Onboarding/WelcomeModal'));
 
 /**
  * Main Application Component
@@ -74,6 +76,7 @@ function App() {
   // Authentication and simulation detection
   const { user, profile } = useAuth();
   const { currentTenant } = useTenant();
+  const welcomeTour = useWelcomeModal();
 
   // Application state management
   const [searchParams, setSearchParams] = useSearchParams();
@@ -720,6 +723,13 @@ function App() {
       <SafeSuspense fallback={null}>
         <ProgramSelectorModal />
       </SafeSuspense>
+
+      {/* Welcome tour - gated on currentTenant so it never stacks on the program selector */}
+      {currentTenant && welcomeTour.isOpen && (
+        <SafeSuspense fallback={null}>
+          <WelcomeModal onSkip={welcomeTour.skip} onFinish={welcomeTour.dismissForever} />
+        </SafeSuspense>
+      )}
 
       {/* HospitalBracelet - full-screen overlay */}
       {braceletPatient && (
