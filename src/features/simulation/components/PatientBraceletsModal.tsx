@@ -112,30 +112,19 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
               display: flex;
               flex-direction: column;
               justify-content: center;
-              padding: 0.08in;
+              align-items: flex-start;
+              padding: 0.08in 0.1in;
               background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             }
             .patient-name {
-              font-size: 16px;
+              font-size: 19px;
               font-weight: 900;
-              margin-bottom: 6px;
               line-height: 1.2;
               text-transform: uppercase;
-              letter-spacing: 0.5px;
-              padding: 4px 8px;
+              letter-spacing: 0.4px;
+              padding: 6px 10px;
               border-left: 4px solid;
               border-radius: 3px;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .patient-info {
-              font-size: 12px;
-              line-height: 1.3;
-              padding: 3px 8px;
-              color: #333;
-              font-weight: 700;
-              border-left: 3px solid;
-              border-radius: 2px;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
@@ -194,7 +183,6 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
               <div class="label">
                 <div class="label-content">
                   <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.first_name} ${patient.last_name}</div>
-                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">
                   <img class="qr-img" src="${qrDataURLs[index]}" alt="QR" />
@@ -267,14 +255,15 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
           <div className="grid grid-cols-3 gap-2" style={{gridTemplateColumns: 'repeat(3, 2.625in)'}}>
             {duplicatedPatients.slice(0, 15).map((patient, idx) => (
               <div key={`${patient.id}-${idx}`} className="border border-gray-300 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex items-stretch" style={{width: '2.625in', height: '1in'}}>
-                <div className="flex-1 flex flex-col justify-center px-3 py-2">
-                  <div className="font-black text-base mb-2 uppercase tracking-wide px-2 py-1 rounded" style={{letterSpacing: '0.5px', fontWeight: 900, background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `4px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`, color: PATIENT_COLORS[patientColorMap[patient.id]].text}}>{patient.first_name} {patient.last_name}</div>
-                  <div className="text-sm font-bold px-2 py-1 rounded text-gray-700" style={{background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `3px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`}}>DOB: {new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                <div className="flex-1 flex items-center px-3 py-2">
+                  <div className="font-black text-lg uppercase tracking-wide px-2.5 py-1.5 rounded" style={{letterSpacing: '0.4px', fontWeight: 900, background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `4px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`, color: PATIENT_COLORS[patientColorMap[patient.id]].text}}>{patient.first_name} {patient.last_name}</div>
                 </div>
                 <div className="w-20 flex justify-center items-center bg-white border-l border-gray-200 p-1">
                   <BarcodeGenerator
                     data={`PT${patient.patient_id.slice(-8).toUpperCase()}`}
                     type="patient"
+                    vertical
+                    compact
                   />
                 </div>
               </div>

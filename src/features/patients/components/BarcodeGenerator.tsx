@@ -16,6 +16,8 @@ interface BarcodeGeneratorProps {
   label?: string;
   onPrint?: () => void;
   vertical?: boolean;
+  /** Renders just the QR canvas with no header, buttons, or ID caption — for tight label previews. */
+  compact?: boolean;
 }
 
 export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
@@ -23,7 +25,8 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
   type,
   label,
   onPrint,
-  vertical = false
+  vertical = false,
+  compact = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -114,6 +117,16 @@ export const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({
     link.href = canvas.toDataURL();
     link.click();
   };
+
+  if (compact) {
+    return (
+      <canvas
+        ref={canvasRef}
+        className="block"
+        style={{ imageRendering: 'pixelated', width: vertical ? 80 : 120, height: vertical ? 80 : 120 }}
+      />
+    );
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">

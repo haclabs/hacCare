@@ -141,6 +141,7 @@ export interface UserProfile {
   phone?: string;
   is_active: boolean;
   simulation_only?: boolean | null;
+  welcome_seen_at?: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -17,13 +17,15 @@ export const queryClient = new QueryClient({
       gcTime: 10 * 60 * 1000,
       // Custom retry logic for healthcare data
       retry: (failureCount, error: Error & { status?: number }) => {
+        const status = error?.status;
+
         // Never retry on authentication/authorization errors
-        if (error?.status === 401 || error?.status === 403) {
+        if (status === 401 || status === 403) {
           return false;
         }
 
         // Don't retry on client errors (4xx)
-        if (error?.status >= 400 && error?.status < 500) {
+        if (status !== undefined && status >= 400 && status < 500) {
           return false;
         }
 
@@ -36,7 +38,8 @@ export const queryClient = new QueryClient({
     mutations: {
       // Retry mutations once on network errors
       retry: (failureCount, error: Error & { status?: number }) => {
-        if (error?.status >= 400 && error?.status < 500) {
+        const status = error?.status;
+        if (status !== undefined && status >= 400 && status < 500) {
           return false;
         }
         return failureCount < 1;
