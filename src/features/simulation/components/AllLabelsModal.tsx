@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
-import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
+import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, formatDOB, SimulationParticipant } from './labelPrintingUtils';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
 import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
 interface AllLabelsModalProps {
@@ -139,15 +139,23 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               print-color-adjust: exact;
             }
             .patient-bracelet .patient-info {
-              font-size: 12px;
+              font-size: 11px;
               line-height: 1.3;
-              padding: 3px 8px;
+              padding: 2px 8px;
               color: #333;
               font-weight: 700;
               border-left: 3px solid;
               border-radius: 2px;
+              margin-bottom: 2px;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+            }
+            .patient-bracelet .patient-doctor {
+              font-size: 9px;
+              font-weight: 600;
+              line-height: 1.2;
+              padding: 0 8px;
+              color: #6b7280;
             }
             .patient-bracelet .barcode-area {
               width: 1.05in;
@@ -263,7 +271,8 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               <div class="label patient-bracelet" style="left: ${leftPos}; top: ${topPos};">
                 <div class="label-content">
                   <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.last_name}, ${patient.first_name}</div>
-                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
+                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${formatDOB(patient.date_of_birth)} &bull; ID: ${patient.patient_id}</div>
+                  ${patient.attending_physician ? `<div class="patient-doctor">Dr. ${patient.attending_physician}</div>` : ''}
                 </div>
                 <div class="barcode-area">
                   <img class="qr-img" src="${patientQRs[index]}" alt="QR" />

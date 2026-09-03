@@ -8,6 +8,7 @@ export interface PatientLabelData {
   date_of_birth: string;
   patient_id: string;
   room_number?: string;
+  attending_physician?: string | null;
 }
 
 export interface MedicationLabelData {
@@ -186,7 +187,8 @@ export async function fetchPatientLabels(providedTenantId?: string): Promise<Pat
         last_name,
         date_of_birth,
         patient_id,
-        room_number
+        room_number,
+        patient_admission_records(attending_physician)
       `)
       .eq('tenant_id', tenantId)
       .order('last_name', { ascending: true });
@@ -198,7 +200,22 @@ export async function fetchPatientLabels(providedTenantId?: string): Promise<Pat
     }
 
     secureLogger.debug('Successfully fetched patient labels:', patients?.length || 0, 'records');
-    return patients || [];
+    // patient_admission_records is a 1:1 relation (unique on patient_id) but PostgREST
+    // may still embed it as an array depending on detected FK cardinality.
+    return (patients || []).map((p) => {
+      const admission = Array.isArray(p.patient_admission_records)
+        ? p.patient_admission_records[0]
+        : p.patient_admission_records;
+      return {
+        id: p.id,
+        first_name: p.first_name,
+        last_name: p.last_name,
+        date_of_birth: p.date_of_birth,
+        patient_id: p.patient_id,
+        room_number: p.room_number,
+        attending_physician: admission?.attending_physician || null,
+      };
+    });
   } catch (error) {
     secureLogger.error('Error in fetchPatientLabels:', error);
     throw error;
