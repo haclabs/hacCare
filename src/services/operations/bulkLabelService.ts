@@ -187,8 +187,7 @@ export async function fetchPatientLabels(providedTenantId?: string): Promise<Pat
         last_name,
         date_of_birth,
         patient_id,
-        room_number,
-        patient_admission_records(attending_physician)
+        room_number
       `)
       .eq('tenant_id', tenantId)
       .order('last_name', { ascending: true });
@@ -199,23 +198,30 @@ export async function fetchPatientLabels(providedTenantId?: string): Promise<Pat
       throw new Error(`Failed to fetch patient data for labels: ${error.message}`);
     }
 
+    // patient_admission_records has no FK constraint to patients (only a unique index
+    // on patient_id), so PostgREST can't embed it — fetch separately and merge by id.
+    const patientIds = (patients || []).map((p) => p.id);
+    const attendingPhysicianByPatientId = new Map<string, string | null>();
+    if (patientIds.length > 0) {
+      const { data: admissions, error: admissionError } = await supabase
+        .from('patient_admission_records')
+        .select('patient_id, attending_physician')
+        .in('patient_id', patientIds);
+
+      if (admissionError) {
+        secureLogger.error('Error fetching admission records for labels:', admissionError);
+      } else {
+        (admissions || []).forEach((a) => {
+          attendingPhysicianByPatientId.set(a.patient_id, a.attending_physician || null);
+        });
+      }
+    }
+
     secureLogger.debug('Successfully fetched patient labels:', patients?.length || 0, 'records');
-    // patient_admission_records is a 1:1 relation (unique on patient_id) but PostgREST
-    // may still embed it as an array depending on detected FK cardinality.
-    return (patients || []).map((p) => {
-      const admission = Array.isArray(p.patient_admission_records)
-        ? p.patient_admission_records[0]
-        : p.patient_admission_records;
-      return {
-        id: p.id,
-        first_name: p.first_name,
-        last_name: p.last_name,
-        date_of_birth: p.date_of_birth,
-        patient_id: p.patient_id,
-        room_number: p.room_number,
-        attending_physician: admission?.attending_physician || null,
-      };
-    });
+    return (patients || []).map((p) => ({
+      ...p,
+      attending_physician: attendingPhysicianByPatientId.get(p.id) || null,
+    }));
   } catch (error) {
     secureLogger.error('Error in fetchPatientLabels:', error);
     throw error;
