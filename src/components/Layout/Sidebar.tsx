@@ -93,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ] : []),
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
     { id: 'sim-templates', label: 'Sim Templates', icon: FileText, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'templates' } },
-    { id: 'active-sims', label: 'Active Sims', icon: Beaker, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'active' } },
+    { id: 'active-sims', label: 'Active Sims', icon: Beaker, color: 'text-amber-600', tab: 'simulations', tabState: { initialTab: 'active' } },
     { id: 'debrief-reports', label: 'Debrief Reports', icon: History, color: 'text-green-600', tab: 'simulations', tabState: { initialTab: 'history' } },
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
@@ -208,7 +208,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
           <ul className="space-y-1">
             {workspaceItems.map((item) => {
               const Icon = item.icon;
-              const isActive = 'tab' in item ? activeTab === item.tab : activeTab === item.id;
+              // Several items share the same outer tab (e.g. all 3 simulation shortcuts route to
+              // tab=simulations) — disambiguate using the sub-tab carried in tabState, defaulting
+              // to 'active' to match SimulationManager's own default when no state is present.
+              const currentSubTab = (location.state as any)?.initialTab || 'active';
+              const isActive = 'tab' in item
+                ? activeTab === item.tab && (!item.tabState || currentSubTab === item.tabState.initialTab)
+                : activeTab === item.id;
 
               return (
                 <li key={item.id}>

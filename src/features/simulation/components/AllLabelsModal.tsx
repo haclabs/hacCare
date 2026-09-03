@@ -262,7 +262,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               return `
               <div class="label patient-bracelet" style="left: ${leftPos}; top: ${topPos};">
                 <div class="label-content">
-                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.last_name}, ${patient.first_name}</div>
                   <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth).toLocaleDateString()}</div>
                 </div>
                 <div class="barcode-area">

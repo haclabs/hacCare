@@ -16,12 +16,14 @@ import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTest
 import { useAuth } from '../../../contexts/auth/useAuth';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { useActiveSimulations } from '../hooks/useActiveSimulations';
+import { printMedicationChecklist } from '../../../utils/medicationChecklistPrinter';
 
 const ActiveSimulations: React.FC = () => {
   const { profile } = useAuth();
   const [seedingSimId, setSeedingSimId] = useState<string | null>(null);
   const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
   const [viewLoginsSimulation, setViewLoginsSimulation] = useState<SimulationActiveWithDetails | null>(null);
+  const [checklistSimId, setChecklistSimId] = useState<string | null>(null);
   const {
     simulations,
     filteredSimulations,
@@ -76,6 +78,15 @@ const ActiveSimulations: React.FC = () => {
       alert(`Error seeding test data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSeedingSimId(null);
+    }
+  };
+
+  const handlePrintChecklist = async (sim: SimulationActiveWithDetails) => {
+    setChecklistSimId(sim.id);
+    try {
+      await printMedicationChecklist(sim);
+    } finally {
+      setChecklistSimId(null);
     }
   };
 
@@ -190,6 +201,8 @@ const ActiveSimulations: React.FC = () => {
               onPrintLabels={setPrintLabelsSimulation}
               onViewTemplateChanges={handleViewTemplateChanges}
               onViewLogins={setViewLoginsSimulation}
+              onPrintChecklist={handlePrintChecklist}
+              checklistLoading={checklistSimId === sim.id}
               onSeedTestData={profile?.role === 'super_admin' ? handleSeedTestData : undefined}
               seeding={seedingSimId === sim.id}
             />
