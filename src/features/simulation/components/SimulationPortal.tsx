@@ -9,11 +9,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Users, Play, Clock, ArrowRight, AlertCircle, Loader2, BookOpen, UserCheck } from 'lucide-react';
+import { Monitor, Users, Clock, ArrowRight, AlertCircle, Loader2, BookOpen, UserCheck } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import { supabase } from '../../../lib/api/supabase';
-import StudentQuickIntro from '../../../components/StudentQuickIntro';
+import StudentQuickIntro, { RECOMMENDED_SHIFT_WORKFLOW_STEPS } from '../../../components/StudentQuickIntro';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface SimulationAssignment {
@@ -236,14 +236,6 @@ const SimulationPortal: React.FC = () => {
     }
   };
 
-  const handleLaunchActiveSimulation = () => {
-    navigate('/app?tab=simulations', { state: { initialTab: 'active' }, replace: true });
-  };
-
-  const handleManageSimulations = () => {
-    navigate('/app?tab=simulations', { state: { initialTab: 'templates' }, replace: true });
-  };
-
   if (authLoading || loading || enteringSimulation) {
     return (
       <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full flex items-center justify-center py-12">
@@ -266,7 +258,7 @@ const SimulationPortal: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
-            <div className="p-4 bg-blue-600 rounded-full">
+            <div className="p-4 rounded-full" style={{ backgroundColor: '#3fbf9a' }}>
               <Monitor className="h-12 w-12 text-white" />
             </div>
           </div>
@@ -306,138 +298,128 @@ const SimulationPortal: React.FC = () => {
           </div>
         )}
 
-        {/* Instructor Actions */}
-        {isInstructor && (
-          <div className="mb-8">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Launch Active Simulation Card */}
-                <button
-                  onClick={handleLaunchActiveSimulation}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all p-6 text-left group border-2 border-transparent hover:border-blue-500"
-                >
-                  <div className="flex items-start mb-4">
-                    <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-600 transition-colors">
-                      <Play className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                    Launch Active Simulation
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Access simulations that are ready to launch. Pre-configured with patients and assigned students - just start when you're ready.
-                  </p>
-                </button>
+        {/* Recommended Shift Workflow (right) + Active Simulations (left) */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Active Simulations List */}
+          <div className="lg:col-span-2">
+            {assignments.length > 0 ? (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  {isInstructor ? 'Your Active Simulations' : 'Select a Simulation'}
+                </h2>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {assignments.map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
+                      onClick={() => handleJoinSimulation(assignment)}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {assignment.simulation.name}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {assignment.simulation.template?.description || 'Simulation session'}
+                          </p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          assignment.simulation.status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {assignment.simulation.status}
+                        </span>
+                      </div>
 
-                {/* Manage Templates Card */}
-                <button
-                  onClick={handleManageSimulations}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all p-6 text-left group border-2 border-transparent hover:border-gray-500"
-                >
-                  <div className="flex items-start mb-4">
-                    <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-gray-700 transition-colors">
-                      <Users className="h-6 w-6 text-gray-700 group-hover:text-white transition-colors" />
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          <span className="capitalize">{assignment.role}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>
+                            Started {new Date(assignment.simulation.starts_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleJoinSimulation(assignment);
+                        }}
+                        className="mt-4 w-full text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center"
+                        style={{ backgroundColor: '#3fbf9a' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#35a687')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3fbf9a')}
+                      >
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        Enter Simulation
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              !isInstructor && (
+                // No assignments for students
+                <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="p-3 bg-gray-100 rounded-full">
+                      <AlertCircle className="h-8 w-8 text-gray-400" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
-                    Manage Simulation Templates
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No Active Simulations
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    Create, edit, or launch new simulations from templates. Use this to set up scenarios for upcoming sessions.
+                  <p className="text-gray-600 mb-4">
+                    You are not currently assigned to any active simulations.
                   </p>
-                </button>
-              </div>
-            </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-gray-700">
+                    <p className="font-medium mb-2">To join a simulation:</p>
+                    <ul className="text-left space-y-1 ml-6 list-disc">
+                      <li>Contact your instructor for simulation access</li>
+                      <li>Check your email for simulation invitations</li>
+                      <li>Wait for your instructor to add you to a simulation</li>
+                    </ul>
+                  </div>
+                </div>
+              )
+            )}
           </div>
-        )}
 
-        {/* Active Simulations List */}
-        {assignments.length > 0 ? (
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              {isInstructor ? 'Your Active Simulations' : 'Select a Simulation'}
-            </h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              {assignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
-                  onClick={() => handleJoinSimulation(assignment)}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {assignment.simulation.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {assignment.simulation.template?.description || 'Simulation session'}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      assignment.simulation.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {assignment.simulation.status}
+          {/* Recommended Shift Workflow - always visible reference sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-md p-6 lg:sticky lg:top-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Recommended Shift Workflow</h2>
+              <ol className="space-y-2 mb-4">
+                {RECOMMENDED_SHIFT_WORKFLOW_STEPS.map((step, i) => (
+                  <li key={step} className="flex items-start gap-3 text-sm text-gray-700">
+                    <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                      {i + 1}
                     </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      <span className="capitalize">{assignment.role}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      <span>
-                        Started {new Date(assignment.simulation.starts_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleJoinSimulation(assignment);
-                    }}
-                    className="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                  >
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Enter Simulation
-                  </button>
-                </div>
-              ))}
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="text-sm text-gray-600 mb-4">
+                Questions? Ask your instructor.
+              </p>
+              <button
+                onClick={() => setShowQuickIntro(true)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-colors"
+                style={{ backgroundColor: '#3fbf9a' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#35a687')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3fbf9a')}
+              >
+                <BookOpen className="h-4 w-4" />
+                Reopen Quick Intro Guide
+              </button>
             </div>
           </div>
-        ) : (
-          !isInstructor && (
-            // No assignments for students
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 bg-gray-100 rounded-full">
-                    <AlertCircle className="h-8 w-8 text-gray-400" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No Active Simulations
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  You are not currently assigned to any active simulations.
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-gray-700">
-                  <p className="font-medium mb-2">To join a simulation:</p>
-                  <ul className="text-left space-y-1 ml-6 list-disc">
-                    <li>Contact your instructor for simulation access</li>
-                    <li>Check your email for simulation invitations</li>
-                    <li>Wait for your instructor to add you to a simulation</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )
-        )}
+        </div>
 
         {/* Footer Help */}
         <div className="text-center mt-12">

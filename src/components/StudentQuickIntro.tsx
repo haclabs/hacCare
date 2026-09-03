@@ -102,6 +102,19 @@ const FLOWSHEET_CATEGORIES: { label: string; description: string }[] = [
   { label: 'Clinical Documentation', description: 'Handover notes, advanced directives, nursing/admission assessments, consents, and BPMH.' },
 ];
 
+// Shared with SimulationPortal.tsx so the portal landing page can preview these steps without duplicating the copy.
+export const RECOMMENDED_SHIFT_WORKFLOW_STEPS = [
+  'Verify patient identity with the ID Bracelet button.',
+  'Review patient\'s chart overview.',
+  'Review Notes (handover) from the previous shift.',
+  'Check Vitals & Assess. and record current measurements.',
+  'Review Orders for anything new to implement.',
+  'Administer and document scheduled Meds.',
+  'Check Labs for results requiring follow-up.',
+  'Use Flowsheets for any additional assessments or documentation.',
+  'Write a handover Note before ending your shift.',
+];
+
 const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -183,16 +196,7 @@ const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
               Recommended Shift Workflow
             </h3>
             <ol className="space-y-2">
-              {[
-                'Verify patient identity with the ID Bracelet button.',
-                'Review Notes (handover) from the previous shift.',
-                'Check Vitals & Assess. and record current measurements.',
-                'Review Orders for anything new to implement.',
-                'Administer and document scheduled Meds.',
-                'Check Labs for results requiring follow-up.',
-                'Use Flowsheets for any additional assessments or documentation.',
-                'Write a handover Note before ending your shift.',
-              ].map((step, i) => (
+              {RECOMMENDED_SHIFT_WORKFLOW_STEPS.map((step, i) => (
                 <li key={step} className="flex items-start gap-3 text-sm text-gray-700">
                   <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
                     {i + 1}
@@ -207,7 +211,7 @@ const StudentQuickIntro: React.FC<StudentQuickIntroProps> = ({ onClose }) => {
           <section className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-3">
             <Badge className="h-4 w-4 text-slate-500 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-slate-700">
-              Questions? Ask your clinical instructor, or reopen this guide anytime from the <strong>Quick Intro</strong>{' '}
+              Questions? Ask your instructor, or reopen this guide anytime from the <strong>Quick Intro</strong>{' '}
               button next to ID Bracelet on the Overview screen.
             </p>
           </section>
