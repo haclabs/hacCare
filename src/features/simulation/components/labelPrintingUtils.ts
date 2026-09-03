@@ -20,6 +20,11 @@ export type SimulationParticipant = {
   role?: string;
 };
 
+/** Timezone-safe DOB formatting — parses as local midnight to avoid an off-by-one-day shift. */
+export function formatDOB(dateOfBirth: string): string {
+  return new Date(dateOfBirth + 'T00:00:00').toLocaleDateString();
+}
+
 export function getInstructorNames(participants: SimulationParticipant[]): string {
   const names = participants
     .filter(p => p.role === 'instructor')
