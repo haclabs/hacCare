@@ -182,7 +182,7 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
               return `
               <div class="label">
                 <div class="label-content">
-                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.first_name} ${patient.last_name}</div>
+                  <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.last_name}, ${patient.first_name}</div>
                 </div>
                 <div class="barcode-area">
                   <img class="qr-img" src="${qrDataURLs[index]}" alt="QR" />
@@ -256,7 +256,7 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
             {duplicatedPatients.slice(0, 15).map((patient, idx) => (
               <div key={`${patient.id}-${idx}`} className="border border-gray-300 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex items-stretch" style={{width: '2.625in', height: '1in'}}>
                 <div className="flex-1 flex items-center px-3 py-2">
-                  <div className="font-black text-lg uppercase tracking-wide px-2.5 py-1.5 rounded" style={{letterSpacing: '0.4px', fontWeight: 900, background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `4px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`, color: PATIENT_COLORS[patientColorMap[patient.id]].text}}>{patient.first_name} {patient.last_name}</div>
+                  <div className="font-black text-lg uppercase tracking-wide px-2.5 py-1.5 rounded" style={{letterSpacing: '0.4px', fontWeight: 900, background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `4px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`, color: PATIENT_COLORS[patientColorMap[patient.id]].text}}>{patient.last_name}, {patient.first_name}</div>
                 </div>
                 <div className="w-20 flex justify-center items-center bg-white border-l border-gray-200 p-1">
                   <BarcodeGenerator

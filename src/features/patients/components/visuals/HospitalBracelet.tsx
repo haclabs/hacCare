@@ -58,7 +58,7 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
                 <span className="text-[11px] font-bold tracking-widest text-blue-100 uppercase">Patient Identification</span>
               </div>
               <div className="mt-2 text-2xl font-bold leading-tight truncate">
-                {patient.first_name} {patient.last_name}
+                {patient.last_name}, {patient.first_name}
               </div>
               <div className="text-sm font-mono text-blue-100 mt-1">{patient.patient_id}</div>
             </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound, ClipboardList } from 'lucide-react';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
@@ -17,6 +17,9 @@ interface SimulationCardProps {
   onViewTemplateChanges: (sim: SimulationActiveWithDetails) => void;
   /** Opens the auto-generated student logins modal for this simulation. */
   onViewLogins: (sim: SimulationActiveWithDetails) => void;
+  /** Prints the medication checklist for this simulation's live tenant (same utility as the Templates tab). */
+  onPrintChecklist: (sim: SimulationActiveWithDetails) => void;
+  checklistLoading?: boolean;
   /** Dev validation tool (super_admin only) — seeds QA_VALIDATION rows into this simulation's live tenant. */
   onSeedTestData?: (sim: SimulationActiveWithDetails) => void;
   seeding?: boolean;
@@ -34,6 +37,8 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
   onPrintLabels,
   onViewTemplateChanges,
   onViewLogins,
+  onPrintChecklist,
+  checklistLoading,
   onSeedTestData,
   seeding,
 }) => {
@@ -145,6 +150,14 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
             title="Print patient and medication labels"
           >
             <Printer className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onPrintChecklist(sim)}
+            disabled={checklistLoading}
+            className="p-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors disabled:opacity-50"
+            title="Print medication checklist"
+          >
+            <ClipboardList className="h-4 w-4" />
           </button>
           <button
             onClick={() => onViewLogins(sim)}
