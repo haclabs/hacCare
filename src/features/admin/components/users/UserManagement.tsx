@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor, Tag } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor, Tag, Mail, Layers } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../../../lib/api/supabase';
 import { useAuth } from '../../../../hooks/useAuth';
 import { getUserPrograms } from '../../../../services/admin/programService';
+import { inviteUser } from '../../../../services/admin/inviteUserService';
+import { getUserAuthStatus, UserAuthStatus } from '../../../../services/admin/userAuthStatusService';
 import { UserForm } from './UserForm';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -16,7 +18,13 @@ export const UserManagement: React.FC = () => {
   const [filterProgram, setFilterProgram] = useState<string>('all');
   const [filterSimOnly, setFilterSimOnly] = useState(false);
   const [userPrograms, setUserPrograms] = useState<Record<string, string[]>>({});
+  const [groupByProgram, setGroupByProgram] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [sendingWelcome, setSendingWelcome] = useState(false);
+  const [authStatus, setAuthStatus] = useState<Record<string, UserAuthStatus>>({});
+  const [filterPendingSetup, setFilterPendingSetup] = useState(false);
   const { hasRole } = useAuth();
+  const canSendWelcomeEmail = hasRole(['admin', 'coordinator', 'super_admin']);
 
   const fetchUsers = async () => {
     try {
@@ -42,6 +50,12 @@ export const UserManagement: React.FC = () => {
           }
         }
         setUserPrograms(programsMap);
+
+        // Last sign-in / email confirmation status, so pending accounts can be spotted
+        if (canSendWelcomeEmail && data && data.length > 0) {
+          const { data: statusMap } = await getUserAuthStatus(data.map(u => u.id));
+          if (statusMap) setAuthStatus(statusMap);
+        }
       }
     } catch (error) {
       secureLogger.error('Error fetching users', error);
@@ -53,6 +67,7 @@ export const UserManagement: React.FC = () => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDeactivateUser = async (userId: string) => {
@@ -166,9 +181,211 @@ export const UserManagement: React.FC = () => {
 
     // Simulation-only filter
     const matchesSimOnly = !filterSimOnly || !!user.simulation_only;
-    
-    return matchesSearch && matchesStatus && matchesProgram && matchesSimOnly;
+
+    // Pending setup filter — never signed in yet
+    const matchesPending = !filterPendingSetup || !authStatus[user.id]?.lastSignInAt;
+
+    return matchesSearch && matchesStatus && matchesProgram && matchesSimOnly && matchesPending;
   });
+
+  // Grouped view — users appear under each program they're assigned to,
+  // with a "No Program" bucket for everyone else (nurses, admins, etc.)
+  const groupedUsers = (() => {
+    if (!groupByProgram) return [];
+    const groups: Record<string, UserProfile[]> = {};
+    const noProgram: UserProfile[] = [];
+    filteredUsers.forEach(user => {
+      const codes = userPrograms[user.id];
+      if (codes && codes.length > 0) {
+        codes.forEach(code => {
+          (groups[code] = groups[code] || []).push(user);
+        });
+      } else {
+        noProgram.push(user);
+      }
+    });
+    const groupList = Object.keys(groups).sort().map(code => ({ label: code, groupUsers: groups[code] }));
+    if (noProgram.length > 0) groupList.push({ label: 'No Program', groupUsers: noProgram });
+    return groupList;
+  })();
+
+  const toggleSelectUser = (userId: string) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId); else next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    const selectableIds = filteredUsers.filter(u => u.is_active).map(u => u.id);
+    const allSelected = selectableIds.length > 0 && selectableIds.every(id => selectedUserIds.has(id));
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        selectableIds.forEach(id => next.delete(id));
+      } else {
+        selectableIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const handleSendWelcomeEmails = async () => {
+    const targets = users.filter(u => selectedUserIds.has(u.id) && u.is_active);
+    if (targets.length === 0) return;
+
+    if (!confirm(
+      `Send a "reset your password" email to ${targets.length} user${targets.length === 1 ? '' : 's'}?\n\n` +
+      `They will need to click the link and set a new password before they can log in again.`
+    )) {
+      return;
+    }
+
+    setSendingWelcome(true);
+    let succeeded = 0;
+    const failed: string[] = [];
+
+    for (const target of targets) {
+      const { error } = await inviteUser({
+        email: target.email,
+        firstName: target.first_name,
+        lastName: target.last_name,
+      });
+      if (error) {
+        failed.push(`${target.email}: ${error}`);
+      } else {
+        succeeded++;
+      }
+    }
+
+    setSendingWelcome(false);
+    setSelectedUserIds(new Set());
+
+    if (failed.length === 0) {
+      alert(`Welcome email sent to ${succeeded} user${succeeded === 1 ? '' : 's'}.`);
+    } else {
+      alert(`Sent ${succeeded} email(s). ${failed.length} failed:\n${failed.join('\n')}`);
+    }
+  };
+
+  const columnCount = 5 + (canSendWelcomeEmail ? 2 : 0) + (hasRole(['admin', 'super_admin']) ? 1 : 0);
+
+  const renderUserRow = (user: UserProfile) => (
+    <tr key={user.id} className={`hover:bg-gray-50 ${!user.is_active ? 'opacity-60 bg-gray-50' : ''}`}>
+      {canSendWelcomeEmail && (
+        <td className="px-4 py-4 whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={selectedUserIds.has(user.id)}
+            disabled={!user.is_active}
+            onChange={() => toggleSelectUser(user.id)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-40"
+            title={user.is_active ? 'Select user' : 'Inactive users cannot be emailed'}
+          />
+        </td>
+      )}
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div>
+          <div className={`text-sm font-medium ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
+            {user.first_name} {user.last_name}
+            {!user.is_active && (
+              <span className="ml-2 text-xs text-red-600 font-normal">(Inactive)</span>
+            )}
+            {user.simulation_only && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                <Monitor className="h-3 w-3 mr-1" />
+                Sim Only
+              </span>
+            )}
+          </div>
+          <div className="text-sm text-gray-500">{user.email}</div>
+          {user.license_number && (
+            <div className="text-xs text-gray-400">License: {user.license_number}</div>
+          )}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+          <Shield className="h-3 w-3 mr-1" />
+          {getRoleLabel(user.role)}
+        </span>
+      </td>
+      <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
+        {(user.role === 'instructor' || user.role === 'coordinator') && userPrograms[user.id]?.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {userPrograms[user.id].map(code => (
+              <span key={code} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                <Tag className="h-3 w-3 mr-1" />
+                {code}
+              </span>
+            ))}
+          </div>
+        ) : '-'}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {user.is_active ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+      <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-500' : 'text-gray-400'}`}>
+        {new Date(user.created_at).toLocaleDateString()}
+      </td>
+      {canSendWelcomeEmail && (
+        <td className="px-6 py-4 whitespace-nowrap text-sm">
+          {authStatus[user.id]?.lastSignInAt ? (
+            <span className="text-gray-500">{new Date(authStatus[user.id].lastSignInAt as string).toLocaleDateString()}</span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+              Never signed in
+            </span>
+          )}
+        </td>
+      )}
+      {hasRole(['admin', 'super_admin']) && (
+        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <div className="flex items-center justify-end space-x-2">
+            <button
+              onClick={() => {
+                setSelectedUser(user);
+                setShowForm(true);
+              }}
+              className="text-blue-600 hover:text-blue-900 p-1 rounded"
+              title="Edit User"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+
+            {/* Deactivate/Reactivate Toggle */}
+            <button
+              onClick={() => user.is_active ? handleDeactivateUser(user.id) : handleReactivateUser(user.id)}
+              className={`p-1 rounded ${
+                user.is_active
+                  ? 'text-orange-600 hover:text-orange-900'
+                  : 'text-green-600 hover:text-green-900'
+              }`}
+              title={user.is_active ? 'Deactivate User' : 'Reactivate User'}
+            >
+              {user.is_active ? <UserX className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
+            </button>
+
+            {/* Permanent Delete - Only for Super Admins */}
+            {hasRole('super_admin') && (
+              <button
+                onClick={() => handleDeleteUser(user.id)}
+                className="text-red-600 hover:text-red-900 p-1 rounded"
+                title="Permanently Delete User"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </td>
+      )}
+    </tr>
+  );
 
   if (loading) {
     return (
@@ -256,17 +473,59 @@ export const UserManagement: React.FC = () => {
               <Monitor className="h-4 w-4" />
               Sim Only
             </button>
+
+            {/* Group by program toggle chip */}
+            {allProgramCodes.length > 0 && (
+              <button
+                onClick={() => setGroupByProgram(v => !v)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  groupByProgram
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+                title="Group users by program"
+              >
+                <Layers className="h-4 w-4" />
+                Group by Program
+              </button>
+            )}
+
+            {/* Pending setup toggle chip — users who have never signed in */}
+            {canSendWelcomeEmail && (
+              <button
+                onClick={() => setFilterPendingSetup(v => !v)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  filterPendingSetup
+                    ? 'bg-amber-600 text-white border-amber-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+                title="Show users who haven't signed in yet"
+              >
+                <Mail className="h-4 w-4" />
+                Pending Setup
+              </button>
+            )}
           </div>
           
           {/* Summary */}
           <div className="mt-3 flex items-center gap-3 text-sm text-gray-600">
             <span>Showing {filteredUsers.length} of {users.length} users</span>
-            {(filterProgram !== 'all' || filterSimOnly || statusFilter !== 'all') && (
+            {(filterProgram !== 'all' || filterSimOnly || filterPendingSetup || statusFilter !== 'all') && (
               <button
-                onClick={() => { setFilterProgram('all'); setFilterSimOnly(false); setStatusFilter('all'); setSearchTerm(''); }}
+                onClick={() => { setFilterProgram('all'); setFilterSimOnly(false); setFilterPendingSetup(false); setStatusFilter('all'); setSearchTerm(''); }}
                 className="text-blue-600 hover:text-blue-800"
               >
                 Clear filters
+              </button>
+            )}
+            {canSendWelcomeEmail && selectedUserIds.size > 0 && (
+              <button
+                onClick={handleSendWelcomeEmails}
+                disabled={sendingWelcome}
+                className="ml-auto inline-flex items-center gap-1.5 bg-amber-600 text-white px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Mail className="h-4 w-4" />
+                {sendingWelcome ? 'Sending...' : `Send Welcome Email (${selectedUserIds.size})`}
               </button>
             )}
           </div>
@@ -276,6 +535,17 @@ export const UserManagement: React.FC = () => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                {canSendWelcomeEmail && (
+                  <th className="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={filteredUsers.some(u => u.is_active) && filteredUsers.filter(u => u.is_active).every(u => selectedUserIds.has(u.id))}
+                      onChange={toggleSelectAllVisible}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      title="Select all active users shown"
+                    />
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   User
                 </th>
@@ -291,6 +561,11 @@ export const UserManagement: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
+                {canSendWelcomeEmail && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Sign In
+                  </th>
+                )}
                 {hasRole(['admin', 'super_admin']) && (
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -299,98 +574,20 @@ export const UserManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className={`hover:bg-gray-50 ${!user.is_active ? 'opacity-60 bg-gray-50' : ''}`}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className={`text-sm font-medium ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
-                        {user.first_name} {user.last_name}
-                        {!user.is_active && (
-                          <span className="ml-2 text-xs text-red-600 font-normal">(Inactive)</span>
-                        )}
-                        {user.simulation_only && (
-                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                            <Monitor className="h-3 w-3 mr-1" />
-                            Sim Only
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                      {user.license_number && (
-                        <div className="text-xs text-gray-400">License: {user.license_number}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                      <Shield className="h-3 w-3 mr-1" />
-                      {getRoleLabel(user.role)}
-                    </span>
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
-                    {(user.role === 'instructor' || user.role === 'coordinator') && userPrograms[user.id]?.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {userPrograms[user.id].map(code => (
-                          <span key={code} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            <Tag className="h-3 w-3 mr-1" />
-                            {code}
-                          </span>
-                        ))}
-                      </div>
-                    ) : '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  {hasRole(['admin', 'super_admin']) && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowForm(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                          title="Edit User"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        
-                        {/* Deactivate/Reactivate Toggle */}
-                        <button
-                          onClick={() => user.is_active ? handleDeactivateUser(user.id) : handleReactivateUser(user.id)}
-                          className={`p-1 rounded ${
-                            user.is_active 
-                              ? 'text-orange-600 hover:text-orange-900' 
-                              : 'text-green-600 hover:text-green-900'
-                          }`}
-                          title={user.is_active ? 'Deactivate User' : 'Reactivate User'}
-                        >
-                          {user.is_active ? <UserX className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
-                        </button>
-                        
-                        {/* Permanent Delete - Only for Super Admins */}
-                        {hasRole('super_admin') && (
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded"
-                            title="Permanently Delete User"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
+              {groupByProgram ? (
+                groupedUsers.map(group => (
+                  <React.Fragment key={group.label}>
+                    <tr className="bg-gray-100">
+                      <td colSpan={columnCount} className="px-6 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        {group.label} <span className="font-normal normal-case text-gray-400">({group.groupUsers.length})</span>
+                      </td>
+                    </tr>
+                    {group.groupUsers.map(renderUserRow)}
+                  </React.Fragment>
+                ))
+              ) : (
+                filteredUsers.map(renderUserRow)
+              )}
             </tbody>
           </table>
         </div>
