@@ -150,6 +150,18 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
+            .patient-bracelet .patient-id-row {
+              font-size: 9px;
+              font-weight: 600;
+              font-family: 'Courier New', monospace;
+              letter-spacing: 0.3px;
+              line-height: 1.2;
+              padding: 1px 8px;
+              margin-bottom: 2px;
+              color: #4b5563;
+              border-left: 3px solid;
+              border-radius: 2px;
+            }
             .patient-bracelet .patient-doctor {
               font-size: 9px;
               font-weight: 600;
@@ -271,7 +283,8 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               <div class="label patient-bracelet" style="left: ${leftPos}; top: ${topPos};">
                 <div class="label-content">
                   <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.last_name}, ${patient.first_name}</div>
-                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${formatDOB(patient.date_of_birth)} &bull; ID: ${patient.patient_id}</div>
+                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${formatDOB(patient.date_of_birth)}</div>
+                  <div class="patient-id-row" style="border-color: ${color.border};">ID: ${patient.patient_id}</div>
                   ${patient.attending_physician ? `<div class="patient-doctor">Dr. ${patient.attending_physician}</div>` : ''}
                 </div>
                 <div class="barcode-area">
