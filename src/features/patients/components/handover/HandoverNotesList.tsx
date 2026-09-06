@@ -62,6 +62,7 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const handleAcknowledge = (noteId: string) => {

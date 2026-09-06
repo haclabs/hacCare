@@ -42,7 +42,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       const exportPackage = JSON.parse(text);
       const validationResult = validateTemplateExport(exportPackage);
       setValidation(validationResult);
-    } catch (error) {
+    } catch {
       setValidation({
         valid: false,
         errors: ['Invalid JSON file or corrupted export'],

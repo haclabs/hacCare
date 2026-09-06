@@ -677,6 +677,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCurrentTenant();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isMultiTenantAdmin, authLoading]);
 
   const value: TenantContextType = {

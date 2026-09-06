@@ -147,7 +147,7 @@ const SimulationGuide: React.FC = () => {
             const logoHeight = 13;
             const logoX = (pageWidth - logoWidth) / 2;
             pdf.addImage(HACCARE_LOGO_BASE64, 'PNG', logoX, 8, logoWidth, logoHeight);
-          } catch (error) {
+          } catch {
             // Silent fail
           }
           

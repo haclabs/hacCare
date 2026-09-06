@@ -79,7 +79,7 @@ export async function createPatientWithTenant(
     secureLogger.debug('👤 Creating new patient for tenant:', tenantId);
 
     // Remove fields that don't belong in the patients table
-    const { medications, vitals, notes, id, ...patientDataForDB } = patientData;
+    const { medications: _medications, vitals: _vitals, notes: _notes, id: _id, ...patientDataForDB } = patientData;
 
     const dbPatient = {
       ...patientDataForDB,
@@ -132,7 +132,7 @@ export async function updatePatientWithTenant(
     }
 
     // Remove fields that don't belong in the patients table
-    const { medications, vitals, notes, id, ...updatesForDB } = updates;
+    const { medications: _medications, vitals: _vitals, notes: _notes, id: _id, ...updatesForDB } = updates;
 
     const { data: patient, error } = await supabase
       .from('patients')

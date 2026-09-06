@@ -358,7 +358,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       secureLogger.debug('🧹 Inactivity monitor cleaned up');
     };
-  }, [user]); // Re-run when user changes (login/logout)
+  }, [user, INACTIVITY_TIMEOUT]); // Re-run when user changes (login/logout)
 
   const signIn = async (email: string, password: string) => {
     try {

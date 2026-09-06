@@ -81,6 +81,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
   
   // Handle image upload

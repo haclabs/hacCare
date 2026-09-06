@@ -667,7 +667,7 @@ const CreateTenantModal: React.FC<{
       };
 
       // Remove admin_email from tenantData since it's not part of the Tenant type
-      const { admin_email, ...finalTenantData } = tenantData;
+      const { admin_email: _admin_email, ...finalTenantData } = tenantData;
 
       const { error } = await createTenant(finalTenantData);
       if (error) {

@@ -41,6 +41,7 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAssessments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const handleAssessmentSaved = () => {
@@ -66,7 +67,7 @@ export const PatientAssessmentsTab: React.FC<PatientAssessmentsTabProps> = ({
     try {
       const date = parseISO(dateString);
       return isValid(date) ? format(date, 'MMM dd, yyyy HH:mm') : 'Invalid date';
-    } catch (error) {
+    } catch {
       return 'Invalid date';
     }
   };

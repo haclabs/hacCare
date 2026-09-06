@@ -190,7 +190,7 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
       return false;
     }
     
-  } catch (error: any) {
+  } catch {
     secureLogger.warn('Unable to connect to database - check Supabase URL and API key');
     return false;
   }
@@ -212,7 +212,7 @@ export const testSupabaseConnection = async (retries = 3): Promise<boolean> => {
         return true;
       }
       secureLogger.debug('Connection attempt failed, retrying', { attempt: i + 1, remaining: retries - i - 1 });
-    } catch (error) {
+    } catch {
       secureLogger.debug('Connection attempt exception', { attempt: i + 1 });
       if (i < retries - 1) {
         const backoffTime = Math.pow(2, i) * 1000;

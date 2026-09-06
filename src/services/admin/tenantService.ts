@@ -305,7 +305,7 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
       } else {
         secureLogger.debug(`✓ Cleaned ${table}`);
       }
-    } catch (e) {
+    } catch {
       secureLogger.debug(`ℹ️  Skipping ${table} (doesn't exist)`);
     }
   }
@@ -349,7 +349,7 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
       } else {
         secureLogger.debug(`ℹ️  ${table} has no records for this tenant`);
       }
-    } catch (e) {
+    } catch {
       secureLogger.debug(`ℹ️  Skipping ${table} (error during check)`);
     }
   }

@@ -51,6 +51,7 @@ interface AdvancedDirectivesFormProps {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAdvancedDirective();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -75,6 +75,7 @@ export default function VersionComparisonModal({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadComparison();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateId, versionOld, versionNew, simulationId]);
 
   function renderCountChange(label: string, oldCount: number, newCount: number) {

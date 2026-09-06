@@ -64,6 +64,7 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAdmissionRecord();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {

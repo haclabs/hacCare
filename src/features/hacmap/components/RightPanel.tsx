@@ -44,6 +44,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isDirty]);
 
   if (!isOpen) return null;

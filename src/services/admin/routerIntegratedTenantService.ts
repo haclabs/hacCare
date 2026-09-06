@@ -159,6 +159,7 @@ export function useRouterIntegratedTenantService(options: Omit<RouteAwareTenantS
       navigate,
       ...options
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, options.preserveRoute]);
 
   return {

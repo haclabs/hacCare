@@ -440,7 +440,7 @@ export async function getPreviousLabResult(
 
   // Remove the joined panel data before returning
   if (data) {
-    const { lab_panels, ...result } = data as any;
+    const { lab_panels: _lab_panels, ...result } = data as any;
     return { data: result as LabResult, error: null };
   }
 

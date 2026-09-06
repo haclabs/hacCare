@@ -88,6 +88,7 @@ export const AdminDashboard: React.FC = () => {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       refreshData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasAdminAccess]);
 
   // Auto-refresh every 30 seconds
@@ -96,6 +97,7 @@ export const AdminDashboard: React.FC = () => {
     
     const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasAdminAccess]);
 
   // Check admin access

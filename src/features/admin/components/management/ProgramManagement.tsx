@@ -56,6 +56,7 @@ export const ProgramManagement: React.FC = () => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTenant?.id, currentTenant?.parent_tenant_id]);
 
   const handleCreate = () => {

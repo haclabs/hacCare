@@ -129,6 +129,7 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTenant]);
 
   const validate = (): boolean => {

@@ -46,6 +46,7 @@ export const VitalsTrends: React.FC<VitalsTrendsProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVitals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const handleClearVitals = async () => {
