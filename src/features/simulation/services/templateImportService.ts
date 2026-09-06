@@ -223,7 +223,7 @@ export async function parseTemplateExportFile(
         const text = event.target?.result as string;
         const exportPackage = JSON.parse(text) as TemplateExportPackage;
         resolve(exportPackage);
-      } catch (error) {
+      } catch {
         reject(new Error('Invalid JSON file'));
       }
     };

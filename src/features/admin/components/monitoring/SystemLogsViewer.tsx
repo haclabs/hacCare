@@ -143,6 +143,7 @@ export const SystemLogsViewer: React.FC = () => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLevel, selectedType, timeRange]);
 
   useEffect(() => {
@@ -150,6 +151,7 @@ export const SystemLogsViewer: React.FC = () => {
       const interval = setInterval(fetchLogs, 10000); // Refresh every 10s
       return () => clearInterval(interval);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, selectedLevel, selectedType, timeRange]);
 
   const deleteLogs = async (olderThan: string) => {

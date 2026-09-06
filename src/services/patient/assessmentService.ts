@@ -158,7 +158,7 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
       let parsedContent = null;
       try {
         parsedContent = JSON.parse(note.content);
-      } catch (e) {
+      } catch {
         // Not JSON, it's old formatted text
       }
 

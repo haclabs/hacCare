@@ -76,6 +76,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTenant]);
 
   // Load available patient templates (ready + within the user's program access) on mount

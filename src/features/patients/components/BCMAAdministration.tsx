@@ -25,6 +25,8 @@ interface BCMAAdministrationProps {
   };
   onAdministrationComplete: (success: boolean, log?: unknown) => void;
   onCancel: () => void;
+  /** Practice/training sandbox — skips the database write entirely, nothing is recorded. */
+  practiceMode?: boolean;
 }
 
 export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
@@ -32,7 +34,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   medication,
   currentUser,
   onAdministrationComplete,
-  onCancel
+  onCancel,
+  practiceMode = false
 }) => {
   const { currentTenant } = useTenant();
 
@@ -236,7 +239,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         studentName,
         overriddenChecks.length > 0 ? overrideReason : undefined,
         undefined, // witnessName - can be added later if needed
-        administeredDose.trim() || undefined
+        administeredDose.trim() || undefined,
+        practiceMode
       );
 
       setCompletionLog(log);
@@ -357,6 +361,11 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         {/* ── Dark header bar ── */}
         <div className="bg-slate-800 text-white px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
+            {practiceMode && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">
+                PRACTICE MODE
+              </span>
+            )}
             {/* Step pills */}
             <div className="flex items-center gap-1">
               {(['scan-patient','scan-medication','verify','complete'] as const).map((s, i) => {

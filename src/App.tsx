@@ -50,6 +50,7 @@ const Changelog = lazy(() => import('./components/Changelog/Changelog'));
 const Settings = lazy(() => import('./features/settings/components/Settings'));
 const SystemLogsViewer = lazy(() => import('./features/admin/components/monitoring/SystemLogsViewer').then(module => ({ default: module.SystemLogsViewer })));
 const MedicationCatalogAdmin = lazy(() => import('./features/admin/components/MedicationCatalogAdmin'));
+const TrainingBCMAPage = lazy(() => import('./features/training/components/TrainingBCMAPage'));
 // Program components
 const ProgramWorkspace = lazy(() => import('./components/Program/ProgramWorkspace'));
 const ProgramSelectorModal = lazy(() => import('./components/Program/ProgramSelectorModal'));
@@ -486,7 +487,7 @@ function App() {
       
       // If it's a workspace tab (simulations, schedule, etc.), fall through to the switch statement below
       // Only default to program workspace for unrecognized tabs
-      if (!['simulations', 'settings', 'user-management', 'management', 'patient-management', 'patient-library', 'admin', 'documentation', 'changelog', 'syslogs', 'med-catalog'].includes(activeTab)) {
+      if (!['simulations', 'settings', 'user-management', 'management', 'patient-management', 'patient-library', 'admin', 'documentation', 'changelog', 'syslogs', 'med-catalog', 'training-bcma'].includes(activeTab)) {
         return (
           <SafeSuspense>
             <ProgramWorkspace />
@@ -617,6 +618,13 @@ function App() {
         return (
           <SafeSuspense>
             <MedicationCatalogAdmin />
+          </SafeSuspense>
+        );
+
+      case 'training-bcma':
+        return (
+          <SafeSuspense>
+            <TrainingBCMAPage />
           </SafeSuspense>
         );
 

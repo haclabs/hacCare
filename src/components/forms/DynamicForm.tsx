@@ -116,7 +116,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         } else {
           setAutoSaveStatus('error');
         }
-      } catch (error) {
+      } catch {
         setAutoSaveStatus('error');
       }
     }, autoSaveInterval);

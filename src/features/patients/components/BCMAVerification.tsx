@@ -182,6 +182,7 @@ export const BCMAVerification: React.FC<BCMAVerificationProps> = ({
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     runVerifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scannedPatientId, scannedMedicationId]);
 
   const allChecksPass = Object.values(checks).every(check => check);

@@ -1,7 +1,10 @@
 // Supabase Edge Function: invite-user
-// Creates a new auth user (no password) and emails them a branded "set your
-// password" link, generated via Supabase Auth's admin invite/recovery link.
-// Requires a valid caller session (admin/coordinator/super_admin only).
+// Creates a new auth user (no password) OR, if the email already has an
+// account, sends that existing user a "reset your password" email instead —
+// used both for new-user invites and for bulk-resending a fresh-start welcome
+// email to existing users (e.g. new school year). Link generated via Supabase
+// Auth's admin invite/recovery link. Requires a valid caller session
+// (admin/coordinator/super_admin only).
 // Deploy: supabase functions deploy invite-user
 // Secrets required: SMTP2GO_API_KEY (already set), SITE_URL (e.g. https://app.haccare.app)
 
@@ -109,9 +112,11 @@ Deno.serve(async (req) => {
     },
   })
 
-  // If the user already exists (e.g. resending a welcome email), fall back
-  // to a recovery link so they can still set/reset their password.
+  // If the user already exists (e.g. resending a welcome email to reset
+  // their password for a new term), fall back to a recovery link.
+  let isExistingUser = false
   if (linkResult.error && /already.*(registered|exists)/i.test(linkResult.error.message)) {
+    isExistingUser = true
     linkResult = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email,
@@ -139,6 +144,19 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Server misconfigured: SMTP2GO_API_KEY not set' }, 500)
   }
 
+  // Existing accounts get "reset your password" copy (e.g. new school year
+  // refresh); brand-new accounts get the original "set up your account" copy.
+  const subject = isExistingUser
+    ? 'hacCare - Please reset your password'
+    : 'Welcome to hacCare - Set up your account'
+  const introHtml = isExistingUser
+    ? `<h2>Hi ${displayName},</h2><p>It's time to reset your password to continue using hacCare. Click the button below to choose a new password.</p>`
+    : `<h2>Welcome to hacCare, ${displayName}!</h2><p>An administrator has created an account for you. Click the button below to set your password and get started.</p>`
+  const introText = isExistingUser
+    ? `Hi ${firstName || 'there'},\n\nIt's time to reset your password to continue using hacCare. Use the link below to choose a new password:`
+    : `Welcome to hacCare, ${displayName}!\n\nAn administrator has created an account for you. Use the link below to set your password:`
+  const buttonLabel = isExistingUser ? 'Reset Your Password' : 'Set Your Password'
+
   const emailRes = await fetch('https://api.smtp2go.com/v3/email/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -146,20 +164,19 @@ Deno.serve(async (req) => {
       api_key: SMTP2GO_API_KEY,
       sender: 'hacCare <noreply@haccare.app>',
       to: [email],
-      subject: 'Welcome to hacCare - Set up your account',
+      subject,
       html_body: `
-        <h2>Welcome to hacCare, ${displayName}!</h2>
-        <p>An administrator has created an account for you. Click the button below to set your password and get started.</p>
+        ${introHtml}
         <p style="margin: 24px 0;">
           <a href="${actionLink}" style="background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
-            Set Your Password
+            ${buttonLabel}
           </a>
         </p>
         <p>If the button doesn't work, copy and paste this link into your browser:</p>
         <p><a href="${actionLink}">${actionLink}</a></p>
-        <p>This link will expire after a limited time. If it expires, ask your administrator to resend the invitation.</p>
+        <p>This link will expire after a limited time. If it expires, ask your administrator to resend it.</p>
       `,
-      text_body: `Welcome to hacCare, ${displayName}!\n\nAn administrator has created an account for you. Use the link below to set your password:\n${actionLink}\n\nThis link will expire after a limited time.`,
+      text_body: `${introText}\n${actionLink}\n\nThis link will expire after a limited time.`,
     }),
   })
 
@@ -169,5 +186,5 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Invitation created but the welcome email failed to send' }, 502)
   }
 
-  return jsonResponse({ success: true, userId: newUserId }, 200)
+  return jsonResponse({ success: true, userId: newUserId, isExistingUser }, 200)
 })

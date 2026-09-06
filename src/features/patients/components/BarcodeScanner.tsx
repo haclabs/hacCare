@@ -129,6 +129,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
       document.removeEventListener('keypress', handleKeyPress);
       clearTimeout(inputTimer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive]);
 
   const handleManualInput = () => {

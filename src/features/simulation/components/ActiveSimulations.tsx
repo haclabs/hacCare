@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, AlertTriangle, X, Filter } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle, Trash2, Tag, Printer, ClipboardList, KeyRound, AlertTriangle, X, Filter, Info } from 'lucide-react';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
@@ -9,6 +9,7 @@ import { CompletionSummaryModal } from './CompletionSummaryModal';
 import VersionComparisonModal from './VersionComparisonModal';
 import { SimulationCard } from './SimulationCard';
 import { SimulationInstructorGuide } from './SimulationInstructorGuide';
+import { SimulationStatusSummary, type StatusQuickFilter } from './SimulationStatusSummary';
 import { EditCategoriesModal } from './EditCategoriesModal';
 import { SimulationAutoStudentsModal } from './SimulationAutoStudentsModal';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
@@ -24,6 +25,7 @@ const ActiveSimulations: React.FC = () => {
   const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
   const [viewLoginsSimulation, setViewLoginsSimulation] = useState<SimulationActiveWithDetails | null>(null);
   const [checklistSimId, setChecklistSimId] = useState<string | null>(null);
+  const [statusQuickFilter, setStatusQuickFilter] = useState<StatusQuickFilter>('all');
   const {
     simulations,
     filteredSimulations,
@@ -90,6 +92,21 @@ const ActiveSimulations: React.FC = () => {
     }
   };
 
+  const visibleSimulations = filteredSimulations.filter(sim => {
+    switch (statusQuickFilter) {
+      case 'running':
+        return sim.status === 'running' && !sim.is_expired;
+      case 'needs-completing':
+        return (sim.status === 'running' || sim.status === 'paused') && !!sim.is_expired;
+      case 'needs-reset':
+        return sim.status === 'completed';
+      case 'ready':
+        return sim.status === 'pending';
+      default:
+        return true;
+    }
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -112,8 +129,9 @@ const ActiveSimulations: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Category Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <Filter className="h-3.5 w-3.5 text-gray-500" />
           <h3 className="text-xs font-semibold text-gray-700">Filter by Category</h3>
@@ -180,14 +198,59 @@ const ActiveSimulations: React.FC = () => {
         </div>
 
         <div className="text-xs text-gray-400 mt-3">
-          Showing {filteredSimulations.length} of {simulations.length} simulations
+          Showing {visibleSimulations.length} of {simulations.length} simulations
+          {statusQuickFilter !== 'all' && ' (status filter applied)'}
+        </div>
+
+        {/* Card Action Icon Legend */}
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Info className="h-3 w-3 text-gray-400" />
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Card Icons</span>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            {[
+              { icon: Tag, color: 'text-purple-600', label: 'Edit Categories' },
+              { icon: Printer, color: 'text-indigo-600', label: 'Print Labels' },
+              { icon: ClipboardList, color: 'text-teal-700', label: 'Print Checklist' },
+              { icon: KeyRound, color: 'text-teal-600', label: 'View Student Logins' },
+              { icon: Play, color: 'text-green-600', label: 'Start / Resume' },
+              { icon: Pause, color: 'text-yellow-600', label: 'Pause' },
+              { icon: RotateCcw, color: 'text-blue-600', label: 'Reset' },
+              { icon: CheckCircle, color: 'text-emerald-600', label: 'Complete' },
+              { icon: Trash2, color: 'text-red-600', label: 'Delete' },
+            ].map(({ icon: Icon, color, label }) => (
+              <span key={label} className="inline-flex items-center gap-1.5 text-[11px] text-gray-600">
+                <Icon className={`h-3.5 w-3.5 ${color}`} />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Status Summary - clickable quick filters */}
+      <SimulationStatusSummary
+        simulations={filteredSimulations}
+        activeFilter={statusQuickFilter}
+        onFilterChange={setStatusQuickFilter}
+      />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-slate-100 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
         {/* Left Column - Active Simulations */}
         <div className="lg:col-span-2 space-y-4">
-          {filteredSimulations.map((sim) => (
+          {visibleSimulations.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+              <p className="text-sm text-gray-500">No simulations match this status filter.</p>
+              <button
+                onClick={() => setStatusQuickFilter('all')}
+                className="mt-2 text-xs text-blue-600 hover:underline"
+              >
+                Clear status filter
+              </button>
+            </div>
+          ) : visibleSimulations.map((sim) => (
             <SimulationCard
               key={sim.id}
               sim={sim}

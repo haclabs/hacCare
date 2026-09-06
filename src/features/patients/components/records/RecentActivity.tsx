@@ -37,6 +37,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadActivity();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const getActionIcon = (action: string) => {

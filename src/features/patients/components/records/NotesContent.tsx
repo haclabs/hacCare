@@ -32,7 +32,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       // Handle both createdAt and created_at field names
       const date = parseISO(dateString || '');
       return isValid(date) ? format(date, 'MMM dd, yyyy HH:mm') : 'Unknown date';
-    } catch (error) {
+    } catch {
       return 'Invalid date';
     }
   };

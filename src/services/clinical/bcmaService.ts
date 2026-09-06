@@ -285,7 +285,8 @@ class BCMAService {
     studentName?: string,
     overrideReason?: string,
     witnessName?: string,
-    administeredDose?: string
+    administeredDose?: string,
+    dryRun: boolean = false
   ): Promise<AdministrationLog> {
     secureLogger.debug('🔵 BCMA: Creating administration record in database...');
     
@@ -302,6 +303,12 @@ class BCMAService {
       manual_overrides: manualOverrides,
       notes
     };
+
+    // Practice/training mode: skip the DB write entirely — nothing gets recorded.
+    if (dryRun) {
+      secureLogger.debug('🎓 BCMA: dryRun active — skipping database write, returning simulated log');
+      return log;
+    }
 
     try {
       // Create the medication administration record in the database

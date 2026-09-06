@@ -15,6 +15,8 @@ export interface InviteUserParams {
 
 export interface InviteUserResult {
   userId: string;
+  /** True if the email already had an account and got a password-reset link instead of a fresh invite. */
+  isExistingUser: boolean;
 }
 
 export async function inviteUser(
@@ -34,7 +36,7 @@ export async function inviteUser(
       return { data: null, error: data?.error || 'Failed to send invitation email' };
     }
 
-    return { data: { userId: data.userId }, error: null };
+    return { data: { userId: data.userId, isExistingUser: !!data.isExistingUser }, error: null };
   } catch (error: any) {
     secureLogger.error('Unexpected error inviting user', error);
     return { data: null, error: error?.message || 'Failed to send invitation email' };

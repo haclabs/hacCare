@@ -74,6 +74,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     filterTenants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenants, searchTerm, statusFilter]);
 
   const handleCreateTenant = async (tenantData: any) => {

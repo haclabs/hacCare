@@ -54,6 +54,17 @@ export const formatPatientName = (firstName: string, lastName: string): string =
 };
 
 /**
+ * Format a patient's date of birth for display.
+ * Parses as local midnight to avoid an off-by-one-day shift in negative-UTC timezones.
+ *
+ * @param {string} dateOfBirth - Date of birth in YYYY-MM-DD format
+ * @returns {string} Localized date string (e.g., "1/1/1990")
+ */
+export const formatDOB = (dateOfBirth: string): string => {
+  return new Date(dateOfBirth + 'T00:00:00').toLocaleDateString();
+};
+
+/**
  * Calculate patient age from date of birth
  * Accurately calculates age considering month and day
  * 
@@ -201,7 +212,7 @@ export const formatTime = (dateValue: string | Date | null): string => {
     if (!isValid(date)) return 'N/A';
     
     return format(date, 'MMM dd, yyyy HH:mm');
-  } catch (error) {
+  } catch {
     return 'N/A';
   }
 };

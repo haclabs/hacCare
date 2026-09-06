@@ -100,6 +100,12 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               margin-bottom: 2px;
               -webkit-print-color-adjust: exact; print-color-adjust: exact;
             }
+            .patient-id-row {
+              font-size: 9px; font-weight: 600; font-family: 'Courier New', monospace;
+              letter-spacing: 0.3px; line-height: 1.2;
+              padding: 1px 10px; margin-bottom: 2px; color: #4b5563;
+              border-left: 3px solid; border-radius: 2px;
+            }
             .patient-doctor {
               font-size: 9px; font-weight: 600; line-height: 1.2;
               padding: 0 10px; color: #6b7280;
@@ -125,7 +131,8 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               <div class="label">
                 <div class="label-content">
                   <div class="patient-name" style="background: ${color.bg}; border-color: ${color.border}; color: ${color.text};">${patient.last_name}, ${patient.first_name}</div>
-                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString()} &bull; ID: ${patient.patient_id}</div>
+                  <div class="patient-info" style="background: ${color.bg}; border-color: ${color.border};">DOB: ${new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString()}</div>
+                  <div class="patient-id-row" style="border-color: ${color.border};">ID: ${patient.patient_id}</div>
                   ${patient.attending_physician ? `<div class="patient-doctor">Dr. ${patient.attending_physician}</div>` : ''}
                 </div>
                 <div class="barcode-area">
@@ -197,7 +204,8 @@ const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients,
               <div key={`${patient.id}-${idx}`} className="border border-gray-300 bg-gradient-to-br from-gray-50 to-white rounded shadow-sm flex items-stretch" style={{width: '2.625in', height: '1in'}}>
                 <div className="flex-1 flex flex-col justify-center px-3 py-2 min-w-0">
                   <div className="font-black text-sm uppercase tracking-wide px-2.5 py-1 rounded truncate" style={{letterSpacing: '0.4px', fontWeight: 900, background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `4px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`, color: PATIENT_COLORS[patientColorMap[patient.id]].text}}>{patient.last_name}, {patient.first_name}</div>
-                  <div className="text-[10px] font-bold px-2.5 py-0.5 mt-1 rounded text-gray-700" style={{background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `3px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`}}>DOB: {new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString()} • ID: {patient.patient_id}</div>
+                  <div className="text-[10px] font-bold px-2.5 py-0.5 mt-1 rounded text-gray-700" style={{background: PATIENT_COLORS[patientColorMap[patient.id]].bg, borderLeft: `3px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`}}>DOB: {new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString()}</div>
+                  <div className="text-[9px] font-semibold px-2.5 py-0.5 mt-0.5 rounded text-gray-600 font-mono tracking-wide" style={{borderLeft: `3px solid ${PATIENT_COLORS[patientColorMap[patient.id]].border}`}}>ID: {patient.patient_id}</div>
                   {patient.attending_physician && (
                     <div className="text-[9px] font-semibold px-2.5 mt-0.5 text-gray-500 truncate">Dr. {patient.attending_physician}</div>
                   )}

@@ -350,7 +350,7 @@ export function formatDateForLabel(dateString: string): string {
       day: '2-digit',
       year: 'numeric'
     });
-  } catch (error) {
+  } catch {
     return dateString;
   }
 }
@@ -370,7 +370,7 @@ export function calculateAge(dateOfBirth: string): number {
     }
     
     return age;
-  } catch (error) {
+  } catch {
     return 0;
   }
 }

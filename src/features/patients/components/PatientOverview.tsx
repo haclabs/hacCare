@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { getAvatarById } from '../../../data/patientAvatars';
 import { calculatePreciseAge } from '../../../utils/vitalRanges';
+import { formatDOB } from '../../../utils/patientUtils';
 import type { Patient } from '../../../types';
 
 type ActiveModule =
@@ -148,6 +149,8 @@ export const PatientOverview: React.FC<PatientOverviewProps> = ({
                 <span className="font-medium">{age} years</span>
                 <span className="text-gray-400">•</span>
                 <span>{patient.gender}</span>
+                <span className="text-gray-400">•</span>
+                <span>DOB: {formatDOB(patient.date_of_birth)}</span>
               </span>
               <span className="flex items-center space-x-1.5">
                 <MapPin className="h-4 w-4 text-gray-500" />

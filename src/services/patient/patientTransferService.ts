@@ -253,7 +253,7 @@ export const canTransferPatient = async (patientId: string): Promise<{ canTransf
     }
 
     return { canTransfer: true };
-  } catch (error) {
+  } catch {
     return {
       canTransfer: false,
       reason: 'Error checking transfer eligibility'

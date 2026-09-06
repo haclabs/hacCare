@@ -160,7 +160,7 @@ export const useBarcodeScanner = (
       setBuffer(prev => prev + event.key);
     }
   },
-  [buffer, lastKeyTime, isScanning, options.maxInputInterval, options.minLength, onScan, clearBuffer]
+  [buffer, lastKeyTime, isScanning, isListening, options.maxInputInterval, onScan, clearBuffer]
 );
 
   // Set up and clean up event listeners
