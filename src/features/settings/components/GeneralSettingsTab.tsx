@@ -4,19 +4,8 @@ import {
   Moon,
   Sun,
   User,
-  Bell,
-  Database,
-  Wifi,
-  WifiOff,
-  Clock,
-  Activity,
-  RefreshCw,
-  MemoryStick,
-  CheckCircle,
-  XCircle,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import type { SystemInfo } from '../hooks/useSettingsMonitor';
+import { PasswordSecurityCard } from './PasswordSecurityCard';
 
 interface ProfileInfo {
   first_name?: string;
@@ -28,28 +17,18 @@ interface ProfileInfo {
 
 interface GeneralSettingsTabProps {
   profile: ProfileInfo | null;
-  systemInfo: SystemInfo;
-  isRefreshing: boolean;
-  updateSystemInfo: () => Promise<void>;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   handleThemeChange: (theme: string) => void;
   getCurrentTheme: () => string;
-  getStatusIcon: (status: string) => { icon: LucideIcon; color: string };
-  formatUptime: () => string;
 }
 
 export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
   profile,
-  systemInfo,
-  isRefreshing,
-  updateSystemInfo,
   isDarkMode,
   toggleDarkMode,
   handleThemeChange,
   getCurrentTheme,
-  getStatusIcon,
-  formatUptime,
 }) => {
   return (
     <div className="space-y-6">
@@ -167,150 +146,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
           </div>
         </div>
 
-        {/* Notification Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-              <Bell className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h2>
-          </div>
-
-          <div className="space-y-4">
-            {[
-              { label: 'Medication Alerts', description: 'Get notified when medications are due' },
-              { label: 'Vital Signs Alerts', description: 'Get notified for abnormal vital signs' },
-              { label: 'Emergency Alerts', description: 'Get notified for emergency situations' },
-              { label: 'Sound Notifications', description: 'Play sound for important alerts' },
-            ].map(({ label, description }) => (
-              <div key={label} className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{label}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{description}</div>
-                </div>
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* System Status */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">System Status</h2>
-            </div>
-            <button
-              onClick={updateSystemInfo}
-              disabled={isRefreshing}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {/* Database Status */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Database className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">Database</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {systemInfo.dbPing !== null ? `${systemInfo.dbPing}ms` : 'No ping data'}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {(() => {
-                  const { icon: Icon, color } = getStatusIcon(systemInfo.dbStatus);
-                  return <Icon className={`h-4 w-4 ${color}`} />;
-                })()}
-                <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
-                  {systemInfo.dbStatus}
-                </span>
-              </div>
-            </div>
-
-            {/* Network Status */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {systemInfo.networkStatus ? (
-                  <Wifi className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                ) : (
-                  <WifiOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                )}
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">Network</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Internet connectivity</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {systemInfo.networkStatus ? (
-                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                )}
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {systemInfo.networkStatus ? 'Online' : 'Offline'}
-                </span>
-              </div>
-            </div>
-
-            {/* Session Uptime */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">Session Uptime</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Since page load</div>
-                </div>
-              </div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">{formatUptime()}</span>
-            </div>
-
-            {/* Memory Usage */}
-            {systemInfo.memoryUsage !== null && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <MemoryStick className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">Memory Usage</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">JavaScript heap</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${
-                        systemInfo.memoryUsage > 80
-                          ? 'bg-red-500'
-                          : systemInfo.memoryUsage > 60
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                      }`}
-                      style={{ width: `${systemInfo.memoryUsage}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{systemInfo.memoryUsage}%</span>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
-              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Last updated: {systemInfo.lastRefresh.toLocaleTimeString()}
-              </div>
-            </div>
-          </div>
-        </div>
+        <PasswordSecurityCard />
       </div>
     </div>
   );

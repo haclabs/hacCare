@@ -1,23 +1,15 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone, Shield } from 'lucide-react';
+import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
 import { parseAuthError } from '../../../utils/authErrorParser';
-import { useAuth } from '../../../hooks/useAuth';
-import { NetlifySecurityDiagnostics } from './NetlifySecurityDiagnostics';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 /**
- * Security Settings Component
- * 
- * Allows users to manage their security settings including:
- * - Password changes with strength validation
- * - Security status overview
- * - Future MFA options
+ * Password + account security card for the General settings tab.
+ * Handles password changes with strength validation, plus a placeholder
+ * for future MFA support.
  */
-export const SecuritySettings: React.FC = () => {
-  useAuth();
-  
-  // Password change state
+export const PasswordSecurityCard: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,8 +18,7 @@ export const SecuritySettings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
-  // Password strength state
+
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     hasMinLength: false,
@@ -36,38 +27,23 @@ export const SecuritySettings: React.FC = () => {
     hasNumber: false,
     hasSpecialChar: false
   });
-  
-  /**
-   * Check password strength
-   * Evaluates password against security criteria
-   */
+
   const checkPasswordStrength = (password: string) => {
     const hasMinLength = password.length >= 10;
     const hasUppercase = /[A-Z]/.test(password);
     const hasLowercase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
-    
-    // Calculate score (0-4)
+
     let score = 0;
     if (hasMinLength) score++;
     if (hasUppercase && hasLowercase) score++;
     if (hasNumber) score++;
     if (hasSpecialChar) score++;
-    
-    setPasswordStrength({
-      score,
-      hasMinLength,
-      hasUppercase,
-      hasLowercase,
-      hasNumber,
-      hasSpecialChar
-    });
+
+    setPasswordStrength({ score, hasMinLength, hasUppercase, hasLowercase, hasNumber, hasSpecialChar });
   };
-  
-  /**
-   * Get color for password strength indicator
-   */
+
   const getStrengthColor = (score: number) => {
     switch (score) {
       case 0: return 'bg-gray-300 dark:bg-gray-600';
@@ -78,10 +54,7 @@ export const SecuritySettings: React.FC = () => {
       default: return 'bg-gray-300 dark:bg-gray-600';
     }
   };
-  
-  /**
-   * Get label for password strength
-   */
+
   const getStrengthLabel = (score: number) => {
     switch (score) {
       case 0: return 'Very Weak';
@@ -92,41 +65,28 @@ export const SecuritySettings: React.FC = () => {
       default: return 'Very Weak';
     }
   };
-  
-  /**
-   * Handle password change form submission
-   */
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Reset status messages
     setError('');
     setSuccess('');
-    
-    // Validate passwords
+
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
     }
-    
+
     if (passwordStrength.score < 3) {
       setError('Please use a stronger password');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      // Update password using Supabase Auth
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Clear form and show success message
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -138,36 +98,31 @@ export const SecuritySettings: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-3">
-        <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Security Settings</h1>
-      </div>
-      
-      {/* Password Change Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <>
+      {/* Change Password */}
+      <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
             <Lock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change Password</h2>
         </div>
-        
+
         {error && (
           <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
             <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
           </div>
         )}
-        
+
         {success && (
           <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
             <p className="text-green-700 dark:text-green-300 text-sm">{success}</p>
           </div>
         )}
-        
-        <form onSubmit={handlePasswordChange} className="space-y-4">
+
+        <form onSubmit={handlePasswordChange} className="space-y-4 max-w-sm">
           <div>
             <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Current Password
@@ -191,7 +146,7 @@ export const SecuritySettings: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           <div>
             <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               New Password
@@ -217,13 +172,12 @@ export const SecuritySettings: React.FC = () => {
                 {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            
-            {/* Password Strength Indicator */}
+
             {newPassword && (
               <div className="mt-2">
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div 
+                    <div
                       className={`h-2 rounded-full transition-all duration-300 ${getStrengthColor(passwordStrength.score)}`}
                       style={{ width: `${(passwordStrength.score / 4) * 100}%` }}
                     />
@@ -232,7 +186,7 @@ export const SecuritySettings: React.FC = () => {
                     {getStrengthLabel(passwordStrength.score)}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className={`flex items-center space-x-1 ${passwordStrength.hasMinLength ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     <CheckCircle className="h-3 w-3" />
@@ -254,7 +208,7 @@ export const SecuritySettings: React.FC = () => {
               </div>
             )}
           </div>
-          
+
           <div>
             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Confirm New Password
@@ -269,41 +223,38 @@ export const SecuritySettings: React.FC = () => {
               placeholder="Confirm your new password"
             />
           </div>
-          
+
           <button
             type="submit"
             disabled={loading || passwordStrength.score < 3}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Updating Password...' : 'Update Password'}
           </button>
         </form>
-      </div>
-      
-      {/* Security Recommendations */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div className="flex items-center space-x-2 mb-3">
-          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <p className="text-blue-800 dark:text-blue-300 font-medium text-sm">Security Recommendations</p>
-        </div>
-        <div className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
-          <p>• Use a unique password that you don't use for other accounts</p>
-          <p>• Include a mix of uppercase, lowercase, numbers, and special characters</p>
-          <p>• Avoid using personal information like names, birthdays, or addresses</p>
-          <p>• Consider using a password manager to generate and store strong passwords</p>
-          <p>• Change your password if you suspect it may have been compromised</p>
+
+        <div className="mt-4 max-w-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <p className="text-blue-800 dark:text-blue-300 font-medium text-sm">Password Tips</p>
+          </div>
+          <div className="text-blue-700 dark:text-blue-400 text-sm space-y-1">
+            <p>• Use a unique password that you don't use for other accounts</p>
+            <p>• Include a mix of uppercase, lowercase, numbers, and special characters</p>
+            <p>• Avoid using personal information like names, birthdays, or addresses</p>
+          </div>
         </div>
       </div>
-      
+
       {/* Account Security Status */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center space-x-3 mb-6">
           <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
             <Lock className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Account Security Status</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Account Security</h2>
         </div>
-        
+
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="flex items-center space-x-3">
@@ -314,7 +265,7 @@ export const SecuritySettings: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="flex items-center space-x-3">
               <Smartphone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -327,11 +278,6 @@ export const SecuritySettings: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Security Diagnostics */}
-      <div className="mt-8">
-        <NetlifySecurityDiagnostics />
-      </div>
-    </div>
+    </>
   );
 };
