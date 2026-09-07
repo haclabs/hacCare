@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, Lock, Info, CheckCircle, Smartphone, AlertCircle } from 'lucide-react';
 import { supabase } from '../../../lib/api/supabase';
 import { parseAuthError } from '../../../utils/authErrorParser';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { MFAEnrollment } from '../../../components/Auth/MFAEnrollment';
 
 /**
  * Password + account security card for the General settings tab.
- * Handles password changes with strength validation, plus a placeholder
- * for future MFA support.
+ * Handles password changes with strength validation, plus self-service MFA enrollment.
  */
 export const PasswordSecurityCard: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -27,6 +27,45 @@ export const PasswordSecurityCard: React.FC = () => {
     hasNumber: false,
     hasSpecialChar: false
   });
+
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaLoading, setMfaLoading] = useState(true);
+  const [mfaError, setMfaError] = useState('');
+  const [showMfaEnrollment, setShowMfaEnrollment] = useState(false);
+
+  const loadMfaStatus = async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      const verified = data?.totp?.find(f => f.status === 'verified');
+      setMfaFactorId(verified?.id ?? null);
+    } catch (err) {
+      secureLogger.error('Error loading MFA status:', err);
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadMfaStatus();
+  }, []);
+
+  const handleDisableMfa = async () => {
+    if (!mfaFactorId) return;
+    if (!window.confirm('Remove two-factor authentication from your account? You will only need your password to sign in.')) {
+      return;
+    }
+    setMfaError('');
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId });
+      if (error) throw error;
+      setMfaFactorId(null);
+    } catch (err: unknown) {
+      secureLogger.error('Error disabling MFA:', err);
+      setMfaError(err instanceof Error ? err.message : 'Failed to disable two-factor authentication');
+    }
+  };
 
   const checkPasswordStrength = (password: string) => {
     const hasMinLength = password.length >= 10;
@@ -268,16 +307,58 @@ export const PasswordSecurityCard: React.FC = () => {
 
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="flex items-center space-x-3">
-              <Smartphone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              <Smartphone className={`h-5 w-5 ${mfaFactorId ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`} />
               <div>
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-300">Multi-Factor Authentication</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-300">Multi-Factor Authentication</p>
+                  {!mfaLoading && !mfaFactorId && (
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded">
+                      Optional
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Additional security layer for your account</p>
               </div>
             </div>
-            <span className="text-xs text-gray-500 dark:text-gray-400">Available Soon</span>
+            {mfaLoading ? (
+              <span className="text-xs text-gray-400">Checking…</span>
+            ) : mfaFactorId ? (
+              <button
+                onClick={handleDisableMfa}
+                className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400"
+              >
+                Disable
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowMfaEnrollment(true)}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Enable
+              </button>
+            )}
           </div>
+
+          {mfaError && (
+            <div className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+              <p className="text-red-700 dark:text-red-300 text-xs">{mfaError}</p>
+            </div>
+          )}
         </div>
       </div>
+
+      {showMfaEnrollment && (
+        <MFAEnrollment
+          description="Scan the QR code with an authenticator app such as Google Authenticator or Authy, then enter the code to confirm."
+          cancelLabel="Cancel"
+          onCancel={() => setShowMfaEnrollment(false)}
+          onSuccess={() => {
+            setShowMfaEnrollment(false);
+            loadMfaStatus();
+          }}
+        />
+      )}
     </>
   );
 };

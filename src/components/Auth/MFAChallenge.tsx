@@ -182,34 +182,34 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel,
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Shield className="h-8 w-8 text-blue-600" />
+            <div className="p-3 rounded-full" style={{ backgroundColor: 'rgba(63,191,154,0.15)' }}>
+              <Shield className="h-8 w-8" style={{ color: '#3fbf9a' }} />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Two-Factor Authentication</h2>
-          <p className="text-gray-500 text-sm mt-2">
+          <h2 className="text-2xl font-bold text-white">Two-Factor Authentication</h2>
+          <p className="text-slate-400 text-sm mt-2">
             Enter the 6-digit code from your authenticator app to continue.
           </p>
         </div>
 
         {initialising ? (
           <div className="flex justify-center py-6">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: '#3fbf9a' }} />
           </div>
         ) : (
           <form onSubmit={handleVerify} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                <p className="text-red-700 text-sm">{error}</p>
+              <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                <p className="text-red-300 text-sm">{error}</p>
               </div>
             )}
 
             <div>
-              <label htmlFor="mfa-code" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="mfa-code" className="block text-sm font-medium text-slate-400 mb-2">
                 Verification Code
               </label>
               <input
@@ -220,7 +220,7 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel,
                 maxLength={6}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-[0.5em] font-mono"
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-[#3fbf9a] focus:ring-1 focus:ring-[#3fbf9a] transition-colors text-center text-2xl tracking-[0.5em] font-mono"
                 placeholder="000000"
                 autoFocus
                 autoComplete="one-time-code"
@@ -230,8 +230,10 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel,
             <button
               type="submit"
               disabled={loading || code.length !== 6 || !factorId}
-              className="w-full text-white py-3 px-4 rounded-lg font-medium focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: '#19ADF2' }}
+              className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#3fbf9a] focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#3fbf9a' }}
+              onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#35a687')}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3fbf9a'}
             >
               {loading ? 'Verifying…' : 'Verify'}
             </button>
@@ -240,7 +242,7 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel,
 
         <button
           onClick={onCancel}
-          className="w-full mt-4 text-gray-500 text-sm hover:text-gray-700 transition-colors"
+          className="w-full mt-4 text-slate-400 text-sm hover:text-slate-200 transition-colors"
         >
           Sign out and return to login
         </button>
