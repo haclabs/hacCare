@@ -19,11 +19,11 @@ hacCare is a **multi-tenant healthcare simulation platform** for clinical educat
 ### 🧹 CRITICAL: Cleanup Priority
 **Tech debt reduction is a TOP PRIORITY**. When working on features:
 - **Remove unused code aggressively** - if it's not actively used, delete it
-- **Consolidate duplicates** - `src/features/clinical/` → `src/features/patients/` migration is ~80% complete
 - **Look for abandoned patterns** - old simulation code, unused services, deprecated components
 - **Document what you remove** - add entries to CHANGELOG.md for significant cleanup
 
 **✅ Recent Consolidation Progress:**
+- ✅ `src/features/clinical/` → `src/features/patients/` migration complete — folder fully removed
 - ✅ Multi-tenant patient hooks centralized in `useMultiTenantPatients.ts`
 - ✅ Program workspace system fully implemented
 - ✅ Template editing workflow complete with banner/tenant switching
@@ -121,15 +121,8 @@ src/features/
 │   ├── hooks/        # React Query hooks (usePatients, useMultiTenantPatients)
 │   └── services/     # API calls (rare - most logic in hooks)
 ├── simulation/       # Simulation manager, templates, debrief reports
-├── admin/            # User management, tenant settings, backup/restore
-└── clinical/         # ⚠️ DEPRECATED - Migrate features to patients/ and remove
+└── admin/            # User management, tenant settings, backup/restore
 ```
-
-**🧹 Cleanup Note**: `clinical/` is being phased out. When working on BCMA, wound assessments, or labs:
-1. Check if functionality already exists in `patients/`
-2. Migrate or consolidate into `patients/` feature folder
-3. Delete the old `clinical/` version
-4. Update imports across the codebase
 
 ### Simulation vs Production
 **No special handling needed** - simulations use the same system as production, just in dedicated tenant environments. The only difference:
@@ -810,8 +803,6 @@ src/features/
 └── program/          # Program workspace features (NEW)
 ```
 
-**🚫 DEPRECATED:** `clinical/` folder - migrate remaining to `patients/`
-
 ## Database Management Rules
 
 ### Migration vs Fix Files
@@ -874,7 +865,7 @@ CREATE POLICY admin_see_all ON table_name
 - ✅ Simulation launch/management working
 - ✅ Role-based permissions enforced
 - 🔄 Documentation coverage > 80% (in progress)
-- 🔄 `clinical/` → `patients/` migration complete
+- ✅ `clinical/` → `patients/` migration complete
 
 ### Post-1.0 Refactor Candidates
 **Don't refactor now - flag for v2.0:**

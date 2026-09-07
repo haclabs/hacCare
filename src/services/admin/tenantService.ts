@@ -805,11 +805,11 @@ export function getSuperAdminSelectedTenant(): string | null {
  */
 export async function getTenantBySubdomain(subdomain: string): Promise<{ data: Tenant | null; error: any }> {
   try {
+    // Uses a SECURITY DEFINER RPC (not a direct table select) so an anon/pre-login
+    // caller can only ever fetch the one tenant matching this exact subdomain,
+    // never enumerate the whole tenants table.
     const { data, error } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('subdomain', subdomain)
-      .eq('status', 'active');
+      .rpc('get_tenant_by_subdomain_public', { p_subdomain: subdomain });
 
     if (error) {
       return { data: null, error };

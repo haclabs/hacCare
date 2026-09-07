@@ -10,32 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -144,39 +119,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      backup_audit_log: {
-        Row: {
-          action: string
-          backup_id: string | null
-          created_at: string
-          details: Json | null
-          id: string
-          ip_address: unknown
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          action: string
-          backup_id?: string | null
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          action?: string
-          backup_id?: string | null
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: []
       }
       bowel_records: {
         Row: {
@@ -779,6 +721,45 @@ export type Database = {
           },
         ]
       }
+      kb_walkthroughs: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          scribe_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          scribe_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          scribe_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lab_ack_events: {
         Row: {
           abnormal_summary: Json | null
@@ -1285,6 +1266,72 @@ export type Database = {
           },
         ]
       }
+      medications_catalog: {
+        Row: {
+          barcode: string
+          category: string
+          created_at: string
+          created_by: string | null
+          display_order: number | null
+          formulation: string
+          generic_name: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          route: string
+          strength: string
+          tenant_id: string | null
+        }
+        Insert: {
+          barcode: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          formulation: string
+          generic_name?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          route: string
+          strength: string
+          tenant_id?: string | null
+        }
+        Update: {
+          barcode?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          formulation?: string
+          generic_name?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          route?: string
+          strength?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_catalog_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medications_catalog_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       multi_tenant_admins: {
         Row: {
           created_at: string | null
@@ -1351,6 +1398,7 @@ export type Database = {
           secondary_contact_phone: string | null
           secondary_contact_relationship: string | null
           smoking_status: string | null
+          student_name: string | null
           tenant_id: string | null
           updated_at: string | null
           weight: string | null
@@ -1384,6 +1432,7 @@ export type Database = {
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           smoking_status?: string | null
+          student_name?: string | null
           tenant_id?: string | null
           updated_at?: string | null
           weight?: string | null
@@ -1417,6 +1466,7 @@ export type Database = {
           secondary_contact_phone?: string | null
           secondary_contact_relationship?: string | null
           smoking_status?: string | null
+          student_name?: string | null
           tenant_id?: string | null
           updated_at?: string | null
           weight?: string | null
@@ -1840,6 +1890,8 @@ export type Database = {
         Row: {
           admin_time: string | null
           admin_times: Json | null
+          barcode: string | null
+          catalog_id: string | null
           category: string | null
           created_at: string | null
           dosage: string
@@ -1859,6 +1911,8 @@ export type Database = {
         Insert: {
           admin_time?: string | null
           admin_times?: Json | null
+          barcode?: string | null
+          catalog_id?: string | null
           category?: string | null
           created_at?: string | null
           dosage: string
@@ -1878,6 +1932,8 @@ export type Database = {
         Update: {
           admin_time?: string | null
           admin_times?: Json | null
+          barcode?: string | null
+          catalog_id?: string | null
           category?: string | null
           created_at?: string | null
           dosage?: string
@@ -1895,6 +1951,13 @@ export type Database = {
           tenant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "patient_medications_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "medications_catalog"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patient_medications_patient_id_fkey"
             columns: ["patient_id"]
@@ -2259,6 +2322,115 @@ export type Database = {
           },
         ]
       }
+      patient_system_assessments: {
+        Row: {
+          assessment_data: Json
+          created_at: string
+          id: string
+          is_baseline: boolean
+          nurse_id: string | null
+          nurse_name: string | null
+          patient_id: string
+          recorded_at: string
+          system_type: string
+          tenant_id: string
+        }
+        Insert: {
+          assessment_data?: Json
+          created_at?: string
+          id?: string
+          is_baseline?: boolean
+          nurse_id?: string | null
+          nurse_name?: string | null
+          patient_id: string
+          recorded_at?: string
+          system_type: string
+          tenant_id: string
+        }
+        Update: {
+          assessment_data?: Json
+          created_at?: string
+          id?: string
+          is_baseline?: boolean
+          nurse_id?: string | null
+          nurse_name?: string | null
+          patient_id?: string
+          recorded_at?: string
+          system_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_system_assessments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_system_assessments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_system_assessments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          primary_categories: string[] | null
+          snapshot_data: Json | null
+          snapshot_taken_at: string | null
+          status:
+            | Database["public"]["Enums"]["simulation_template_status"]
+            | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          primary_categories?: string[] | null
+          snapshot_data?: Json | null
+          snapshot_taken_at?: string | null
+          status?:
+            | Database["public"]["Enums"]["simulation_template_status"]
+            | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          primary_categories?: string[] | null
+          snapshot_data?: Json | null
+          snapshot_taken_at?: string | null
+          status?:
+            | Database["public"]["Enums"]["simulation_template_status"]
+            | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       patient_vitals: {
         Row: {
           blood_pressure_diastolic: number | null
@@ -2589,56 +2761,6 @@ export type Database = {
         }
         Relationships: []
       }
-      program_announcements: {
-        Row: {
-          author_id: string
-          author_name: string | null
-          category: string | null
-          content: string
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          is_pinned: boolean | null
-          program_id: string
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          author_id: string
-          author_name?: string | null
-          category?: string | null
-          content: string
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          is_pinned?: boolean | null
-          program_id: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          author_id?: string
-          author_name?: string | null
-          category?: string | null
-          content?: string
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          is_pinned?: boolean | null
-          program_id?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "program_announcements_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       programs: {
         Row: {
           code: string
@@ -2686,94 +2808,6 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      scheduled_simulations: {
-        Row: {
-          cohort_id: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          duration_minutes: number
-          id: string
-          instructor_id: string
-          launched_simulation_id: string | null
-          name: string
-          notes: string | null
-          program_id: string
-          recurrence_rule: string | null
-          room_location: string | null
-          scheduled_end: string
-          scheduled_start: string
-          status: string | null
-          student_count: number | null
-          template_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          cohort_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          duration_minutes: number
-          id?: string
-          instructor_id: string
-          launched_simulation_id?: string | null
-          name: string
-          notes?: string | null
-          program_id: string
-          recurrence_rule?: string | null
-          room_location?: string | null
-          scheduled_end: string
-          scheduled_start: string
-          status?: string | null
-          student_count?: number | null
-          template_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          cohort_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          duration_minutes?: number
-          id?: string
-          instructor_id?: string
-          launched_simulation_id?: string | null
-          name?: string
-          notes?: string | null
-          program_id?: string
-          recurrence_rule?: string | null
-          room_location?: string | null
-          scheduled_end?: string
-          scheduled_start?: string
-          status?: string | null
-          student_count?: number | null
-          template_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scheduled_simulations_launched_simulation_id_fkey"
-            columns: ["launched_simulation_id"]
-            isOneToOne: false
-            referencedRelation: "simulation_active"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scheduled_simulations_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scheduled_simulations_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "simulation_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -2907,6 +2941,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "simulation_activity_log_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_active"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulation_auto_students: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string
+          id: string
+          label: string | null
+          program_id: string | null
+          simulation_id: string
+          student_number: string
+          temp_password: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email: string
+          id?: string
+          label?: string | null
+          program_id?: string | null
+          simulation_id: string
+          student_number: string
+          temp_password: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string
+          id?: string
+          label?: string | null
+          program_id?: string | null
+          simulation_id?: string
+          student_number?: string
+          temp_password?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_auto_students_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_auto_students_simulation_id_fkey"
             columns: ["simulation_id"]
             isOneToOne: false
             referencedRelation: "simulation_active"
@@ -3535,6 +3623,486 @@ export type Database = {
           },
         ]
       }
+      tr_active_living_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_baseline: boolean
+          narrative: string | null
+          patient_id: string
+          recorded_by: string | null
+          recorded_by_user_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_baseline?: boolean
+          narrative?: string | null
+          patient_id: string
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_baseline?: boolean
+          narrative?: string | null
+          patient_id?: string
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_active_living_profiles_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_active_living_profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_active_living_profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tr_assessment_scores: {
+        Row: {
+          administered_by: string | null
+          created_at: string
+          date_administered: string | null
+          id: string
+          interpretation: string | null
+          is_baseline: boolean
+          patient_id: string
+          recorded_by: string | null
+          recorded_by_user_id: string | null
+          subscale_scores: Json | null
+          tenant_id: string
+          tool_name: string
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          administered_by?: string | null
+          created_at?: string
+          date_administered?: string | null
+          id?: string
+          interpretation?: string | null
+          is_baseline?: boolean
+          patient_id: string
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          subscale_scores?: Json | null
+          tenant_id: string
+          tool_name: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          administered_by?: string | null
+          created_at?: string
+          date_administered?: string | null
+          id?: string
+          interpretation?: string | null
+          is_baseline?: boolean
+          patient_id?: string
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          subscale_scores?: Json | null
+          tenant_id?: string
+          tool_name?: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_assessment_scores_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_assessment_scores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_assessment_scores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tr_interdisciplinary_interps: {
+        Row: {
+          created_at: string
+          id: string
+          interpretation: string | null
+          is_baseline: boolean
+          patient_id: string
+          recorded_by: string | null
+          recorded_by_user_id: string | null
+          score_group: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interpretation?: string | null
+          is_baseline?: boolean
+          patient_id: string
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          score_group: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interpretation?: string | null
+          is_baseline?: boolean
+          patient_id?: string
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          score_group?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_interdisciplinary_interps_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_interdisciplinary_interps_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_interdisciplinary_interps_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tr_progress_notes: {
+        Row: {
+          assessment: string | null
+          clinician_name: string | null
+          created_at: string
+          id: string
+          narrative: string | null
+          note_date: string
+          note_time: string | null
+          note_type: string
+          objective: string | null
+          patient_id: string
+          plan: string | null
+          recorded_by_user_id: string | null
+          subjective: string | null
+          tenant_id: string
+        }
+        Insert: {
+          assessment?: string | null
+          clinician_name?: string | null
+          created_at?: string
+          id?: string
+          narrative?: string | null
+          note_date?: string
+          note_time?: string | null
+          note_type?: string
+          objective?: string | null
+          patient_id: string
+          plan?: string | null
+          recorded_by_user_id?: string | null
+          subjective?: string | null
+          tenant_id: string
+        }
+        Update: {
+          assessment?: string | null
+          clinician_name?: string | null
+          created_at?: string
+          id?: string
+          narrative?: string | null
+          note_date?: string
+          note_time?: string | null
+          note_type?: string
+          objective?: string | null
+          patient_id?: string
+          plan?: string | null
+          recorded_by_user_id?: string | null
+          subjective?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_progress_notes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_progress_notes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_progress_notes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tr_screening_entries: {
+        Row: {
+          balance_active_passive: boolean | null
+          boredom_frequency: string | null
+          clinician_signature: string | null
+          community_accessibility: string[] | null
+          community_frequency: string | null
+          community_participation_pattern: string[] | null
+          completed_at: string | null
+          created_at: string
+          environmental_barriers: string[] | null
+          experiences_boredom: boolean | null
+          functional_barriers: string[] | null
+          id: string
+          is_baseline: boolean
+          lcm_community_participation_score: number | null
+          lcm_leisure_attitude_score: number | null
+          lcm_social_contact_score: number | null
+          leisure_barriers_description: string | null
+          leisure_participation_notes: string | null
+          leisure_satisfaction_rating: number | null
+          patient_id: string
+          personal_barriers: string[] | null
+          readiness_to_participate: number | null
+          recorded_by: string | null
+          recorded_by_user_id: string | null
+          social_barriers: string[] | null
+          social_comments: string | null
+          social_contact_frequency: string | null
+          social_contact_performance: string | null
+          social_engagement_rating: number | null
+          social_support: string[] | null
+          takes_initiative: boolean | null
+          tenant_id: string
+          tr_recommendation: string | null
+          updated_at: string
+        }
+        Insert: {
+          balance_active_passive?: boolean | null
+          boredom_frequency?: string | null
+          clinician_signature?: string | null
+          community_accessibility?: string[] | null
+          community_frequency?: string | null
+          community_participation_pattern?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          environmental_barriers?: string[] | null
+          experiences_boredom?: boolean | null
+          functional_barriers?: string[] | null
+          id?: string
+          is_baseline?: boolean
+          lcm_community_participation_score?: number | null
+          lcm_leisure_attitude_score?: number | null
+          lcm_social_contact_score?: number | null
+          leisure_barriers_description?: string | null
+          leisure_participation_notes?: string | null
+          leisure_satisfaction_rating?: number | null
+          patient_id: string
+          personal_barriers?: string[] | null
+          readiness_to_participate?: number | null
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          social_barriers?: string[] | null
+          social_comments?: string | null
+          social_contact_frequency?: string | null
+          social_contact_performance?: string | null
+          social_engagement_rating?: number | null
+          social_support?: string[] | null
+          takes_initiative?: boolean | null
+          tenant_id: string
+          tr_recommendation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          balance_active_passive?: boolean | null
+          boredom_frequency?: string | null
+          clinician_signature?: string | null
+          community_accessibility?: string[] | null
+          community_frequency?: string | null
+          community_participation_pattern?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          environmental_barriers?: string[] | null
+          experiences_boredom?: boolean | null
+          functional_barriers?: string[] | null
+          id?: string
+          is_baseline?: boolean
+          lcm_community_participation_score?: number | null
+          lcm_leisure_attitude_score?: number | null
+          lcm_social_contact_score?: number | null
+          leisure_barriers_description?: string | null
+          leisure_participation_notes?: string | null
+          leisure_satisfaction_rating?: number | null
+          patient_id?: string
+          personal_barriers?: string[] | null
+          readiness_to_participate?: number | null
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          social_barriers?: string[] | null
+          social_comments?: string | null
+          social_contact_frequency?: string | null
+          social_contact_performance?: string | null
+          social_engagement_rating?: number | null
+          social_support?: string[] | null
+          takes_initiative?: boolean | null
+          tenant_id?: string
+          tr_recommendation?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_screening_entries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_screening_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_screening_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tr_treatment_plan_rows: {
+        Row: {
+          clinician_signature: string | null
+          created_at: string
+          goal: string | null
+          id: string
+          intervention: string | null
+          is_baseline: boolean
+          objective_1: string | null
+          objective_2: string | null
+          objective_3: string | null
+          patient_id: string
+          plan_date: string | null
+          recorded_by: string | null
+          recorded_by_user_id: string | null
+          sort_order: number
+          target_area: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          clinician_signature?: string | null
+          created_at?: string
+          goal?: string | null
+          id?: string
+          intervention?: string | null
+          is_baseline?: boolean
+          objective_1?: string | null
+          objective_2?: string | null
+          objective_3?: string | null
+          patient_id: string
+          plan_date?: string | null
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          sort_order?: number
+          target_area?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          clinician_signature?: string | null
+          created_at?: string
+          goal?: string | null
+          id?: string
+          intervention?: string | null
+          is_baseline?: boolean
+          objective_1?: string | null
+          objective_2?: string | null
+          objective_3?: string | null
+          patient_id?: string
+          plan_date?: string | null
+          recorded_by?: string | null
+          recorded_by_user_id?: string | null
+          sort_order?: number
+          target_area?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tr_treatment_plan_rows_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_treatment_plan_rows_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tr_treatment_plan_rows_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           created_at: string | null
@@ -3550,6 +4118,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           simulation_only: boolean | null
           updated_at: string | null
+          welcome_seen_at: string | null
         }
         Insert: {
           created_at?: string | null
@@ -3565,6 +4134,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           simulation_only?: boolean | null
           updated_at?: string | null
+          welcome_seen_at?: string | null
         }
         Update: {
           created_at?: string | null
@@ -3580,6 +4150,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           simulation_only?: boolean | null
           updated_at?: string | null
+          welcome_seen_at?: string | null
         }
         Relationships: [
           {
@@ -4250,6 +4821,39 @@ export type Database = {
         Args: { p_alert_id: string; p_tenant_id: string }
         Returns: Json
       }
+      add_patient_template_to_simulation_template: {
+        Args: {
+          p_patient_template_id: string
+          p_simulation_template_id: string
+        }
+        Returns: Json
+      }
+      add_student_to_roster_admin: {
+        Args: {
+          p_program_id: string
+          p_student_number: string
+          p_user_id: string
+        }
+        Returns: {
+          cohort_id: string | null
+          created_at: string | null
+          created_by: string | null
+          enrollment_date: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          program_id: string
+          student_number: string
+          updated_at: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "student_roster"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       bulk_assign_students_to_simulation: {
         Args: {
           p_role?: string
@@ -4292,6 +4896,10 @@ export type Database = {
         }
         Returns: Json
       }
+      confirm_simulation_student_email: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       confirm_user_email: { Args: { target_user_id: string }; Returns: boolean }
       create_medication_super_admin: {
         Args: {
@@ -4325,6 +4933,14 @@ export type Database = {
           status: string
           tenant_id: string
         }[]
+      }
+      create_patient_template: {
+        Args: {
+          p_description?: string
+          p_name: string
+          p_primary_categories?: string[]
+        }
+        Returns: Json
       }
       create_program_tenant: {
         Args: { p_parent_tenant_id: string; p_program_id: string }
@@ -4373,6 +4989,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           simulation_only: boolean | null
           updated_at: string | null
+          welcome_seen_at: string | null
         }
         SetofOptions: {
           from: "*"
@@ -4395,12 +5012,20 @@ export type Database = {
         Args: { p_medication_id: string }
         Returns: boolean
       }
+      delete_patient_template: {
+        Args: { p_patient_template_id: string }
+        Returns: Json
+      }
       delete_simulation: {
         Args: { p_archive_to_history?: boolean; p_simulation_id: string }
         Returns: Json
       }
       delete_simulation_history: {
         Args: { p_history_id: string }
+        Returns: Json
+      }
+      delete_simulation_template: {
+        Args: { p_template_id: string }
         Returns: Json
       }
       delete_tenant_secure: {
@@ -4454,6 +5079,7 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           simulation_only: boolean | null
           updated_at: string | null
+          welcome_seen_at: string | null
         }
         SetofOptions: {
           from: "*"
@@ -4581,6 +5207,14 @@ export type Database = {
           template_name: string
         }[]
       }
+      get_user_auth_status: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          email_confirmed_at: string
+          last_sign_in_at: string
+          user_id: string
+        }[]
+      }
       get_user_current_tenant: {
         Args: { target_user_id: string }
         Returns: {
@@ -4639,6 +5273,7 @@ export type Database = {
           tenant_id: string
         }[]
       }
+      mark_welcome_seen: { Args: never; Returns: string }
       move_patient_to_tenant:
         | {
             Args: { p_patient_id: string; p_target_tenant_id: string }
@@ -4691,6 +5326,10 @@ export type Database = {
         }
         Returns: Json
       }
+      save_patient_template_snapshot: {
+        Args: { p_patient_template_id: string }
+        Returns: Json
+      }
       save_template_snapshot_v2: {
         Args: { p_template_id: string }
         Returns: Json
@@ -4713,6 +5352,8 @@ export type Database = {
         Returns: {
           admin_time: string | null
           admin_times: Json | null
+          barcode: string | null
+          catalog_id: string | null
           category: string | null
           created_at: string | null
           dosage: string
@@ -4876,12 +5517,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4905,11 +5546,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4930,11 +5571,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4955,11 +5596,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4972,11 +5613,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4986,9 +5627,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       ack_scope: ["panel", "result"],

@@ -55,7 +55,8 @@ REVOKE EXECUTE ON FUNCTION public.get_simulation_students(p_simulation_id uuid) 
 REVOKE EXECUTE ON FUNCTION public.get_super_admin_tenant_context() FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.get_user_accessible_simulations(p_user_id uuid) FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.get_user_role(user_id uuid) FROM authenticated;
-REVOKE EXECUTE ON FUNCTION public.get_user_simulation_assignments(p_user_id uuid) FROM authenticated;
+-- get_user_simulation_assignments: NOT revoked here, see 20260907000003 hotfix — actually used by
+-- SimulationPortal.tsx (missed by this session's grep due to its multi-line rpc() call form).
 REVOKE EXECUTE ON FUNCTION public.get_user_simulation_tenant_access() FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.is_super_admin(check_user_id uuid) FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.move_patient_to_tenant(p_source_patient_id text, p_target_tenant_id uuid) FROM authenticated;
