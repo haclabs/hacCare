@@ -285,10 +285,10 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading || oauthLoading || !isSupabaseConfigured}
-            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#19ADF2' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#3fbf9a] focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#3fbf9a' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#35a687'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3fbf9a'}
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
@@ -336,7 +336,7 @@ export const LoginForm: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowPrivacyNotice(true)}
-            className="text-cyan-400 hover:underline"
+            className="text-[#3fbf9a] hover:text-[#35a687] hover:underline"
           >
             Privacy Notice
           </button>

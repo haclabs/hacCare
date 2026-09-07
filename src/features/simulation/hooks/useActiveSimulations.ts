@@ -35,6 +35,8 @@ export function useActiveSimulations() {
     activities: StudentActivity[];
     warnings: string[];
     completed: boolean;
+    /** Tenant of the simulation just completed — lets the UI auto-exit if the user is still inside it. */
+    tenantId: string;
   } | null>(null);
 
   const { canSeeAllPrograms, programCodes } = useUserProgramAccess();
@@ -268,6 +270,7 @@ export function useActiveSimulations() {
         activities,
         warnings: [],
         completed: true,
+        tenantId: simTenantId,
       });
 
       await loadSimulations();
@@ -279,6 +282,7 @@ export function useActiveSimulations() {
         activities: [],
         warnings: [error instanceof Error ? error.message : String(error)],
         completed: false,
+        tenantId: simTenantId,
       });
     } finally {
       setActionLoading(null);
@@ -360,6 +364,7 @@ export function useActiveSimulations() {
         activities,
         warnings: backfillWarnings,
         completed: true,
+        tenantId,
       });
 
       await loadSimulations();
@@ -371,6 +376,7 @@ export function useActiveSimulations() {
         activities: [],
         warnings: [error instanceof Error ? error.message : String(error)],
         completed: false,
+        tenantId,
       });
     } finally {
       setActionLoading(null);
@@ -380,7 +386,7 @@ export function useActiveSimulations() {
   /** Complete without attributing unnamed records to any student. */
   const handleCompleteSkipStudent = async () => {
     if (!pendingCompletion) return;
-    const { simulationId, instructorName } = pendingCompletion;
+    const { simulationId, tenantId, instructorName } = pendingCompletion;
     setActionLoading(simulationId);
     setPendingCompletion(null);
     try {
@@ -392,6 +398,7 @@ export function useActiveSimulations() {
         activities: [],
         warnings: [],
         completed: true,
+        tenantId,
       });
       await loadSimulations();
     } catch (error) {
@@ -402,6 +409,7 @@ export function useActiveSimulations() {
         activities: [],
         warnings: [error instanceof Error ? error.message : String(error)],
         completed: false,
+        tenantId,
       });
     } finally {
       setActionLoading(null);

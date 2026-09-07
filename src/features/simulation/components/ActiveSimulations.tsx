@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, CheckCircle, Trash2, Tag, Printer, ClipboardList, KeyRound, AlertTriangle, X, Filter, Info } from 'lucide-react';
-import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
+import { SUB_CATEGORIES } from '../types/simulation';
 import type { SimulationActiveWithDetails } from '../types/simulation';
+import { useTenant } from '../../../contexts/TenantContext';
+import { getPrograms, type Program } from '../../../services/admin/programService';
 import { SimulationLabelPrintModal } from './SimulationLabelPrintModal';
 import { InstructorNameModal } from './InstructorNameModal';
 import { UnnamedStudentModal } from './UnnamedStudentModal';
@@ -19,13 +21,41 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 import { useActiveSimulations } from '../hooks/useActiveSimulations';
 import { printMedicationChecklist } from '../../../utils/medicationChecklistPrinter';
 
+/** Deterministic pill color, cycling through a fixed palette by index — DB programs have no stored color */
+const CATEGORY_COLORS = [
+  'bg-blue-100 text-blue-800',
+  'bg-green-100 text-green-800',
+  'bg-purple-100 text-purple-800',
+  'bg-orange-100 text-orange-800',
+  'bg-teal-100 text-teal-800',
+  'bg-pink-100 text-pink-800',
+  'bg-indigo-100 text-indigo-800',
+  'bg-amber-100 text-amber-800',
+];
+
 const ActiveSimulations: React.FC = () => {
   const { profile } = useAuth();
+  const { currentTenant, exitSimulationTenant } = useTenant();
   const [seedingSimId, setSeedingSimId] = useState<string | null>(null);
   const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
   const [viewLoginsSimulation, setViewLoginsSimulation] = useState<SimulationActiveWithDetails | null>(null);
   const [checklistSimId, setChecklistSimId] = useState<string | null>(null);
   const [statusQuickFilter, setStatusQuickFilter] = useState<StatusQuickFilter>('all');
+  const [programs, setPrograms] = useState<Program[]>([]);
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      if (!currentTenant) return;
+      // Resolve the owning institution (not the program sub-tenant) so the filter
+      // never shows another institution's programs.
+      const institutionTenantId = currentTenant.tenant_type === 'program' && currentTenant.parent_tenant_id
+        ? currentTenant.parent_tenant_id
+        : currentTenant.id;
+      const { data } = await getPrograms(institutionTenantId);
+      if (data) setPrograms(data);
+    };
+    loadPrograms();
+  }, [currentTenant]);
   const {
     simulations,
     filteredSimulations,
@@ -80,6 +110,20 @@ const ActiveSimulations: React.FC = () => {
       alert(`Error seeding test data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSeedingSimId(null);
+    }
+  };
+
+  /** If the instructor is still physically inside the simulation they just completed, kick them back home. */
+  const handleCloseCompletionSummary = async () => {
+    const shouldExit = completionSummary?.completed && currentTenant?.id === completionSummary.tenantId;
+    setCompletionSummary(null);
+    if (shouldExit) {
+      try {
+        await exitSimulationTenant();
+        window.location.href = profile?.simulation_only ? '/app/simulation-portal' : '/app';
+      } catch (error) {
+        secureLogger.error('Error exiting completed simulation tenant:', error);
+      }
     }
   };
 
@@ -150,25 +194,28 @@ const ActiveSimulations: React.FC = () => {
           <div>
             <div className="text-xs text-gray-500 mb-2">Primary (Program):</div>
             <div className="flex flex-wrap gap-2">
-              {PRIMARY_CATEGORIES.map((category) => (
-                <button
-                  key={category.value}
-                  onClick={() => {
-                    if (selectedPrimaryCategories.includes(category.value)) {
-                      setSelectedPrimaryCategories(selectedPrimaryCategories.filter(c => c !== category.value));
-                    } else {
-                      setSelectedPrimaryCategories([...selectedPrimaryCategories, category.value]);
-                    }
-                  }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                    selectedPrimaryCategories.includes(category.value)
-                      ? category.color + ' ring-2 ring-blue-500'
-                      : category.color + ' opacity-50 hover:opacity-100'
-                  }`}
-                >
-                  {category.label}
-                </button>
-              ))}
+              {programs.map((program, idx) => {
+                const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+                return (
+                  <button
+                    key={program.id}
+                    onClick={() => {
+                      if (selectedPrimaryCategories.includes(program.code)) {
+                        setSelectedPrimaryCategories(selectedPrimaryCategories.filter(c => c !== program.code));
+                      } else {
+                        setSelectedPrimaryCategories([...selectedPrimaryCategories, program.code]);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                      selectedPrimaryCategories.includes(program.code)
+                        ? color + ' ring-2 ring-blue-500'
+                        : color + ' opacity-50 hover:opacity-100'
+                    }`}
+                  >
+                    {program.code}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div>
@@ -300,6 +347,7 @@ const ActiveSimulations: React.FC = () => {
           setEditCategoriesModal={setEditCategoriesModal}
           actionLoading={actionLoading}
           onSave={handleSaveCategories}
+          programs={programs}
         />
       )}
 
@@ -386,7 +434,7 @@ const ActiveSimulations: React.FC = () => {
           activities={completionSummary.activities}
           warnings={completionSummary.warnings}
           completed={completionSummary.completed}
-          onClose={() => setCompletionSummary(null)}
+          onClose={handleCloseCompletionSummary}
         />
       )}
 

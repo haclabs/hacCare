@@ -35,7 +35,6 @@ function SafeSuspense({ children, fallback }: { children: React.ReactNode; fallb
 
 // Lazy-loaded feature components for better code splitting
 const PatientCard = lazy(() => import('./features/patients/components/records/PatientCard'));
-const AdminDashboard = lazy(() => import('./features/admin/components/AdminDashboard'));
 // Simulation components restored from commit 01ec049
 const SimulationManager = lazy(() => import('./features/simulation/components/SimulationManager'));
 const SimulationBanner = lazy(() => import('./features/simulation/components/SimulationBanner'));
@@ -604,13 +603,6 @@ function App() {
         return (
           <SafeSuspense>
             <PatientManagement />
-          </SafeSuspense>
-        );
-
-      case 'admin':
-        return (
-          <SafeSuspense>
-            <AdminDashboard />
           </SafeSuspense>
         );
 

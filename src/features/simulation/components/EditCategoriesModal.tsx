@@ -1,13 +1,16 @@
 import React from 'react';
 import { Tag, X } from 'lucide-react';
 import type { SimulationActiveWithDetails } from '../types/simulation';
-import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
+import { SUB_CATEGORIES } from '../types/simulation';
+import type { Program } from '../../../services/admin/programService';
 
 interface EditCategoriesModalProps {
   editCategoriesModal: { sim: SimulationActiveWithDetails; primary: string[]; sub: string[] };
   setEditCategoriesModal: (v: { sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null) => void;
   actionLoading: string | null;
   onSave: () => void;
+  /** Institution-scoped programs to choose from (never the hardcoded global list). */
+  programs: Program[];
 }
 
 export const EditCategoriesModal: React.FC<EditCategoriesModalProps> = ({
@@ -15,6 +18,7 @@ export const EditCategoriesModal: React.FC<EditCategoriesModalProps> = ({
   setEditCategoriesModal,
   actionLoading,
   onSave,
+  programs,
 }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -46,11 +50,11 @@ export const EditCategoriesModal: React.FC<EditCategoriesModalProps> = ({
               Primary Category (Program)
             </label>
             <div className="grid grid-cols-2 gap-3">
-              {PRIMARY_CATEGORIES.map((category) => {
-                const isSelected = editCategoriesModal.primary.includes(category.value);
+              {programs.map((program) => {
+                const isSelected = editCategoriesModal.primary.includes(program.code);
                 return (
                   <label
-                    key={category.value}
+                    key={program.id}
                     className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -62,14 +66,14 @@ export const EditCategoriesModal: React.FC<EditCategoriesModalProps> = ({
                       checked={isSelected}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setEditCategoriesModal({ ...editCategoriesModal, primary: [...editCategoriesModal.primary, category.value] });
+                          setEditCategoriesModal({ ...editCategoriesModal, primary: [...editCategoriesModal.primary, program.code] });
                         } else {
-                          setEditCategoriesModal({ ...editCategoriesModal, primary: editCategoriesModal.primary.filter(c => c !== category.value) });
+                          setEditCategoriesModal({ ...editCategoriesModal, primary: editCategoriesModal.primary.filter(c => c !== program.code) });
                         }
                       }}
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${category.color}`}>{category.label}</span>
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">{program.code}</span>
                   </label>
                 );
               })}
