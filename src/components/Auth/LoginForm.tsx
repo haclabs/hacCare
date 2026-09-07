@@ -53,26 +53,24 @@ export const LoginForm: React.FC = () => {
     if (mfaMode !== null) return; // MFA modal already open
     if (submitActiveRef.current) return; // handleSubmit is driving the MFA flow
 
-    if (profile.role !== 'super_admin') {
-      doRedirect(profile.simulation_only ?? undefined);
-      return;
-    }
-
-    // Super admin with a restored session — check AAL level now.
+    // Check AAL for every user (not just super_admin) — anyone who has voluntarily
+    // enrolled a factor via Settings must still be challenged on a restored session.
     const checkRestoredSession = async () => {
       try {
         const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalError) throw aalError;
 
         if (aal.currentLevel === 'aal2') {
-          secureLogger.debug('✅ Restored super admin session already at AAL2 — redirecting');
+          secureLogger.debug('✅ Restored session already at AAL2 — redirecting');
           doRedirect(profile.simulation_only ?? undefined);
         } else if (aal.nextLevel === 'aal2') {
-          secureLogger.debug('🔐 Restored super admin session needs MFA challenge');
+          secureLogger.debug('🔐 Restored session needs MFA challenge');
           setMfaMode('challenge');
-        } else {
+        } else if (profile.role === 'super_admin') {
           secureLogger.debug('🔐 Restored super admin session — no factor enrolled, showing enrollment');
           setMfaMode('enroll');
+        } else {
+          doRedirect(profile.simulation_only ?? undefined);
         }
       } catch (err: unknown) {
         secureLogger.error('AAL check on restored session failed, signing out:', err);
@@ -122,36 +120,32 @@ export const LoginForm: React.FC = () => {
         return;
       }
 
-      // Non-super_admin: redirect immediately — no MFA required
-      if (!signedInProfile || signedInProfile.role !== 'super_admin') {
-        secureLogger.debug('✅ Non-admin sign in, redirecting...');
-        doRedirect(signedInProfile?.simulation_only ?? undefined);
-        return;
-      }
-
-      // Super admin: check MFA using the access_token directly to bypass getSession() → _acquireLock.
+      // Check MFA for every user using the access_token directly to bypass getSession() → _acquireLock.
       // Passing the token makes getAuthenticatorAssuranceLevel() decode the JWT synchronously
       // instead of calling getSession() which contends with any concurrent background lock acquisition.
-      secureLogger.debug('🔐 Super admin — checking MFA assurance level...');
+      secureLogger.debug('🔐 Checking MFA assurance level...');
       try {
         const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
         if (aalError) throw aalError;
 
         if (aal.currentLevel === 'aal2') {
-          secureLogger.debug('✅ Super admin already at AAL2');
-          doRedirect(signedInProfile.simulation_only ?? undefined);
+          secureLogger.debug('✅ Already at AAL2');
+          doRedirect(signedInProfile?.simulation_only ?? undefined);
         } else if (aal.nextLevel === 'aal2') {
           secureLogger.debug('🔐 Showing MFA challenge');
           setMfaAccessToken(accessToken);
           setLoading(false);
           setMfaMode('challenge');
-        } else {
-          secureLogger.debug('🔐 No factors enrolled — showing enrollment');
+        } else if (signedInProfile?.role === 'super_admin') {
+          secureLogger.debug('🔐 No factors enrolled — showing enrollment (required for super_admin)');
           setLoading(false);
           setMfaMode('enroll');
+        } else {
+          secureLogger.debug('✅ No factor enrolled, MFA optional for this role — redirecting');
+          doRedirect(signedInProfile?.simulation_only ?? undefined);
         }
       } catch (aalErr: unknown) {
-        // Fail CLOSED — sign out rather than silently letting the admin through
+        // Fail CLOSED — sign out rather than silently letting the user through
         secureLogger.error('MFA AAL check failed, signing out for safety:', aalErr);
         submitActiveRef.current = false;
         setLoading(false);
@@ -285,10 +279,10 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading || oauthLoading || !isSupabaseConfigured}
-            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#19ADF2' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1598D6'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#3fbf9a] focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#3fbf9a' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#35a687'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3fbf9a'}
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
@@ -336,7 +330,7 @@ export const LoginForm: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowPrivacyNotice(true)}
-            className="text-cyan-400 hover:underline"
+            className="text-[#3fbf9a] hover:text-[#35a687] hover:underline"
           >
             Privacy Notice
           </button>
@@ -356,7 +350,11 @@ export const LoginForm: React.FC = () => {
       )}
 
       {mfaMode === 'enroll' && (
-        <MFAEnrollment onSuccess={handleMFASuccess} onCancel={handleMFACancel} />
+        <MFAEnrollment
+          onSuccess={handleMFASuccess}
+          onCancel={handleMFACancel}
+          description="Super admin accounts require 2FA. Scan the QR code with an authenticator app such as Google Authenticator or Authy, then enter the code to confirm."
+        />
       )}
     </div>
   );

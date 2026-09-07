@@ -11,7 +11,7 @@ import { X, Play, Users, Clock, AlertCircle, Tag, KeyRound, Copy, Check, Plus, T
 import { launchSimulation } from '../../../services/simulation/simulationService';
 import { supabase } from '../../../lib/api/supabase';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
-import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
+import { SUB_CATEGORIES } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { useTenant } from '../../../contexts/TenantContext';
 import { getPrograms, type Program } from '../../../services/admin/programService';
@@ -94,15 +94,42 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
   }, [currentTenant]);
 
   const loadUsers = async () => {
-    try {
-      // Get all users from the current tenant
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, email, role')
-        .order('first_name');
+    if (!currentTenant) return;
 
-      if (error) throw error;
-      setUsers(data || []);
+    try {
+      // Scope to this institution: its own tenant plus every program tenant
+      // underneath it (never pull users from other institutions).
+      const institutionTenantId = currentTenant.tenant_type === 'program' && currentTenant.parent_tenant_id
+        ? currentTenant.parent_tenant_id
+        : currentTenant.id;
+
+      const { data: programTenants } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('parent_tenant_id', institutionTenantId);
+
+      const tenantIds = [institutionTenantId, ...(programTenants || []).map(t => t.id)];
+
+      const results = await Promise.all(
+        tenantIds.map(id => supabase.rpc('get_tenant_users', { target_tenant_id: id }))
+      );
+
+      const byId = new Map<string, UserOption>();
+      for (const { data, error } of results) {
+        if (error || !data) continue;
+        for (const row of data as Array<{ user_id: string; first_name: string; last_name: string; email: string; role: string; is_active: boolean }>) {
+          if (row.is_active === false) continue;
+          byId.set(row.user_id, {
+            id: row.user_id,
+            first_name: row.first_name,
+            last_name: row.last_name,
+            email: row.email,
+            role: row.role,
+          });
+        }
+      }
+
+      setUsers([...byId.values()].sort((a, b) => (a.first_name || '').localeCompare(b.first_name || '')));
     } catch (err) {
       secureLogger.error('Error loading users:', err);
     } finally {
@@ -113,7 +140,8 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadUsers();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTenant]);
 
   const handleUserToggle = (userId: string, role: 'instructor' | 'student') => {
     const index = formData.participant_user_ids.indexOf(userId);
@@ -578,45 +606,49 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
               <Tag className="inline h-4 w-4 mr-1" />
               Primary Category (Program)
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {PRIMARY_CATEGORIES.map((category) => {
-                const isSelected = formData.primary_categories.includes(category.value);
-                return (
-                  <label
-                    key={category.value}
-                    className={`
-                      flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all
-                      ${isSelected 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
-                      }
-                    `}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            primary_categories: [...formData.primary_categories, category.value]
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            primary_categories: formData.primary_categories.filter(c => c !== category.value)
-                          });
+            {programs.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400">No programs found for this institution.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {programs.map((program) => {
+                  const isSelected = formData.primary_categories.includes(program.code);
+                  return (
+                    <label
+                      key={program.id}
+                      className={`
+                        flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all
+                        ${isSelected 
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                          : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                         }
-                      }}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    />
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${category.color}`}>
-                      {category.label}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
+                      `}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              primary_categories: [...formData.primary_categories, program.code]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              primary_categories: formData.primary_categories.filter(c => c !== program.code)
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      />
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                        {program.code}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Select one or more programs (optional)
             </p>

@@ -602,11 +602,11 @@ const SimulationHistory: React.FC = () => {
                     <div className="flex flex-wrap gap-2 mb-3">
                       {record.primary_categories?.map((cat) => {
                         const categoryConfig = PRIMARY_CATEGORIES.find(c => c.value === cat);
-                        return categoryConfig ? (
-                          <span key={cat} className={`px-2 py-1 rounded text-xs font-medium ${categoryConfig.color}`}>
-                            {categoryConfig.label}
+                        return (
+                          <span key={cat} className={`px-2 py-1 rounded text-xs font-medium ${categoryConfig?.color || 'bg-purple-100 text-purple-700'}`}>
+                            {categoryConfig?.label || cat}
                           </span>
-                        ) : null;
+                        );
                       })}
                       {record.sub_categories?.map((cat) => {
                         const categoryConfig = SUB_CATEGORIES.find(c => c.value === cat);
