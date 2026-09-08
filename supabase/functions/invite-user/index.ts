@@ -150,8 +150,8 @@ Deno.serve(async (req) => {
     ? 'hacCare - Please reset your password'
     : 'Welcome to hacCare - Set up your account'
   const introHtml = isExistingUser
-    ? `<h2>Hi ${displayName},</h2><p>It's time to reset your password to continue using hacCare. Click the button below to choose a new password.</p>`
-    : `<h2>Welcome to hacCare, ${displayName}!</h2><p>An administrator has created an account for you. Click the button below to set your password and get started.</p>`
+    ? `<h2 style="margin:0 0 12px 0;color:#111827;">Hi ${displayName},</h2><p style="margin:0;">It's time to reset your password to continue using hacCare. Click the button below to choose a new password.</p>`
+    : `<h2 style="margin:0 0 12px 0;color:#111827;">Welcome to hacCare, ${displayName}!</h2><p style="margin:0;">An administrator has created an account for you. Click the button below to set your password and get started.</p>`
   const introText = isExistingUser
     ? `Hi ${firstName || 'there'},\n\nIt's time to reset your password to continue using hacCare. Use the link below to choose a new password:`
     : `Welcome to hacCare, ${displayName}!\n\nAn administrator has created an account for you. Use the link below to set your password:`
@@ -163,20 +163,39 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       api_key: SMTP2GO_API_KEY,
       sender: 'hacCare <noreply@haccare.app>',
+      reply_to: 'support@haccare.app',
       to: [email],
       subject,
       html_body: `
-        ${introHtml}
-        <p style="margin: 24px 0;">
-          <a href="${actionLink}" style="background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
-            ${buttonLabel}
-          </a>
-        </p>
-        <p>If the button doesn't work, copy and paste this link into your browser:</p>
-        <p><a href="${actionLink}">${actionLink}</a></p>
-        <p>This link will expire after a limited time. If it expires, ask your administrator to resend it.</p>
+        <div style="background:#f1f5f9;padding:32px 16px;font-family:Helvetica,Arial,sans-serif;">
+          <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+            <div style="padding:28px 32px 0 32px;">
+              <span style="font-size:24px;font-weight:700;letter-spacing:-0.02em;">
+                <span style="color:#4a4a46;">hac</span><span style="color:#3fbf9a;">Care</span>
+              </span>
+            </div>
+            <div style="padding:20px 32px 32px 32px;color:#1f2937;font-size:15px;line-height:1.6;">
+              ${introHtml}
+              <p style="margin: 24px 0;">
+                <a href="${actionLink}" style="background:#3fbf9a;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">
+                  ${buttonLabel}
+                </a>
+              </p>
+              <p style="color:#6b7280;font-size:13px;">If the button doesn't work, copy and paste this link into your browser:</p>
+              <p style="word-break:break-all;font-size:13px;"><a href="${actionLink}" style="color:#3fbf9a;">${actionLink}</a></p>
+              <p style="color:#6b7280;font-size:13px;">This link will expire after a limited time. If it expires, ask your administrator to resend it.</p>
+            </div>
+            <div style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">
+              <p style="margin:0 0 4px 0;">Need a hand? The hacCare support team is here to help.</p>
+              <p style="margin:0;">
+                Email or message us on Teams:
+                <a href="mailto:support@haccare.app" style="color:#3fbf9a;font-weight:600;text-decoration:none;">support@haccare.app</a>
+              </p>
+            </div>
+          </div>
+        </div>
       `,
-      text_body: `${introText}\n${actionLink}\n\nThis link will expire after a limited time.`,
+      text_body: `${introText}\n${actionLink}\n\nThis link will expire after a limited time.\n\nNeed a hand? Email or message us on Teams: support@haccare.app`,
     }),
   })
 
