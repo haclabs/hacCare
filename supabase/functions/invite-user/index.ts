@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
               </p>
               <p style="color:#6b7280;font-size:13px;">If the button doesn't work, copy and paste this link into your browser:</p>
               <p style="word-break:break-all;font-size:13px;"><a href="${actionLink}" style="color:#3fbf9a;">${actionLink}</a></p>
-              <p style="color:#6b7280;font-size:13px;">This link will expire after a limited time. If it expires, ask your administrator to resend it.</p>
+              <p style="color:#6b7280;font-size:13px;">This link will expire in 24 hours. If it expires, please contact <a href="mailto:support@haccare.app" style="color:#3fbf9a;">support@haccare.app</a> to request it be resent.</p>
             </div>
             <div style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">
               <p style="margin:0 0 4px 0;">Need a hand? The hacCare support team is here to help.</p>
@@ -195,7 +195,7 @@ Deno.serve(async (req) => {
           </div>
         </div>
       `,
-      text_body: `${introText}\n${actionLink}\n\nThis link will expire after a limited time.\n\nNeed a hand? Email or message us on Teams: support@haccare.app`,
+      text_body: `${introText}\n${actionLink}\n\nThis link will expire in 24 hours. If it expires, please contact support@haccare.app to request it be resent.\n\nNeed a hand? Email or message us on Teams: support@haccare.app`,
     }),
   })
 
