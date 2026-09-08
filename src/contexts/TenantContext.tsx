@@ -677,8 +677,11 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCurrentTenant();
+    // profile?.role is included deliberately: instructors/coordinators need the
+    // program-tenant branch below re-run once profile finishes loading, since
+    // isMultiTenantAdmin alone doesn't change value for those roles.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isMultiTenantAdmin, authLoading]);
+  }, [user, isMultiTenantAdmin, authLoading, profile?.role]);
 
   const value: TenantContextType = {
     currentTenant,

@@ -4,6 +4,10 @@ import { useTenant } from '../../contexts/TenantContext';
 import { getTenantById } from '../../services/admin/tenantService';
 import { secureLogger } from '../../lib/security/secureLogger';
 
+/** Matches the mint accent used across the login page / HacCareLogo / WelcomeModal. */
+const MINT = '#3fbf9a';
+const MINT_DARK = '#2f9e80';
+
 /**
  * Program Selector Modal
  * Shown to instructors with multiple program assignments on login
@@ -52,14 +56,17 @@ export const ProgramSelectorModal: React.FC = () => {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+        <div
+          className="p-6 text-white"
+          style={{ background: `linear-gradient(135deg, ${MINT} 0%, ${MINT_DARK} 100%)` }}
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-white/20 rounded-lg">
               <BookOpen className="h-6 w-6" />
             </div>
             <h2 className="text-2xl font-bold">Select Your Program</h2>
           </div>
-          <p className="text-blue-100">
+          <p className="text-white/80">
             You're assigned to multiple programs. Choose which one you'd like to work in.
           </p>
         </div>
@@ -78,10 +85,13 @@ export const ProgramSelectorModal: React.FC = () => {
               key={program.tenant_id}
               onClick={() => handleSelectProgram(program.tenant_id)}
               disabled={selecting}
-              className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 rounded-lg transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 hover:bg-[#3fbf9a]/10 dark:hover:bg-[#3fbf9a]/10 border border-gray-200 dark:border-gray-700 rounded-lg transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg text-white font-bold text-lg">
+                <div
+                  className="flex items-center justify-center w-12 h-12 rounded-lg text-white font-bold text-lg"
+                  style={{ background: `linear-gradient(135deg, ${MINT} 0%, ${MINT_DARK} 100%)` }}
+                >
                   {program.program_code.substring(0, 2)}
                 </div>
                 <div className="text-left">
@@ -89,7 +99,7 @@ export const ProgramSelectorModal: React.FC = () => {
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {program.program_name}
                     </span>
-                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                    <span className="px-2 py-0.5 bg-[#3fbf9a]/10 text-[#2f9e80] dark:text-[#3fbf9a] rounded text-xs font-medium">
                       {program.program_code}
                     </span>
                   </div>
@@ -98,7 +108,7 @@ export const ProgramSelectorModal: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+              <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-[#3fbf9a] transition-colors" />
             </button>
           ))}
         </div>

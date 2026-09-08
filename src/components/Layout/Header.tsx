@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { User, LogOut, Clock, BookOpen, AlertTriangle } from 'lucide-react';
+import { User, LogOut, Clock, BookOpen, AlertTriangle, ChevronDown, Check } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { format } from 'date-fns';
 import BarcodeScanner from '../UI/BarcodeScanner';
 import { TenantSwitcher } from './TenantSwitcher';
 import { HacCareLogo } from './HacCareLogo';
+
+/** Matches the mint accent used across the login page / HacCareLogo / WelcomeModal. */
+const MINT = '#3fbf9a';
+const MINT_DARK = '#2f9e80';
 
 interface HeaderProps {
   onAlertsClick?: () => void;
@@ -18,9 +22,16 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed 
   const { currentTenant, programTenants } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProgramSwitcher, setShowProgramSwitcher] = useState(false);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
+  };
+
+  const handleSwitchProgram = (tenantId: string) => {
+    // Save preference to localStorage, then reload to trigger TenantContext to load it
+    localStorage.setItem('current_program_tenant', tenantId);
+    window.location.reload();
   };
 
   // Update time every second
@@ -91,6 +102,68 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed 
             <span className="px-2 py-1 bg-white/20 backdrop-blur-sm border border-white/30 rounded text-xs font-semibold text-white">
               {currentProgram.program_code}
             </span>
+          )}
+
+          {currentProgram && programTenants.length > 1 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowProgramSwitcher(!showProgramSwitcher)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-lg transition-colors text-xs font-semibold text-white"
+              >
+                Switch Program
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showProgramSwitcher ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showProgramSwitcher && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowProgramSwitcher(false)} />
+                  <div className="absolute left-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-20">
+                    <div className="p-2">
+                      {programTenants.map((program) => {
+                        const isCurrent = program.tenant_id === currentTenant?.id;
+                        return (
+                          <button
+                            key={program.tenant_id}
+                            onClick={() => {
+                              if (!isCurrent) {
+                                handleSwitchProgram(program.tenant_id);
+                              }
+                              setShowProgramSwitcher(false);
+                            }}
+                            disabled={isCurrent}
+                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                              isCurrent
+                                ? 'bg-[#3fbf9a]/10 cursor-default'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-900/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="flex items-center justify-center w-10 h-10 rounded-lg text-white font-bold text-sm"
+                                style={{ background: isCurrent ? `linear-gradient(135deg, ${MINT} 0%, ${MINT_DARK} 100%)` : '#9ca3af' }}
+                              >
+                                {program.program_code.substring(0, 2)}
+                              </div>
+                              <div className="text-left">
+                                <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                  {program.program_name}
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  {program.program_code}
+                                </div>
+                              </div>
+                            </div>
+                            {isCurrent && (
+                              <Check className="h-5 w-5 text-[#3fbf9a]" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
 
