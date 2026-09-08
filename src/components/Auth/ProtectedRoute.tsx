@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 import { User, AlertCircle, CheckCircle } from 'lucide-react';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { HacCareLogo } from '../Layout/HacCareLogo';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -89,53 +90,47 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-8">
           <div className="text-center mb-8">
-            <div className="flex justify-center mb-6">
-              <div className="flex items-center">
-                <div className="text-left">
-                  <h1 className="text-3xl font-bold text-gray-800 leading-none">
-                    haccare
-                  </h1>
-                  <p className="text-sm text-gray-500 font-medium mt-1">
-                    patient record system
-                  </p>
-                </div>
-              </div>
+            <div className="flex justify-center mb-5">
+              <HacCareLogo variant="dark" size="38px" withBar />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Secure Profile Setup</h1>
-            <p className="text-gray-600 mt-2">Complete your profile to continue</p>
+            <h1 className="text-2xl font-bold text-white">Secure Profile Setup</h1>
+            <p className="text-slate-400 mt-2">Complete your profile to continue</p>
           </div>
 
           <div className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-emerald-900/20 border border-emerald-700/40 rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-2">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                <p className="text-blue-800 text-sm font-medium">Account Verified</p>
+                <CheckCircle className="h-5 w-5 text-emerald-400" />
+                <p className="text-emerald-300 text-sm font-medium">Account Verified</p>
               </div>
-              <p className="text-blue-700 text-sm">
+              <p className="text-slate-300 text-sm">
                 <strong>Email:</strong> {user.email}
               </p>
-              <p className="text-blue-600 text-xs mt-1">
+              <p className="text-slate-400 text-xs mt-1">
                 Setting up your secure hospital profile...
               </p>
             </div>
 
             {profileError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4">
                 <div className="flex items-center space-x-2">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                  <p className="text-red-800 text-sm font-medium">Profile Setup Failed</p>
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <p className="text-red-300 text-sm font-medium">Profile Setup Failed</p>
                 </div>
-                <p className="text-red-700 text-sm mt-1">{profileError}</p>
+                <p className="text-red-300 text-sm mt-1">{profileError}</p>
               </div>
             )}
 
             <button
               onClick={handleCreateProfile}
               disabled={creatingProfile}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3fbf9a] focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#3fbf9a' }}
+              onMouseEnter={(e) => !creatingProfile && (e.currentTarget.style.backgroundColor = '#35a687')}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3fbf9a'}
             >
               {creatingProfile ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -152,7 +147,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
             <button
               onClick={handleSignOut}
-              className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+              className="w-full bg-slate-800 border border-slate-700 hover:bg-slate-700 hover:border-slate-600 text-slate-300 hover:text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Sign Out
             </button>

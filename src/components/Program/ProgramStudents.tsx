@@ -1,28 +1,35 @@
-import React, { useState } from 'react';
-import { Users, Plus, Search, Edit2, UserX, BarChart } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
+import { KeyRound, Search, Eye, EyeOff } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useTenant } from '../../contexts/TenantContext';
-import { getStudentRoster } from '../../services/admin/programService';
+import { getSimulationAutoStudentsByProgram } from '../../services/simulation/autoStudentService';
 import { supabase } from '../../lib/api/supabase';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { format } from 'date-fns';
-import AddStudentModal from './AddStudentModal';
 import { secureLogger } from '../../lib/security/secureLogger';
 
+const STATUS_BADGE: Record<string, string> = {
+  running: 'bg-green-100 text-green-800',
+  paused: 'bg-yellow-100 text-yellow-800',
+  pending: 'bg-blue-100 text-blue-800',
+  completed: 'bg-gray-100 text-gray-700',
+};
+
 /**
- * Program Students Management Page
- * Full student roster with search, pagination, and management
+ * Active Simulation Student Logins
+ *
+ * Instructors never create real student accounts by hand — every student
+ * login is a disposable "simulation-only" account auto-generated from the
+ * "auto-generate student" checkbox on Launch Simulation. This page just lets
+ * an instructor look up which simulation an account belongs to and reveal
+ * its password again (same info shown by the "Logins" button on Active
+ * Simulations), rather than offering roster CRUD that would never be used.
  */
 export const ProgramStudents: React.FC = () => {
   const { currentTenant } = useTenant();
-  const queryClient = useQueryClient();
-  
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const pageSize = 50;
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
 
-  // Get program directly using program_id from current tenant
   const { data: currentProgram } = useQuery({
     queryKey: ['program', currentTenant?.program_id],
     queryFn: async () => {
@@ -32,7 +39,7 @@ export const ProgramStudents: React.FC = () => {
         .select('*')
         .eq('id', currentTenant.program_id)
         .single();
-      
+
       if (error) {
         secureLogger.error('Error fetching program:', error);
         return null;
@@ -42,20 +49,31 @@ export const ProgramStudents: React.FC = () => {
     enabled: !!currentTenant?.program_id
   });
 
-  // Fetch student roster
-  const { data: rosterData, isLoading } = useQuery({
-    queryKey: ['student-roster', currentProgram?.id, currentPage, searchQuery],
-    queryFn: async () => {
-      if (!currentProgram?.id) return { data: [], count: 0 };
-      return await getStudentRoster(currentProgram.id, currentPage, pageSize, searchQuery);
-    },
+  const { data: logins = [], isLoading } = useQuery({
+    queryKey: ['simulation-auto-students', currentProgram?.id],
+    queryFn: () => getSimulationAutoStudentsByProgram(currentProgram!.id),
     enabled: !!currentProgram?.id,
     staleTime: 30000
   });
 
-  const students = rosterData?.data || [];
-  const totalCount = rosterData?.count || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const filteredLogins = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return logins;
+    return logins.filter(l =>
+      l.email.toLowerCase().includes(q) ||
+      l.student_number.toLowerCase().includes(q) ||
+      (l.label || '').toLowerCase().includes(q) ||
+      (l.simulation?.name || '').toLowerCase().includes(q)
+    );
+  }, [logins, searchQuery]);
+
+  const toggleReveal = (id: string) => {
+    setRevealed(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   if (!currentTenant || currentTenant.tenant_type !== 'program') {
     return (
@@ -65,85 +83,58 @@ export const ProgramStudents: React.FC = () => {
     );
   }
 
-  if (!currentProgram) {
-    return <LoadingSpinner />;
-  }
-
-  if (isLoading) {
+  if (!currentProgram || isLoading) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <Users className="h-8 w-8 text-purple-600" />
-            Student Roster
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {currentProgram.name} - {totalCount} enrolled students
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-md"
-          >
-            <Plus className="h-4 w-4" />
-            Add Student
-          </button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <KeyRound className="h-8 w-8 text-purple-600" />
+          Active Simulation Student Logins
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          {currentProgram.name} - {logins.length} auto-generated login{logins.length === 1 ? '' : 's'}
+        </p>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(0);
-              }}
-              placeholder="Search by name, email, or student number..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-            />
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, email, student number, or simulation..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
+          />
         </div>
       </div>
 
-      {/* Students Table */}
+      {/* Logins Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Student
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Student Number
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Enrolled
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Actions
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Simulation</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Password</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {students.length === 0 ? (
+            {filteredLogins.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No students found</p>
+                  <KeyRound className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No auto-generated student logins found</p>
+                  <p className="text-xs mt-1">
+                    Use the "Auto-generate simulation-only student login(s)" option on Launch Simulation to create one.
+                  </p>
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
@@ -155,57 +146,51 @@ export const ProgramStudents: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              students.map((student) => (
-                <tr key={student.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+              filteredLogins.map((login) => (
+                <tr key={login.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-semibold">
-                        {student.user_profile?.first_name?.[0]}{student.user_profile?.last_name?.[0]}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-semibold shrink-0">
+                        {(login.label || login.student_number)[0]?.toUpperCase()}
                       </div>
                       <div>
                         <div className="font-medium text-gray-900 dark:text-white">
-                          {student.user_profile?.first_name} {student.user_profile?.last_name}
+                          {login.label || login.student_number}
                         </div>
-                        {student.notes && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                            {student.notes}
-                          </div>
-                        )}
+                        <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
+                          {login.student_number}
+                        </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-sm font-medium">
-                      {student.student_number}
-                    </span>
+                    {login.simulation ? (
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${STATUS_BADGE[login.simulation.status] || 'bg-gray-100 text-gray-700'}`}>
+                        {login.simulation.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">Simulation deleted</span>
+                    )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    {student.user_profile?.email || 'N/A'}
+                  <td className="px-6 py-4 text-sm font-mono text-gray-600 dark:text-gray-400">
+                    {login.email}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    {format(new Date(student.enrollment_date), 'MMM d, yyyy')}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
+                        {revealed.has(login.id) ? login.temp_password : '••••••••'}
+                      </span>
                       <button
-                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                        title="View simulations"
+                        onClick={() => toggleReveal(login.id)}
+                        className="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        title={revealed.has(login.id) ? 'Hide password' : 'Show password'}
                       >
-                        <BarChart className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="p-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                        title="Edit student"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        title="Deactivate student"
-                      >
-                        <UserX className="h-4 w-4" />
+                        {revealed.has(login.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    {format(new Date(login.created_at), 'MMM d, yyyy')}
                   </td>
                 </tr>
               ))
@@ -213,48 +198,6 @@ export const ProgramStudents: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount} students
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-              disabled={currentPage === 0}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
-              Page {currentPage + 1} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-              disabled={currentPage >= totalPages - 1}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Add Student Modal */}
-      {showAddModal && currentProgram && (
-        <AddStudentModal
-          programId={currentProgram.program_id}
-          programName={currentProgram.program_name}
-          onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
-            setShowAddModal(false);
-            queryClient.invalidateQueries({ queryKey: ['student-roster'] });
-          }}
-        />
-      )}
-
     </div>
   );
 };
