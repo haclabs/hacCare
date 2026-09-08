@@ -481,7 +481,7 @@ export function useActiveSimulations() {
     const matchesSub = selectedSubCategories.length === 0 ||
       (sim.sub_categories && sim.sub_categories.some(cat => selectedSubCategories.includes(cat)));
     return matchesPrimary && matchesSub;
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
   secureLogger.debug('📊 Simulation filtering results:', {
     totalSimulations: simulations.length,

@@ -669,7 +669,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
               </span>
             </label>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-6">
-              Creates a disposable student account (added to that program's Student Roster) so you can hand out a login at a shared workstation.
+              Creates a disposable student account (visible under that program's Active Simulation Student Logins page) so you can hand out a login at a shared workstation.
               It's automatically deleted only when this simulation is deleted — pause/reset/complete won't touch it.
             </p>
             {autoGenerate && (

@@ -107,7 +107,7 @@ The six quick links
 • Templates — build and manage simulation scenarios. This is where a scenario is born: you create a template, fill in a patient chart, and save it.
 • Active Simulations — monitor and launch running sessions. Once a template is launched for a class, it lives here.
 • Debrief Reports — review completed session activity. Every action every student took, grouped by student.
-• Students — manage your simulation student roster.
+• Students — view auto-generated simulation student logins and their passwords, grouped by which simulation they belong to.
 • Knowledge Base — searchable how-to articles, including this one.
 • Instructor Guide — a walkthrough of the full simulation workflow.
 

@@ -141,10 +141,10 @@ export const SetNewPassword: React.FC = () => {
           <button
             onClick={handleActivate}
             disabled={activating}
-            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#19ADF2' }}
-            onMouseEnter={(e) => !activating && (e.currentTarget.style.backgroundColor = '#1598D6')}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#19ADF2'}
+            className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#3fbf9a] focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#3fbf9a' }}
+            onMouseEnter={(e) => !activating && (e.currentTarget.style.backgroundColor = '#35a687')}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3fbf9a'}
           >
             {activating ? 'Activating...' : 'Activate Account'}
           </button>
@@ -217,6 +217,11 @@ export const SetNewPassword: React.FC = () => {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              <ul className="mt-2 text-xs text-slate-400 space-y-0.5 list-disc list-inside">
+                <li>At least {MIN_PASSWORD_LENGTH} characters</li>
+                <li>At least one uppercase letter</li>
+                <li>At least one symbol — for example <span className="font-mono">!</span>, <span className="font-mono">?</span>, <span className="font-mono">#</span>, or <span className="font-mono">$</span></li>
+              </ul>
             </div>
 
             <div>

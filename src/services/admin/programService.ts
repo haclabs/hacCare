@@ -461,62 +461,6 @@ export async function checkUserProgramAccess(
 // ============================================================================
 
 /**
- * Get student roster for a program with pagination
- */
-export async function getStudentRoster(
-  programId: string,
-  page: number = 0,
-  pageSize: number = 50,
-  search?: string
-): Promise<{ data: StudentRoster[] | null; error: any; count: number }> {
-  try {
-    const offset = page * pageSize;
-    let query = supabase
-      .from('student_roster_with_profiles')
-      .select('*', { count: 'exact' })
-      .eq('program_id', programId)
-      .eq('is_active', true)
-      .order('student_number', { ascending: true })
-      .range(offset, offset + pageSize - 1);
-
-    // Add search filter if provided
-    if (search) {
-      query = query.or(`student_number.ilike.%${search}%,user_first_name.ilike.%${search}%,user_last_name.ilike.%${search}%,user_email.ilike.%${search}%`);
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) throw error;
-    
-    // Transform view data to match StudentRoster interface
-    const transformedData = data?.map(row => ({
-      id: row.id,
-      user_id: row.user_id,
-      program_id: row.program_id,
-      cohort_id: row.cohort_id,
-      student_number: row.student_number,
-      enrollment_date: row.enrollment_date,
-      is_active: row.is_active,
-      notes: row.notes,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      created_by: row.created_by,
-      user_profile: {
-        email: row.user_email,
-        first_name: row.user_first_name,
-        last_name: row.user_last_name,
-        role: row.user_role
-      }
-    }));
-    
-    return { data: transformedData as StudentRoster[], error: null, count: count || 0 };
-  } catch (error) {
-    secureLogger.error('Error fetching student roster:', error);
-    return { data: null, error, count: 0 };
-  }
-}
-
-/**
  * Add single student to roster
  */
 export async function addStudentToRoster(
@@ -541,47 +485,6 @@ export async function addStudentToRoster(
   } catch (error) {
     secureLogger.error('Error adding student to roster:', error);
     return { data: null, error };
-  }
-}
-
-/**
- * Update student roster entry
- */
-export async function updateStudentRoster(
-  studentId: string,
-  updates: Partial<Pick<StudentRoster, 'student_number' | 'is_active' | 'notes' | 'cohort_id'>>
-): Promise<{ data: StudentRoster | null; error: any }> {
-  try {
-    const { data, error } = await supabase
-      .from('student_roster')
-      .update(updates)
-      .eq('id', studentId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { data: data as StudentRoster, error: null };
-  } catch (error) {
-    secureLogger.error('Error updating student roster:', error);
-    return { data: null, error };
-  }
-}
-
-/**
- * Remove student from roster (soft delete)
- */
-export async function removeStudentFromRoster(studentId: string): Promise<{ error: any }> {
-  try {
-    const { error } = await supabase
-      .from('student_roster')
-      .update({ is_active: false })
-      .eq('id', studentId);
-
-    if (error) throw error;
-    return { error: null };
-  } catch (error) {
-    secureLogger.error('Error removing student from roster:', error);
-    return { error };
   }
 }
 

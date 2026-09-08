@@ -51,16 +51,15 @@ export const ProgramWorkspace: React.FC = () => {
   const { filterByPrograms } = useUserProgramAccess();
   const filteredTemplates = filterByPrograms(templates as Array<{ primary_categories?: string[] | null }>);
 
-  // Load student count
+  // Load count of auto-generated simulation student logins for this program
   const { data: studentCount = 0 } = useQuery({
     queryKey: ['studentCount', programId],
     queryFn: async () => {
       if (!programId) return 0;
       const { count } = await supabase
-        .from('student_roster')
+        .from('simulation_auto_students')
         .select('*', { count: 'exact', head: true })
-        .eq('program_id', programId)
-        .eq('is_active', true);
+        .eq('program_id', programId);
       return count || 0;
     },
     enabled: !!programId
@@ -110,8 +109,8 @@ export const ProgramWorkspace: React.FC = () => {
       onClick: () => navigate('/app?tab=simulations', { state: { initialTab: 'history' } }),
     },
     {
-      label: 'Students',
-      description: 'Manage the simulation student roster',
+      label: 'Student Logins',
+      description: 'View auto-generated simulation student logins',
       icon: Users,
       color: 'purple',
       onClick: () => navigate('/app?tab=program-students'),
@@ -161,10 +160,10 @@ export const ProgramWorkspace: React.FC = () => {
             <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
               <Users className="h-5 w-5" />
             </div>
-            <h3 className="font-semibold text-gray-800 text-sm">Students</h3>
+            <h3 className="font-semibold text-gray-800 text-sm">Student Logins</h3>
           </div>
           <p className="text-3xl font-bold text-gray-900">{studentCount}</p>
-          <p className="text-xs text-gray-500 mt-1">Simulation students</p>
+          <p className="text-xs text-gray-500 mt-1">Auto-generated simulation logins</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
