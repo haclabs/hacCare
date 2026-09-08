@@ -53,7 +53,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profileLoading, setProfileLoading] = useState(false);  // Profile-specific loading state
   const [isOffline, setIsOffline] = useState(false);            // Offline state indicator
   const [isAnonymous, setIsAnonymous] = useState(false);        // Anonymous simulation user indicator
-  const fetchingProfile = useRef(false);                       // Prevent duplicate profile fetches (Chrome race condition fix)
+  // Holds the in-flight profile fetch promise so concurrent callers (initializeAuth's
+  // getSession() path and onAuthStateChange's INITIAL_SESSION handler both call this)
+  // await the SAME completion instead of one skipping and resolving early with profile
+  // still null — that race let TenantContext run with a stale null profile.
+  const fetchingProfile = useRef<Promise<void> | null>(null);
 
   /**
    * Initialize authentication on component mount
@@ -298,14 +302,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Prevent duplicate fetches (Chrome race condition fix)
+    // Concurrent fetches await the same in-flight promise (Chrome race condition fix)
     if (fetchingProfile.current) {
-      secureLogger.debug('🔄 Profile fetch already in progress, skipping duplicate');
-      return;
+      secureLogger.debug('🔄 Profile fetch already in progress, awaiting existing fetch');
+      return fetchingProfile.current;
     }
 
+    const fetchPromise = (async () => {
     try {
-      fetchingProfile.current = true;
       secureLogger.debug('📥 Starting profile fetch for user:', userId);
       setProfileLoading(true);
       
@@ -404,8 +408,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Don't throw error - just set profile to null and continue
     } finally {
       setProfileLoading(false);
-      fetchingProfile.current = false; // ✅ ALWAYS reset the guard flag
+      fetchingProfile.current = null; // ✅ ALWAYS reset the guard flag
     }
+    })();
+
+    fetchingProfile.current = fetchPromise;
+    return fetchPromise;
   }
 
   /**
@@ -644,7 +652,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // Reset the profile fetch guard on logout
-      fetchingProfile.current = false; // ✅ Reset guard flag on logout
+      fetchingProfile.current = null; // ✅ Reset guard flag on logout
       
       // Attempt Supabase sign out if configured
       // This clears all session data managed by Supabase
