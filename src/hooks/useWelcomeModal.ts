@@ -5,6 +5,11 @@ import { secureLogger } from '../lib/security/secureLogger';
 
 const WELCOME_ROLES = ['instructor', 'coordinator', 'admin', 'super_admin'];
 
+/** Instructors and up only — students/nurses (incl. simulation_only accounts) never see the tour. */
+export function isWelcomeTourRole(profile: { role?: string | null; simulation_only?: boolean | null } | null | undefined) {
+  return !!profile && profile.simulation_only !== true && WELCOME_ROLES.includes(profile.role ?? '');
+}
+
 /** Lets the "Replay welcome tour" button reach the modal mounted up in App. */
 export const OPEN_WELCOME_TOUR_EVENT = 'open-welcome-tour';
 
@@ -20,13 +25,11 @@ export function useWelcomeModal() {
   const [skipped, setSkipped] = useState(false);
   const [forceOpen, setForceOpen] = useState(false);
 
-  const eligible =
-    !!profile &&
-    profile.simulation_only !== true &&
-    WELCOME_ROLES.includes(profile.role) &&
-    !profile.welcome_seen_at;
+  const roleEligible = isWelcomeTourRole(profile);
+  const eligible = roleEligible && !profile?.welcome_seen_at;
 
-  const isOpen = forceOpen || (eligible && !dismissed && !skipped);
+  // Role gate applies even to a manual replay so a student can never force it open.
+  const isOpen = roleEligible && (forceOpen || (eligible && !dismissed && !skipped));
 
   useEffect(() => {
     const handleOpen = () => setForceOpen(true);
