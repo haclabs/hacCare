@@ -39,11 +39,11 @@ const SLIDES: Slide[] = [
     icon: LayoutDashboard,
     title: 'This Is Your Workspace',
     intro:
-      'You will land here every time you sign in. The coloured bar at the top always tells you which program you are working in.',
+      'You land here every time you sign in. The coloured bar at the top always tells you which program you are working in.',
     points: [
       'Three counters: templates ready to launch, students on your roster, sessions completed',
       'Six quick links covering everything you will use day to day',
-      'No patients here, and that is correct — patients live inside templates and simulations',
+      'No patients on this screen, and that is correct — patients live inside templates and simulations',
     ],
   },
   {
@@ -51,24 +51,38 @@ const SLIDES: Slide[] = [
     title: 'How a Simulation Flows',
     intro: 'Four stages, start to finish. You will get plenty of practice with each one.',
     points: [
-      'Build a template — a practice hospital with your patient chart in it',
-      'Launch it — creates a private copy for one class, leaving your template untouched',
-      'Students work — they chart and administer inside their own copy',
-      'Reset for the next group, or complete to generate the debrief report',
+      '**Build a template** — a practice hospital with your patient chart in it',
+      '**Launch it** — creates a private copy for one class; your template is never touched',
+      '**Students work** — they chart and administer inside their own copy, and every entry is attributed to them',
+      '**Reset** for the next group — clean chart, identical starting point, same barcodes — or **Complete** to generate the debrief report',
     ],
   },
   {
     icon: LifeBuoy,
     title: 'Help Is Always Nearby',
     intro:
-      'Help & Docs in the sidebar has searchable articles and recorded click-by-click walkthroughs.',
+      'Help & Docs in the sidebar opens the Knowledge Base — searchable articles plus recorded click-by-click walkthroughs.',
     points: [
-      'Start with the Getting Started category — it covers everything in this tour in more detail',
-      'The Instructor Guide under Sim Templates walks through the full simulation workflow',
-      'Replay this tour any time from the button at the top of Help & Docs',
+      'Start with **Getting Started** — it covers everything in this tour in more detail',
+      '**Creating a template and adding a patient** is a recorded walkthrough of the task you will do first',
+      'The **Instructor Guide** under Sim Templates covers the full simulation workflow',
+      'Replay this tour any time from **Replay welcome tour** at the top of Help & Docs',
     ],
   },
 ];
+
+/** Slide copy uses **bold** markers for the handful of terms worth emphasizing. */
+function renderBoldSegments(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') ? (
+      <strong key={i} className="font-semibold text-gray-900">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      part
+    )
+  );
+}
 
 interface WelcomeModalProps {
   onSkip: () => void;
@@ -137,7 +151,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ onSkip, onFinish }) 
             {slide.points.map((point) => (
               <li key={point} className="flex gap-3 text-sm text-gray-700">
                 <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-gray-300 flex-shrink-0" />
-                <span>{point}</span>
+                <span>{renderBoldSegments(point)}</span>
               </li>
             ))}
           </ul>

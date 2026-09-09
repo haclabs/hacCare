@@ -186,7 +186,9 @@ export const UserManagement: React.FC = () => {
     const matchesPending = !filterPendingSetup || !authStatus[user.id]?.lastSignInAt;
 
     return matchesSearch && matchesStatus && matchesProgram && matchesSimOnly && matchesPending;
-  });
+  }).sort((a, b) =>
+    a.first_name.localeCompare(b.first_name) || a.last_name.localeCompare(b.last_name)
+  );
 
   // Grouped view — users appear under each program they're assigned to,
   // with a "No Program" bucket for everyone else (nurses, admins, etc.)

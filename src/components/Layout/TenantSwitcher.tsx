@@ -104,6 +104,18 @@ export const TenantSwitcher: React.FC = () => {
     if (selectedTenantId === 'all') {
       return 'All Tenants';
     }
+    // While editing a template, prefer its own current name over the tenant
+    // row's name — the latter can go stale/verbose if the template was ever
+    // renamed without the tenant being updated to match.
+    const stored = sessionStorage.getItem('editing_template');
+    if (stored) {
+      try {
+        const info = JSON.parse(stored) as { template_name?: string };
+        if (info?.template_name) return info.template_name;
+      } catch {
+        // ignore malformed sessionStorage value, fall through to tenant name
+      }
+    }
     return currentTenant?.name || 'Select Tenant';
   };
 

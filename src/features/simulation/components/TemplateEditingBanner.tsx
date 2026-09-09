@@ -170,7 +170,7 @@ export const TemplateEditingBanner: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg">
+    <div className="bg-gradient-to-r from-[#3fbf9a] to-[#2f9e80] text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 xl:px-12 py-3">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Template Info */}
