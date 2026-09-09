@@ -6,6 +6,7 @@ import { useAuth } from '../../../../hooks/useAuth';
 import { getAllTenants } from '../../../../services/admin/tenantService';
 import { getPrograms, getUserPrograms, bulkAssignUserToPrograms, type Program } from '../../../../services/admin/programService';
 import { inviteUser } from '../../../../services/admin/inviteUserService';
+import { updateUserEmail } from '../../../../services/admin/updateUserEmailService';
 import { Tenant } from '../../../../types';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -228,6 +229,19 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
         secureLogger.debug('User profile updated via RPC');
 
+        // Email changes need the Admin API — user_profiles.email alone never
+        // touches the actual auth.users login credential.
+        const newEmail = formData.email.trim().toLowerCase();
+        if (newEmail && newEmail !== (user.email || '').toLowerCase()) {
+          const { error: emailError } = await updateUserEmail(user.id, newEmail);
+          if (emailError) {
+            secureLogger.error('Error updating user email', emailError);
+            setError('Profile updated, but changing the login email failed: ' + emailError);
+            return;
+          }
+          secureLogger.debug('User login email updated');
+        }
+
         // Handle tenant assignment for super admin
         if (hasRole('super_admin') && selectedTenantId) {
           try {
@@ -439,10 +453,15 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                disabled={!!user}
+                disabled={!!user && !hasRole(['admin', 'coordinator', 'super_admin'])}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
               />
             </div>
+            {user && (
+              <p className="mt-1 text-xs text-gray-500">
+                Changes the user's actual login email, not just their display record.
+              </p>
+            )}
           </div>
 
           {!user && formData.role !== 'instructor' && (
