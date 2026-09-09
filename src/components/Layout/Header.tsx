@@ -54,19 +54,31 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed 
     }
   };
 
-  // Check if editing a template
-  const isEditingTemplate = !!sessionStorage.getItem('editing_template');
+  // Check if editing a template — read the template's own name/kind directly
+  // instead of currentTenant.name, which can go stale/verbose if the template
+  // was ever renamed without the tenant row being updated to match.
+  const editingTemplateInfo = (() => {
+    const stored = sessionStorage.getItem('editing_template');
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as { template_name: string; kind?: 'simulation' | 'patient' };
+    } catch {
+      return null;
+    }
+  })();
 
   // Get current context (Program, Simulation, or Tenant)
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
   const contextName = currentProgram 
     ? currentProgram.program_name 
-    : currentTenant?.is_simulation 
-      ? `Simulation: ${currentTenant.name}`
-      : currentTenant?.name || 'Loading...';
+    : editingTemplateInfo
+      ? editingTemplateInfo.template_name
+      : currentTenant?.is_simulation 
+        ? `Simulation: ${currentTenant.name}`
+        : currentTenant?.name || 'Loading...';
 
-  const contextType = isEditingTemplate
-    ? 'Editing Template'
+  const contextType = editingTemplateInfo
+    ? editingTemplateInfo.kind === 'patient' ? 'Editing Patient Template' : 'Editing Template'
     : currentProgram 
       ? 'Program Workspace' 
       : currentTenant?.is_simulation 
