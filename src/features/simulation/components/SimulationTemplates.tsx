@@ -11,7 +11,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit, Clock,
-  Search, LayoutGrid, List, ChevronDown, HelpCircle, FolderOpen, Folder, X, Check, ClipboardList,
+  Search, LayoutGrid, List, ChevronDown, HelpCircle, FolderOpen, Folder, X, Check, ClipboardList, Layers,
 } from 'lucide-react';
 import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate, updateTemplateFolder } from '../../../services/simulation/simulationService';
 import { printMedicationChecklist } from '../../../utils/medicationChecklistPrinter';
@@ -20,6 +20,7 @@ import CreateTemplateModal from './CreateTemplateModal';
 import LaunchSimulationModal from './LaunchSimulationModal';
 import TemplateExportButton from './TemplateExportButton';
 import TemplateImportModal from './TemplateImportModal';
+import { TemplateStatesModal } from './TemplateStatesModal';
 import { formatDistanceToNow } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +67,7 @@ const SimulationTemplates: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [statesModalTemplate, setStatesModalTemplate] = useState<SimulationTemplateWithDetails | null>(null);
 
   // Filter / view state
   const [search, setSearch] = useState('');
@@ -605,6 +607,13 @@ const SimulationTemplates: React.FC = () => {
                           Launch
                         </button>
                         <button
+                          onClick={() => setStatesModalTemplate(template)}
+                          className="p-1.5 bg-purple-100 text-purple-600 hover:bg-purple-200 rounded-md transition-colors"
+                          title="Manage named states (e.g. Week 1, Week 2)"
+                        >
+                          <Layers className="h-3 w-3" />
+                        </button>
+                        <button
                           onClick={() => { setEditingFolderFor(template.id); setFolderInput(template.folder || ''); }}
                           className="p-1.5 bg-amber-100 text-amber-600 hover:bg-amber-200 rounded-md transition-colors"
                           title={template.folder ? `Folder: ${template.folder} — click to change` : 'Assign to folder'}
@@ -861,6 +870,13 @@ const SimulationTemplates: React.FC = () => {
                       >
                         <ClipboardList className="h-3.5 w-3.5" />
                       </button>
+                      <button
+                        onClick={() => setStatesModalTemplate(template)}
+                        className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Manage named states (e.g. Week 1, Week 2)"
+                      >
+                        <Layers className="h-3.5 w-3.5" />
+                      </button>
                       <TemplateExportButton
                         templateId={template.id}
                         templateName={template.name}
@@ -986,6 +1002,14 @@ const SimulationTemplates: React.FC = () => {
             setSelectedTemplate(null);
             // Optionally switch to Active tab
           }}
+        />
+      )}
+
+      {statesModalTemplate && (
+        <TemplateStatesModal
+          templateId={statesModalTemplate.id}
+          templateName={statesModalTemplate.name}
+          onClose={() => setStatesModalTemplate(null)}
         />
       )}
     </>

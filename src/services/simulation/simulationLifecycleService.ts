@@ -56,6 +56,7 @@ export async function getActiveSimulations(
       .select(`
         *,
         template:simulation_templates(id, name, description, snapshot_version),
+        current_state:simulation_template_states(id, label),
         tenant:tenants(id, name),
         participants:simulation_participants(id, user_id, role, granted_at)
       `)
@@ -133,6 +134,7 @@ export async function getActiveSimulation(
       .select(`
         *,
         template:simulation_templates!simulation_active_template_id_fkey(id, name, description),
+        current_state:simulation_template_states(id, label),
         tenant:tenants!simulation_active_tenant_id_fkey(id, name),
         participants:simulation_participants(id, user_id, role, granted_at, last_accessed_at)
       `)
@@ -210,9 +212,12 @@ export async function updateSimulationStatus(
 
 /**
  * Reset simulation for the next session (preserves printed barcodes).
+ * Optional stateId resets into a named template state instead of the
+ * template's default snapshot.
  */
 export async function resetSimulationForNextSession(
-  simulationId: string
+  simulationId: string,
+  stateId?: string | null
 ): Promise<SimulationFunctionResult> {
   try {
     const { data: simulation, error: simError } = await supabase
@@ -235,6 +240,7 @@ export async function resetSimulationForNextSession(
 
     const { data, error } = await supabase.rpc('reset_simulation_for_next_session', {
       p_simulation_id: simulationId,
+      p_state_id: stateId || null,
     });
 
     if (error) throw error;
@@ -278,16 +284,19 @@ export async function resetSimulation(
 
 /**
  * Reset simulation and sync to the latest template changes.
- * Requires patient list to be unchanged (no adds/removes).
+ * Requires patient list to be unchanged (no adds/removes). Optional stateId
+ * syncs from a named template state instead of the template's default snapshot.
  */
 export async function resetSimulationWithTemplateUpdates(
-  simulationId: string
+  simulationId: string,
+  stateId?: string | null
 ): Promise<SimulationFunctionResult> {
   try {
     secureLogger.debug('Resetting simulation with template updates:', simulationId);
 
     const { data, error } = await supabase.rpc('reset_simulation_with_template_updates', {
       p_simulation_id: simulationId,
+      p_state_id: stateId || null,
     });
 
     if (error) {

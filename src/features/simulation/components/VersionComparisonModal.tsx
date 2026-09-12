@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, AlertTriangle, CheckCircle, Plus, Minus } from 'lucide-react';
-import { compareTemplateVersions, compareSimulationVsTemplate } from '../../../services/simulation/simulationService';
+import { compareSimulationVsTemplate } from '../../../services/simulation/simulationService';
 import type { PatientListComparison } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -59,10 +59,10 @@ export default function VersionComparisonModal({
   async function loadComparison() {
     try {
       setLoading(true);
-      // If comparing for simulation sync, use actual simulation data
-      const data = simulationId 
-        ? await compareSimulationVsTemplate(simulationId)
-        : await compareTemplateVersions(templateId, versionOld, versionNew);
+      if (!simulationId) {
+        throw new Error('Comparison requires an active simulation');
+      }
+      const data = await compareSimulationVsTemplate(simulationId);
       setDiff(data);
     } catch (err: unknown) {
       secureLogger.error('Error loading version comparison:', err);

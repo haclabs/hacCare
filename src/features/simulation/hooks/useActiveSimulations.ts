@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation } from '../../../services/simulation/simulationService';
+import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
@@ -14,6 +14,8 @@ export function useActiveSimulations() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [printLabelsSimulation, setPrintLabelsSimulation] = useState<SimulationActiveWithDetails | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState<string | null>(null);
+  const [resetTemplateStates, setResetTemplateStates] = useState<Array<{ id: string; label: string; changelog_note: string | null }>>([]);
+  const [selectedResetStateId, setSelectedResetStateId] = useState<string | null>(null);
   const [selectedPrimaryCategories, setSelectedPrimaryCategories] = useState<string[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [editCategoriesModal, setEditCategoriesModal] = useState<{ sim: SimulationActiveWithDetails; primary: string[]; sub: string[] } | null>(null);
@@ -117,18 +119,33 @@ export function useActiveSimulations() {
   };
 
   const handleReset = async (id: string) => {
+    setSelectedResetStateId(null);
+    setResetTemplateStates([]);
     setResetModalOpen(id);
+
+    const sim = simulations.find(s => s.id === id);
+    if (sim?.template_id) {
+      try {
+        const states = await getTemplateStates(sim.template_id);
+        setResetTemplateStates(states);
+      } catch (error) {
+        secureLogger.error('Error loading template states for reset:', error);
+      }
+    }
   };
 
   const confirmReset = async () => {
     if (!resetModalOpen) return;
 
     const id = resetModalOpen;
+    const stateId = selectedResetStateId;
     setResetModalOpen(null);
+    setSelectedResetStateId(null);
+    setResetTemplateStates([]);
     setActionLoading(id);
 
     try {
-      const result = await resetSimulationForNextSession(id);
+      const result = await resetSimulationForNextSession(id, stateId);
       secureLogger.debug('✅ Simulation reset successfully:', result);
 
       if (result.restore_details) {
@@ -497,6 +514,8 @@ export function useActiveSimulations() {
     actionLoading,
     printLabelsSimulation, setPrintLabelsSimulation,
     resetModalOpen, setResetModalOpen,
+    resetTemplateStates,
+    selectedResetStateId, setSelectedResetStateId,
     selectedPrimaryCategories, setSelectedPrimaryCategories,
     selectedSubCategories, setSelectedSubCategories,
     editCategoriesModal, setEditCategoriesModal,

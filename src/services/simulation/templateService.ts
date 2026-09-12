@@ -158,11 +158,10 @@ export async function deleteSimulationTemplate(templateId: string): Promise<void
 
 /**
  * Save a frozen snapshot of the template's live tenant data (V2 config-driven).
- * Automatically archives the previous version for history.
+ * This overwrites the template's default snapshot_data.
  */
 export async function saveTemplateSnapshot(
-  templateId: string,
-  changeNotes?: string
+  templateId: string
 ): Promise<SimulationFunctionResult> {
   try {
     const cleanId = templateId.trim();
@@ -178,22 +177,6 @@ export async function saveTemplateSnapshot(
     }
 
     secureLogger.debug('Snapshot saved (V2):', data);
-
-    if (data.success && (data as any).snapshot_data) {
-      try {
-        secureLogger.debug('Archiving template version...');
-        await supabase.rpc('save_template_version', {
-          p_template_id: cleanId,
-          p_new_snapshot: (data as any).snapshot_data,
-          p_change_notes: changeNotes || 'Snapshot saved',
-          p_user_id: null,
-        });
-        secureLogger.debug('Version archived successfully');
-      } catch (versionError) {
-        secureLogger.error('Failed to archive version (non-critical):', versionError);
-      }
-    }
-
     return data as SimulationFunctionResult;
   } catch (error: any) {
     secureLogger.error('Error saving template snapshot:', error);
@@ -202,108 +185,73 @@ export async function saveTemplateSnapshot(
 }
 
 /**
- * Save template snapshot and archive a named version.
+ * Save the template tenant's current data as a new named state (e.g. "Week 2"),
+ * independent of the template's default snapshot_data.
  */
-export async function saveTemplateSnapshotWithVersion(
+export async function saveTemplateState(
   templateId: string,
-  changeNotes?: string
+  label: string,
+  changelogNote?: string
 ): Promise<SimulationFunctionResult> {
   try {
-    const cleanId = templateId.trim();
-    secureLogger.debug('Saving template with version archiving:', cleanId);
-
-    const snapshotResult = await saveTemplateSnapshot(cleanId);
-    if (!snapshotResult.success) {
-      throw new Error('Failed to save template snapshot');
-    }
-
-    const { data, error } = await supabase.rpc('save_template_version', {
-      p_template_id: cleanId,
-      p_new_snapshot: (snapshotResult as any).snapshot_data,
-      p_change_notes: changeNotes || null,
-      p_user_id: null,
+    const { data, error } = await supabase.rpc('save_template_state', {
+      p_template_id: templateId.trim(),
+      p_label: label.trim(),
+      p_changelog_note: changelogNote || null,
     });
 
-    if (error) {
-      secureLogger.error('RPC Error archiving version:', error);
-      throw error;
-    }
-
-    secureLogger.debug('Template version archived:', data);
+    if (error) throw error;
     return data as SimulationFunctionResult;
   } catch (error: any) {
-    secureLogger.error('Error saving template with version:', error);
+    secureLogger.error('Error saving template state:', error);
     throw error;
   }
 }
 
 /**
- * Get template version history
+ * Get all named states for a template, oldest first.
  */
-export async function getTemplateVersions(templateId: string): Promise<any[]> {
+export async function getTemplateStates(templateId: string): Promise<any[]> {
   try {
     const { data, error } = await supabase
-      .from('simulation_template_versions')
-      .select(`
-        *,
-        user_profiles!saved_by(id, email, first_name, last_name)
-      `)
+      .from('simulation_template_states')
+      .select('id, label, changelog_note, sort_order, created_at, created_by')
       .eq('template_id', templateId)
-      .order('version', { ascending: false });
+      .order('sort_order', { ascending: true });
 
     if (error) throw error;
     return data || [];
   } catch (error: any) {
-    secureLogger.error('Error fetching template versions:', error);
+    secureLogger.error('Error fetching template states:', error);
     throw error;
   }
 }
 
 /**
- * Compare two template versions
+ * Rename a template state's label and/or changelog note.
  */
-export async function compareTemplateVersions(
-  templateId: string,
-  versionOld: number,
-  versionNew: number
-): Promise<any> {
-  try {
-    const { data, error } = await supabase.rpc('compare_template_versions', {
-      p_template_id: templateId,
-      p_version_old: versionOld,
-      p_version_new: versionNew,
-    });
+export async function updateTemplateState(
+  stateId: string,
+  updates: { label?: string; changelog_note?: string }
+): Promise<void> {
+  const { error } = await supabase
+    .from('simulation_template_states')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', stateId);
 
-    if (error) throw error;
-    return data;
-  } catch (error: any) {
-    secureLogger.error('Error comparing template versions:', error);
-    throw error;
-  }
+  if (error) throw error;
 }
 
 /**
- * Restore a previous template version
+ * Delete a template state.
  */
-export async function restoreTemplateVersion(
-  templateId: string,
-  versionToRestore: number,
-  restoreNotes?: string
-): Promise<SimulationFunctionResult> {
-  try {
-    const { data, error } = await supabase.rpc('restore_template_version', {
-      p_template_id: templateId,
-      p_version_to_restore: versionToRestore,
-      p_user_id: null,
-      p_restore_notes: restoreNotes || null,
-    });
+export async function deleteTemplateState(stateId: string): Promise<void> {
+  const { error } = await supabase
+    .from('simulation_template_states')
+    .delete()
+    .eq('id', stateId);
 
-    if (error) throw error;
-    return data as SimulationFunctionResult;
-  } catch (error: any) {
-    secureLogger.error('Error restoring template version:', error);
-    throw error;
-  }
+  if (error) throw error;
 }
 
 /**

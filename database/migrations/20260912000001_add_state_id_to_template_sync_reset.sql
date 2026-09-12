@@ -1,16 +1,14 @@
--- ============================================================================
--- RESET SIMULATION WITH TEMPLATE UPDATES (Property-Based Medication Sync)
--- ============================================================================
--- Smart reset that syncs simulation with updated template
--- Preserves existing medication barcodes, adds NEW medications with NEW barcodes
--- 
--- KEY INSIGHT: Simulation launch creates NEW UUIDs for all data (can't compare by ID)
--- Solution: Match medications by properties (patient barcode + name + dosage + route)
--- New medications get NEW UUIDs = NEW barcodes (instructor prints labels for new ones only)
--- ============================================================================-- CREATE OR REPLACE with a different parameter list creates a new overload
+-- Migration: Add p_state_id to reset_simulation_with_template_updates
+-- Date: 2026-09-12
+-- Companion to 20260912000000_add_simulation_template_states.sql — same optional
+-- override, applied to the "sync with template updates" reset path (property-based
+-- medication matching), not just the plain reset path.
+--
+-- CREATE OR REPLACE with a different parameter list creates a new overload
 -- rather than replacing the old one — drop the old single-arg signature first
 -- to avoid "function name is not unique" ambiguity errors on later calls.
 DROP FUNCTION IF EXISTS reset_simulation_with_template_updates(UUID);
+
 CREATE OR REPLACE FUNCTION reset_simulation_with_template_updates(
   p_simulation_id UUID,
   p_state_id UUID DEFAULT NULL
@@ -348,7 +346,6 @@ BEGIN
     starts_at = NULL,
     ends_at = NULL,
     template_snapshot_version_synced = v_template_version,
-    current_state_id = p_state_id,
     updated_at = NOW()
   WHERE id = p_simulation_id;
   

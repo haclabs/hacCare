@@ -5,11 +5,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus } from 'lucide-react';
+import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus, ChevronDown, Layers, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/auth/useAuth';
-import { saveTemplateSnapshot } from '../../../services/simulation/simulationService';
+import { saveTemplateSnapshot, saveTemplateState } from '../../../services/simulation/simulationService';
 import { savePatientTemplateSnapshot } from '../../../services/simulation/patientTemplateService';
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
@@ -30,6 +30,11 @@ export const TemplateEditingBanner: React.FC = () => {
   const [seeding, setSeeding] = useState(false);
   const [seedResults, setSeedResults] = useState<SeedPatientResult[] | null>(null);
   const [showAddFromLibrary, setShowAddFromLibrary] = useState(false);
+  const [showSaveMenu, setShowSaveMenu] = useState(false);
+  const [showSaveAsStateModal, setShowSaveAsStateModal] = useState(false);
+  const [stateLabel, setStateLabel] = useState('');
+  const [stateChangelogNote, setStateChangelogNote] = useState('');
+  const [savingState, setSavingState] = useState(false);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
   const { profile } = useAuth();
@@ -138,6 +143,36 @@ export const TemplateEditingBanner: React.FC = () => {
     }
   };
 
+  /** Saves the template tenant's current data as a new named state (e.g. "Week 2") instead of overwriting the default snapshot, then exits editing. */
+  const handleSaveAsNewState = async () => {
+    if (!editingInfo || !stateLabel.trim()) return;
+
+    setSavingState(true);
+    try {
+      const result = await saveTemplateState(editingInfo.template_id, stateLabel.trim(), stateChangelogNote.trim() || undefined);
+
+      if (!result.success) {
+        alert(`❌ Failed to save state:\n\n${result.message}`);
+        return;
+      }
+
+      alert(`✅ State "${stateLabel.trim()}" saved!\n\n${result.records_captured || 0} records captured from ${result.tables_captured || 0} tables.\n\nReturning to templates...`);
+
+      setShowSaveAsStateModal(false);
+      setStateLabel('');
+      setStateChangelogNote('');
+      sessionStorage.removeItem('editing_template');
+      setEditingInfo(null);
+      await exitTemplateTenant();
+      navigate('/app?tab=simulations');
+    } catch (error) {
+      secureLogger.error('❌ Banner: Error saving template state:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save state'}`);
+    } finally {
+      setSavingState(false);
+    }
+  };
+
   const handleSeedTestData = async () => {
     if (!editingInfo || !profile) return;
 
@@ -214,25 +249,57 @@ export const TemplateEditingBanner: React.FC = () => {
                 <span className="hidden lg:inline">{seeding ? 'Seeding...' : 'Seed Test Data'}</span>
               </button>
             )}
-            <button
-              onClick={handleExitTemplate}
-              disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="hidden sm:inline">Saving...</span>
-                  <span className="sm:hidden">...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  <span className="hidden sm:inline">Save & Exit</span>
-                  <span className="sm:hidden">Save</span>
-                </>
+            <div className="relative flex items-center">
+              <button
+                onClick={handleExitTemplate}
+                disabled={saving}
+                className={`flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm shadow-md hover:shadow-lg ${
+                  isPatientTemplate ? 'rounded-lg' : 'rounded-l-lg'
+                }`}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="hidden sm:inline">Saving...</span>
+                    <span className="sm:hidden">...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span className="hidden sm:inline">Save & Exit</span>
+                    <span className="sm:hidden">Save</span>
+                  </>
+                )}
+              </button>
+              {!isPatientTemplate && (
+                <button
+                  onClick={() => setShowSaveMenu(v => !v)}
+                  disabled={saving}
+                  title="More save options"
+                  className="flex items-center px-2 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 rounded-r-lg border-l border-white/20 transition-colors shadow-md hover:shadow-lg"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </button>
               )}
-            </button>
+              {showSaveMenu && (
+                <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-10 text-gray-800">
+                  <button
+                    onClick={() => { setShowSaveMenu(false); handleExitTemplate(); }}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <Save className="h-3.5 w-3.5 text-blue-600" />
+                    Update Template
+                  </button>
+                  <button
+                    onClick={() => { setShowSaveMenu(false); setShowSaveAsStateModal(true); }}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <Layers className="h-3.5 w-3.5 text-purple-600" />
+                    Save as New State…
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -240,6 +307,68 @@ export const TemplateEditingBanner: React.FC = () => {
       {/* Seed results panel */}
       {seedResults && (
         <SeedTestDataResultsPanel results={seedResults} onClose={() => setSeedResults(null)} />
+      )}
+
+      {/* Save as New State modal */}
+      {showSaveAsStateModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <Layers className="h-4 w-4 text-purple-600" />
+                Save as New State
+              </h3>
+              <button onClick={() => setShowSaveAsStateModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-gray-500">
+                Captures this template's current data as a new named state (e.g. "Week 2"). The template's
+                default snapshot is left untouched. Instructors can pick this state when resetting an active
+                simulation.
+              </p>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={stateLabel}
+                  onChange={(e) => setStateLabel(e.target.value)}
+                  placeholder="e.g. Week 2 - Deterioration"
+                  className="w-full px-3 py-2 text-sm bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Changelog note (optional)</label>
+                <textarea
+                  value={stateChangelogNote}
+                  onChange={(e) => setStateChangelogNote(e.target.value)}
+                  placeholder="What changed for this state?"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setShowSaveAsStateModal(false)}
+                  disabled={savingState}
+                  className="flex-1 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAsNewState}
+                  disabled={savingState || !stateLabel.trim()}
+                  className="flex-1 px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {savingState ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />}
+                  Save & Exit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Add Patient from Library modal */}

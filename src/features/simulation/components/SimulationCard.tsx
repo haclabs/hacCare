@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound, ClipboardList } from 'lucide-react';
+import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound, ClipboardList, Layers } from 'lucide-react';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
@@ -75,6 +75,15 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
                 Expired
+              </span>
+            )}
+            {sim.current_state && (
+              <span
+                className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700 flex items-center gap-1"
+                title="Named template state this simulation was last reset into"
+              >
+                <Layers className="h-3 w-3" />
+                {sim.current_state.label}
               </span>
             )}
           </div>

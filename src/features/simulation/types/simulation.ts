@@ -55,6 +55,8 @@ export interface SimulationActive {
   updated_at: string | null;
   primary_categories: string[];
   sub_categories: string[];
+  /** Named template state (simulation_template_states) this sim was last reset into. Null = template default. */
+  current_state_id?: string | null;
 }
 
 export interface SimulationHistory {
@@ -164,6 +166,10 @@ export interface SimulationActiveWithDetails extends SimulationActive {
     name: string;
     description: string;
   };
+  current_state?: {
+    id: string;
+    label: string;
+  } | null;
   participants?: SimulationParticipant[];
   tenant?: {
     id: string;
