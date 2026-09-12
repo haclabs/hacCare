@@ -13,7 +13,7 @@ import {
   FileText, Plus, Play, Save, Trash2, Camera, Upload, Edit, Clock,
   Search, LayoutGrid, List, ChevronDown, HelpCircle, FolderOpen, Folder, X, Check, ClipboardList, Layers,
 } from 'lucide-react';
-import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate, updateTemplateFolder } from '../../../services/simulation/simulationService';
+import { getSimulationTemplates, saveTemplateSnapshot, deleteSimulationTemplate, updateTemplateFolder, getTemplateStates, loadTemplateState } from '../../../services/simulation/simulationService';
 import { printMedicationChecklist } from '../../../utils/medicationChecklistPrinter';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import CreateTemplateModal from './CreateTemplateModal';
@@ -33,6 +33,9 @@ function getTemplateInitial(name: string): string {
 }
 
 interface SnapshotPatient { first_name: string; last_name: string; }
+
+/** Minimal shape needed for the Edit button's state-picker dropdown */
+interface TemplateStateLite { id: string; label: string; changelog_note?: string | null; }
 
 /** Pull patients array out of snapshot_data — zero extra DB calls, already fetched */
 function getSnapshotPatients(template: { snapshot_data: any }): SnapshotPatient[] {
@@ -68,6 +71,11 @@ const SimulationTemplates: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<SimulationTemplateWithDetails | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [statesModalTemplate, setStatesModalTemplate] = useState<SimulationTemplateWithDetails | null>(null);
+
+  // Edit button's state-picker dropdown ("Current (live)" vs a saved state)
+  const [editMenuFor, setEditMenuFor] = useState<string | null>(null);
+  const [editMenuStates, setEditMenuStates] = useState<Record<string, TemplateStateLite[]>>({});
+  const [editMenuLoading, setEditMenuLoading] = useState<string | null>(null);
 
   // Filter / view state
   const [search, setSearch] = useState('');
@@ -224,6 +232,68 @@ const SimulationTemplates: React.FC = () => {
     
     // Navigate to patients tab in main app view
     navigate('/app?tab=patients');
+  };
+
+  /** Lazily loads (and caches) a template's saved states — shared by the Edit dropdown and the expanded row panel. */
+  const ensureStatesLoaded = async (templateId: string) => {
+    if (editMenuStates[templateId]) return;
+    setEditMenuLoading(templateId);
+    try {
+      const states = await getTemplateStates(templateId);
+      setEditMenuStates(prev => ({ ...prev, [templateId]: states }));
+    } catch (error) {
+      secureLogger.error('Error loading template states:', error);
+    } finally {
+      setEditMenuLoading(null);
+    }
+  };
+
+  /** Lazily loads + toggles the Edit button's "which saved state" dropdown for a template. */
+  const toggleEditMenu = async (template: SimulationTemplateWithDetails) => {
+    setEditMenuFor(prev => (prev === template.id ? null : template.id));
+    await ensureStatesLoaded(template.id);
+  };
+
+  /** Toggles the expanded description panel, lazily loading saved states to show alongside it. */
+  const toggleExpanded = async (template: SimulationTemplateWithDetails) => {
+    const opening = expandedTemplate !== template.id;
+    setExpandedTemplate(opening ? template.id : null);
+    if (opening) await ensureStatesLoaded(template.id);
+  };
+
+  /** Loads a named state's data into the template tenant, then enters the editor tagged to that state (so the banner's Save writes back to it, not the default). */
+  const handleEditTemplateState = async (template: SimulationTemplateWithDetails, state: TemplateStateLite) => {
+    setEditMenuFor(null);
+    if (!confirm(
+      `Load "${state.label}" into the editor? This replaces the template's current live data — ` +
+      'any unsaved edits will be lost.'
+    )) return;
+
+    setActionLoading(template.id);
+    try {
+      const result = await loadTemplateState(template.id, state.id);
+      if (!result.success) {
+        alert(`❌ Failed to load state:\n\n${result.message}`);
+        return;
+      }
+
+      const editInfo = {
+        template_id: template.id,
+        template_name: template.name,
+        tenant_id: template.tenant_id,
+        kind: 'simulation' as const,
+        state_id: state.id,
+        state_label: state.label,
+      };
+      sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
+      window.dispatchEvent(new CustomEvent('template-edit-start', { detail: editInfo }));
+      navigate('/app?tab=patients');
+    } catch (error) {
+      secureLogger.error('Error loading template state for editing:', error);
+      alert('Failed to load state for editing');
+    } finally {
+      setActionLoading(null);
+    }
   };
   
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
@@ -418,7 +488,7 @@ const SimulationTemplates: React.FC = () => {
                 {grouped[group].map((template, tIdx) => (
                   <div key={template.id}>
                   <div
-                    onClick={() => setExpandedTemplate(expandedTemplate === template.id ? null : template.id)}
+                    onClick={() => toggleExpanded(template)}
                     className={`group relative flex items-center gap-3 pl-3 pr-4 py-3 transition-colors cursor-pointer border-l-4 ${
                       template.status === 'ready'
                         ? 'border-l-green-500'
@@ -579,15 +649,55 @@ const SimulationTemplates: React.FC = () => {
                       </div>
                     ) : (
                       <div className="absolute right-4 inset-y-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                        <button
-                          onClick={() => handleEditTemplate(template)}
-                          disabled={actionLoading === template.id}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-md disabled:opacity-50 transition-colors"
-                          title="Edit template patients and data"
-                        >
-                          <Edit className="h-3 w-3" />
-                          Edit
-                        </button>
+                        <div className="relative flex items-center">
+                          <button
+                            onClick={() => handleEditTemplate(template)}
+                            disabled={actionLoading === template.id}
+                            className="flex items-center gap-1 pl-2.5 pr-1.5 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-l-md disabled:opacity-50 transition-colors"
+                            title="Edit template patients and data"
+                          >
+                            <Edit className="h-3 w-3" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => toggleEditMenu(template)}
+                            disabled={actionLoading === template.id}
+                            title="Edit a specific saved state"
+                            className="p-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-r-md border-l border-purple-200 disabled:opacity-50 transition-colors"
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                          {editMenuFor === template.id && (
+                            <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20 text-gray-800">
+                              <button
+                                onClick={() => { setEditMenuFor(null); handleEditTemplate(template); }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                              >
+                                <Edit className="h-3.5 w-3.5 text-purple-600" />
+                                Current (live)
+                              </button>
+                              <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide border-t border-gray-100 mt-1">
+                                Saved States
+                              </div>
+                              {editMenuLoading === template.id ? (
+                                <div className="px-3 py-2 text-xs text-gray-400">Loading…</div>
+                              ) : (editMenuStates[template.id]?.length ?? 0) === 0 ? (
+                                <p className="px-3 py-2 text-xs text-gray-400">No saved states yet</p>
+                              ) : (
+                                editMenuStates[template.id].map(state => (
+                                  <button
+                                    key={state.id}
+                                    onClick={() => handleEditTemplateState(template, state)}
+                                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                                  >
+                                    <Layers className="h-3.5 w-3.5 text-purple-600" />
+                                    {state.label}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
                         <button
                           onClick={() => handleSaveSnapshot(template.id)}
                           disabled={actionLoading === template.id}
@@ -703,6 +813,38 @@ const SimulationTemplates: React.FC = () => {
                                   );
                                 })}
                               </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Saved states (e.g. "Week 1", "Week 2") — click one to load it straight into the editor */}
+                        {(() => {
+                          const states = editMenuStates[template.id];
+                          const loadingStates = editMenuLoading === template.id;
+                          if (!loadingStates && (!states || states.length === 0)) return null;
+                          return (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                                <Layers className="h-3 w-3" />
+                                Saved states{states ? ` (${states.length})` : ''}
+                              </p>
+                              {loadingStates ? (
+                                <p className="text-xs text-gray-400">Loading…</p>
+                              ) : (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {states!.map((state) => (
+                                    <button
+                                      key={state.id}
+                                      onClick={() => handleEditTemplateState(template, state)}
+                                      title={state.changelog_note ? state.changelog_note : `Load "${state.label}" into the editor`}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                                    >
+                                      <Layers className="h-3 w-3" />
+                                      {state.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         })()}
@@ -835,15 +977,55 @@ const SimulationTemplates: React.FC = () => {
 
                     {/* Action strip */}
                     <div className="pt-3 border-t border-gray-100 flex items-center gap-1">
-                      <button
-                        onClick={() => handleEditTemplate(template)}
-                        disabled={actionLoading === template.id}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        title="Edit template"
-                      >
-                        <Edit className="h-3 w-3" />
-                        Edit
-                      </button>
+                      <div className="relative flex items-center">
+                        <button
+                          onClick={() => handleEditTemplate(template)}
+                          disabled={actionLoading === template.id}
+                          className="flex items-center gap-1 pl-2.5 pr-1.5 py-1.5 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-l-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          title="Edit template"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => toggleEditMenu(template)}
+                          disabled={actionLoading === template.id}
+                          title="Edit a specific saved state"
+                          className="p-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-r-lg border-l border-purple-200 disabled:opacity-50 transition-colors"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                        {editMenuFor === template.id && (
+                          <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20 text-gray-800">
+                            <button
+                              onClick={() => { setEditMenuFor(null); handleEditTemplate(template); }}
+                              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Edit className="h-3.5 w-3.5 text-purple-600" />
+                              Current (live)
+                            </button>
+                            <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide border-t border-gray-100 mt-1">
+                              Saved States
+                            </div>
+                            {editMenuLoading === template.id ? (
+                              <div className="px-3 py-2 text-xs text-gray-400">Loading…</div>
+                            ) : (editMenuStates[template.id]?.length ?? 0) === 0 ? (
+                              <p className="px-3 py-2 text-xs text-gray-400">No saved states yet</p>
+                            ) : (
+                              editMenuStates[template.id].map(state => (
+                                <button
+                                  key={state.id}
+                                  onClick={() => handleEditTemplateState(template, state)}
+                                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                  <Layers className="h-3.5 w-3.5 text-purple-600" />
+                                  {state.label}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={() => handleLaunch(template)}
                         disabled={!template.snapshot_data || actionLoading === template.id}
@@ -1009,6 +1191,7 @@ const SimulationTemplates: React.FC = () => {
         <TemplateStatesModal
           templateId={statesModalTemplate.id}
           templateName={statesModalTemplate.name}
+          tenantId={statesModalTemplate.tenant_id}
           onClose={() => setStatesModalTemplate(null)}
         />
       )}

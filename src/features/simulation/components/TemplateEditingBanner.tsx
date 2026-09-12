@@ -5,11 +5,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus, ChevronDown, Layers, X } from 'lucide-react';
+import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus, ChevronDown, Layers, Undo2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/auth/useAuth';
-import { saveTemplateSnapshot, saveTemplateState } from '../../../services/simulation/simulationService';
+import { saveTemplateSnapshot, saveTemplateState, loadTemplateState, updateTemplateStateSnapshot } from '../../../services/simulation/simulationService';
 import { savePatientTemplateSnapshot } from '../../../services/simulation/patientTemplateService';
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
@@ -22,6 +22,9 @@ interface TemplateEditingInfo {
   tenant_id: string;
   /** 'simulation' (default, backward compatible) or 'patient' for the Patient Library */
   kind?: 'simulation' | 'patient';
+  /** Set when the editor was entered via a loaded named state — Save writes back into this state instead of the template's default snapshot. */
+  state_id?: string;
+  state_label?: string;
 }
 
 export const TemplateEditingBanner: React.FC = () => {
@@ -35,10 +38,13 @@ export const TemplateEditingBanner: React.FC = () => {
   const [stateLabel, setStateLabel] = useState('');
   const [stateChangelogNote, setStateChangelogNote] = useState('');
   const [savingState, setSavingState] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
   const { profile } = useAuth();
   const isPatientTemplate = editingInfo?.kind === 'patient';
+  const editingStateId = editingInfo?.state_id;
+  const editingStateLabel = editingInfo?.state_label;
 
   useEffect(() => {
     // Check if we're editing a template on mount
@@ -107,7 +113,9 @@ export const TemplateEditingBanner: React.FC = () => {
       secureLogger.debug('💾 Banner: Saving template snapshot...');
       const result = isPatientTemplate
         ? await savePatientTemplateSnapshot(editingInfo.template_id)
-        : await saveTemplateSnapshot(editingInfo.template_id);
+        : editingStateId
+          ? await updateTemplateStateSnapshot(editingInfo.template_id, editingStateId)
+          : await saveTemplateSnapshot(editingInfo.template_id);
       
       if (result.success) {
         secureLogger.debug('✅ Banner: Snapshot saved successfully');
@@ -115,7 +123,8 @@ export const TemplateEditingBanner: React.FC = () => {
         // Show success message with details
         const recordCount = result.records_captured || 0;
         const tableCount = result.tables_captured || 0;
-        alert(`✅ Template saved successfully!\n\n${recordCount} records captured from ${tableCount} tables.\n\nReturning to templates...`);
+        const savedWhat = editingStateId ? `State "${editingStateLabel}"` : 'Template';
+        alert(`✅ ${savedWhat} saved successfully!\n\n${recordCount} records captured from ${tableCount} tables.\n\nReturning to templates...`);
       } else {
         secureLogger.error('❌ Banner: Failed to save snapshot:', result.message);
         alert(`❌ Failed to save template:\n\n${result.message}`);
@@ -173,6 +182,62 @@ export const TemplateEditingBanner: React.FC = () => {
     }
   };
 
+  /** Promotes the currently-loaded state's data to become the template's default snapshot, without touching the state itself. */
+  const handleSaveAsDefault = async () => {
+    if (!editingInfo) return;
+    setSaving(true);
+    try {
+      const result = await saveTemplateSnapshot(editingInfo.template_id);
+      if (!result.success) {
+        alert(`❌ Failed to save as template default:\n\n${result.message}`);
+        return;
+      }
+
+      alert(`✅ Saved as the template's default snapshot!\n\n${result.records_captured || 0} records captured from ${result.tables_captured || 0} tables.\n\nReturning to templates...`);
+
+      sessionStorage.removeItem('editing_template');
+      setEditingInfo(null);
+      await exitTemplateTenant();
+      navigate('/app?tab=simulations');
+    } catch (error) {
+      secureLogger.error('❌ Banner: Error saving as template default:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save as template default'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /** Discards live edits by reloading whatever was originally loaded (a named state, or the template's own last-saved snapshot) back into its tenant, then exits without saving. */
+  const handleDiscardChanges = async () => {
+    if (!editingInfo) return;
+    const revertTarget = editingStateId ? `state "${editingStateLabel}"` : 'the template';
+    if (!confirm(
+      `Discard all changes since the last save and exit?\n\n` +
+      `Template editing is live — this reverts ${revertTarget} back to its last saved ` +
+      'version. This cannot be undone.'
+    )) return;
+
+    setDiscarding(true);
+    try {
+      const result = await loadTemplateState(editingInfo.template_id, editingStateId);
+
+      if (!result.success) {
+        alert(`❌ Failed to discard changes:\n\n${result.message}`);
+        return;
+      }
+
+      sessionStorage.removeItem('editing_template');
+      setEditingInfo(null);
+      await exitTemplateTenant();
+      navigate('/app?tab=simulations');
+    } catch (error) {
+      secureLogger.error('❌ Banner: Error discarding template changes:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to discard changes'}`);
+    } finally {
+      setDiscarding(false);
+    }
+  };
+
   const handleSeedTestData = async () => {
     if (!editingInfo || !profile) return;
 
@@ -220,6 +285,12 @@ export const TemplateEditingBanner: React.FC = () => {
               <BookOpen className="h-4 w-4" />
               <span className="text-sm font-medium">{editingInfo.template_name}</span>
             </div>
+            {editingStateId && (
+              <div className="flex items-center gap-1.5 bg-white/20 px-2.5 py-1 rounded-full" title="Saving will update this named state, not the template's default">
+                <Layers className="h-3.5 w-3.5" />
+                <span className="text-xs font-semibold">State: {editingStateLabel}</span>
+              </div>
+            )}
           </div>
 
           {/* Right: Add Patient from Library (simulation templates only) + Seed Test Data (super_admin only) + Save Button */}
@@ -237,7 +308,7 @@ export const TemplateEditingBanner: React.FC = () => {
             {profile?.role === 'super_admin' && (
               <button
                 onClick={handleSeedTestData}
-                disabled={seeding || saving}
+                disabled={seeding || saving || discarding}
                 title="Seed one QA_VALIDATION test row into every clinical table (dev validation tool)"
                 className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
               >
@@ -252,7 +323,7 @@ export const TemplateEditingBanner: React.FC = () => {
             <div className="relative flex items-center">
               <button
                 onClick={handleExitTemplate}
-                disabled={saving}
+                disabled={saving || discarding}
                 className={`flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm shadow-md hover:shadow-lg ${
                   isPatientTemplate ? 'rounded-lg' : 'rounded-l-lg'
                 }`}
@@ -266,7 +337,7 @@ export const TemplateEditingBanner: React.FC = () => {
                 ) : (
                   <>
                     <Save className="h-4 w-4" />
-                    <span className="hidden sm:inline">Save & Exit</span>
+                    <span className="hidden sm:inline">{editingStateId ? `Update "${editingStateLabel}"` : 'Save & Exit'}</span>
                     <span className="sm:hidden">Save</span>
                   </>
                 )}
@@ -274,7 +345,7 @@ export const TemplateEditingBanner: React.FC = () => {
               {!isPatientTemplate && (
                 <button
                   onClick={() => setShowSaveMenu(v => !v)}
-                  disabled={saving}
+                  disabled={saving || discarding}
                   title="More save options"
                   className="flex items-center px-2 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 rounded-r-lg border-l border-white/20 transition-colors shadow-md hover:shadow-lg"
                 >
@@ -288,14 +359,31 @@ export const TemplateEditingBanner: React.FC = () => {
                     className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
                   >
                     <Save className="h-3.5 w-3.5 text-blue-600" />
-                    Update Template
+                    {editingStateId ? `Update "${editingStateLabel}"` : 'Update Template'}
                   </button>
+                  {editingStateId && (
+                    <button
+                      onClick={() => { setShowSaveMenu(false); handleSaveAsDefault(); }}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <BookOpen className="h-3.5 w-3.5 text-blue-600" />
+                      Save as Template Default
+                    </button>
+                  )}
                   <button
                     onClick={() => { setShowSaveMenu(false); setShowSaveAsStateModal(true); }}
                     className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
                   >
                     <Layers className="h-3.5 w-3.5 text-purple-600" />
                     Save as New State…
+                  </button>
+                  <button
+                    onClick={() => { setShowSaveMenu(false); handleDiscardChanges(); }}
+                    disabled={discarding}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 border-t border-gray-100"
+                  >
+                    {discarding ? <Loader2 className="h-3.5 w-3.5 animate-spin text-red-600" /> : <Undo2 className="h-3.5 w-3.5 text-red-600" />}
+                    Discard Changes & Exit
                   </button>
                 </div>
               )}

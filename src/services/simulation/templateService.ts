@@ -209,6 +209,32 @@ export async function saveTemplateState(
 }
 
 /**
+ * Overwrite an existing named state's snapshot in place with the template
+ * tenant's current live data — keeps the state's id/label/changelog_note
+ * stable (unlike delete + re-save, this doesn't break any active simulation's
+ * `current_state_id` reference to it). Use this when the editor was entered
+ * via `loadTemplateState(templateId, stateId)` and edits should be saved
+ * back into that same state rather than the template's default snapshot.
+ */
+export async function updateTemplateStateSnapshot(
+  templateId: string,
+  stateId: string
+): Promise<SimulationFunctionResult> {
+  try {
+    const { data, error } = await supabase.rpc('update_template_state_snapshot', {
+      p_template_id: templateId.trim(),
+      p_state_id: stateId,
+    });
+
+    if (error) throw error;
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    secureLogger.error('Error updating template state snapshot:', error);
+    throw error;
+  }
+}
+
+/**
  * Get all named states for a template, oldest first.
  */
 export async function getTemplateStates(templateId: string): Promise<any[]> {
@@ -223,6 +249,34 @@ export async function getTemplateStates(templateId: string): Promise<any[]> {
     return data || [];
   } catch (error: any) {
     secureLogger.error('Error fetching template states:', error);
+    throw error;
+  }
+}
+
+/**
+ * Load a named state's snapshot back into the template's own tenant so it can
+ * be edited — replaces the tenant's current live data (any unsaved edits are
+ * lost). Does not preserve barcodes; template barcodes aren't load-bearing
+ * since simulation launch always assigns fresh ones.
+ *
+ * Omit `stateId` to reload the template's own default snapshot instead of a
+ * named state — this is the "discard changes" path, since template editing
+ * is live and there's otherwise no way to revert unsaved edits.
+ */
+export async function loadTemplateState(
+  templateId: string,
+  stateId?: string
+): Promise<SimulationFunctionResult> {
+  try {
+    const { data, error } = await supabase.rpc('load_template_state', {
+      p_template_id: templateId.trim(),
+      p_state_id: stateId || null,
+    });
+
+    if (error) throw error;
+    return data as SimulationFunctionResult;
+  } catch (error: any) {
+    secureLogger.error('Error loading template state:', error);
     throw error;
   }
 }

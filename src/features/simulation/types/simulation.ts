@@ -214,6 +214,8 @@ export interface LaunchSimulationParams {
   participant_user_ids: string[];
   participant_roles?: SimulationRole[];
   primary_categories?: string[];
+  /** Launch from a named template state (simulation_template_states) instead of the template's default snapshot. */
+  state_id?: string | null;
   sub_categories?: string[];
 }
 

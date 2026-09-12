@@ -33,6 +33,7 @@ export async function launchSimulation(
       p_participant_roles: params.participant_roles || null,
       p_primary_categories: params.primary_categories || [],
       p_sub_categories: params.sub_categories || [],
+      p_state_id: params.state_id || null,
     });
 
     if (error) throw error;

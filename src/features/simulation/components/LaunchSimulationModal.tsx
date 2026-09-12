@@ -7,8 +7,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Play, Users, Clock, AlertCircle, Tag, KeyRound, Copy, Check, Plus, Trash2, DoorOpen } from 'lucide-react';
-import { launchSimulation } from '../../../services/simulation/simulationService';
+import { X, Play, Users, Clock, AlertCircle, Tag, KeyRound, Copy, Check, Plus, Trash2, DoorOpen, Layers } from 'lucide-react';
+import { launchSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
 import { supabase } from '../../../lib/api/supabase';
 import type { SimulationTemplateWithDetails } from '../types/simulation';
 import { SUB_CATEGORIES } from '../types/simulation';
@@ -41,6 +41,8 @@ interface RoomEntry {
   instructorId: string;
 }
 
+interface TemplateStateOption { id: string; label: string; }
+
 const INSTRUCTOR_ELIGIBLE_ROLES = ['instructor', 'coordinator', 'admin', 'super_admin'];
 
 const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
@@ -59,6 +61,8 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
   });
   const [users, setUsers] = useState<UserOption[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [templateStates, setTemplateStates] = useState<TemplateStateOption[]>([]);
+  const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [launchMode, setLaunchMode] = useState<'single' | 'rooms'>('single');
   const [rooms, setRooms] = useState<RoomEntry[]>([{ roomNumber: '', instructorId: '' }]);
   const [roomLaunchProgress, setRoomLaunchProgress] = useState<string | null>(null);
@@ -93,6 +97,10 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
     loadPrograms();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTenant]);
+
+  useEffect(() => {
+    getTemplateStates(template.id).then(setTemplateStates).catch(() => setTemplateStates([]));
+  }, [template.id]);
 
   const loadUsers = async () => {
     if (!currentTenant) return;
@@ -230,6 +238,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
             participant_roles: ['instructor', ...generated.map(() => 'student' as const)],
             primary_categories: formData.primary_categories,
             sub_categories: formData.sub_categories,
+            state_id: selectedStateId || null,
           });
 
           const launchResult = Array.isArray(result) ? result[0] : result;
@@ -332,6 +341,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
         participant_roles: [...formData.participant_roles, ...generated.map(() => 'student' as const)],
         primary_categories: formData.primary_categories,
         sub_categories: formData.sub_categories,
+        state_id: selectedStateId || null,
       });
 
       // RPC returns array with single row
@@ -608,6 +618,30 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
             </p>
           </div>
           </>
+          )}
+
+          {/* Launch From (default snapshot vs a saved named state) */}
+          {templateStates.length > 0 && (
+            <div>
+              <label htmlFor="launch-state" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <Layers className="inline h-4 w-4 mr-1" />
+                Launch From
+              </label>
+              <select
+                id="launch-state"
+                value={selectedStateId}
+                onChange={(e) => setSelectedStateId(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-slate-700 dark:text-white"
+              >
+                <option value="">Default (current template snapshot)</option>
+                {templateStates.map((state) => (
+                  <option key={state.id} value={state.id}>{state.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Pick a saved state (e.g. "Week 2") to launch the simulation with that data instead of the template's default.
+              </p>
+            </div>
           )}
 
           {/* Duration */}
