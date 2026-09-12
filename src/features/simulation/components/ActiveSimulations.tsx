@@ -470,6 +470,7 @@ const ActiveSimulations: React.FC = () => {
           versionNew={(versionComparisonModal.simulation as any).template_current_version || 1}
           simulationId={versionComparisonModal.simulation.id}
           patientComparison={versionComparisonModal.patientComparison}
+          currentStateLabel={versionComparisonModal.simulation.current_state?.label ?? null}
           onClose={() => setVersionComparisonModal(null)}
           onSyncWithPreservation={handleSyncWithTemplateUpdates}
           onRelaunchRequired={handleRelaunchRequired}

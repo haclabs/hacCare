@@ -187,15 +187,19 @@ export function useActiveSimulations() {
     setActionLoading(sim.id);
 
     try {
-      secureLogger.debug('🚀 Starting sync for simulation:', sim.id);
-      const result = await resetSimulationWithTemplateUpdates(sim.id);
+      secureLogger.debug('🚀 Starting sync for simulation:', sim.id, 'state:', sim.current_state_id);
+      // Preserve whichever state (if any) this simulation is currently on —
+      // syncing must NOT silently fall back to the template's default snapshot
+      // for a simulation that's pinned to a named state (e.g. "Week 3").
+      const result = await resetSimulationWithTemplateUpdates(sim.id, sim.current_state_id);
       secureLogger.debug('✅ Simulation synced with template:', result);
 
       const medsAddedText = (result.medications_added ?? 0) > 0
         ? `${result.medications_added} new medication(s) added.`
         : 'No new medications to add.';
+      const stateText = sim.current_state?.label ? ` (state: ${sim.current_state.label})` : '';
 
-      alert(`Simulation synced to template v${result.template_version_synced ?? 'unknown'}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
+      alert(`Simulation synced to template v${result.template_version_synced ?? 'unknown'}${stateText}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
       await loadSimulations();
     } catch (error: any) {
       secureLogger.error('❌ Error syncing simulation:', error);

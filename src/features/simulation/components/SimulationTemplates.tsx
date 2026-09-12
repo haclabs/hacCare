@@ -1191,7 +1191,6 @@ const SimulationTemplates: React.FC = () => {
         <TemplateStatesModal
           templateId={statesModalTemplate.id}
           templateName={statesModalTemplate.name}
-          tenantId={statesModalTemplate.tenant_id}
           onClose={() => setStatesModalTemplate(null)}
         />
       )}

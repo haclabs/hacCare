@@ -19,6 +19,8 @@ interface Props {
   versionNew: number;
   simulationId?: string; // If comparing for simulation sync
   patientComparison?: PatientListComparison;
+  /** Label of the named state this simulation is currently pinned to, if any — changes what "Sync" actually does. */
+  currentStateLabel?: string | null;
   onClose: () => void;
   onSyncWithPreservation?: () => void;
   onRelaunchRequired?: () => void;
@@ -48,6 +50,7 @@ export default function VersionComparisonModal({
   versionNew,
   simulationId,
   patientComparison,
+  currentStateLabel,
   onClose,
   onSyncWithPreservation,
   onRelaunchRequired,
@@ -171,6 +174,26 @@ export default function VersionComparisonModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Named-state notice — syncing re-applies THIS state's own data, not the template's default */}
+          {currentStateLabel && (
+            <div className="bg-purple-50 border-l-4 border-purple-400 p-4 rounded">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-purple-900 mb-1">
+                    Pinned to state "{currentStateLabel}"
+                  </h4>
+                  <p className="text-sm text-purple-800">
+                    This simulation is running the "{currentStateLabel}" state, not the template's default.
+                    Syncing will refresh it using "{currentStateLabel}"'s own saved data (medication
+                    adds/removals, barcodes preserved) — it will stay on "{currentStateLabel}", not switch to
+                    the template's default snapshot.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Patient List Warning */}
           {patientsChanged && (
             <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded">
@@ -251,7 +274,7 @@ export default function VersionComparisonModal({
                 onClick={onSyncWithPreservation}
                 className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors"
               >
-                Sync to v{versionNew} - Keep Barcodes
+                {currentStateLabel ? `Sync "${currentStateLabel}" - Keep Barcodes` : `Sync to v${versionNew} - Keep Barcodes`}
               </button>
             )}
             

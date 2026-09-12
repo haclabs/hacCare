@@ -4,17 +4,17 @@
  * ===========================================================================
  * Lists the named states saved for a template (e.g. "Week 1", "Week 2"),
  * saved via TemplateEditingBanner's "Save as New State" option. Lets an
- * instructor rename/edit the changelog note, delete a state, or load a state
- * back into the template editor to make further changes to it. Picking which
- * state an ACTIVE SIMULATION resets to happens separately, in the Active
+ * instructor rename/edit the changelog note or delete a state. Loading a
+ * state into the editor happens via the Edit button's dropdown on the
+ * template card (one entry point, not duplicated here). Picking which state
+ * an ACTIVE SIMULATION resets to happens separately, in the Active
  * Simulations reset modal.
  * ===========================================================================
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X, Layers, Trash2, Pencil, Check, Loader2, PencilLine } from 'lucide-react';
-import { getTemplateStates, updateTemplateState, deleteTemplateState, loadTemplateState } from '../../../services/simulation/simulationService';
+import { X, Layers, Trash2, Pencil, Check, Loader2 } from 'lucide-react';
+import { getTemplateStates, updateTemplateState, deleteTemplateState } from '../../../services/simulation/simulationService';
 import { formatDistanceToNow } from 'date-fns';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -30,18 +30,16 @@ interface TemplateState {
 interface Props {
   templateId: string;
   templateName: string;
-  tenantId: string;
   onClose: () => void;
 }
 
-export const TemplateStatesModal: React.FC<Props> = ({ templateId, templateName, tenantId, onClose }) => {
+export const TemplateStatesModal: React.FC<Props> = ({ templateId, templateName, onClose }) => {
   const [states, setStates] = useState<TemplateState[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editNote, setEditNote] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
@@ -91,44 +89,6 @@ export const TemplateStatesModal: React.FC<Props> = ({ templateId, templateName,
     } catch (error) {
       secureLogger.error('Error deleting template state:', error);
       alert('Failed to delete state');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  /** Loads a state's data into the template tenant, replacing current live data, then enters the normal template editor on it. */
-  const handleLoadForEditing = async (state: TemplateState) => {
-    if (!confirm(
-      `Load "${state.label}" into the editor? This replaces the template's current live data — \n` +
-      'any unsaved edits will be lost. You can save your changes back to this state, ' +
-      'as a new state, or as the template\'s default snapshot when you\'re done.'
-    )) return;
-
-    setBusyId(state.id);
-    try {
-      const result = await loadTemplateState(templateId, state.id);
-      if (!result.success) {
-        alert(`❌ Failed to load state:
-
-${result.message}`);
-        return;
-      }
-
-      const editInfo = {
-        template_id: templateId,
-        template_name: templateName,
-        tenant_id: tenantId,
-        kind: 'simulation' as const,
-        state_id: state.id,
-        state_label: state.label,
-      };
-      sessionStorage.setItem('editing_template', JSON.stringify(editInfo));
-      window.dispatchEvent(new CustomEvent('template-edit-start', { detail: editInfo }));
-      onClose();
-      navigate('/app?tab=patients');
-    } catch (error) {
-      secureLogger.error('Error loading template state for editing:', error);
-      alert('Failed to load state for editing');
     } finally {
       setBusyId(null);
     }
@@ -203,14 +163,6 @@ ${result.message}`);
                       </p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <button
-                        onClick={() => handleLoadForEditing(state)}
-                        disabled={busyId === state.id}
-                        className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors disabled:opacity-50"
-                        title="Load this state into the editor"
-                      >
-                        {busyId === state.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PencilLine className="h-3.5 w-3.5" />}
-                      </button>
                       <button
                         onClick={() => startEdit(state)}
                         className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors"

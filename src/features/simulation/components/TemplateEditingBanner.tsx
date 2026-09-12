@@ -182,31 +182,6 @@ export const TemplateEditingBanner: React.FC = () => {
     }
   };
 
-  /** Promotes the currently-loaded state's data to become the template's default snapshot, without touching the state itself. */
-  const handleSaveAsDefault = async () => {
-    if (!editingInfo) return;
-    setSaving(true);
-    try {
-      const result = await saveTemplateSnapshot(editingInfo.template_id);
-      if (!result.success) {
-        alert(`❌ Failed to save as template default:\n\n${result.message}`);
-        return;
-      }
-
-      alert(`✅ Saved as the template's default snapshot!\n\n${result.records_captured || 0} records captured from ${result.tables_captured || 0} tables.\n\nReturning to templates...`);
-
-      sessionStorage.removeItem('editing_template');
-      setEditingInfo(null);
-      await exitTemplateTenant();
-      navigate('/app?tab=simulations');
-    } catch (error) {
-      secureLogger.error('❌ Banner: Error saving as template default:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to save as template default'}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   /** Discards live edits by reloading whatever was originally loaded (a named state, or the template's own last-saved snapshot) back into its tenant, then exits without saving. */
   const handleDiscardChanges = async () => {
     if (!editingInfo) return;
@@ -361,15 +336,6 @@ export const TemplateEditingBanner: React.FC = () => {
                     <Save className="h-3.5 w-3.5 text-blue-600" />
                     {editingStateId ? `Update "${editingStateLabel}"` : 'Update Template'}
                   </button>
-                  {editingStateId && (
-                    <button
-                      onClick={() => { setShowSaveMenu(false); handleSaveAsDefault(); }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <BookOpen className="h-3.5 w-3.5 text-blue-600" />
-                      Save as Template Default
-                    </button>
-                  )}
                   <button
                     onClick={() => { setShowSaveMenu(false); setShowSaveAsStateModal(true); }}
                     className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
