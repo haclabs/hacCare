@@ -1,8 +1,256 @@
+-- Migration: Named "weekly states" for simulation templates
+-- Date: 2026-09-12
+--
+-- Lets an instructor save multiple named snapshots of a template (e.g. "Week 1",
+-- "Week 2 - Deterioration") and pick which one to load when RESETTING an active
+-- simulation — without ever touching patient/medication barcodes (the existing
+-- barcode-preserving restore_snapshot_to_tenant(..., p_preserve_barcodes := true)
+-- path is reused unchanged; only the source snapshot JSONB changes).
+--
+-- Replaces the old auto-archive-on-every-save version history
+-- (simulation_template_versions / save_template_version / restore_template_version /
+-- compare_template_versions). That system had ZERO UI consumers on the read/
+-- restore/compare side (verified via grep across src/ 2026-09-12) — every save
+-- silently archived a version nobody ever looked at. It also modeled a
+-- different problem (linear undo history that overwrites "current") rather
+-- than named, independently-selectable scenario states.
+
 -- ============================================================================
--- RESET SIMULATION FOR NEXT SESSION
+-- STEP 1: Drop the old unused version-history system
 -- ============================================================================
--- Smart reset that preserves patient & medication barcodes
--- Sets status to 'pending' so instructor can manually start when ready
+DROP FUNCTION IF EXISTS public.compare_template_versions(uuid, integer, integer);
+DROP FUNCTION IF EXISTS public.restore_template_version(uuid, integer, uuid, text);
+DROP FUNCTION IF EXISTS public.save_template_version(uuid, jsonb, text, uuid);
+DROP TABLE IF EXISTS public.simulation_template_versions;
+
+-- ============================================================================
+-- STEP 2: New named-states table
+-- ============================================================================
+CREATE TABLE public.simulation_template_states (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  template_id uuid NOT NULL REFERENCES public.simulation_templates(id) ON DELETE CASCADE,
+  label text NOT NULL,
+  changelog_note text,
+  snapshot_data jsonb NOT NULL,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT simulation_template_states_label_unique UNIQUE (template_id, label)
+);
+
+CREATE INDEX idx_template_states_template ON public.simulation_template_states(template_id, sort_order);
+
+COMMENT ON TABLE public.simulation_template_states IS 'Instructor-named snapshot states per template (e.g. "Week 1", "Week 2"), independently selectable when resetting an active simulation.';
+
+ALTER TABLE public.simulation_template_states ENABLE ROW LEVEL SECURITY;
+
+-- Mirrors the tenant_users membership check used by enterTemplateTenant() for
+-- template editing access (see TemplateEditingBanner / TenantContext), plus
+-- the standard super_admin/coordinator bypass.
+CREATE POLICY template_states_select ON public.simulation_template_states
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.tenant_users tu
+      WHERE tu.tenant_id = simulation_template_states.tenant_id
+        AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator')
+    )
+  );
+
+CREATE POLICY template_states_insert ON public.simulation_template_states
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.tenant_users tu
+      WHERE tu.tenant_id = simulation_template_states.tenant_id
+        AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator')
+    )
+  );
+
+CREATE POLICY template_states_update ON public.simulation_template_states
+  FOR UPDATE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.tenant_users tu
+      WHERE tu.tenant_id = simulation_template_states.tenant_id
+        AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.tenant_users tu
+      WHERE tu.tenant_id = simulation_template_states.tenant_id
+        AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator')
+    )
+  );
+
+CREATE POLICY template_states_delete ON public.simulation_template_states
+  FOR DELETE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.tenant_users tu
+      WHERE tu.tenant_id = simulation_template_states.tenant_id
+        AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator')
+    )
+  );
+
+-- ============================================================================
+-- STEP 3: save_template_state() — capture the template tenant's current data
+-- as a new named state. Mirrors save_template_snapshot_v2's auto-discovery
+-- capture loop (already excludes tenant_users/programs admin metadata).
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.save_template_state(
+  p_template_id uuid,
+  p_label text,
+  p_changelog_note text DEFAULT NULL
+) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public'
+AS $_$
+DECLARE
+  v_tenant_id uuid;
+  v_snapshot jsonb := '{}'::jsonb;
+  v_table_record record;
+  v_table_data jsonb;
+  v_count integer;
+  v_total_tables integer := 0;
+  v_total_records integer := 0;
+  v_state_id uuid;
+  v_state_count integer;
+BEGIN
+  SELECT tenant_id INTO v_tenant_id FROM simulation_templates WHERE id = p_template_id;
+  IF v_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Template not found: %', p_template_id;
+  END IF;
+
+  IF p_label IS NULL OR trim(p_label) = '' THEN
+    RAISE EXCEPTION 'A label is required to save a template state';
+  END IF;
+
+  SELECT COUNT(*) INTO v_state_count FROM simulation_template_states WHERE template_id = p_template_id;
+  IF v_state_count >= 10 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Maximum of 10 states per template reached');
+  END IF;
+
+  FOR v_table_record IN
+    SELECT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'tenant_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND t.table_name NOT IN ('tenant_users', 'programs')
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      WHERE t.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  FOR v_table_record IN
+    SELECT DISTINCT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'patient_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND NOT EXISTS (
+      SELECT 1 FROM information_schema.columns c2
+      WHERE c2.table_name = t.table_name
+      AND c2.column_name = 'tenant_id'
+    )
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      JOIN patients p ON p.id = t.patient_id
+      WHERE p.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  v_snapshot := v_snapshot || jsonb_build_object(
+    'snapshot_metadata', jsonb_build_object(
+      'created_at', now(),
+      'created_by', auth.uid(),
+      'tenant_id', v_tenant_id,
+      'total_tables_scanned', v_total_tables,
+      'total_records_captured', v_total_records,
+      'schema_version', '2.0'
+    )
+  );
+
+  BEGIN
+    INSERT INTO simulation_template_states (
+      tenant_id, template_id, label, changelog_note, snapshot_data, sort_order, created_by
+    ) VALUES (
+      v_tenant_id, p_template_id, trim(p_label), p_changelog_note, v_snapshot, v_state_count, auth.uid()
+    )
+    RETURNING id INTO v_state_id;
+  EXCEPTION WHEN unique_violation THEN
+    RETURN jsonb_build_object('success', false, 'message', 'A state with that label already exists for this template');
+  END;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'state_id', v_state_id,
+    'template_id', p_template_id,
+    'label', p_label,
+    'tables_captured', v_total_tables,
+    'records_captured', v_total_records,
+    'message', 'Template state saved successfully'
+  );
+END;
+$_$;
+
+COMMENT ON FUNCTION public.save_template_state(uuid, text, text) IS 'Captures the template tenant''s current clinical data as a new named state (e.g. "Week 2"), independent of the template''s default snapshot_data.';
+
+GRANT EXECUTE ON FUNCTION public.save_template_state(uuid, text, text) TO authenticated;
+
+-- ============================================================================
+-- STEP 4: reset_simulation_for_next_session — add optional p_state_id
 -- ============================================================================
 -- CREATE OR REPLACE with a different parameter list creates a new overload
 -- rather than replacing the old one — drop the old single-arg signature first
@@ -47,7 +295,7 @@ BEGIN
   FROM simulation_active sa
   JOIN simulation_templates st ON st.id = sa.template_id
   WHERE sa.id = p_simulation_id;
-  
+
   IF v_tenant_id IS NULL THEN
     RAISE EXCEPTION 'Simulation not found: %', p_simulation_id;
   END IF;
@@ -287,7 +535,6 @@ BEGIN
     starts_at = NULL,
     ends_at = NULL,
     completed_at = NULL,
-    current_state_id = p_state_id,
     updated_at = NOW()
   WHERE id = p_simulation_id;
   

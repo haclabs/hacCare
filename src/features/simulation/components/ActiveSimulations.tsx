@@ -63,6 +63,8 @@ const ActiveSimulations: React.FC = () => {
     actionLoading,
     printLabelsSimulation, setPrintLabelsSimulation,
     resetModalOpen, setResetModalOpen,
+    resetTemplateStates,
+    selectedResetStateId, setSelectedResetStateId,
     selectedPrimaryCategories, setSelectedPrimaryCategories,
     selectedSubCategories, setSelectedSubCategories,
     editCategoriesModal, setEditCategoriesModal,
@@ -384,6 +386,30 @@ const ActiveSimulations: React.FC = () => {
                   <strong>Reminder:</strong> Click "Complete Simulation" first to save student activities to debrief report before resetting.
                 </p>
               </div>
+              {resetTemplateStates.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Reset into state
+                  </label>
+                  <select
+                    value={selectedResetStateId ?? ''}
+                    onChange={(e) => setSelectedResetStateId(e.target.value || null)}
+                    className="w-full px-3 py-2 text-sm bg-white text-gray-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  >
+                    <option value="">Current / Default</option>
+                    {resetTemplateStates.map((state) => (
+                      <option key={state.id} value={state.id}>
+                        {state.label}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedResetStateId && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      {resetTemplateStates.find(s => s.id === selectedResetStateId)?.changelog_note || 'No changelog note provided.'}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={() => setResetModalOpen(null)}
@@ -444,6 +470,7 @@ const ActiveSimulations: React.FC = () => {
           versionNew={(versionComparisonModal.simulation as any).template_current_version || 1}
           simulationId={versionComparisonModal.simulation.id}
           patientComparison={versionComparisonModal.patientComparison}
+          currentStateLabel={versionComparisonModal.simulation.current_state?.label ?? null}
           onClose={() => setVersionComparisonModal(null)}
           onSyncWithPreservation={handleSyncWithTemplateUpdates}
           onRelaunchRequired={handleRelaunchRequired}
