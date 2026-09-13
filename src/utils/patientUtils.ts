@@ -125,10 +125,14 @@ export const getPatientRiskLevel = (patient: any): 'Low' | 'Medium' | 'High' | '
  * 
  * @param {string} roomNumber - Room number
  * @param {string} bedNumber - Bed identifier (A, B, C, D)
- * @returns {string} Formatted room/bed string (e.g., "302A")
+ * @returns {string} Formatted room/bed string (e.g., "302A", or "TBD-A" for non-numeric rooms)
  */
 export const formatRoomBed = (roomNumber: string, bedNumber: string): string => {
-  return `${roomNumber}${bedNumber}`;
+  if (!roomNumber) return bedNumber || '';
+  if (!bedNumber) return roomNumber;
+  // Non-numeric room numbers (e.g. "TBD") need a separator so they don't run into the bed letter
+  const isNumericRoom = /^\d+$/.test(roomNumber.trim());
+  return isNumericRoom ? `${roomNumber}${bedNumber}` : `${roomNumber}-${bedNumber}`;
 };
 
 /**

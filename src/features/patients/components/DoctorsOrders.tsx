@@ -55,6 +55,11 @@ interface OrderFormData {
   doctor_name: string; // Doctor who created the order (for admin/super admin)
 }
 
+/** The UI prepends "Dr." itself when displaying a name — strip any "Dr"/"Dr." the user typed to avoid "Dr. Dr. Smith" */
+function stripDoctorTitle(name: string): string {
+  return name.trim().replace(/^dr\.?\s*/i, '');
+}
+
 export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   patientId,
   currentUser,
@@ -119,16 +124,18 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       setSubmitting(true);
       setError('');
 
+      const normalizedFormData = { ...formData, ordering_doctor: stripDoctorTitle(formData.ordering_doctor) };
+
       if (editingOrder) {
         // Update existing order
-        const updatedOrder = await updateDoctorsOrder(editingOrder.id, formData);
+        const updatedOrder = await updateDoctorsOrder(editingOrder.id, normalizedFormData);
         setOrders(orders.map(order => order.id === editingOrder.id ? updatedOrder : order));
         setEditingOrder(null);
       } else {
         // Create new order
         const newOrder = await createDoctorsOrder({
           patient_id: patientId,
-          ...formData
+          ...normalizedFormData
         });
         setOrders([newOrder, ...orders]);
         setShowAddForm(false);
@@ -161,7 +168,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       order_date: order.order_date,
       order_time: order.order_time,
       order_text: order.order_text,
-      ordering_doctor: order.ordering_doctor,
+      ordering_doctor: stripDoctorTitle(order.ordering_doctor), // self-heals any previously double-prefixed "Dr. Dr." records
       notes: order.notes || '',
       order_type: order.order_type,
       doctor_name: order.doctor_name || ''
@@ -371,14 +378,14 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                 {/* Ordering Doctor */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ordering Doctor
+                    Ordering Doctor <span className="font-normal text-gray-400">(without "Dr." — added automatically)</span>
                   </label>
                   <input
                     type="text"
                     value={formData.ordering_doctor}
                     onChange={(e) => setFormData({ ...formData, ordering_doctor: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Dr. Smith"
+                    placeholder="A. Patel"
                     required
                   />
                 </div>
@@ -511,7 +518,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
 
                       {/* Doctor */}
                       <div className="mb-2">
-                        <span className="text-sm font-medium text-gray-700">Dr. {order.ordering_doctor}</span>
+                        <span className="text-sm font-medium text-gray-700">Dr. {stripDoctorTitle(order.ordering_doctor)}</span>
                       </div>
 
                       {/* Order text */}

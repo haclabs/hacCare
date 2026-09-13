@@ -22,6 +22,7 @@ DECLARE
   v_tenant_id uuid;
   v_template_id uuid;
   v_snapshot jsonb;
+  v_snapshot_anchor timestamptz;
   v_snapshot_original jsonb;  -- Keep original snapshot with medications
   v_duration_minutes integer;
   v_result jsonb;
@@ -38,12 +39,14 @@ BEGIN
     sa.tenant_id,
     sa.template_id,
     sa.duration_minutes,
-    st.snapshot_data
+    st.snapshot_data,
+    st.snapshot_taken_at
   INTO 
     v_tenant_id,
     v_template_id,
     v_duration_minutes,
-    v_snapshot
+    v_snapshot,
+    v_snapshot_anchor
   FROM simulation_active sa
   JOIN simulation_templates st ON st.id = sa.template_id
   WHERE sa.id = p_simulation_id;
@@ -54,7 +57,7 @@ BEGIN
 
   -- If a named state was requested, use its snapshot instead of the template's default
   IF p_state_id IS NOT NULL THEN
-    SELECT snapshot_data INTO v_snapshot
+    SELECT snapshot_data, updated_at INTO v_snapshot, v_snapshot_anchor
     FROM simulation_template_states
     WHERE id = p_state_id AND template_id = v_template_id;
 
@@ -64,6 +67,11 @@ BEGIN
 
     RAISE NOTICE '📦 Using named state % for reset', p_state_id;
   END IF;
+
+  -- Re-base wall-clock timestamps (I&O, vitals, orders, medication history, etc.)
+  -- so they land relative to THIS reset instead of the template/state's original
+  -- build date.
+  v_snapshot := shift_snapshot_timestamps(v_snapshot, now() - v_snapshot_anchor);
 
   -- Save original snapshot (before we remove medications)
   v_snapshot_original := v_snapshot;
@@ -341,6 +349,6 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
-COMMENT ON FUNCTION reset_simulation_for_next_session(uuid, uuid) IS 'Reset simulation for next session - preserves patient/medication barcodes, sets status to pending (manual start required). Optional p_state_id resets into a named template state instead of the template''s default snapshot.';
+COMMENT ON FUNCTION reset_simulation_for_next_session(uuid, uuid) IS 'Reset simulation for next session - preserves patient/medication barcodes, sets status to pending (manual start required). Optional p_state_id resets into a named template state instead of the template''s default snapshot. Re-bases snapshot wall-clock timestamps to land relative to the reset instant.';
 
 GRANT EXECUTE ON FUNCTION reset_simulation_for_next_session(uuid, uuid) TO authenticated;

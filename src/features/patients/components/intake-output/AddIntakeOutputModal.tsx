@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Droplets, Save } from 'lucide-react';
 import { createIntakeOutputEvent, getCategoryDisplayName } from '../../../../services/clinical/intakeOutputService';
 import type { IoDirection, IoCategory } from '../../../../services/clinical/intakeOutputService';
-import { getCurrentLocalDateTimeString } from '../../../../utils/time';
+import { getCurrentLocalDateTimeString, localDateTimeStringToISO } from '../../../../utils/time';
 import { supabase } from '../../../../lib/api/supabase';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -113,7 +113,10 @@ export const AddIntakeOutputModal: React.FC<AddIntakeOutputModalProps> = ({
         route: formData.route || null,
         description: formData.description || null,
         amount_ml: parseFloat(formData.amount_ml),
-        event_timestamp: formData.event_timestamp,
+        // event_timestamp is a timestamptz column — convert the naive datetime-local
+        // value to a real UTC instant here, or Postgres would assume the DB session's
+        // timezone (UTC) instead of the user's local time.
+        event_timestamp: localDateTimeStringToISO(formData.event_timestamp),
         student_name: formData.student_name || null
       });
 

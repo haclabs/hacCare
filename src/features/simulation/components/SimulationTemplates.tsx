@@ -125,7 +125,7 @@ const SimulationTemplates: React.FC = () => {
       const folderLabel = t.folder || 'Uncategorized';
       if (groupFilter !== 'all' && folderLabel !== groupFilter) return false;
       return true;
-    });
+    }).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
   }, [programFiltered, search, statusFilter, groupFilter]);
 
   /** Unique folders across ALL program-filtered templates (for filter chips) */
@@ -297,6 +297,7 @@ const SimulationTemplates: React.FC = () => {
   };
   
   const handleLaunch = (template: SimulationTemplateWithDetails) => {
+    if (!confirm(`Launch a new simulation from "${template.name}"?`)) return;
     setSelectedTemplate(template);
     setShowLaunchModal(true);
   };
@@ -577,17 +578,8 @@ const SimulationTemplates: React.FC = () => {
                       expandedTemplate === template.id ? 'rotate-180' : ''
                     }`} />
 
-                    {/* Right-side meta — visible at rest, fades on hover */}
-                    <div className="hidden sm:flex items-center gap-4 text-xs text-gray-400 transition-opacity duration-150 group-hover:opacity-0 pointer-events-none shrink-0">
-                      {(() => {
-                        const pts = getSnapshotPatients(template);
-                        return pts.length > 0 ? (
-                          <span className="flex items-center gap-1">
-                            <span>{pts.length}p</span>
-                          </span>
-                        ) : null;
-                      })()}
-                      <span>{template.default_duration_minutes} min</span>
+                    {/* Status + snapshot indicator — compact, always visible on wider screens */}
+                    <div className="hidden lg:flex items-center gap-2 text-xs text-gray-400 shrink-0">
                       {template.snapshot_taken_at ? (
                         <span className="flex items-center gap-1 text-green-600">
                           <Camera className="h-3 w-3" />
@@ -607,10 +599,10 @@ const SimulationTemplates: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Hover action buttons — revealed on hover, absolutely positioned */}
+                    {/* Action buttons — always visible in normal flow (previously hover-only + absolutely positioned, which overlapped the chevron) */}
                     {editingFolderFor === template.id ? (
                       /* Folder assignment inline editor */
-                      <div className="absolute right-4 inset-y-0 flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         <FolderOpen className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
                         <div className="relative">
                           <input
@@ -648,7 +640,7 @@ const SimulationTemplates: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="absolute right-4 inset-y-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         <div className="relative flex items-center">
                           <button
                             onClick={() => handleEditTemplate(template)}
@@ -871,10 +863,10 @@ const SimulationTemplates: React.FC = () => {
               return (
                 <div
                   key={template.id}
-                  className="group rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-150 flex flex-col overflow-hidden"
+                  className="group rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-px transition-all duration-150 flex flex-col"
                 >
-                  {/* Status accent bar */}
-                  <div className={`h-1 flex-shrink-0 ${
+                  {/* Status accent bar — rounds its own top corners since the card can't use overflow-hidden (it would clip the Edit dropdown below) */}
+                  <div className={`h-1 flex-shrink-0 rounded-t-xl ${
                     template.status === 'ready' ? 'bg-green-400'
                     : template.status === 'draft' ? 'bg-amber-400'
                     : 'bg-gray-200'
@@ -1155,6 +1147,7 @@ const SimulationTemplates: React.FC = () => {
       {showCreateModal && (
         <CreateTemplateModal
           onClose={() => setShowCreateModal(false)}
+          existingFolders={existingFolders}
           onSuccess={() => {
             setShowCreateModal(false);
             loadTemplates();

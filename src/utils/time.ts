@@ -186,3 +186,22 @@ export const getCurrentLocalDateTimeString = (): string => {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
+
+/**
+ * Convert a `datetime-local` input value (a naive "wall clock" string with no
+ * zone, e.g. "2026-09-13T14:30") into a correct absolute-instant ISO string
+ * for storage in a `timestamptz` column.
+ *
+ * `new Date(value)` parses a zone-less date-time string as LOCAL time (per the
+ * spec), so calling `.toISOString()` on it yields the correct UTC instant.
+ * Sending the raw `datetime-local` string straight to a `timestamptz` column
+ * instead skips this step entirely — Postgres/PostgREST then interprets those
+ * same digits assuming the DB session's timezone (UTC on Supabase), silently
+ * shifting the stored time by the user's UTC offset.
+ *
+ * @param {string} localDateTimeString - Value from a `datetime-local` input
+ * @returns {string} ISO 8601 string in UTC, safe to store in a timestamptz column
+ */
+export const localDateTimeStringToISO = (localDateTimeString: string): string => {
+  return new Date(localDateTimeString).toISOString();
+};

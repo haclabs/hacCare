@@ -24,6 +24,7 @@ DECLARE
   v_tenant_id uuid;
   v_template_id uuid;
   v_snapshot jsonb;
+  v_snapshot_anchor timestamptz;
   v_duration_minutes integer;
   v_result jsonb;
   v_patient_barcodes jsonb := '{}'::jsonb;
@@ -66,13 +67,15 @@ BEGIN
     sa.template_id,
     sa.duration_minutes,
     st.snapshot_data,
-    st.snapshot_version
+    st.snapshot_version,
+    st.snapshot_taken_at
   INTO 
     v_tenant_id,
     v_template_id,
     v_duration_minutes,
     v_snapshot,
-    v_template_version
+    v_template_version,
+    v_snapshot_anchor
   FROM simulation_active sa
   JOIN simulation_templates st ON st.id = sa.template_id
   WHERE sa.id = p_simulation_id;
@@ -83,7 +86,7 @@ BEGIN
 
   -- If a named state was requested, use its snapshot instead of the template's default
   IF p_state_id IS NOT NULL THEN
-    SELECT snapshot_data INTO v_snapshot
+    SELECT snapshot_data, updated_at INTO v_snapshot, v_snapshot_anchor
     FROM simulation_template_states
     WHERE id = p_state_id AND template_id = v_template_id;
 
@@ -93,6 +96,12 @@ BEGIN
 
     RAISE NOTICE '📦 Using named state % for sync reset', p_state_id;
   END IF;
+
+  -- Re-base wall-clock timestamps (I&O, vitals, orders, medication history/
+  -- next_due, etc.) so they land relative to THIS reset instead of the
+  -- template/state's original build date. Must happen BEFORE the medication
+  -- sync loop below reads next_due/start_date/end_date off v_snapshot.
+  v_snapshot := shift_snapshot_timestamps(v_snapshot, now() - v_snapshot_anchor);
   
   RAISE NOTICE '📋 Simulation Details:';
   RAISE NOTICE '  - Simulation ID: %', p_simulation_id;
@@ -386,4 +395,4 @@ $$;
 
 GRANT EXECUTE ON FUNCTION reset_simulation_with_template_updates(uuid, uuid) TO authenticated;
 
-COMMENT ON FUNCTION reset_simulation_with_template_updates(uuid, uuid) IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged. Optional p_state_id syncs from a named template state instead of the template''s default snapshot.';
+COMMENT ON FUNCTION reset_simulation_with_template_updates(uuid, uuid) IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged. Optional p_state_id syncs from a named template state instead of the template''s default snapshot. Re-bases snapshot wall-clock timestamps to land relative to the reset instant.';

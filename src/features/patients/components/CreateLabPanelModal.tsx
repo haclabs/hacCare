@@ -6,7 +6,7 @@ import { X, Calendar, FileText } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { createLabPanel } from '../../../services/clinical/labService';
 import type { CreateLabPanelInput } from '../types/labs';
-import { getCurrentLocalDateTimeString } from '../../../utils/time';
+import { getCurrentLocalDateTimeString, localDateTimeStringToISO } from '../../../utils/time';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface CreateLabPanelModalProps {
@@ -43,7 +43,13 @@ export const CreateLabPanelModal: React.FC<CreateLabPanelModalProps> = ({
     setLoading(true);
     setError('');
 
-    const { error: err } = await createLabPanel(formData, currentTenant.id);
+    // panel_time is a timestamptz column — convert the naive datetime-local value to
+    // a real UTC instant, or Postgres would assume the DB session's timezone (UTC)
+    // instead of the user's local time.
+    const { error: err } = await createLabPanel(
+      { ...formData, panel_time: localDateTimeStringToISO(formData.panel_time) },
+      currentTenant.id
+    );
 
     if (err) {
       setError('Failed to create lab panel');

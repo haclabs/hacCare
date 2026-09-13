@@ -99,7 +99,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
     if (!formData.first_name?.trim()) newErrors.first_name = 'First name is required';
     if (!formData.last_name?.trim()) newErrors.last_name = 'Last name is required';
     if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required';
-    if (!formData.room_number?.trim()) newErrors.room_number = 'Room number is required';
     if (!formData.diagnosis?.trim()) newErrors.diagnosis = 'Diagnosis is required';
 
     // Emergency contact validation
@@ -355,7 +354,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Room Number *
+                    Room Number
                   </label>
                   <input
                     type="text"
@@ -364,8 +363,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                       errors.room_number ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
-                    placeholder="302"
-                    required
+                    placeholder="302 (leave blank for outpatient)"
                   />
                   {errors.room_number && (
                     <p className="text-red-600 dark:text-red-400 text-xs mt-1">{errors.room_number}</p>

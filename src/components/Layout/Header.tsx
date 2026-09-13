@@ -19,7 +19,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed = false }) => {
   const { profile, signOut } = useAuth();
-  const { currentTenant, programTenants } = useTenant();
+  const { currentTenant, programTenants, loading: tenantLoading } = useTenant();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProgramSwitcher, setShowProgramSwitcher] = useState(false);
@@ -69,21 +69,28 @@ export const Header: React.FC<HeaderProps> = ({ onBarcodeScan, sidebarCollapsed 
 
   // Get current context (Program, Simulation, or Tenant)
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+  // Use tenant_type (not the shared is_simulation flag, which is also true for
+  // template tenants) so a template tenant never gets mislabeled as an active
+  // simulation during the brief window while exiting the editor switches tenants.
   const contextName = currentProgram 
     ? currentProgram.program_name 
     : editingTemplateInfo
       ? editingTemplateInfo.template_name
-      : currentTenant?.is_simulation 
+      : currentTenant?.tenant_type === 'simulation_active'
         ? `Simulation: ${currentTenant.name}`
-        : currentTenant?.name || 'Loading...';
+        : currentTenant?.tenant_type === 'simulation_template'
+          ? `Template: ${currentTenant.name}`
+          : currentTenant?.name || (tenantLoading ? 'Loading...' : 'No Workspace Selected');
 
   const contextType = editingTemplateInfo
     ? editingTemplateInfo.kind === 'patient' ? 'Editing Patient Template' : 'Editing Template'
     : currentProgram 
       ? 'Program Workspace' 
-      : currentTenant?.is_simulation 
+      : currentTenant?.tenant_type === 'simulation_active'
         ? 'Active Simulation'
-        : 'Workspace';
+        : currentTenant?.tenant_type === 'simulation_template'
+          ? 'Template'
+          : 'Workspace';
 
   return (
     <>

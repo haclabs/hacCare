@@ -136,13 +136,19 @@ export const TemplateEditingBanner: React.FC = () => {
       sessionStorage.removeItem('editing_template');
       setEditingInfo(null);
 
-      // Step 3: Exit template tenant (returns to home tenant)
+      // Step 3: Exit template tenant (returns to home tenant) BEFORE navigating —
+      // navigating first let the Templates/Active Simulations tab mount while
+      // currentTenant was still the template tenant, so it fetched stale/wrong-tenant
+      // data that never re-fetched (desync fixed only by a manual click afterward).
       secureLogger.debug('🔙 Banner: Exiting template tenant');
       await exitTemplateTenant();
       secureLogger.debug('✅ Banner: Successfully exited template tenant');
-      
-      // Step 4: Navigate back to the right list screen
-      navigate(isPatientTemplate ? '/app?tab=patient-library' : '/app?tab=simulations');
+
+      // Step 4: Now that tenant context is back to home, land on the list screen.
+      navigate(
+        isPatientTemplate ? '/app?tab=patient-library' : '/app?tab=simulations',
+        isPatientTemplate ? undefined : { state: { initialTab: 'templates' } }
+      );
       
     } catch (error) {
       secureLogger.error('❌ Banner: Error during save/exit:', error);
@@ -172,8 +178,10 @@ export const TemplateEditingBanner: React.FC = () => {
       setStateChangelogNote('');
       sessionStorage.removeItem('editing_template');
       setEditingInfo(null);
+      // Exit the template tenant before navigating so the destination tab doesn't
+      // mount against the (about to be stale) template tenant context.
       await exitTemplateTenant();
-      navigate('/app?tab=simulations');
+      navigate('/app?tab=simulations', { state: { initialTab: 'templates' } });
     } catch (error) {
       secureLogger.error('❌ Banner: Error saving template state:', error);
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to save state'}`);
@@ -203,8 +211,10 @@ export const TemplateEditingBanner: React.FC = () => {
 
       sessionStorage.removeItem('editing_template');
       setEditingInfo(null);
+      // Exit the template tenant before navigating so the destination tab doesn't
+      // mount against the (about to be stale) template tenant context.
       await exitTemplateTenant();
-      navigate('/app?tab=simulations');
+      navigate('/app?tab=simulations', { state: { initialTab: 'templates' } });
     } catch (error) {
       secureLogger.error('❌ Banner: Error discarding template changes:', error);
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to discard changes'}`);
