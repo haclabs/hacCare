@@ -314,9 +314,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             {renderAutoSaveStatus()}
           </div>
 
-          {/* Step content */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+          {/* Step content — no overflow-hidden here, it would clip dropdowns (e.g. medication lookup) */}
+          <div className="bg-white rounded-xl border border-gray-200">
+            <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60 rounded-t-xl">
               <h3 className="text-sm font-semibold text-gray-800">{currentStepData.title}</h3>
               {currentStepData.description && (
                 <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{currentStepData.description}</p>
@@ -367,8 +367,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             );
 
             return (
-              <div key={section.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+              <div key={section.id} className="bg-white rounded-xl border border-gray-200">
+                {/* No overflow-hidden here, it would clip dropdowns (e.g. medication lookup) */}
+                <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60 rounded-t-xl">
                   <h3 className="text-sm font-semibold text-gray-800">{section.title}</h3>
                   {section.description && (
                     <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{section.description}</p>

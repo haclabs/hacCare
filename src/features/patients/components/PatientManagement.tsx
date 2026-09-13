@@ -12,6 +12,7 @@ import PatientTransferModal from './PatientTransferModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { getTenantsForSwitching } from '../../../services/admin/tenantService';
 import { useTenant } from '../../../contexts/TenantContext';
+import { formatRoomBed } from '../../../utils/patientUtils';
 
 /**
  * Patient Management Component
@@ -142,8 +143,8 @@ export const PatientManagement: React.FC = () => {
         bValue = `${b.last_name || ''}, ${b.first_name || ''}`;
         break;
       case 'room':
-        aValue = `${a.room_number || ''}${a.bed_number || ''}`;
-        bValue = `${b.room_number || ''}${b.bed_number || ''}`;
+        aValue = formatRoomBed(a.room_number || '', a.bed_number || '');
+        bValue = formatRoomBed(b.room_number || '', b.bed_number || '');
         break;
       case 'admission':
         aValue = new Date(a.admission_date || '').getTime();
@@ -594,7 +595,7 @@ export const PatientManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900 dark:text-white">
                         <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
-                        {patient.room_number}{patient.bed_number}
+                        {formatRoomBed(patient.room_number, patient.bed_number)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

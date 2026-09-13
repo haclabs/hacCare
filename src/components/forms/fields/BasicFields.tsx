@@ -2,9 +2,11 @@
  * Basic Field Components for Dynamic Forms
  */
 
-import React from 'react';
-import { AlertTriangle, Info } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, Info, Package, Plus, X } from 'lucide-react';
 import { FieldError, FieldWarning } from '../../../types/schema';
+import { fetchMedicationCatalog, CatalogEntry } from '../../../services/clinical/medicationService';
+import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface ProcessedField {
   name: string;
@@ -272,12 +274,150 @@ export const TextAreaField: React.FC<BaseFieldProps> = ({
   );
 };
 
-// Placeholder components for specialized healthcare fields
-export const MedicationLookupField: React.FC<BaseFieldProps> = (props) => {
+// Multi-entry medication list backed by the medications catalog, with a free-text fallback
+// for medications that aren't in the catalog.
+export const MedicationLookupField: React.FC<BaseFieldProps> = ({
+  field,
+  value,
+  onChange,
+  error,
+  warning,
+  disabled = false,
+  required = false
+}) => {
+  const items: string[] = Array.isArray(value) ? value : (typeof value === 'string' && value ? [value] : []);
+  const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMedicationCatalog()
+      .then((data) => { if (!cancelled) setCatalog(data); })
+      .catch((err) => secureLogger.error('Failed to load medication catalog', err))
+      .finally(() => { if (!cancelled) setCatalogLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const filtered = search.trim().length === 0
+    ? []
+    : catalog.filter((e) =>
+        e.name.toLowerCase().includes(search.toLowerCase()) ||
+        (e.generic_name?.toLowerCase().includes(search.toLowerCase()) ?? false)
+      ).slice(0, 8);
+
+  const addMedication = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || items.includes(trimmed)) { setSearch(''); setOpen(false); return; }
+    onChange([...items, trimmed]);
+    setSearch('');
+    setOpen(false);
+  };
+
+  const removeMedication = (name: string) => {
+    onChange(items.filter((m) => m !== name));
+  };
+
   return (
-    <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
-      <p className="text-gray-600">Medication Lookup Field - To be implemented</p>
-      <StringField {...props} />
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-gray-900">
+        {field.title}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      {field.description && <p className="text-xs text-gray-500">{field.description}</p>}
+
+      {items.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {items.map((med) => (
+            <span key={med} className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+              {med}
+              {!disabled && (
+                <button type="button" onClick={() => removeMedication(med)} className="hover:text-blue-900" title={`Remove ${med}`}>
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {!disabled && (
+        <div ref={containerRef} className="relative">
+          <div className="relative flex gap-2">
+            <div className="relative flex-1">
+              <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
+                onFocus={() => setOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); addMedication(search); }
+                }}
+                placeholder={catalogLoading ? 'Loading catalog…' : 'Search catalog or type a medication…'}
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => addMedication(search)}
+              disabled={!search.trim()}
+              className="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 flex-shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
+          </div>
+
+          {open && filtered.length > 0 && (
+            <ul className="absolute z-20 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+              {filtered.map((entry) => (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); addMedication(`${entry.name} ${entry.strength}`.trim()); }}
+                    className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+                  >
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium text-gray-900 truncate">{entry.name}</span>
+                      <span className="block text-xs text-gray-500">{entry.strength} · {entry.formulation}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {open && !catalogLoading && search.trim().length > 0 && filtered.length === 0 && (
+            <div className="absolute z-20 left-0 right-0 mt-1 p-2.5 bg-white border border-gray-200 rounded-lg shadow-lg text-xs text-gray-500">
+              No catalog matches — press Enter or Add to use this as free text
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-center space-x-2 text-red-600 text-sm">
+          <AlertTriangle className="h-4 w-4" />
+          <span>{error.message}</span>
+        </div>
+      )}
+      {warning && (
+        <div className="flex items-center space-x-2 text-yellow-600 text-sm">
+          <Info className="h-4 w-4" />
+          <span>{warning.message}</span>
+        </div>
+      )}
     </div>
   );
 };

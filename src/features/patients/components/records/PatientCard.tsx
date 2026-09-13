@@ -1,8 +1,9 @@
 import React from 'react';
 import { Patient } from '../../../../types';
-import { User, MapPin, AlertTriangle, QrCode, Trash2 } from 'lucide-react';
+import { User, MapPin, AlertTriangle, QrCode, Trash2, Pencil } from 'lucide-react';
 import { isValid } from 'date-fns';
 import { getAvatarById } from '../../../../data/patientAvatars';
+import { formatRoomBed } from '../../../../utils/patientUtils';
 
 /**
  * Patient Card Component
@@ -13,6 +14,7 @@ import { getAvatarById } from '../../../../data/patientAvatars';
  * @param {Patient} patient - Patient data object
  * @param {Function} onClick - Callback function when card is clicked
  * @param {Function} onShowBracelet - Optional callback to show patient bracelet
+ * @param {Function} onEdit - Optional callback to edit demographics (e.g. room/condition/diagnosis while editing a simulation template); omit to hide the action entirely
  * @param {Function} onDelete - Optional callback to remove the patient (e.g. while editing a simulation template); omit to hide the action entirely
  * @returns {JSX.Element} Patient card component
  */
@@ -20,10 +22,11 @@ interface PatientCardProps {
   patient: Patient;
   onClick: () => void;
   onShowBracelet?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet, onDelete }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBracelet, onEdit, onDelete }) => {
   /**
    * Get CSS classes for patient condition styling - clean readable theme
    * @param {Patient['condition']} condition - Patient's current condition
@@ -145,6 +148,18 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
                 <QrCode className="h-4 w-4" />
               </button>
             )}
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all duration-200"
+                title="Edit Patient Details"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
             {onDelete && (
               <button
                 onClick={(e) => {
@@ -170,7 +185,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
         <div>
           <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">Location</p>
           <p className="text-sm font-bold text-gray-900">
-            Room {patient.room_number}{patient.bed_number}
+            Room {formatRoomBed(patient.room_number, patient.bed_number)}
           </p>
         </div>
       </div>

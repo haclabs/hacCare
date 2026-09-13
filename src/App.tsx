@@ -106,8 +106,9 @@ function App() {
   }, [location.pathname, navigate]);
 
   // Get patients using React Query hooks - Use multi-tenant hook for proper filtering
-  const { patients = [], error: dbError, createPatient, deletePatient } = useMultiTenantPatients();
+  const { patients = [], error: dbError, createPatient, updatePatient, deletePatient } = useMultiTenantPatients();
   const [showAddPatientForm, setShowAddPatientForm] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
 
   // Create currentUser object for components that need it
   const currentUser = user && profile ? {
@@ -545,6 +546,7 @@ function App() {
                         key={patient.id}
                         patient={patient}
                         onClick={() => handlePatientSelect(patient)}
+                        onEdit={currentTenant?.tenant_type === 'simulation_template' ? () => setEditingPatient(patient) : undefined}
                         onDelete={currentTenant?.tenant_type === 'simulation_template' ? () => {
                           if (!confirm(`Remove ${patient.first_name} ${patient.last_name} from this simulation template? This cannot be undone.`)) return;
                           deletePatient(patient.id).catch((err) => {
@@ -565,6 +567,17 @@ function App() {
                 onSave={async (newPatient) => {
                   await createPatient(newPatient);
                   setShowAddPatientForm(false);
+                }}
+              />
+            )}
+
+            {editingPatient && (
+              <PatientForm
+                patient={editingPatient}
+                onClose={() => setEditingPatient(null)}
+                onSave={async (updates) => {
+                  await updatePatient({ patientId: editingPatient.id, updates });
+                  setEditingPatient(null);
                 }}
               />
             )}

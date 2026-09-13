@@ -138,7 +138,6 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
     if (!patientFields.first_name.trim()) errors.first_name = 'First name is required';
     if (!patientFields.last_name.trim()) errors.last_name = 'Last name is required';
     if (!patientFields.date_of_birth) errors.date_of_birth = 'Date of birth is required';
-    if (!patientFields.room_number.trim()) errors.room_number = 'Room number is required';
     if (!patientFields.diagnosis.trim()) errors.diagnosis = 'Diagnosis is required';
     if (!patientFields.emergency_contact_name.trim()) errors.emergency_contact_name = 'Emergency contact name is required';
     if (!patientFields.emergency_contact_relationship.trim()) errors.emergency_contact_relationship = 'Relationship is required';
@@ -431,7 +430,7 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Room Number *</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Room Number</label>
                 <input
                   type="text"
                   value={patientFields.room_number}
@@ -439,7 +438,7 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                     fieldErrors.room_number ? 'border-red-300' : 'border-slate-300'
                   }`}
-                  placeholder="302"
+                  placeholder="302 (leave blank for outpatient)"
                 />
                 {fieldErrors.room_number && <p className="text-red-600 text-xs mt-1">{fieldErrors.room_number}</p>}
               </div>

@@ -7,8 +7,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, FileText, AlertCircle, Tag, UserCog } from 'lucide-react';
-import { createSimulationTemplate } from '../../../services/simulation/simulationService';
+import { X, FileText, AlertCircle, Tag, UserCog, Folder } from 'lucide-react';
+import { createSimulationTemplate, updateTemplateFolder } from '../../../services/simulation/simulationService';
 import { getPatientTemplates, addPatientTemplateToSimulationTemplate } from '../../../services/simulation/patientTemplateService';
 import type { PatientTemplate } from '../types/patientTemplate';
 import { getPrograms, type Program } from '../../../services/admin/programService';
@@ -17,12 +17,17 @@ import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { supabase } from '../../../lib/api/supabase';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
+/** Sentinel select value that reveals the "new folder name" text input. */
+const NEW_FOLDER_OPTION = '__new__';
+
 interface CreateTemplateModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  /** Existing folder names, for the create dialog's folder picker. */
+  existingFolders?: string[];
 }
 
-const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSuccess }) => {
+const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSuccess, existingFolders = [] }) => {
   const { currentTenant } = useTenant();
   const { programCodes, canSeeAllPrograms, isInstructor, filterByPrograms } = useUserProgramAccess();
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -34,6 +39,8 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
     description: '',
     default_duration_minutes: 120,
   });
+  const [folderChoice, setFolderChoice] = useState(''); // '' = Uncategorized, NEW_FOLDER_OPTION = show text input, else an existing folder name
+  const [newFolderName, setNewFolderName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,6 +121,22 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
             await addPatientTemplateToSimulationTemplate(patientTemplateId, result.template_id);
           }
         }
+
+        const folderToAssign = folderChoice === NEW_FOLDER_OPTION
+          // Case-insensitively reuse an existing folder's casing so a typo'd "New folder"
+          // entry (e.g. "Health Of Families") can't create a near-duplicate of an existing
+          // one (e.g. "Health of Families").
+          ? existingFolders.find((f) => f.toLowerCase() === newFolderName.trim().toLowerCase()) ?? newFolderName.trim()
+          : folderChoice;
+        if (folderToAssign && result.template_id) {
+          try {
+            await updateTemplateFolder(result.template_id, folderToAssign);
+          } catch (folderError) {
+            secureLogger.error('Error assigning folder to new template:', folderError);
+            // Non-fatal — the template still exists in Uncategorized and can be filed manually.
+          }
+        }
+
         alert(`Template created successfully!\n\nTemplate ID: ${result.template_id}\nTenant ID: ${result.tenant_id}\n\nYou can now build your scenario in this template tenant, then save a snapshot.`);
         onSuccess();
       } else {
@@ -179,6 +202,36 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
               className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
               placeholder="e.g., Cardiac Emergency Response"
             />
+          </div>
+
+          {/* Folder */}
+          <div>
+            <label htmlFor="folder" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <Folder className="inline h-4 w-4 mr-1" />
+              Folder
+            </label>
+            <select
+              id="folder"
+              value={folderChoice}
+              onChange={(e) => setFolderChoice(e.target.value)}
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
+            >
+              <option value="">Uncategorized</option>
+              {existingFolders.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+              <option value={NEW_FOLDER_OPTION}>+ New folder…</option>
+            </select>
+            {folderChoice === NEW_FOLDER_OPTION && (
+              <input
+                type="text"
+                autoFocus
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                className="mt-2 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
+                placeholder="New folder name…"
+              />
+            )}
           </div>
 
           {/* Description */}
