@@ -3,6 +3,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { CATEGORICAL_FLAG_MAP } from '../../features/patients/types/labs';
 import type {
   LabPanel,
   LabResult,
@@ -466,17 +467,21 @@ export async function createLabResult(
 
   const patientSex = patientData?.gender?.toLowerCase() as PatientSex || null;
 
-  // Compute flag
-  const flag = computeLabFlag(
-    input.value,
-    input.ref_low ?? null,
-    input.ref_high ?? null,
-    input.ref_operator || 'between',
-    input.sex_ref || null,
-    patientSex,
-    input.critical_low ?? null,
-    input.critical_high ?? null
-  );
+  // Categorical tests (e.g. urine ketones) have no numeric value to flag from —
+  // look up the flag from the selected option stored in comments instead.
+  const categoricalMap = CATEGORICAL_FLAG_MAP[input.test_code];
+  const flag = categoricalMap
+    ? categoricalMap[input.comments ?? ''] ?? 'normal'
+    : computeLabFlag(
+        input.value,
+        input.ref_low ?? null,
+        input.ref_high ?? null,
+        input.ref_operator || 'between',
+        input.sex_ref || null,
+        patientSex,
+        input.critical_low ?? null,
+        input.critical_high ?? null
+      );
 
   const { data, error } = await supabase
     .from('lab_results')
@@ -513,8 +518,8 @@ export async function updateLabResult(
   updates: Partial<LabResult>,
   patientId: string
 ): Promise<{ error: any }> {
-  // If value changed, recompute flag
-  if (updates.value !== undefined) {
+  // If value or comments changed, recompute flag
+  if (updates.value !== undefined || updates.comments !== undefined) {
     const { data: result } = await supabase
       .from('lab_results')
       .select('*')
@@ -522,24 +527,31 @@ export async function updateLabResult(
       .single();
 
     if (result) {
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('gender')
-        .eq('id', patientId)
-        .single();
+      const categoricalMap = CATEGORICAL_FLAG_MAP[result.test_code];
 
-      const patientSex = patientData?.gender?.toLowerCase() as PatientSex || null;
+      if (categoricalMap) {
+        const selectedOption = updates.comments ?? result.comments ?? '';
+        updates.flag = categoricalMap[selectedOption] ?? 'normal';
+      } else if (updates.value !== undefined) {
+        const { data: patientData } = await supabase
+          .from('patients')
+          .select('gender')
+          .eq('id', patientId)
+          .single();
 
-      updates.flag = computeLabFlag(
-        updates.value ?? result.value,
-        updates.ref_low ?? result.ref_low,
-        updates.ref_high ?? result.ref_high,
-        updates.ref_operator ?? result.ref_operator,
-        updates.sex_ref ?? result.sex_ref,
-        patientSex,
-        updates.critical_low ?? result.critical_low,
-        updates.critical_high ?? result.critical_high
-      );
+        const patientSex = patientData?.gender?.toLowerCase() as PatientSex || null;
+
+        updates.flag = computeLabFlag(
+          updates.value ?? result.value,
+          updates.ref_low ?? result.ref_low,
+          updates.ref_high ?? result.ref_high,
+          updates.ref_operator ?? result.ref_operator,
+          updates.sex_ref ?? result.sex_ref,
+          patientSex,
+          updates.critical_low ?? result.critical_low,
+          updates.critical_high ?? result.critical_high
+        );
+      }
     }
   }
 
