@@ -18,6 +18,31 @@ export type AckScope = 'panel' | 'result';
 
 export type PatientSex = 'male' | 'female' | 'other';
 
+// Tests whose result is a category label rather than a number — no numeric
+// `value` column, so the selection is stored in `comments` and flagging is
+// skipped (flag stays 'normal' since value is left null).
+export const CATEGORICAL_TEST_OPTIONS: Record<string, string[]> = {
+  URINE_KETONES: ['Negative', 'Trace', 'Small', 'Moderate', 'Large'],
+  NEWBORN_SCREEN: ['Normal', 'Abnormal', 'Pending'],
+};
+
+// Flag to apply per categorical option, since computeLabFlag() can't compute
+// one from a null numeric value. Missing option -> 'normal'.
+export const CATEGORICAL_FLAG_MAP: Record<string, Record<string, LabFlag>> = {
+  URINE_KETONES: {
+    Negative: 'normal',
+    Trace: 'abnormal_high',
+    Small: 'abnormal_high',
+    Moderate: 'abnormal_high',
+    Large: 'critical_high',
+  },
+  NEWBORN_SCREEN: {
+    Normal: 'normal',
+    Abnormal: 'critical_high',
+    Pending: 'normal',
+  },
+};
+
 // Sex-specific reference range structure
 export interface SexSpecificRange {
   male?: {

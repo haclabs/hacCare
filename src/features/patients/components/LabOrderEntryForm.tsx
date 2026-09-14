@@ -12,7 +12,9 @@ import {
   getProcedureCategories,
   getProcedureTypes,
   getSourceCategories,
-  getSourceTypes
+  getSourceTypes,
+  getProcedureDefaultSource,
+  OTHER_PROCEDURE_OPTION
 } from '../types/labOrders';
 import { formatDate } from '../../../utils/time';
 
@@ -57,6 +59,7 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
 
   const [procedureTypes, setProcedureTypes] = useState<string[]>([]);
   const [sourceTypes, setSourceTypes] = useState<string[]>([]);
+  const [otherProcedureText, setOtherProcedureText] = useState('');
 
   const handleProcedureCategoryChange = (category: string) => {
     setFormData({
@@ -65,6 +68,25 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
       procedure_type: '' // Reset type when category changes
     });
     setProcedureTypes(getProcedureTypes(category));
+    setOtherProcedureText('');
+  };
+
+  const handleProcedureTypeChange = (type: string) => {
+    setOtherProcedureText('');
+    const defaultSource = getProcedureDefaultSource(type);
+
+    if (defaultSource) {
+      setFormData({
+        ...formData,
+        procedure_type: type,
+        source_category: defaultSource.category,
+        source_type: defaultSource.type
+      });
+      setSourceTypes(getSourceTypes(defaultSource.category));
+      return;
+    }
+
+    setFormData({ ...formData, procedure_type: type });
   };
 
   const handleSourceCategoryChange = (category: string) => {
@@ -89,12 +111,22 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
       return;
     }
 
+    if (formData.procedure_type === OTHER_PROCEDURE_OPTION && !otherProcedureText.trim()) {
+      setError('Please specify the procedure.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
 
+    const submittedProcedureType =
+      formData.procedure_type === OTHER_PROCEDURE_OPTION
+        ? otherProcedureText.trim()
+        : formData.procedure_type;
+
     const { data, error: err } = await createLabOrder(
-      { ...formData, verified_by: user.id },
+      { ...formData, procedure_type: submittedProcedureType, verified_by: user.id },
       currentTenant.id
     );
 
@@ -209,7 +241,7 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
               </label>
               <select
                 value={formData.procedure_type}
-                onChange={(e) => setFormData({ ...formData, procedure_type: e.target.value })}
+                onChange={(e) => handleProcedureTypeChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
@@ -218,6 +250,22 @@ export const LabOrderEntryForm: React.FC<LabOrderEntryFormProps> = ({
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {formData.procedure_type === OTHER_PROCEDURE_OPTION && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Specify Procedure <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={otherProcedureText}
+                onChange={(e) => setOtherProcedureText(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter procedure name"
+                required
+              />
             </div>
           )}
         </div>

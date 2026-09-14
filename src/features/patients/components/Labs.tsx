@@ -11,7 +11,7 @@ import {
   hasUnacknowledgedLabs,
   deleteLabPanel,
 } from '../../../services/clinical/labService';
-import { getLabOrders } from '../../../services/clinical/labOrderService';
+import { getLabOrders, deleteLabOrder } from '../../../services/clinical/labOrderService';
 import type { LabPanel, LabCategory } from '../types/labs';
 import type { LabOrder } from '../types/labOrders';
 import { LAB_CATEGORY_TABS, getStatusLabel, getStatusColorClass } from '../types/labs';
@@ -20,6 +20,7 @@ import { CreateLabPanelModal } from './CreateLabPanelModal';
 import { LabOrderEntryForm } from './LabOrderEntryForm';
 import { LabOrderCard } from './LabOrderCard';
 import { LabOrderLabelModal } from './LabOrderLabelModal';
+import { ConfirmModal } from '../../../components/modals/ConfirmModal';
 import { PatientActionBar } from '../../../components/PatientActionBar';
 import { format24HourDateTime } from '../../../utils/time';
 import { secureLogger } from '../../../lib/security/secureLogger';
@@ -77,6 +78,9 @@ export const Labs: React.FC<LabsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hasNewLabs, setHasNewLabs] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<LabOrder | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   const isAdmin = hasRole('admin') || hasRole('super_admin');
 
@@ -127,6 +131,24 @@ export const Labs: React.FC<LabsProps> = ({
   const handlePanelCreated = () => {
     loadPanels();
     setShowCreateModal(false);
+  };
+
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+
+    setCancellingOrder(true);
+    setCancelError('');
+
+    const { error: err } = await deleteLabOrder(orderToCancel.id);
+
+    setCancellingOrder(false);
+
+    if (err) {
+      setCancelError(err);
+    } else {
+      setOrderToCancel(null);
+      loadLabOrders();
+    }
   };
 
   const handlePanelUpdated = () => {
@@ -311,6 +333,10 @@ export const Labs: React.FC<LabsProps> = ({
                       key={order.id}
                       order={order}
                       onClick={() => setSelectedOrder(order)}
+                      onCancel={() => {
+                        setCancelError('');
+                        setOrderToCancel(order);
+                      }}
                     />
                   ))}
                 </div>
@@ -361,6 +387,20 @@ export const Labs: React.FC<LabsProps> = ({
           patientNumber={patientNumber || patientId}
           patientDOB={patientDOB || ''}
           onClose={() => setSelectedOrder(null)}
+        />
+      )}
+
+      {/* Cancel Lab Order Confirmation */}
+      {orderToCancel && (
+        <ConfirmModal
+          title="Cancel Lab Order"
+          message={`Cancel the "${orderToCancel.procedure_type}" order? This cannot be undone.`}
+          confirmLabel="Cancel Order"
+          cancelLabel="Keep Order"
+          loading={cancellingOrder}
+          error={cancelError}
+          onConfirm={handleCancelOrder}
+          onCancel={() => setOrderToCancel(null)}
         />
       )}
     </div>

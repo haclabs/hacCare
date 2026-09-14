@@ -4,16 +4,17 @@
  */
 
 import React from 'react';
-import { FileText, Clock } from 'lucide-react';
+import { FileText, Clock, Trash2 } from 'lucide-react';
 import type { LabOrder } from '../types/labOrders';
 import { formatDate } from '../../../utils/time';
 
 interface LabOrderCardProps {
   order: LabOrder;
   onClick?: () => void;
+  onCancel?: () => void;
 }
 
-export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick }) => {
+export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick, onCancel }) => {
   const handleClick = () => {
     onClick?.();
   };
@@ -104,6 +105,19 @@ export const LabOrderCard: React.FC<LabOrderCardProps> = ({ order, onClick }) =>
             <span>Ordered: {formatDate(order.created_at)}</span>
           </div>
           <p className="text-sm font-medium text-gray-900 mt-1">By: {order.student_name || order.initials || 'Unknown'}</p>
+          {onCancel && order.status === 'pending' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel();
+              }}
+              className="mt-2 inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-700"
+              title="Cancel order"
+            >
+              <Trash2 className="w-4 h-4" />
+              Cancel
+            </button>
+          )}
         </div>
       </div>
     </div>
