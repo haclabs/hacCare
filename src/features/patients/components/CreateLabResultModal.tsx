@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Search } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { createLabResult, getLabResultRefs } from '../../../services/clinical/labService';
+import { CATEGORICAL_TEST_OPTIONS } from '../types/labs';
 import type { CreateLabResultInput, LabResultRef } from '../types/labs';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -66,11 +67,18 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
     setSearchTerm('');
   };
 
+  const categoricalOptions = selectedRef ? CATEGORICAL_TEST_OPTIONS[selectedRef.test_code] : undefined;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!currentTenant) {
       setError('No tenant selected');
+      return;
+    }
+
+    if (categoricalOptions && !formData.comments?.trim()) {
+      setError('Please select a result');
       return;
     }
 
@@ -193,54 +201,77 @@ export const CreateLabResultModal: React.FC<CreateLabResultModalProps> = ({
                 </div>
               </div>
 
-              {/* Value */}
-              <div className="grid grid-cols-2 gap-3">
+              {categoricalOptions ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Value
+                    Result <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.value || ''}
+                  <select
+                    value={formData.comments || ''}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        value: e.target.value ? parseFloat(e.target.value) : null,
-                      })
+                      setFormData({ ...formData, comments: e.target.value, value: null })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter value"
-                  />
+                    required
+                  >
+                    <option value="">-- Select Result --</option>
+                    {categoricalOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Units
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.units}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  {/* Value */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Value
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.value || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            value: e.target.value ? parseFloat(e.target.value) : null,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter value"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Units
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.units}
+                        readOnly
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                      />
+                    </div>
+                  </div>
 
-              {/* Comments */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Comments (Optional)
-                </label>
-                <textarea
-                  value={formData.comments}
-                  onChange={(e) =>
-                    setFormData({ ...formData, comments: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={2}
-                  placeholder="Any notes about this result..."
-                />
-              </div>
+                  {/* Comments */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Comments (Optional)
+                    </label>
+                    <textarea
+                      value={formData.comments}
+                      onChange={(e) =>
+                        setFormData({ ...formData, comments: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      rows={2}
+                      placeholder="Any notes about this result..."
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
 

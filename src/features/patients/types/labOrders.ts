@@ -12,7 +12,9 @@ export const LAB_PROCEDURES = {
     '24-Hour Urine Collection',
     'Urine for Cytology',
     'Urine for Protein/Creatinine Ratio',
-    'Urine for Drugs of Abuse'
+    'Urine for Drugs of Abuse',
+    'Urine Ketones (dipstick)',
+    'Other (specify)'
   ],
   'Swabs / Cultures': [
     'MRSA Swab (nasal or groin)',
@@ -24,7 +26,8 @@ export const LAB_PROCEDURES = {
     'Vaginal / Cervical Swab',
     'Rectal Swab',
     'Stool for C. difficile Toxin or Culture',
-    'Nasal Swab (Influenza, RSV, etc.)'
+    'Nasal Swab (Influenza, RSV, etc.)',
+    'Other (specify)'
   ],
   'Blood Specimens': [
     'Blood Culture',
@@ -35,19 +38,28 @@ export const LAB_PROCEDURES = {
     'Troponin',
     'Lactate',
     'Type and Screen / Crossmatch',
-    'Venous Blood Gas / Arterial Blood Gas'
+    'Venous Blood Gas / Arterial Blood Gas',
+    'Reticulocyte Count',
+    'CRP (C-Reactive Protein)',
+    'HbA1c (Glycated Hemoglobin)',
+    'Beta-hydroxybutyrate (Blood Ketones)',
+    'Newborn Screening Bloodspot (heelstick)',
+    'Bilirubin (Total/Direct)',
+    'Other (specify)'
   ],
   'Stool Specimens': [
     'Stool for Ova and Parasites',
     'Stool for Occult Blood / FIT Test',
     'Stool for C&S',
-    'Stool for C. difficile Toxin'
+    'Stool for C. difficile Toxin',
+    'Other (specify)'
   ],
   'Sputum / Respiratory Specimens': [
     'Sputum for C&S',
     'Sputum for AFB (Acid-Fast Bacilli / TB)',
     'Sputum Cytology',
-    'Nasopharyngeal Aspirate (for viral testing)'
+    'Nasopharyngeal Aspirate (for viral testing)',
+    'Other (specify)'
   ],
   'Other Body Fluids': [
     'CSF (Cerebrospinal Fluid)',
@@ -55,8 +67,17 @@ export const LAB_PROCEDURES = {
     'Peritoneal / Ascitic Fluid',
     'Synovial Fluid (Joint Aspirate)',
     'Wound Drainage / Exudate',
-    'Pericardial Fluid'
+    'Pericardial Fluid',
+    'Other (specify)'
   ]
+};
+
+// Procedures that should pre-select a specimen source (user can still override)
+export const PROCEDURE_DEFAULT_SOURCE: Record<string, { category: string; type: string }> = {
+  'Newborn Screening Bloodspot (heelstick)': {
+    category: 'Blood Sources',
+    type: 'Capillary (fingerstick or heelstick)'
+  }
 };
 
 // Source categories and their associated collection sites
@@ -129,6 +150,13 @@ export const getSourceCategories = (): string[] => {
 export const getSourceTypes = (category: string): string[] => {
   return LAB_SOURCES[category as keyof typeof LAB_SOURCES] || [];
 };
+
+// Get the default specimen source for a procedure, if one is defined
+export const getProcedureDefaultSource = (procedureType: string) => {
+  return PROCEDURE_DEFAULT_SOURCE[procedureType];
+};
+
+export const OTHER_PROCEDURE_OPTION = 'Other (specify)';
 
 // TypeScript types
 export interface LabOrder {
