@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { updateLabResult } from '../../../services/clinical/labService';
+import { CATEGORICAL_TEST_OPTIONS } from '../types/labs';
 import type { LabResult } from '../types/labs';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -25,8 +26,15 @@ export const EditLabResultModal: React.FC<EditLabResultModalProps> = ({
   const [value, setValue] = useState<number | null>(result.value);
   const [comments, setComments] = useState(result.comments || '');
 
+  const categoricalOptions = CATEGORICAL_TEST_OPTIONS[result.test_code];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (categoricalOptions && !comments.trim()) {
+      setError('Please select a result');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -77,49 +85,74 @@ export const EditLabResultModal: React.FC<EditLabResultModalProps> = ({
           </div>
 
           {/* Value */}
-          <div className="grid grid-cols-2 gap-3">
+          {categoricalOptions ? (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Value
+                Result <span className="text-red-500">*</span>
               </label>
-              <input
-                type="number"
-                step="any"
-                value={value || ''}
-                onChange={(e) =>
-                  setValue(e.target.value ? parseFloat(e.target.value) : null)
-                }
+              <select
+                value={comments}
+                onChange={(e) => {
+                  setComments(e.target.value);
+                  setValue(null);
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter value"
+                required
                 autoFocus
-              />
+              >
+                <option value="">-- Select Result --</option>
+                {categoricalOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Units
-              </label>
-              <input
-                type="text"
-                value={result.units || ''}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-              />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Value
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={value || ''}
+                  onChange={(e) =>
+                    setValue(e.target.value ? parseFloat(e.target.value) : null)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter value"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Units
+                </label>
+                <input
+                  type="text"
+                  value={result.units || ''}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Comments */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Comments (Optional)
-            </label>
-            <textarea
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={2}
-              placeholder="Any notes about this result..."
-            />
-          </div>
+          {!categoricalOptions && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Comments (Optional)
+              </label>
+              <textarea
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={2}
+                placeholder="Any notes about this result..."
+              />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">

@@ -5,11 +5,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus, ChevronDown, Layers, Undo2, X } from 'lucide-react';
+import { Edit, Save, BookOpen, Loader2, FlaskConical, UserPlus, ChevronDown, Layers, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useAuth } from '../../../contexts/auth/useAuth';
-import { saveTemplateSnapshot, saveTemplateState, loadTemplateState, updateTemplateStateSnapshot } from '../../../services/simulation/simulationService';
+import { saveTemplateSnapshot, saveTemplateState, updateTemplateStateSnapshot } from '../../../services/simulation/simulationService';
 import { savePatientTemplateSnapshot } from '../../../services/simulation/patientTemplateService';
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
@@ -38,7 +38,6 @@ export const TemplateEditingBanner: React.FC = () => {
   const [stateLabel, setStateLabel] = useState('');
   const [stateChangelogNote, setStateChangelogNote] = useState('');
   const [savingState, setSavingState] = useState(false);
-  const [discarding, setDiscarding] = useState(false);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
   const { profile } = useAuth();
@@ -191,37 +190,9 @@ export const TemplateEditingBanner: React.FC = () => {
   };
 
   /** Discards live edits by reloading whatever was originally loaded (a named state, or the template's own last-saved snapshot) back into its tenant, then exits without saving. */
-  const handleDiscardChanges = async () => {
-    if (!editingInfo) return;
-    const revertTarget = editingStateId ? `state "${editingStateLabel}"` : 'the template';
-    if (!confirm(
-      `Discard all changes since the last save and exit?\n\n` +
-      `Template editing is live — this reverts ${revertTarget} back to its last saved ` +
-      'version. This cannot be undone.'
-    )) return;
-
-    setDiscarding(true);
-    try {
-      const result = await loadTemplateState(editingInfo.template_id, editingStateId);
-
-      if (!result.success) {
-        alert(`❌ Failed to discard changes:\n\n${result.message}`);
-        return;
-      }
-
-      sessionStorage.removeItem('editing_template');
-      setEditingInfo(null);
-      // Exit the template tenant before navigating so the destination tab doesn't
-      // mount against the (about to be stale) template tenant context.
-      await exitTemplateTenant();
-      navigate('/app?tab=simulations', { state: { initialTab: 'templates' } });
-    } catch (error) {
-      secureLogger.error('❌ Banner: Error discarding template changes:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to discard changes'}`);
-    } finally {
-      setDiscarding(false);
-    }
-  };
+  // Removed: loadTemplateState()/restore_snapshot_to_tenant() delete-and-recreate
+  // patients with brand-new UUIDs, breaking any already-open patient URL — see
+  // CHANGELOG. Re-add only once that restore path can preserve patient IDs.
 
   const handleSeedTestData = async () => {
     if (!editingInfo || !profile) return;
@@ -293,7 +264,7 @@ export const TemplateEditingBanner: React.FC = () => {
             {profile?.role === 'super_admin' && (
               <button
                 onClick={handleSeedTestData}
-                disabled={seeding || saving || discarding}
+                disabled={seeding || saving}
                 title="Seed one QA_VALIDATION test row into every clinical table (dev validation tool)"
                 className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-medium text-sm shadow-md hover:shadow-lg"
               >
@@ -308,7 +279,7 @@ export const TemplateEditingBanner: React.FC = () => {
             <div className="relative flex items-center">
               <button
                 onClick={handleExitTemplate}
-                disabled={saving || discarding}
+                disabled={saving}
                 className={`flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm shadow-md hover:shadow-lg ${
                   isPatientTemplate ? 'rounded-lg' : 'rounded-l-lg'
                 }`}
@@ -330,7 +301,7 @@ export const TemplateEditingBanner: React.FC = () => {
               {!isPatientTemplate && (
                 <button
                   onClick={() => setShowSaveMenu(v => !v)}
-                  disabled={saving || discarding}
+                  disabled={saving}
                   title="More save options"
                   className="flex items-center px-2 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 rounded-r-lg border-l border-white/20 transition-colors shadow-md hover:shadow-lg"
                 >
@@ -352,14 +323,6 @@ export const TemplateEditingBanner: React.FC = () => {
                   >
                     <Layers className="h-3.5 w-3.5 text-purple-600" />
                     Save as New State…
-                  </button>
-                  <button
-                    onClick={() => { setShowSaveMenu(false); handleDiscardChanges(); }}
-                    disabled={discarding}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 border-t border-gray-100"
-                  >
-                    {discarding ? <Loader2 className="h-3.5 w-3.5 animate-spin text-red-600" /> : <Undo2 className="h-3.5 w-3.5 text-red-600" />}
-                    Discard Changes & Exit
                   </button>
                 </div>
               )}
