@@ -5,6 +5,8 @@
  * with appropriate fallbacks and security checks.
  */
 
+import { isValidSupabaseUrl } from '../lib/api/supabaseUrl';
+
 interface EnvironmentConfig {
   // Supabase Configuration
   supabase: {
@@ -37,11 +39,9 @@ const validateEnvironment = (): EnvironmentConfig => {
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
   
   // Validate Supabase configuration
-  const isValidUrl = supabaseUrl && (
-    supabaseUrl.startsWith('https://') && 
-    supabaseUrl.includes('.supabase.co') &&
-    supabaseUrl.length > 30
-  );
+  // Single source of truth for URL shape -- accepts hosted projects and the
+  // local CLI stack. See isValidSupabaseUrl() in lib/api/supabase.ts.
+  const isValidUrl = isValidSupabaseUrl(supabaseUrl);
   
   // Support both legacy JWT keys and new sb_publishable_ format
   const isValidKey = supabaseAnonKey && 
