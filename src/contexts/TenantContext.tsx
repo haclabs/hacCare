@@ -157,15 +157,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               if (user) {
                 secureLogger.debug('🔐 Ensuring simulation-only user has tenant access...');
                 const { error: accessError } = await supabase
-                  .from('tenant_users')
-                  .upsert({
-                    user_id: user.id,
-                    tenant_id: simulationTenantId,
-                    is_active: true,
-                    role: profile?.role || 'nurse'
-                  }, {
-                    onConflict: 'user_id,tenant_id'
-                  });
+                  .rpc('ensure_tenant_access', { p_tenant_id: simulationTenantId });
 
                 if (accessError) {
                   secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
@@ -205,15 +197,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (user) {
               secureLogger.debug('🔐 Ensuring user has tenant access on restore...');
               const { error: accessError } = await supabase
-                .from('tenant_users')
-                .upsert({
-                  user_id: user.id,
-                  tenant_id: simulationTenantId,
-                  is_active: true,
-                  role: profile?.role || 'nurse'
-                }, {
-                  onConflict: 'user_id,tenant_id'
-                });
+                .rpc('ensure_tenant_access', { p_tenant_id: simulationTenantId });
 
               if (accessError) {
                 secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
@@ -249,15 +233,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               if (user) {
                 secureLogger.debug('🔐 Ensuring instructor has tenant access...');
                 const { error: accessError } = await supabase
-                  .from('tenant_users')
-                  .upsert({
-                    user_id: user.id,
-                    tenant_id: simulationTenantId,
-                    is_active: true,
-                    role: profile?.role || 'instructor'
-                  }, {
-                    onConflict: 'user_id,tenant_id'
-                  });
+                  .rpc('ensure_tenant_access', { p_tenant_id: simulationTenantId });
 
                 if (accessError) {
                   secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
@@ -468,15 +444,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (user) {
         secureLogger.debug('🔐 Ensuring user has access to simulation tenant...');
         const { error: accessError } = await supabase
-          .from('tenant_users')
-          .upsert({
-            user_id: user.id,
-            tenant_id: tenantId,
-            is_active: true,
-            role: profile?.role || 'nurse' // Use their actual role, default to nurse for sim-only users
-          }, {
-            onConflict: 'user_id,tenant_id'
-          });
+          .rpc('ensure_tenant_access', { p_tenant_id: tenantId });
 
         if (accessError) {
           secureLogger.warn('⚠️ Could not grant tenant access:', accessError);
@@ -572,15 +540,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (user) {
         secureLogger.debug('🔐 Ensuring user has access to template tenant...');
         const { error: accessError } = await supabase
-          .from('tenant_users')
-          .upsert({
-            user_id: user.id,
-            tenant_id: tenantId,
-            is_active: true,
-            role: profile?.role === 'instructor' ? 'admin' : 'admin' // Grant admin role for editing
-          }, {
-            onConflict: 'user_id,tenant_id'
-          });
+          .rpc('ensure_tenant_access', { p_tenant_id: tenantId });
 
         if (accessError) {
           secureLogger.warn('⚠️ Could not grant tenant access:', accessError);

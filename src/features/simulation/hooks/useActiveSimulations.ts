@@ -236,17 +236,11 @@ export function useActiveSimulations() {
       // Ensure this user has RLS read access to the simulation's tenant so that
       // getStudentActivitiesBySimulation can query clinical tables. Instructors
       // are not added to tenant_users at launch time (only participants are), so
-      // without this upsert all clinical queries return empty arrays for non-super_admin users.
+      // without this grant all clinical queries return empty arrays for non-super_admin users.
       const { data: { user } } = await supabase.auth.getUser();
       if (user && simTenantId) {
         const { error: accessError } = await supabase
-          .from('tenant_users')
-          .upsert({
-            user_id: user.id,
-            tenant_id: simTenantId,
-            is_active: true,
-            role: 'admin'
-          }, { onConflict: 'user_id,tenant_id' });
+          .rpc('ensure_tenant_access', { p_tenant_id: simTenantId });
 
         if (accessError) {
           secureLogger.warn('⚠️ Could not grant simulation tenant access:', accessError);
@@ -321,9 +315,7 @@ export function useActiveSimulations() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase
-          .from('tenant_users')
-          .upsert({ user_id: user.id, tenant_id: tenantId, is_active: true, role: 'admin' },
-            { onConflict: 'user_id,tenant_id' });
+          .rpc('ensure_tenant_access', { p_tenant_id: tenantId });
       }
 
       // Backfill all clinical tables that store student_name AND are scoped by tenant_id.
