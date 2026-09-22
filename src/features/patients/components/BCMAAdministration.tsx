@@ -91,6 +91,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const [overriddenChecks, setOverriddenChecks] = useState<string[]>([]);
   const [studentName, setStudentName] = useState<string>('');
   const [completionLog, setCompletionLog] = useState<unknown>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   // Set BCMA as active when component mounts
   useEffect(() => {
@@ -218,6 +219,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     if (!validationResult || !validationResult.isValid) return;
 
     // Check if glucose reading is required and provided — inline field handles this, allReady gate is sufficient
+    setSubmissionError(null);
 
     try {
       const administrationData = {
@@ -247,7 +249,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       setCurrentStep('complete');
     } catch (error) {
       secureLogger.error('BCMA administration error:', error);
-      onAdministrationComplete(false);
+      // Surface the failure instead of silently closing — a permission/RLS error
+      // otherwise looks identical to the screen "freezing" from the student's view.
+      setSubmissionError(error instanceof Error ? error.message : 'Failed to save administration record. Please try again or contact your instructor.');
     }
   };
 
@@ -655,6 +659,16 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 )}
 
                 {/* ── Sign & Submit ── full width */}
+                {submissionError && (
+                  <div className="col-span-2 rounded-xl border-2 border-red-400 bg-red-50 p-4 flex items-start gap-3">
+                    <X className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-red-800">Could not save administration</p>
+                      <p className="text-sm text-red-700 mt-0.5">{submissionError}</p>
+                      <p className="text-xs text-red-600 mt-1">Ask your instructor to check your access to this simulation, then try again.</p>
+                    </div>
+                  </div>
+                )}
                 <div className={`col-span-2 rounded-xl border-2 p-4 transition-all duration-300 ${
                   allReady ? 'bg-green-50 border-green-400 shadow-md' : 'bg-white border-slate-200'
                 }`}>
