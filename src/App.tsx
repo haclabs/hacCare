@@ -146,7 +146,7 @@ function App() {
    * @param {Patient} patient - The selected patient
    */
   const handlePatientSelect = (patient: Patient) => {
-    navigate(`patient/${patient.id}`);
+    navigate(`/app/patient/${patient.id}`);
   };
 
   /**
@@ -170,7 +170,7 @@ function App() {
         
         const patient = patients.find(p => p.patient_id === patientId);
         if (patient) {
-          navigate(`patient/${patient.id}`);
+          navigate(`/app/patient/${patient.id}`);
         } else {
           secureLogger.warn('Patient not found with exact match, trying flexible search');
           
@@ -181,7 +181,7 @@ function App() {
           );
           
           if (flexibleMatch) {
-            navigate(`patient/${flexibleMatch.id}`);
+            navigate(`/app/patient/${flexibleMatch.id}`);
             return;
           } else {
             // Try matching just the numeric part (for when PT prefix is missing)
@@ -192,7 +192,7 @@ function App() {
             });
             
             if (numericMatch) {
-              navigate(`patient/${numericMatch.id}`);
+              navigate(`/app/patient/${numericMatch.id}`);
               return;
             } else {
               secureLogger.warn('No patient found with any matching method for patient barcode');
@@ -230,7 +230,7 @@ function App() {
         
         // If found in local data, navigate directly
         if (patientWithMedication && foundMedication) {
-          navigate(`/patient/${patientWithMedication.id}`, { 
+          navigate(`/app/patient/${patientWithMedication.id}`, { 
             state: { 
               activeTab: 'medications',
               medicationCategory: foundMedication.category || 'scheduled'
@@ -250,7 +250,7 @@ function App() {
         );
         
         if (numericMatch) {
-          navigate(`/patient/${numericMatch.id}`);
+          navigate(`/app/patient/${numericMatch.id}`);
           return;
         }
         
@@ -263,7 +263,7 @@ function App() {
         
         // If found, navigate to the patient
         if (flexibleMatch) {
-          navigate(`/patient/${flexibleMatch.id}`);
+          navigate(`/app/patient/${flexibleMatch.id}`);
           return;
         }
         
@@ -275,7 +275,7 @@ function App() {
         );
         
         if (anyMatch) {
-          navigate(`/patient/${anyMatch.id}`);
+          navigate(`/app/patient/${anyMatch.id}`);
           return;
         }
         
@@ -297,7 +297,7 @@ function App() {
           );
           
           if (heather) {
-            navigate(`/patient/${heather.id}`, { 
+            navigate(`/app/patient/${heather.id}`, { 
               state: { 
                 activeTab: 'medications',
                 medicationCategory: 'scheduled'
@@ -337,7 +337,7 @@ function App() {
         
         // If found in local data, navigate directly
         if (patientWithMedication && foundMedication) {
-          navigate(`/patient/${patientWithMedication.id}`, { 
+          navigate(`/app/patient/${patientWithMedication.id}`, { 
             state: { 
               activeTab: 'medications',
               medicationCategory: foundMedication.category || 'scheduled'
@@ -353,7 +353,7 @@ function App() {
             const fullBarcodeResult = await getPatientByMedicationId(barcode);
             
             if (fullBarcodeResult) {
-              navigate(`/patient/${fullBarcodeResult.patientId}`, { 
+              navigate(`/app/patient/${fullBarcodeResult.patientId}`, { 
                 state: { 
                   activeTab: 'medications',
                   medicationCategory: 'scheduled'
@@ -364,7 +364,7 @@ function App() {
           }
           
           if (result) {
-            navigate(`/patient/${result.patientId}`, { 
+            navigate(`/app/patient/${result.patientId}`, { 
               state: { 
                 activeTab: 'medications',
                 medicationCategory: 'scheduled'
@@ -382,7 +382,7 @@ function App() {
               );
               
               if (heather) {
-                navigate(`/patient/${heather.id}`, { 
+                navigate(`/app/patient/${heather.id}`, { 
                   state: { 
                     activeTab: 'medications',
                     medicationCategory: 'scheduled'
@@ -401,7 +401,7 @@ function App() {
           // Try to find patient with this numeric ID
           const numericMatch = patients.find(p => p.patient_id === `PT${barcode}` || p.patient_id === barcode);
           if (numericMatch) {
-            navigate(`/patient/${numericMatch.id}`);
+            navigate(`/app/patient/${numericMatch.id}`);
             return;
           }
           
@@ -414,7 +414,7 @@ function App() {
           });
           
           if (flexibleMatch) {
-            navigate(`/patient/${flexibleMatch.id}`);
+            navigate(`/app/patient/${flexibleMatch.id}`);
             return;
           }
         }
@@ -428,7 +428,7 @@ function App() {
         );
         
         if (lastResortMatch) {
-          navigate(`/patient/${lastResortMatch.id}`);
+          navigate(`/app/patient/${lastResortMatch.id}`);
           return;
         }
       }
