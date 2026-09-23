@@ -9,6 +9,7 @@
 
 import { supabase } from '../../../lib/api/supabase';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 import type {
   TemplateExportPackage,
   TemplateImportOptions,
@@ -197,11 +198,11 @@ export async function importSimulationTemplate(
       tenant_id: tenantId,
       warnings: validation.warnings,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error importing template:', error);
     return {
       success: false,
-      error: error.message || 'Unknown error during import',
+      error: getErrorMessage(error) || 'Unknown error during import',
     };
   }
 }
@@ -265,11 +266,11 @@ export async function importTemplateFromFile(
     const result = await importSimulationTemplate(exportPackage, options);
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error importing template from file:', error);
     return {
       success: false,
-      error: error.message || 'Failed to import template',
+      error: getErrorMessage(error) || 'Failed to import template',
     };
   }
 }

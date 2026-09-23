@@ -78,7 +78,7 @@ export async function getSimulationHistory(
     );
 
     return enrichedData as SimulationHistoryWithDetails[];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching simulation history:', error);
     throw error;
   }
@@ -99,7 +99,7 @@ export async function getSimulationHistoryRecord(
 
     if (error) throw error;
     return data as SimulationHistoryWithDetails;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching simulation history record:', error);
     return null;
   }
@@ -116,7 +116,7 @@ export async function saveSimulationDebrief(params: SaveDebriefParams): Promise<
       .eq('simulation_id', params.simulation_id);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error saving simulation debrief:', error);
     throw error;
   }
@@ -160,7 +160,7 @@ export async function archiveSimulationHistory(historyId: string): Promise<void>
 
     if (error) throw error;
     secureLogger.debug(`Archived to folder: ${archiveFolder}`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error archiving simulation history:', error);
     throw error;
   }
@@ -177,7 +177,7 @@ export async function unarchiveSimulationHistory(historyId: string): Promise<voi
       .eq('id', historyId);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error unarchiving simulation history:', error);
     throw error;
   }
@@ -213,7 +213,7 @@ export async function deleteSimulationHistory(historyId: string): Promise<void> 
       .eq('id', historyId);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error deleting simulation history:', error);
     throw error;
   }
@@ -239,7 +239,7 @@ export async function logSimulationActivity(
       .insert({ simulation_id: simulationId, user_id: user.id, ...entry });
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error logging simulation activity:', error);
   }
 }
@@ -259,7 +259,7 @@ export async function getSimulationActivityLog(
 
     if (error) throw error;
     return (data || []) as SimulationActivityLog[];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching simulation activity log:', error);
     throw error;
   }

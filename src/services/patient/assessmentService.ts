@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 /**
  * Assessment Service
@@ -125,9 +126,9 @@ export const createAssessment = async (assessment: PatientAssessment): Promise<P
 
     secureLogger.debug('Assessment saved successfully:', savedAssessment);
     return savedAssessment;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error creating assessment:', error);
-    throw new Error(`Failed to create assessment: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to create assessment: ${getErrorMessage(error) || 'Unknown error'}`);
   }
 };
 
@@ -206,7 +207,7 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
 
     secureLogger.debug(`Fetched ${assessments.length} assessments for patient ${patientId}`);
     return assessments;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching assessments:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
   }
@@ -259,9 +260,9 @@ export const updateAssessment = async (assessmentId: string, updates: Partial<Pa
 
     secureLogger.debug('Assessment updated successfully:', updatedAssessment);
     return updatedAssessment;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error updating assessment:', error);
-    throw new Error(`Failed to update assessment: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to update assessment: ${getErrorMessage(error) || 'Unknown error'}`);
   }
 };
 
@@ -283,8 +284,8 @@ export const deleteAssessment = async (assessmentId: string): Promise<void> => {
     }
 
     secureLogger.debug('Assessment deleted successfully');
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error deleting assessment:', error);
-    throw new Error(`Failed to delete assessment: ${error.message || 'Unknown error'}`);
+    throw new Error(`Failed to delete assessment: ${getErrorMessage(error) || 'Unknown error'}`);
   }
 };

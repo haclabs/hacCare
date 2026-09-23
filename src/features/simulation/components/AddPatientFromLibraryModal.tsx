@@ -11,6 +11,7 @@ import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { getPatientTemplates, addPatientTemplateToSimulationTemplate } from '../../../services/simulation/patientTemplateService';
 import type { PatientTemplate } from '../types/patientTemplate';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 interface AddPatientFromLibraryModalProps {
   simulationTemplateId: string;
@@ -61,9 +62,9 @@ export const AddPatientFromLibraryModal: React.FC<AddPatientFromLibraryModalProp
       }
       setAddedIds(prev => [...prev, patientTemplate.id]);
       queryClient.invalidateQueries({ queryKey: ['patients', currentTenant?.id] });
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error adding patient template to simulation template:', err);
-      setError(err?.message || 'Failed to add patient');
+      setError(getErrorMessage(err) || 'Failed to add patient');
     } finally {
       setAddingId(null);
     }

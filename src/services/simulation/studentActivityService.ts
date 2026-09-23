@@ -1430,7 +1430,7 @@ export async function getStudentActivitiesBySimulation(
     }
     
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching student activities:', error);
     throw error;
   }
