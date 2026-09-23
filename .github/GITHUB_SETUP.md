@@ -7,7 +7,6 @@ This document outlines the recommended GitHub repository settings for hacCare.
 - [x] Dependabot for automated dependency updates
 - [x] CodeQL security scanning
 - [x] CI/CD workflow for testing and linting
-- [x] PR templates
 - [x] Issue templates
 - [x] Netlify auto-deployment on main branch
 
