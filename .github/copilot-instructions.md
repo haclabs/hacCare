@@ -99,7 +99,8 @@ npm run build                  # Production build with Terser minification
 npm run preview                # Preview production build
 
 # Code Quality
-npm run lint                   # ESLint (no auto-fix)
+npm run lint                   # ESLint, --max-warnings 0 (fails on the current 345 warnings)
+npm run lint:ci                # ESLint gating on errors only — what CI runs
 npm run lint:fix               # ESLint with --fix
 npm run type-check             # TypeScript compilation check (no emit)
 
@@ -111,7 +112,18 @@ npm run test:coverage          # Coverage report
 npm run supabase:types         # Regenerate TypeScript types from Supabase schema
 ```
 
-**Database migrations**: Place migration files in `database/migrations/` (PREFERRED LOCATION). Never run `supabase migration` commands directly.
+**Database migrations**: Place new migration files in **`supabase/migrations/`**. That is the only
+directory `supabase db push` reads — a migration placed anywhere else silently never deploys. This
+is not hypothetical: `reset_simulation_with_template_updates` went months without clearing
+`patient_intake_output_events` partly because its fix sat in the wrong directory.
+
+`database/migrations/history/` is a record of changes applied by hand before this convention. Nothing
+reads it and nothing re-runs it — several entries are superseded, so replaying them would move the
+schema backwards. Do not add to it.
+
+Deploy with `supabase db push` (check `supabase migration list --linked` first). Editing a `.sql`
+file under `database/functions/` changes nothing in the live database; Postgres runs its own compiled
+copy, so any change to a deployed function needs a migration doing `CREATE OR REPLACE FUNCTION`.
 
 ### Feature Folder Structure
 ```

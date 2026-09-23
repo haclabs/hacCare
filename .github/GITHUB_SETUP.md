@@ -7,7 +7,6 @@ This document outlines the recommended GitHub repository settings for hacCare.
 - [x] Dependabot for automated dependency updates
 - [x] CodeQL security scanning
 - [x] CI/CD workflow for testing and linting
-- [x] PR templates
 - [x] Issue templates
 - [x] Netlify auto-deployment on main branch
 
@@ -65,11 +64,23 @@ If you're working alone, you can:
 
 ### General
 
-**Pull Requests:**
-- [x] Allow squash merging (clean history)
-- [x] Allow merge commits (preserves branch history)
-- [ ] Allow rebase merging (linear history, optional)
-- [x] Automatically delete head branches (cleanup merged PRs)
+**Pull Requests:** (verified against the live repo 2026-09-22)
+- [x] Allow squash merging — the default in practice
+- [x] Allow rebase merging
+- [~] Allow merge commits — enabled at repo level, but the `main` ruleset
+      **requires linear history**, so GitHub offers only *Squash* and *Rebase*
+      on PRs into `main`. Do not expect a merge-commit option there.
+- [x] Automatically delete head branches — **turned on 2026-09-22.** It was off
+      before that, which orphaned a stacked PR: #405 merged into an
+      already-squash-merged parent branch, and GitHub reported both PRs as
+      MERGED while only one reached `develop`. With this on, GitHub
+      auto-retargets a child PR when its parent merges.
+
+**Consequence of linear history + squash:** after every `develop` → `main`
+merge, `develop` diverges from `main` in history even when the content is
+identical. Merge `main` back into `develop` afterwards, or the next PR reports
+phantom conflicts. Judge whether something shipped by diffing content
+(`git diff origin/main origin/develop`), never by commit counts.
 
 ### Security
 
@@ -95,7 +106,14 @@ Add the following secrets (if not already set):
 1. `VITE_SUPABASE_URL` - Your Supabase project URL
 2. `VITE_SUPABASE_ANON_KEY` - Your Supabase anon/public key
 
-**Note:** These are only needed if you want the CI build to succeed. Since Netlify handles your deployments with its own env vars, CI builds can fail without affecting production.
+**Note:** the build step falls back to placeholder values when these are unset,
+so CI passes without them and Netlify supplies the real values at deploy time.
+
+This no longer means CI failures are harmless. As of 2026-09-22 every step
+blocks — lint, type-check, tests, `npm audit --audit-level=high` and both Snyk
+scans. `ci.yml` contains no `continue-on-error`. Before that, lint and tests
+were advisory and the type check was a no-op that checked zero files, so a
+green tick meant very little.
 
 ---
 
