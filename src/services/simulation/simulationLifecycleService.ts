@@ -39,7 +39,7 @@ export async function launchSimulation(
     if (error) throw error;
     secureLogger.debug('Simulation launched successfully:', data);
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error launching simulation:', error);
     throw error;
   }
@@ -117,7 +117,7 @@ export async function getActiveSimulations(
         template_running_version: syncedVersion,
       };
     }) as SimulationActiveWithDetails[];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching active simulations:', error);
     throw error;
   }
@@ -154,7 +154,7 @@ export async function getActiveSimulation(
       is_expired: timeRemainingMinutes === 0 && data.status === 'running',
       participant_count: data.participants?.length || 0,
     } as SimulationActiveWithDetails;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching active simulation:', error);
     return null;
   }
@@ -181,7 +181,7 @@ export async function getUserAccessibleSimulations(): Promise<SimulationActiveWi
 
     if (error) throw error;
     return (data || []) as SimulationActiveWithDetails[];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching user accessible simulations:', error);
     return [];
   }
@@ -205,7 +205,7 @@ export async function updateSimulationStatus(
       .eq('id', simulationId);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error updating simulation status:', error);
     throw error;
   }
@@ -249,7 +249,7 @@ export async function resetSimulationForNextSession(
 
     secureLogger.debug('Reset completed with barcode preservation:', data);
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error resetting simulation:', error);
     throw error;
   }
@@ -268,7 +268,7 @@ export async function resetSimulationToTemplate(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error resetting simulation to template:', error);
     throw error;
   }
@@ -312,7 +312,7 @@ export async function resetSimulationWithTemplateUpdates(
 
     secureLogger.debug('Reset with template updates completed:', data);
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error resetting simulation with template updates:', error);
     throw error;
   }
@@ -335,7 +335,7 @@ export async function completeSimulation(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error completing simulation:', error);
     throw error;
   }
@@ -356,7 +356,7 @@ export async function deleteSimulation(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error deleting simulation:', error);
     throw error;
   }
@@ -371,7 +371,7 @@ export async function checkExpiredSimulations(): Promise<SimulationFunctionResul
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error checking expired simulations:', error);
     throw error;
   }
@@ -401,7 +401,7 @@ export async function addSimulationParticipants(
 
     const { error } = await supabase.from('simulation_participants').insert(records);
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error adding simulation participants:', error);
     throw error;
   }
@@ -418,7 +418,7 @@ export async function removeSimulationParticipant(participantId: string): Promis
       .eq('id', participantId);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error removing simulation participant:', error);
     throw error;
   }
@@ -439,7 +439,7 @@ export async function updateParticipantAccess(simulationId: string): Promise<voi
       .eq('user_id', user.id);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error updating participant access:', error);
   }
 }
@@ -467,7 +467,7 @@ export async function getUserSimulationAssignments(userId: string): Promise<any[
 
     if (error) throw error;
     return data || [];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error getting user simulation assignments:', error);
     throw error;
   }

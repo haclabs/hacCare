@@ -6,6 +6,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 export interface InviteUserParams {
   email: string;
@@ -37,8 +38,8 @@ export async function inviteUser(
     }
 
     return { data: { userId: data.userId, isExistingUser: !!data.isExistingUser }, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Unexpected error inviting user', error);
-    return { data: null, error: error?.message || 'Failed to send invitation email' };
+    return { data: null, error: getErrorMessage(error) || 'Failed to send invitation email' };
   }
 }

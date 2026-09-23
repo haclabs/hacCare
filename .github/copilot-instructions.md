@@ -99,7 +99,8 @@ npm run build                  # Production build with Terser minification
 npm run preview                # Preview production build
 
 # Code Quality
-npm run lint                   # ESLint (no auto-fix)
+npm run lint                   # ESLint, --max-warnings 0 (fails on the current 345 warnings)
+npm run lint:ci                # ESLint gating on errors only — what CI runs
 npm run lint:fix               # ESLint with --fix
 npm run type-check             # TypeScript compilation check (no emit)
 
@@ -111,7 +112,18 @@ npm run test:coverage          # Coverage report
 npm run supabase:types         # Regenerate TypeScript types from Supabase schema
 ```
 
-**Database migrations**: Place migration files in `database/migrations/` (PREFERRED LOCATION). Never run `supabase migration` commands directly.
+**Database migrations**: Place new migration files in **`supabase/migrations/`**. That is the only
+directory `supabase db push` reads — a migration placed anywhere else silently never deploys. This
+is not hypothetical: `reset_simulation_with_template_updates` went months without clearing
+`patient_intake_output_events` partly because its fix sat in the wrong directory.
+
+`database/migrations/history/` is a record of changes applied by hand before this convention. Nothing
+reads it and nothing re-runs it — several entries are superseded, so replaying them would move the
+schema backwards. Do not add to it.
+
+Deploy with `supabase db push` (check `supabase migration list --linked` first). Editing a `.sql`
+file under `database/functions/` changes nothing in the live database; Postgres runs its own compiled
+copy, so any change to a deployed function needs a migration doing `CREATE OR REPLACE FUNCTION`.
 
 ### Feature Folder Structure
 ```
@@ -218,7 +230,7 @@ CREATE POLICY tenants_instructors_see_program_tenants
 ```
 
 **Critical Files:**
-- [database/migrations/20260127000000_implement_program_tenants.sql](../database/migrations/20260127000000_implement_program_tenants.sql) - Full migration
+- [database/migrations/history/20260127000000_implement_program_tenants.sql](../database/migrations/history/20260127000000_implement_program_tenants.sql) - Full migration
 - [src/contexts/TenantContext.tsx](../src/contexts/TenantContext.tsx) - Program tenant switching logic
 - [src/services/admin/programService.ts](../src/services/admin/programService.ts) - `getUserProgramTenants()`, `createProgramTenant()`
 - [src/hooks/useUserProgramAccess.ts](../src/hooks/useUserProgramAccess.ts) - Program filtering logic
@@ -386,7 +398,7 @@ if (Object.keys(vitalData).length <= 2) {
 - ✅ Service layer validates and rejects empty vital submissions (at least one required)
 
 **Migration Status:**
-- Database migration created: `database/migrations/20260323000000_make_patient_vitals_nullable.sql`
+- Database migration created: `database/migrations/history/20260323000000_make_patient_vitals_nullable.sql`
 - TypeScript types need regeneration after migration runs: `npm run supabase:types`
 - Test with newborn patient (0-28 days) entering only respiratory rate (e.g., 70)
 
@@ -452,7 +464,7 @@ END IF;
 - `20260323000004_revert_restore_snapshot_fix.sql` - Revert migration for safety
 
 **Critical Files:**
-- [database/migrations/20260323000005_fix_empty_array_handling.sql](../database/migrations/20260323000005_fix_empty_array_handling.sql) - Main fix
+- [database/migrations/history/20260323000005_fix_empty_array_handling.sql](../database/migrations/history/20260323000005_fix_empty_array_handling.sql) - Main fix
 - [database/functions/restore_snapshot_to_tenant.sql](../database/functions/restore_snapshot_to_tenant.sql) - Function being fixed
 
 **Common Issues:**
@@ -581,7 +593,7 @@ const filteredTemplates = filterByPrograms(templates);
 - Allows creating/editing programs and assigning users to programs
 
 **Critical Files:**
-- [database/migrations/20260126000000_add_programs_and_roles.sql](../database/migrations/20260126000000_add_programs_and_roles.sql) - Initial schema
+- [database/migrations/history/20260126000000_add_programs_and_roles.sql](../database/migrations/history/20260126000000_add_programs_and_roles.sql) - Initial schema
 - [src/services/admin/programService.ts](../src/services/admin/programService.ts) - CRUD operations
 - [src/features/admin/components/users/UserForm.tsx](../src/features/admin/components/users/UserForm.tsx) - Program assignment checkboxes
 - [database/functions/update_user_profile_admin.sql](../database/functions/update_user_profile_admin.sql) - SECURITY DEFINER function for role updates
@@ -604,7 +616,7 @@ See [src/App.tsx](../src/App.tsx) lines 69-81.
 ### RLS Infinite Recursion
 **Problem**: RLS policies that query the same table cause infinite recursion.
 **Solution**: Use `SECURITY DEFINER` functions or explicit `security_invoker = false` on policies.
-Example: [database/migrations/20251117022000_emergency_fix_device_assessments_rls.sql](../database/migrations/20251117022000_emergency_fix_device_assessments_rls.sql)
+Example: [database/migrations/history/20251117022000_emergency_fix_device_assessments_rls.sql](../database/migrations/history/20251117022000_emergency_fix_device_assessments_rls.sql)
 
 ### Patient Creation Race Conditions
 Patient creation across tenants can cause duplicate barcodes. Always use:

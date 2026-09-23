@@ -4,7 +4,7 @@
  * ===========================================================================
  * CRUD for the Knowledge Base's embedded Scribe walkthroughs.
  * Reads are open to any authenticated user; writes are restricted to
- * super_admin by RLS (see database/migrations/20260831000000_create_kb_walkthroughs.sql).
+ * super_admin by RLS (see database/migrations/history/20260831000000_create_kb_walkthroughs.sql).
  * ===========================================================================
  */
 

@@ -6,6 +6,10 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
+    /* Path alias -- must mirror the `resolve.alias` in vite.config.ts.
+       Without this, `@/x` imports build and run fine but fail type-check. */
+    "paths": { "@/*": ["./src/*"] },
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

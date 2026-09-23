@@ -63,7 +63,7 @@ export async function exportSimulationTemplate(
     };
 
     return exportPackage;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error exporting template:', error);
     throw error;
   }
@@ -102,7 +102,7 @@ export async function downloadTemplateExport(
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error downloading template export:', error);
     throw error;
   }
@@ -159,7 +159,7 @@ export async function getExportSummary(templateId: string): Promise<{
       table_count: tableCount,
       record_count: recordCount,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error getting export summary:', error);
     throw error;
   }

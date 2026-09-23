@@ -81,7 +81,7 @@ export const createBowelRecord = async (record: BowelRecord): Promise<BowelRecor
 
     secureLogger.debug('Bowel record created successfully:', data);
     return data as BowelRecord;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error in createBowelRecord:', error);
     throw error;
   }
@@ -109,7 +109,7 @@ export const fetchPatientBowelRecords = async (patientId: string): Promise<Bowel
 
     secureLogger.debug(`Fetched ${data?.length || 0} bowel records for patient ${patientId}`);
     return data || [];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error in fetchPatientBowelRecords:', error);
     return []; // Return empty array instead of throwing to prevent UI crashes
   }
@@ -136,7 +136,7 @@ export const updateBowelRecord = async (recordId: string, updates: Partial<Bowel
 
     secureLogger.debug('Bowel record updated successfully:', data);
     return data as BowelRecord;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error in updateBowelRecord:', error);
     throw error;
   }
@@ -160,7 +160,7 @@ export const deleteBowelRecord = async (recordId: string): Promise<void> => {
     }
 
     secureLogger.debug('Bowel record deleted successfully');
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error in deleteBowelRecord:', error);
     throw error;
   }

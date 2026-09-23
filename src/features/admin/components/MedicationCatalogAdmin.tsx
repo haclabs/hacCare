@@ -17,6 +17,7 @@ import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 import type { CatalogEntry } from '../../patients/components/mar/CatalogMedicationPicker';
 import { BarcodeLabelSheetModal, type BarcodeLabelItem } from './BarcodeLabelSheetModal';
 import { SmallVialLabelSheetModal } from './SmallVialLabelSheetModal';
+import { getErrorCode, getErrorMessage } from '@/lib/errors';
 
 const ROUTES = [
   { value: 'oral',         label: 'Oral' },
@@ -212,12 +213,12 @@ export const MedicationCatalogAdmin: React.FC = () => {
 
       await load();
       setTimeout(() => { setShowModal(false); setSuccess(''); }, 1200);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Catalog save error', err);
-      if (err?.code === '23505') {
+      if (getErrorCode(err) === '23505') {
         setError(`Barcode "${form.barcode.toUpperCase()}" is already in use`);
       } else {
-        setError(err?.message || 'Save failed');
+        setError(getErrorMessage(err) || 'Save failed');
       }
     } finally {
       setSubmitting(false);

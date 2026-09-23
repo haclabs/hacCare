@@ -26,16 +26,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Gates on errors. The codebase currently carries 424 lint warnings, so
+      # `npm run lint` (--max-warnings 0) would fail; lint:ci omits that cap.
+      # Ratchet the warnings down and then switch this to `npm run lint`.
       - name: Run linter
-        run: npm run lint
-        continue-on-error: true
+        run: npm run lint:ci
 
+      # Must be `npm run type-check`, NOT a bare `tsc --noEmit`. The root
+      # tsconfig.json is a solution file with "files": [], so bare tsc checks
+      # ZERO files and always exits 0. Vite does not type-check either
+      # (esbuild strips types), so this step is the only thing standing
+      # between a type error and production.
       - name: Type check
-        run: npx tsc --noEmit --skipLibCheck
+        run: npm run type-check
 
       - name: Run tests
         run: npm test
-        continue-on-error: true
         
       - name: Build
         run: npm run build
@@ -63,15 +69,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Fails the build on high or critical advisories. There are currently
+      # zero vulnerabilities at any severity, so this blocks regressions
+      # rather than existing debt. The step this replaced only ever printed
+      # a ::warning:: and could never fail, which made a required check
+      # that always passed.
       - name: Run security audit
         run: npm audit --audit-level=high
-        continue-on-error: true
-
-      - name: Check for vulnerable dependencies
-        run: |
-          if npm audit --audit-level=critical | grep -q "found"; then
-            echo "::warning::Critical vulnerabilities found in dependencies"
-          fi
 
   snyk:
     name: Snyk Security Scan
@@ -92,22 +96,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Blocking as of 2026-09-22. The note this replaced said "don't block PRs
+      # until you've triaged existing issues" -- that is now done: code scanning
+      # shows 0 open alerts (38 fixed, 4 dismissed as false positives). Turning
+      # it on at zero costs nothing today and catches the next regression.
+      #
+      # FAILURE MODE: this now fails the build on a Snyk outage, an expired
+      # SNYK_TOKEN, or a free-plan test-quota exhaustion -- not only on a real
+      # finding. If PRs start blocking for one of those reasons, restore
+      # `continue-on-error: true` here rather than merging around it, and rely
+      # on the SARIF upload plus the code-scanning ruleset for enforcement.
       - name: Run Snyk to check for dependency vulnerabilities
         uses: snyk/actions/node@master
-        continue-on-error: true  # Don't block PRs until you've triaged existing issues
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high --sarif-file-output=snyk-deps.sarif
 
+      # --severity-threshold=high matches the dependency scan above. Without it
+      # this step exits non-zero on ANY finding including LOW, which blocked
+      # PR #407 on two MEDIUMs that had already been dismissed as false
+      # positives in GitHub code scanning (DOMXSS in ImageAnnotation.tsx,
+      # NoCryptoTimingAttacks in SetNewPassword.tsx).
+      #
+      # Worth knowing: GitHub-side dismissals do NOT reach the Snyk CLI. Snyk
+      # only honours ignores recorded on its own side (a .snyk policy file or
+      # the Snyk UI), so anything dismissed in the Security tab will still be
+      # re-reported here. Medium and low findings continue to reach the
+      # Security tab through the SARIF upload below -- they just no longer
+      # block the merge.
       - name: Run Snyk Code (SAST) scan
         uses: snyk/actions/node@master
-        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
-          args: --sarif-file-output=snyk-code.sarif
+          args: --severity-threshold=high --sarif-file-output=snyk-code.sarif
 
       - name: Upload Snyk dependency results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4.38.1

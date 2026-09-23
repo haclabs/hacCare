@@ -74,7 +74,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       
       try {
         await createProfile();
-      } catch (error: any) {
+      } catch (error: unknown) {
         secureLogger.error('Failed to create profile:', error);
         setProfileError(parseAuthError(error));
       } finally {

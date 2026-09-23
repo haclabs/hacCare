@@ -10,6 +10,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, AlertCircle, CheckCircle, FileJson } from 'lucide-react';
 import { importTemplateFromFile, validateTemplateExport } from '../services/templateImportService';
 import type { TemplateValidationResult, TemplateImportResult } from '../types/templateSnapshot';
+import { getErrorMessage } from '@/lib/errors';
 
 interface TemplateImportModalProps {
   isOpen: boolean;
@@ -84,10 +85,10 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
           handleClose();
         }, 2000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setImportResult({
         success: false,
-        error: error.message || 'Import failed',
+        error: getErrorMessage(error) || 'Import failed',
       });
     } finally {
       setImporting(false);

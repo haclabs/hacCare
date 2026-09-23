@@ -4,6 +4,7 @@ import { createBowelRecord, BowelRecord } from '../../../../services/clinical/bo
 import { useAuth } from '../../../../hooks/useAuth';
 import { formatLocalTime } from '../../../../utils/time';
 import { secureLogger } from '../../../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 /**
  * Bowel Record Form Component
@@ -96,9 +97,9 @@ export const BowelRecordForm: React.FC<BowelRecordFormProps> = ({
 
       const createdRecord = await createBowelRecord(bowelRecord);
       onSave(createdRecord);
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('Error creating bowel record:', error);
-      setErrors({ submit: error.message || 'Failed to save bowel record' });
+      setErrors({ submit: getErrorMessage(error) || 'Failed to save bowel record' });
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,7 @@ import type { PatientListComparison } from '../types/simulation';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { getStudentActivitiesBySimulation } from '../../../services/simulation/studentActivityService';
 import type { StudentActivity } from '../../../services/simulation/studentActivityService';
+import { errorMessageIncludes, getErrorMessage } from '@/lib/errors';
 
 export function useActiveSimulations() {
   const [simulations, setSimulations] = useState<SimulationActiveWithDetails[]>([]);
@@ -201,12 +202,12 @@ export function useActiveSimulations() {
 
       alert(`Simulation synced to template v${result.template_version_synced ?? 'unknown'}${stateText}!\n\n${medsAddedText}\nStatus set to "Ready to Start".\nAll barcodes preserved.`);
       await loadSimulations();
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('❌ Error syncing simulation:', error);
-      if (error.message?.includes('PATIENT_LIST_CHANGED') || error.message?.includes('patient list')) {
+      if (errorMessageIncludes(error, 'PATIENT_LIST_CHANGED') || errorMessageIncludes(error, 'patient list')) {
         alert('Cannot sync - patient list has changed in template. You must delete this simulation and launch a new one with fresh barcodes.');
       } else {
-        alert('Failed to sync simulation: ' + error.message);
+        alert('Failed to sync simulation: ' + getErrorMessage(error));
       }
     } finally {
       setActionLoading(null);

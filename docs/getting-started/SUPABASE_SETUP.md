@@ -166,10 +166,9 @@ SELECT MAX(CAST(SUBSTRING(tablename FROM 1 FOR 3) AS INTEGER)) as current_versio
 FROM information_schema.tables
 WHERE table_schema = 'public';
 
--- If version < 015, run missing migrations in order
--- Example: If at version 013, run:
--- 1. database/migrations/014_reset_simulation_preserve_ids.sql
--- 2. database/migrations/015_security_hardening.sql
+-- The numbered scheme (014_, 015_, ...) is long gone. Current schema state
+-- lives in supabase/migrations/, applied with `supabase db push`; check what is
+-- outstanding with `supabase migration list --linked`.
 ```
 
 ---

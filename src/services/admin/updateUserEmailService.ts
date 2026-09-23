@@ -7,6 +7,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 export async function updateUserEmail(
   userId: string,
@@ -31,8 +32,8 @@ export async function updateUserEmail(
     }
 
     return { error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Unexpected error updating user email', error);
-    return { error: error?.message || 'Failed to update email' };
+    return { error: getErrorMessage(error) || 'Failed to update email' };
   }
 }

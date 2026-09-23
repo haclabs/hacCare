@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Shield, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 interface MFAEnrollmentProps {
   onSuccess: () => void;
@@ -68,9 +69,9 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({ onSuccess, onCance
         setFactorId(enrollData.id);
         setQrCode(enrollData.totp.qr_code);
         setSecret(enrollData.totp.secret);
-      } catch (err: any) {
+      } catch (err: unknown) {
         secureLogger.error('MFA enroll init failed:', err);
-        setError(err.message ?? 'Failed to start MFA enrollment. Please try again.');
+        setError(getErrorMessage(err) ?? 'Failed to start MFA enrollment. Please try again.');
       } finally {
         setInitialising(false);
       }
