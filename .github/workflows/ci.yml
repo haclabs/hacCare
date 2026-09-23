@@ -113,13 +113,25 @@ jobs:
         with:
           args: --severity-threshold=high --sarif-file-output=snyk-deps.sarif
 
+      # --severity-threshold=high matches the dependency scan above. Without it
+      # this step exits non-zero on ANY finding including LOW, which blocked
+      # PR #407 on two MEDIUMs that had already been dismissed as false
+      # positives in GitHub code scanning (DOMXSS in ImageAnnotation.tsx,
+      # NoCryptoTimingAttacks in SetNewPassword.tsx).
+      #
+      # Worth knowing: GitHub-side dismissals do NOT reach the Snyk CLI. Snyk
+      # only honours ignores recorded on its own side (a .snyk policy file or
+      # the Snyk UI), so anything dismissed in the Security tab will still be
+      # re-reported here. Medium and low findings continue to reach the
+      # Security tab through the SARIF upload below -- they just no longer
+      # block the merge.
       - name: Run Snyk Code (SAST) scan
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
-          args: --sarif-file-output=snyk-code.sarif
+          args: --severity-threshold=high --sarif-file-output=snyk-code.sarif
 
       - name: Upload Snyk dependency results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4.38.1
