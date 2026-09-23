@@ -1,8 +1,13 @@
 # hacCare Refactoring Roadmap
 
-> Last updated: April 16, 2026  
-> Branch: `fix/rls-policy-always-true`  
+> Last updated: September 22, 2026 (status audited against the codebase)  
 > Goal: Production-quality, scalable, zero security debt
+
+**Audit, 2026-09-22.** Most of this roadmap was already done but never ticked.
+Phase 1 is complete, Phase 2 is complete apart from four sub-component
+extractions in 2.2, and Phase 3 is complete or moot. Every status below was
+verified against the tree, not assumed. What genuinely remains is collected
+under **Ongoing / Housekeeping**.
 
 ---
 
@@ -11,12 +16,23 @@
 These are small-effort, high-impact fixes. Do before any structural refactor.
 
 ### 1.1 — ErrorBoundary wrappers around all lazy routes
-- [ ] Wrap every `<Suspense>` block in `App.tsx` with `<ErrorBoundary>`
-- [ ] Prioritize: `SimulationManager`, `BCMAAdministration`, `PatientCard`
-- [ ] Verify `ErrorBoundary.tsx` is exporting correctly and logs to error service
+- [x] Wrap every `<Suspense>` block in `App.tsx` with `<ErrorBoundary>`
+- [x] Prioritize: `SimulationManager`, `BCMAAdministration`, `PatientCard`
+- [x] Verify `ErrorBoundary.tsx` is exporting correctly and logs to error service
 - **Why it matters:** A lazy chunk crash = blank screen mid-student-session. Unacceptable in a live sim.
 
-> Notes:
+> Notes: Done via the `SafeSuspense` helper in `App.tsx` (ErrorBoundary + Suspense in one
+> wrapper), applied at 22 sites covering all 19 lazy routes — so no bare `<Suspense>` remains
+> in `App.tsx`. `ErrorBoundary` is a named export from `src/components/ErrorBoundary.tsx` and
+> its `componentDidCatch` logs to both `secureLogger` and `systemLogger` with the component
+> stack.
+>
+> Residual, minor: two nested lazy boundaries use a bare `<Suspense>` —
+> `FlowsheetFormWrapper.tsx:70` and `ModuleContent.tsx:235`. Both sit *inside* a SafeSuspense
+> subtree (ModuleContent under `PatientCard`, FlowsheetFormWrapper under `FlowsheetsHub`), so a
+> chunk failure is still caught and the app does not blank. The only cost is blast radius: the
+> enclosing route unmounts rather than just that tab. Wrap them in `SafeSuspense` if that
+> matters. Verified 2026-09-22.
 
 ---
 
@@ -83,18 +99,24 @@ These are small-effort, high-impact fixes. Do before any structural refactor.
 ---
 
 ### 2.2 — `ModularPatientDashboard.tsx` (2,172 lines → React Query + sub-components)
-Current state: 13+ useState hooks, manual fetch chains, all logic fused in one file.
+**PARTIALLY DONE** — 2,172 → 353 lines. The data layer landed; the sub-component
+extractions did not.
 
-- [ ] Extract patient data fetching to `usePatientDashboard(patientId, tenantId)` hook (React Query)
+- [x] Extract patient data fetching to `usePatientDashboard(patientId, tenantId)` hook (React Query)
 - [ ] Extract `<PatientHeader />` sub-component (patient name, age, room, allergies banner)
 - [ ] Extract `<PatientAlerts />` sub-component
 - [ ] Extract `<ModuleNavigation />` sub-component (tab bar)
 - [ ] Extract `<QuickIntroModal />` sub-component
-- [ ] Replace `setLoading/setError/setPatient` useState chains with `useQuery`
-- [ ] Replace sequential `useEffect` fetch chains with parallel React Query queries
+- [x] Replace `setLoading/setError/setPatient` useState chains with `useQuery`
+- [x] Replace sequential `useEffect` fetch chains with parallel React Query queries
 - [ ] Replace `labsRefreshTrigger` / `ordersRefreshTrigger` counters with `queryClient.invalidateQueries()`
-- [ ] Verify component stays under 350 lines after extraction
-- [ ] Run `npm run type-check`
+- [x] Verify component stays under 350 lines after extraction
+- [x] Run `npm run type-check`
+
+> Notes (2026-09-22 audit): `usePatientDashboard.ts` exists (89 lines, 5 React Query calls) and
+> the component is down to 353 lines — 3 over the 350 convention. The four named sub-components
+> were never created, and two `labsRefreshTrigger` / `ordersRefreshTrigger` references remain in
+> the component. Those are the only open items here.
 
 > Notes:
 
@@ -116,35 +138,47 @@ Current state: 13+ useState hooks, manual fetch chains, all logic fused in one f
 
 ## Phase 3 — Code Quality (Systematic)
 
-### 3.1 — `backupService.ts` (1,685 lines — 20+ `any[]` return types)
-- [ ] Type all `private export*` methods — replace `Promise<any[]>` with proper interfaces
-- [ ] Extract a generic `exportTable<T>(tableName, options, columns)` helper to replace the copy-paste export pattern
-- [ ] Consider splitting into `BackupExportService` + `BackupRestoreService`
-- [ ] Run `npm run type-check`
+### 3.1 — `backupService.ts` (1,685 lines — 20+ `any[]` return types) ✅ MOOT
+- [x] ~~Type all `private export*` methods~~
+- [x] ~~Extract a generic `exportTable<T>(...)` helper~~
+- [x] ~~Split into `BackupExportService` + `BackupRestoreService`~~
+
+> Notes (2026-09-22 audit): `backupService.ts` no longer exists anywhere in `src/`. The legacy
+> backup system was removed (see the 2026-08-25 DATABASE CLEANUP entry in CHANGELOG.md), so all
+> 1,685 lines and their `any[]` returns went with it. Nothing to do.
 
 > Notes:
 
 ---
 
-### 3.2 — `simulationService.ts` (1,196 lines — 3 domains mixed)
-- [ ] Split into `templateService.ts` — create/update/delete/version templates
-- [ ] Split into `simulationLifecycleService.ts` — launch/complete/reset/status
-- [ ] Split into `simulationCompareService.ts` — compare functions
-- [ ] Update all import references across the codebase
-- [ ] Run `npm run type-check`
+### 3.2 — `simulationService.ts` (1,196 lines — 3 domains mixed) ✅ COMPLETE
+- [x] Split into `templateService.ts` — create/update/delete/version templates
+- [x] Split into `simulationLifecycleService.ts` — launch/complete/reset/status
+- [x] ~~Split into `simulationCompareService.ts`~~ — comparison folded into `templateService.ts` instead
+- [x] Update all import references across the codebase
+- [x] Run `npm run type-check`
 
-> Notes:
+> Notes (2026-09-22 audit): `simulationService.ts` is now a 13-line barrel re-exporting
+> `templateService.ts` (343), `simulationLifecycleService.ts` (474) and
+> `simulationHistoryService.ts`. Existing imports kept working unchanged, so no call sites needed
+> touching. No separate compare service was created — the comparison functions live in
+> `templateService.ts`, which is a reasonable home for them.
 
 ---
 
 ### 3.3 — `MARModule.tsx` (1,869 lines — form + history + grid fused)
 > Note: Do after 2.1 (migration) is complete.
-- [ ] Extract `<AddMedicationForm />` sub-component
-- [ ] Extract `<EditMedicationForm />` sub-component
-- [ ] Extract `<MedicationAdministrationGrid />` sub-component
-- [ ] Extract `<BBITForm />` sub-component (or verify it's already in `patients/`)
-- [ ] Replace `useState` loading pattern with `useMedications` hook
-- [ ] Verify component stays under 350 lines
+- [x] Extract `<AddMedicationForm />` sub-component
+- [x] Extract `<EditMedicationForm />` sub-component
+- [x] Extract `<MedicationAdministrationGrid />` sub-component
+- [x] Extract `<BBITForm />` sub-component (or verify it's already in `patients/`)
+- [x] Replace `useState` loading pattern with `useMedications` hook
+- [x] Verify component stays under 350 lines
+
+> Notes (2026-09-22 audit): MARModule.tsx is 329 lines, under the limit. All named extractions
+> exist in `features/patients/components/mar/`: AddMedicationForm, EditMedicationForm,
+> MedicationAdministrationGrid, BBITTab, plus MedicationHistoryView and CatalogMedicationPicker.
+> `useMedications.ts` is in `features/patients/hooks/`.
 
 > Notes:
 
@@ -164,16 +198,35 @@ Current state: 13+ useState hooks, manual fetch chains, all logic fused in one f
 ## Ongoing / Housekeeping
 
 ### Type Safety
-- [ ] Reduce 356 `: any` usages — prioritize services touching patient data
+- [ ] Reduce the remaining **345** `no-explicit-any` warnings — prioritize services touching patient data
+  - Was 424 before 2026-09-22; all 79 `catch (e: any)` bindings are done, narrowed through
+    `src/lib/errors.ts`. What is left: `(x: any) =>` callbacks (59), `as any` assertions (40),
+    `: any[]` (25), `Record<string, any>` (12), plus 26 `react-refresh/only-export-components`.
+  - Biggest concentrations: `studentActivityService.ts` (29), `simulationLifecycleService.ts` (23),
+    `templateService.ts` (18), `labService.ts` (17), `schemaEngine.ts` (17).
 - [ ] Enable `noImplicitAny` in `tsconfig.app.json` once count is below ~50
-- [ ] Run `npm run type-check` on each PR
+- [x] Run `npm run type-check` on each PR — now enforced in CI, and it was a no-op before
+      2026-09-22 (bare `tsc --noEmit` resolved the root solution tsconfig with `"files": []`,
+      so it checked zero files and always passed)
 
 ### Performance
-- [ ] `ErrorBoundary` wrapping is also a perf guard (prevents full tree unmount on lazy errors)
-- [ ] Review `studentActivityService.ts` (1,067 lines) — large `Promise.all` block; check for N+1 queries
+- [x] `ErrorBoundary` wrapping is also a perf guard (prevents full tree unmount on lazy errors) — see 1.1
+- [ ] Review `studentActivityService.ts` — large `Promise.all` block; check for N+1 queries
+  - **It has grown, not shrunk: 1,067 → 1,448 lines** as of 2026-09-22. Also the single largest
+    holder of `any` warnings (29). It is on the debrief path, so a regression here is only
+    noticed after a session ends.
+- [ ] 12 components still exceed the 350-line convention, none of them tracked above:
+      `SimulationTemplates.tsx` (1,194), `reactPdfGenerator.tsx` (990),
+      `ManagementDashboard.tsx` (940), `LaunchSimulationModal.tsx` (926),
+      `MedicationForm.tsx` (917), `Changelog.tsx` (915), `LandingPage.tsx` (901),
+      `BBITTab.tsx` (867), `BCMAAdministration.tsx` (835), `SimulationHistory.tsx` (820),
+      `DeviceForm.tsx` (798), `VitalsModule.tsx` (788). Section 3.4 is marked COMPLETE, and is —
+      for the five files it names. It was never the whole list.
 
 ### Database
-- [ ] 69 migrations — review for consolidation opportunity in next quarterly window
+- [ ] Migrations — review for consolidation in the next quarterly window. The count is **47**,
+      not 69: 40 in `database/migrations/` plus 7 in `supabase/migrations/` (baseline, two no-op
+      stubs kept for history alignment, and the four 2026-09-21 security migrations).
 - [ ] Document any new clinical table additions against the 4-part checklist (reset function, table config, debrief service, debrief modal)
 - [ ] Post-1.0: migrate `patient_advanced_directives` + `patient_admission_records` into the generic
       `patient_system_assessments` (system_type + JSONB) pattern already proven by `consents`/`bpmh`.
