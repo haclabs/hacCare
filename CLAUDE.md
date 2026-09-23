@@ -93,8 +93,13 @@ the tenant providers. `App.tsx` holds the authenticated routes and lazy-loads he
 
 ### Database changes
 
-- Migrations go in `database/migrations/` (this is the working location; `supabase/migrations/`
-  holds only the early baseline). Reusable function definitions live in `database/functions/`.
+- **New migrations go in `supabase/migrations/`.** That is the only directory `supabase db push`
+  reads, so a migration placed anywhere else silently never deploys. Its baseline
+  (`20251113000000_initial_schema.sql`) is a `supabase db dump --schema public` of production;
+  refresh it when a local `supabase start` fails with `relation "…" does not exist`.
+- `database/migrations/` is a **historical record of changes applied by hand** to Supabase, not a
+  queue. Nothing reads it automatically. Do not add to it.
+- Reusable function definitions live in `database/functions/`.
 - **Editing a `.sql` file in `database/functions/` does not change the live database.** Postgres
   runs its own compiled copy. Any change to a deployed function needs a migration that does
   `CREATE OR REPLACE FUNCTION`.
