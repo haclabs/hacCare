@@ -11,7 +11,7 @@
  * That is exactly what happened with patient_intake_output_events: present in
  * the first function, absent from the second, for 30 tables' worth of drift
  * before anyone noticed. Fixed in
- * database/migrations/20260922000000_fix_intake_output_not_cleared_on_template_reset.sql.
+ * supabase/migrations/20260922000000_fix_intake_output_not_cleared_on_template_reset.sql.
  *
  * This reads SQL rather than talking to a database, so it runs in CI with no
  * Postgres. The source of truth is the effective definition: the LAST
@@ -22,8 +22,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const BASELINE = 'supabase/migrations/20251113000000_initial_schema.sql';
-const MIGRATIONS = 'database/migrations';
+const MIGRATIONS = 'supabase/migrations';
 const ACTIVITY_SERVICE = 'src/services/simulation/studentActivityService.ts';
 
 const RESET_FUNCTIONS = [
@@ -31,22 +30,21 @@ const RESET_FUNCTIONS = [
   'reset_simulation_with_template_updates',
 ] as const;
 
-/** Every .sql that can redefine a function, oldest first. */
+/**
+ * Every .sql that can redefine a function, oldest first.
+ *
+ * Only `supabase/migrations/` counts. Its baseline
+ * (20251113000000_initial_schema.sql) is a `supabase db dump` of production, so
+ * it already contains the cumulative effect of everything in
+ * `database/migrations/` -- those are a record of changes applied by hand, not a
+ * queue, and reading them here would resurrect superseded definitions.
+ * Filenames are timestamp-prefixed, so lexical order is apply order.
+ */
 function sqlSourcesInApplyOrder(): string[] {
-  const sources = [readFileSync(BASELINE, 'utf-8')];
-  const walk = (dir: string): string[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) return walk(path);
-      return entry.name.endsWith('.sql') ? [path] : [];
-    });
-  // Filenames are timestamp-prefixed, so lexical order is apply order.
-  // `history/` is nested and sorts with its parent, which is fine: those
-  // predate the baseline and are only ever overridden by it.
-  for (const path of walk(MIGRATIONS).sort()) {
-    sources.push(readFileSync(path, 'utf-8'));
-  }
-  return sources;
+  return readdirSync(MIGRATIONS)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .map((name) => readFileSync(join(MIGRATIONS, name), 'utf-8'));
 }
 
 /**
@@ -137,6 +135,8 @@ describe('simulation reset wiring', () => {
       MIGRATIONS,
       '20260922000000_fix_intake_output_not_cleared_on_template_reset.sql',
     );
+    // Must live in supabase/migrations/: `supabase db push` reads only that
+    // directory, so the same file under database/migrations/ would never deploy.
     expect(existsSync(fix), `${fix} is missing -- the intake/output fix regressed`).toBe(true);
 
     const body = effectiveFunctionBody('reset_simulation_with_template_updates');
