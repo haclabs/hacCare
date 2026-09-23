@@ -8,7 +8,7 @@
 -- since template editing is live and there was previously no cancel button).
 --
 -- Reference copy — the live migration is
--- database/migrations/20260912000003_add_load_template_state_function.sql
+-- database/migrations/history/20260912000003_add_load_template_state_function.sql
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.load_template_state(

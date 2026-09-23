@@ -528,7 +528,7 @@ deviceAssessmentsData.data?.forEach((assessment: any) => {
   - Rollback support: Restore previous template versions
   - Audit trail: Track who changed what and when
   - Files added:
-    * `/database/migrations/20260205000000_add_template_versioning.sql`
+    * `/database/migrations/history/20260205000000_add_template_versioning.sql`
     * `/database/functions/compare_simulation_template_patients.sql`
     * `/database/functions/reset_simulation_with_template_updates.sql`
     * `/src/features/simulation/components/VersionComparisonModal.tsx`

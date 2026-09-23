@@ -9,7 +9,7 @@ Creates dedicated program workspaces for instructors. When they login, they land
 ### Step 1: Run SQL Migration (2 min)
 1. Open Supabase Dashboard
 2. Go to SQL Editor
-3. Copy/paste `database/migrations/20260127000000_implement_program_tenants.sql`
+3. Copy/paste `database/migrations/history/20260127000000_implement_program_tenants.sql`
 4. Click "Run"
 5. Verify you see: ✅ Created program tenant: NESA Program (and others)
 
@@ -56,7 +56,7 @@ Each program (NESA, PN, SIM Hub, BNAD) is now its own tenant workspace.
 
 ## Files You Need to Know
 
-1. **Migration**: `database/migrations/20260127000000_implement_program_tenants.sql`
+1. **Migration**: `database/migrations/history/20260127000000_implement_program_tenants.sql`
 2. **Guides**: `docs/features/program-tenants/IMPLEMENTATION_GUIDE.md`
 3. **Checklist**: `docs/features/program-tenants/DEPLOYMENT_CHECKLIST.md`
 

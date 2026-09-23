@@ -7,7 +7,7 @@ This implementation adds **program tenant workspaces** for instructors in hacCar
 ## What Was Implemented
 
 ### 1. Database Layer
-- **Migration**: `database/migrations/20260127000000_implement_program_tenants.sql`
+- **Migration**: `database/migrations/history/20260127000000_implement_program_tenants.sql`
   - Added `'program'` to `tenant_type` enum
   - Added `program_id` column to `tenants` table
   - Created `create_program_tenant()` function
@@ -123,7 +123,7 @@ ADD COLUMN default_tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL;
 ### Option 1: Supabase Dashboard (Recommended)
 1. Open your Supabase project dashboard
 2. Go to SQL Editor
-3. Copy contents of `database/migrations/20260127000000_implement_program_tenants.sql`
+3. Copy contents of `database/migrations/history/20260127000000_implement_program_tenants.sql`
 4. Paste and run
 5. Verify output shows:
    - ✅ Added program to tenant_type enum
@@ -135,7 +135,7 @@ ADD COLUMN default_tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL;
 ### Option 2: Command Line
 ```bash
 # Using psql
-psql $DATABASE_URL -f database/migrations/20260127000000_implement_program_tenants.sql
+psql $DATABASE_URL -f database/migrations/history/20260127000000_implement_program_tenants.sql
 
 # Or using Supabase CLI
 supabase db push

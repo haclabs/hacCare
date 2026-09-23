@@ -222,7 +222,7 @@ CREATE TABLE patient_system_assessments (
 
 `system_type` values map directly to `NativeFlowsheetDefinition.systemType` in the registry (e.g. `'pain'`, `'respiratory'`, `'fall-risk'`).
 
-Migration: `database/migrations/20260520000000_create_patient_system_assessments.sql`
+Migration: `database/migrations/history/20260520000000_create_patient_system_assessments.sql`
 
 ---
 
