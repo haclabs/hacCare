@@ -5,6 +5,7 @@ import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supab
 import { parseAuthError } from '../../utils/authErrorParser';
 // authPersistence import removed — initializeAuth now uses a single getSession() call
 import { secureLogger } from '../../lib/security/secureLogger';
+import { errorMessageIncludes, getErrorMessage, getErrorName } from '@/lib/errors';
 
 /**
  * Authentication Context Interface
@@ -151,22 +152,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (import.meta.env.DEV) {
           // Debug logging handled elsewhere
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         secureLogger.error('💥 Error in initializeAuth:', error);
         
         // Handle specific error types
-        if (error.message?.includes('Failed to fetch') || 
-            error.message?.includes('NetworkError') ||
-            error.message?.includes('timeout') ||
-            error.message?.includes('Supabase not configured')) {
+        if (errorMessageIncludes(error, 'Failed to fetch') || 
+            errorMessageIncludes(error, 'NetworkError') ||
+            errorMessageIncludes(error, 'timeout') ||
+            errorMessageIncludes(error, 'Supabase not configured')) {
           secureLogger.error('🌐 Network connectivity issue or Supabase not configured during auth initialization');
           secureLogger.error('💡 Falling back to mock data mode');
         }
         
         // Handle refresh token errors in catch block as well
-        if (error.message?.includes('Invalid Refresh Token') || 
-            error.message?.includes('Refresh Token Not Found') ||
-            error.message?.includes('refresh_token_not_found')) {
+        if (errorMessageIncludes(error, 'Invalid Refresh Token') || 
+            errorMessageIncludes(error, 'Refresh Token Not Found') ||
+            errorMessageIncludes(error, 'refresh_token_not_found')) {
           secureLogger.debug('🔄 Invalid refresh token detected in catch, clearing session...');
           await signOut();
         }
@@ -375,31 +376,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(data);
           setIsOffline(false);
         }
-      } catch (fetchError: any) {
+      } catch (fetchError: unknown) {
         clearTimeout(timeoutId);
         const elapsed = performance.now() - startTime;
         
-        if (fetchError.name === 'AbortError') {
+        if (getErrorName(fetchError) === 'AbortError') {
           secureLogger.error(`❌ Profile fetch aborted after ${elapsed.toFixed(0)}ms`);
-        } else if (fetchError.message?.includes('Profile fetch timeout')) {
+        } else if (errorMessageIncludes(fetchError, 'Profile fetch timeout')) {
           secureLogger.error(`⏱️ Profile fetch timeout after ${elapsed.toFixed(0)}ms`);
-        } else if (fetchError.message?.includes('Supabase not configured')) {
+        } else if (errorMessageIncludes(fetchError, 'Supabase not configured')) {
           secureLogger.error('❌ Supabase not configured properly');
         } else {
-          secureLogger.error(`❌ Profile fetch error after ${elapsed.toFixed(0)}ms:`, fetchError.message);
+          secureLogger.error(`❌ Profile fetch error after ${elapsed.toFixed(0)}ms:`, getErrorMessage(fetchError));
         }
         
         setProfile(null);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('💥 Exception in fetchUserProfile:', error);
       
       // Handle network-related errors gracefully
-      if (error.message?.includes('Failed to fetch') || 
-          error.message?.includes('NetworkError') ||
-          error.message?.includes('timeout') ||
-          error.message?.includes('fetch') ||
-          error.message?.includes('Supabase not configured')) {
+      if (errorMessageIncludes(error, 'Failed to fetch') || 
+          errorMessageIncludes(error, 'NetworkError') ||
+          errorMessageIncludes(error, 'timeout') ||
+          errorMessageIncludes(error, 'fetch') ||
+          errorMessageIncludes(error, 'Supabase not configured')) {
         secureLogger.warn('📱 Network error fetching profile:', error);
         setIsOffline(true);
       }
@@ -483,15 +484,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         secureLogger.debug('✅ Profile created/updated successfully:', data);
         setProfile(data);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('💥 Exception in createProfile:', error);
       
       // Provide user-friendly error messages
-      if (error.message?.includes('Failed to fetch') || 
-          error.message?.includes('NetworkError') ||
-          error.message?.includes('timeout') ||
-          error.message?.includes('fetch') ||
-          error.message?.includes('Supabase not configured')) {
+      if (errorMessageIncludes(error, 'Failed to fetch') || 
+          errorMessageIncludes(error, 'NetworkError') ||
+          errorMessageIncludes(error, 'timeout') ||
+          errorMessageIncludes(error, 'fetch') ||
+          errorMessageIncludes(error, 'Supabase not configured')) {
         throw new Error(parseAuthError(error));
       }
       
@@ -623,16 +624,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       return { error };
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('💥 Sign in exception:', error);
       setLoading(false);
       
       // Handle timeout and network errors
-      if (error.message?.includes('timeout') || 
-          error.message?.includes('Failed to fetch') ||
-          error.message?.includes('NetworkError') ||
-          error.message?.includes('fetch') ||
-          error.message?.includes('Supabase not configured')) {
+      if (errorMessageIncludes(error, 'timeout') || 
+          errorMessageIncludes(error, 'Failed to fetch') ||
+          errorMessageIncludes(error, 'NetworkError') ||
+          errorMessageIncludes(error, 'fetch') ||
+          errorMessageIncludes(error, 'Supabase not configured')) {
         return { error: { message: parseAuthError(error) } };
       }
       

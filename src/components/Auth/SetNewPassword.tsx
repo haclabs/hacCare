@@ -73,7 +73,7 @@ export const SetNewPassword: React.FC = () => {
         return;
       }
       setHasSession(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error activating invite', err);
       setError(parseAuthError(err));
     } finally {
@@ -104,7 +104,7 @@ export const SetNewPassword: React.FC = () => {
       }
       setSuccess(true);
       setTimeout(() => navigate('/app'), 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       secureLogger.error('Error setting password', err);
       setError(parseAuthError(err));
     } finally {

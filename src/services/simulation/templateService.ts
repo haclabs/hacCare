@@ -32,7 +32,7 @@ export async function createSimulationTemplate(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error creating simulation template:', error);
     throw error;
   }
@@ -63,7 +63,7 @@ export async function getSimulationTemplates(
     const { data, error } = await query;
     if (error) throw error;
     return (data || []) as SimulationTemplateWithDetails[];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching simulation templates:', error);
     throw error;
   }
@@ -84,7 +84,7 @@ export async function getSimulationTemplate(
 
     if (error) throw error;
     return data as SimulationTemplateWithDetails;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching simulation template:', error);
     return null;
   }
@@ -104,7 +104,7 @@ export async function updateSimulationTemplate(
       .eq('id', templateId);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error updating simulation template:', error);
     throw error;
   }
@@ -125,7 +125,7 @@ export async function updateTemplateFolder(
       .eq('id', templateId);
 
     if (error) throw error;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error updating template folder:', error);
     throw error;
   }
@@ -146,7 +146,7 @@ export async function deleteSimulationTemplate(templateId: string): Promise<void
     if (data && (data as any).success === false) {
       throw new Error((data as any).message || 'Failed to delete template');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error deleting simulation template:', error);
     throw error;
   }
@@ -178,7 +178,7 @@ export async function saveTemplateSnapshot(
 
     secureLogger.debug('Snapshot saved (V2):', data);
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error saving template snapshot:', error);
     throw error;
   }
@@ -202,7 +202,7 @@ export async function saveTemplateState(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error saving template state:', error);
     throw error;
   }
@@ -228,7 +228,7 @@ export async function updateTemplateStateSnapshot(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error updating template state snapshot:', error);
     throw error;
   }
@@ -247,7 +247,7 @@ export async function getTemplateStates(templateId: string): Promise<any[]> {
 
     if (error) throw error;
     return data || [];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching template states:', error);
     throw error;
   }
@@ -275,7 +275,7 @@ export async function loadTemplateState(
 
     if (error) throw error;
     return data as SimulationFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error loading template state:', error);
     throw error;
   }
@@ -319,7 +319,7 @@ export async function compareSimulationTemplatePatients(simulationId: string): P
 
     if (error) throw error;
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error comparing patient lists:', error);
     throw error;
   }
@@ -336,7 +336,7 @@ export async function compareSimulationVsTemplate(simulationId: string): Promise
 
     if (error) throw error;
     return data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error comparing simulation vs template:', error);
     throw error;
   }

@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { Download } from 'lucide-react';
 import { downloadTemplateExport, getExportSummary } from '../services/templateExportService';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 interface TemplateExportButtonProps {
   templateId: string;
@@ -55,9 +56,9 @@ const TemplateExportButton: React.FC<TemplateExportButtonProps> = ({
       
       // Success notification
       alert(`✅ Template exported successfully!\n\nThe file has been downloaded to your Downloads folder.`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('Error exporting template:', error);
-      alert(`❌ Export failed: ${error.message}`);
+      alert(`❌ Export failed: ${getErrorMessage(error)}`);
     } finally {
       setIsExporting(false);
     }

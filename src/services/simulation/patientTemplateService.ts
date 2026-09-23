@@ -22,7 +22,7 @@ export async function createPatientTemplate(
 
     if (error) throw error;
     return data as PatientTemplateFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error creating patient template:', error);
     throw error;
   }
@@ -37,7 +37,7 @@ export async function getPatientTemplates(): Promise<PatientTemplate[]> {
 
     if (error) throw error;
     return (data || []) as PatientTemplate[];
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error fetching patient templates:', error);
     throw error;
   }
@@ -53,7 +53,7 @@ export async function deletePatientTemplate(patientTemplateId: string): Promise<
     if (data && (data as any).success === false) {
       throw new Error((data as any).message || 'Failed to delete patient template');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error deleting patient template:', error);
     throw error;
   }
@@ -69,7 +69,7 @@ export async function savePatientTemplateSnapshot(
 
     if (error) throw error;
     return data as PatientTemplateFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error saving patient template snapshot:', error);
     throw error;
   }
@@ -92,7 +92,7 @@ export async function addPatientTemplateToSimulationTemplate(
 
     if (error) throw error;
     return data as PatientTemplateFunctionResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     secureLogger.error('Error adding patient template to simulation template:', error);
     throw error;
   }

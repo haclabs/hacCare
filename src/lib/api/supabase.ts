@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { secureLogger } from '../security/secureLogger';
 import { isValidSupabaseUrl } from './supabaseUrl';
+import { getErrorMessage, getErrorName } from '@/lib/errors';
 
 /**
  * Supabase Configuration and Client Setup
@@ -177,13 +178,13 @@ export const checkDatabaseHealth = async (): Promise<boolean> => {
       
       secureLogger.debug('Database connection successful');
       return true;
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
       
-      if (fetchError.name === 'AbortError') {
+      if (getErrorName(fetchError) === 'AbortError') {
         secureLogger.warn('Database connection timeout');
       } else {
-        secureLogger.warn('Database connection error', { message: fetchError.message });
+        secureLogger.warn('Database connection error', { message: getErrorMessage(fetchError) });
       }
       
       return false;

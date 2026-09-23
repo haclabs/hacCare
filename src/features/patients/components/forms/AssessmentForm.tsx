@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { createAssessment, PatientAssessment } from '../../../../services/patient/assessmentService';
 import { useAuth } from '../../../../hooks/useAuth';
 import { secureLogger } from '../../../../lib/security/secureLogger';
+import { getErrorMessage } from '@/lib/errors';
 
 /**
  * Assessment Form Component
@@ -162,9 +163,9 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({
       // Call the onSave callback
       onSave(savedAssessment);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('Error saving assessment:', error);
-      alert(`Failed to save assessment: ${error.message || 'Unknown error'}. Please try again.`);
+      alert(`Failed to save assessment: ${getErrorMessage(error) || 'Unknown error'}. Please try again.`);
     } finally {
       setLoading(false);
     }

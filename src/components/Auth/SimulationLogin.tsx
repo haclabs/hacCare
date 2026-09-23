@@ -40,7 +40,7 @@ const SimulationLogin: React.FC = () => {
         secureLogger.debug('✅ Simulation login successful');
         // Navigation handled by SimulationRouter after successful login
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       secureLogger.error('Simulation login error:', error);
       setError('Login failed. Please try again.');
     } finally {

@@ -193,7 +193,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
             return false;
           }
-        } catch (assignError: any) {
+        } catch (assignError: unknown) {
           secureLogger.error('Error in new user tenant assignment', assignError);
           setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
           return false;
@@ -260,7 +260,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             }
 
             secureLogger.debug('Tenant reassignment complete');
-          } catch (assignError: any) {
+          } catch (assignError: unknown) {
             secureLogger.error('Error in tenant reassignment', assignError);
             setError('User updated but failed to reassign tenant: ' + parseAuthError(assignError));
             return;
@@ -346,7 +346,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               // Don't fail the creation, just warn
               secureLogger.warn('User created but email not confirmed. They may need to confirm via email.');
             }
-          } catch (confirmError: any) {
+          } catch (confirmError: unknown) {
             secureLogger.error('Error in email confirmation', confirmError);
             // Continue with user creation even if confirmation fails
           }
@@ -377,7 +377,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
       }
 
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(parseAuthError(error));
     } finally {
       setLoading(false);
