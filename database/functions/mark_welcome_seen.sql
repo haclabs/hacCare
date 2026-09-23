@@ -1,5 +1,5 @@
 -- Reference copy of mark_welcome_seen (deployed via
--- database/migrations/20260902000000_add_welcome_seen_at.sql).
+-- database/migrations/history/20260902000000_add_welcome_seen_at.sql).
 -- Records that the caller dismissed the welcome tour for good.
 
 CREATE OR REPLACE FUNCTION mark_welcome_seen()
