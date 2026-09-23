@@ -218,7 +218,7 @@ CREATE POLICY tenants_instructors_see_program_tenants
 ```
 
 **Critical Files:**
-- [database/migrations/20260127000000_implement_program_tenants.sql](../database/migrations/20260127000000_implement_program_tenants.sql) - Full migration
+- [database/migrations/history/20260127000000_implement_program_tenants.sql](../database/migrations/history/20260127000000_implement_program_tenants.sql) - Full migration
 - [src/contexts/TenantContext.tsx](../src/contexts/TenantContext.tsx) - Program tenant switching logic
 - [src/services/admin/programService.ts](../src/services/admin/programService.ts) - `getUserProgramTenants()`, `createProgramTenant()`
 - [src/hooks/useUserProgramAccess.ts](../src/hooks/useUserProgramAccess.ts) - Program filtering logic
@@ -386,7 +386,7 @@ if (Object.keys(vitalData).length <= 2) {
 - ✅ Service layer validates and rejects empty vital submissions (at least one required)
 
 **Migration Status:**
-- Database migration created: `database/migrations/20260323000000_make_patient_vitals_nullable.sql`
+- Database migration created: `database/migrations/history/20260323000000_make_patient_vitals_nullable.sql`
 - TypeScript types need regeneration after migration runs: `npm run supabase:types`
 - Test with newborn patient (0-28 days) entering only respiratory rate (e.g., 70)
 
@@ -452,7 +452,7 @@ END IF;
 - `20260323000004_revert_restore_snapshot_fix.sql` - Revert migration for safety
 
 **Critical Files:**
-- [database/migrations/20260323000005_fix_empty_array_handling.sql](../database/migrations/20260323000005_fix_empty_array_handling.sql) - Main fix
+- [database/migrations/history/20260323000005_fix_empty_array_handling.sql](../database/migrations/history/20260323000005_fix_empty_array_handling.sql) - Main fix
 - [database/functions/restore_snapshot_to_tenant.sql](../database/functions/restore_snapshot_to_tenant.sql) - Function being fixed
 
 **Common Issues:**
@@ -581,7 +581,7 @@ const filteredTemplates = filterByPrograms(templates);
 - Allows creating/editing programs and assigning users to programs
 
 **Critical Files:**
-- [database/migrations/20260126000000_add_programs_and_roles.sql](../database/migrations/20260126000000_add_programs_and_roles.sql) - Initial schema
+- [database/migrations/history/20260126000000_add_programs_and_roles.sql](../database/migrations/history/20260126000000_add_programs_and_roles.sql) - Initial schema
 - [src/services/admin/programService.ts](../src/services/admin/programService.ts) - CRUD operations
 - [src/features/admin/components/users/UserForm.tsx](../src/features/admin/components/users/UserForm.tsx) - Program assignment checkboxes
 - [database/functions/update_user_profile_admin.sql](../database/functions/update_user_profile_admin.sql) - SECURITY DEFINER function for role updates
@@ -604,7 +604,7 @@ See [src/App.tsx](../src/App.tsx) lines 69-81.
 ### RLS Infinite Recursion
 **Problem**: RLS policies that query the same table cause infinite recursion.
 **Solution**: Use `SECURITY DEFINER` functions or explicit `security_invoker = false` on policies.
-Example: [database/migrations/20251117022000_emergency_fix_device_assessments_rls.sql](../database/migrations/20251117022000_emergency_fix_device_assessments_rls.sql)
+Example: [database/migrations/history/20251117022000_emergency_fix_device_assessments_rls.sql](../database/migrations/history/20251117022000_emergency_fix_device_assessments_rls.sql)
 
 ### Patient Creation Race Conditions
 Patient creation across tenants can cause duplicate barcodes. Always use:

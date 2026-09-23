@@ -19,7 +19,7 @@ Lab ordering, results management and reference-range tracking.
 |---|---|
 | Components | `src/features/patients/components/` (`LabOrderCard`, `CreateLabPanelModal`, `CreateLabResultModal`, `EditLabResultModal`, `LabAcknowledgeModal`) |
 | Services | `src/features/patients/components/labService.ts`, `labOrderService.ts` |
-| Catalog migration | `database/migrations/20260913000000_add_lab_test_catalog_entries.sql` |
+| Catalog migration | `database/migrations/history/20260913000000_add_lab_test_catalog_entries.sql` |
 
 Lab tables were created in the schema baseline rather than a standalone
 migration; `supabase/migrations/20251113000000_initial_schema.sql` is the

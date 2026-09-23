@@ -1214,8 +1214,8 @@ GROUP BY student_name, device_type;
 ### Key File Paths
 ```
 Database Migrations:
-  /database/migrations/20251116210200_create_device_assessments_table.sql
-  /database/migrations/20251116210300_add_device_specific_fields.sql
+  Both folded into the schema baseline and no longer exist as separate files.
+  See supabase/migrations/20251113000000_initial_schema.sql for the DDL.
 
 Services:
   /src/services/hacmap/deviceAssessmentService.ts

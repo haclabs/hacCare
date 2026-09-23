@@ -2,7 +2,7 @@
  * types.ts — Therapeutic Recreation Module
  *
  * TypeScript interfaces matching every TR table defined in:
- *   database/migrations/20260527000000_create_tr_module_tables.sql
+ *   database/migrations/history/20260527000000_create_tr_module_tables.sql
  */
 
 // ── Database row types ────────────────────────────────────────────────────────

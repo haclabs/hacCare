@@ -7,7 +7,7 @@
 -- tenant for editing) — this saves edits BACK into that same state.
 --
 -- Reference copy — the live migration is
--- database/migrations/20260912000004_add_update_template_state_snapshot_function.sql
+-- database/migrations/history/20260912000004_add_update_template_state_snapshot_function.sql
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.update_template_state_snapshot(
