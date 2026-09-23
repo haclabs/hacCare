@@ -140,7 +140,7 @@ tenant setup) with the exact symptoms and fixes. Worth consulting when touching 
 snapshot/reset machinery.
 
 Domain docs are under `docs/`: `architecture/` (security, RLS), `features/` (bcma, simulation,
-patients, labs), `database/`, `operations/` (deployment, troubleshooting), `development/`.
+patients, labs), `database/`, `operations/` (deployment, troubleshooting), `user-guides/`.
 
 Deployment is Netlify (`netlify.toml`), with SPA fallback and a `simulation.haccare.app` subdomain
 redirect. CI (`.github/workflows/ci.yml`) runs lint, type-check, tests, build, plus npm audit,

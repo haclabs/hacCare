@@ -1,29 +1,19 @@
-# 🏥 Patient Management
+# Patient Management
 
-Comprehensive patient record management and landing page.
+Patient records, charting and the clinical modules that hang off them.
 
-## 📄 Documentation
+## Where the code lives
 
-- **[Patient Record Enhancements](PATIENT_RECORD_ENHANCEMENTS.md)** - Advanced patient features
-- **[Landing Page Implementation](LANDING_PAGE_IMPLEMENTATION.md)** - Patient dashboard design
+| Area | Path |
+|---|---|
+| Feature root | `src/features/patients/` |
+| Hooks | `src/features/patients/hooks/` (see `useMultiTenantPatients.ts` for the canonical tenant-scoped query) |
 
-## 🏥 Key Features
+Patient tables and the four wirings a new `patient_*` table needs are
+documented in `CLAUDE.md` and [ADDING_PATIENT_FEATURES](../../database/ADDING_PATIENT_FEATURES.md).
 
-- **Complete Patient Profiles:** Demographics, medical history, allergies
-- **Vital Signs Monitoring:** Real-time tracking with alert thresholds
-- **Medication Administration:** MAR integration with BCMA
-- **Clinical Assessments:** Wound care, diabetic records, admission records
-- **Patient Notes:** Categorized notes with search functionality
-- **Medical Timeline:** Chronological view of care events
-- **Multi-Tenant:** Patient isolation by healthcare organization
+## Related
 
-## 🔗 Related Documentation
-
-- [BCMA Integration](../bcma/) - Medication administration
-- [Lab Integration](../labs/) - Lab results in patient chart
-- [Simulation System](../simulation/) - Patient data in simulations
-- [Database Schema](../../../database/) - Patient tables and relationships
-
-## 🚀 Quick Start
-
-See [PATIENT_RECORD_ENHANCEMENTS.md](PATIENT_RECORD_ENHANCEMENTS.md) for feature details.
+- [BCMA](../bcma/) — medication administration
+- [Labs](../labs/) — lab results in the chart
+- [Simulation](../simulation/) — patient data inside a simulation tenant

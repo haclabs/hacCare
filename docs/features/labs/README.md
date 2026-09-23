@@ -1,29 +1,33 @@
-# 🔬 Laboratory System
+# Laboratory System
 
-Complete lab ordering, results management, and reference range tracking.
+Lab ordering, results management and reference-range tracking.
 
-## 📄 Documentation
+## Key features
 
-- **[Labs Implementation Summary](LABS_IMPLEMENTATION_SUMMARY.md)** - Complete system overview
-- **[Labs Integration Complete](LABS_INTEGRATION_COMPLETE.md)** - Integration with patient records
-- **[Foreign Key Fix](LABS_FOREIGN_KEY_FIX.md)** - Database relationship fixes
-- **[UI Styling Update](LABS_UI_STYLING_UPDATE.md)** - User interface improvements
+- **Lab panels** — pre-configured test panels (CBC, CMP, lipid panel, …)
+- **Reference ranges** — age- and sex-specific normal ranges, with categorical
+  flagging for non-numeric results
+- **Results management** — pending, completed and critical results, with
+  acknowledgement
+- **Ordering** — place and cancel lab orders against a patient
+- **Integration** — results surface in the patient chart alongside vitals and
+  the MAR
 
-## 🏥 Key Features
+## Where the code lives
 
-- **Lab Panels:** Pre-configured test panels (CBC, CMP, Lipid Panel, etc.)
-- **Reference Ranges:** Age and gender-specific normal ranges
-- **Results Management:** Track pending, completed, and critical results
-- **Critical Alerts:** Automatic notifications for abnormal values
-- **Trend Analysis:** View lab results over time
-- **Integration:** Seamless integration with patient charts
+| Area | Path |
+|---|---|
+| Components | `src/features/patients/components/` (`LabOrderCard`, `CreateLabPanelModal`, `CreateLabResultModal`, `EditLabResultModal`, `LabAcknowledgeModal`) |
+| Services | `src/features/patients/components/labService.ts`, `labOrderService.ts` |
+| Catalog migration | `database/migrations/20260913000000_add_lab_test_catalog_entries.sql` |
 
-## 🔗 Related Documentation
+Lab tables were created in the schema baseline rather than a standalone
+migration; `supabase/migrations/20251113000000_initial_schema.sql` is the
+current dump if you need the DDL.
 
-- [Database Schema](../../../database/migrations/006_labs_schema.sql) - Lab tables
-- [Reference Data](../../../database/seeds/labs_reference_data.sql) - Lab panels and ranges
-- [Patient Management](../patients/) - Integration with patient records
+## Related
 
-## 🚀 Quick Start
-
-See [LABS_IMPLEMENTATION_SUMMARY.md](LABS_IMPLEMENTATION_SUMMARY.md) for complete details.
+- [Patient management](../patients/) — how results reach the chart
+- [Simulation](../simulation/) — labs inside a simulation tenant are copied
+  from the template snapshot and matched on `test_name` + `panel_name`, never
+  by id or barcode (see `CLAUDE.md`)

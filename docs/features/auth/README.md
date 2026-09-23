@@ -1,27 +1,25 @@
-# 🔐 Authentication & Authorization
+# Authentication
 
-Microsoft OAuth integration and secure session management.
+Supabase Auth, with optional Microsoft Office 365 sign-in.
 
-## 📄 Documentation
+## Documentation
 
-- **[Microsoft OAuth Implementation](MICROSOFT_OAUTH_IMPLEMENTATION.md)** - Technical implementation
-- **[Microsoft OAuth Setup](MICROSOFT_OAUTH_SETUP.md)** - Configuration guide
-- **[Microsoft OAuth Visual Guide](MICROSOFT_OAUTH_VISUAL_GUIDE.md)** - Step-by-step with screenshots
+- **[Microsoft OAuth Setup](MICROSOFT_OAUTH_SETUP.md)** — Azure AD configuration
 
-## 🏥 Key Features
+## Where the code lives
 
-- **Microsoft OAuth 2.0:** Enterprise single sign-on
-- **Multi-Tenant Support:** Tenant-based access control
-- **Role-Based Access:** Nurse, Admin, Super Admin roles
-- **Session Management:** Secure session handling with automatic timeout
-- **Audit Logging:** Complete authentication audit trail
+| Area | Path |
+|---|---|
+| Auth context | `src/contexts/auth/AuthContext.tsx` |
+| Login form | `src/components/Auth/LoginForm.tsx` |
+| OAuth callback | `src/components/Auth/AuthCallback.tsx` |
 
-## 🔗 Related Documentation
+Roles are `super_admin` → `coordinator` → `admin` → `instructor` → `nurse`
+(plus `student` for simulation participants). A role change needs a
+logout/login to take effect. Filtering logic lives in
+`src/hooks/useUserProgramAccess.ts`.
 
-- [Session Tracking](../../../database/migrations/001_enhance_session_tracking.sql) - Database schema
-- [Security Architecture](../../architecture/security/) - Overall security model
-- [Troubleshooting](../../operations/troubleshooting/) - Auth-related issues
+## Related
 
-## 🚀 Quick Start
-
-See [MICROSOFT_OAUTH_SETUP.md](MICROSOFT_OAUTH_SETUP.md) for Azure AD configuration.
+- [Security architecture](../../architecture/security/) — how authorization is
+  actually enforced (Postgres RLS, not the client)
