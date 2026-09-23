@@ -76,7 +76,7 @@ IF p_preserve_barcodes AND p_snapshot ? 'patients' THEN
 ```
 
 #### 2. `reset_simulation_for_next_session()`
-**Location**: `/workspaces/hacCare/database/functions/reset_simulation_for_next_session.sql`
+**Location**: `database/functions/reset_simulation_for_next_session.sql`
 
 **What It Does**:
 
@@ -125,7 +125,7 @@ WHERE id = p_simulation_id;
 
 ### Frontend Integration
 
-**Location**: `/workspaces/hacCare/src/services/simulation/simulationService.ts`
+**Location**: `src/services/simulation/simulationService.ts`
 
 **Function**: `resetSimulationForNextSession()`
 

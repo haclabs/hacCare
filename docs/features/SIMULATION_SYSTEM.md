@@ -287,12 +287,8 @@ Check form code doesn't reference `student_name` for these tables.
 
 ### Documentation
 - This file: `/SIMULATION_SYSTEM.md`
-- Functions: `/database/functions/simulation/README.md`
+- Functions: `database/functions/`
 
-### Archives (DO NOT USE)
-- `/backup/simulation-legacy/` - Old V1 system
-- `/docs/development/simulation-v2/` - Development work
-- `/archive/` - Old component versions
 
 ## Reset Workflow Changes
 

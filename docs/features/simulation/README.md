@@ -6,10 +6,8 @@ Clinical scenario simulation and training platform with realistic patient data a
 
 ### User Guides
 - **[Simulation User Guide](SIMULATION_USER_GUIDE.md)** - How to use the simulation system
-- **[Reusable Simulation Labels Guide](REUSABLE_SIMULATION_LABELS_GUIDE.md)** - Label printing in simulations
 
 ### Technical
-- **[Simulation Metrics Fix](SIMULATION_METRICS_FIX.md)** - Performance and metrics tracking
 
 ## 🏥 Key Features
 
@@ -44,9 +42,8 @@ The simulation system preserves patient and medication barcodes across simulatio
 
 ## 🔗 Related Documentation
 
-- [Database Functions](../../../database/functions/simulation_snapshot_functions.sql) - Snapshot/restore logic
-- [RLS Policies](../../../database/policies/simulation_rls.sql) - Simulation security
-- [Development Work](../../development/simulation-v2/) - Simulation v2 development history
+- [Database functions](../../../database/functions/) - snapshot/restore logic
+- [Security architecture](../../architecture/security/) - tenant isolation and RLS
 
 ## 🚀 Quick Start
 

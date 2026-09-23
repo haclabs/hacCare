@@ -677,8 +677,8 @@ Located at `src/features/simulation/components/EnhancedDebriefModal.tsx`. Add:
 
 - **Architecture**: [docs/architecture/](../docs/architecture/) (security RLS policies, audit analysis)
 - **Features**: [docs/features/](../docs/features/) (bcma/, simulation/, patients/, labs/)
-- **Operations**: [docs/operations/](../docs/operations/) (deployment, troubleshooting, bundle optimization)
-- **Development**: [docs/development/](../docs/development/) (database/, sql/, scripts/)
+- **Operations**: [docs/operations/](../docs/operations/) (deployment, troubleshooting)
+- **User guides**: [docs/user-guides/](../docs/user-guides/)
 
 ## When Adding New Features
 ### Development Priorities (in order)
