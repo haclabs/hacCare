@@ -3,7 +3,7 @@ import { Patient } from '../../../../types';
 import { User, MapPin, AlertTriangle, QrCode, Trash2, Pencil } from 'lucide-react';
 import { isValid } from 'date-fns';
 import { getAvatarById } from '../../../../data/patientAvatars';
-import { formatRoomBed } from '../../../../utils/patientUtils';
+import { formatRoomBed, formatDOB } from '../../../../utils/patientUtils';
 
 /**
  * Patient Card Component
@@ -123,6 +123,8 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
               <span>{age} years</span>
               <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
               <span>{patient.gender}</span>
+              <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+              <span>DOB: {formatDOB(patient.date_of_birth)}</span>
             </p>
             <p className="text-xs text-gray-500 font-mono tracking-wider">
               Patient ID <span className="text-gray-400">•</span> <span className="text-gray-700">{patient.patient_id}</span>
