@@ -1,73 +1,24 @@
-## Description
-<!-- Provide a brief description of the changes in this PR -->
+## What and why
 
-## Type of Change
-<!-- Mark the relevant option with an 'x' -->
+<!-- What changes, and what problem it solves. Prose is fine — delete the sections below that don't apply. -->
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] 🔧 Configuration change
-- [ ] 🎨 UI/UX improvement
-- [ ] ♻️ Code refactoring
-- [ ] 🔒 Security fix
+## Risk checks
 
-## Related Issues
-<!-- Link to related issues using #issue_number -->
+Only tick what's relevant; delete the rest.
 
-Fixes #
-Related to #
-
-## Changes Made
-<!-- List the specific changes made in this PR -->
-
-- 
-- 
-- 
+- [ ] **Tenant scoping** — every Supabase query filters by `tenant_id` explicitly. Omitting it is the most common source of bugs here, and RLS will not save you because components pass the tenant through directly.
+- [ ] **Migration** — new `.sql` is in `supabase/migrations/`, not `database/migrations/history/`. Only the former is read by `supabase db push`; a migration in the wrong place silently never deploys.
+- [ ] **New `patient_*` table** — all four wirings done: `DELETE` in *both* reset functions, a `simulation_table_config` row, a query in `studentActivityService.ts`, and a section in `EnhancedDebriefModal.tsx`. Miss one and rows accumulate across resets or vanish from debriefs.
+- [ ] **Template ↔ simulation matching** — matched on immutable properties, never UUID or barcode. Launch regenerates both, and a barcode match returns NULL and skips records silently rather than erroring.
+- [ ] **Secrets** — no keys, tokens or connection strings in the diff, including in docs and comments.
 
 ## Testing
-<!-- Describe the testing you've done -->
 
-- [ ] Manual testing completed
-- [ ] Tested in simulation mode
-- [ ] Tested with real patient data
-- [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
-- [ ] Mobile responsive testing
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
+<!-- What you actually ran or clicked. "Verified in a simulation as an instructor and a student" beats a ticked box. -->
 
-## Security Considerations
-<!-- Any security implications of this change? -->
+## Deployment
 
-- [ ] No sensitive data exposed
-- [ ] Input validation implemented
-- [ ] XSS prevention measures in place
-- [ ] SQL injection prevention (if applicable)
-- [ ] Authentication/authorization checked
-- [ ] HIPAA compliance maintained
-
-## Screenshots
-<!-- If applicable, add screenshots to help explain your changes -->
-
-## Deployment Notes
-<!-- Any special deployment steps or configuration changes needed? -->
-
-- [ ] Database migrations required
-- [ ] Environment variables added/changed
-- [ ] External service configuration needed
-- [ ] No special deployment steps needed
-
-## Checklist
-<!-- Ensure all items are completed before submitting -->
-
-- [ ] Code follows project style guidelines
-- [ ] Self-review of code completed
-- [ ] Comments added for complex logic
-- [ ] Documentation updated (if needed)
-- [ ] No new warnings generated
-- [ ] Changes are backwards compatible (or breaking changes documented)
-- [ ] Dependent changes merged and published
-
-## Additional Context
-<!-- Add any other context about the PR here -->
+- [ ] Needs `supabase db push` after merge
+- [ ] Needs an Edge Function redeploy (`supabase functions deploy <name>`)
+- [ ] Environment variable or Supabase secret added/changed
+- [ ] Nothing special
