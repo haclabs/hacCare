@@ -7,6 +7,59 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-09-22 - TENANT ISOLATION SECURITY FIX
+===============================================================================
+
+* Closed a cross-tenant privilege escalation on tenant_users (deployed to
+  production 2026-09-22)
+  - Two policies, tenant_users_auth_select and tenant_users_auth_insert,
+    admitted any authenticated user. Since is_active defaults to true and
+    Supabase grants anon/authenticated full table rights by default, RLS was
+    the only barrier -- so any account, including a simulation student, could
+    enumerate every tenant and enrol itself into one. Every clinical table's
+    policy matches on tenant_users membership, so this conferred read/write
+    on other institutions' patients, medications, vitals, labs and notes
+  - The policy was load-bearing: TenantContext self-granted membership at five
+    sites and useActiveSimulations at two, because launch_simulation enrols
+    participants but not instructors. Replaced with ensure_tenant_access(), a
+    SECURITY DEFINER RPC gated on user_may_join_tenant(), which mirrors the
+    entitlement rules the existing SELECT policies already encode
+  - tenants carried the same pattern for INSERT/UPDATE/DELETE alongside the
+    correct tenants_super_admin_* policies. Permissive policies OR together,
+    so the super_admin restriction had been decorative
+  - Removed the auth.jwt() user_metadata fallback from
+    current_user_is_super_admin(). It was user-forgeable
+  - Scoped the user directory and handover notes, both of which had been
+    readable by any authenticated user platform-wide
+  - Files: TenantContext.tsx, useActiveSimulations.ts, migrations
+    20260921000000..20260921000003
+
+* Added an emergency rollback for the above
+  - Backups are daily with PITR disabled, so the only restore target discards
+    a day of charting. This change touches only functions and policies and
+    rewrites no data, so a targeted revert is faster and lossless
+  - Atomic, and asserts before COMMIT that all eight original policies are
+    back and all seven hardened ones gone, so a partial revert aborts
+  - File: supabase/rollback/20260921_rollback_tenant_access_hardening.sql
+
+* Made the local Supabase stack usable again
+  - The local baseline was ~10 months stale (55 tables against 61 live) and
+    could not build a database at all: it predated patient_templates, which
+    the new entitlement function queries
+  - Added seed data so verify_rls_isolation.sql actually executes its
+    behavioural assertions rather than skipping them, and a negative control
+    confirming the suite fails when the old policy is reinstated
+  - seed.sql must open with a plain REFRESH MATERIALIZED VIEW: pg_dump emits
+    views WITH NO DATA and the tenant_users trigger refreshes CONCURRENTLY,
+    which Postgres rejects on a never-populated view
+  - Removed supabase/schema.sql, an unreferenced August dump that still
+    documented the vulnerable policy set. Regenerate on demand with
+    `supabase db dump --linked --schema public`
+  - Files: supabase/migrations/20251113000000_initial_schema.sql,
+    supabase/seed.sql, supabase/README.md
+
+
+===============================================================================
 [Unreleased] - 2026-08-29 - MEDICATION LABEL REDESIGN
 ===============================================================================
 

@@ -18,8 +18,8 @@ supabase/
 ├── migrations/   # Baseline + pending migrations, for `supabase start`
 ├── functions/    # Edge Functions
 ├── tests/        # SQL assertions run against a local or dev database
+├── rollback/     # Emergency reverts, applied by hand and never by the CLI
 ├── seed.sql      # Local-only fixture data
-├── schema.sql    # Reference pg_dump of the live database (not applied)
 └── .gitignore
 ```
 
