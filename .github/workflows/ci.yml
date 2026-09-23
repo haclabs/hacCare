@@ -96,9 +96,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Blocking as of 2026-09-22. The note this replaced said "don't block PRs
+      # until you've triaged existing issues" -- that is now done: code scanning
+      # shows 0 open alerts (38 fixed, 4 dismissed as false positives). Turning
+      # it on at zero costs nothing today and catches the next regression.
+      #
+      # FAILURE MODE: this now fails the build on a Snyk outage, an expired
+      # SNYK_TOKEN, or a free-plan test-quota exhaustion -- not only on a real
+      # finding. If PRs start blocking for one of those reasons, restore
+      # `continue-on-error: true` here rather than merging around it, and rely
+      # on the SARIF upload plus the code-scanning ruleset for enforcement.
       - name: Run Snyk to check for dependency vulnerabilities
         uses: snyk/actions/node@master
-        continue-on-error: true  # Don't block PRs until you've triaged existing issues
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -106,7 +115,6 @@ jobs:
 
       - name: Run Snyk Code (SAST) scan
         uses: snyk/actions/node@master
-        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
