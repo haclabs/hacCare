@@ -1,40 +1,49 @@
--- =============================================================================
--- BASELINE SCHEMA MIGRATION
--- Generated from supabase/schema.sql
--- This migration creates all public schema objects from scratch so that
--- Supabase Preview Branches can run migrations against a blank database.
--- =============================================================================
-
--- Extensions are managed by Supabase platform, but ensure pgcrypto is available
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
-
-SET search_path = public;
 
 
--- ============================================================
--- TYPES
--- ============================================================
 
--- -- Name: ack_scope; Type: TYPE; Schema: public
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
 
-CREATE TYPE public.ack_scope AS ENUM (
+
+CREATE SCHEMA IF NOT EXISTS "public";
+
+
+ALTER SCHEMA "public" OWNER TO "pg_database_owner";
+
+
+COMMENT ON SCHEMA "public" IS 'Old simulation system cleaned up - ready for new implementation';
+
+
+
+CREATE TYPE "public"."ack_scope" AS ENUM (
     'panel',
     'result'
 );
 
--- -- Name: alert_priority_enum; Type: TYPE; Schema: public
 
-CREATE TYPE public.alert_priority_enum AS ENUM (
+ALTER TYPE "public"."ack_scope" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."alert_priority_enum" AS ENUM (
     'low',
     'medium',
     'high',
     'critical'
 );
 
--- -- Name: alert_type_enum; Type: TYPE; Schema: public
 
-CREATE TYPE public.alert_type_enum AS ENUM (
+ALTER TYPE "public"."alert_priority_enum" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."alert_type_enum" AS ENUM (
     'medication_due',
     'vital_signs',
     'emergency',
@@ -42,9 +51,11 @@ CREATE TYPE public.alert_type_enum AS ENUM (
     'discharge_ready'
 );
 
--- -- Name: device_type_enum; Type: TYPE; Schema: public
 
-CREATE TYPE public.device_type_enum AS ENUM (
+ALTER TYPE "public"."alert_type_enum" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."device_type_enum" AS ENUM (
     'closed-suction-drain',
     'chest-tube',
     'foley',
@@ -57,17 +68,21 @@ CREATE TYPE public.device_type_enum AS ENUM (
     'nasogastric'
 );
 
--- -- Name: lab_category; Type: TYPE; Schema: public
 
-CREATE TYPE public.lab_category AS ENUM (
+ALTER TYPE "public"."device_type_enum" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."lab_category" AS ENUM (
     'chemistry',
     'abg',
     'hematology'
 );
 
--- -- Name: lab_flag; Type: TYPE; Schema: public
 
-CREATE TYPE public.lab_flag AS ENUM (
+ALTER TYPE "public"."lab_category" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."lab_flag" AS ENUM (
     'normal',
     'abnormal_high',
     'abnormal_low',
@@ -75,17 +90,21 @@ CREATE TYPE public.lab_flag AS ENUM (
     'critical_low'
 );
 
--- -- Name: lab_panel_status; Type: TYPE; Schema: public
 
-CREATE TYPE public.lab_panel_status AS ENUM (
+ALTER TYPE "public"."lab_flag" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."lab_panel_status" AS ENUM (
     'new',
     'partial_ack',
     'acknowledged'
 );
 
--- -- Name: orientation_enum; Type: TYPE; Schema: public
 
-CREATE TYPE public.orientation_enum AS ENUM (
+ALTER TYPE "public"."lab_panel_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."orientation_enum" AS ENUM (
     'superior',
     'inferior',
     'medial',
@@ -94,18 +113,22 @@ CREATE TYPE public.orientation_enum AS ENUM (
     'posterior'
 );
 
--- -- Name: ref_operator; Type: TYPE; Schema: public
 
-CREATE TYPE public.ref_operator AS ENUM (
+ALTER TYPE "public"."orientation_enum" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."ref_operator" AS ENUM (
     'between',
     '>=',
     '<=',
     'sex-specific'
 );
 
--- -- Name: reservoir_type_enum; Type: TYPE; Schema: public
 
-CREATE TYPE public.reservoir_type_enum AS ENUM (
+ALTER TYPE "public"."ref_operator" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."reservoir_type_enum" AS ENUM (
     'jackson-pratt',
     'hemovac',
     'penrose',
@@ -113,9 +136,11 @@ CREATE TYPE public.reservoir_type_enum AS ENUM (
     'urinary-drainage-bag'
 );
 
--- -- Name: simulation_active_status; Type: TYPE; Schema: public
 
-CREATE TYPE public.simulation_active_status AS ENUM (
+ALTER TYPE "public"."reservoir_type_enum" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."simulation_active_status" AS ENUM (
     'pending',
     'running',
     'paused',
@@ -124,33 +149,41 @@ CREATE TYPE public.simulation_active_status AS ENUM (
     'cancelled'
 );
 
--- -- Name: simulation_role; Type: TYPE; Schema: public
 
-CREATE TYPE public.simulation_role AS ENUM (
+ALTER TYPE "public"."simulation_active_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."simulation_role" AS ENUM (
     'instructor',
     'student'
 );
 
--- -- Name: simulation_template_status; Type: TYPE; Schema: public
 
-CREATE TYPE public.simulation_template_status AS ENUM (
+ALTER TYPE "public"."simulation_role" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."simulation_template_status" AS ENUM (
     'draft',
     'ready',
     'archived'
 );
 
--- -- Name: tenant_type; Type: TYPE; Schema: public
 
-CREATE TYPE public.tenant_type AS ENUM (
+ALTER TYPE "public"."simulation_template_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."tenant_type" AS ENUM (
     'production',
     'simulation_template',
     'simulation_active',
     'program'
 );
 
--- -- Name: user_role; Type: TYPE; Schema: public
 
-CREATE TYPE public.user_role AS ENUM (
+ALTER TYPE "public"."tenant_type" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."user_role" AS ENUM (
     'nurse',
     'admin',
     'super_admin',
@@ -159,9 +192,15 @@ CREATE TYPE public.user_role AS ENUM (
     'student'
 );
 
--- -- Name: wound_type_enum; Type: TYPE; Schema: public
 
-CREATE TYPE public.wound_type_enum AS ENUM (
+ALTER TYPE "public"."user_role" OWNER TO "postgres";
+
+
+COMMENT ON TYPE "public"."user_role" IS 'User roles: super_admin (cross-tenant), coordinator (tenant-wide), admin (tenant admin), instructor (program-scoped), nurse (clinical staff), student (learner)';
+
+
+
+CREATE TYPE "public"."wound_type_enum" AS ENUM (
     'incision',
     'laceration',
     'surgical-site',
@@ -171,1374 +210,12 @@ CREATE TYPE public.wound_type_enum AS ENUM (
 );
 
 
--- ============================================================
--- SEQUENCES
--- ============================================================
+ALTER TYPE "public"."wound_type_enum" OWNER TO "postgres";
 
--- -- Name: simulation_table_config_id_seq; Type: SEQUENCE; Schema: public
 
-CREATE SEQUENCE public.simulation_table_config_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
--- ============================================================
--- TABLES
--- ============================================================
-
--- -- Name: user_profiles; Type: TABLE; Schema: public
-
-CREATE TABLE public.user_profiles (
-    id uuid NOT NULL,
-    email text NOT NULL,
-    first_name text DEFAULT ''::text NOT NULL,
-    last_name text DEFAULT ''::text NOT NULL,
-    role public.user_role DEFAULT 'nurse'::public.user_role NOT NULL,
-    primary_program text,
-    license_number text,
-    phone text,
-    is_active boolean DEFAULT true,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    simulation_only boolean DEFAULT false,
-    default_tenant_id uuid
-);
-
--- -- Name: patient_medications; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_medications (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid,
-    name text NOT NULL,
-    dosage text NOT NULL,
-    frequency text NOT NULL,
-    route text NOT NULL,
-    start_date date NOT NULL,
-    end_date date,
-    prescribed_by text NOT NULL,
-    last_administered timestamp with time zone,
-    next_due timestamp with time zone NOT NULL,
-    status text DEFAULT 'Active'::text NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    category text DEFAULT 'scheduled'::text,
-    tenant_id uuid,
-    admin_time character varying(5) DEFAULT '08:00'::character varying,
-    admin_times jsonb,
-    CONSTRAINT patient_medications_category_check CHECK ((category = ANY (ARRAY['scheduled'::text, 'unscheduled'::text, 'prn'::text, 'continuous'::text, 'diabetic'::text, 'stat'::text])))
-);
-
--- -- Name: audit_logs; Type: TABLE; Schema: public
-
-CREATE TABLE public.audit_logs (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid,
-    action text NOT NULL,
-    target_id uuid,
-    target_type text NOT NULL,
-    details jsonb DEFAULT '{}'::jsonb,
-    "timestamp" timestamp with time zone DEFAULT now()
-);
-
--- -- Name: avatar_locations; Type: TABLE; Schema: public
-
-CREATE TABLE public.avatar_locations (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    region_key text NOT NULL,
-    x_percent numeric NOT NULL,
-    y_percent numeric NOT NULL,
-    free_text text,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    body_view text,
-    CONSTRAINT avatar_locations_x_percent_check CHECK (((x_percent >= (0)::numeric) AND (x_percent <= (100)::numeric))),
-    CONSTRAINT avatar_locations_y_percent_check CHECK (((y_percent >= (0)::numeric) AND (y_percent <= (100)::numeric)))
-);
-
--- -- Name: backup_audit_log; Type: TABLE; Schema: public
-
-CREATE TABLE public.backup_audit_log (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
-    action text NOT NULL,
-    backup_id text,
-    details jsonb DEFAULT '{}'::jsonb,
-    ip_address inet,
-    user_agent text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT backup_audit_log_action_check CHECK ((action = ANY (ARRAY['backup_created'::text, 'backup_downloaded'::text, 'backup_deleted'::text, 'backup_restored'::text, 'backup_failed'::text, 'backup_expired'::text, 'backup_access_denied'::text])))
-);
-
--- -- Name: backup_files; Type: TABLE; Schema: public
-
-CREATE TABLE public.backup_files (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    backup_id text NOT NULL,
-    file_data text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    file_hash text,
-    compression_type text DEFAULT 'none'::text,
-    CONSTRAINT backup_files_compression_type_check CHECK ((compression_type = ANY (ARRAY['none'::text, 'gzip'::text, 'brotli'::text])))
-);
-
--- -- Name: backup_metadata; Type: TABLE; Schema: public
-
-CREATE TABLE public.backup_metadata (
-    id text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    created_by uuid NOT NULL,
-    backup_type text NOT NULL,
-    file_size bigint DEFAULT 0 NOT NULL,
-    record_count integer DEFAULT 0 NOT NULL,
-    options jsonb DEFAULT '{}'::jsonb NOT NULL,
-    checksum text NOT NULL,
-    encrypted boolean DEFAULT false NOT NULL,
-    status text DEFAULT 'in_progress'::text NOT NULL,
-    expiry_date timestamp with time zone NOT NULL,
-    download_count integer DEFAULT 0 NOT NULL,
-    last_downloaded timestamp with time zone,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT backup_metadata_backup_type_check CHECK ((backup_type = ANY (ARRAY['full'::text, 'partial'::text, 'tenant_specific'::text]))),
-    CONSTRAINT backup_metadata_status_check CHECK ((status = ANY (ARRAY['in_progress'::text, 'completed'::text, 'failed'::text, 'expired'::text])))
-);
-
--- -- Name: bowel_records; Type: TABLE; Schema: public
-
-CREATE TABLE public.bowel_records (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid,
-    patient_id text NOT NULL,
-    nurse_id text NOT NULL,
-    nurse_name text NOT NULL,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    bowel_incontinence text,
-    stool_appearance text,
-    stool_consistency text,
-    stool_colour text,
-    stool_amount text,
-    notes text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    student_name text,
-    CONSTRAINT bowel_records_bowel_incontinence_check CHECK ((bowel_incontinence = ANY (ARRAY['Continent'::text, 'Incontinent'::text, 'Partial'::text]))),
-    CONSTRAINT bowel_records_stool_amount_check CHECK ((stool_amount = ANY (ARRAY['Small'::text, 'Moderate'::text, 'Large'::text, 'None'::text]))),
-    CONSTRAINT bowel_records_stool_appearance_check CHECK ((stool_appearance = ANY (ARRAY['Normal'::text, 'Abnormal'::text, 'Blood present'::text, 'Mucus present'::text]))),
-    CONSTRAINT bowel_records_stool_colour_check CHECK ((stool_colour = ANY (ARRAY['Brown'::text, 'Green'::text, 'Yellow'::text, 'Black'::text, 'Red'::text, 'Clay colored'::text]))),
-    CONSTRAINT bowel_records_stool_consistency_check CHECK ((stool_consistency = ANY (ARRAY['Formed'::text, 'Loose'::text, 'Watery'::text, 'Hard'::text, 'Soft'::text])))
-);
-
--- -- Name: contact_submissions; Type: TABLE; Schema: public
-
-CREATE TABLE public.contact_submissions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL,
-    email text NOT NULL,
-    institution text,
-    message text NOT NULL,
-    submitted_at timestamp with time zone DEFAULT now() NOT NULL,
-    processed boolean DEFAULT false,
-    processed_at timestamp with time zone,
-    notes text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
--- -- Name: device_assessments; Type: TABLE; Schema: public
-
-CREATE TABLE public.device_assessments (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    device_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    assessed_at timestamp with time zone DEFAULT now() NOT NULL,
-    student_name text NOT NULL,
-    device_type text NOT NULL,
-    status text,
-    output_amount_ml numeric(10,2),
-    notes text,
-    assessment_data jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
--- -- Name: devices; Type: TABLE; Schema: public
-
-CREATE TABLE public.devices (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    location_id uuid NOT NULL,
-    type public.device_type_enum DEFAULT 'closed-suction-drain'::public.device_type_enum NOT NULL,
-    placement_date date,
-    placement_time time without time zone,
-    placed_pre_arrival text,
-    inserted_by text,
-    tube_number integer,
-    orientation public.orientation_enum[] DEFAULT '{}'::public.orientation_enum[],
-    tube_size_fr text,
-    number_of_sutures_placed integer,
-    reservoir_type public.reservoir_type_enum,
-    reservoir_size_ml integer,
-    securement_method text[] DEFAULT '{}'::text[],
-    patient_tolerance text,
-    notes text,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    gauge text,
-    site_side text,
-    route text,
-    external_length_cm numeric(5,2),
-    initial_xray_confirmed boolean DEFAULT false,
-    initial_ph numeric(3,1),
-    initial_aspirate_appearance text,
-    placement_confirmed boolean DEFAULT false,
-    site_location text,
-    ostomy_construction text,
-    stoma_side text,
-    ng_securement text,
-    ng_attached_to text,
-    ng_external_length_mm numeric(8,1),
-    ng_residual_volume_ml numeric(8,1),
-    CONSTRAINT devices_tube_number_check CHECK (((tube_number >= 1) AND (tube_number <= 10)))
-);
-
--- -- Name: diabetic_records; Type: TABLE; Schema: public
-
-CREATE TABLE public.diabetic_records (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id text NOT NULL,
-    recorded_by uuid,
-    date date NOT NULL,
-    time_cbg_taken time without time zone NOT NULL,
-    reading_type character varying(10) NOT NULL,
-    glucose_reading numeric(4,1) NOT NULL,
-    basal_insulin jsonb,
-    bolus_insulin jsonb,
-    correction_insulin jsonb,
-    other_insulin jsonb,
-    treatments_given text,
-    comments_for_physician text,
-    signature character varying(255) NOT NULL,
-    prompt_frequency character varying(10) DEFAULT 'Q6H'::character varying NOT NULL,
-    recorded_at timestamp with time zone DEFAULT now(),
-    created_at timestamp with time zone DEFAULT now(),
-    student_name text,
-    CONSTRAINT diabetic_records_glucose_reading_check CHECK (((glucose_reading >= (0)::numeric) AND (glucose_reading <= (50)::numeric))),
-    CONSTRAINT diabetic_records_reading_type_check CHECK (((reading_type)::text = ANY (ARRAY[('AC'::character varying)::text, ('PC'::character varying)::text, ('HS'::character varying)::text, ('AM'::character varying)::text, ('PRN'::character varying)::text])))
-);
-
--- -- Name: doctors_orders; Type: TABLE; Schema: public
-
-CREATE TABLE public.doctors_orders (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    order_date date DEFAULT CURRENT_DATE NOT NULL,
-    order_time time without time zone DEFAULT CURRENT_TIME NOT NULL,
-    order_text text NOT NULL,
-    ordering_doctor text NOT NULL,
-    notes text,
-    order_type text DEFAULT 'Direct'::text,
-    is_acknowledged boolean DEFAULT false,
-    acknowledged_by uuid,
-    acknowledged_at timestamp with time zone,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_by uuid,
-    updated_at timestamp with time zone DEFAULT now(),
-    doctor_name text,
-    acknowledged_by_student text,
-    CONSTRAINT doctors_orders_order_type_check CHECK ((order_type = ANY (ARRAY['Direct'::text, 'Phone Order'::text, 'Verbal Order'::text])))
-);
-
--- -- Name: handover_notes; Type: TABLE; Schema: public
-
-CREATE TABLE public.handover_notes (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    situation text NOT NULL,
-    background text NOT NULL,
-    assessment text NOT NULL,
-    recommendations text NOT NULL,
-    shift character varying(10) NOT NULL,
-    priority character varying(10) NOT NULL,
-    acknowledged_by uuid,
-    acknowledged_at timestamp with time zone,
-    created_by_name character varying(255) NOT NULL,
-    created_by_role character varying(100) NOT NULL,
-    student_name text,
-    nursing_notes text,
-    CONSTRAINT handover_notes_priority_check CHECK (((priority)::text = ANY (ARRAY[('low'::character varying)::text, ('medium'::character varying)::text, ('high'::character varying)::text, ('urgent'::character varying)::text]))),
-    CONSTRAINT handover_notes_shift_check CHECK (((shift)::text = ANY (ARRAY[('day'::character varying)::text, ('evening'::character varying)::text, ('night'::character varying)::text])))
-);
-
--- -- Name: lab_ack_events; Type: TABLE; Schema: public
-
-CREATE TABLE public.lab_ack_events (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    panel_id uuid NOT NULL,
-    ack_scope public.ack_scope NOT NULL,
-    ack_by uuid NOT NULL,
-    ack_at timestamp with time zone DEFAULT now(),
-    abnormal_summary jsonb,
-    note text,
-    created_at timestamp with time zone DEFAULT now(),
-    student_name text
-);
-
--- -- Name: lab_orders; Type: TABLE; Schema: public
-
-CREATE TABLE public.lab_orders (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    order_date date NOT NULL,
-    order_time time without time zone NOT NULL,
-    procedure_category text NOT NULL,
-    procedure_type text NOT NULL,
-    source_category text NOT NULL,
-    source_type text NOT NULL,
-    student_name text NOT NULL,
-    verified_by uuid NOT NULL,
-    status text DEFAULT 'pending'::text,
-    notes text,
-    label_printed boolean DEFAULT false,
-    label_printed_at timestamp with time zone,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
--- -- Name: lab_panels; Type: TABLE; Schema: public
-
-CREATE TABLE public.lab_panels (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    panel_time timestamp with time zone NOT NULL,
-    source text,
-    entered_by uuid,
-    status public.lab_panel_status DEFAULT 'new'::public.lab_panel_status,
-    ack_required boolean DEFAULT true,
-    notes text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    student_name text
-);
-
--- -- Name: lab_result_refs; Type: TABLE; Schema: public
-
-CREATE TABLE public.lab_result_refs (
-    test_code text NOT NULL,
-    category public.lab_category NOT NULL,
-    test_name text NOT NULL,
-    units text,
-    ref_low numeric(12,4),
-    ref_high numeric(12,4),
-    ref_operator public.ref_operator DEFAULT 'between'::public.ref_operator,
-    sex_ref jsonb,
-    critical_low numeric(12,4),
-    critical_high numeric(12,4),
-    display_order integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
--- -- Name: lab_results; Type: TABLE; Schema: public
-
-CREATE TABLE public.lab_results (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    panel_id uuid NOT NULL,
-    category public.lab_category NOT NULL,
-    test_code text NOT NULL,
-    test_name text NOT NULL,
-    value numeric(12,4),
-    units text,
-    ref_low numeric(12,4),
-    ref_high numeric(12,4),
-    ref_operator public.ref_operator DEFAULT 'between'::public.ref_operator,
-    sex_ref jsonb,
-    critical_low numeric(12,4),
-    critical_high numeric(12,4),
-    flag public.lab_flag DEFAULT 'normal'::public.lab_flag,
-    entered_by uuid,
-    entered_at timestamp with time zone DEFAULT now(),
-    ack_by uuid,
-    ack_at timestamp with time zone,
-    comments text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    acknowledged_by_student text,
-    note text
-);
-
--- -- Name: medication_administrations; Type: TABLE; Schema: public
-
-CREATE TABLE public.medication_administrations (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    medication_id text,
-    patient_id text NOT NULL,
-    administered_by text NOT NULL,
-    administered_by_id text,
-    "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
-    notes text,
-    dosage text,
-    route text,
-    status text DEFAULT 'completed'::text,
-    medication_name text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    tenant_id uuid NOT NULL,
-    student_name text,
-    barcode_scanned boolean DEFAULT false,
-    patient_barcode_scanned text,
-    medication_barcode_scanned text,
-    override_reason text,
-    witness_name text,
-    administered_dose text,
-    CONSTRAINT medication_administrations_status_check CHECK ((status = ANY (ARRAY['completed'::text, 'missed'::text, 'late'::text, 'partial'::text])))
-);
-
--- -- Name: multi_tenant_admins; Type: TABLE; Schema: public
-
-CREATE TABLE public.multi_tenant_admins (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
--- -- Name: patient_admission_records; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_admission_records (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid,
-    patient_id text NOT NULL,
-    admission_type text,
-    attending_physician text,
-    insurance_provider text,
-    insurance_policy text,
-    admission_source text,
-    chief_complaint text,
-    height text,
-    weight text,
-    bmi text,
-    smoking_status text,
-    alcohol_use text,
-    exercise text,
-    occupation text,
-    family_history text,
-    marital_status text,
-    secondary_contact_name text,
-    secondary_contact_relationship text,
-    secondary_contact_phone text,
-    secondary_contact_address text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    admission_date timestamp with time zone,
-    admitting_diagnosis text,
-    allergies text,
-    current_medications text,
-    emergency_contact_name text,
-    emergency_contact_phone text,
-    emergency_contact_relationship text
-);
-
--- -- Name: patient_advanced_directives; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_advanced_directives (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid,
-    patient_id text NOT NULL,
-    living_will_status text,
-    living_will_date text,
-    healthcare_proxy_name text,
-    healthcare_proxy_phone text,
-    dnr_status text,
-    organ_donation_status text,
-    organ_donation_details text,
-    religious_preference text,
-    special_instructions text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    living_will_exists boolean DEFAULT false,
-    healthcare_proxy_relationship text,
-    student_name text
-);
-
--- -- Name: patient_alerts; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_alerts (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    patient_name text NOT NULL,
-    alert_type public.alert_type_enum NOT NULL,
-    message text NOT NULL,
-    priority public.alert_priority_enum NOT NULL,
-    acknowledged boolean DEFAULT false NOT NULL,
-    acknowledged_by uuid,
-    acknowledged_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    expires_at timestamp with time zone,
-    tenant_id uuid
-);
-
--- -- Name: tenants; Type: TABLE; Schema: public
-
-CREATE TABLE public.tenants (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name character varying(255) NOT NULL,
-    subdomain character varying(100) NOT NULL,
-    logo_url text,
-    primary_color character varying(7) DEFAULT '#3B82F6'::character varying,
-    settings jsonb DEFAULT '{"currency": "USD", "features": {"mobile_app": true, "wound_care": false, "barcode_scanning": false, "advanced_analytics": false, "medication_management": true}, "security": {"password_policy": {"min_length": 8, "require_numbers": true, "require_symbols": false, "require_lowercase": true, "require_uppercase": true}, "session_timeout": 480, "two_factor_required": false}, "timezone": "UTC", "date_format": "MM/DD/YYYY"}'::jsonb NOT NULL,
-    status character varying(20) DEFAULT 'active'::character varying NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    admin_user_id uuid,
-    subscription_plan character varying(20) DEFAULT 'basic'::character varying NOT NULL,
-    max_users integer DEFAULT 10 NOT NULL,
-    max_patients integer DEFAULT 100 NOT NULL,
-    parent_tenant_id uuid,
-    tenant_type text DEFAULT 'institution'::text,
-    simulation_id uuid,
-    auto_cleanup_at timestamp without time zone,
-    is_simulation boolean DEFAULT false,
-    simulation_config jsonb DEFAULT '{}'::jsonb,
-    program_id uuid,
-    CONSTRAINT tenants_status_check CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text]))),
-    CONSTRAINT tenants_subscription_plan_check CHECK (((subscription_plan)::text = ANY (ARRAY[('basic'::character varying)::text, ('premium'::character varying)::text, ('enterprise'::character varying)::text])))
-);
-
--- -- Name: patient_bbit_entries; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_bbit_entries (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    time_label text,
-    student_name text,
-    glucose_value numeric(5,2),
-    basal_name text,
-    basal_dose numeric(6,2),
-    basal_status text,
-    basal_held_reason text,
-    basal_held_other text,
-    bolus_dose numeric(6,2),
-    bolus_meal text,
-    bolus_status text,
-    bolus_not_given_reason text,
-    correction_dose numeric(6,2),
-    correction_suggested_dose numeric(6,2),
-    correction_status text,
-    hypo_juice boolean,
-    hypo_dextrose_tabs boolean,
-    hypo_iv_dextrose boolean,
-    hypo_glucagon boolean,
-    hypo_other text,
-    hypo_recheck_completed boolean,
-    carb_intake text,
-    note_symptomatic_hypo boolean,
-    note_hyperglycemia_symptoms boolean,
-    note_insulin_delay boolean,
-    note_other text,
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT patient_bbit_entries_basal_dose_check CHECK ((basal_dose >= (0)::numeric)),
-    CONSTRAINT patient_bbit_entries_basal_held_reason_check CHECK ((basal_held_reason = ANY (ARRAY['Low BG'::text, 'NPO'::text, 'Provider order'::text, 'Other'::text]))),
-    CONSTRAINT patient_bbit_entries_basal_status_check CHECK ((basal_status = ANY (ARRAY['given'::text, 'held'::text]))),
-    CONSTRAINT patient_bbit_entries_bolus_dose_check CHECK ((bolus_dose >= (0)::numeric)),
-    CONSTRAINT patient_bbit_entries_bolus_meal_check CHECK ((bolus_meal = ANY (ARRAY['Breakfast'::text, 'Lunch'::text, 'Supper'::text]))),
-    CONSTRAINT patient_bbit_entries_bolus_not_given_reason_check CHECK ((bolus_not_given_reason = ANY (ARRAY['Patient not eating'::text, 'NPO'::text, 'Refused'::text]))),
-    CONSTRAINT patient_bbit_entries_bolus_status_check CHECK ((bolus_status = ANY (ARRAY['given'::text, 'not_given'::text]))),
-    CONSTRAINT patient_bbit_entries_carb_intake_check CHECK ((carb_intake = ANY (ARRAY['full'::text, 'partial'::text, 'none'::text]))),
-    CONSTRAINT patient_bbit_entries_correction_dose_check CHECK ((correction_dose >= (0)::numeric)),
-    CONSTRAINT patient_bbit_entries_correction_status_check CHECK ((correction_status = ANY (ARRAY['given'::text, 'not_required'::text]))),
-    CONSTRAINT patient_bbit_entries_correction_suggested_dose_check CHECK ((correction_suggested_dose >= (0)::numeric)),
-    CONSTRAINT patient_bbit_entries_glucose_value_check CHECK (((glucose_value >= (0)::numeric) AND (glucose_value <= (50)::numeric)))
-);
-
--- -- Name: patient_images; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_images (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid,
-    image_url text NOT NULL,
-    thumbnail_url text,
-    annotations jsonb DEFAULT '[]'::jsonb,
-    image_type text NOT NULL,
-    description text,
-    uploaded_by uuid,
-    created_at timestamp with time zone DEFAULT now(),
-    tenant_id uuid
-);
-
--- -- Name: patient_intake_output_events; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_intake_output_events (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    event_timestamp timestamp with time zone DEFAULT now() NOT NULL,
-    shift_label text,
-    direction text NOT NULL,
-    category text NOT NULL,
-    route text,
-    description text,
-    amount_ml numeric(10,2) NOT NULL,
-    student_name text,
-    created_by uuid,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT patient_intake_output_events_amount_ml_check CHECK ((amount_ml >= (0)::numeric)),
-    CONSTRAINT patient_intake_output_events_category_check CHECK ((category = ANY (ARRAY['oral'::text, 'iv_fluid'::text, 'iv_med'::text, 'blood'::text, 'tube_feed'::text, 'urine'::text, 'stool'::text, 'emesis'::text, 'drain'::text]))),
-    CONSTRAINT patient_intake_output_events_direction_check CHECK ((direction = ANY (ARRAY['intake'::text, 'output'::text])))
-);
-
--- -- Name: patient_medications_templates; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_medications_templates (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_template_id uuid NOT NULL,
-    medication_name character varying(200) NOT NULL,
-    generic_name character varying(200),
-    dosage character varying(100) NOT NULL,
-    route character varying(50) NOT NULL,
-    frequency character varying(100) NOT NULL,
-    indication text,
-    contraindications text,
-    side_effects text[],
-    is_prn boolean DEFAULT false,
-    prn_parameters text,
-    start_date date,
-    end_date date,
-    max_dose_per_day character varying(50),
-    notes text,
-    barcode character varying(100),
-    display_order integer DEFAULT 0,
-    is_active boolean DEFAULT true,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    created_by uuid,
-    CONSTRAINT patient_medications_templates_route_check CHECK (((route)::text = ANY (ARRAY[('oral'::character varying)::text, ('intravenous'::character varying)::text, ('intramuscular'::character varying)::text, ('subcutaneous'::character varying)::text, ('topical'::character varying)::text, ('inhalation'::character varying)::text, ('rectal'::character varying)::text, ('sublingual'::character varying)::text, ('nasal'::character varying)::text, ('transdermal'::character varying)::text])))
-);
-
--- -- Name: patient_neuro_assessments; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_neuro_assessments (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    student_name text,
-    level_of_consciousness text,
-    oriented_person boolean,
-    oriented_place boolean,
-    oriented_time boolean,
-    gcs_eye smallint,
-    gcs_verbal smallint,
-    gcs_motor smallint,
-    pupils_equal boolean,
-    pupil_left_size numeric(3,1),
-    pupil_left_reaction text,
-    pupil_right_size numeric(3,1),
-    pupil_right_reaction text,
-    strength_right_arm smallint,
-    strength_left_arm smallint,
-    strength_right_leg smallint,
-    strength_left_leg smallint,
-    sensation text,
-    speech text,
-    pain_score smallint,
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT patient_neuro_assessments_gcs_eye_check CHECK (((gcs_eye >= 1) AND (gcs_eye <= 4))),
-    CONSTRAINT patient_neuro_assessments_gcs_motor_check CHECK (((gcs_motor >= 1) AND (gcs_motor <= 6))),
-    CONSTRAINT patient_neuro_assessments_gcs_verbal_check CHECK (((gcs_verbal >= 1) AND (gcs_verbal <= 5))),
-    CONSTRAINT patient_neuro_assessments_level_of_consciousness_check CHECK ((level_of_consciousness = ANY (ARRAY['Alert'::text, 'Voice'::text, 'Pain'::text, 'Unresponsive'::text]))),
-    CONSTRAINT patient_neuro_assessments_pain_score_check CHECK (((pain_score >= 0) AND (pain_score <= 10))),
-    CONSTRAINT patient_neuro_assessments_pupil_left_reaction_check CHECK ((pupil_left_reaction = ANY (ARRAY['Brisk'::text, 'Sluggish'::text, 'Fixed'::text, 'Absent'::text]))),
-    CONSTRAINT patient_neuro_assessments_pupil_left_size_check CHECK (((pupil_left_size >= (1)::numeric) AND (pupil_left_size <= (9)::numeric))),
-    CONSTRAINT patient_neuro_assessments_pupil_right_reaction_check CHECK ((pupil_right_reaction = ANY (ARRAY['Brisk'::text, 'Sluggish'::text, 'Fixed'::text, 'Absent'::text]))),
-    CONSTRAINT patient_neuro_assessments_pupil_right_size_check CHECK (((pupil_right_size >= (1)::numeric) AND (pupil_right_size <= (9)::numeric))),
-    CONSTRAINT patient_neuro_assessments_sensation_check CHECK ((sensation = ANY (ARRAY['Normal'::text, 'Reduced'::text, 'Absent'::text, 'Abnormal'::text]))),
-    CONSTRAINT patient_neuro_assessments_speech_check CHECK ((speech = ANY (ARRAY['Clear'::text, 'Slurred'::text, 'Confused'::text, 'Aphasia'::text, 'None'::text]))),
-    CONSTRAINT patient_neuro_assessments_strength_left_arm_check CHECK (((strength_left_arm >= 0) AND (strength_left_arm <= 5))),
-    CONSTRAINT patient_neuro_assessments_strength_left_leg_check CHECK (((strength_left_leg >= 0) AND (strength_left_leg <= 5))),
-    CONSTRAINT patient_neuro_assessments_strength_right_arm_check CHECK (((strength_right_arm >= 0) AND (strength_right_arm <= 5))),
-    CONSTRAINT patient_neuro_assessments_strength_right_leg_check CHECK (((strength_right_leg >= 0) AND (strength_right_leg <= 5)))
-);
-
--- -- Name: patient_newborn_assessments; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_newborn_assessments (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    time_of_birth time without time zone,
-    weight_grams numeric(6,1),
-    length_cm numeric(5,1),
-    head_circumference_cm numeric(4,1),
-    head_circumference_1hr_cm numeric(4,1),
-    head_circumference_2hr_cm numeric(4,1),
-    apgar_1min smallint,
-    apgar_5min smallint,
-    apgar_10min smallint,
-    vitamin_k_given boolean DEFAULT false,
-    vitamin_k_declined boolean DEFAULT false,
-    vitamin_k_dose text,
-    vitamin_k_site text,
-    vitamin_k_date date,
-    vitamin_k_time text,
-    vitamin_k_signature text,
-    erythromycin_given boolean DEFAULT false,
-    erythromycin_date date,
-    erythromycin_time text,
-    erythromycin_signature text,
-    physical_observations jsonb DEFAULT '{}'::jsonb,
-    completed_by text,
-    completed_initials text,
-    student_name text,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT patient_newborn_assessments_apgar_10min_check CHECK (((apgar_10min >= 0) AND (apgar_10min <= 10))),
-    CONSTRAINT patient_newborn_assessments_apgar_1min_check CHECK (((apgar_1min >= 0) AND (apgar_1min <= 10))),
-    CONSTRAINT patient_newborn_assessments_apgar_5min_check CHECK (((apgar_5min >= 0) AND (apgar_5min <= 10))),
-    CONSTRAINT patient_newborn_assessments_vitamin_k_dose_check CHECK ((vitamin_k_dose = ANY (ARRAY['0.5mg'::text, '1.0mg'::text])))
-);
-
--- -- Name: patient_notes; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_notes (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    note_type text,
-    content text,
-    created_by uuid,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    type text DEFAULT 'Note'::text NOT NULL,
-    nurse_name text,
-    nurse_id text,
-    priority text DEFAULT 'Medium'::text,
-    student_name text
-);
-
--- -- Name: patient_vitals; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_vitals (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid,
-    temperature numeric(4,1),
-    blood_pressure_systolic integer,
-    blood_pressure_diastolic integer,
-    heart_rate integer,
-    respiratory_rate integer,
-    oxygen_saturation integer,
-    recorded_at timestamp with time zone DEFAULT now(),
-    tenant_id uuid,
-    oxygen_delivery text DEFAULT 'Room Air'::text,
-    student_name text,
-    oxygen_flow_rate text DEFAULT 'N/A'::text,
-    CONSTRAINT patient_vitals_at_least_one_vital CHECK (((temperature IS NOT NULL) OR (heart_rate IS NOT NULL) OR (blood_pressure_systolic IS NOT NULL) OR (blood_pressure_diastolic IS NOT NULL) OR (respiratory_rate IS NOT NULL) OR (oxygen_saturation IS NOT NULL))),
-    CONSTRAINT patient_vitals_bp_pair CHECK ((((blood_pressure_systolic IS NULL) AND (blood_pressure_diastolic IS NULL)) OR ((blood_pressure_systolic IS NOT NULL) AND (blood_pressure_diastolic IS NOT NULL))))
-);
-
--- -- Name: patient_vitals_templates; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_vitals_templates (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_template_id uuid NOT NULL,
-    vital_type character varying(50) NOT NULL,
-    value_systolic integer,
-    value_diastolic integer,
-    value_numeric numeric(10,2),
-    unit character varying(20) NOT NULL,
-    normal_range_min numeric(10,2),
-    normal_range_max numeric(10,2),
-    notes text,
-    frequency_minutes integer DEFAULT 60,
-    is_critical boolean DEFAULT false,
-    display_order integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    created_by uuid,
-    CONSTRAINT patient_vitals_templates_vital_type_check CHECK (((vital_type)::text = ANY (ARRAY[('blood_pressure'::character varying)::text, ('heart_rate'::character varying)::text, ('respiratory_rate'::character varying)::text, ('temperature'::character varying)::text, ('oxygen_saturation'::character varying)::text, ('blood_glucose'::character varying)::text, ('pain_scale'::character varying)::text, ('weight'::character varying)::text, ('height'::character varying)::text])))
-);
-
--- -- Name: patient_wounds; Type: TABLE; Schema: public
-
-CREATE TABLE public.patient_wounds (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid,
-    location text NOT NULL,
-    coordinates_x numeric NOT NULL,
-    coordinates_y numeric NOT NULL,
-    view text NOT NULL,
-    type text NOT NULL,
-    stage text NOT NULL,
-    size_length numeric NOT NULL,
-    size_width numeric NOT NULL,
-    size_depth numeric,
-    description text,
-    treatment text,
-    assessed_by text NOT NULL,
-    assessment_date timestamp with time zone DEFAULT now() NOT NULL,
-    healing_progress text NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
--- -- Name: patients; Type: TABLE; Schema: public
-
-CREATE TABLE public.patients (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id text NOT NULL,
-    first_name text NOT NULL,
-    last_name text NOT NULL,
-    date_of_birth date NOT NULL,
-    gender text NOT NULL,
-    room_number text NOT NULL,
-    bed_number text NOT NULL,
-    admission_date date NOT NULL,
-    condition text NOT NULL,
-    diagnosis text NOT NULL,
-    allergies text[] DEFAULT '{}'::text[],
-    blood_type text NOT NULL,
-    emergency_contact_name text NOT NULL,
-    emergency_contact_relationship text NOT NULL,
-    emergency_contact_phone text NOT NULL,
-    assigned_nurse text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    tenant_id uuid,
-    avatar_id text
-);
-
--- -- Name: profiles; Type: TABLE; Schema: public
-
-CREATE TABLE public.profiles (
-    id uuid NOT NULL,
-    email text,
-    first_name text,
-    last_name text,
-    role text DEFAULT 'nurse'::text,
-    department text,
-    license_number text,
-    phone text,
-    is_active boolean DEFAULT true,
-    permissions text[] DEFAULT '{}'::text[],
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT profiles_role_check CHECK ((role = ANY (ARRAY['nurse'::text, 'doctor'::text, 'admin'::text, 'super_admin'::text])))
-);
-
--- -- Name: program_announcements; Type: TABLE; Schema: public
-
-CREATE TABLE public.program_announcements (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    program_id uuid NOT NULL,
-    title text NOT NULL,
-    content text NOT NULL,
-    category text DEFAULT 'General'::text,
-    is_pinned boolean DEFAULT false,
-    author_id uuid NOT NULL,
-    author_name text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    expires_at timestamp with time zone,
-    CONSTRAINT content_not_empty CHECK ((length(TRIM(BOTH FROM content)) > 0)),
-    CONSTRAINT program_announcements_category_check CHECK ((category = ANY (ARRAY['General'::text, 'Templates'::text, 'Training'::text, 'Students'::text, 'Important'::text, 'Reminder'::text]))),
-    CONSTRAINT title_not_empty CHECK ((length(TRIM(BOTH FROM title)) > 0))
-);
-
--- -- Name: programs; Type: TABLE; Schema: public
-
-CREATE TABLE public.programs (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    code text NOT NULL,
-    name text NOT NULL,
-    description text,
-    is_active boolean DEFAULT true,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    created_by uuid
-);
-
--- -- Name: scheduled_simulations; Type: TABLE; Schema: public
-
-CREATE TABLE public.scheduled_simulations (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    template_id uuid NOT NULL,
-    program_id uuid NOT NULL,
-    name text NOT NULL,
-    description text,
-    scheduled_start timestamp with time zone NOT NULL,
-    scheduled_end timestamp with time zone NOT NULL,
-    duration_minutes integer NOT NULL,
-    cohort_id uuid,
-    instructor_id uuid NOT NULL,
-    room_location text,
-    status text DEFAULT 'scheduled'::text,
-    launched_simulation_id uuid,
-    recurrence_rule text,
-    student_count integer DEFAULT 0,
-    notes text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    created_by uuid,
-    CONSTRAINT duration_positive CHECK ((duration_minutes > 0)),
-    CONSTRAINT scheduled_end_after_start CHECK ((scheduled_end > scheduled_start)),
-    CONSTRAINT scheduled_simulations_status_check CHECK ((status = ANY (ARRAY['scheduled'::text, 'launched'::text, 'completed'::text, 'cancelled'::text])))
-);
-
--- -- Name: simulation_active; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_active (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    template_id uuid NOT NULL,
-    name text NOT NULL,
-    tenant_id uuid NOT NULL,
-    status public.simulation_active_status DEFAULT 'pending'::public.simulation_active_status,
-    duration_minutes integer NOT NULL,
-    starts_at timestamp with time zone DEFAULT now(),
-    ends_at timestamp with time zone,
-    completed_at timestamp with time zone,
-    template_snapshot_version integer NOT NULL,
-    allow_late_join boolean DEFAULT false,
-    auto_cleanup boolean DEFAULT true,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    primary_categories text[] DEFAULT '{}'::text[],
-    sub_categories text[] DEFAULT '{}'::text[],
-    template_snapshot_version_launched integer DEFAULT 1,
-    template_snapshot_version_synced integer,
-    CONSTRAINT valid_duration CHECK ((duration_minutes > 0))
-);
-
--- -- Name: simulation_activity_log; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_activity_log (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    simulation_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    action_type text NOT NULL,
-    action_details jsonb DEFAULT '{}'::jsonb,
-    entity_type text,
-    entity_id uuid,
-    occurred_at timestamp with time zone DEFAULT now(),
-    notes text
-);
-
--- -- Name: simulation_history; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_history (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    simulation_id uuid,
-    template_id uuid NOT NULL,
-    name text NOT NULL,
-    status public.simulation_active_status NOT NULL,
-    duration_minutes integer NOT NULL,
-    started_at timestamp with time zone NOT NULL,
-    ended_at timestamp with time zone,
-    completed_at timestamp with time zone,
-    metrics jsonb DEFAULT '{}'::jsonb,
-    debrief_data jsonb DEFAULT '{}'::jsonb,
-    participants jsonb DEFAULT '[]'::jsonb,
-    activity_summary jsonb DEFAULT '{}'::jsonb,
-    created_by uuid NOT NULL,
-    archived_at timestamp with time zone DEFAULT now(),
-    created_at timestamp with time zone DEFAULT now(),
-    tenant_id uuid,
-    student_activities jsonb DEFAULT '[]'::jsonb,
-    primary_categories text[] DEFAULT '{}'::text[],
-    sub_categories text[] DEFAULT '{}'::text[],
-    archived boolean DEFAULT false NOT NULL,
-    archived_by uuid,
-    instructor_name text,
-    archive_folder text
-);
-
--- -- Name: simulation_participants; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_participants (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    simulation_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    role public.simulation_role DEFAULT 'student'::public.simulation_role NOT NULL,
-    granted_at timestamp with time zone DEFAULT now(),
-    granted_by uuid NOT NULL,
-    last_accessed_at timestamp with time zone
-);
-
--- -- Name: simulation_table_config; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_table_config (
-    id integer NOT NULL,
-    table_name text NOT NULL,
-    category text NOT NULL,
-    has_tenant_id boolean DEFAULT false,
-    has_patient_id boolean DEFAULT false,
-    parent_table text,
-    parent_column text,
-    requires_id_mapping boolean DEFAULT false,
-    delete_order integer NOT NULL,
-    enabled boolean DEFAULT true,
-    notes text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT valid_delete_order CHECK ((delete_order > 0))
-);
-
--- -- Name: simulation_template_versions; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_template_versions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    template_id uuid NOT NULL,
-    version integer NOT NULL,
-    snapshot_data jsonb NOT NULL,
-    saved_at timestamp without time zone DEFAULT now(),
-    saved_by uuid,
-    change_notes text,
-    patient_count integer,
-    medication_count integer,
-    order_count integer,
-    wound_count integer,
-    device_count integer,
-    CONSTRAINT simulation_template_versions_version_check CHECK ((version > 0))
-);
-
--- -- Name: simulation_templates; Type: TABLE; Schema: public
-
-CREATE TABLE public.simulation_templates (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL,
-    description text,
-    tenant_id uuid NOT NULL,
-    status public.simulation_template_status DEFAULT 'draft'::public.simulation_template_status,
-    snapshot_data jsonb DEFAULT '{}'::jsonb,
-    snapshot_version integer DEFAULT 0,
-    snapshot_taken_at timestamp with time zone,
-    default_duration_minutes integer DEFAULT 120,
-    auto_cleanup_after_hours integer DEFAULT 24,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    primary_categories text[] DEFAULT '{}'::text[],
-    sub_categories text[] DEFAULT '{}'::text[],
-    folder text,
-    CONSTRAINT valid_cleanup CHECK ((auto_cleanup_after_hours >= 0)),
-    CONSTRAINT valid_duration CHECK ((default_duration_minutes > 0))
-);
-
--- -- Name: student_roster; Type: TABLE; Schema: public
-
-CREATE TABLE public.student_roster (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
-    program_id uuid NOT NULL,
-    cohort_id uuid,
-    student_number text NOT NULL,
-    enrollment_date date DEFAULT CURRENT_DATE NOT NULL,
-    is_active boolean DEFAULT true,
-    notes text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    created_by uuid
-);
-
--- -- Name: system_logs; Type: TABLE; Schema: public
-
-CREATE TABLE public.system_logs (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    "timestamp" timestamp with time zone DEFAULT now() NOT NULL,
-    user_id uuid,
-    tenant_id uuid,
-    log_level character varying(20) NOT NULL,
-    log_type character varying(50) NOT NULL,
-    component character varying(255),
-    action character varying(255),
-    error_message text,
-    error_stack text,
-    request_data jsonb,
-    response_data jsonb,
-    user_agent text,
-    browser_info jsonb,
-    ip_address inet,
-    session_id text,
-    current_url text,
-    previous_url text,
-    metadata jsonb,
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT system_logs_log_level_check CHECK (((log_level)::text = ANY (ARRAY[('debug'::character varying)::text, ('info'::character varying)::text, ('warn'::character varying)::text, ('error'::character varying)::text, ('security'::character varying)::text])))
-);
-
--- -- Name: tenant_users; Type: TABLE; Schema: public
-
-CREATE TABLE public.tenant_users (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    role character varying(20) DEFAULT 'viewer'::character varying NOT NULL,
-    permissions text[] DEFAULT '{}'::text[],
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    is_active boolean DEFAULT true,
-    CONSTRAINT tenant_users_role_check CHECK (((role)::text = ANY (ARRAY[('super_admin'::character varying)::text, ('coordinator'::character varying)::text, ('admin'::character varying)::text, ('instructor'::character varying)::text, ('nurse'::character varying)::text, ('student'::character varying)::text, ('viewer'::character varying)::text])))
-);
-
--- -- Name: user_programs; Type: TABLE; Schema: public
-
-CREATE TABLE public.user_programs (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid NOT NULL,
-    program_id uuid NOT NULL,
-    assigned_at timestamp with time zone DEFAULT now(),
-    assigned_by uuid
-);
-
--- -- Name: user_sessions; Type: TABLE; Schema: public
-
-CREATE TABLE public.user_sessions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id uuid,
-    ip_address inet,
-    user_agent text,
-    tenant_id uuid,
-    login_time timestamp with time zone DEFAULT now(),
-    last_activity timestamp with time zone DEFAULT now(),
-    logout_time timestamp with time zone,
-    session_token text,
-    status character varying(20) DEFAULT 'active'::character varying,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT user_sessions_status_check CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('idle'::character varying)::text, ('logged_out'::character varying)::text])))
-);
-
--- -- Name: wound_assessments; Type: TABLE; Schema: public
-
-CREATE TABLE public.wound_assessments (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    assessment_date timestamp with time zone DEFAULT now(),
-    wound_location text,
-    wound_type text,
-    stage text,
-    length_cm numeric(5,2) DEFAULT 0,
-    width_cm numeric(5,2) DEFAULT 0,
-    depth_cm numeric(5,2) DEFAULT 0,
-    wound_bed text,
-    exudate_amount text,
-    exudate_type text,
-    periwound_condition text,
-    pain_level integer,
-    odor text,
-    signs_of_infection text,
-    assessment_notes text,
-    photos text[],
-    assessor_id uuid,
-    assessor_name text,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now(),
-    student_name text,
-    device_id uuid,
-    wound_id uuid,
-    assessed_at timestamp with time zone DEFAULT now(),
-    site_condition text,
-    surrounding_skin text,
-    treatment_applied text,
-    dressing_type text,
-    device_functioning boolean,
-    output_amount_ml integer,
-    drainage_type text[],
-    drainage_amount text,
-    wound_length_cm numeric(5,2),
-    wound_width_cm numeric(5,2),
-    wound_depth_cm numeric(5,2),
-    wound_appearance text,
-    notes text,
-    assessment_data jsonb DEFAULT '{}'::jsonb,
-    device_type text,
-    CONSTRAINT wound_assessments_exudate_amount_check CHECK ((exudate_amount = ANY (ARRAY['none'::text, 'minimal'::text, 'moderate'::text, 'heavy'::text]))),
-    CONSTRAINT wound_assessments_exudate_type_check CHECK ((exudate_type = ANY (ARRAY['serous'::text, 'sanguineous'::text, 'serosanguineous'::text, 'purulent'::text, 'other'::text]))),
-    CONSTRAINT wound_assessments_pain_level_check CHECK (((pain_level >= 0) AND (pain_level <= 10))),
-    CONSTRAINT wound_assessments_wound_bed_check CHECK ((wound_bed = ANY (ARRAY['red'::text, 'yellow'::text, 'black'::text, 'mixed'::text]))),
-    CONSTRAINT wound_assessments_wound_type_check CHECK ((wound_type = ANY (ARRAY['surgical'::text, 'pressure'::text, 'venous'::text, 'arterial'::text, 'diabetic'::text, 'traumatic'::text, 'other'::text])))
-);
-
--- -- Name: wound_treatments; Type: TABLE; Schema: public
-
-CREATE TABLE public.wound_treatments (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    patient_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    wound_assessment_id uuid,
-    treatment_date timestamp with time zone DEFAULT now() NOT NULL,
-    treatment_type text NOT NULL,
-    products_used text NOT NULL,
-    procedure_notes text NOT NULL,
-    administered_by text NOT NULL,
-    administered_by_id uuid NOT NULL,
-    administered_at timestamp with time zone DEFAULT now() NOT NULL,
-    next_treatment_due timestamp with time zone,
-    photos_after text[],
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
--- -- Name: wounds; Type: TABLE; Schema: public
-
-CREATE TABLE public.wounds (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    patient_id uuid NOT NULL,
-    location_id uuid NOT NULL,
-    wound_type public.wound_type_enum NOT NULL,
-    peri_wound_temperature text,
-    wound_length_cm numeric,
-    wound_width_cm numeric,
-    wound_depth_cm numeric,
-    wound_description text,
-    drainage_description text[] DEFAULT '{}'::text[],
-    drainage_consistency text[] DEFAULT '{}'::text[],
-    wound_odor text[] DEFAULT '{}'::text[],
-    drainage_amount text,
-    wound_edges text,
-    closure text,
-    suture_staple_line text,
-    sutures_intact text,
-    notes text,
-    created_by uuid NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    entered_by text
-);
-
-
--- ============================================================
--- VIEWS
--- ============================================================
-
--- -- Name: patient_alerts_view; Type: VIEW; Schema: public
-
-CREATE VIEW public.patient_alerts_view WITH (security_invoker='on') AS
- SELECT pa.id,
-    pa.patient_id,
-    pa.patient_name,
-    pa.alert_type,
-    pa.message,
-    pa.priority,
-    pa.acknowledged,
-    pa.acknowledged_by,
-    pa.acknowledged_at,
-    pa.created_at,
-    pa.tenant_id,
-    t.name AS tenant_name,
-    t.subdomain AS tenant_subdomain
-   FROM (public.patient_alerts pa
-     JOIN public.tenants t ON ((pa.tenant_id = t.id)));
-
--- -- Name: student_roster_with_profiles; Type: VIEW; Schema: public
-
-CREATE VIEW public.student_roster_with_profiles WITH (security_invoker='true') AS
- SELECT sr.id,
-    sr.user_id,
-    sr.program_id,
-    sr.cohort_id,
-    sr.student_number,
-    sr.enrollment_date,
-    sr.is_active,
-    sr.notes,
-    sr.created_at,
-    sr.updated_at,
-    sr.created_by,
-    up.email AS user_email,
-    up.first_name AS user_first_name,
-    up.last_name AS user_last_name,
-    up.role AS user_role,
-    up.phone AS user_phone,
-    up.simulation_only AS user_simulation_only
-   FROM (public.student_roster sr
-     LEFT JOIN public.user_profiles up ON ((sr.user_id = up.id)));
-
--- -- Name: tenant_statistics; Type: VIEW; Schema: public
-
-CREATE VIEW public.tenant_statistics WITH (security_invoker='on') AS
- SELECT t.id,
-    t.name,
-    t.created_at,
-    count(DISTINCT tu.user_id) AS user_count,
-    count(DISTINCT p.id) AS patient_count
-   FROM ((public.tenants t
-     LEFT JOIN public.tenant_users tu ON (((t.id = tu.tenant_id) AND (tu.is_active = true))))
-     LEFT JOIN public.patients p ON ((t.id = p.tenant_id)))
-  GROUP BY t.id, t.name, t.created_at;
-
--- -- Name: user_roles; Type: VIEW; Schema: public
-
-CREATE VIEW public.user_roles WITH (security_invoker='on') AS
- SELECT id,
-    email,
-    role,
-    first_name,
-    last_name,
-    created_at
-   FROM public.user_profiles up;
-
--- -- Name: user_tenant_access; Type: VIEW; Schema: public
-
-CREATE VIEW public.user_tenant_access WITH (security_invoker='on') AS
- SELECT DISTINCT tu.user_id,
-    tu.tenant_id,
-    up.role AS user_role,
-    tu.is_active
-   FROM (public.tenant_users tu
-     JOIN public.user_profiles up ON ((tu.user_id = up.id)));
-
-
--- ============================================================
--- MATERIALIZED VIEWS
--- ============================================================
-
--- -- Name: user_tenant_cache; Type: MATERIALIZED VIEW; Schema: public
-
-CREATE MATERIALIZED VIEW public.user_tenant_cache AS
- SELECT user_id,
-    tenant_id,
-    role,
-    is_active,
-    created_at
-   FROM public.tenant_users
-  WHERE (is_active = true)
-  WITH NO DATA;
-
-
--- ============================================================
--- FUNCTIONS
--- ============================================================
-
--- -- Name: acknowledge_alert_for_tenant(uuid, uuid); Type: FUNCTION; Schema: public
-
-CREATE FUNCTION public.acknowledge_alert_for_tenant(p_alert_id uuid, p_tenant_id uuid) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION "public"."acknowledge_alert_for_tenant"("p_alert_id" "uuid", "p_tenant_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   calling_user_id UUID;
@@ -1590,11 +267,141 @@ EXCEPTION WHEN others THEN
 END;
 $$;
 
--- -- Name: archive_landing_content_version(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.archive_landing_content_version() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."acknowledge_alert_for_tenant"("p_alert_id" "uuid", "p_tenant_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."acknowledge_alert_for_tenant"("p_alert_id" "uuid", "p_tenant_id" "uuid") IS 'Allows super admins and admins to acknowledge patient alerts across tenants, bypassing RLS policies';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."add_patient_template_to_simulation_template"("p_patient_template_id" "uuid", "p_simulation_template_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_snapshot jsonb;
+  v_target_tenant_id uuid;
+  v_patient_count_before integer;
+  v_patient_count_after integer;
+BEGIN
+  SELECT snapshot_data INTO v_snapshot
+  FROM patient_templates
+  WHERE id = p_patient_template_id;
+
+  IF v_snapshot IS NULL OR v_snapshot = '{}'::jsonb THEN
+    RETURN json_build_object('success', false, 'message', 'Patient template has no saved snapshot yet — save it before adding it to a simulation template');
+  END IF;
+
+  SELECT tenant_id INTO v_target_tenant_id
+  FROM simulation_templates
+  WHERE id = p_simulation_template_id;
+
+  IF v_target_tenant_id IS NULL THEN
+    RETURN json_build_object('success', false, 'message', 'Simulation template not found');
+  END IF;
+
+  SELECT COUNT(*) INTO v_patient_count_before FROM patients WHERE tenant_id = v_target_tenant_id;
+
+  PERFORM restore_snapshot_to_tenant(
+    p_tenant_id := v_target_tenant_id,
+    p_snapshot := v_snapshot,
+    p_preserve_barcodes := false
+  );
+
+  SELECT COUNT(*) INTO v_patient_count_after FROM patients WHERE tenant_id = v_target_tenant_id;
+
+  RETURN json_build_object(
+    'success', true,
+    'simulation_template_id', p_simulation_template_id,
+    'tenant_id', v_target_tenant_id,
+    'patients_added', v_patient_count_after - v_patient_count_before,
+    'message', 'Patient added to simulation template'
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN json_build_object('success', false, 'message', SQLERRM);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."add_patient_template_to_simulation_template"("p_patient_template_id" "uuid", "p_simulation_template_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."add_patient_template_to_simulation_template"("p_patient_template_id" "uuid", "p_simulation_template_id" "uuid") IS 'Copies a patient template''s single patient + all clinical data into a simulation template''s tenant, minting a fresh patient id/barcode each time. Copy-once — no ongoing sync back to the patient template.';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
+
+
+CREATE TABLE IF NOT EXISTS "public"."student_roster" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "program_id" "uuid" NOT NULL,
+    "cohort_id" "uuid",
+    "student_number" "text" NOT NULL,
+    "enrollment_date" "date" DEFAULT CURRENT_DATE NOT NULL,
+    "is_active" boolean DEFAULT true,
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "created_by" "uuid"
+);
+
+
+ALTER TABLE "public"."student_roster" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."student_roster" IS 'Student enrollments in programs with cohort tracking';
+
+
+
+COMMENT ON COLUMN "public"."student_roster"."cohort_id" IS 'Optional cohort grouping (e.g., Fall 2025, Spring 2026)';
+
+
+
+COMMENT ON COLUMN "public"."student_roster"."student_number" IS 'Institutional student ID (unique across all programs)';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."add_student_to_roster_admin"("p_program_id" "uuid", "p_user_id" "uuid", "p_student_number" "text") RETURNS "public"."student_roster"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_caller_role text;
+  v_row public.student_roster;
+BEGIN
+  SELECT role INTO v_caller_role FROM user_profiles WHERE id = auth.uid();
+
+  IF v_caller_role IS NULL OR v_caller_role NOT IN ('super_admin', 'coordinator', 'admin', 'instructor') THEN
+    RAISE EXCEPTION 'Insufficient permissions to manage the student roster';
+  END IF;
+
+  INSERT INTO student_roster (program_id, user_id, student_number, enrollment_date, created_by)
+  VALUES (p_program_id, p_user_id, p_student_number, CURRENT_DATE, auth.uid())
+  RETURNING * INTO v_row;
+
+  RETURN v_row;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."add_student_to_roster_admin"("p_program_id" "uuid", "p_user_id" "uuid", "p_student_number" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."add_student_to_roster_admin"("p_program_id" "uuid", "p_user_id" "uuid", "p_student_number" "text") IS 'Adds a student to a program roster, bypassing RLS. SECURITY DEFINER so this
+works regardless of student_roster''s RLS policy state; caller must already
+hold super_admin/coordinator/admin/instructor role (same gate as
+update_user_profile_admin).';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."archive_landing_content_version"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Only archive if content actually changed
@@ -1619,34 +426,42 @@ BEGIN
 END;
 $$;
 
--- -- Name: auto_set_tenant_id(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.auto_set_tenant_id() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."archive_landing_content_version"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."auto_set_tenant_id"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- If tenant_id is already set (e.g., from RPC function), don't override it
   IF NEW.tenant_id IS NOT NULL THEN
     RETURN NEW;
   END IF;
-  
+
   -- Otherwise, try to get it from tenant_users (avoid user_profiles for now due to cache)
-  SELECT tenant_id INTO NEW.tenant_id
-  FROM tenant_users
-  WHERE user_id = auth.uid()
-  AND is_active = true
+  SELECT tu.tenant_id INTO NEW.tenant_id
+  FROM tenant_users tu
+  WHERE tu.user_id = auth.uid()
+  AND tu.is_active = true
   LIMIT 1;
-  
+
   RETURN NEW;
 END;
 $$;
 
--- -- Name: auto_tag_simulation_from_template(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.auto_tag_simulation_from_template() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."auto_set_tenant_id"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."auto_set_tenant_id"() IS 'BEFORE INSERT trigger — auto-populates tenant_id from the current user''s active tenant_users row when not explicitly provided. Fixed 2026-08-18: qualified bare tenant_id reference that was ambiguous against NEW''s own tenant_id column (42702).';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."auto_tag_simulation_from_template"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- If simulation has no categories but template does, copy them
@@ -1668,11 +483,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: bulk_assign_students_to_simulation(uuid, uuid[], text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.bulk_assign_students_to_simulation(p_simulation_id uuid, p_student_user_ids uuid[], p_role text DEFAULT 'student'::text) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."auto_tag_simulation_from_template"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."auto_tag_simulation_from_template"() IS 'Automatically copy primary_categories from template to simulation when launching';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."bulk_assign_students_to_simulation"("p_simulation_id" "uuid", "p_student_user_ids" "uuid"[], "p_role" "text" DEFAULT 'student'::"text") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_simulation RECORD;
@@ -1755,11 +576,13 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
--- -- Name: calculate_simulation_metrics(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.calculate_simulation_metrics(p_simulation_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."bulk_assign_students_to_simulation"("p_simulation_id" "uuid", "p_student_user_ids" "uuid"[], "p_role" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."calculate_simulation_metrics"("p_simulation_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_metrics jsonb;
@@ -1814,11 +637,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: cleanup_all_problem_simulations(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.cleanup_all_problem_simulations() RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."calculate_simulation_metrics"("p_simulation_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."cleanup_all_problem_simulations"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     v_run_record RECORD;
@@ -1857,11 +682,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: cleanup_backup_audit_logs(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.cleanup_backup_audit_logs() RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."cleanup_all_problem_simulations"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."cleanup_backup_audit_logs"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     deleted_count INTEGER;
@@ -1875,11 +702,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: cleanup_expired_simulations(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.cleanup_expired_simulations() RETURNS integer
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."cleanup_backup_audit_logs"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."cleanup_backup_audit_logs"() IS 'Removes audit logs older than 1 year';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."cleanup_expired_simulations"() RETURNS integer
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_count INTEGER := 0;
@@ -1920,11 +753,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: cleanup_old_sessions(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.cleanup_old_sessions() RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."cleanup_expired_simulations"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."cleanup_expired_simulations"() IS 'Removes expired simulation tenants and their data';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."cleanup_old_sessions"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   deleted_count integer;
@@ -1937,11 +776,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: cleanup_old_user_sessions(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.cleanup_old_user_sessions() RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."cleanup_old_sessions"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."cleanup_old_user_sessions"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   deleted_count INTEGER;
@@ -1963,11 +804,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: cleanup_orphaned_users(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.cleanup_orphaned_users() RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+ALTER FUNCTION "public"."cleanup_old_user_sessions"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."cleanup_old_user_sessions"() IS 'Deletes user_sessions older than 7 days to prevent table bloat. Run manually or schedule via Edge Function.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."cleanup_orphaned_users"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
 DECLARE
     deleted_count INTEGER := 0;
@@ -1990,11 +837,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: compare_simulation_template_patients(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.compare_simulation_template_patients(p_simulation_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."cleanup_orphaned_users"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."compare_simulation_template_patients"("p_simulation_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_sim_tenant_id UUID;
@@ -2126,11 +975,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: compare_simulation_vs_template(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.compare_simulation_vs_template(p_simulation_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."compare_simulation_template_patients"("p_simulation_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."compare_simulation_template_patients"("p_simulation_id" "uuid") IS 'Compares simulation vs template patient lists to determine if barcodes can be preserved during sync';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."compare_simulation_vs_template"("p_simulation_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_sim_tenant_id UUID;
@@ -2211,62 +1066,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: compare_template_versions(uuid, integer, integer); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.compare_template_versions(p_template_id uuid, p_version_old integer, p_version_new integer) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-DECLARE
-  v_snapshot_old JSONB;
-  v_snapshot_new JSONB;
-  v_result JSONB := '{}'::jsonb;
-BEGIN
-  -- Get old version snapshot
-  IF p_version_old = 0 THEN
-    -- Version 0 means "nothing" (for initial version comparison)
-    v_snapshot_old := '{}'::jsonb;
-  ELSE
-    SELECT snapshot_data INTO v_snapshot_old
-    FROM simulation_template_versions
-    WHERE template_id = p_template_id AND version = p_version_old;
-  END IF;
-  
-  -- Get new version snapshot (could be current or history)
-  SELECT CASE
-    WHEN p_version_new = (SELECT snapshot_version FROM simulation_templates WHERE id = p_template_id)
-    THEN (SELECT snapshot_data FROM simulation_templates WHERE id = p_template_id)
-    ELSE (SELECT snapshot_data FROM simulation_template_versions WHERE template_id = p_template_id AND version = p_version_new)
-  END INTO v_snapshot_new;
-  
-  -- Calculate diffs (simplified - full diff logic in frontend)
-  v_result := jsonb_build_object(
-    'template_id', p_template_id,
-    'version_old', p_version_old,
-    'version_new', p_version_new,
-    'patient_count_old', COALESCE(jsonb_array_length(v_snapshot_old->'patients'), 0),
-    'patient_count_new', COALESCE(jsonb_array_length(v_snapshot_new->'patients'), 0),
-    'medication_count_old', COALESCE(jsonb_array_length(v_snapshot_old->'patient_medications'), 0),
-    'medication_count_new', COALESCE(jsonb_array_length(v_snapshot_new->'patient_medications'), 0),
-    'order_count_old', COALESCE(jsonb_array_length(v_snapshot_old->'doctors_orders'), 0),
-    'order_count_new', COALESCE(jsonb_array_length(v_snapshot_new->'doctors_orders'), 0),
-    'wound_count_old', COALESCE(jsonb_array_length(v_snapshot_old->'wounds'), 0),
-    'wound_count_new', COALESCE(jsonb_array_length(v_snapshot_new->'wounds'), 0),
-    'device_count_old', COALESCE(jsonb_array_length(v_snapshot_old->'devices'), 0),
-    'device_count_new', COALESCE(jsonb_array_length(v_snapshot_new->'devices'), 0),
-    'snapshot_old', v_snapshot_old,
-    'snapshot_new', v_snapshot_new
-  );
-  
-  RETURN v_result;
-END;
-$$;
+ALTER FUNCTION "public"."compare_simulation_vs_template"("p_simulation_id" "uuid") OWNER TO "postgres";
 
--- -- Name: complete_simulation(uuid, jsonb, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.complete_simulation(p_simulation_id uuid, p_activities jsonb DEFAULT '[]'::jsonb, p_instructor_name text DEFAULT NULL::text) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+COMMENT ON FUNCTION "public"."compare_simulation_vs_template"("p_simulation_id" "uuid") IS 'Compares active simulation current data with template current snapshot for accurate sync preview';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."complete_simulation"("p_simulation_id" "uuid", "p_activities" "jsonb" DEFAULT '[]'::"jsonb", "p_instructor_name" "text" DEFAULT NULL::"text") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_simulation simulation_active%ROWTYPE;
@@ -2364,11 +1174,55 @@ BEGIN
 END;
 $$;
 
--- -- Name: confirm_user_email(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.confirm_user_email(target_user_id uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."complete_simulation"("p_simulation_id" "uuid", "p_activities" "jsonb", "p_instructor_name" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."complete_simulation"("p_simulation_id" "uuid", "p_activities" "jsonb", "p_instructor_name" "text") IS 'Complete simulation and archive to history with categories preserved';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."confirm_simulation_student_email"("p_user_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_caller_role text;
+  v_is_simulation_only boolean;
+BEGIN
+  SELECT role INTO v_caller_role FROM user_profiles WHERE id = auth.uid();
+
+  IF v_caller_role IS NULL OR v_caller_role NOT IN ('super_admin', 'coordinator', 'admin', 'instructor') THEN
+    RAISE EXCEPTION 'Insufficient permissions to confirm student accounts';
+  END IF;
+
+  SELECT simulation_only INTO v_is_simulation_only FROM user_profiles WHERE id = p_user_id;
+
+  IF v_is_simulation_only IS NOT TRUE THEN
+    RAISE EXCEPTION 'This function can only auto-confirm simulation-only accounts';
+  END IF;
+
+  UPDATE auth.users
+  SET email_confirmed_at = COALESCE(email_confirmed_at, NOW())
+  WHERE id = p_user_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."confirm_simulation_student_email"("p_user_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."confirm_simulation_student_email"("p_user_id" "uuid") IS 'Marks a simulation-only student account as email-confirmed so it can sign in
+immediately, without needing to click a confirmation link (auto-generated
+accounts use a fake, non-deliverable address and could never receive one).
+Restricted to simulation_only=true targets, callable only by
+super_admin/coordinator/admin/instructor.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."confirm_user_email"("target_user_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   current_user_role TEXT;
@@ -2400,11 +1254,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: create_medication_super_admin(uuid, text, text, text, text, date, date, text, text, text, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_medication_super_admin(p_patient_id uuid, p_name text, p_dosage text, p_frequency text, p_route text, p_start_date date, p_end_date date DEFAULT NULL::date, p_prescribed_by text DEFAULT NULL::text, p_category text DEFAULT 'scheduled'::text, p_admin_time text DEFAULT '09:00'::text, p_status text DEFAULT 'Active'::text) RETURNS TABLE(medication_id uuid, patient_id uuid, name text, dosage text, frequency text, route text, start_date date, end_date date, prescribed_by text, last_administered timestamp with time zone, next_due timestamp with time zone, status text, created_at timestamp with time zone, category text, tenant_id uuid, admin_time character varying)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."confirm_user_email"("target_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."create_medication_super_admin"("p_patient_id" "uuid", "p_name" "text", "p_dosage" "text", "p_frequency" "text", "p_route" "text", "p_start_date" "date", "p_end_date" "date" DEFAULT NULL::"date", "p_prescribed_by" "text" DEFAULT NULL::"text", "p_category" "text" DEFAULT 'scheduled'::"text", "p_admin_time" "text" DEFAULT '09:00'::"text", "p_status" "text" DEFAULT 'Active'::"text") RETURNS TABLE("medication_id" "uuid", "patient_id" "uuid", "name" "text", "dosage" "text", "frequency" "text", "route" "text", "start_date" "date", "end_date" "date", "prescribed_by" "text", "last_administered" timestamp with time zone, "next_due" timestamp with time zone, "status" "text", "created_at" timestamp with time zone, "category" "text", "tenant_id" "uuid", "admin_time" character varying)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     current_user_id UUID;
@@ -2499,11 +1355,63 @@ BEGIN
 END;
 $$;
 
--- -- Name: create_program_tenant(uuid, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_program_tenant(p_program_id uuid, p_parent_tenant_id uuid) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_medication_super_admin"("p_patient_id" "uuid", "p_name" "text", "p_dosage" "text", "p_frequency" "text", "p_route" "text", "p_start_date" "date", "p_end_date" "date", "p_prescribed_by" "text", "p_category" "text", "p_admin_time" "text", "p_status" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."create_patient_template"("p_name" "text", "p_description" "text" DEFAULT NULL::"text", "p_primary_categories" "text"[] DEFAULT NULL::"text"[]) RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_tenant_id UUID;
+  v_template_id UUID;
+  v_subdomain TEXT;
+  v_current_user_id UUID;
+BEGIN
+  v_current_user_id := auth.uid();
+
+  IF v_current_user_id IS NULL THEN
+    RETURN json_build_object('success', false, 'message', 'User not authenticated');
+  END IF;
+
+  v_subdomain := lower(regexp_replace(p_name, '[^a-zA-Z0-9]', '', 'g'));
+  v_subdomain := 'pt-' || substring(v_subdomain, 1, 20) || '-' || substring(gen_random_uuid()::text, 1, 8);
+
+  INSERT INTO tenants (name, subdomain, tenant_type, is_simulation, status)
+  VALUES (p_name || ' (Patient Template)', v_subdomain, 'patient_template', true, 'active')
+  RETURNING id INTO v_tenant_id;
+
+  INSERT INTO patient_templates (tenant_id, name, description, primary_categories, status, created_by)
+  VALUES (v_tenant_id, p_name, p_description, p_primary_categories, 'draft', v_current_user_id)
+  RETURNING id INTO v_template_id;
+
+  INSERT INTO tenant_users (tenant_id, user_id, role, is_active)
+  VALUES (v_tenant_id, v_current_user_id, 'admin', true);
+
+  RETURN json_build_object(
+    'success', true,
+    'patient_template_id', v_template_id,
+    'tenant_id', v_tenant_id,
+    'message', 'Patient template created successfully'
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN json_build_object('success', false, 'message', SQLERRM);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."create_patient_template"("p_name" "text", "p_description" "text", "p_primary_categories" "text"[]) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_patient_template"("p_name" "text", "p_description" "text", "p_primary_categories" "text"[]) IS 'Creates a new single-patient template with its own dedicated tenant for live editing. Mirrors create_simulation_template.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_program_tenant"("p_program_id" "uuid", "p_parent_tenant_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_program RECORD;
@@ -2625,11 +1533,17 @@ EXCEPTION
 END;
 $$;
 
--- -- Name: create_simulation_subtenant(uuid, text, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_simulation_subtenant(p_simulation_id uuid, p_simulation_name text, p_parent_tenant_id uuid) RETURNS uuid
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_program_tenant"("p_program_id" "uuid", "p_parent_tenant_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_program_tenant"("p_program_id" "uuid", "p_parent_tenant_id" "uuid") IS 'Creates a dedicated tenant workspace for a program. Called when programs are created.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_simulation_subtenant"("p_simulation_id" "uuid", "p_simulation_name" "text", "p_parent_tenant_id" "uuid") RETURNS "uuid"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_subtenant_id UUID;
@@ -2673,11 +1587,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: create_simulation_template(text, text, integer, text[]); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_simulation_template(p_name text, p_description text, p_default_duration_minutes integer, p_primary_categories text[] DEFAULT NULL::text[]) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_simulation_subtenant"("p_simulation_id" "uuid", "p_simulation_name" "text", "p_parent_tenant_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_simulation_subtenant"("p_simulation_id" "uuid", "p_simulation_name" "text", "p_parent_tenant_id" "uuid") IS 'Creates a new sub-tenant for a simulation with isolated data and auto-generated subdomain';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_simulation_template"("p_name" "text", "p_description" "text", "p_default_duration_minutes" integer, "p_primary_categories" "text"[] DEFAULT NULL::"text"[]) RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_tenant_id UUID;
@@ -2771,11 +1691,17 @@ EXCEPTION
 END;
 $$;
 
--- -- Name: create_snapshot(uuid, text, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_snapshot(p_template_id uuid, p_name text, p_description text DEFAULT NULL::text) RETURNS uuid
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_simulation_template"("p_name" "text", "p_description" "text", "p_default_duration_minutes" integer, "p_primary_categories" "text"[]) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_simulation_template"("p_name" "text", "p_description" "text", "p_default_duration_minutes" integer, "p_primary_categories" "text"[]) IS 'Creates a new simulation template with optional program categories. Categories determine which instructors can see and use the template.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_snapshot"("p_template_id" "uuid", "p_name" "text", "p_description" "text" DEFAULT NULL::"text") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     v_snapshot_id UUID;
@@ -2974,11 +1900,50 @@ BEGIN
 END;
 $$;
 
--- -- Name: create_user_profile(uuid, text, text, text, public.user_role); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_user_profile(user_id uuid, user_email text DEFAULT NULL::text, first_name text DEFAULT 'User'::text, last_name text DEFAULT ''::text, user_role public.user_role DEFAULT 'nurse'::public.user_role) RETURNS public.user_profiles
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_snapshot"("p_template_id" "uuid", "p_name" "text", "p_description" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_snapshot"("p_template_id" "uuid", "p_name" "text", "p_description" "text") IS 'Creates snapshot from template including hacMap data with body_view field';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."user_profiles" (
+    "id" "uuid" NOT NULL,
+    "email" "text" NOT NULL,
+    "first_name" "text" DEFAULT ''::"text" NOT NULL,
+    "last_name" "text" DEFAULT ''::"text" NOT NULL,
+    "role" "public"."user_role" DEFAULT 'nurse'::"public"."user_role" NOT NULL,
+    "primary_program" "text",
+    "license_number" "text",
+    "phone" "text",
+    "is_active" boolean DEFAULT true,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "simulation_only" boolean DEFAULT false,
+    "default_tenant_id" "uuid",
+    "welcome_seen_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."user_profiles" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."user_profiles"."primary_program" IS 'DEPRECATED: Primary program code. Use user_programs junction table instead.';
+
+
+
+COMMENT ON COLUMN "public"."user_profiles"."default_tenant_id" IS 'Instructors default program tenant. Auto-set to their first program tenant or manually chosen.';
+
+
+
+COMMENT ON COLUMN "public"."user_profiles"."welcome_seen_at" IS 'Set when the user dismisses the welcome tour with "don''t show again". NULL = show it.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_user_profile"("user_id" "uuid", "user_email" "text" DEFAULT NULL::"text", "first_name" "text" DEFAULT 'User'::"text", "last_name" "text" DEFAULT ''::"text", "user_role" "public"."user_role" DEFAULT 'nurse'::"public"."user_role") RETURNS "public"."user_profiles"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   new_profile user_profiles;
@@ -3022,11 +1987,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: create_user_session(inet, text, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.create_user_session(p_ip_address inet, p_user_agent text DEFAULT NULL::text, p_tenant_id uuid DEFAULT NULL::uuid) RETURNS uuid
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_user_profile"("user_id" "uuid", "user_email" "text", "first_name" "text", "last_name" "text", "user_role" "public"."user_role") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_user_profile"("user_id" "uuid", "user_email" "text", "first_name" "text", "last_name" "text", "user_role" "public"."user_role") IS 'Creates a user profile with immutable search path for security';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."create_user_session"("p_ip_address" "inet", "p_user_agent" "text" DEFAULT NULL::"text", "p_tenant_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   session_id uuid;
@@ -3040,11 +2011,15 @@ BEGIN
     AND status = 'active'
     AND logout_time IS NULL;
 
-  -- Resolve tenant ID if not provided
-  IF p_tenant_id IS NULL THEN
-    resolved_tenant_id := public.get_user_tenant_id();
-  ELSE
+  -- Resolve tenant ID: use provided value, or fall back to first assigned tenant
+  IF p_tenant_id IS NOT NULL THEN
     resolved_tenant_id := p_tenant_id;
+  ELSE
+    SELECT tenant_id INTO resolved_tenant_id
+    FROM public.tenant_users
+    WHERE user_id = auth.uid()
+    ORDER BY created_at ASC
+    LIMIT 1;
   END IF;
 
   -- Always create a new session for each login
@@ -3070,11 +2045,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: current_user_is_super_admin(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.current_user_is_super_admin() RETURNS boolean
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."create_user_session"("p_ip_address" "inet", "p_user_agent" "text", "p_tenant_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."create_user_session"("p_ip_address" "inet", "p_user_agent" "text", "p_tenant_id" "uuid") IS 'Creates or updates user session with IP tracking on login';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."current_user_is_super_admin"() RETURNS boolean
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   is_admin boolean := false;
@@ -3106,11 +2087,13 @@ EXCEPTION
 END;
 $$;
 
--- -- Name: deactivate_user(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.deactivate_user(target_user_id uuid) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."current_user_is_super_admin"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."deactivate_user"("target_user_id" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   current_user_role TEXT;
@@ -3132,11 +2115,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: delete_medication_super_admin(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.delete_medication_super_admin(p_medication_id uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."deactivate_user"("target_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_medication_super_admin"("p_medication_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     current_user_id UUID;
@@ -3176,11 +2161,97 @@ BEGIN
 END;
 $$;
 
--- -- Name: delete_simulation(uuid, boolean); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.delete_simulation(p_simulation_id uuid, p_archive_to_history boolean DEFAULT true) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."delete_medication_super_admin"("p_medication_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."delete_medication_super_admin"("p_medication_id" "uuid") IS 'Allows super admins and admins to delete medications across tenant boundaries, bypassing RLS';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_patient_template"("p_patient_template_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_template_name text;
+  v_tenant_id uuid;
+  v_deleted_patients integer := 0;
+BEGIN
+  SELECT name, tenant_id INTO v_template_name, v_tenant_id
+  FROM patient_templates
+  WHERE id = p_patient_template_id;
+
+  IF v_template_name IS NULL THEN
+    RAISE EXCEPTION 'Patient template not found: %', p_patient_template_id;
+  END IF;
+
+  IF v_tenant_id IS NOT NULL THEN
+    SELECT COUNT(*) INTO v_deleted_patients FROM patients WHERE tenant_id = v_tenant_id;
+
+    BEGIN DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_notes WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_images WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wound_treatments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM device_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_results WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_panels WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_ack_events WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_orders WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id); EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_newborn_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM bowel_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM diabetic_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_intake_output_events WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wounds WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM devices WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_medications WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+
+    DELETE FROM patients WHERE tenant_id = v_tenant_id;
+    DELETE FROM tenant_users WHERE tenant_id = v_tenant_id;
+    DELETE FROM patient_templates WHERE id = p_patient_template_id;
+    DELETE FROM tenants WHERE id = v_tenant_id;
+  ELSE
+    DELETE FROM patient_templates WHERE id = p_patient_template_id;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'patient_template_id', p_patient_template_id,
+    'template_name', v_template_name,
+    'tenant_id', v_tenant_id,
+    'deleted_patients', v_deleted_patients
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."delete_patient_template"("p_patient_template_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."delete_patient_template"("p_patient_template_id" "uuid") IS 'Deletes a patient template AND its backing tenant (patients, meds, notes, everything). Mirrors delete_simulation_template. Uses SECURITY DEFINER to bypass RLS for complete cleanup.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_simulation"("p_simulation_id" "uuid", "p_archive_to_history" boolean DEFAULT true) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_simulation_tenant_id uuid;
@@ -3189,6 +2260,7 @@ DECLARE
   v_deleted_patients integer := 0;
   v_deleted_medications integer := 0;
   v_child_tenant_id uuid;
+  v_deleted_auto_students integer := 0;
 BEGIN
   -- Get simulation details before deletion
   SELECT tenant_id, name, template_id
@@ -3199,6 +2271,19 @@ BEGIN
   IF v_simulation_tenant_id IS NULL THEN
     RAISE EXCEPTION 'Simulation not found: %', p_simulation_id;
   END IF;
+
+  -- Delete auto-generated student accounts tied to this simulation FIRST
+  -- (before anything cascades simulation_auto_students away). Deleting
+  -- auth.users cascades to user_profiles, tenant_users, student_roster,
+  -- and simulation_participants for that account automatically.
+  WITH deleted_users AS (
+    DELETE FROM auth.users
+    WHERE id IN (
+      SELECT user_id FROM simulation_auto_students WHERE simulation_id = p_simulation_id
+    )
+    RETURNING id
+  )
+  SELECT COUNT(*) INTO v_deleted_auto_students FROM deleted_users;
 
   -- Archive to history if requested (only if simulation actually started)
   IF p_archive_to_history THEN
@@ -3297,7 +2382,7 @@ BEGIN
   -- Delete tenant users
   DELETE FROM tenant_users WHERE tenant_id = v_simulation_tenant_id;
 
-  -- ⚠️ NEW: Delete any child tenants BEFORE deleting the parent simulation tenant
+  -- ⚠️ Delete any child tenants BEFORE deleting the parent simulation tenant
   -- This prevents foreign key violations on parent_tenant_id
   FOR v_child_tenant_id IN 
     SELECT id FROM tenants WHERE parent_tenant_id = v_simulation_tenant_id
@@ -3317,7 +2402,7 @@ BEGIN
     BEGIN DELETE FROM lab_panels WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
     BEGIN DELETE FROM lab_orders WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
     BEGIN DELETE FROM doctors_orders WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
-    BEGIN DELETE FROM diabetic_records WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_bbit_entries WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
     BEGIN DELETE FROM bowel_records WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
     BEGIN DELETE FROM wounds WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
     BEGIN DELETE FROM devices WHERE tenant_id = v_child_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
@@ -3339,9 +2424,9 @@ BEGIN
   -- Delete the simulation_active record
   DELETE FROM simulation_active WHERE id = p_simulation_id;
 
-  RAISE NOTICE 'Deleted simulation % (%) with tenant % - removed % patients, % medications',
+  RAISE NOTICE 'Deleted simulation % (%) with tenant % - removed % patients, % medications, % auto-generated student account(s)',
     p_simulation_id, v_simulation_name, v_simulation_tenant_id,
-    v_deleted_patients, v_deleted_medications;
+    v_deleted_patients, v_deleted_medications, v_deleted_auto_students;
 
   RETURN jsonb_build_object(
     'success', true,
@@ -3350,16 +2435,27 @@ BEGIN
     'tenant_id', v_simulation_tenant_id,
     'archived', p_archive_to_history,
     'deleted_patients', v_deleted_patients,
-    'deleted_medications', v_deleted_medications
+    'deleted_medications', v_deleted_medications,
+    'deleted_auto_students', v_deleted_auto_students
   );
 END;
 $$;
 
--- -- Name: delete_simulation_history(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.delete_simulation_history(p_history_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."delete_simulation"("p_simulation_id" "uuid", "p_archive_to_history" boolean) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."delete_simulation"("p_simulation_id" "uuid", "p_archive_to_history" boolean) IS 'Deletes an active simulation and its associated tenant. 
+Also deletes any auto-generated simulation-only student accounts tied to it (simulation_auto_students).
+Handles child tenants (program tenants) before deleting parent.
+Optionally archives to simulation_history before deletion.
+Uses SECURITY DEFINER to bypass RLS for complete cleanup.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_simulation_history"("p_history_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_simulation_name text;
@@ -3386,11 +2482,125 @@ BEGIN
 END;
 $$;
 
--- -- Name: delete_tenant_secure(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.delete_tenant_secure(target_tenant_id uuid) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."delete_simulation_history"("p_history_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."delete_simulation_history"("p_history_id" "uuid") IS 'Permanently deletes a simulation history record and its debrief data.
+Uses SECURITY DEFINER to bypass RLS.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_simulation_template"("p_template_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_template_name text;
+  v_tenant_id uuid;
+  v_active_simulations_count integer;
+  v_deleted_patients integer := 0;
+BEGIN
+  SELECT name, tenant_id INTO v_template_name, v_tenant_id
+  FROM simulation_templates
+  WHERE id = p_template_id;
+
+  IF v_template_name IS NULL THEN
+    RAISE EXCEPTION 'Template not found: %', p_template_id;
+  END IF;
+
+  -- Warn (but don't block) if simulations launched from this template still exist
+  SELECT COUNT(*) INTO v_active_simulations_count
+  FROM simulation_active
+  WHERE template_id = p_template_id;
+
+  IF v_active_simulations_count > 0 THEN
+    RAISE WARNING 'Template % has % active simulations that will continue running',
+      v_template_name, v_active_simulations_count;
+  END IF;
+
+  IF v_tenant_id IS NOT NULL THEN
+    SELECT COUNT(*) INTO v_deleted_patients FROM patients WHERE tenant_id = v_tenant_id;
+
+    -- Delete all tenant-scoped clinical data, children before parents.
+    -- Wrapped per-table so a schema change (new/renamed table) can't block the whole delete.
+    BEGIN DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_notes WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_images WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wound_treatments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM device_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_results WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_panels WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_ack_events WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM lab_orders WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id); EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_bbit_entries WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_newborn_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM bowel_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM diabetic_records WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_intake_output_events WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM wounds WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM devices WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+    BEGIN DELETE FROM patient_medications WHERE tenant_id = v_tenant_id; EXCEPTION WHEN undefined_table THEN NULL; END;
+
+    -- Patients last (referenced by most of the above)
+    DELETE FROM patients WHERE tenant_id = v_tenant_id;
+
+    -- Tenant membership + the template row, then the tenant itself
+    DELETE FROM tenant_users WHERE tenant_id = v_tenant_id;
+    DELETE FROM simulation_templates WHERE id = p_template_id;
+    DELETE FROM tenants WHERE id = v_tenant_id;
+  ELSE
+    -- No tenant on record (shouldn't normally happen) — just remove the metadata row
+    DELETE FROM simulation_templates WHERE id = p_template_id;
+  END IF;
+
+  RAISE NOTICE 'Deleted template % (%) with tenant % — removed % patients',
+    p_template_id, v_template_name, v_tenant_id, v_deleted_patients;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'template_id', p_template_id,
+    'template_name', v_template_name,
+    'tenant_id', v_tenant_id,
+    'deleted_patients', v_deleted_patients,
+    'active_simulations_warning', v_active_simulations_count > 0,
+    'active_simulations_count', v_active_simulations_count
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."delete_simulation_template"("p_template_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."delete_simulation_template"("p_template_id" "uuid") IS 'Deletes a simulation template AND its backing tenant (patients, meds, notes, everything).
+Mirrors the delete_simulation() pattern since patients.tenant_id is ON DELETE SET NULL
+(not CASCADE) and several clinical tables have no cascade at all, so a raw tenant delete
+would either orphan patients (tenant_id -> NULL) or fail with a FK violation.
+Warns (does not block) if active simulations still reference this template.
+Uses SECURITY DEFINER to bypass RLS for complete cleanup.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_tenant_secure"("target_tenant_id" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   current_user_role TEXT;
@@ -3412,11 +2622,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: delete_user_permanently(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.delete_user_permanently(target_user_id uuid) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."delete_tenant_secure"("target_tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."delete_user_permanently"("target_user_id" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   current_user_role TEXT;
@@ -3442,11 +2654,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: duplicate_patient_to_tenant(text, uuid, text, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.duplicate_patient_to_tenant(p_source_patient_id text, p_target_tenant_id uuid, p_new_patient_id text DEFAULT NULL::text, p_include_vitals boolean DEFAULT true, p_include_medications boolean DEFAULT true, p_include_assessments boolean DEFAULT true, p_include_handover_notes boolean DEFAULT true, p_include_alerts boolean DEFAULT true, p_include_diabetic_records boolean DEFAULT true, p_include_bowel_records boolean DEFAULT true, p_include_wound_care boolean DEFAULT true, p_include_doctors_orders boolean DEFAULT true, p_include_labs boolean DEFAULT true, p_include_hacmap boolean DEFAULT true, p_include_intake_output boolean DEFAULT true) RETURNS TABLE(success boolean, new_patient_id uuid, new_patient_identifier text, records_created jsonb, message text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."delete_user_permanently"("target_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."duplicate_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid", "p_new_patient_id" "text" DEFAULT NULL::"text", "p_include_vitals" boolean DEFAULT true, "p_include_medications" boolean DEFAULT true, "p_include_assessments" boolean DEFAULT true, "p_include_handover_notes" boolean DEFAULT true, "p_include_alerts" boolean DEFAULT true, "p_include_diabetic_records" boolean DEFAULT true, "p_include_bowel_records" boolean DEFAULT true, "p_include_wound_care" boolean DEFAULT true, "p_include_doctors_orders" boolean DEFAULT true, "p_include_labs" boolean DEFAULT true, "p_include_hacmap" boolean DEFAULT true, "p_include_intake_output" boolean DEFAULT true) RETURNS TABLE("success" boolean, "new_patient_id" "uuid", "new_patient_identifier" "text", "records_created" "jsonb", "message" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_source_patient_uuid UUID;
@@ -4405,11 +3619,40 @@ BEGIN
 END;
 $$;
 
--- -- Name: end_user_session(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.end_user_session() RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."duplicate_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid", "p_new_patient_id" "text", "p_include_vitals" boolean, "p_include_medications" boolean, "p_include_assessments" boolean, "p_include_handover_notes" boolean, "p_include_alerts" boolean, "p_include_diabetic_records" boolean, "p_include_bowel_records" boolean, "p_include_wound_care" boolean, "p_include_doctors_orders" boolean, "p_include_labs" boolean, "p_include_hacmap" boolean, "p_include_intake_output" boolean) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."duplicate_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid", "p_new_patient_id" "text", "p_include_vitals" boolean, "p_include_medications" boolean, "p_include_assessments" boolean, "p_include_handover_notes" boolean, "p_include_alerts" boolean, "p_include_diabetic_records" boolean, "p_include_bowel_records" boolean, "p_include_wound_care" boolean, "p_include_doctors_orders" boolean, "p_include_labs" boolean, "p_include_hacmap" boolean, "p_include_intake_output" boolean) IS 'Duplicates a patient and ALL associated data to another tenant. Includes labs, hacMap, intake/output, and all other clinical data with proper foreign key mapping.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."enable_rls_on_new_tables"() RETURNS "event_trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  obj record;
+BEGIN
+  FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP
+    -- Only act on CREATE TABLE statements in the public schema
+    IF obj.command_tag = 'CREATE TABLE' AND obj.schema_name = 'public' THEN
+      EXECUTE format(
+        'ALTER TABLE %s ENABLE ROW LEVEL SECURITY',
+        obj.object_identity  -- already schema-qualified, e.g. "public.patients"
+      );
+    END IF;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."enable_rls_on_new_tables"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."end_user_session"() RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Update active sessions to logged out
@@ -4426,34 +3669,41 @@ BEGIN
 END;
 $$;
 
--- -- Name: ensure_user_profile(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.ensure_user_profile() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."end_user_session"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."end_user_session"() IS 'Ends user session and records logout time';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."ensure_user_profile"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
-  -- Create user profile if it doesn't exist
   INSERT INTO user_profiles (id, email, role, is_active, created_at, updated_at)
   VALUES (
     NEW.id,
     NEW.email,
-    'nurse',  -- Default role
+    'nurse',
     true,
     NOW(),
     NOW()
   )
   ON CONFLICT (id) DO NOTHING;
-  
+
   RETURN NEW;
 END;
 $$;
 
--- -- Name: ensure_user_profile(uuid, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.ensure_user_profile(user_id uuid, user_email text) RETURNS public.user_profiles
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."ensure_user_profile"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text") RETURNS "public"."user_profiles"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   profile user_profiles;
@@ -4493,11 +3743,17 @@ EXCEPTION
 END;
 $$;
 
--- -- Name: fetch_medications_for_tenant(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.fetch_medications_for_tenant(target_tenant_id uuid) RETURNS TABLE(medication_id uuid, patient_id uuid, name text, dosage text, frequency text, route text, prescribed_by text, start_date date, tenant_id uuid, patient_first_name text, patient_last_name text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text") IS 'Creates or retrieves a user profile. Uses immutable search path for security.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."fetch_medications_for_tenant"("target_tenant_id" "uuid") RETURNS TABLE("medication_id" "uuid", "patient_id" "uuid", "name" "text", "dosage" "text", "frequency" "text", "route" "text", "prescribed_by" "text", "start_date" "date", "tenant_id" "uuid", "patient_first_name" "text", "patient_last_name" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     current_user_id UUID;
@@ -4538,11 +3794,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: find_user_by_email(text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.find_user_by_email(email_param text) RETURNS TABLE(user_id uuid, email text, created_at timestamp with time zone)
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."fetch_medications_for_tenant"("target_tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."find_user_by_email"("email_param" "text") RETURNS TABLE("user_id" "uuid", "email" "text", "created_at" timestamp with time zone)
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT 
     au.id as user_id,
@@ -4554,11 +3812,13 @@ CREATE FUNCTION public.find_user_by_email(email_param text) RETURNS TABLE(user_i
   LIMIT 1;
 $$;
 
--- -- Name: generate_simulation_id_sets(uuid, integer, text[]); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.generate_simulation_id_sets(p_template_id uuid, p_session_count integer, p_session_names text[] DEFAULT NULL::text[]) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."find_user_by_email"("email_param" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."generate_simulation_id_sets"("p_template_id" "uuid", "p_session_count" integer, "p_session_names" "text"[] DEFAULT NULL::"text"[]) RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_id_sets jsonb := '[]'::jsonb;
@@ -4675,11 +3935,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_available_admin_users(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_available_admin_users() RETURNS TABLE(user_id uuid, email text, created_at timestamp with time zone)
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."generate_simulation_id_sets"("p_template_id" "uuid", "p_session_count" integer, "p_session_names" "text"[]) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_available_admin_users"() RETURNS TABLE("user_id" "uuid", "email" "text", "created_at" timestamp with time zone)
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT 
     au.id as user_id,
@@ -4691,11 +3953,13 @@ CREATE FUNCTION public.get_available_admin_users() RETURNS TABLE(user_id uuid, e
   ORDER BY au.created_at DESC;
 $$;
 
--- -- Name: get_available_tenants_for_transfer(text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_available_tenants_for_transfer(p_source_patient_id text) RETURNS TABLE(tenant_id uuid, tenant_name character varying, subdomain character varying)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_available_admin_users"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_available_tenants_for_transfer"("p_source_patient_id" "text") RETURNS TABLE("tenant_id" "uuid", "tenant_name" character varying, "subdomain" character varying)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     v_source_tenant_id UUID;
@@ -4722,38 +3986,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_backup_statistics(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_backup_statistics() RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-DECLARE
-    stats JSONB;
-BEGIN
-    SELECT jsonb_build_object(
-        'total_backups', COUNT(*),
-        'completed_backups', COUNT(*) FILTER (WHERE status = 'completed'),
-        'failed_backups', COUNT(*) FILTER (WHERE status = 'failed'),
-        'expired_backups', COUNT(*) FILTER (WHERE status = 'expired'),
-        'total_size_bytes', COALESCE(SUM(file_size), 0),
-        'total_records', COALESCE(SUM(record_count), 0),
-        'encrypted_backups', COUNT(*) FILTER (WHERE encrypted = true),
-        'oldest_backup', MIN(created_at),
-        'newest_backup', MAX(created_at),
-        'total_downloads', COALESCE(SUM(download_count), 0)
-    ) INTO stats
-    FROM backup_metadata;
-    
-    RETURN stats;
-END;
-$$;
+ALTER FUNCTION "public"."get_available_tenants_for_transfer"("p_source_patient_id" "text") OWNER TO "postgres";
 
--- -- Name: get_cohort_students(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_cohort_students(p_cohort_id uuid) RETURNS TABLE(user_id uuid, email text, first_name text, last_name text, student_number text, program_id uuid, program_code text)
-    LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION "public"."get_cohort_students"("p_cohort_id" "uuid") RETURNS TABLE("user_id" "uuid", "email" "text", "first_name" "text", "last_name" "text", "student_number" "text", "program_id" "uuid", "program_code" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT 
     sr.user_id,
@@ -4771,11 +4010,13 @@ CREATE FUNCTION public.get_cohort_students(p_cohort_id uuid) RETURNS TABLE(user_
   ORDER BY up.last_name, up.first_name;
 $$;
 
--- -- Name: get_secure_alerts(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_secure_alerts() RETURNS TABLE(alert_id uuid, patient_id uuid, patient_name text, alert_type text, message text, priority text, acknowledged boolean, acknowledged_by uuid, acknowledged_at timestamp with time zone, created_at timestamp with time zone, tenant_id uuid, tenant_name text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_cohort_students"("p_cohort_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_secure_alerts"() RETURNS TABLE("alert_id" "uuid", "patient_id" "uuid", "patient_name" "text", "alert_type" "text", "message" "text", "priority" "text", "acknowledged" boolean, "acknowledged_by" "uuid", "acknowledged_at" timestamp with time zone, "created_at" timestamp with time zone, "tenant_id" "uuid", "tenant_name" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   current_user_id UUID := auth.uid();
@@ -4821,11 +4062,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_simulation_label_data(uuid, integer); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_simulation_label_data(p_template_id uuid, p_session_number integer) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_secure_alerts"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_simulation_label_data"("p_template_id" "uuid", "p_session_number" integer) RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_tenant_id uuid;
@@ -4892,11 +4135,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_simulation_students(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_simulation_students(p_simulation_id uuid) RETURNS TABLE(user_id uuid, email text, first_name text, last_name text, student_number text, role public.simulation_role, granted_at timestamp with time zone, last_accessed_at timestamp with time zone)
-    LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_simulation_label_data"("p_template_id" "uuid", "p_session_number" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_simulation_students"("p_simulation_id" "uuid") RETURNS TABLE("user_id" "uuid", "email" "text", "first_name" "text", "last_name" "text", "student_number" "text", "role" "public"."simulation_role", "granted_at" timestamp with time zone, "last_accessed_at" timestamp with time zone)
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT 
     sp.user_id,
@@ -4914,11 +4159,13 @@ CREATE FUNCTION public.get_simulation_students(p_simulation_id uuid) RETURNS TAB
   ORDER BY sp.role DESC, up.last_name, up.first_name;
 $$;
 
--- -- Name: get_super_admin_tenant_context(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_super_admin_tenant_context() RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_simulation_students"("p_simulation_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_super_admin_tenant_context"() RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   tenant_context text;
@@ -4940,11 +4187,67 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_tenant_users(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_tenant_users(target_tenant_id uuid) RETURNS TABLE(user_id uuid, tenant_id uuid, role text, permissions text[], is_active boolean, email text, first_name text, last_name text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_super_admin_tenant_context"() OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."tenants" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" character varying(255) NOT NULL,
+    "subdomain" character varying(100) NOT NULL,
+    "logo_url" "text",
+    "primary_color" character varying(7) DEFAULT '#3B82F6'::character varying,
+    "settings" "jsonb" DEFAULT '{"currency": "USD", "features": {"mobile_app": true, "wound_care": false, "barcode_scanning": false, "advanced_analytics": false, "medication_management": true}, "security": {"password_policy": {"min_length": 8, "require_numbers": true, "require_symbols": false, "require_lowercase": true, "require_uppercase": true}, "session_timeout": 480, "two_factor_required": false}, "timezone": "UTC", "date_format": "MM/DD/YYYY"}'::"jsonb" NOT NULL,
+    "status" character varying(20) DEFAULT 'active'::character varying NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "admin_user_id" "uuid",
+    "subscription_plan" character varying(20) DEFAULT 'basic'::character varying NOT NULL,
+    "max_users" integer DEFAULT 10 NOT NULL,
+    "max_patients" integer DEFAULT 100 NOT NULL,
+    "parent_tenant_id" "uuid",
+    "tenant_type" "text" DEFAULT 'institution'::"text",
+    "simulation_id" "uuid",
+    "auto_cleanup_at" timestamp without time zone,
+    "is_simulation" boolean DEFAULT false,
+    "simulation_config" "jsonb" DEFAULT '{}'::"jsonb",
+    "program_id" "uuid",
+    CONSTRAINT "tenants_status_check" CHECK ((("status")::"text" = ANY (ARRAY[('active'::character varying)::"text", ('inactive'::character varying)::"text", ('suspended'::character varying)::"text"]))),
+    CONSTRAINT "tenants_subscription_plan_check" CHECK ((("subscription_plan")::"text" = ANY (ARRAY[('basic'::character varying)::"text", ('premium'::character varying)::"text", ('enterprise'::character varying)::"text"])))
+);
+
+
+ALTER TABLE "public"."tenants" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."tenants" IS 'Stores tenant/organization information for multi-tenant architecture';
+
+
+
+COMMENT ON COLUMN "public"."tenants"."settings" IS 'JSON configuration for tenant-specific settings and features';
+
+
+
+COMMENT ON COLUMN "public"."tenants"."program_id" IS 'Links program tenants to their program record. NULL for non-program tenants.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_tenant_by_subdomain_public"("p_subdomain" "text") RETURNS SETOF "public"."tenants"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT * FROM public.tenants
+  WHERE subdomain = p_subdomain AND status = 'active'
+  LIMIT 1;
+$$;
+
+
+ALTER FUNCTION "public"."get_tenant_by_subdomain_public"("p_subdomain" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_tenant_users"("target_tenant_id" "uuid") RETURNS TABLE("user_id" "uuid", "tenant_id" "uuid", "role" "text", "permissions" "text"[], "is_active" boolean, "email" "text", "first_name" "text", "last_name" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   RETURN QUERY
@@ -4963,11 +4266,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_user_accessible_simulations(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_accessible_simulations(p_user_id uuid) RETURNS TABLE(template_id uuid, template_name text, simulation_id uuid, simulation_name text, categories text[], access_reason text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_tenant_users"("target_tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_accessible_simulations"("p_user_id" "uuid") RETURNS TABLE("template_id" "uuid", "template_name" "text", "simulation_id" "uuid", "simulation_name" "text", "categories" "text"[], "access_reason" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   RETURN QUERY
@@ -5003,11 +4308,45 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_user_current_tenant(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_current_tenant(target_user_id uuid) RETURNS TABLE(tenant_id uuid, role text, is_active boolean)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_user_accessible_simulations"("p_user_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_user_accessible_simulations"("p_user_id" "uuid") IS 'Debug function to see what simulations a user can access and why';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_auth_status"("p_user_ids" "uuid"[]) RETURNS TABLE("user_id" "uuid", "last_sign_in_at" timestamp with time zone, "email_confirmed_at" timestamp with time zone)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_caller_role text;
+BEGIN
+  SELECT role INTO v_caller_role FROM user_profiles WHERE id = auth.uid();
+
+  IF v_caller_role IS NULL OR v_caller_role NOT IN ('super_admin', 'coordinator', 'admin') THEN
+    RAISE EXCEPTION 'Insufficient permissions to view user sign-in status';
+  END IF;
+
+  RETURN QUERY
+  SELECT au.id, au.last_sign_in_at, au.email_confirmed_at
+  FROM auth.users au
+  WHERE au.id = ANY(p_user_ids);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_user_auth_status"("p_user_ids" "uuid"[]) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_user_auth_status"("p_user_ids" "uuid"[]) IS 'Returns last_sign_in_at/email_confirmed_at from auth.users for the given user ids. Caller must be admin/coordinator/super_admin. Used by User Management to flag accounts that have never signed in (pending setup).';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_current_tenant"("target_user_id" "uuid") RETURNS TABLE("tenant_id" "uuid", "role" "text", "is_active" boolean)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   RETURN QUERY
@@ -5022,11 +4361,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_user_program_codes(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_program_codes(p_user_id uuid) RETURNS text[]
-    LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_user_current_tenant"("target_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_program_codes"("p_user_id" "uuid") RETURNS "text"[]
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT ARRAY_AGG(p.code)
   FROM user_programs up
@@ -5035,11 +4376,17 @@ CREATE FUNCTION public.get_user_program_codes(p_user_id uuid) RETURNS text[]
     AND p.is_active = true;
 $$;
 
--- -- Name: get_user_program_tenants(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_program_tenants(p_user_id uuid) RETURNS TABLE(tenant_id uuid, tenant_name text, program_id uuid, program_code text, program_name text, subdomain text)
-    LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_user_program_codes"("p_user_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_user_program_codes"("p_user_id" "uuid") IS 'Returns array of program codes assigned to user';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_program_tenants"("p_user_id" "uuid") RETURNS TABLE("tenant_id" "uuid", "tenant_name" "text", "program_id" "uuid", "program_code" "text", "program_name" "text", "subdomain" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT 
     t.id as tenant_id,
@@ -5058,11 +4405,17 @@ CREATE FUNCTION public.get_user_program_tenants(p_user_id uuid) RETURNS TABLE(te
   ORDER BY p.code;
 $$;
 
--- -- Name: get_user_role(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_role(user_id uuid) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_user_program_tenants"("p_user_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_user_program_tenants"("p_user_id" "uuid") IS 'Returns all program tenants that a user has access to via their program assignments';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_role"("user_id" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     user_role text;
@@ -5076,11 +4429,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_user_simulation_assignments(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_simulation_assignments(p_user_id uuid) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_user_role"("user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_simulation_assignments"("p_user_id" "uuid") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_result json;
@@ -5127,11 +4482,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: get_user_simulation_tenant_access(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.get_user_simulation_tenant_access() RETURNS uuid
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."get_user_simulation_assignments"("p_user_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_user_simulation_assignments"("p_user_id" "uuid") IS 'Gets simulation assignments for a user, bypassing RLS restrictions. Used by simulation portal.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."get_user_simulation_tenant_access"() RETURNS "uuid"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT CASE
     -- Super admin can access any tenant
@@ -5153,11 +4514,17 @@ CREATE FUNCTION public.get_user_simulation_tenant_access() RETURNS uuid
   END;
 $$;
 
--- -- Name: handle_new_user(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.handle_new_user() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO ''
+ALTER FUNCTION "public"."get_user_simulation_tenant_access"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."get_user_simulation_tenant_access"() IS 'Returns NULL for super_admin (access all tenants) or tenant_id for regular users';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 BEGIN
     INSERT INTO public.user_profiles (id, email, created_at, updated_at)
@@ -5167,11 +4534,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: handle_patient_tenant_assignment(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.handle_patient_tenant_assignment() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO ''
+ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."handle_patient_tenant_assignment"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 BEGIN
   -- Ensure patient has a tenant_id
@@ -5188,11 +4557,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: handle_user_profile_update(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.handle_user_profile_update() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO ''
+ALTER FUNCTION "public"."handle_patient_tenant_assignment"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."handle_user_profile_update"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 BEGIN
   -- Update timestamp
@@ -5202,11 +4573,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: instantiate_simulation_patients(uuid, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.instantiate_simulation_patients(p_simulation_id uuid, p_scenario_template_id uuid) RETURNS integer
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."handle_user_profile_update"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."instantiate_simulation_patients"("p_simulation_id" "uuid", "p_scenario_template_id" "uuid") RETURNS integer
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     template_record RECORD;
@@ -5355,11 +4728,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: is_admin_user(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.is_admin_user(user_id uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."instantiate_simulation_patients"("p_simulation_id" "uuid", "p_scenario_template_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_admin_user"("user_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     user_role text;
@@ -5374,11 +4749,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: is_super_admin(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.is_super_admin(check_user_id uuid DEFAULT auth.uid()) RETURNS boolean
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."is_admin_user"("user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_super_admin"("check_user_id" "uuid" DEFAULT "auth"."uid"()) RETURNS boolean
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT EXISTS (
     SELECT 1 
@@ -5388,11 +4765,13 @@ CREATE FUNCTION public.is_super_admin(check_user_id uuid DEFAULT auth.uid()) RET
   );
 $$;
 
--- -- Name: is_super_admin_direct(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.is_super_admin_direct(user_uuid uuid DEFAULT auth.uid()) RETURNS boolean
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."is_super_admin"("check_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_super_admin_direct"("user_uuid" "uuid" DEFAULT "auth"."uid"()) RETURNS boolean
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.tenant_users 
@@ -5402,11 +4781,13 @@ CREATE FUNCTION public.is_super_admin_direct(user_uuid uuid DEFAULT auth.uid()) 
   );
 $$;
 
--- -- Name: is_super_admin_user(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.is_super_admin_user(user_id uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."is_super_admin_direct"("user_uuid" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_super_admin_user"("user_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     user_role text;
@@ -5421,11 +4802,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: is_tenant_admin(uuid, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.is_tenant_admin(tenant_uuid uuid, user_uuid uuid DEFAULT auth.uid()) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+ALTER FUNCTION "public"."is_super_admin_user"("user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_tenant_admin"("tenant_uuid" "uuid", "user_uuid" "uuid" DEFAULT "auth"."uid"()) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
 BEGIN
     RETURN EXISTS (
@@ -5440,11 +4823,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: launch_run(uuid, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.launch_run(p_snapshot_id uuid, p_run_name text) RETURNS uuid
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."is_tenant_admin"("tenant_uuid" "uuid", "user_uuid" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."launch_run"("p_snapshot_id" "uuid", "p_run_name" "text") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     v_run_id UUID;
@@ -5518,10 +4903,16 @@ BEGIN
 END;
 $$;
 
--- -- Name: launch_simulation(uuid, text, integer, uuid[], text[], text[], text[]); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[] DEFAULT NULL::text[], p_primary_categories text[] DEFAULT '{}'::text[], p_sub_categories text[] DEFAULT '{}'::text[]) RETURNS TABLE(simulation_id uuid, tenant_id uuid, message text)
-    LANGUAGE plpgsql SECURITY DEFINER
+ALTER FUNCTION "public"."launch_run"("p_snapshot_id" "uuid", "p_run_name" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."launch_run"("p_snapshot_id" "uuid", "p_run_name" "text") IS 'Launches active simulation from snapshot';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."launch_simulation"("p_template_id" "uuid", "p_name" "text", "p_duration_minutes" integer, "p_participant_user_ids" "uuid"[], "p_participant_roles" "text"[] DEFAULT NULL::"text"[], "p_primary_categories" "text"[] DEFAULT '{}'::"text"[], "p_sub_categories" "text"[] DEFAULT '{}'::"text"[], "p_state_id" "uuid" DEFAULT NULL::"uuid") RETURNS TABLE("simulation_id" "uuid", "tenant_id" "uuid", "message" "text")
+    LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 DECLARE
   v_simulation_tenant_id UUID;
@@ -5529,6 +4920,7 @@ DECLARE
   v_user_role TEXT;
   v_simulation_id UUID;
   v_snapshot JSONB;
+  v_snapshot_anchor timestamptz;
   v_patient_count INTEGER;
   v_template_snapshot_version INTEGER;
 BEGIN
@@ -5553,15 +4945,39 @@ BEGIN
     LIMIT 1;
   END IF;
 
-  -- Fetch the template snapshot AND current version
-  SELECT st.snapshot_data, st.snapshot_version
-  INTO v_snapshot, v_template_snapshot_version
+  -- Confirm the template exists (and grab its version regardless of which
+  -- snapshot we end up launching from).
+  SELECT st.snapshot_version
+  INTO v_template_snapshot_version
   FROM simulation_templates st
   WHERE st.id = p_template_id;
 
-  IF v_snapshot IS NULL THEN
+  IF v_template_snapshot_version IS NULL THEN
     RAISE EXCEPTION 'Template not found: %', p_template_id;
   END IF;
+
+  IF p_state_id IS NOT NULL THEN
+    SELECT sts.snapshot_data, sts.updated_at INTO v_snapshot, v_snapshot_anchor
+    FROM simulation_template_states sts
+    WHERE sts.id = p_state_id AND sts.template_id = p_template_id;
+
+    IF v_snapshot IS NULL THEN
+      RAISE EXCEPTION 'Template state not found or does not belong to this template: %', p_state_id;
+    END IF;
+  ELSE
+    SELECT st.snapshot_data, st.snapshot_taken_at INTO v_snapshot, v_snapshot_anchor
+    FROM simulation_templates st
+    WHERE st.id = p_template_id;
+
+    IF v_snapshot IS NULL THEN
+      RAISE EXCEPTION 'Template has no snapshot data';
+    END IF;
+  END IF;
+
+  -- Re-base wall-clock timestamps (I&O, vitals, orders, medication history/
+  -- next_due, etc.) baked into the snapshot so they land relative to THIS
+  -- launch instead of showing whenever the template/state was last saved.
+  v_snapshot := shift_snapshot_timestamps(v_snapshot, now() - v_snapshot_anchor);
 
   -- Generate new simulation ID
   v_simulation_id := gen_random_uuid();
@@ -5616,7 +5032,8 @@ BEGIN
     template_snapshot_version,
     template_snapshot_version_synced,
     primary_categories,
-    sub_categories
+    sub_categories,
+    current_state_id
   )
   VALUES (
     v_simulation_id,
@@ -5629,25 +5046,23 @@ BEGIN
     auth.uid(),
     'running',
     v_template_snapshot_version,
-    v_template_snapshot_version,
+    v_template_snapshot_version,  -- Launched at current template version
     p_primary_categories,
-    p_sub_categories
+    p_sub_categories,
+    p_state_id
   );
 
-  RAISE NOTICE 'Simulation launched: % (%) with categories: Primary=[%], Sub=[%]',
+  RAISE NOTICE 'Simulation launched: % (%) with categories: Primary=[%], Sub=[%], state=%',
     v_simulation_id, p_name, 
     array_to_string(p_primary_categories, ', '), 
-    array_to_string(p_sub_categories, ', ');
+    array_to_string(p_sub_categories, ', '),
+    p_state_id;
 
-  -- =========================================================================
-  -- FIX: Add the launching instructor to tenant_users so they can read all
-  -- clinical tables when generating the debrief on completion.
-  -- Previously only participants were added here; the launcher was omitted,
-  -- causing RLS to block getStudentActivitiesBySimulation for non-super_admins.
-  -- =========================================================================
+  -- Add the launching instructor to tenant_users so they can read all clinical
+  -- tables when generating the debrief on completion.
   INSERT INTO tenant_users (user_id, tenant_id, is_active, role)
   VALUES (auth.uid(), v_simulation_tenant_id, true, 'admin')
-  ON CONFLICT (user_id, tenant_id) DO UPDATE
+  ON CONFLICT ON CONSTRAINT tenant_users_tenant_id_user_id_key DO UPDATE
     SET is_active = true, role = 'admin';
 
   RAISE NOTICE '✅ Launching instructor added to simulation tenant_users for debrief access';
@@ -5683,7 +5098,7 @@ BEGIN
           ELSE 'nurse'
         END
       )
-      ON CONFLICT (user_id, tenant_id) DO UPDATE
+      ON CONFLICT ON CONSTRAINT tenant_users_tenant_id_user_id_key DO UPDATE
         SET is_active = true;
     END LOOP;
     
@@ -5693,45 +5108,176 @@ BEGIN
   RETURN QUERY SELECT 
     v_simulation_id AS simulation_id,
     v_simulation_tenant_id AS tenant_id,
-    'Simulation launched successfully'::TEXT AS message;
+    format('Simulation "%s" launched successfully with %s patients', p_name, v_patient_count) AS message;
 END;
 $$;
 
--- -- Name: mark_expired_backups(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.mark_expired_backups() RETURNS integer
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."launch_simulation"("p_template_id" "uuid", "p_name" "text", "p_duration_minutes" integer, "p_participant_user_ids" "uuid"[], "p_participant_roles" "text"[], "p_primary_categories" "text"[], "p_sub_categories" "text"[], "p_state_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."launch_simulation"("p_template_id" "uuid", "p_name" "text", "p_duration_minutes" integer, "p_participant_user_ids" "uuid"[], "p_participant_roles" "text"[], "p_primary_categories" "text"[], "p_sub_categories" "text"[], "p_state_id" "uuid") IS 'Launches a new active simulation from a template (or one of its named states). Re-bases the snapshot''s wall-clock timestamps (I&O/vitals/orders/meds/etc.) to land relative to the launch instant instead of the template''s original build date.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."load_template_state"("p_template_id" "uuid", "p_state_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
+DECLARE
+  v_tenant_id uuid;
+  v_snapshot jsonb;
+  v_table_record record;
+  v_result jsonb;
+  v_tables_cleared integer := 0;
+BEGIN
+  SELECT tenant_id INTO v_tenant_id FROM simulation_templates WHERE id = p_template_id;
+  IF v_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Template not found: %', p_template_id;
+  END IF;
+
+  -- Caller must have editing access to this template's tenant (mirrors the
+  -- tenant_users check used by enterTemplateTenant()/the states RLS policies).
+  IF NOT (
+    EXISTS (
+      SELECT 1 FROM tenant_users tu
+      WHERE tu.tenant_id = v_tenant_id AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator', 'admin')
+    )
+  ) THEN
+    RAISE EXCEPTION 'Not authorized to edit this template';
+  END IF;
+
+  IF p_state_id IS NULL THEN
+    -- Discard path: reload the template's own default snapshot
+    SELECT snapshot_data INTO v_snapshot
+    FROM simulation_templates
+    WHERE id = p_template_id;
+
+    IF v_snapshot IS NULL THEN
+      RAISE EXCEPTION 'This template has no saved snapshot yet — nothing to discard back to';
+    END IF;
+  ELSE
+    SELECT snapshot_data INTO v_snapshot
+    FROM simulation_template_states
+    WHERE id = p_state_id AND template_id = p_template_id;
+
+    IF v_snapshot IS NULL THEN
+      RAISE EXCEPTION 'Template state not found or does not belong to this template: %', p_state_id;
+    END IF;
+  END IF;
+
+  RAISE NOTICE '🔄 Loading state % into template tenant % for editing', p_state_id, v_tenant_id;
+
+  -- STEP 1: Clear patient_id-only tables (no tenant_id column) BEFORE patients
+  -- are deleted below, same discovery criteria save_template_state() uses to
+  -- capture them — keeps this in sync automatically as new clinical tables
+  -- are added, without needing a hand-maintained delete list.
+  FOR v_table_record IN
+    SELECT DISTINCT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'patient_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND NOT EXISTS (
+      SELECT 1 FROM information_schema.columns c2
+      WHERE c2.table_name = t.table_name AND c2.column_name = 'tenant_id'
+    )
+  LOOP
+    EXECUTE format(
+      'DELETE FROM %I WHERE patient_id IN (SELECT id FROM patients WHERE tenant_id = $1)',
+      v_table_record.table_name
+    ) USING v_tenant_id;
+    v_tables_cleared := v_tables_cleared + 1;
+  END LOOP;
+
+  -- STEP 2: Clear all tenant_id-scoped tables (patients last, since STEP 1
+  -- above still needs them to resolve patient_id -> tenant_id).
+  FOR v_table_record IN
+    SELECT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'tenant_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND t.table_name NOT IN ('tenant_users', 'programs')
+    ORDER BY CASE WHEN t.table_name = 'patients' THEN 2 ELSE 1 END
+  LOOP
+    EXECUTE format('DELETE FROM %I WHERE tenant_id = $1', v_table_record.table_name) USING v_tenant_id;
+    v_tables_cleared := v_tables_cleared + 1;
+  END LOOP;
+
+  RAISE NOTICE '🗑️  Cleared % tables in template tenant before restoring state', v_tables_cleared;
+
+  -- STEP 3: Restore the named state's snapshot fresh. Unlike an active
+  -- simulation reset, template barcodes aren't load-bearing (real barcodes
+  -- are only assigned when a simulation is launched from this template), so
+  -- this intentionally does NOT preserve barcodes — same behavior as
+  -- importing a template from an export package.
+  SELECT restore_snapshot_to_tenant(
+    p_tenant_id := v_tenant_id,
+    p_snapshot := v_snapshot
+  ) INTO v_result;
+
+  RAISE NOTICE '✅ State loaded for editing: %', jsonb_pretty(v_result);
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'template_id', p_template_id,
+    'state_id', p_state_id,
+    'restore_details', v_result
+  );
+
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE '❌ Error loading template state: %', SQLERRM;
+  RETURN jsonb_build_object(
+    'success', false,
+    'message', SQLERRM
+  );
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."load_template_state"("p_template_id" "uuid", "p_state_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."load_template_state"("p_template_id" "uuid", "p_state_id" "uuid") IS 'Loads a named template state (simulation_template_states) into the template''s own tenant, replacing current live data, so an instructor can edit that state via the normal template editing flow. p_state_id NULL reloads the template''s own default snapshot instead (discard-changes path). Does not preserve barcodes (not load-bearing for templates — real barcodes are assigned on simulation launch).';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."mark_welcome_seen"() RETURNS timestamp with time zone
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
-    expired_count INTEGER;
+  v_seen_at TIMESTAMPTZ := NOW();
 BEGIN
-    -- Update expired backups
-    UPDATE backup_metadata 
-    SET status = 'expired', updated_at = NOW()
-    WHERE status = 'completed' 
-    AND expiry_date < NOW()
-    AND status != 'expired';
-    
-    GET DIAGNOSTICS expired_count = ROW_COUNT;
-    
-    -- Log the expiration
-    INSERT INTO backup_audit_log (user_id, action, details)
-    VALUES (
-        '00000000-0000-0000-0000-000000000000'::UUID, -- System user
-        'backup_expired', 
-        jsonb_build_object('expired_count', expired_count)
-    );
-    
-    RETURN expired_count;
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  UPDATE user_profiles
+  SET welcome_seen_at = v_seen_at,
+      updated_at = v_seen_at
+  WHERE id = auth.uid();
+
+  RETURN v_seen_at;
 END;
 $$;
 
--- -- Name: move_patient_to_tenant(text, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.move_patient_to_tenant(p_source_patient_id text, p_target_tenant_id uuid) RETURNS TABLE(patient_id uuid, patient_identifier character varying, records_updated jsonb)
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."mark_welcome_seen"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."move_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid") RETURNS TABLE("patient_id" "uuid", "patient_identifier" character varying, "records_updated" "jsonb")
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     v_patient_uuid UUID;
@@ -5779,11 +5325,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: move_patient_to_tenant(uuid, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.move_patient_to_tenant(p_patient_id uuid, p_target_tenant_id uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."move_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."move_patient_to_tenant"("p_patient_id" "uuid", "p_target_tenant_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
     UPDATE patients 
@@ -5798,11 +5346,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: protect_medication_identifiers(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.protect_medication_identifiers() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."move_patient_to_tenant"("p_patient_id" "uuid", "p_target_tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_medication_identifiers"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   IF OLD.id IS DISTINCT FROM NEW.id THEN
@@ -5812,11 +5362,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: protect_patient_identifiers(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.protect_patient_identifiers() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."protect_medication_identifiers"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."protect_medication_identifiers"() IS 'Protects medication IDs from changes to preserve barcode validity';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_patient_identifiers"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   IF OLD.patient_id IS DISTINCT FROM NEW.patient_id THEN
@@ -5829,11 +5385,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: protect_super_admin_role(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.protect_super_admin_role() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."protect_patient_identifiers"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."protect_patient_identifiers"() IS 'Protects patient_id from changes to preserve pre-printed label validity';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_super_admin_role"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Only block the change if:
@@ -5858,11 +5420,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: reactivate_user(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.reactivate_user(target_user_id uuid) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."protect_super_admin_role"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."protect_super_admin_role"() IS 'Prevents non-super-admins from changing super_admin roles, but allows super_admins to demote other super_admins. Includes audit logging for security compliance.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."reactivate_user"("target_user_id" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   current_user_role TEXT;
@@ -5884,11 +5452,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: reassign_user_tenant(uuid, uuid, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.reassign_user_tenant(p_user_id uuid, p_new_tenant_id uuid, p_role text DEFAULT 'nurse'::text) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."reactivate_user"("target_user_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."reassign_user_tenant"("p_user_id" "uuid", "p_new_tenant_id" "uuid", "p_role" "text" DEFAULT 'nurse'::"text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_existing_count integer;
@@ -5942,11 +5512,18 @@ BEGIN
 END;
 $$;
 
--- -- Name: refresh_user_tenant_cache(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.refresh_user_tenant_cache() RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."reassign_user_tenant"("p_user_id" "uuid", "p_new_tenant_id" "uuid", "p_role" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."reassign_user_tenant"("p_user_id" "uuid", "p_new_tenant_id" "uuid", "p_role" "text") IS 'Reassigns a user to a different tenant. Uses SECURITY DEFINER to bypass RLS. 
+Only callable by super_admins. Removes all existing tenant assignments and creates a new one.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."refresh_user_tenant_cache"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Refresh the materialized view
@@ -5954,11 +5531,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: remove_user_from_tenant(uuid, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.remove_user_from_tenant(tenant_uuid uuid, user_uuid uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+ALTER FUNCTION "public"."refresh_user_tenant_cache"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."remove_user_from_tenant"("tenant_uuid" "uuid", "user_uuid" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
 BEGIN
     UPDATE public.tenant_users
@@ -5971,11 +5550,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: reset_run(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.reset_run(p_run_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."remove_user_from_tenant"("tenant_uuid" "uuid", "user_uuid" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."reset_run"("p_run_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     v_deleted_counts JSONB;
@@ -6079,16 +5660,23 @@ EXCEPTION
 END;
 $$;
 
--- -- Name: reset_simulation_for_next_session(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.reset_simulation_for_next_session(p_simulation_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."reset_run"("p_run_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."reset_run"("p_run_id" "uuid") IS 'Resets simulation by deleting only event data, preserving printed IDs';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."reset_simulation_for_next_session"("p_simulation_id" "uuid", "p_state_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_tenant_id uuid;
   v_template_id uuid;
   v_snapshot jsonb;
+  v_snapshot_anchor timestamptz;
   v_snapshot_original jsonb;  -- Keep original snapshot with medications
   v_duration_minutes integer;
   v_result jsonb;
@@ -6105,22 +5693,42 @@ BEGIN
     sa.tenant_id,
     sa.template_id,
     sa.duration_minutes,
-    st.snapshot_data
+    st.snapshot_data,
+    st.snapshot_taken_at
   INTO 
     v_tenant_id,
     v_template_id,
     v_duration_minutes,
-    v_snapshot
+    v_snapshot,
+    v_snapshot_anchor
   FROM simulation_active sa
   JOIN simulation_templates st ON st.id = sa.template_id
   WHERE sa.id = p_simulation_id;
   
-  -- Save original snapshot (before we remove medications)
-  v_snapshot_original := v_snapshot;
-
   IF v_tenant_id IS NULL THEN
     RAISE EXCEPTION 'Simulation not found: %', p_simulation_id;
   END IF;
+
+  -- If a named state was requested, use its snapshot instead of the template's default
+  IF p_state_id IS NOT NULL THEN
+    SELECT snapshot_data, updated_at INTO v_snapshot, v_snapshot_anchor
+    FROM simulation_template_states
+    WHERE id = p_state_id AND template_id = v_template_id;
+
+    IF v_snapshot IS NULL THEN
+      RAISE EXCEPTION 'Template state not found or does not belong to this simulation''s template: %', p_state_id;
+    END IF;
+
+    RAISE NOTICE '📦 Using named state % for reset', p_state_id;
+  END IF;
+
+  -- Re-base wall-clock timestamps (I&O, vitals, orders, medication history, etc.)
+  -- so they land relative to THIS reset instead of the template/state's original
+  -- build date.
+  v_snapshot := shift_snapshot_timestamps(v_snapshot, now() - v_snapshot_anchor);
+
+  -- Save original snapshot (before we remove medications)
+  v_snapshot_original := v_snapshot;
 
   IF v_snapshot IS NULL THEN
     RAISE EXCEPTION 'Template has no snapshot data';
@@ -6209,7 +5817,42 @@ BEGIN
   DELETE FROM patient_newborn_assessments WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % newborn assessments', v_count;
-  
+
+  -- 📋 Flowsheet system assessments: delete ONLY student entries.
+  -- Instructor-set baseline entries (is_baseline = true) survive the reset so
+  -- that clinical context (e.g. "patient has chronic pain, baseline 7/10")
+  -- is still visible to students in the next session.
+  DELETE FROM patient_system_assessments
+  WHERE tenant_id = v_tenant_id
+    AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % system assessments (student entries only, baseline preserved)', v_count;
+
+  -- 🧩 TR module tables: delete student entries, preserve instructor baselines
+  DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR screening entries (student only)', v_count;
+
+  DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR active living profiles (student only)', v_count;
+
+  DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR assessment scores (student only)', v_count;
+
+  DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR treatment plan rows (student only)', v_count;
+
+  DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR interdisciplinary interpretations (student only)', v_count;
+
+  DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % TR progress notes', v_count;
+
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % doctors orders', v_count;
@@ -6221,6 +5864,10 @@ BEGIN
   DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % advanced directives', v_count;
+  
+  DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RAISE NOTICE '🗑️  Deleted % admission records', v_count;
   
   DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
@@ -6263,6 +5910,21 @@ BEGIN
   -- KEEP patients in snapshot - restore function needs them to build patient mapping!
   v_snapshot := v_snapshot - 'patient_medications';
   RAISE NOTICE '💊 Removed medications from snapshot (preserved with their UUIDs)';
+
+  -- Remove system assessments from snapshot - baseline rows are preserved
+  -- in-place (is_baseline = true), so restoring from snapshot would duplicate them.
+  v_snapshot := v_snapshot - 'patient_system_assessments';
+  RAISE NOTICE '📋 Removed system assessments from snapshot (baseline rows preserved in-place)';
+
+  -- Strip TR tables from snapshot — baseline rows preserved in-place
+  v_snapshot := v_snapshot - 'tr_screening_entries';
+  v_snapshot := v_snapshot - 'tr_active_living_profiles';
+  v_snapshot := v_snapshot - 'tr_assessment_scores';
+  v_snapshot := v_snapshot - 'tr_treatment_plan_rows';
+  v_snapshot := v_snapshot - 'tr_interdisciplinary_interps';
+  v_snapshot := v_snapshot - 'tr_progress_notes';
+  RAISE NOTICE '🧩 Removed TR module tables from snapshot (baseline rows preserved in-place)';
+
   RAISE NOTICE '👥 Keeping patients in snapshot for ID mapping (will not create new patients due to preserve_barcodes flag)';
   
   -- Restore all baseline data, mapping to existing patients
@@ -6287,6 +5949,7 @@ BEGIN
     starts_at = NULL,
     ends_at = NULL,
     completed_at = NULL,
+    current_state_id = p_state_id,
     updated_at = NOW()
   WHERE id = p_simulation_id;
   
@@ -6309,7 +5972,10 @@ BEGIN
     auth.uid(),
     'simulation_reset',
     v_result,
-    'Simulation reset for next session - status set to pending, ready for manual start'
+    CASE WHEN p_state_id IS NOT NULL
+      THEN format('Simulation reset to template state %s - status set to pending, ready for manual start', p_state_id)
+      ELSE 'Simulation reset for next session - status set to pending, ready for manual start'
+    END
   );
 
   RAISE NOTICE '🎉 Session reset complete! Simulation ready to start.';
@@ -6319,6 +5985,7 @@ BEGIN
     'success', true,
     'simulation_id', p_simulation_id,
     'status', 'pending',
+    'state_id', p_state_id,
     'message', 'Simulation reset successfully. Click Play to start when ready.',
     'restore_details', v_result,
     'restored_counts', COALESCE(v_result->'restored_counts', '{}'::jsonb),
@@ -6336,16 +6003,23 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
--- -- Name: reset_simulation_with_template_updates(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.reset_simulation_with_template_updates(p_simulation_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."reset_simulation_for_next_session"("p_simulation_id" "uuid", "p_state_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."reset_simulation_for_next_session"("p_simulation_id" "uuid", "p_state_id" "uuid") IS 'Reset simulation for next session - preserves patient/medication barcodes, sets status to pending (manual start required). Optional p_state_id resets into a named template state instead of the template''s default snapshot. Re-bases snapshot wall-clock timestamps to land relative to the reset instant.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."reset_simulation_with_template_updates"("p_simulation_id" "uuid", "p_state_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_tenant_id uuid;
   v_template_id uuid;
   v_snapshot jsonb;
+  v_snapshot_anchor timestamptz;
   v_duration_minutes integer;
   v_result jsonb;
   v_patient_barcodes jsonb := '{}'::jsonb;
@@ -6388,13 +6062,15 @@ BEGIN
     sa.template_id,
     sa.duration_minutes,
     st.snapshot_data,
-    st.snapshot_version
+    st.snapshot_version,
+    st.snapshot_taken_at
   INTO 
     v_tenant_id,
     v_template_id,
     v_duration_minutes,
     v_snapshot,
-    v_template_version
+    v_template_version,
+    v_snapshot_anchor
   FROM simulation_active sa
   JOIN simulation_templates st ON st.id = sa.template_id
   WHERE sa.id = p_simulation_id;
@@ -6402,6 +6078,25 @@ BEGIN
   IF v_tenant_id IS NULL THEN
     RAISE EXCEPTION 'Simulation not found: %', p_simulation_id;
   END IF;
+
+  -- If a named state was requested, use its snapshot instead of the template's default
+  IF p_state_id IS NOT NULL THEN
+    SELECT snapshot_data, updated_at INTO v_snapshot, v_snapshot_anchor
+    FROM simulation_template_states
+    WHERE id = p_state_id AND template_id = v_template_id;
+
+    IF v_snapshot IS NULL THEN
+      RAISE EXCEPTION 'Template state not found or does not belong to this simulation''s template: %', p_state_id;
+    END IF;
+
+    RAISE NOTICE '📦 Using named state % for sync reset', p_state_id;
+  END IF;
+
+  -- Re-base wall-clock timestamps (I&O, vitals, orders, medication history/
+  -- next_due, etc.) so they land relative to THIS reset instead of the
+  -- template/state's original build date. Must happen BEFORE the medication
+  -- sync loop below reads next_due/start_date/end_date off v_snapshot.
+  v_snapshot := shift_snapshot_timestamps(v_snapshot, now() - v_snapshot_anchor);
   
   RAISE NOTICE '📋 Simulation Details:';
   RAISE NOTICE '  - Simulation ID: %', p_simulation_id;
@@ -6439,11 +6134,23 @@ BEGIN
   DELETE FROM doctors_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM handover_notes WHERE patient_id::uuid IN (SELECT id FROM patients WHERE tenant_id = v_tenant_id);
   DELETE FROM patient_advanced_directives WHERE tenant_id = v_tenant_id;
+  DELETE FROM patient_admission_records WHERE tenant_id = v_tenant_id;
   DELETE FROM lab_orders WHERE tenant_id = v_tenant_id;
   DELETE FROM bowel_records WHERE tenant_id = v_tenant_id;
   DELETE FROM wounds WHERE tenant_id = v_tenant_id;
   DELETE FROM devices WHERE tenant_id = v_tenant_id;
   DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id;
+
+  -- 📋 Flowsheet system assessments: delete ONLY student entries (was ON HOLD, now active)
+  DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id AND is_baseline = false;
+
+  -- 🧩 TR module tables: delete student entries, preserve instructor baselines
+  DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_active_living_profiles WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_assessment_scores WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_treatment_plan_rows WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_interdisciplinary_interps WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  DELETE FROM tr_progress_notes WHERE tenant_id = v_tenant_id;
 
   -- =====================================================
   -- STEP 3: INSERT NEW MEDICATIONS (Property-based matching)
@@ -6514,11 +6221,13 @@ BEGIN
           v_template_med->>'name', v_template_med->>'dosage', v_template_med->>'route', v_barcode;
         
         BEGIN
-          -- Insert with NEW UUID (generates NEW barcode automatically)
+          -- Insert with NEW UUID. Copy catalog_id + barcode from template so
+          -- physical QR labels printed for this medication remain valid.
           INSERT INTO patient_medications (
             tenant_id, patient_id, name, dosage, route, frequency,
             admin_time, admin_times, category, start_date, end_date,
-            next_due, prescribed_by, status, last_administered
+            next_due, prescribed_by, status, last_administered,
+            catalog_id, barcode
           ) VALUES (
             v_tenant_id,
             v_patient_id,  -- Mapped to simulation patient
@@ -6538,7 +6247,11 @@ BEGIN
                  ELSE NULL END,
             v_template_med->>'prescribed_by',
             COALESCE(v_template_med->>'status', 'active'),
-            NULL
+            NULL,  -- last_administered
+            CASE WHEN v_template_med->>'catalog_id' IS NOT NULL
+                 THEN (v_template_med->>'catalog_id')::uuid
+                 ELSE NULL END,
+            v_template_med->>'barcode'  -- NULL for free-entry meds
           );
           
           v_meds_added := v_meds_added + 1;
@@ -6606,7 +6319,16 @@ BEGIN
   
   -- Remove patient_medications from snapshot (we handled it above)
   v_snapshot := v_snapshot - 'patient_medications';
-  
+
+  -- Strip PSA and TR tables — baseline rows preserved in-place, restore would duplicate
+  v_snapshot := v_snapshot - 'patient_system_assessments';
+  v_snapshot := v_snapshot - 'tr_screening_entries';
+  v_snapshot := v_snapshot - 'tr_active_living_profiles';
+  v_snapshot := v_snapshot - 'tr_assessment_scores';
+  v_snapshot := v_snapshot - 'tr_treatment_plan_rows';
+  v_snapshot := v_snapshot - 'tr_interdisciplinary_interps';
+  v_snapshot := v_snapshot - 'tr_progress_notes';
+
   -- Build barcode mapping for restore_snapshot_to_tenant (sim patient UUID → barcode)
   FOR v_patient_id, v_barcode IN 
     SELECT id, patient_id FROM patients WHERE tenant_id = v_tenant_id ORDER BY created_at
@@ -6630,6 +6352,7 @@ BEGIN
     starts_at = NULL,
     ends_at = NULL,
     template_snapshot_version_synced = v_template_version,
+    current_state_id = p_state_id,
     updated_at = NOW()
   WHERE id = p_simulation_id;
   
@@ -6641,17 +6364,21 @@ BEGIN
       p_simulation_id, auth.uid(), 'synced_from_template',
       jsonb_build_object(
         'template_version', v_template_version,
+        'state_id', p_state_id,
         'meds_added', v_meds_added,
         'meds_removed', v_meds_removed
       ),
-      format('Synced to template v%s: %s added, %s removed', 
-        v_template_version, v_meds_added, v_meds_removed)
+      format('Synced to template v%s%s: %s added, %s removed', 
+        v_template_version,
+        CASE WHEN p_state_id IS NOT NULL THEN format(' (state %s)', p_state_id) ELSE '' END,
+        v_meds_added, v_meds_removed)
     );
   END IF;
   
   RETURN jsonb_build_object(
     'success', true,
     'template_version_synced', v_template_version,
+    'state_id', p_state_id,
     'medications_added', v_meds_added,
     'medications_removed', v_meds_removed,
     'template_medication_count', v_template_med_count,
@@ -6661,11 +6388,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: restore_snapshot_to_tenant(uuid, jsonb, jsonb, jsonb, boolean, boolean); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.restore_snapshot_to_tenant(p_tenant_id uuid, p_snapshot jsonb, p_id_mappings jsonb DEFAULT NULL::jsonb, p_barcode_mappings jsonb DEFAULT NULL::jsonb, p_preserve_barcodes boolean DEFAULT false, p_skip_patients boolean DEFAULT false) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."reset_simulation_with_template_updates"("p_simulation_id" "uuid", "p_state_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."reset_simulation_with_template_updates"("p_simulation_id" "uuid", "p_state_id" "uuid") IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged. Optional p_state_id syncs from a named template state instead of the template''s default snapshot. Re-bases snapshot wall-clock timestamps to land relative to the reset instant.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."restore_snapshot_to_tenant"("p_tenant_id" "uuid", "p_snapshot" "jsonb", "p_id_mappings" "jsonb" DEFAULT NULL::"jsonb", "p_barcode_mappings" "jsonb" DEFAULT NULL::"jsonb", "p_preserve_barcodes" boolean DEFAULT false, "p_skip_patients" boolean DEFAULT false) RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $_$
 DECLARE
   v_table_name text;
@@ -6691,6 +6424,7 @@ DECLARE
   v_column_type text;
   v_udt_name text;
   v_mapped_count integer;
+  v_has_patient_id_unique boolean;
 BEGIN
   RAISE NOTICE '🔄 Schema-agnostic restore to tenant % (skip_patients=%, preserve_barcodes=%)', 
     p_tenant_id, p_skip_patients, p_preserve_barcodes;
@@ -6845,6 +6579,24 @@ BEGIN
     IF jsonb_array_length(v_table_data) > 0 THEN
       RAISE NOTICE '📦 Restoring % (% records)...', v_table_name, jsonb_array_length(v_table_data);
       v_count := 0;
+      
+      -- Detect tables that only ever allow one row per patient (e.g.
+      -- patient_advanced_directives, patient_admission_records) so the
+      -- INSERT below can be made idempotent via ON CONFLICT instead of
+      -- erroring when a snapshot's fallback mapping assigns two rows to
+      -- the same patient.
+      SELECT EXISTS (
+        SELECT 1
+        FROM pg_constraint c
+        JOIN pg_class t ON t.oid = c.conrelid
+        WHERE t.relname = v_actual_table_name
+          AND c.contype = 'u'
+          AND array_length(c.conkey, 1) = 1
+          AND c.conkey = ARRAY[(
+            SELECT a.attnum FROM pg_attribute a
+            WHERE a.attrelid = t.oid AND a.attname = 'patient_id'
+          )]
+      ) INTO v_has_patient_id_unique;
       
       FOR v_record IN SELECT * FROM jsonb_array_elements(v_table_data)
       LOOP
@@ -7010,10 +6762,11 @@ BEGIN
             CONTINUE;
           END IF;
           
-          v_sql := format('INSERT INTO %I (%s) VALUES (%s)',
+          v_sql := format('INSERT INTO %I (%s) VALUES (%s)%s',
             v_actual_table_name,
             array_to_string(v_columns, ', '),
-            array_to_string(v_values, ', ')
+            array_to_string(v_values, ', '),
+            CASE WHEN v_has_patient_id_unique THEN ' ON CONFLICT (patient_id) DO NOTHING' ELSE '' END
           );
           
           EXECUTE v_sql;
@@ -7041,44 +6794,167 @@ BEGIN
 END;
 $_$;
 
--- -- Name: restore_template_version(uuid, integer, uuid, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.restore_template_version(p_template_id uuid, p_version_to_restore integer, p_user_id uuid DEFAULT NULL::uuid, p_restore_notes text DEFAULT NULL::text) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."restore_snapshot_to_tenant"("p_tenant_id" "uuid", "p_snapshot" "jsonb", "p_id_mappings" "jsonb", "p_barcode_mappings" "jsonb", "p_preserve_barcodes" boolean, "p_skip_patients" boolean) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."restore_snapshot_to_tenant"("p_tenant_id" "uuid", "p_snapshot" "jsonb", "p_id_mappings" "jsonb", "p_barcode_mappings" "jsonb", "p_preserve_barcodes" boolean, "p_skip_patients" boolean) IS 'Restores snapshot data to a tenant. Fixed 2026-08-18: tables with a UNIQUE(patient_id) constraint (patient_advanced_directives, patient_admission_records) now use ON CONFLICT (patient_id) DO NOTHING to avoid duplicate-key failures when the fallback single-patient mapping assigns more than one snapshot row to the same patient.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog'
     AS $$
 DECLARE
-  v_snapshot_to_restore JSONB;
-  v_result JSONB;
+  cmd record;
 BEGIN
-  -- Get the snapshot from version history
-  SELECT snapshot_data
-  INTO v_snapshot_to_restore
-  FROM simulation_template_versions
-  WHERE template_id = p_template_id
-  AND version = p_version_to_restore;
-  
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Version % not found for template %', p_version_to_restore, p_template_id;
-  END IF;
-  
-  -- Save current version and update to restored snapshot
-  SELECT save_template_version(
-    p_template_id,
-    v_snapshot_to_restore,
-    COALESCE(p_restore_notes, 'Restored from version ' || p_version_to_restore),
-    p_user_id
-  ) INTO v_result;
-  
-  RETURN v_result || jsonb_build_object('restored_from_version', p_version_to_restore);
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
 END;
 $$;
 
--- -- Name: save_template_snapshot_v2(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.save_template_snapshot_v2(p_template_id uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."rls_auto_enable"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."save_patient_template_snapshot"("p_patient_template_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
+DECLARE
+  v_tenant_id uuid;
+  v_snapshot jsonb := '{}'::jsonb;
+  v_table_record record;
+  v_table_data jsonb;
+  v_count integer;
+  v_total_tables integer := 0;
+  v_total_records integer := 0;
+BEGIN
+  SELECT tenant_id INTO v_tenant_id
+  FROM patient_templates
+  WHERE id = p_patient_template_id;
+
+  IF v_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Patient template not found: %', p_patient_template_id;
+  END IF;
+
+  -- STEP 1: tables with tenant_id
+  FOR v_table_record IN
+    SELECT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'tenant_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND t.table_name <> 'patient_templates'
+    AND t.table_name NOT IN ('tenant_users', 'programs')  -- Tenant admin/org metadata, not template data
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      WHERE t.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  -- STEP 2: tables linked via patient_id only (no tenant_id column)
+  FOR v_table_record IN
+    SELECT DISTINCT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'patient_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND NOT EXISTS (
+      SELECT 1 FROM information_schema.columns c2
+      WHERE c2.table_name = t.table_name
+      AND c2.column_name = 'tenant_id'
+    )
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      JOIN patients p ON p.id = t.patient_id
+      WHERE p.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  v_snapshot := v_snapshot || jsonb_build_object(
+    'snapshot_metadata', jsonb_build_object(
+      'created_at', now(),
+      'created_by', auth.uid(),
+      'tenant_id', v_tenant_id,
+      'total_tables_scanned', v_total_tables,
+      'total_records_captured', v_total_records,
+      'schema_version', '2.0'
+    )
+  );
+
+  UPDATE patient_templates
+  SET
+    snapshot_data = v_snapshot,
+    snapshot_taken_at = now(),
+    status = 'ready',
+    updated_at = now()
+  WHERE id = p_patient_template_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'patient_template_id', p_patient_template_id,
+    'tables_captured', v_total_tables,
+    'records_captured', v_total_records,
+    'message', 'Patient template snapshot saved successfully'
+  );
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."save_patient_template_snapshot"("p_patient_template_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."save_patient_template_snapshot"("p_patient_template_id" "uuid") IS 'Schema-agnostic snapshot creation for patient templates. Mirrors save_template_snapshot_v2 but targets patient_templates (excludes tenant_users/programs admin metadata).';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."save_template_snapshot_v2"("p_template_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $_$
 DECLARE
   v_tenant_id uuid;
@@ -7109,6 +6985,7 @@ BEGIN
     AND c.column_name = 'tenant_id'
     AND t.table_type = 'BASE TABLE'
     AND t.table_name NOT LIKE 'simulation_%'  -- Skip simulation system tables
+    AND t.table_name NOT IN ('tenant_users', 'programs')  -- Tenant admin/org metadata, not template data
     ORDER BY t.table_name
   LOOP
     -- Dynamically capture all data from this tenant-aware table
@@ -7199,112 +7076,145 @@ BEGIN
 END;
 $_$;
 
--- -- Name: save_template_version(uuid, jsonb, text, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.save_template_version(p_template_id uuid, p_new_snapshot jsonb, p_change_notes text DEFAULT NULL::text, p_user_id uuid DEFAULT NULL::uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
+ALTER FUNCTION "public"."save_template_snapshot_v2"("p_template_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."save_template_snapshot_v2"("p_template_id" "uuid") IS 'Schema-agnostic snapshot creation V2. Automatically discovers and captures ALL tenant clinical/template data (excludes tenant_users/programs admin metadata). Works with future schema changes automatically.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."save_template_state"("p_template_id" "uuid", "p_label" "text", "p_changelog_note" "text" DEFAULT NULL::"text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
 DECLARE
-  v_current_version INT;
-  v_current_snapshot JSONB;
-  v_new_version INT;
-  v_patient_count INT := 0;
-  v_medication_count INT := 0;
-  v_order_count INT := 0;
-  v_wound_count INT := 0;
-  v_device_count INT := 0;
-  v_version_id UUID;
+  v_tenant_id uuid;
+  v_snapshot jsonb := '{}'::jsonb;
+  v_table_record record;
+  v_table_data jsonb;
+  v_count integer;
+  v_total_tables integer := 0;
+  v_total_records integer := 0;
+  v_state_id uuid;
+  v_state_count integer;
 BEGIN
-  -- Get current template data
-  SELECT snapshot_version, snapshot_data
-  INTO v_current_version, v_current_snapshot
-  FROM simulation_templates
-  WHERE id = p_template_id;
-  
-  IF NOT FOUND THEN
+  SELECT tenant_id INTO v_tenant_id FROM simulation_templates WHERE id = p_template_id;
+  IF v_tenant_id IS NULL THEN
     RAISE EXCEPTION 'Template not found: %', p_template_id;
   END IF;
-  
-  -- Calculate new version
-  v_new_version := COALESCE(v_current_version, 0) + 1;
-  
-  -- Archive CURRENT version (before updating)
-  IF v_current_snapshot IS NOT NULL THEN
-    -- Calculate stats from current snapshot
-    IF v_current_snapshot ? 'patients' THEN
-      v_patient_count := jsonb_array_length(v_current_snapshot->'patients');
-    END IF;
-    
-    IF v_current_snapshot ? 'patient_medications' THEN
-      v_medication_count := jsonb_array_length(v_current_snapshot->'patient_medications');
-    END IF;
-    
-    IF v_current_snapshot ? 'doctors_orders' THEN
-      v_order_count := jsonb_array_length(v_current_snapshot->'doctors_orders');
-    END IF;
-    
-    IF v_current_snapshot ? 'wounds' THEN
-      v_wound_count := jsonb_array_length(v_current_snapshot->'wounds');
-    END IF;
-    
-    IF v_current_snapshot ? 'devices' THEN
-      v_device_count := jsonb_array_length(v_current_snapshot->'devices');
-    END IF;
-    
-    -- Insert archived version
-    INSERT INTO simulation_template_versions (
-      template_id,
-      version,
-      snapshot_data,
-      saved_by,
-      change_notes,
-      patient_count,
-      medication_count,
-      order_count,
-      wound_count,
-      device_count
-    ) VALUES (
-      p_template_id,
-      v_current_version,
-      v_current_snapshot,
-      COALESCE(p_user_id, auth.uid()),
-      p_change_notes,
-      v_patient_count,
-      v_medication_count,
-      v_order_count,
-      v_wound_count,
-      v_device_count
-    )
-    RETURNING id INTO v_version_id;
-    
-    RAISE NOTICE '📦 Archived template v% (version_id: %)', v_current_version, v_version_id;
+
+  IF p_label IS NULL OR trim(p_label) = '' THEN
+    RAISE EXCEPTION 'A label is required to save a template state';
   END IF;
-  
-  -- Update template with new snapshot and version
-  UPDATE simulation_templates
-  SET 
-    snapshot_data = p_new_snapshot,
-    snapshot_version = v_new_version,
-    updated_at = NOW()
-  WHERE id = p_template_id;
-  
-  RAISE NOTICE '✅ Updated template to v%', v_new_version;
-  
+
+  SELECT COUNT(*) INTO v_state_count FROM simulation_template_states WHERE template_id = p_template_id;
+  IF v_state_count >= 10 THEN
+    RETURN jsonb_build_object('success', false, 'message', 'Maximum of 10 states per template reached');
+  END IF;
+
+  FOR v_table_record IN
+    SELECT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'tenant_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND t.table_name NOT IN ('tenant_users', 'programs')
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      WHERE t.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  FOR v_table_record IN
+    SELECT DISTINCT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'patient_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND NOT EXISTS (
+      SELECT 1 FROM information_schema.columns c2
+      WHERE c2.table_name = t.table_name
+      AND c2.column_name = 'tenant_id'
+    )
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      JOIN patients p ON p.id = t.patient_id
+      WHERE p.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  v_snapshot := v_snapshot || jsonb_build_object(
+    'snapshot_metadata', jsonb_build_object(
+      'created_at', now(),
+      'created_by', auth.uid(),
+      'tenant_id', v_tenant_id,
+      'total_tables_scanned', v_total_tables,
+      'total_records_captured', v_total_records,
+      'schema_version', '2.0'
+    )
+  );
+
+  BEGIN
+    INSERT INTO simulation_template_states (
+      tenant_id, template_id, label, changelog_note, snapshot_data, sort_order, created_by
+    ) VALUES (
+      v_tenant_id, p_template_id, trim(p_label), p_changelog_note, v_snapshot, v_state_count, auth.uid()
+    )
+    RETURNING id INTO v_state_id;
+  EXCEPTION WHEN unique_violation THEN
+    RETURN jsonb_build_object('success', false, 'message', 'A state with that label already exists for this template');
+  END;
+
   RETURN jsonb_build_object(
     'success', true,
-    'previous_version', v_current_version,
-    'new_version', v_new_version,
-    'archived_version_id', v_version_id
+    'state_id', v_state_id,
+    'template_id', p_template_id,
+    'label', p_label,
+    'tables_captured', v_total_tables,
+    'records_captured', v_total_records,
+    'message', 'Template state saved successfully'
   );
 END;
-$$;
+$_$;
 
--- -- Name: set_alert_tenant_id(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_alert_tenant_id() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO ''
+ALTER FUNCTION "public"."save_template_state"("p_template_id" "uuid", "p_label" "text", "p_changelog_note" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."save_template_state"("p_template_id" "uuid", "p_label" "text", "p_changelog_note" "text") IS 'Captures the template tenant''s current clinical data as a new named state (e.g. "Week 2"), independent of the template''s default snapshot_data.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."set_alert_tenant_id"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 BEGIN
   -- If tenant_id is not provided, get it from the patient
@@ -7323,11 +7233,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: set_medication_admin_tenant_id(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_medication_admin_tenant_id() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."set_alert_tenant_id"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_medication_admin_tenant_id"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- If tenant_id is not provided, get it from the patient
@@ -7340,11 +7252,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: set_super_admin_tenant_context(text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_super_admin_tenant_context(target_tenant_id text) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."set_medication_admin_tenant_id"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_super_admin_tenant_context"("target_tenant_id" "text") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Only super admins can set tenant context
@@ -7376,11 +7290,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: set_tenant_id_on_insert(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_tenant_id_on_insert() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO ''
+ALTER FUNCTION "public"."set_super_admin_tenant_context"("target_tenant_id" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_tenant_id_on_insert"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
     AS $$
 BEGIN
     -- If tenant_id is not provided, try to get it from the current user
@@ -7397,22 +7313,26 @@ BEGIN
 END;
 $$;
 
--- -- Name: set_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."set_tenant_id_on_insert"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 begin 
   new.updated_at = now(); 
   return new; 
 end $$;
 
--- -- Name: set_wound_assessment_tenant_id(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_wound_assessment_tenant_id() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."set_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_wound_assessment_tenant_id"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Get tenant_id from the patient
@@ -7434,11 +7354,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: set_wound_treatment_tenant_id(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.set_wound_treatment_tenant_id() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."set_wound_assessment_tenant_id"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."set_wound_treatment_tenant_id"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
     NEW.tenant_id = (SELECT tenant_id FROM patients WHERE id = NEW.patient_id);
@@ -7446,11 +7368,85 @@ BEGIN
 END;
 $$;
 
--- -- Name: trigger_create_program_tenant(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.trigger_create_program_tenant() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."set_wound_treatment_tenant_id"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."shift_snapshot_timestamps"("p_snapshot" "jsonb", "p_shift" interval) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_table_name text;
+  v_actual_table_name text;
+  v_shiftable_cols text[];
+  v_rows jsonb;
+  v_row jsonb;
+  v_new_rows jsonb;
+  i integer;
+BEGIN
+  IF p_shift IS NULL OR p_shift = interval '0' THEN
+    RETURN p_snapshot;
+  END IF;
+
+  FOR v_table_name IN SELECT jsonb_object_keys(p_snapshot)
+  LOOP
+    IF v_table_name = 'snapshot_metadata' THEN
+      CONTINUE;
+    END IF;
+
+    v_rows := p_snapshot->v_table_name;
+    IF jsonb_typeof(v_rows) IS DISTINCT FROM 'array' OR jsonb_array_length(v_rows) = 0 THEN
+      CONTINUE;
+    END IF;
+
+    -- Same 'medications' -> 'patient_medications' alias restore_snapshot_to_tenant uses
+    v_actual_table_name := CASE WHEN v_table_name = 'medications' THEN 'patient_medications' ELSE v_table_name END;
+
+    SELECT array_agg(column_name) INTO v_shiftable_cols
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = v_actual_table_name
+      AND data_type IN ('timestamp with time zone', 'timestamp without time zone')
+      AND column_name NOT IN ('created_at', 'updated_at');
+
+    IF v_shiftable_cols IS NULL THEN
+      CONTINUE;
+    END IF;
+
+    v_new_rows := '[]'::jsonb;
+    FOR v_row IN SELECT * FROM jsonb_array_elements(v_rows)
+    LOOP
+      FOR i IN 1..array_length(v_shiftable_cols, 1) LOOP
+        IF v_row ? v_shiftable_cols[i] AND (v_row->v_shiftable_cols[i]) IS DISTINCT FROM 'null'::jsonb THEN
+          v_row := jsonb_set(
+            v_row,
+            ARRAY[v_shiftable_cols[i]],
+            to_jsonb(((v_row->>v_shiftable_cols[i])::timestamptz + p_shift))
+          );
+        END IF;
+      END LOOP;
+      v_new_rows := v_new_rows || jsonb_build_array(v_row);
+    END LOOP;
+
+    p_snapshot := jsonb_set(p_snapshot, ARRAY[v_table_name], v_new_rows);
+  END LOOP;
+
+  RETURN p_snapshot;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."shift_snapshot_timestamps"("p_snapshot" "jsonb", "p_shift" interval) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."shift_snapshot_timestamps"("p_snapshot" "jsonb", "p_shift" interval) IS 'Shifts every timestamp/timestamptz column (except created_at/updated_at) across all tables in a snapshot JSONB by a fixed interval, preserving relative spacing. Used by launch_simulation/reset_simulation_for_next_session/reset_simulation_with_template_updates to re-base a template''s baked-in wall-clock times around the actual launch/reset instant.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."trigger_create_program_tenant"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_result json;
@@ -7469,11 +7465,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: trigger_refresh_user_tenant_cache(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.trigger_refresh_user_tenant_cache() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."trigger_create_program_tenant"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."trigger_create_program_tenant"() IS 'Trigger function that creates a program tenant when a new program is inserted';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."trigger_refresh_user_tenant_cache"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Trigger cache refresh
@@ -7482,11 +7484,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_backup_metadata_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_backup_metadata_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."trigger_refresh_user_tenant_cache"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_bowel_records_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -7494,23 +7498,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_bowel_records_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_bowel_records_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
-    AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$;
+ALTER FUNCTION "public"."update_bowel_records_updated_at"() OWNER TO "postgres";
 
--- -- Name: update_contact_submissions_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_contact_submissions_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION "public"."update_contact_submissions_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = now();
@@ -7518,11 +7512,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_handover_notes_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_handover_notes_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_contact_submissions_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_handover_notes_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -7530,11 +7526,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_lab_panel_status(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_lab_panel_status() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_handover_notes_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_lab_panel_status"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_total_results INTEGER;
@@ -7561,11 +7559,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_lab_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_lab_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_lab_panel_status"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_lab_panel_status"() IS 'Auto-update panel status when results are acknowledged';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_lab_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -7573,11 +7577,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_landing_content_timestamp(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_landing_content_timestamp() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_lab_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_landing_content_timestamp"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -7586,11 +7592,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_medication_administrations_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_medication_administrations_updated_at() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_landing_content_timestamp"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_medication_administrations_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -7598,11 +7606,56 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_medication_super_admin(uuid, jsonb); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_medication_super_admin(p_medication_id uuid, p_updates jsonb) RETURNS SETOF public.patient_medications
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_medication_administrations_updated_at"() OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."patient_medications" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid",
+    "name" "text" NOT NULL,
+    "dosage" "text" NOT NULL,
+    "frequency" "text" NOT NULL,
+    "route" "text" NOT NULL,
+    "start_date" "date" NOT NULL,
+    "end_date" "date",
+    "prescribed_by" "text" NOT NULL,
+    "last_administered" timestamp with time zone,
+    "next_due" timestamp with time zone NOT NULL,
+    "status" "text" DEFAULT 'Active'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "category" "text" DEFAULT 'scheduled'::"text",
+    "tenant_id" "uuid",
+    "admin_time" character varying(5) DEFAULT '08:00'::character varying,
+    "admin_times" "jsonb",
+    "catalog_id" "uuid",
+    "barcode" "text",
+    CONSTRAINT "patient_medications_category_check" CHECK (("category" = ANY (ARRAY['scheduled'::"text", 'unscheduled'::"text", 'prn'::"text", 'continuous'::"text", 'diabetic'::"text", 'stat'::"text"])))
+);
+
+
+ALTER TABLE "public"."patient_medications" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."patient_medications"."category" IS 'Medication category: scheduled (default), unscheduled, prn, continuous, diabetic, stat. Defaults to scheduled for backward compatibility with snapshot restoration.';
+
+
+
+COMMENT ON COLUMN "public"."patient_medications"."admin_time" IS 'Time of day when medication should be administered (HH:MM format)';
+
+
+
+COMMENT ON COLUMN "public"."patient_medications"."catalog_id" IS 'FK to medications_catalog. NULL for free-entry medications.';
+
+
+
+COMMENT ON COLUMN "public"."patient_medications"."barcode" IS 'Pre-resolved barcode string. Populated from catalog.barcode for catalog entries, or hash-generated (M{initial}{5digits}) for free-entry medications. Copied through simulation launch and reset so physical labels remain valid.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_medication_super_admin"("p_medication_id" "uuid", "p_updates" "jsonb") RETURNS SETOF "public"."patient_medications"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     current_user_id UUID;
@@ -7653,11 +7706,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_patient_intake_output_events_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_patient_intake_output_events_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_medication_super_admin"("p_medication_id" "uuid", "p_updates" "jsonb") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_medication_super_admin"("p_medication_id" "uuid", "p_updates" "jsonb") IS 'Allows super admins and admins to update medications across tenant boundaries, bypassing RLS';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_patient_intake_output_events_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = now();
@@ -7665,11 +7724,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_patient_notes_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_patient_notes_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_patient_intake_output_events_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_patient_notes_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -7677,11 +7738,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_program_announcements_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_program_announcements_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_patient_notes_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_programs_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -7689,35 +7752,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_programs_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_programs_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
-    AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
+ALTER FUNCTION "public"."update_programs_updated_at"() OWNER TO "postgres";
 
--- -- Name: update_scheduled_simulations_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_scheduled_simulations_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
-    AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
-
--- -- Name: update_simulation_categories(uuid, text[], text[]); Type: FUNCTION; Schema: public
-
-CREATE FUNCTION public.update_simulation_categories(p_simulation_id uuid, p_primary_categories text[] DEFAULT '{}'::text[], p_sub_categories text[] DEFAULT '{}'::text[]) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+CREATE OR REPLACE FUNCTION "public"."update_simulation_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[] DEFAULT '{}'::"text"[], "p_sub_categories" "text"[] DEFAULT '{}'::"text"[]) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Simply update the categories - doesn't affect any other simulation data
@@ -7738,11 +7779,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_simulation_history_categories(uuid, text[], text[]); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_simulation_history_categories(p_simulation_id uuid, p_primary_categories text[] DEFAULT '{}'::text[], p_sub_categories text[] DEFAULT '{}'::text[]) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_simulation_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_simulation_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) IS 'Safely update category tags on existing active simulations';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_simulation_history_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[] DEFAULT '{}'::"text"[], "p_sub_categories" "text"[] DEFAULT '{}'::"text"[]) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   -- Update the categories in simulation_history
@@ -7762,11 +7809,17 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_student_roster_updated_at(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_student_roster_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_simulation_history_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_simulation_history_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) IS 'Safely update category tags on completed simulations in history';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_student_roster_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -7774,11 +7827,143 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
-    LANGUAGE plpgsql
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_student_roster_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_template_state_snapshot"("p_template_id" "uuid", "p_state_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
+DECLARE
+  v_tenant_id uuid;
+  v_snapshot jsonb := '{}'::jsonb;
+  v_table_record record;
+  v_table_data jsonb;
+  v_count integer;
+  v_total_tables integer := 0;
+  v_total_records integer := 0;
+BEGIN
+  SELECT tenant_id INTO v_tenant_id FROM simulation_templates WHERE id = p_template_id;
+  IF v_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Template not found: %', p_template_id;
+  END IF;
+
+  IF NOT (
+    EXISTS (
+      SELECT 1 FROM tenant_users tu
+      WHERE tu.tenant_id = v_tenant_id AND tu.user_id = auth.uid() AND tu.is_active = true
+    )
+    OR EXISTS (
+      SELECT 1 FROM user_profiles up
+      WHERE up.id = auth.uid() AND up.role IN ('super_admin', 'coordinator', 'admin')
+    )
+  ) THEN
+    RAISE EXCEPTION 'Not authorized to edit this template';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM simulation_template_states WHERE id = p_state_id AND template_id = p_template_id
+  ) THEN
+    RAISE EXCEPTION 'Template state not found or does not belong to this template: %', p_state_id;
+  END IF;
+
+  -- Capture loop identical to save_template_state() — keep both in sync if the
+  -- capture criteria ever changes.
+  FOR v_table_record IN
+    SELECT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'tenant_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND t.table_name NOT IN ('tenant_users', 'programs')
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      WHERE t.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  FOR v_table_record IN
+    SELECT DISTINCT t.table_name
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON c.table_name = t.table_name
+    WHERE t.table_schema = 'public'
+    AND c.column_name = 'patient_id'
+    AND t.table_type = 'BASE TABLE'
+    AND t.table_name NOT LIKE 'simulation_%'
+    AND NOT EXISTS (
+      SELECT 1 FROM information_schema.columns c2
+      WHERE c2.table_name = t.table_name
+      AND c2.column_name = 'tenant_id'
+    )
+    ORDER BY t.table_name
+  LOOP
+    EXECUTE format('
+      SELECT COALESCE(jsonb_agg(to_jsonb(t.*)), ''[]''::jsonb), COUNT(*)
+      FROM %I t
+      JOIN patients p ON p.id = t.patient_id
+      WHERE p.tenant_id = $1
+    ', v_table_record.table_name)
+    INTO v_table_data, v_count
+    USING v_tenant_id;
+
+    IF v_count > 0 THEN
+      v_snapshot := v_snapshot || jsonb_build_object(v_table_record.table_name, v_table_data);
+      v_total_records := v_total_records + v_count;
+      v_total_tables := v_total_tables + 1;
+    END IF;
+  END LOOP;
+
+  v_snapshot := v_snapshot || jsonb_build_object(
+    'snapshot_metadata', jsonb_build_object(
+      'created_at', now(),
+      'created_by', auth.uid(),
+      'tenant_id', v_tenant_id,
+      'total_tables_scanned', v_total_tables,
+      'total_records_captured', v_total_records,
+      'schema_version', '2.0'
+    )
+  );
+
+  UPDATE simulation_template_states
+  SET snapshot_data = v_snapshot,
+      updated_at = now()
+  WHERE id = p_state_id AND template_id = p_template_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'template_id', p_template_id,
+    'state_id', p_state_id,
+    'tables_captured', v_total_tables,
+    'records_captured', v_total_records
+  );
+END;
+$_$;
+
+
+ALTER FUNCTION "public"."update_template_state_snapshot"("p_template_id" "uuid", "p_state_id" "uuid") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_template_state_snapshot"("p_template_id" "uuid", "p_state_id" "uuid") IS 'Overwrites an existing named template state''s snapshot_data in place with the template tenant''s current live data, keeping the state''s id/label/changelog_note stable (so simulation_active.current_state_id references referencing it stay valid). Companion to load_template_state.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
     AS $$
 BEGIN
   NEW.updated_at = now();
@@ -7786,27 +7971,56 @@ BEGIN
 END;
 $$;
 
--- -- Name: update_user_profile_admin(uuid, text, text, text, text, text, text, boolean, boolean); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.update_user_profile_admin(p_user_id uuid, p_first_name text, p_last_name text, p_role text, p_department text DEFAULT NULL::text, p_license_number text DEFAULT NULL::text, p_phone text DEFAULT NULL::text, p_is_active boolean DEFAULT true, p_simulation_only boolean DEFAULT false) RETURNS json
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_user_profile_admin"("p_user_id" "uuid", "p_first_name" "text", "p_last_name" "text", "p_role" "text", "p_department" "text" DEFAULT NULL::"text", "p_license_number" "text" DEFAULT NULL::"text", "p_phone" "text" DEFAULT NULL::"text", "p_is_active" boolean DEFAULT true, "p_simulation_only" boolean DEFAULT false) RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_result json;
+  v_caller_role text;
 BEGIN
-  UPDATE user_profiles
-  SET 
-    first_name = p_first_name,
-    last_name = p_last_name,
-    role = p_role::user_role,
-    primary_program = p_department,
-    license_number = p_license_number,
-    phone = p_phone,
-    is_active = p_is_active,
-    simulation_only = p_simulation_only,
-    updated_at = now()
-  WHERE id = p_user_id;
+  SELECT role INTO v_caller_role FROM user_profiles WHERE id = auth.uid();
+
+  IF v_caller_role IS NULL OR v_caller_role NOT IN ('super_admin', 'coordinator', 'admin', 'instructor') THEN
+    RAISE EXCEPTION 'Insufficient permissions to update user profiles';
+  END IF;
+
+  IF v_caller_role = 'instructor' AND p_role NOT IN ('student', 'nurse') THEN
+    RAISE EXCEPTION 'Instructors may only create or update student/nurse accounts';
+  END IF;
+
+  IF v_caller_role = 'admin' AND p_role IN ('super_admin', 'coordinator') THEN
+    RAISE EXCEPTION 'Admins may not assign the coordinator or super_admin role';
+  END IF;
+
+  IF v_caller_role = 'coordinator' AND p_role IN ('super_admin', 'admin') THEN
+    RAISE EXCEPTION 'Coordinators may not assign the admin or super_admin role';
+  END IF;
+
+  -- UPSERT: create profile if it doesn't exist (e.g. trigger missed), otherwise update.
+  INSERT INTO user_profiles (
+    id, email, first_name, last_name, role, primary_program,
+    license_number, phone, is_active, simulation_only, created_at, updated_at
+  )
+  SELECT
+    p_user_id, COALESCE(au.email, ''), p_first_name, p_last_name, p_role::user_role,
+    p_department, p_license_number, p_phone, p_is_active, p_simulation_only, NOW(), NOW()
+  FROM auth.users au
+  WHERE au.id = p_user_id
+  ON CONFLICT (id) DO UPDATE SET
+    first_name      = EXCLUDED.first_name,
+    last_name       = EXCLUDED.last_name,
+    role            = EXCLUDED.role,
+    primary_program = EXCLUDED.primary_program,
+    license_number  = EXCLUDED.license_number,
+    phone           = EXCLUDED.phone,
+    is_active       = EXCLUDED.is_active,
+    simulation_only = EXCLUDED.simulation_only,
+    updated_at      = NOW();
 
   SELECT json_build_object(
     'success', true,
@@ -7820,11 +8034,21 @@ BEGIN
 END;
 $$;
 
--- -- Name: user_has_patient_access(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.user_has_patient_access(patient_tenant_id uuid) RETURNS boolean
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."update_user_profile_admin"("p_user_id" "uuid", "p_first_name" "text", "p_last_name" "text", "p_role" "text", "p_department" "text", "p_license_number" "text", "p_phone" "text", "p_is_active" boolean, "p_simulation_only" boolean) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."update_user_profile_admin"("p_user_id" "uuid", "p_first_name" "text", "p_last_name" "text", "p_role" "text", "p_department" "text", "p_license_number" "text", "p_phone" "text", "p_is_active" boolean, "p_simulation_only" boolean) IS 'Allows super_admin/coordinator/admin/instructor callers to update user profiles, bypassing RLS.
+SECURITY: caller must already hold one of those roles; instructors are further capped to only
+assign student/nurse roles, and admins/coordinators cannot assign roles above their own tier
+(mirrors the role-assignment matrix already enforced client-side in UserForm.tsx).
+Uses UPSERT so it creates the profile row if the on_auth_user_created trigger missed it.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."user_has_patient_access"("patient_tenant_id" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   has_access boolean := false;
@@ -7850,11 +8074,13 @@ EXCEPTION
 END;
 $$;
 
--- -- Name: user_has_permission(uuid, text, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.user_has_permission(user_uuid uuid, permission_name text, tenant_uuid uuid DEFAULT NULL::uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+ALTER FUNCTION "public"."user_has_patient_access"("patient_tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."user_has_permission"("user_uuid" "uuid", "permission_name" "text", "tenant_uuid" "uuid" DEFAULT NULL::"uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
 BEGIN
     -- Super admins have all permissions
@@ -7886,11 +8112,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: user_has_program_access(uuid, text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.user_has_program_access(p_user_id uuid, p_program_code text) RETURNS boolean
-    LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."user_has_permission"("user_uuid" "uuid", "permission_name" "text", "tenant_uuid" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."user_has_program_access"("p_user_id" "uuid", "p_program_code" "text") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
   SELECT EXISTS (
     SELECT 1
@@ -7902,11 +8130,17 @@ CREATE FUNCTION public.user_has_program_access(p_user_id uuid, p_program_code te
   );
 $$;
 
--- -- Name: user_has_tenant_access(); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.user_has_tenant_access() RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."user_has_program_access"("p_user_id" "uuid", "p_program_code" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."user_has_program_access"("p_user_id" "uuid", "p_program_code" "text") IS 'Check if user is assigned to a specific program';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."user_has_tenant_access"() RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
   user_role TEXT;
@@ -7935,11 +8169,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: user_has_tenant_access(uuid, uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.user_has_tenant_access(user_uuid uuid, tenant_uuid uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+ALTER FUNCTION "public"."user_has_tenant_access"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."user_has_tenant_access"("user_uuid" "uuid", "tenant_uuid" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
 BEGIN
   RETURN EXISTS (
@@ -7952,11 +8188,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: user_is_super_admin(uuid); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.user_is_super_admin(user_uuid uuid) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+ALTER FUNCTION "public"."user_has_tenant_access"("user_uuid" "uuid", "tenant_uuid" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."user_is_super_admin"("user_uuid" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
     AS $$
 BEGIN
   RETURN EXISTS (
@@ -7968,11 +8206,13 @@ BEGIN
 END;
 $$;
 
--- -- Name: validate_subdomain(text); Type: FUNCTION; Schema: public
 
-CREATE FUNCTION public.validate_subdomain(subdomain_input text) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+ALTER FUNCTION "public"."user_is_super_admin"("user_uuid" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."validate_subdomain"("subdomain_input" "text") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $_$
 BEGIN
   -- Validate subdomain format and availability
@@ -7995,4258 +8235,6790 @@ END;
 $_$;
 
 
--- ============================================================
--- SEQUENCE OWNED BYS
--- ============================================================
+ALTER FUNCTION "public"."validate_subdomain"("subdomain_input" "text") OWNER TO "postgres";
 
--- -- Name: simulation_table_config_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 
-ALTER SEQUENCE public.simulation_table_config_id_seq OWNED BY public.simulation_table_config.id;
+CREATE TABLE IF NOT EXISTS "public"."audit_logs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid",
+    "action" "text" NOT NULL,
+    "target_id" "uuid",
+    "target_type" "text" NOT NULL,
+    "details" "jsonb" DEFAULT '{}'::"jsonb",
+    "timestamp" timestamp with time zone DEFAULT "now"()
+);
 
 
--- ============================================================
--- PUBLICATION TABLES
--- ============================================================
+ALTER TABLE "public"."audit_logs" OWNER TO "postgres";
 
--- -- Name: supabase_realtime simulation_active; Type: PUBLICATION TABLE; Schema: public
 
-ALTER PUBLICATION supabase_realtime ADD TABLE ONLY public.simulation_active;
+CREATE TABLE IF NOT EXISTS "public"."avatar_locations" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "region_key" "text" NOT NULL,
+    "x_percent" numeric NOT NULL,
+    "y_percent" numeric NOT NULL,
+    "free_text" "text",
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "body_view" "text",
+    CONSTRAINT "avatar_locations_x_percent_check" CHECK ((("x_percent" >= (0)::numeric) AND ("x_percent" <= (100)::numeric))),
+    CONSTRAINT "avatar_locations_y_percent_check" CHECK ((("y_percent" >= (0)::numeric) AND ("y_percent" <= (100)::numeric)))
+);
 
 
--- ============================================================
--- TRIGGERS
--- ============================================================
+ALTER TABLE "public"."avatar_locations" OWNER TO "postgres";
 
--- -- Name: programs after_program_insert_create_tenant; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER after_program_insert_create_tenant AFTER INSERT ON public.programs FOR EACH ROW EXECUTE FUNCTION public.trigger_create_program_tenant();
+COMMENT ON COLUMN "public"."avatar_locations"."body_view" IS 'View where marker was placed: front or back. NULL for regions visible on both views (head, arms, etc.)';
 
--- -- Name: avatar_locations avatar_locations_set_tenant_id; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER avatar_locations_set_tenant_id BEFORE INSERT ON public.avatar_locations FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: devices devices_set_tenant_id; Type: TRIGGER; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."bowel_records" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid",
+    "patient_id" "text" NOT NULL,
+    "nurse_id" "text" NOT NULL,
+    "nurse_name" "text" NOT NULL,
+    "recorded_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "bowel_incontinence" "text",
+    "stool_appearance" "text",
+    "stool_consistency" "text",
+    "stool_colour" "text",
+    "stool_amount" "text",
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "student_name" "text",
+    CONSTRAINT "bowel_records_bowel_incontinence_check" CHECK (("bowel_incontinence" = ANY (ARRAY['Continent'::"text", 'Incontinent'::"text", 'Partial'::"text"]))),
+    CONSTRAINT "bowel_records_stool_amount_check" CHECK (("stool_amount" = ANY (ARRAY['Small'::"text", 'Moderate'::"text", 'Large'::"text", 'None'::"text"]))),
+    CONSTRAINT "bowel_records_stool_appearance_check" CHECK (("stool_appearance" = ANY (ARRAY['Normal'::"text", 'Abnormal'::"text", 'Blood present'::"text", 'Mucus present'::"text"]))),
+    CONSTRAINT "bowel_records_stool_colour_check" CHECK (("stool_colour" = ANY (ARRAY['Brown'::"text", 'Green'::"text", 'Yellow'::"text", 'Black'::"text", 'Red'::"text", 'Clay colored'::"text"]))),
+    CONSTRAINT "bowel_records_stool_consistency_check" CHECK (("stool_consistency" = ANY (ARRAY['Formed'::"text", 'Loose'::"text", 'Watery'::"text", 'Hard'::"text", 'Soft'::"text"])))
+);
 
-CREATE TRIGGER devices_set_tenant_id BEFORE INSERT ON public.devices FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: devices devices_set_updated_at; Type: TRIGGER; Schema: public
+ALTER TABLE "public"."bowel_records" OWNER TO "postgres";
 
-CREATE TRIGGER devices_set_updated_at BEFORE UPDATE ON public.devices FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
--- -- Name: lab_orders lab_orders_set_tenant_id; Type: TRIGGER; Schema: public
+COMMENT ON TABLE "public"."bowel_records" IS 'Bowel movement records with RLS enabled for multi-tenant isolation';
 
-CREATE TRIGGER lab_orders_set_tenant_id BEFORE INSERT ON public.lab_orders FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: lab_orders lab_orders_set_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER lab_orders_set_updated_at BEFORE UPDATE ON public.lab_orders FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+COMMENT ON COLUMN "public"."bowel_records"."student_name" IS 'Full name of student who created bowel record';
 
--- -- Name: medication_administrations medication_admin_set_tenant_id; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER medication_admin_set_tenant_id BEFORE INSERT ON public.medication_administrations FOR EACH ROW EXECUTE FUNCTION public.set_medication_admin_tenant_id();
 
--- -- Name: medication_administrations medication_administrations_updated_at; Type: TRIGGER; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."contact_submissions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "email" "text" NOT NULL,
+    "institution" "text",
+    "message" "text" NOT NULL,
+    "submitted_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "processed" boolean DEFAULT false,
+    "processed_at" timestamp with time zone,
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
-CREATE TRIGGER medication_administrations_updated_at BEFORE UPDATE ON public.medication_administrations FOR EACH ROW EXECUTE FUNCTION public.update_medication_administrations_updated_at();
 
--- -- Name: patient_alerts patient_alerts_tenant_trigger; Type: TRIGGER; Schema: public
+ALTER TABLE "public"."contact_submissions" OWNER TO "postgres";
 
-CREATE TRIGGER patient_alerts_tenant_trigger BEFORE INSERT OR UPDATE ON public.patient_alerts FOR EACH ROW EXECUTE FUNCTION public.set_alert_tenant_id();
 
--- -- Name: patient_medications prevent_medication_id_changes; Type: TRIGGER; Schema: public
+COMMENT ON TABLE "public"."contact_submissions" IS 'Stores contact form submissions from the landing page';
 
-CREATE TRIGGER prevent_medication_id_changes BEFORE UPDATE ON public.patient_medications FOR EACH ROW EXECUTE FUNCTION public.protect_medication_identifiers();
 
--- -- Name: patients prevent_patient_id_changes; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER prevent_patient_id_changes BEFORE UPDATE ON public.patients FOR EACH ROW EXECUTE FUNCTION public.protect_patient_identifiers();
+COMMENT ON COLUMN "public"."contact_submissions"."processed" IS 'Whether the submission has been reviewed/responded to';
 
--- -- Name: program_announcements program_announcements_updated_at_trigger; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER program_announcements_updated_at_trigger BEFORE UPDATE ON public.program_announcements FOR EACH ROW EXECUTE FUNCTION public.update_program_announcements_updated_at();
 
--- -- Name: programs programs_updated_at_trigger; Type: TRIGGER; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."device_assessments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "device_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "assessed_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "student_name" "text" NOT NULL,
+    "device_type" "text" NOT NULL,
+    "status" "text",
+    "output_amount_ml" numeric(10,2),
+    "notes" "text",
+    "assessment_data" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
-CREATE TRIGGER programs_updated_at_trigger BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.update_programs_updated_at();
 
--- -- Name: user_profiles protect_super_admin_role_trigger; Type: TRIGGER; Schema: public
+ALTER TABLE "public"."device_assessments" OWNER TO "postgres";
 
-CREATE TRIGGER protect_super_admin_role_trigger BEFORE UPDATE ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION public.protect_super_admin_role();
 
--- -- Name: scheduled_simulations scheduled_simulations_updated_at_trigger; Type: TRIGGER; Schema: public
+COMMENT ON TABLE "public"."device_assessments" IS 'Tracks device assessments over time for monitoring and documentation';
 
-CREATE TRIGGER scheduled_simulations_updated_at_trigger BEFORE UPDATE ON public.scheduled_simulations FOR EACH ROW EXECUTE FUNCTION public.update_scheduled_simulations_updated_at();
 
--- -- Name: patient_notes set_patient_notes_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_patient_notes_updated_at BEFORE UPDATE ON public.patient_notes FOR EACH ROW EXECUTE FUNCTION public.update_patient_notes_updated_at();
+COMMENT ON COLUMN "public"."device_assessments"."device_id" IS 'Links to device being assessed';
 
--- -- Name: bowel_records set_tenant_id_before_insert; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.bowel_records FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: diabetic_records set_tenant_id_before_insert; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."device_assessments"."student_name" IS 'Name of student who performed the assessment (for debrief tracking)';
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.diabetic_records FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: medication_administrations set_tenant_id_before_insert; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.medication_administrations FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
+COMMENT ON COLUMN "public"."device_assessments"."device_type" IS 'Cached device type from devices table for quick filtering';
 
--- -- Name: patient_admission_records set_tenant_id_before_insert; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patient_admission_records FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: patient_advanced_directives set_tenant_id_before_insert; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."device_assessments"."output_amount_ml" IS 'Generic output amount for drains, tubes, catheters';
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patient_advanced_directives FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: patient_alerts set_tenant_id_before_insert; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patient_alerts FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
+COMMENT ON COLUMN "public"."device_assessments"."assessment_data" IS 'Device-specific assessment data stored as JSONB for flexibility';
 
--- -- Name: patient_medications set_tenant_id_before_insert; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patient_medications FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: patient_notes set_tenant_id_before_insert; Type: TRIGGER; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."devices" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "location_id" "uuid" NOT NULL,
+    "type" "public"."device_type_enum" DEFAULT 'closed-suction-drain'::"public"."device_type_enum" NOT NULL,
+    "placement_date" "date",
+    "placement_time" time without time zone,
+    "placed_pre_arrival" "text",
+    "inserted_by" "text",
+    "tube_number" integer,
+    "orientation" "public"."orientation_enum"[] DEFAULT '{}'::"public"."orientation_enum"[],
+    "tube_size_fr" "text",
+    "number_of_sutures_placed" integer,
+    "reservoir_type" "public"."reservoir_type_enum",
+    "reservoir_size_ml" integer,
+    "securement_method" "text"[] DEFAULT '{}'::"text"[],
+    "patient_tolerance" "text",
+    "notes" "text",
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "gauge" "text",
+    "site_side" "text",
+    "route" "text",
+    "external_length_cm" numeric(5,2),
+    "initial_xray_confirmed" boolean DEFAULT false,
+    "initial_ph" numeric(3,1),
+    "initial_aspirate_appearance" "text",
+    "placement_confirmed" boolean DEFAULT false,
+    "site_location" "text",
+    "ostomy_construction" "text",
+    "stoma_side" "text",
+    "ng_securement" "text",
+    "ng_attached_to" "text",
+    "ng_external_length_mm" numeric(8,1),
+    "ng_residual_volume_ml" numeric(8,1),
+    CONSTRAINT "devices_tube_number_check" CHECK ((("tube_number" >= 1) AND ("tube_number" <= 10)))
+);
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patient_notes FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: patient_vitals set_tenant_id_before_insert; Type: TRIGGER; Schema: public
+ALTER TABLE "public"."devices" OWNER TO "postgres";
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patient_vitals FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: patients set_tenant_id_before_insert; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."devices"."gauge" IS 'IV gauge size (e.g., 18G, 20G, 22G)';
 
-CREATE TRIGGER set_tenant_id_before_insert BEFORE INSERT ON public.patients FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: tenant_users set_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.tenant_users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+COMMENT ON COLUMN "public"."devices"."site_side" IS 'Side of body (Left/Right)';
 
--- -- Name: user_profiles set_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- -- Name: student_roster student_roster_updated_at_trigger; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."devices"."route" IS 'Feeding tube route (NG, OG, PEG, PEJ, GJ, Other)';
 
-CREATE TRIGGER student_roster_updated_at_trigger BEFORE UPDATE ON public.student_roster FOR EACH ROW EXECUTE FUNCTION public.update_student_roster_updated_at();
 
--- -- Name: tenant_users tenant_users_cache_refresh; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER tenant_users_cache_refresh AFTER INSERT OR DELETE OR UPDATE ON public.tenant_users FOR EACH STATEMENT EXECUTE FUNCTION public.trigger_refresh_user_tenant_cache();
+COMMENT ON COLUMN "public"."devices"."external_length_cm" IS 'External length at skin in centimeters';
 
--- -- Name: simulation_active trigger_auto_tag_simulation; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER trigger_auto_tag_simulation BEFORE INSERT ON public.simulation_active FOR EACH ROW EXECUTE FUNCTION public.auto_tag_simulation_from_template();
 
--- -- Name: backup_metadata trigger_backup_metadata_updated_at; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."devices"."initial_xray_confirmed" IS 'X-ray confirmation of initial placement';
 
-CREATE TRIGGER trigger_backup_metadata_updated_at BEFORE UPDATE ON public.backup_metadata FOR EACH ROW EXECUTE FUNCTION public.update_backup_metadata_updated_at();
 
--- -- Name: wound_assessments trigger_set_wound_assessment_tenant_id; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER trigger_set_wound_assessment_tenant_id BEFORE INSERT ON public.wound_assessments FOR EACH ROW EXECUTE FUNCTION public.set_wound_assessment_tenant_id();
+COMMENT ON COLUMN "public"."devices"."initial_ph" IS 'Initial pH check value';
 
--- -- Name: wound_treatments trigger_set_wound_treatment_tenant_id; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER trigger_set_wound_treatment_tenant_id BEFORE INSERT ON public.wound_treatments FOR EACH ROW EXECUTE FUNCTION public.set_wound_treatment_tenant_id();
 
--- -- Name: patient_intake_output_events trigger_update_patient_intake_output_events_updated_at; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."devices"."initial_aspirate_appearance" IS 'Initial aspirate appearance (milky, green, clear, bloody, other)';
 
-CREATE TRIGGER trigger_update_patient_intake_output_events_updated_at BEFORE UPDATE ON public.patient_intake_output_events FOR EACH ROW EXECUTE FUNCTION public.update_patient_intake_output_events_updated_at();
 
--- -- Name: wound_assessments trigger_wound_assessments_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER trigger_wound_assessments_updated_at BEFORE UPDATE ON public.wound_assessments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+COMMENT ON COLUMN "public"."devices"."placement_confirmed" IS 'Placement confirmed prior to first use';
 
--- -- Name: wound_treatments trigger_wound_treatments_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER trigger_wound_treatments_updated_at BEFORE UPDATE ON public.wound_treatments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- -- Name: contact_submissions update_contact_submissions_updated_at; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."devices"."site_location" IS 'Anatomical location description (e.g., left antecubital, right forearm)';
 
-CREATE TRIGGER update_contact_submissions_updated_at BEFORE UPDATE ON public.contact_submissions FOR EACH ROW EXECUTE FUNCTION public.update_contact_submissions_updated_at();
 
--- -- Name: device_assessments update_device_assessments_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER update_device_assessments_updated_at BEFORE UPDATE ON public.device_assessments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+COMMENT ON COLUMN "public"."devices"."ostomy_construction" IS 'Ostomy type: Colostomy, Ileostomy, Urostomy, Other';
 
--- -- Name: handover_notes update_handover_notes_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER update_handover_notes_updated_at BEFORE UPDATE ON public.handover_notes FOR EACH ROW EXECUTE FUNCTION public.update_handover_notes_updated_at();
 
--- -- Name: lab_panels update_lab_panels_updated_at; Type: TRIGGER; Schema: public
+COMMENT ON COLUMN "public"."devices"."stoma_side" IS 'Side of abdomen: Left, Right';
 
-CREATE TRIGGER update_lab_panels_updated_at BEFORE UPDATE ON public.lab_panels FOR EACH ROW EXECUTE FUNCTION public.update_lab_updated_at();
 
--- -- Name: lab_result_refs update_lab_result_refs_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER update_lab_result_refs_updated_at BEFORE UPDATE ON public.lab_result_refs FOR EACH ROW EXECUTE FUNCTION public.update_lab_updated_at();
+CREATE TABLE IF NOT EXISTS "public"."diabetic_records" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "text" NOT NULL,
+    "recorded_by" "uuid",
+    "date" "date" NOT NULL,
+    "time_cbg_taken" time without time zone NOT NULL,
+    "reading_type" character varying(10) NOT NULL,
+    "glucose_reading" numeric(4,1) NOT NULL,
+    "basal_insulin" "jsonb",
+    "bolus_insulin" "jsonb",
+    "correction_insulin" "jsonb",
+    "other_insulin" "jsonb",
+    "treatments_given" "text",
+    "comments_for_physician" "text",
+    "signature" character varying(255) NOT NULL,
+    "prompt_frequency" character varying(10) DEFAULT 'Q6H'::character varying NOT NULL,
+    "recorded_at" timestamp with time zone DEFAULT "now"(),
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "student_name" "text",
+    CONSTRAINT "diabetic_records_glucose_reading_check" CHECK ((("glucose_reading" >= (0)::numeric) AND ("glucose_reading" <= (50)::numeric))),
+    CONSTRAINT "diabetic_records_reading_type_check" CHECK ((("reading_type")::"text" = ANY (ARRAY[('AC'::character varying)::"text", ('PC'::character varying)::"text", ('HS'::character varying)::"text", ('AM'::character varying)::"text", ('PRN'::character varying)::"text"])))
+);
 
--- -- Name: lab_results update_lab_results_updated_at; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER update_lab_results_updated_at BEFORE UPDATE ON public.lab_results FOR EACH ROW EXECUTE FUNCTION public.update_lab_updated_at();
+ALTER TABLE "public"."diabetic_records" OWNER TO "postgres";
 
--- -- Name: lab_results update_panel_status_on_result_ack; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER update_panel_status_on_result_ack AFTER UPDATE OF ack_at ON public.lab_results FOR EACH ROW EXECUTE FUNCTION public.update_lab_panel_status();
+COMMENT ON COLUMN "public"."diabetic_records"."student_name" IS 'Full name of student who created diabetic record';
 
--- -- Name: wounds wounds_set_tenant_id; Type: TRIGGER; Schema: public
 
-CREATE TRIGGER wounds_set_tenant_id BEFORE INSERT ON public.wounds FOR EACH ROW EXECUTE FUNCTION public.auto_set_tenant_id();
 
--- -- Name: wounds wounds_set_updated_at; Type: TRIGGER; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."doctors_orders" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "order_date" "date" DEFAULT CURRENT_DATE NOT NULL,
+    "order_time" time without time zone DEFAULT CURRENT_TIME NOT NULL,
+    "order_text" "text" NOT NULL,
+    "ordering_doctor" "text" NOT NULL,
+    "notes" "text",
+    "order_type" "text" DEFAULT 'Direct'::"text",
+    "is_acknowledged" boolean DEFAULT false,
+    "acknowledged_by" "uuid",
+    "acknowledged_at" timestamp with time zone,
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_by" "uuid",
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "doctor_name" "text",
+    "acknowledged_by_student" "text",
+    CONSTRAINT "doctors_orders_order_type_check" CHECK (("order_type" = ANY (ARRAY['Direct'::"text", 'Phone Order'::"text", 'Verbal Order'::"text"])))
+);
 
-CREATE TRIGGER wounds_set_updated_at BEFORE UPDATE ON public.wounds FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+ALTER TABLE "public"."doctors_orders" OWNER TO "postgres";
 
--- ============================================================
--- INDEXS
--- ============================================================
 
--- -- Name: idx_activity_log_simulation; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."doctors_orders" IS 'Stores physician orders with acknowledgment tracking and support for phone/verbal orders';
 
-CREATE INDEX idx_activity_log_simulation ON public.simulation_activity_log USING btree (simulation_id, occurred_at DESC);
 
--- -- Name: idx_activity_log_user; Type: INDEX; Schema: public
 
-CREATE INDEX idx_activity_log_user ON public.simulation_activity_log USING btree (user_id, occurred_at DESC);
+COMMENT ON COLUMN "public"."doctors_orders"."order_text" IS 'The actual physician order content';
 
--- -- Name: idx_advanced_directives_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_advanced_directives_student_name ON public.patient_advanced_directives USING btree (student_name);
 
--- -- Name: idx_audit_logs_action; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."doctors_orders"."order_type" IS 'Type of order: Direct (admin/super admin), Phone Order, or Verbal Order (nurses)';
 
-CREATE INDEX idx_audit_logs_action ON public.audit_logs USING btree (action);
 
--- -- Name: idx_audit_logs_target_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_audit_logs_target_id ON public.audit_logs USING btree (target_id);
+COMMENT ON COLUMN "public"."doctors_orders"."is_acknowledged" IS 'Whether the order has been acknowledged by nursing staff';
 
--- -- Name: idx_audit_logs_timestamp; Type: INDEX; Schema: public
 
-CREATE INDEX idx_audit_logs_timestamp ON public.audit_logs USING btree ("timestamp");
 
--- -- Name: idx_audit_logs_user_id; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."doctors_orders"."doctor_name" IS 'Name of the doctor who created the order (for admin/super admin entries)';
 
-CREATE INDEX idx_audit_logs_user_id ON public.audit_logs USING btree (user_id);
 
--- -- Name: idx_avatar_locations_patient; Type: INDEX; Schema: public
 
-CREATE INDEX idx_avatar_locations_patient ON public.avatar_locations USING btree (patient_id);
+COMMENT ON COLUMN "public"."doctors_orders"."acknowledged_by_student" IS 'Full name of student who acknowledged order';
 
--- -- Name: idx_avatar_locations_tenant; Type: INDEX; Schema: public
 
-CREATE INDEX idx_avatar_locations_tenant ON public.avatar_locations USING btree (tenant_id);
 
--- -- Name: idx_backup_audit_action; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."handover_notes" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "situation" "text" NOT NULL,
+    "background" "text" NOT NULL,
+    "assessment" "text" NOT NULL,
+    "recommendations" "text" NOT NULL,
+    "shift" character varying(10) NOT NULL,
+    "priority" character varying(10) NOT NULL,
+    "acknowledged_by" "uuid",
+    "acknowledged_at" timestamp with time zone,
+    "created_by_name" character varying(255) NOT NULL,
+    "created_by_role" character varying(100) NOT NULL,
+    "student_name" "text",
+    "nursing_notes" "text",
+    CONSTRAINT "handover_notes_priority_check" CHECK ((("priority")::"text" = ANY (ARRAY[('low'::character varying)::"text", ('medium'::character varying)::"text", ('high'::character varying)::"text", ('urgent'::character varying)::"text"]))),
+    CONSTRAINT "handover_notes_shift_check" CHECK ((("shift")::"text" = ANY (ARRAY[('day'::character varying)::"text", ('evening'::character varying)::"text", ('night'::character varying)::"text"])))
+);
 
-CREATE INDEX idx_backup_audit_action ON public.backup_audit_log USING btree (action);
 
--- -- Name: idx_backup_audit_backup_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."handover_notes" OWNER TO "postgres";
 
-CREATE INDEX idx_backup_audit_backup_id ON public.backup_audit_log USING btree (backup_id);
 
--- -- Name: idx_backup_audit_created_at; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."handover_notes" IS 'SBAR (Situation, Background, Assessment, Recommendations) handover notes for patient care transitions';
 
-CREATE INDEX idx_backup_audit_created_at ON public.backup_audit_log USING btree (created_at DESC);
 
--- -- Name: idx_backup_audit_user_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_backup_audit_user_id ON public.backup_audit_log USING btree (user_id);
+COMMENT ON COLUMN "public"."handover_notes"."situation" IS 'Current situation and purpose of communication';
 
--- -- Name: idx_backup_files_backup_id; Type: INDEX; Schema: public
 
-CREATE UNIQUE INDEX idx_backup_files_backup_id ON public.backup_files USING btree (backup_id);
 
--- -- Name: idx_backup_files_created_at; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."handover_notes"."background" IS 'Relevant context and patient history';
 
-CREATE INDEX idx_backup_files_created_at ON public.backup_files USING btree (created_at DESC);
 
--- -- Name: idx_backup_metadata_created_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_backup_metadata_created_at ON public.backup_metadata USING btree (created_at DESC);
+COMMENT ON COLUMN "public"."handover_notes"."assessment" IS 'Professional clinical judgment and assessment';
 
--- -- Name: idx_backup_metadata_created_by; Type: INDEX; Schema: public
 
-CREATE INDEX idx_backup_metadata_created_by ON public.backup_metadata USING btree (created_by);
 
--- -- Name: idx_backup_metadata_expiry; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."handover_notes"."recommendations" IS 'Proposed actions and next steps';
 
-CREATE INDEX idx_backup_metadata_expiry ON public.backup_metadata USING btree (expiry_date);
 
--- -- Name: idx_backup_metadata_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_backup_metadata_status ON public.backup_metadata USING btree (status);
+COMMENT ON COLUMN "public"."handover_notes"."shift" IS 'Shift during which the handover note was created';
 
--- -- Name: idx_bbit_patient; Type: INDEX; Schema: public
 
-CREATE INDEX idx_bbit_patient ON public.patient_bbit_entries USING btree (patient_id);
 
--- -- Name: idx_bbit_recorded_at; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."handover_notes"."priority" IS 'Priority level of the handover communication';
 
-CREATE INDEX idx_bbit_recorded_at ON public.patient_bbit_entries USING btree (patient_id, recorded_at);
 
--- -- Name: idx_bbit_tenant; Type: INDEX; Schema: public
 
-CREATE INDEX idx_bbit_tenant ON public.patient_bbit_entries USING btree (tenant_id);
+COMMENT ON COLUMN "public"."handover_notes"."student_name" IS 'Name of the student who acknowledged this handover note. Used for debrief reporting to track student activity.';
 
--- -- Name: idx_bowel_records_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_bowel_records_patient_id ON public.bowel_records USING btree (patient_id);
 
--- -- Name: idx_bowel_records_recorded_at; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."handover_notes"."nursing_notes" IS 'Free-text nursing observations, displayed above the SBAR fields in the handover form.';
 
-CREATE INDEX idx_bowel_records_recorded_at ON public.bowel_records USING btree (recorded_at DESC);
 
--- -- Name: idx_bowel_records_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_bowel_records_student_name ON public.bowel_records USING btree (student_name) WHERE (student_name IS NOT NULL);
+CREATE TABLE IF NOT EXISTS "public"."kb_walkthroughs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "scribe_url" "text" NOT NULL,
+    "category" "text",
+    "display_order" integer DEFAULT 0 NOT NULL,
+    "is_active" boolean DEFAULT true NOT NULL,
+    "created_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "kb_walkthroughs_title_not_empty" CHECK (("btrim"("title") <> ''::"text")),
+    CONSTRAINT "kb_walkthroughs_url_not_empty" CHECK (("btrim"("scribe_url") <> ''::"text"))
+);
 
--- -- Name: idx_bowel_records_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_bowel_records_tenant_id ON public.bowel_records USING btree (tenant_id);
+ALTER TABLE "public"."kb_walkthroughs" OWNER TO "postgres";
 
--- -- Name: idx_contact_submissions_email; Type: INDEX; Schema: public
 
-CREATE INDEX idx_contact_submissions_email ON public.contact_submissions USING btree (email);
+CREATE TABLE IF NOT EXISTS "public"."lab_ack_events" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "panel_id" "uuid" NOT NULL,
+    "ack_scope" "public"."ack_scope" NOT NULL,
+    "ack_by" "uuid" NOT NULL,
+    "ack_at" timestamp with time zone DEFAULT "now"(),
+    "abnormal_summary" "jsonb",
+    "note" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "student_name" "text"
+);
 
--- -- Name: idx_contact_submissions_processed; Type: INDEX; Schema: public
 
-CREATE INDEX idx_contact_submissions_processed ON public.contact_submissions USING btree (processed) WHERE (NOT processed);
+ALTER TABLE "public"."lab_ack_events" OWNER TO "postgres";
 
--- -- Name: idx_contact_submissions_submitted_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_contact_submissions_submitted_at ON public.contact_submissions USING btree (submitted_at DESC);
+COMMENT ON TABLE "public"."lab_ack_events" IS 'Audit log for lab acknowledgements';
 
--- -- Name: idx_device_assessments_assessed_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_device_assessments_assessed_at ON public.device_assessments USING btree (assessed_at DESC);
 
--- -- Name: idx_device_assessments_data; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."lab_ack_events"."student_name" IS 'Name of the student who acknowledged the labs (for debrief reporting)';
 
-CREATE INDEX idx_device_assessments_data ON public.device_assessments USING gin (assessment_data);
 
--- -- Name: idx_device_assessments_device_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_device_assessments_device_id ON public.device_assessments USING btree (device_id);
+CREATE TABLE IF NOT EXISTS "public"."lab_orders" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "order_date" "date" NOT NULL,
+    "order_time" time without time zone NOT NULL,
+    "procedure_category" "text" NOT NULL,
+    "procedure_type" "text" NOT NULL,
+    "source_category" "text" NOT NULL,
+    "source_type" "text" NOT NULL,
+    "student_name" "text" NOT NULL,
+    "verified_by" "uuid" NOT NULL,
+    "status" "text" DEFAULT 'pending'::"text",
+    "notes" "text",
+    "label_printed" boolean DEFAULT false,
+    "label_printed_at" timestamp with time zone,
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
--- -- Name: idx_device_assessments_device_type; Type: INDEX; Schema: public
 
-CREATE INDEX idx_device_assessments_device_type ON public.device_assessments USING btree (device_type);
+ALTER TABLE "public"."lab_orders" OWNER TO "postgres";
 
--- -- Name: idx_device_assessments_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_device_assessments_patient_id ON public.device_assessments USING btree (patient_id);
+COMMENT ON COLUMN "public"."lab_orders"."student_name" IS 'Full name of student who ordered lab';
 
--- -- Name: idx_device_assessments_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_device_assessments_student_name ON public.device_assessments USING btree (student_name);
 
--- -- Name: idx_device_assessments_tenant_id; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."lab_panels" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "panel_time" timestamp with time zone NOT NULL,
+    "source" "text",
+    "entered_by" "uuid",
+    "status" "public"."lab_panel_status" DEFAULT 'new'::"public"."lab_panel_status",
+    "ack_required" boolean DEFAULT true,
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "student_name" "text"
+);
 
-CREATE INDEX idx_device_assessments_tenant_id ON public.device_assessments USING btree (tenant_id);
 
--- -- Name: idx_devices_location; Type: INDEX; Schema: public
+ALTER TABLE "public"."lab_panels" OWNER TO "postgres";
 
-CREATE INDEX idx_devices_location ON public.devices USING btree (location_id);
 
--- -- Name: idx_devices_patient; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."lab_panels" IS 'Lab panel batches with acknowledgement tracking';
 
-CREATE INDEX idx_devices_patient ON public.devices USING btree (patient_id);
 
--- -- Name: idx_devices_tenant; Type: INDEX; Schema: public
 
-CREATE INDEX idx_devices_tenant ON public.devices USING btree (tenant_id);
+COMMENT ON COLUMN "public"."lab_panels"."student_name" IS 'Full name of student who created panel';
 
--- -- Name: idx_diabetic_records_date; Type: INDEX; Schema: public
 
-CREATE INDEX idx_diabetic_records_date ON public.diabetic_records USING btree (date);
 
--- -- Name: idx_diabetic_records_patient_date; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."lab_result_refs" (
+    "test_code" "text" NOT NULL,
+    "category" "public"."lab_category" NOT NULL,
+    "test_name" "text" NOT NULL,
+    "units" "text",
+    "ref_low" numeric(12,4),
+    "ref_high" numeric(12,4),
+    "ref_operator" "public"."ref_operator" DEFAULT 'between'::"public"."ref_operator",
+    "sex_ref" "jsonb",
+    "critical_low" numeric(12,4),
+    "critical_high" numeric(12,4),
+    "display_order" integer DEFAULT 0,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
 
-CREATE INDEX idx_diabetic_records_patient_date ON public.diabetic_records USING btree (patient_id, date);
 
--- -- Name: idx_diabetic_records_patient_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."lab_result_refs" OWNER TO "postgres";
 
-CREATE INDEX idx_diabetic_records_patient_id ON public.diabetic_records USING btree (patient_id);
 
--- -- Name: idx_diabetic_records_recorded_at; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."lab_result_refs" IS 'Seeded with ABG, Hematology, and Chemistry reference ranges';
 
-CREATE INDEX idx_diabetic_records_recorded_at ON public.diabetic_records USING btree (recorded_at);
 
--- -- Name: idx_diabetic_records_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_diabetic_records_student_name ON public.diabetic_records USING btree (student_name) WHERE (student_name IS NOT NULL);
+COMMENT ON COLUMN "public"."lab_result_refs"."sex_ref" IS 'Sex-specific ranges in JSON format';
 
--- -- Name: idx_diabetic_records_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_diabetic_records_tenant_id ON public.diabetic_records USING btree (tenant_id);
 
--- -- Name: idx_doctors_orders_acknowledged_by; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."lab_results" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "panel_id" "uuid" NOT NULL,
+    "category" "public"."lab_category" NOT NULL,
+    "test_code" "text" NOT NULL,
+    "test_name" "text" NOT NULL,
+    "value" numeric(12,4),
+    "units" "text",
+    "ref_low" numeric(12,4),
+    "ref_high" numeric(12,4),
+    "ref_operator" "public"."ref_operator" DEFAULT 'between'::"public"."ref_operator",
+    "sex_ref" "jsonb",
+    "critical_low" numeric(12,4),
+    "critical_high" numeric(12,4),
+    "flag" "public"."lab_flag" DEFAULT 'normal'::"public"."lab_flag",
+    "entered_by" "uuid",
+    "entered_at" timestamp with time zone DEFAULT "now"(),
+    "ack_by" "uuid",
+    "ack_at" timestamp with time zone,
+    "comments" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "acknowledged_by_student" "text",
+    "note" "text"
+);
 
-CREATE INDEX idx_doctors_orders_acknowledged_by ON public.doctors_orders USING btree (acknowledged_by_student) WHERE (acknowledged_by_student IS NOT NULL);
 
--- -- Name: idx_doctors_orders_is_acknowledged; Type: INDEX; Schema: public
+ALTER TABLE "public"."lab_results" OWNER TO "postgres";
 
-CREATE INDEX idx_doctors_orders_is_acknowledged ON public.doctors_orders USING btree (is_acknowledged);
 
--- -- Name: idx_doctors_orders_order_date; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."lab_results" IS 'Individual lab test results with reference ranges';
 
-CREATE INDEX idx_doctors_orders_order_date ON public.doctors_orders USING btree (order_date);
 
--- -- Name: idx_doctors_orders_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_doctors_orders_patient_id ON public.doctors_orders USING btree (patient_id);
+COMMENT ON COLUMN "public"."lab_results"."flag" IS 'Auto-computed from value vs reference range';
 
--- -- Name: idx_doctors_orders_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_doctors_orders_tenant_id ON public.doctors_orders USING btree (tenant_id);
 
--- -- Name: idx_handover_notes_acknowledged; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."lab_results"."acknowledged_by_student" IS 'Full name of student who acknowledged result';
 
-CREATE INDEX idx_handover_notes_acknowledged ON public.handover_notes USING btree (acknowledged_by) WHERE (acknowledged_by IS NOT NULL);
 
--- -- Name: idx_handover_notes_created_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_handover_notes_created_at ON public.handover_notes USING btree (created_at DESC);
+COMMENT ON COLUMN "public"."lab_results"."note" IS 'Student note added when acknowledging lab result';
 
--- -- Name: idx_handover_notes_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_handover_notes_patient_id ON public.handover_notes USING btree (patient_id);
 
--- -- Name: idx_handover_notes_priority; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."medication_administrations" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "medication_id" "text",
+    "patient_id" "text" NOT NULL,
+    "administered_by" "text" NOT NULL,
+    "administered_by_id" "text",
+    "timestamp" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "notes" "text",
+    "dosage" "text",
+    "route" "text",
+    "status" "text" DEFAULT 'completed'::"text",
+    "medication_name" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "tenant_id" "uuid" NOT NULL,
+    "student_name" "text",
+    "barcode_scanned" boolean DEFAULT false,
+    "patient_barcode_scanned" "text",
+    "medication_barcode_scanned" "text",
+    "override_reason" "text",
+    "witness_name" "text",
+    "administered_dose" "text",
+    CONSTRAINT "medication_administrations_status_check" CHECK (("status" = ANY (ARRAY['completed'::"text", 'missed'::"text", 'late'::"text", 'partial'::"text"])))
+);
 
-CREATE INDEX idx_handover_notes_priority ON public.handover_notes USING btree (priority);
 
--- -- Name: idx_handover_notes_shift; Type: INDEX; Schema: public
+ALTER TABLE "public"."medication_administrations" OWNER TO "postgres";
 
-CREATE INDEX idx_handover_notes_shift ON public.handover_notes USING btree (shift);
 
--- -- Name: idx_handover_notes_student_name; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."medication_administrations" IS 'Medication administration records. Can be deleted by reset_simulation_for_next_session function with SECURITY DEFINER bypass.';
 
-CREATE INDEX idx_handover_notes_student_name ON public.handover_notes USING btree (student_name) WHERE (student_name IS NOT NULL);
 
--- -- Name: idx_io_direction; Type: INDEX; Schema: public
 
-CREATE INDEX idx_io_direction ON public.patient_intake_output_events USING btree (tenant_id, patient_id, direction);
+COMMENT ON COLUMN "public"."medication_administrations"."student_name" IS 'Name of the student who administered the medication (for simulation tracking)';
 
--- -- Name: idx_io_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_io_student_name ON public.patient_intake_output_events USING btree (student_name) WHERE (student_name IS NOT NULL);
 
--- -- Name: idx_io_tenant_patient_time; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."medication_administrations"."barcode_scanned" IS 'Whether this medication was administered using barcode scanning (BCMA compliant)';
 
-CREATE INDEX idx_io_tenant_patient_time ON public.patient_intake_output_events USING btree (tenant_id, patient_id, event_timestamp DESC);
 
--- -- Name: idx_lab_ack_events_ack_by; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_ack_events_ack_by ON public.lab_ack_events USING btree (ack_by);
+COMMENT ON COLUMN "public"."medication_administrations"."patient_barcode_scanned" IS 'The patient barcode that was scanned (for audit trail)';
 
--- -- Name: idx_lab_ack_events_panel; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_ack_events_panel ON public.lab_ack_events USING btree (panel_id);
 
--- -- Name: idx_lab_ack_events_student_name; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."medication_administrations"."medication_barcode_scanned" IS 'The medication barcode that was scanned (for audit trail)';
 
-CREATE INDEX idx_lab_ack_events_student_name ON public.lab_ack_events USING btree (student_name);
 
--- -- Name: idx_lab_ack_events_tenant_patient; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_ack_events_tenant_patient ON public.lab_ack_events USING btree (tenant_id, patient_id);
+COMMENT ON COLUMN "public"."medication_administrations"."override_reason" IS 'Reason provided when student manually overrides barcode scanning requirement';
 
--- -- Name: idx_lab_orders_date; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_orders_date ON public.lab_orders USING btree (order_date DESC);
 
--- -- Name: idx_lab_orders_patient; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."medication_administrations"."witness_name" IS 'Name of witness when manual override is used (for safety compliance)';
 
-CREATE INDEX idx_lab_orders_patient ON public.lab_orders USING btree (patient_id);
 
--- -- Name: idx_lab_orders_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_orders_status ON public.lab_orders USING btree (status);
+COMMENT ON COLUMN "public"."medication_administrations"."administered_dose" IS 'Volume/units drawn up and administered by the student (e.g., "2 mL"). Distinct from dosage which stores the label concentration (e.g., "500mg/2mL"). Populated via the BCMA verify step where students enter their calculated dose.';
 
--- -- Name: idx_lab_orders_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_orders_student_name ON public.lab_orders USING btree (student_name) WHERE (student_name IS NOT NULL);
 
--- -- Name: idx_lab_orders_tenant; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."medications_catalog" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid",
+    "barcode" "text" NOT NULL,
+    "name" "text" NOT NULL,
+    "generic_name" "text",
+    "formulation" "text" NOT NULL,
+    "strength" "text" NOT NULL,
+    "route" "text" NOT NULL,
+    "category" "text" DEFAULT 'scheduled'::"text" NOT NULL,
+    "is_active" boolean DEFAULT true NOT NULL,
+    "display_order" integer,
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "created_by" "uuid",
+    CONSTRAINT "medications_catalog_category_check" CHECK (("category" = ANY (ARRAY['scheduled'::"text", 'unscheduled'::"text", 'prn'::"text", 'continuous'::"text", 'diabetic'::"text", 'stat'::"text"]))),
+    CONSTRAINT "medications_catalog_route_check" CHECK (("route" = ANY (ARRAY['oral'::"text", 'intravenous'::"text", 'intramuscular'::"text", 'subcutaneous'::"text", 'topical'::"text", 'inhalation'::"text", 'rectal'::"text", 'sublingual'::"text", 'nasal'::"text", 'transdermal'::"text"])))
+);
 
-CREATE INDEX idx_lab_orders_tenant ON public.lab_orders USING btree (tenant_id);
 
--- -- Name: idx_lab_panels_entered_by; Type: INDEX; Schema: public
+ALTER TABLE "public"."medications_catalog" OWNER TO "postgres";
 
-CREATE INDEX idx_lab_panels_entered_by ON public.lab_panels USING btree (entered_by);
 
--- -- Name: idx_lab_panels_panel_time; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."medications_catalog" IS 'Master medication catalog. tenant_id IS NULL = global starter pack (super_admin managed). tenant_id non-null = institution-specific additions (admin/coordinator managed). Barcodes are MZ-series (MZ001–MZ020 global, MZ021+ institution additions). patient_medications.catalog_id links to this table; barcode is copied on insert and preserved through simulation launch/reset so physical QR labels are reusable.';
 
-CREATE INDEX idx_lab_panels_panel_time ON public.lab_panels USING btree (panel_time DESC);
 
--- -- Name: idx_lab_panels_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_panels_status ON public.lab_panels USING btree (status);
+COMMENT ON COLUMN "public"."medications_catalog"."tenant_id" IS 'NULL = global entry managed only by super_admin. Non-null = institution addition.';
 
--- -- Name: idx_lab_panels_tenant_patient; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_panels_tenant_patient ON public.lab_panels USING btree (tenant_id, patient_id);
 
--- -- Name: idx_lab_results_ack; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."medications_catalog"."barcode" IS 'Stable QR barcode string printed on physical medication labels (e.g. MZ003). Must be globally unique. MZ001–MZ020 reserved for global pack.';
 
-CREATE INDEX idx_lab_results_ack ON public.lab_results USING btree (ack_by, ack_at) WHERE (ack_at IS NULL);
 
--- -- Name: idx_lab_results_ack_by; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_results_ack_by ON public.lab_results USING btree (ack_by);
+CREATE TABLE IF NOT EXISTS "public"."multi_tenant_admins" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
 
--- -- Name: idx_lab_results_acknowledged_by; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_results_acknowledged_by ON public.lab_results USING btree (acknowledged_by_student) WHERE (acknowledged_by_student IS NOT NULL);
+ALTER TABLE "public"."multi_tenant_admins" OWNER TO "postgres";
 
--- -- Name: idx_lab_results_category; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_results_category ON public.lab_results USING btree (category);
+CREATE TABLE IF NOT EXISTS "public"."patient_admission_records" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid",
+    "patient_id" "text" NOT NULL,
+    "admission_type" "text",
+    "attending_physician" "text",
+    "insurance_provider" "text",
+    "insurance_policy" "text",
+    "admission_source" "text",
+    "chief_complaint" "text",
+    "height" "text",
+    "weight" "text",
+    "bmi" "text",
+    "smoking_status" "text",
+    "alcohol_use" "text",
+    "exercise" "text",
+    "occupation" "text",
+    "family_history" "text",
+    "marital_status" "text",
+    "secondary_contact_name" "text",
+    "secondary_contact_relationship" "text",
+    "secondary_contact_phone" "text",
+    "secondary_contact_address" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "admission_date" timestamp with time zone,
+    "admitting_diagnosis" "text",
+    "allergies" "text",
+    "current_medications" "text",
+    "emergency_contact_name" "text",
+    "emergency_contact_phone" "text",
+    "emergency_contact_relationship" "text",
+    "student_name" "text"
+);
 
--- -- Name: idx_lab_results_entered_by; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_results_entered_by ON public.lab_results USING btree (entered_by);
+ALTER TABLE "public"."patient_admission_records" OWNER TO "postgres";
 
--- -- Name: idx_lab_results_flag; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_results_flag ON public.lab_results USING btree (flag);
+COMMENT ON TABLE "public"."patient_admission_records" IS 'Patient admission records with RLS enabled for multi-tenant isolation';
 
--- -- Name: idx_lab_results_note; Type: INDEX; Schema: public
 
-CREATE INDEX idx_lab_results_note ON public.lab_results USING btree (note) WHERE (note IS NOT NULL);
 
--- -- Name: idx_lab_results_panel; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_advanced_directives" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid",
+    "patient_id" "text" NOT NULL,
+    "living_will_status" "text",
+    "living_will_date" "text",
+    "healthcare_proxy_name" "text",
+    "healthcare_proxy_phone" "text",
+    "dnr_status" "text",
+    "organ_donation_status" "text",
+    "organ_donation_details" "text",
+    "religious_preference" "text",
+    "special_instructions" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "living_will_exists" boolean DEFAULT false,
+    "healthcare_proxy_relationship" "text",
+    "student_name" "text"
+);
 
-CREATE INDEX idx_lab_results_panel ON public.lab_results USING btree (panel_id);
 
--- -- Name: idx_lab_results_tenant_patient; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_advanced_directives" OWNER TO "postgres";
 
-CREATE INDEX idx_lab_results_tenant_patient ON public.lab_results USING btree (tenant_id, patient_id);
 
--- -- Name: idx_medication_administrations_administered_by_id; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."patient_advanced_directives" IS 'Patient advanced care directives with RLS enabled for multi-tenant isolation';
 
-CREATE INDEX idx_medication_administrations_administered_by_id ON public.medication_administrations USING btree (administered_by_id);
 
--- -- Name: idx_medication_administrations_medication_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_medication_administrations_medication_id ON public.medication_administrations USING btree (medication_id);
+COMMENT ON COLUMN "public"."patient_advanced_directives"."student_name" IS 'Name of the student who filled out the advanced directives (for debrief reporting)';
 
--- -- Name: idx_medication_administrations_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_medication_administrations_patient_id ON public.medication_administrations USING btree (patient_id);
 
--- -- Name: idx_medication_administrations_student_name; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_alerts" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "patient_name" "text" NOT NULL,
+    "alert_type" "public"."alert_type_enum" NOT NULL,
+    "message" "text" NOT NULL,
+    "priority" "public"."alert_priority_enum" NOT NULL,
+    "acknowledged" boolean DEFAULT false NOT NULL,
+    "acknowledged_by" "uuid",
+    "acknowledged_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "expires_at" timestamp with time zone,
+    "tenant_id" "uuid"
+);
 
-CREATE INDEX idx_medication_administrations_student_name ON public.medication_administrations USING btree (student_name) WHERE (student_name IS NOT NULL);
 
--- -- Name: idx_medication_administrations_tenant_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_alerts" OWNER TO "postgres";
 
-CREATE INDEX idx_medication_administrations_tenant_id ON public.medication_administrations USING btree (tenant_id);
 
--- -- Name: idx_medication_administrations_timestamp; Type: INDEX; Schema: public
+CREATE OR REPLACE VIEW "public"."patient_alerts_view" WITH ("security_invoker"='on') AS
+ SELECT "pa"."id",
+    "pa"."patient_id",
+    "pa"."patient_name",
+    "pa"."alert_type",
+    "pa"."message",
+    "pa"."priority",
+    "pa"."acknowledged",
+    "pa"."acknowledged_by",
+    "pa"."acknowledged_at",
+    "pa"."created_at",
+    "pa"."tenant_id",
+    "t"."name" AS "tenant_name",
+    "t"."subdomain" AS "tenant_subdomain"
+   FROM ("public"."patient_alerts" "pa"
+     JOIN "public"."tenants" "t" ON (("pa"."tenant_id" = "t"."id")));
 
-CREATE INDEX idx_medication_administrations_timestamp ON public.medication_administrations USING btree ("timestamp" DESC);
 
--- -- Name: idx_neuro_patient; Type: INDEX; Schema: public
+ALTER VIEW "public"."patient_alerts_view" OWNER TO "postgres";
 
-CREATE INDEX idx_neuro_patient ON public.patient_neuro_assessments USING btree (patient_id);
 
--- -- Name: idx_neuro_recorded_at; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_bbit_entries" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "recorded_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "time_label" "text",
+    "student_name" "text",
+    "glucose_value" numeric(5,2),
+    "basal_name" "text",
+    "basal_dose" numeric(6,2),
+    "basal_status" "text",
+    "basal_held_reason" "text",
+    "basal_held_other" "text",
+    "bolus_dose" numeric(6,2),
+    "bolus_meal" "text",
+    "bolus_status" "text",
+    "bolus_not_given_reason" "text",
+    "correction_dose" numeric(6,2),
+    "correction_suggested_dose" numeric(6,2),
+    "correction_status" "text",
+    "hypo_juice" boolean,
+    "hypo_dextrose_tabs" boolean,
+    "hypo_iv_dextrose" boolean,
+    "hypo_glucagon" boolean,
+    "hypo_other" "text",
+    "hypo_recheck_completed" boolean,
+    "carb_intake" "text",
+    "note_symptomatic_hypo" boolean,
+    "note_hyperglycemia_symptoms" boolean,
+    "note_insulin_delay" boolean,
+    "note_other" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "patient_bbit_entries_basal_dose_check" CHECK (("basal_dose" >= (0)::numeric)),
+    CONSTRAINT "patient_bbit_entries_basal_held_reason_check" CHECK (("basal_held_reason" = ANY (ARRAY['Low BG'::"text", 'NPO'::"text", 'Provider order'::"text", 'Other'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_basal_status_check" CHECK (("basal_status" = ANY (ARRAY['given'::"text", 'held'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_bolus_dose_check" CHECK (("bolus_dose" >= (0)::numeric)),
+    CONSTRAINT "patient_bbit_entries_bolus_meal_check" CHECK (("bolus_meal" = ANY (ARRAY['Breakfast'::"text", 'Lunch'::"text", 'Supper'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_bolus_not_given_reason_check" CHECK (("bolus_not_given_reason" = ANY (ARRAY['Patient not eating'::"text", 'NPO'::"text", 'Refused'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_bolus_status_check" CHECK (("bolus_status" = ANY (ARRAY['given'::"text", 'not_given'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_carb_intake_check" CHECK (("carb_intake" = ANY (ARRAY['full'::"text", 'partial'::"text", 'none'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_correction_dose_check" CHECK (("correction_dose" >= (0)::numeric)),
+    CONSTRAINT "patient_bbit_entries_correction_status_check" CHECK (("correction_status" = ANY (ARRAY['given'::"text", 'not_required'::"text"]))),
+    CONSTRAINT "patient_bbit_entries_correction_suggested_dose_check" CHECK (("correction_suggested_dose" >= (0)::numeric)),
+    CONSTRAINT "patient_bbit_entries_glucose_value_check" CHECK ((("glucose_value" >= (0)::numeric) AND ("glucose_value" <= (50)::numeric)))
+);
 
-CREATE INDEX idx_neuro_recorded_at ON public.patient_neuro_assessments USING btree (patient_id, recorded_at);
 
--- -- Name: idx_neuro_tenant; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_bbit_entries" OWNER TO "postgres";
 
-CREATE INDEX idx_neuro_tenant ON public.patient_neuro_assessments USING btree (tenant_id);
 
--- -- Name: idx_newborn_patient; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_images" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid",
+    "image_url" "text" NOT NULL,
+    "thumbnail_url" "text",
+    "annotations" "jsonb" DEFAULT '[]'::"jsonb",
+    "image_type" "text" NOT NULL,
+    "description" "text",
+    "uploaded_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "tenant_id" "uuid"
+);
 
-CREATE INDEX idx_newborn_patient ON public.patient_newborn_assessments USING btree (patient_id);
 
--- -- Name: idx_newborn_tenant; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_images" OWNER TO "postgres";
 
-CREATE INDEX idx_newborn_tenant ON public.patient_newborn_assessments USING btree (tenant_id);
 
--- -- Name: idx_newborn_tenant_recorded; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_intake_output_events" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "event_timestamp" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "shift_label" "text",
+    "direction" "text" NOT NULL,
+    "category" "text" NOT NULL,
+    "route" "text",
+    "description" "text",
+    "amount_ml" numeric(10,2) NOT NULL,
+    "student_name" "text",
+    "created_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "patient_intake_output_events_amount_ml_check" CHECK (("amount_ml" >= (0)::numeric)),
+    CONSTRAINT "patient_intake_output_events_category_check" CHECK (("category" = ANY (ARRAY['oral'::"text", 'iv_fluid'::"text", 'iv_med'::"text", 'blood'::"text", 'tube_feed'::"text", 'urine'::"text", 'stool'::"text", 'emesis'::"text", 'drain'::"text"]))),
+    CONSTRAINT "patient_intake_output_events_direction_check" CHECK (("direction" = ANY (ARRAY['intake'::"text", 'output'::"text"])))
+);
 
-CREATE INDEX idx_newborn_tenant_recorded ON public.patient_newborn_assessments USING btree (tenant_id, recorded_at DESC);
 
--- -- Name: idx_patient_admission_records_patient_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_intake_output_events" OWNER TO "postgres";
 
-CREATE INDEX idx_patient_admission_records_patient_id ON public.patient_admission_records USING btree (patient_id);
 
--- -- Name: idx_patient_admission_records_tenant_id; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."patient_intake_output_events" IS 'Tracks fluid intake and output events for patients. Used for calculating fluid balance in nursing care.';
 
-CREATE INDEX idx_patient_admission_records_tenant_id ON public.patient_admission_records USING btree (tenant_id);
 
--- -- Name: idx_patient_advanced_directives_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_advanced_directives_patient_id ON public.patient_advanced_directives USING btree (patient_id);
+COMMENT ON COLUMN "public"."patient_intake_output_events"."direction" IS 'Either intake (fluids going in) or output (fluids coming out)';
 
--- -- Name: idx_patient_advanced_directives_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_advanced_directives_tenant_id ON public.patient_advanced_directives USING btree (tenant_id);
 
--- -- Name: idx_patient_alerts_acknowledged; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patient_intake_output_events"."category" IS 'Type of I&O: oral, iv_fluid, iv_med, blood, tube_feed, urine, stool, emesis, drain';
 
-CREATE INDEX idx_patient_alerts_acknowledged ON public.patient_alerts USING btree (acknowledged);
 
--- -- Name: idx_patient_alerts_created_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_alerts_created_at ON public.patient_alerts USING btree (created_at);
+COMMENT ON COLUMN "public"."patient_intake_output_events"."amount_ml" IS 'Volume in milliliters (mL). Always positive number.';
 
--- -- Name: idx_patient_alerts_expires_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_alerts_expires_at ON public.patient_alerts USING btree (expires_at);
 
--- -- Name: idx_patient_alerts_patient_id; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patient_intake_output_events"."student_name" IS 'Name of student who recorded this event. Used for activity tracking in simulation debrief reports.';
 
-CREATE INDEX idx_patient_alerts_patient_id ON public.patient_alerts USING btree (patient_id);
 
--- -- Name: idx_patient_alerts_priority; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_alerts_priority ON public.patient_alerts USING btree (priority);
+CREATE TABLE IF NOT EXISTS "public"."patient_medications_templates" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_template_id" "uuid" NOT NULL,
+    "medication_name" character varying(200) NOT NULL,
+    "generic_name" character varying(200),
+    "dosage" character varying(100) NOT NULL,
+    "route" character varying(50) NOT NULL,
+    "frequency" character varying(100) NOT NULL,
+    "indication" "text",
+    "contraindications" "text",
+    "side_effects" "text"[],
+    "is_prn" boolean DEFAULT false,
+    "prn_parameters" "text",
+    "start_date" "date",
+    "end_date" "date",
+    "max_dose_per_day" character varying(50),
+    "notes" "text",
+    "barcode" character varying(100),
+    "display_order" integer DEFAULT 0,
+    "is_active" boolean DEFAULT true,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "created_by" "uuid",
+    CONSTRAINT "patient_medications_templates_route_check" CHECK ((("route")::"text" = ANY (ARRAY[('oral'::character varying)::"text", ('intravenous'::character varying)::"text", ('intramuscular'::character varying)::"text", ('subcutaneous'::character varying)::"text", ('topical'::character varying)::"text", ('inhalation'::character varying)::"text", ('rectal'::character varying)::"text", ('sublingual'::character varying)::"text", ('nasal'::character varying)::"text", ('transdermal'::character varying)::"text"])))
+);
 
--- -- Name: idx_patient_alerts_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_alerts_tenant_id ON public.patient_alerts USING btree (tenant_id);
+ALTER TABLE "public"."patient_medications_templates" OWNER TO "postgres";
 
--- -- Name: idx_patient_alerts_type; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_alerts_type ON public.patient_alerts USING btree (alert_type);
+CREATE TABLE IF NOT EXISTS "public"."patient_neuro_assessments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "recorded_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "student_name" "text",
+    "level_of_consciousness" "text",
+    "oriented_person" boolean,
+    "oriented_place" boolean,
+    "oriented_time" boolean,
+    "gcs_eye" smallint,
+    "gcs_verbal" smallint,
+    "gcs_motor" smallint,
+    "pupils_equal" boolean,
+    "pupil_left_size" numeric(3,1),
+    "pupil_left_reaction" "text",
+    "pupil_right_size" numeric(3,1),
+    "pupil_right_reaction" "text",
+    "strength_right_arm" smallint,
+    "strength_left_arm" smallint,
+    "strength_right_leg" smallint,
+    "strength_left_leg" smallint,
+    "sensation" "text",
+    "speech" "text",
+    "pain_score" smallint,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "patient_neuro_assessments_gcs_eye_check" CHECK ((("gcs_eye" >= 1) AND ("gcs_eye" <= 4))),
+    CONSTRAINT "patient_neuro_assessments_gcs_motor_check" CHECK ((("gcs_motor" >= 1) AND ("gcs_motor" <= 6))),
+    CONSTRAINT "patient_neuro_assessments_gcs_verbal_check" CHECK ((("gcs_verbal" >= 1) AND ("gcs_verbal" <= 5))),
+    CONSTRAINT "patient_neuro_assessments_level_of_consciousness_check" CHECK (("level_of_consciousness" = ANY (ARRAY['Alert'::"text", 'Voice'::"text", 'Pain'::"text", 'Unresponsive'::"text"]))),
+    CONSTRAINT "patient_neuro_assessments_pain_score_check" CHECK ((("pain_score" >= 0) AND ("pain_score" <= 10))),
+    CONSTRAINT "patient_neuro_assessments_pupil_left_reaction_check" CHECK (("pupil_left_reaction" = ANY (ARRAY['Brisk'::"text", 'Sluggish'::"text", 'Fixed'::"text", 'Absent'::"text"]))),
+    CONSTRAINT "patient_neuro_assessments_pupil_left_size_check" CHECK ((("pupil_left_size" >= (1)::numeric) AND ("pupil_left_size" <= (9)::numeric))),
+    CONSTRAINT "patient_neuro_assessments_pupil_right_reaction_check" CHECK (("pupil_right_reaction" = ANY (ARRAY['Brisk'::"text", 'Sluggish'::"text", 'Fixed'::"text", 'Absent'::"text"]))),
+    CONSTRAINT "patient_neuro_assessments_pupil_right_size_check" CHECK ((("pupil_right_size" >= (1)::numeric) AND ("pupil_right_size" <= (9)::numeric))),
+    CONSTRAINT "patient_neuro_assessments_sensation_check" CHECK (("sensation" = ANY (ARRAY['Normal'::"text", 'Reduced'::"text", 'Absent'::"text", 'Abnormal'::"text"]))),
+    CONSTRAINT "patient_neuro_assessments_speech_check" CHECK (("speech" = ANY (ARRAY['Clear'::"text", 'Slurred'::"text", 'Confused'::"text", 'Aphasia'::"text", 'None'::"text"]))),
+    CONSTRAINT "patient_neuro_assessments_strength_left_arm_check" CHECK ((("strength_left_arm" >= 0) AND ("strength_left_arm" <= 5))),
+    CONSTRAINT "patient_neuro_assessments_strength_left_leg_check" CHECK ((("strength_left_leg" >= 0) AND ("strength_left_leg" <= 5))),
+    CONSTRAINT "patient_neuro_assessments_strength_right_arm_check" CHECK ((("strength_right_arm" >= 0) AND ("strength_right_arm" <= 5))),
+    CONSTRAINT "patient_neuro_assessments_strength_right_leg_check" CHECK ((("strength_right_leg" >= 0) AND ("strength_right_leg" <= 5)))
+);
 
--- -- Name: idx_patient_images_created_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_images_created_at ON public.patient_images USING btree (created_at);
+ALTER TABLE "public"."patient_neuro_assessments" OWNER TO "postgres";
 
--- -- Name: idx_patient_images_image_type; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_images_image_type ON public.patient_images USING btree (image_type);
+CREATE TABLE IF NOT EXISTS "public"."patient_newborn_assessments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "time_of_birth" time without time zone,
+    "weight_grams" numeric(6,1),
+    "length_cm" numeric(5,1),
+    "head_circumference_cm" numeric(4,1),
+    "head_circumference_1hr_cm" numeric(4,1),
+    "head_circumference_2hr_cm" numeric(4,1),
+    "apgar_1min" smallint,
+    "apgar_5min" smallint,
+    "apgar_10min" smallint,
+    "vitamin_k_given" boolean DEFAULT false,
+    "vitamin_k_declined" boolean DEFAULT false,
+    "vitamin_k_dose" "text",
+    "vitamin_k_site" "text",
+    "vitamin_k_date" "date",
+    "vitamin_k_time" "text",
+    "vitamin_k_signature" "text",
+    "erythromycin_given" boolean DEFAULT false,
+    "erythromycin_date" "date",
+    "erythromycin_time" "text",
+    "erythromycin_signature" "text",
+    "physical_observations" "jsonb" DEFAULT '{}'::"jsonb",
+    "completed_by" "text",
+    "completed_initials" "text",
+    "student_name" "text",
+    "recorded_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "patient_newborn_assessments_apgar_10min_check" CHECK ((("apgar_10min" >= 0) AND ("apgar_10min" <= 10))),
+    CONSTRAINT "patient_newborn_assessments_apgar_1min_check" CHECK ((("apgar_1min" >= 0) AND ("apgar_1min" <= 10))),
+    CONSTRAINT "patient_newborn_assessments_apgar_5min_check" CHECK ((("apgar_5min" >= 0) AND ("apgar_5min" <= 10))),
+    CONSTRAINT "patient_newborn_assessments_vitamin_k_dose_check" CHECK (("vitamin_k_dose" = ANY (ARRAY['0.5mg'::"text", '1.0mg'::"text"])))
+);
 
--- -- Name: idx_patient_images_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_images_patient_id ON public.patient_images USING btree (patient_id);
+ALTER TABLE "public"."patient_newborn_assessments" OWNER TO "postgres";
 
--- -- Name: idx_patient_medications_category; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_medications_category ON public.patient_medications USING btree (category);
+CREATE TABLE IF NOT EXISTS "public"."patient_notes" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "note_type" "text",
+    "content" "text",
+    "created_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "type" "text" DEFAULT 'Note'::"text" NOT NULL,
+    "nurse_name" "text",
+    "nurse_id" "text",
+    "priority" "text" DEFAULT 'Medium'::"text",
+    "student_name" "text"
+);
 
--- -- Name: idx_patient_medications_next_due; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_medications_next_due ON public.patient_medications USING btree (next_due);
+ALTER TABLE "public"."patient_notes" OWNER TO "postgres";
 
--- -- Name: idx_patient_medications_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_medications_patient_id ON public.patient_medications USING btree (patient_id);
+COMMENT ON TABLE "public"."patient_notes" IS 'Stores clinical assessments, nursing notes, and patient documentation';
 
--- -- Name: idx_patient_medications_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_medications_tenant_id ON public.patient_medications USING btree (tenant_id);
 
--- -- Name: idx_patient_notes_student_name; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patient_notes"."tenant_id" IS 'Auto-set by trigger based on patient tenant';
 
-CREATE INDEX idx_patient_notes_student_name ON public.patient_notes USING btree (student_name) WHERE (student_name IS NOT NULL);
 
--- -- Name: idx_patient_notes_type; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_notes_type ON public.patient_notes USING btree (type);
+COMMENT ON COLUMN "public"."patient_notes"."type" IS 'Type of note: Assessment, Progress Note, Shift Note, etc.';
 
--- -- Name: idx_patient_vitals_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_vitals_patient_id ON public.patient_vitals USING btree (patient_id);
 
--- -- Name: idx_patient_vitals_recorded_at; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patient_notes"."priority" IS 'Priority level: Low, Medium, High, Critical';
 
-CREATE INDEX idx_patient_vitals_recorded_at ON public.patient_vitals USING btree (recorded_at);
 
--- -- Name: idx_patient_vitals_student_name; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_vitals_student_name ON public.patient_vitals USING btree (student_name) WHERE (student_name IS NOT NULL);
+COMMENT ON COLUMN "public"."patient_notes"."student_name" IS 'Full name of student who created note';
 
--- -- Name: idx_patient_vitals_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patient_vitals_tenant_id ON public.patient_vitals USING btree (tenant_id);
 
--- -- Name: idx_patient_vitals_tenant_patient; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_system_assessments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "system_type" "text" NOT NULL,
+    "assessment_data" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "nurse_id" "uuid",
+    "nurse_name" "text",
+    "recorded_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "is_baseline" boolean DEFAULT false NOT NULL
+);
 
-CREATE INDEX idx_patient_vitals_tenant_patient ON public.patient_vitals USING btree (tenant_id, patient_id);
 
--- -- Name: idx_patient_wounds_assessment_date; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_system_assessments" OWNER TO "postgres";
 
-CREATE INDEX idx_patient_wounds_assessment_date ON public.patient_wounds USING btree (assessment_date);
 
--- -- Name: idx_patients_avatar_id; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."patient_templates" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "description" "text",
+    "tenant_id" "uuid" NOT NULL,
+    "status" "public"."simulation_template_status" DEFAULT 'draft'::"public"."simulation_template_status",
+    "snapshot_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "snapshot_taken_at" timestamp with time zone,
+    "primary_categories" "text"[] DEFAULT '{}'::"text"[],
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
 
-CREATE INDEX idx_patients_avatar_id ON public.patients USING btree (avatar_id);
 
--- -- Name: idx_patients_patient_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."patient_templates" OWNER TO "postgres";
 
-CREATE INDEX idx_patients_patient_id ON public.patients USING btree (patient_id);
 
--- -- Name: idx_patients_room; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."patient_templates" IS 'Reusable single-patient templates. Each has its own dedicated tenant for live editing; snapshot_data is copied (never synced) into simulation templates via add_patient_template_to_simulation_template().';
 
-CREATE INDEX idx_patients_room ON public.patients USING btree (room_number, bed_number);
 
--- -- Name: idx_patients_tenant_created; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patients_tenant_created ON public.patients USING btree (tenant_id, created_at DESC);
+CREATE TABLE IF NOT EXISTS "public"."patient_vitals" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid",
+    "temperature" numeric(4,1),
+    "blood_pressure_systolic" integer,
+    "blood_pressure_diastolic" integer,
+    "heart_rate" integer,
+    "respiratory_rate" integer,
+    "oxygen_saturation" integer,
+    "recorded_at" timestamp with time zone DEFAULT "now"(),
+    "tenant_id" "uuid",
+    "oxygen_delivery" "text" DEFAULT 'Room Air'::"text",
+    "student_name" "text",
+    "oxygen_flow_rate" "text" DEFAULT 'N/A'::"text",
+    CONSTRAINT "patient_vitals_at_least_one_vital" CHECK ((("temperature" IS NOT NULL) OR ("heart_rate" IS NOT NULL) OR ("blood_pressure_systolic" IS NOT NULL) OR ("blood_pressure_diastolic" IS NOT NULL) OR ("respiratory_rate" IS NOT NULL) OR ("oxygen_saturation" IS NOT NULL))),
+    CONSTRAINT "patient_vitals_bp_pair" CHECK (((("blood_pressure_systolic" IS NULL) AND ("blood_pressure_diastolic" IS NULL)) OR (("blood_pressure_systolic" IS NOT NULL) AND ("blood_pressure_diastolic" IS NOT NULL))))
+);
 
--- -- Name: idx_patients_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_patients_tenant_id ON public.patients USING btree (tenant_id);
+ALTER TABLE "public"."patient_vitals" OWNER TO "postgres";
 
--- -- Name: idx_profiles_email; Type: INDEX; Schema: public
 
-CREATE INDEX idx_profiles_email ON public.profiles USING btree (email);
+COMMENT ON TABLE "public"."patient_vitals" IS 'Patient vital signs records. All vital fields are optional to support clinical scenarios where not all measurements can be obtained (e.g., newborns without BP). At least one vital sign must be present per record.';
 
--- -- Name: idx_profiles_role; Type: INDEX; Schema: public
 
-CREATE INDEX idx_profiles_role ON public.profiles USING btree (role);
 
--- -- Name: idx_program_announcements_author_id; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patient_vitals"."oxygen_delivery" IS 'Oxygen delivery method: Room Air, O2 1 L/min through O2 15 L/min';
 
-CREATE INDEX idx_program_announcements_author_id ON public.program_announcements USING btree (author_id);
 
--- -- Name: idx_program_announcements_category; Type: INDEX; Schema: public
 
-CREATE INDEX idx_program_announcements_category ON public.program_announcements USING btree (category);
+COMMENT ON COLUMN "public"."patient_vitals"."student_name" IS 'Full name of student who recorded vitals';
 
--- -- Name: idx_program_announcements_created_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_program_announcements_created_at ON public.program_announcements USING btree (created_at DESC);
 
--- -- Name: idx_program_announcements_is_pinned; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patient_vitals"."oxygen_flow_rate" IS 'Oxygen flow rate: N/A, <1L, 1L-15L, >15L. Separates device type from flow rate for clinical accuracy.';
 
-CREATE INDEX idx_program_announcements_is_pinned ON public.program_announcements USING btree (is_pinned);
 
--- -- Name: idx_program_announcements_program_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_program_announcements_program_id ON public.program_announcements USING btree (program_id);
+COMMENT ON CONSTRAINT "patient_vitals_at_least_one_vital" ON "public"."patient_vitals" IS 'Ensures at least one vital sign measurement is recorded per entry';
 
--- -- Name: idx_programs_code; Type: INDEX; Schema: public
 
-CREATE INDEX idx_programs_code ON public.programs USING btree (code);
 
--- -- Name: idx_programs_is_active; Type: INDEX; Schema: public
+COMMENT ON CONSTRAINT "patient_vitals_bp_pair" ON "public"."patient_vitals" IS 'Ensures blood pressure values are recorded together (both systolic and diastolic or neither)';
 
-CREATE INDEX idx_programs_is_active ON public.programs USING btree (is_active);
 
--- -- Name: idx_programs_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_programs_tenant_id ON public.programs USING btree (tenant_id);
+CREATE TABLE IF NOT EXISTS "public"."patient_vitals_templates" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_template_id" "uuid" NOT NULL,
+    "vital_type" character varying(50) NOT NULL,
+    "value_systolic" integer,
+    "value_diastolic" integer,
+    "value_numeric" numeric(10,2),
+    "unit" character varying(20) NOT NULL,
+    "normal_range_min" numeric(10,2),
+    "normal_range_max" numeric(10,2),
+    "notes" "text",
+    "frequency_minutes" integer DEFAULT 60,
+    "is_critical" boolean DEFAULT false,
+    "display_order" integer DEFAULT 0,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "created_by" "uuid",
+    CONSTRAINT "patient_vitals_templates_vital_type_check" CHECK ((("vital_type")::"text" = ANY (ARRAY[('blood_pressure'::character varying)::"text", ('heart_rate'::character varying)::"text", ('respiratory_rate'::character varying)::"text", ('temperature'::character varying)::"text", ('oxygen_saturation'::character varying)::"text", ('blood_glucose'::character varying)::"text", ('pain_scale'::character varying)::"text", ('weight'::character varying)::"text", ('height'::character varying)::"text"])))
+);
 
--- -- Name: idx_scheduled_simulations_cohort_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_cohort_id ON public.scheduled_simulations USING btree (cohort_id) WHERE (cohort_id IS NOT NULL);
+ALTER TABLE "public"."patient_vitals_templates" OWNER TO "postgres";
 
--- -- Name: idx_scheduled_simulations_date_range; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_date_range ON public.scheduled_simulations USING btree (scheduled_start, scheduled_end, status);
+CREATE TABLE IF NOT EXISTS "public"."patient_wounds" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid",
+    "location" "text" NOT NULL,
+    "coordinates_x" numeric NOT NULL,
+    "coordinates_y" numeric NOT NULL,
+    "view" "text" NOT NULL,
+    "type" "text" NOT NULL,
+    "stage" "text" NOT NULL,
+    "size_length" numeric NOT NULL,
+    "size_width" numeric NOT NULL,
+    "size_depth" numeric,
+    "description" "text",
+    "treatment" "text",
+    "assessed_by" "text" NOT NULL,
+    "assessment_date" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "healing_progress" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
 
--- -- Name: idx_scheduled_simulations_instructor_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_instructor_id ON public.scheduled_simulations USING btree (instructor_id);
+ALTER TABLE "public"."patient_wounds" OWNER TO "postgres";
 
--- -- Name: idx_scheduled_simulations_program_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_program_id ON public.scheduled_simulations USING btree (program_id);
+CREATE TABLE IF NOT EXISTS "public"."patients" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "text" NOT NULL,
+    "first_name" "text" NOT NULL,
+    "last_name" "text" NOT NULL,
+    "date_of_birth" "date" NOT NULL,
+    "gender" "text" NOT NULL,
+    "room_number" "text" NOT NULL,
+    "bed_number" "text" NOT NULL,
+    "admission_date" "date" NOT NULL,
+    "condition" "text" NOT NULL,
+    "diagnosis" "text" NOT NULL,
+    "allergies" "text"[] DEFAULT '{}'::"text"[],
+    "blood_type" "text" NOT NULL,
+    "emergency_contact_name" "text" NOT NULL,
+    "emergency_contact_relationship" "text" NOT NULL,
+    "emergency_contact_phone" "text" NOT NULL,
+    "assigned_nurse" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "tenant_id" "uuid",
+    "avatar_id" "text"
+);
 
--- -- Name: idx_scheduled_simulations_scheduled_end; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_scheduled_end ON public.scheduled_simulations USING btree (scheduled_end);
+ALTER TABLE "public"."patients" OWNER TO "postgres";
 
--- -- Name: idx_scheduled_simulations_scheduled_start; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_scheduled_start ON public.scheduled_simulations USING btree (scheduled_start);
+COMMENT ON COLUMN "public"."patients"."assigned_nurse" IS 'Optional assigned nurse name (TEXT field, not a foreign key). Legacy field from production nursing workflows. Not required for simulation environments.';
 
--- -- Name: idx_scheduled_simulations_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_scheduled_simulations_status ON public.scheduled_simulations USING btree (status);
 
--- -- Name: idx_scheduled_simulations_template_id; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."patients"."avatar_id" IS 'Patient avatar identifier (avatar-1 through avatar-10)';
 
-CREATE INDEX idx_scheduled_simulations_template_id ON public.scheduled_simulations USING btree (template_id);
 
--- -- Name: idx_simulation_active_ends_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_active_ends_at ON public.simulation_active USING btree (ends_at) WHERE (status = 'running'::public.simulation_active_status);
+CREATE TABLE IF NOT EXISTS "public"."profiles" (
+    "id" "uuid" NOT NULL,
+    "email" "text",
+    "first_name" "text",
+    "last_name" "text",
+    "role" "text" DEFAULT 'nurse'::"text",
+    "department" "text",
+    "license_number" "text",
+    "phone" "text",
+    "is_active" boolean DEFAULT true,
+    "permissions" "text"[] DEFAULT '{}'::"text"[],
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "profiles_role_check" CHECK (("role" = ANY (ARRAY['nurse'::"text", 'doctor'::"text", 'admin'::"text", 'super_admin'::"text"])))
+);
 
--- -- Name: idx_simulation_active_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_active_status ON public.simulation_active USING btree (status);
+ALTER TABLE "public"."profiles" OWNER TO "postgres";
 
--- -- Name: idx_simulation_active_status_ends; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_active_status_ends ON public.simulation_active USING btree (status, ends_at) WHERE (status = 'running'::public.simulation_active_status);
+CREATE TABLE IF NOT EXISTS "public"."programs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "code" "text" NOT NULL,
+    "name" "text" NOT NULL,
+    "description" "text",
+    "is_active" boolean DEFAULT true,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "created_by" "uuid"
+);
 
--- -- Name: idx_simulation_active_template; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_active_template ON public.simulation_active USING btree (template_id);
+ALTER TABLE "public"."programs" OWNER TO "postgres";
 
--- -- Name: idx_simulation_active_tenant; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_active_tenant ON public.simulation_active USING btree (tenant_id);
+COMMENT ON TABLE "public"."programs" IS 'Programs within tenants (e.g., NESA, PN, SIM Hub, BNAD)';
 
--- -- Name: idx_simulation_active_tenant_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_active_tenant_status ON public.simulation_active USING btree (tenant_id, status);
 
--- -- Name: idx_simulation_history_archived; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."programs"."code" IS 'Short code for program (e.g., NESA, PN) - used in simulation categories';
 
-CREATE INDEX idx_simulation_history_archived ON public.simulation_history USING btree (archived, completed_at DESC);
 
--- -- Name: idx_simulation_history_completed; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_history_completed ON public.simulation_history USING btree (completed_at DESC);
+COMMENT ON COLUMN "public"."programs"."name" IS 'Full program name';
 
--- -- Name: idx_simulation_history_created_by; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_history_created_by ON public.simulation_history USING btree (created_by);
 
--- -- Name: idx_simulation_history_instructor_name; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."simulation_active" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "template_id" "uuid" NOT NULL,
+    "name" "text" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "status" "public"."simulation_active_status" DEFAULT 'pending'::"public"."simulation_active_status",
+    "duration_minutes" integer NOT NULL,
+    "starts_at" timestamp with time zone DEFAULT "now"(),
+    "ends_at" timestamp with time zone,
+    "completed_at" timestamp with time zone,
+    "template_snapshot_version" integer NOT NULL,
+    "allow_late_join" boolean DEFAULT false,
+    "auto_cleanup" boolean DEFAULT true,
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "primary_categories" "text"[] DEFAULT '{}'::"text"[],
+    "sub_categories" "text"[] DEFAULT '{}'::"text"[],
+    "template_snapshot_version_launched" integer DEFAULT 1,
+    "template_snapshot_version_synced" integer,
+    "current_state_id" "uuid",
+    CONSTRAINT "valid_duration" CHECK (("duration_minutes" > 0))
+);
 
-CREATE INDEX idx_simulation_history_instructor_name ON public.simulation_history USING btree (instructor_name);
 
--- -- Name: idx_simulation_history_template; Type: INDEX; Schema: public
+ALTER TABLE "public"."simulation_active" OWNER TO "postgres";
 
-CREATE INDEX idx_simulation_history_template ON public.simulation_history USING btree (template_id);
 
--- -- Name: idx_simulation_participants_simulation_id; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."simulation_active" IS 'Active running simulations - RLS enforced';
 
-CREATE INDEX idx_simulation_participants_simulation_id ON public.simulation_participants USING btree (simulation_id);
 
--- -- Name: idx_simulation_participants_user_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_participants_user_id ON public.simulation_participants USING btree (user_id);
+COMMENT ON COLUMN "public"."simulation_active"."primary_categories" IS 'Primary program categories: PN, NESA, SIM Hub, BNAD';
 
--- -- Name: idx_simulation_participants_user_role; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_participants_user_role ON public.simulation_participants USING btree (user_id, role);
 
--- -- Name: idx_simulation_templates_created_by; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_active"."sub_categories" IS 'Sub-categories: Labs, Simulation, Testing';
 
-CREATE INDEX idx_simulation_templates_created_by ON public.simulation_templates USING btree (created_by);
 
--- -- Name: idx_simulation_templates_folder; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_templates_folder ON public.simulation_templates USING btree (folder);
+COMMENT ON COLUMN "public"."simulation_active"."template_snapshot_version_launched" IS 'Template version when simulation was originally launched';
 
--- -- Name: idx_simulation_templates_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_simulation_templates_status ON public.simulation_templates USING btree (status);
 
--- -- Name: idx_simulation_templates_tenant; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_active"."template_snapshot_version_synced" IS 'Template version last synced to (NULL if never synced)';
 
-CREATE INDEX idx_simulation_templates_tenant ON public.simulation_templates USING btree (tenant_id);
 
--- -- Name: idx_student_roster_cohort_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_student_roster_cohort_id ON public.student_roster USING btree (cohort_id) WHERE (cohort_id IS NOT NULL);
+COMMENT ON COLUMN "public"."simulation_active"."current_state_id" IS 'Named template state (simulation_template_states) this simulation was last reset into. NULL means the template''s default/current snapshot.';
 
--- -- Name: idx_student_roster_program_active; Type: INDEX; Schema: public
 
-CREATE INDEX idx_student_roster_program_active ON public.student_roster USING btree (program_id, is_active) WHERE (is_active = true);
 
--- -- Name: idx_student_roster_program_id; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."simulation_activity_log" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "simulation_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "action_type" "text" NOT NULL,
+    "action_details" "jsonb" DEFAULT '{}'::"jsonb",
+    "entity_type" "text",
+    "entity_id" "uuid",
+    "occurred_at" timestamp with time zone DEFAULT "now"(),
+    "notes" "text"
+);
 
-CREATE INDEX idx_student_roster_program_id ON public.student_roster USING btree (program_id);
 
--- -- Name: idx_student_roster_student_number; Type: INDEX; Schema: public
+ALTER TABLE "public"."simulation_activity_log" OWNER TO "postgres";
 
-CREATE INDEX idx_student_roster_student_number ON public.student_roster USING btree (student_number);
 
--- -- Name: idx_student_roster_user_id; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."simulation_activity_log" IS 'Simulation activity audit log - RLS enforced';
 
-CREATE INDEX idx_student_roster_user_id ON public.student_roster USING btree (user_id);
 
--- -- Name: idx_system_logs_component; Type: INDEX; Schema: public
 
-CREATE INDEX idx_system_logs_component ON public.system_logs USING btree (component, "timestamp" DESC);
+CREATE TABLE IF NOT EXISTS "public"."simulation_auto_students" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "simulation_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "program_id" "uuid",
+    "student_number" "text" NOT NULL,
+    "email" "text" NOT NULL,
+    "temp_password" "text" NOT NULL,
+    "label" "text",
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
--- -- Name: idx_system_logs_level; Type: INDEX; Schema: public
 
-CREATE INDEX idx_system_logs_level ON public.system_logs USING btree (log_level, "timestamp" DESC);
+ALTER TABLE "public"."simulation_auto_students" OWNER TO "postgres";
 
--- -- Name: idx_system_logs_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_system_logs_tenant_id ON public.system_logs USING btree (tenant_id, "timestamp" DESC);
+COMMENT ON TABLE "public"."simulation_auto_students" IS 'Auto-generated simulation-only student logins created from Launch Simulation. Row (and the underlying auth.users account) is only removed when the owning simulation_active row is deleted, via delete_simulation().';
 
--- -- Name: idx_system_logs_timestamp; Type: INDEX; Schema: public
 
-CREATE INDEX idx_system_logs_timestamp ON public.system_logs USING btree ("timestamp" DESC);
 
--- -- Name: idx_system_logs_type; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."simulation_history" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "simulation_id" "uuid",
+    "template_id" "uuid" NOT NULL,
+    "name" "text" NOT NULL,
+    "status" "public"."simulation_active_status" NOT NULL,
+    "duration_minutes" integer NOT NULL,
+    "started_at" timestamp with time zone NOT NULL,
+    "ended_at" timestamp with time zone,
+    "completed_at" timestamp with time zone,
+    "metrics" "jsonb" DEFAULT '{}'::"jsonb",
+    "debrief_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "participants" "jsonb" DEFAULT '[]'::"jsonb",
+    "activity_summary" "jsonb" DEFAULT '{}'::"jsonb",
+    "created_by" "uuid" NOT NULL,
+    "archived_at" timestamp with time zone DEFAULT "now"(),
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "tenant_id" "uuid",
+    "student_activities" "jsonb" DEFAULT '[]'::"jsonb",
+    "primary_categories" "text"[] DEFAULT '{}'::"text"[],
+    "sub_categories" "text"[] DEFAULT '{}'::"text"[],
+    "archived" boolean DEFAULT false NOT NULL,
+    "archived_by" "uuid",
+    "instructor_name" "text",
+    "archive_folder" "text"
+);
 
-CREATE INDEX idx_system_logs_type ON public.system_logs USING btree (log_type, "timestamp" DESC);
 
--- -- Name: idx_system_logs_user_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."simulation_history" OWNER TO "postgres";
 
-CREATE INDEX idx_system_logs_user_id ON public.system_logs USING btree (user_id, "timestamp" DESC);
 
--- -- Name: idx_template_versions_saved_at; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."simulation_history" IS 'Completed simulation history - RLS enforced';
 
-CREATE INDEX idx_template_versions_saved_at ON public.simulation_template_versions USING btree (saved_at DESC);
 
--- -- Name: idx_template_versions_template; Type: INDEX; Schema: public
 
-CREATE INDEX idx_template_versions_template ON public.simulation_template_versions USING btree (template_id, version DESC);
+COMMENT ON COLUMN "public"."simulation_history"."archived_at" IS 'Timestamp when the simulation was archived';
 
--- -- Name: idx_tenant_users_active; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenant_users_active ON public.tenant_users USING btree (is_active);
 
--- -- Name: idx_tenant_users_tenant_id; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_history"."student_activities" IS 'Snapshot of student activities at completion time for debrief reports';
 
-CREATE INDEX idx_tenant_users_tenant_id ON public.tenant_users USING btree (tenant_id);
 
--- -- Name: idx_tenant_users_user_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenant_users_user_id ON public.tenant_users USING btree (user_id);
+COMMENT ON COLUMN "public"."simulation_history"."primary_categories" IS 'Primary program categories from active simulation';
 
--- -- Name: idx_tenant_users_user_tenant; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenant_users_user_tenant ON public.tenant_users USING btree (user_id, tenant_id);
 
--- -- Name: idx_tenant_users_user_tenant_active; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_history"."sub_categories" IS 'Sub-categories from active simulation';
 
-CREATE INDEX idx_tenant_users_user_tenant_active ON public.tenant_users USING btree (user_id, tenant_id, is_active) WHERE (is_active = true);
 
--- -- Name: idx_tenants_admin_user_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenants_admin_user_id ON public.tenants USING btree (admin_user_id);
+COMMENT ON COLUMN "public"."simulation_history"."archived" IS 'Whether this simulation has been archived by an instructor';
 
--- -- Name: idx_tenants_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenants_id ON public.tenants USING btree (id);
 
--- -- Name: idx_tenants_program_id; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_history"."archived_by" IS 'User ID of the instructor who archived this simulation';
 
-CREATE INDEX idx_tenants_program_id ON public.tenants USING btree (program_id);
 
--- -- Name: idx_tenants_simulation; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenants_simulation ON public.tenants USING btree (is_simulation) WHERE (is_simulation = true);
+COMMENT ON COLUMN "public"."simulation_history"."instructor_name" IS 'Name of the instructor who completed and debriefed this simulation';
 
--- -- Name: idx_tenants_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
--- -- Name: idx_tenants_subdomain; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_history"."archive_folder" IS 'Archive folder structure: InstructorName/CompletionDate (e.g., "John Smith/2025-11-30")';
 
-CREATE INDEX idx_tenants_subdomain ON public.tenants USING btree (subdomain);
 
--- -- Name: idx_tenants_type; Type: INDEX; Schema: public
 
-CREATE INDEX idx_tenants_type ON public.tenants USING btree (tenant_type);
+CREATE TABLE IF NOT EXISTS "public"."simulation_participants" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "simulation_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "role" "public"."simulation_role" DEFAULT 'student'::"public"."simulation_role" NOT NULL,
+    "granted_at" timestamp with time zone DEFAULT "now"(),
+    "granted_by" "uuid" NOT NULL,
+    "last_accessed_at" timestamp with time zone
+);
 
--- -- Name: idx_user_profiles_active; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_profiles_active ON public.user_profiles USING btree (is_active);
+ALTER TABLE "public"."simulation_participants" OWNER TO "postgres";
 
--- -- Name: idx_user_profiles_default_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_profiles_default_tenant_id ON public.user_profiles USING btree (default_tenant_id);
+COMMENT ON TABLE "public"."simulation_participants" IS 'User access to simulations - RLS enforced';
 
--- -- Name: idx_user_profiles_email; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_profiles_email ON public.user_profiles USING btree (email);
 
--- -- Name: idx_user_profiles_id; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."simulation_table_config" (
+    "id" integer NOT NULL,
+    "table_name" "text" NOT NULL,
+    "category" "text" NOT NULL,
+    "has_tenant_id" boolean DEFAULT false,
+    "has_patient_id" boolean DEFAULT false,
+    "parent_table" "text",
+    "parent_column" "text",
+    "requires_id_mapping" boolean DEFAULT false,
+    "delete_order" integer NOT NULL,
+    "enabled" boolean DEFAULT true,
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "valid_delete_order" CHECK (("delete_order" > 0))
+);
 
-CREATE INDEX idx_user_profiles_id ON public.user_profiles USING btree (id);
 
--- -- Name: idx_user_profiles_id_role; Type: INDEX; Schema: public
+ALTER TABLE "public"."simulation_table_config" OWNER TO "postgres";
 
-CREATE INDEX idx_user_profiles_id_role ON public.user_profiles USING btree (id, role);
 
--- -- Name: idx_user_profiles_role; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."simulation_table_config" IS 'Configuration for patient-related tables in simulation snapshot/restore system';
 
-CREATE INDEX idx_user_profiles_role ON public.user_profiles USING btree (role);
 
--- -- Name: idx_user_profiles_role_active; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_profiles_role_active ON public.user_profiles USING btree (role, is_active);
+COMMENT ON COLUMN "public"."simulation_table_config"."requires_id_mapping" IS 'TRUE if IDs must be preserved for barcodes (patients, medications, wounds, lab_panels)';
 
--- -- Name: idx_user_profiles_simulation_only; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_profiles_simulation_only ON public.user_profiles USING btree (simulation_only) WHERE (simulation_only = true);
 
--- -- Name: idx_user_profiles_super_admin_check; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_table_config"."delete_order" IS 'Order for deletion in reset: lower numbers first (delete children before parents)';
 
-CREATE INDEX idx_user_profiles_super_admin_check ON public.user_profiles USING btree (id) WHERE ((role = 'super_admin'::public.user_role) AND (is_active = true));
 
--- -- Name: idx_user_programs_program_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_programs_program_id ON public.user_programs USING btree (program_id);
+CREATE SEQUENCE IF NOT EXISTS "public"."simulation_table_config_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
--- -- Name: idx_user_programs_user_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_programs_user_id ON public.user_programs USING btree (user_id);
+ALTER SEQUENCE "public"."simulation_table_config_id_seq" OWNER TO "postgres";
 
--- -- Name: idx_user_sessions_last_activity; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_sessions_last_activity ON public.user_sessions USING btree (last_activity);
+ALTER SEQUENCE "public"."simulation_table_config_id_seq" OWNED BY "public"."simulation_table_config"."id";
 
--- -- Name: idx_user_sessions_status; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_sessions_status ON public.user_sessions USING btree (status);
 
--- -- Name: idx_user_sessions_user_id; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."simulation_template_states" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "template_id" "uuid" NOT NULL,
+    "label" "text" NOT NULL,
+    "changelog_note" "text",
+    "snapshot_data" "jsonb" NOT NULL,
+    "sort_order" integer DEFAULT 0 NOT NULL,
+    "created_by" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
-CREATE INDEX idx_user_sessions_user_id ON public.user_sessions USING btree (user_id);
 
--- -- Name: idx_user_tenant_active; Type: INDEX; Schema: public
+ALTER TABLE "public"."simulation_template_states" OWNER TO "postgres";
 
-CREATE INDEX idx_user_tenant_active ON public.tenant_users USING btree (user_id, is_active) WHERE (is_active = true);
 
--- -- Name: idx_user_tenant_cache_tenant_id; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."simulation_template_states" IS 'Instructor-named snapshot states per template (e.g. "Week 1", "Week 2"), independently selectable when resetting an active simulation.';
 
-CREATE INDEX idx_user_tenant_cache_tenant_id ON public.user_tenant_cache USING btree (tenant_id);
 
--- -- Name: idx_user_tenant_cache_user; Type: INDEX; Schema: public
 
-CREATE INDEX idx_user_tenant_cache_user ON public.user_tenant_cache USING btree (user_id);
+CREATE TABLE IF NOT EXISTS "public"."simulation_templates" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "description" "text",
+    "tenant_id" "uuid" NOT NULL,
+    "status" "public"."simulation_template_status" DEFAULT 'draft'::"public"."simulation_template_status",
+    "snapshot_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "snapshot_version" integer DEFAULT 0,
+    "snapshot_taken_at" timestamp with time zone,
+    "default_duration_minutes" integer DEFAULT 120,
+    "auto_cleanup_after_hours" integer DEFAULT 24,
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "primary_categories" "text"[] DEFAULT '{}'::"text"[],
+    "sub_categories" "text"[] DEFAULT '{}'::"text"[],
+    "folder" "text",
+    CONSTRAINT "valid_cleanup" CHECK (("auto_cleanup_after_hours" >= 0)),
+    CONSTRAINT "valid_duration" CHECK (("default_duration_minutes" > 0))
+);
 
--- -- Name: idx_user_tenant_cache_user_tenant; Type: INDEX; Schema: public
 
-CREATE UNIQUE INDEX idx_user_tenant_cache_user_tenant ON public.user_tenant_cache USING btree (user_id, tenant_id);
+ALTER TABLE "public"."simulation_templates" OWNER TO "postgres";
 
--- -- Name: idx_wound_assessments_assessed_at; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_assessments_assessed_at ON public.wound_assessments USING btree (assessed_at DESC);
+COMMENT ON TABLE "public"."simulation_templates" IS 'Simulation templates with snapshot data - RLS enforced';
 
--- -- Name: idx_wound_assessments_assessment_data; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_assessments_assessment_data ON public.wound_assessments USING gin (assessment_data);
 
--- -- Name: idx_wound_assessments_assessment_date; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."simulation_templates"."folder" IS 'Optional display folder for organizing templates in the UI. No referential integrity — purely cosmetic. NULL = uncategorized.';
 
-CREATE INDEX idx_wound_assessments_assessment_date ON public.wound_assessments USING btree (assessment_date);
 
--- -- Name: idx_wound_assessments_assessor_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_assessments_assessor_id ON public.wound_assessments USING btree (assessor_id);
+CREATE OR REPLACE VIEW "public"."student_roster_with_profiles" WITH ("security_invoker"='true') AS
+ SELECT "sr"."id",
+    "sr"."user_id",
+    "sr"."program_id",
+    "sr"."cohort_id",
+    "sr"."student_number",
+    "sr"."enrollment_date",
+    "sr"."is_active",
+    "sr"."notes",
+    "sr"."created_at",
+    "sr"."updated_at",
+    "sr"."created_by",
+    "up"."email" AS "user_email",
+    "up"."first_name" AS "user_first_name",
+    "up"."last_name" AS "user_last_name",
+    "up"."role" AS "user_role",
+    "up"."phone" AS "user_phone",
+    "up"."simulation_only" AS "user_simulation_only"
+   FROM ("public"."student_roster" "sr"
+     LEFT JOIN "public"."user_profiles" "up" ON (("sr"."user_id" = "up"."id")));
 
--- -- Name: idx_wound_assessments_device_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_assessments_device_id ON public.wound_assessments USING btree (device_id);
+ALTER VIEW "public"."student_roster_with_profiles" OWNER TO "postgres";
 
--- -- Name: idx_wound_assessments_device_type; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_assessments_device_type ON public.wound_assessments USING btree (device_type) WHERE (device_type IS NOT NULL);
+COMMENT ON VIEW "public"."student_roster_with_profiles" IS 'Student roster with joined user profile information for easy querying';
 
--- -- Name: idx_wound_assessments_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_assessments_patient_id ON public.wound_assessments USING btree (patient_id);
 
--- -- Name: idx_wound_assessments_student_name; Type: INDEX; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."system_logs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "timestamp" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "user_id" "uuid",
+    "tenant_id" "uuid",
+    "log_level" character varying(20) NOT NULL,
+    "log_type" character varying(50) NOT NULL,
+    "component" character varying(255),
+    "action" character varying(255),
+    "error_message" "text",
+    "error_stack" "text",
+    "request_data" "jsonb",
+    "response_data" "jsonb",
+    "user_agent" "text",
+    "browser_info" "jsonb",
+    "ip_address" "inet",
+    "session_id" "text",
+    "current_url" "text",
+    "previous_url" "text",
+    "metadata" "jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "system_logs_log_level_check" CHECK ((("log_level")::"text" = ANY (ARRAY[('debug'::character varying)::"text", ('info'::character varying)::"text", ('warn'::character varying)::"text", ('error'::character varying)::"text", ('security'::character varying)::"text"])))
+);
 
-CREATE INDEX idx_wound_assessments_student_name ON public.wound_assessments USING btree (student_name);
 
--- -- Name: idx_wound_assessments_tenant_id; Type: INDEX; Schema: public
+ALTER TABLE "public"."system_logs" OWNER TO "postgres";
 
-CREATE INDEX idx_wound_assessments_tenant_id ON public.wound_assessments USING btree (tenant_id);
 
--- -- Name: idx_wound_assessments_wound_id; Type: INDEX; Schema: public
+COMMENT ON TABLE "public"."system_logs" IS 'Comprehensive system logging for super admin monitoring and troubleshooting. Tracks errors, user actions, and system events with full context.';
 
-CREATE INDEX idx_wound_assessments_wound_id ON public.wound_assessments USING btree (wound_id);
 
--- -- Name: idx_wound_treatments_administered_by_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_treatments_administered_by_id ON public.wound_treatments USING btree (administered_by_id);
+CREATE TABLE IF NOT EXISTS "public"."tenant_users" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "role" character varying(20) DEFAULT 'viewer'::character varying NOT NULL,
+    "permissions" "text"[] DEFAULT '{}'::"text"[],
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "is_active" boolean DEFAULT true,
+    CONSTRAINT "tenant_users_role_check" CHECK ((("role")::"text" = ANY (ARRAY[('super_admin'::character varying)::"text", ('coordinator'::character varying)::"text", ('admin'::character varying)::"text", ('instructor'::character varying)::"text", ('nurse'::character varying)::"text", ('student'::character varying)::"text", ('viewer'::character varying)::"text"])))
+);
 
--- -- Name: idx_wound_treatments_assessment_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_treatments_assessment_id ON public.wound_treatments USING btree (wound_assessment_id);
+ALTER TABLE "public"."tenant_users" OWNER TO "postgres";
 
--- -- Name: idx_wound_treatments_patient_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_treatments_patient_id ON public.wound_treatments USING btree (patient_id);
+COMMENT ON TABLE "public"."tenant_users" IS 'Maps users to tenants with role-based access control';
 
--- -- Name: idx_wound_treatments_tenant_id; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wound_treatments_tenant_id ON public.wound_treatments USING btree (tenant_id);
 
--- -- Name: idx_wound_treatments_treatment_date; Type: INDEX; Schema: public
+COMMENT ON COLUMN "public"."tenant_users"."permissions" IS 'Array of permission strings for granular access control';
 
-CREATE INDEX idx_wound_treatments_treatment_date ON public.wound_treatments USING btree (treatment_date);
 
--- -- Name: idx_wounds_location; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wounds_location ON public.wounds USING btree (location_id);
+COMMENT ON CONSTRAINT "tenant_users_role_check" ON "public"."tenant_users" IS 'Validates role: super_admin, coordinator, admin, instructor, nurse, student, viewer';
 
--- -- Name: idx_wounds_patient; Type: INDEX; Schema: public
 
-CREATE INDEX idx_wounds_patient ON public.wounds USING btree (patient_id);
 
--- -- Name: idx_wounds_tenant; Type: INDEX; Schema: public
+CREATE OR REPLACE VIEW "public"."tenant_statistics" WITH ("security_invoker"='on') AS
+ SELECT "t"."id",
+    "t"."name",
+    "t"."created_at",
+    "count"(DISTINCT "tu"."user_id") AS "user_count",
+    "count"(DISTINCT "p"."id") AS "patient_count"
+   FROM (("public"."tenants" "t"
+     LEFT JOIN "public"."tenant_users" "tu" ON ((("t"."id" = "tu"."tenant_id") AND ("tu"."is_active" = true))))
+     LEFT JOIN "public"."patients" "p" ON (("t"."id" = "p"."tenant_id")))
+  GROUP BY "t"."id", "t"."name", "t"."created_at";
 
-CREATE INDEX idx_wounds_tenant ON public.wounds USING btree (tenant_id);
 
--- -- Name: patient_notes_patient_id_idx; Type: INDEX; Schema: public
+ALTER VIEW "public"."tenant_statistics" OWNER TO "postgres";
 
-CREATE INDEX patient_notes_patient_id_idx ON public.patient_notes USING btree (patient_id);
 
--- -- Name: patient_notes_tenant_id_idx; Type: INDEX; Schema: public
+COMMENT ON VIEW "public"."tenant_statistics" IS 'Tenant statistics view - Uses security_invoker=on to enforce calling user permissions and RLS policies';
 
-CREATE INDEX patient_notes_tenant_id_idx ON public.patient_notes USING btree (tenant_id);
 
--- -- Name: patient_wounds_patient_id_idx; Type: INDEX; Schema: public
 
-CREATE INDEX patient_wounds_patient_id_idx ON public.patient_wounds USING btree (patient_id);
+CREATE TABLE IF NOT EXISTS "public"."tr_active_living_profiles" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "is_baseline" boolean DEFAULT false NOT NULL,
+    "narrative" "text",
+    "recorded_by" "text",
+    "recorded_by_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
 
--- ============================================================
--- CONSTRAINTS
--- ============================================================
+ALTER TABLE "public"."tr_active_living_profiles" OWNER TO "postgres";
 
--- -- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.audit_logs
-    ADD CONSTRAINT audit_logs_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."tr_assessment_scores" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "is_baseline" boolean DEFAULT false NOT NULL,
+    "tool_name" "text" NOT NULL,
+    "subscale_scores" "jsonb",
+    "total_score" numeric,
+    "interpretation" "text",
+    "date_administered" "date",
+    "administered_by" "text",
+    "recorded_by" "text",
+    "recorded_by_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
--- -- Name: avatar_locations avatar_locations_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.avatar_locations
-    ADD CONSTRAINT avatar_locations_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."tr_assessment_scores" OWNER TO "postgres";
 
--- -- Name: backup_audit_log backup_audit_log_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.backup_audit_log
-    ADD CONSTRAINT backup_audit_log_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."tr_interdisciplinary_interps" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "is_baseline" boolean DEFAULT false NOT NULL,
+    "score_group" "text" NOT NULL,
+    "interpretation" "text",
+    "recorded_by" "text",
+    "recorded_by_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
--- -- Name: backup_files backup_files_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.backup_files
-    ADD CONSTRAINT backup_files_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."tr_interdisciplinary_interps" OWNER TO "postgres";
 
--- -- Name: backup_metadata backup_metadata_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.backup_metadata
-    ADD CONSTRAINT backup_metadata_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."tr_progress_notes" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "note_type" "text" DEFAULT 'soap'::"text" NOT NULL,
+    "subjective" "text",
+    "objective" "text",
+    "assessment" "text",
+    "plan" "text",
+    "narrative" "text",
+    "note_date" "date" DEFAULT CURRENT_DATE NOT NULL,
+    "note_time" time without time zone,
+    "clinician_name" "text",
+    "recorded_by_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
--- -- Name: bowel_records bowel_records_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.bowel_records
-    ADD CONSTRAINT bowel_records_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."tr_progress_notes" OWNER TO "postgres";
 
--- -- Name: contact_submissions contact_submissions_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.contact_submissions
-    ADD CONSTRAINT contact_submissions_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."tr_screening_entries" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "is_baseline" boolean DEFAULT false NOT NULL,
+    "experiences_boredom" boolean,
+    "boredom_frequency" "text",
+    "takes_initiative" boolean,
+    "social_contact_frequency" "text",
+    "social_support" "text"[],
+    "social_contact_performance" "text",
+    "social_engagement_rating" integer,
+    "social_comments" "text",
+    "community_frequency" "text",
+    "community_participation_pattern" "text"[],
+    "balance_active_passive" boolean,
+    "community_accessibility" "text"[],
+    "leisure_satisfaction_rating" integer,
+    "leisure_participation_notes" "text",
+    "leisure_barriers_description" "text",
+    "personal_barriers" "text"[],
+    "functional_barriers" "text"[],
+    "social_barriers" "text"[],
+    "environmental_barriers" "text"[],
+    "readiness_to_participate" integer,
+    "lcm_leisure_attitude_score" integer,
+    "lcm_social_contact_score" integer,
+    "lcm_community_participation_score" integer,
+    "tr_recommendation" "text",
+    "clinician_signature" "text",
+    "completed_at" timestamp with time zone,
+    "recorded_by" "text",
+    "recorded_by_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "tr_screening_entries_leisure_satisfaction_rating_check" CHECK ((("leisure_satisfaction_rating" >= 1) AND ("leisure_satisfaction_rating" <= 4))),
+    CONSTRAINT "tr_screening_entries_readiness_to_participate_check" CHECK ((("readiness_to_participate" >= 1) AND ("readiness_to_participate" <= 10))),
+    CONSTRAINT "tr_screening_entries_social_engagement_rating_check" CHECK ((("social_engagement_rating" >= 1) AND ("social_engagement_rating" <= 5)))
+);
 
--- -- Name: device_assessments device_assessments_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.device_assessments
-    ADD CONSTRAINT device_assessments_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."tr_screening_entries" OWNER TO "postgres";
 
--- -- Name: devices devices_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.devices
-    ADD CONSTRAINT devices_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."tr_treatment_plan_rows" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "is_baseline" boolean DEFAULT false NOT NULL,
+    "sort_order" integer DEFAULT 0 NOT NULL,
+    "target_area" "text",
+    "goal" "text",
+    "objective_1" "text",
+    "objective_2" "text",
+    "objective_3" "text",
+    "intervention" "text",
+    "clinician_signature" "text",
+    "plan_date" "date",
+    "recorded_by" "text",
+    "recorded_by_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
 
--- -- Name: diabetic_records diabetic_records_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.diabetic_records
-    ADD CONSTRAINT diabetic_records_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."tr_treatment_plan_rows" OWNER TO "postgres";
 
--- -- Name: doctors_orders doctors_orders_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.doctors_orders
-    ADD CONSTRAINT doctors_orders_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."user_programs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "program_id" "uuid" NOT NULL,
+    "assigned_at" timestamp with time zone DEFAULT "now"(),
+    "assigned_by" "uuid"
+);
 
--- -- Name: handover_notes handover_notes_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.handover_notes
-    ADD CONSTRAINT handover_notes_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."user_programs" OWNER TO "postgres";
 
--- -- Name: lab_ack_events lab_ack_events_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_ack_events
-    ADD CONSTRAINT lab_ack_events_pkey PRIMARY KEY (id);
+COMMENT ON TABLE "public"."user_programs" IS 'Many-to-many: users assigned to programs';
 
--- -- Name: lab_orders lab_orders_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_orders
-    ADD CONSTRAINT lab_orders_pkey PRIMARY KEY (id);
 
--- -- Name: lab_panels lab_panels_pkey; Type: CONSTRAINT; Schema: public
+CREATE OR REPLACE VIEW "public"."user_roles" WITH ("security_invoker"='on') AS
+ SELECT "id",
+    "email",
+    "role",
+    "first_name",
+    "last_name",
+    "created_at"
+   FROM "public"."user_profiles" "up";
 
-ALTER TABLE ONLY public.lab_panels
-    ADD CONSTRAINT lab_panels_pkey PRIMARY KEY (id);
 
--- -- Name: lab_result_refs lab_result_refs_pkey; Type: CONSTRAINT; Schema: public
+ALTER VIEW "public"."user_roles" OWNER TO "postgres";
 
-ALTER TABLE ONLY public.lab_result_refs
-    ADD CONSTRAINT lab_result_refs_pkey PRIMARY KEY (test_code);
 
--- -- Name: lab_results lab_results_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON VIEW "public"."user_roles" IS 'User roles view - Uses security_invoker=on to enforce calling user permissions and RLS policies';
 
-ALTER TABLE ONLY public.lab_results
-    ADD CONSTRAINT lab_results_pkey PRIMARY KEY (id);
 
--- -- Name: medication_administrations medication_administrations_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.medication_administrations
-    ADD CONSTRAINT medication_administrations_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."user_sessions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid",
+    "ip_address" "inet",
+    "user_agent" "text",
+    "tenant_id" "uuid",
+    "login_time" timestamp with time zone DEFAULT "now"(),
+    "last_activity" timestamp with time zone DEFAULT "now"(),
+    "logout_time" timestamp with time zone,
+    "session_token" "text",
+    "status" character varying(20) DEFAULT 'active'::character varying,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "user_sessions_status_check" CHECK ((("status")::"text" = ANY (ARRAY[('active'::character varying)::"text", ('idle'::character varying)::"text", ('logged_out'::character varying)::"text"])))
+);
 
--- -- Name: multi_tenant_admins multi_tenant_admins_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.multi_tenant_admins
-    ADD CONSTRAINT multi_tenant_admins_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."user_sessions" OWNER TO "postgres";
 
--- -- Name: multi_tenant_admins multi_tenant_admins_user_id_key; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.multi_tenant_admins
-    ADD CONSTRAINT multi_tenant_admins_user_id_key UNIQUE (user_id);
+COMMENT ON TABLE "public"."user_sessions" IS 'Tracks user login sessions with IP addresses and timestamps';
 
--- -- Name: patient_admission_records patient_admission_records_patient_id_key; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_admission_records
-    ADD CONSTRAINT patient_admission_records_patient_id_key UNIQUE (patient_id);
 
--- -- Name: patient_admission_records patient_admission_records_pkey; Type: CONSTRAINT; Schema: public
+CREATE OR REPLACE VIEW "public"."user_tenant_access" WITH ("security_invoker"='on') AS
+ SELECT DISTINCT "tu"."user_id",
+    "tu"."tenant_id",
+    "up"."role" AS "user_role",
+    "tu"."is_active"
+   FROM ("public"."tenant_users" "tu"
+     JOIN "public"."user_profiles" "up" ON (("tu"."user_id" = "up"."id")));
 
-ALTER TABLE ONLY public.patient_admission_records
-    ADD CONSTRAINT patient_admission_records_pkey PRIMARY KEY (id);
 
--- -- Name: patient_advanced_directives patient_advanced_directives_patient_id_key; Type: CONSTRAINT; Schema: public
+ALTER VIEW "public"."user_tenant_access" OWNER TO "postgres";
 
-ALTER TABLE ONLY public.patient_advanced_directives
-    ADD CONSTRAINT patient_advanced_directives_patient_id_key UNIQUE (patient_id);
 
--- -- Name: patient_advanced_directives patient_advanced_directives_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON VIEW "public"."user_tenant_access" IS 'User-tenant access mapping - Uses security_invoker=on to enforce calling user permissions and RLS policies';
 
-ALTER TABLE ONLY public.patient_advanced_directives
-    ADD CONSTRAINT patient_advanced_directives_pkey PRIMARY KEY (id);
 
--- -- Name: patient_alerts patient_alerts_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_alerts
-    ADD CONSTRAINT patient_alerts_pkey PRIMARY KEY (id);
+CREATE MATERIALIZED VIEW "public"."user_tenant_cache" AS
+ SELECT "user_id",
+    "tenant_id",
+    "role",
+    "is_active",
+    "created_at"
+   FROM "public"."tenant_users"
+  WHERE ("is_active" = true)
+  WITH NO DATA;
 
--- -- Name: patient_bbit_entries patient_bbit_entries_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_bbit_entries
-    ADD CONSTRAINT patient_bbit_entries_pkey PRIMARY KEY (id);
+ALTER MATERIALIZED VIEW "public"."user_tenant_cache" OWNER TO "postgres";
 
--- -- Name: patient_images patient_images_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_images
-    ADD CONSTRAINT patient_images_pkey PRIMARY KEY (id);
+COMMENT ON MATERIALIZED VIEW "public"."user_tenant_cache" IS 'Cached user-tenant relationships for performance. Currently accessible to authenticated users. TODO: Refactor application code to use RLS-protected functions instead of direct access.';
 
--- -- Name: patient_intake_output_events patient_intake_output_events_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_intake_output_events
-    ADD CONSTRAINT patient_intake_output_events_pkey PRIMARY KEY (id);
 
--- -- Name: patient_medications patient_medications_pkey; Type: CONSTRAINT; Schema: public
+CREATE TABLE IF NOT EXISTS "public"."wound_assessments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "assessment_date" timestamp with time zone DEFAULT "now"(),
+    "wound_location" "text",
+    "wound_type" "text",
+    "stage" "text",
+    "length_cm" numeric(5,2) DEFAULT 0,
+    "width_cm" numeric(5,2) DEFAULT 0,
+    "depth_cm" numeric(5,2) DEFAULT 0,
+    "wound_bed" "text",
+    "exudate_amount" "text",
+    "exudate_type" "text",
+    "periwound_condition" "text",
+    "pain_level" integer,
+    "odor" "text",
+    "signs_of_infection" "text",
+    "assessment_notes" "text",
+    "photos" "text"[],
+    "assessor_id" "uuid",
+    "assessor_name" "text",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "student_name" "text",
+    "device_id" "uuid",
+    "wound_id" "uuid",
+    "assessed_at" timestamp with time zone DEFAULT "now"(),
+    "site_condition" "text",
+    "surrounding_skin" "text",
+    "treatment_applied" "text",
+    "dressing_type" "text",
+    "device_functioning" boolean,
+    "output_amount_ml" integer,
+    "drainage_type" "text"[],
+    "drainage_amount" "text",
+    "wound_length_cm" numeric(5,2),
+    "wound_width_cm" numeric(5,2),
+    "wound_depth_cm" numeric(5,2),
+    "wound_appearance" "text",
+    "notes" "text",
+    "assessment_data" "jsonb" DEFAULT '{}'::"jsonb",
+    "device_type" "text",
+    CONSTRAINT "wound_assessments_exudate_amount_check" CHECK (("exudate_amount" = ANY (ARRAY['none'::"text", 'minimal'::"text", 'moderate'::"text", 'heavy'::"text"]))),
+    CONSTRAINT "wound_assessments_exudate_type_check" CHECK (("exudate_type" = ANY (ARRAY['serous'::"text", 'sanguineous'::"text", 'serosanguineous'::"text", 'purulent'::"text", 'other'::"text"]))),
+    CONSTRAINT "wound_assessments_pain_level_check" CHECK ((("pain_level" >= 0) AND ("pain_level" <= 10))),
+    CONSTRAINT "wound_assessments_wound_bed_check" CHECK (("wound_bed" = ANY (ARRAY['red'::"text", 'yellow'::"text", 'black'::"text", 'mixed'::"text"]))),
+    CONSTRAINT "wound_assessments_wound_type_check" CHECK (("wound_type" = ANY (ARRAY['surgical'::"text", 'pressure'::"text", 'venous'::"text", 'arterial'::"text", 'diabetic'::"text", 'traumatic'::"text", 'other'::"text"])))
+);
 
-ALTER TABLE ONLY public.patient_medications
-    ADD CONSTRAINT patient_medications_pkey PRIMARY KEY (id);
 
--- -- Name: patient_medications_templates patient_medications_templates_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE "public"."wound_assessments" OWNER TO "postgres";
 
-ALTER TABLE ONLY public.patient_medications_templates
-    ADD CONSTRAINT patient_medications_templates_pkey PRIMARY KEY (id);
 
--- -- Name: patient_neuro_assessments patient_neuro_assessments_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON TABLE "public"."wound_assessments" IS 'Multi-purpose table: legacy wound care assessments + new hacMap device/wound assessments';
 
-ALTER TABLE ONLY public.patient_neuro_assessments
-    ADD CONSTRAINT patient_neuro_assessments_pkey PRIMARY KEY (id);
 
--- -- Name: patient_newborn_assessments patient_newborn_assessments_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_newborn_assessments
-    ADD CONSTRAINT patient_newborn_assessments_pkey PRIMARY KEY (id);
+COMMENT ON COLUMN "public"."wound_assessments"."student_name" IS 'Full name of student who performed assessment';
 
--- -- Name: patient_newborn_assessments patient_newborn_assessments_unique; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_newborn_assessments
-    ADD CONSTRAINT patient_newborn_assessments_unique UNIQUE (patient_id, tenant_id);
 
--- -- Name: patient_notes patient_notes_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."device_id" IS 'Links to device being assessed (NULL if wound assessment)';
 
-ALTER TABLE ONLY public.patient_notes
-    ADD CONSTRAINT patient_notes_pkey PRIMARY KEY (id);
 
--- -- Name: patient_vitals patient_vitals_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_vitals
-    ADD CONSTRAINT patient_vitals_pkey PRIMARY KEY (id);
+COMMENT ON COLUMN "public"."wound_assessments"."site_condition" IS 'Condition of IV site (devices) or surrounding skin (wounds)';
 
--- -- Name: patient_vitals_templates patient_vitals_templates_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_vitals_templates
-    ADD CONSTRAINT patient_vitals_templates_pkey PRIMARY KEY (id);
 
--- -- Name: patient_wounds patient_wounds_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."device_functioning" IS 'Is the device patent and functioning properly?';
 
-ALTER TABLE ONLY public.patient_wounds
-    ADD CONSTRAINT patient_wounds_pkey PRIMARY KEY (id);
 
--- -- Name: patients patients_patient_id_key; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patients
-    ADD CONSTRAINT patients_patient_id_key UNIQUE (patient_id);
+COMMENT ON COLUMN "public"."wound_assessments"."output_amount_ml" IS 'Amount of drainage from device (for drains, tubes, catheters)';
 
--- -- Name: patients patients_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patients
-    ADD CONSTRAINT patients_pkey PRIMARY KEY (id);
 
--- -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."drainage_type" IS 'Array of drainage types: serous, sanguineous, serosanguineous, purulent, none';
 
-ALTER TABLE ONLY public.profiles
-    ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
 
--- -- Name: program_announcements program_announcements_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.program_announcements
-    ADD CONSTRAINT program_announcements_pkey PRIMARY KEY (id);
+COMMENT ON COLUMN "public"."wound_assessments"."drainage_amount" IS 'Amount of drainage: none, scant, small, moderate, large, copious';
 
--- -- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_pkey PRIMARY KEY (id);
 
--- -- Name: programs programs_tenant_code_unique; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."wound_length_cm" IS 'Wound length in centimeters';
 
-ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_tenant_code_unique UNIQUE (tenant_id, code);
 
--- -- Name: scheduled_simulations scheduled_simulations_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.scheduled_simulations
-    ADD CONSTRAINT scheduled_simulations_pkey PRIMARY KEY (id);
+COMMENT ON COLUMN "public"."wound_assessments"."wound_width_cm" IS 'Wound width in centimeters';
 
--- -- Name: simulation_active simulation_active_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_active
-    ADD CONSTRAINT simulation_active_pkey PRIMARY KEY (id);
 
--- -- Name: simulation_activity_log simulation_activity_log_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."wound_depth_cm" IS 'Wound depth in centimeters';
 
-ALTER TABLE ONLY public.simulation_activity_log
-    ADD CONSTRAINT simulation_activity_log_pkey PRIMARY KEY (id);
 
--- -- Name: simulation_history simulation_history_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_history
-    ADD CONSTRAINT simulation_history_pkey PRIMARY KEY (id);
+COMMENT ON COLUMN "public"."wound_assessments"."wound_appearance" IS 'Wound appearance: clean, granulating, epithelializing, slough, eschar, necrotic, infected';
 
--- -- Name: simulation_participants simulation_participants_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_participants
-    ADD CONSTRAINT simulation_participants_pkey PRIMARY KEY (id);
 
--- -- Name: simulation_table_config simulation_table_config_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."notes" IS 'Additional notes or observations about the assessment';
 
-ALTER TABLE ONLY public.simulation_table_config
-    ADD CONSTRAINT simulation_table_config_pkey PRIMARY KEY (id);
 
--- -- Name: simulation_table_config simulation_table_config_table_name_key; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_table_config
-    ADD CONSTRAINT simulation_table_config_table_name_key UNIQUE (table_name);
+COMMENT ON COLUMN "public"."wound_assessments"."assessment_data" IS 'Device/wound-specific assessment fields stored as JSONB (e.g., IV site details, feeding tube residuals)';
 
--- -- Name: simulation_template_versions simulation_template_versions_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_template_versions
-    ADD CONSTRAINT simulation_template_versions_pkey PRIMARY KEY (id);
 
--- -- Name: simulation_template_versions simulation_template_versions_template_id_version_key; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_assessments"."device_type" IS 'Cached device type from devices table for quick filtering';
 
-ALTER TABLE ONLY public.simulation_template_versions
-    ADD CONSTRAINT simulation_template_versions_template_id_version_key UNIQUE (template_id, version);
 
--- -- Name: simulation_templates simulation_templates_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_templates
-    ADD CONSTRAINT simulation_templates_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."wound_treatments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "wound_assessment_id" "uuid",
+    "treatment_date" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "treatment_type" "text" NOT NULL,
+    "products_used" "text" NOT NULL,
+    "procedure_notes" "text" NOT NULL,
+    "administered_by" "text" NOT NULL,
+    "administered_by_id" "uuid" NOT NULL,
+    "administered_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "next_treatment_due" timestamp with time zone,
+    "photos_after" "text"[],
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
 
--- -- Name: student_roster student_roster_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.student_roster
-    ADD CONSTRAINT student_roster_pkey PRIMARY KEY (id);
+ALTER TABLE "public"."wound_treatments" OWNER TO "postgres";
 
--- -- Name: student_roster student_roster_unique_student_number; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.student_roster
-    ADD CONSTRAINT student_roster_unique_student_number UNIQUE (student_number);
+COMMENT ON TABLE "public"."wound_treatments" IS 'Tracks wound treatment history, procedures, and outcomes';
 
--- -- Name: student_roster student_roster_unique_user_program; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.student_roster
-    ADD CONSTRAINT student_roster_unique_user_program UNIQUE (user_id, program_id);
 
--- -- Name: system_logs system_logs_pkey; Type: CONSTRAINT; Schema: public
+COMMENT ON COLUMN "public"."wound_treatments"."photos_after" IS 'Array of Supabase Storage URLs for post-treatment photos';
 
-ALTER TABLE ONLY public.system_logs
-    ADD CONSTRAINT system_logs_pkey PRIMARY KEY (id);
 
--- -- Name: tenant_users tenant_users_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.tenant_users
-    ADD CONSTRAINT tenant_users_pkey PRIMARY KEY (id);
+CREATE TABLE IF NOT EXISTS "public"."wounds" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "patient_id" "uuid" NOT NULL,
+    "location_id" "uuid" NOT NULL,
+    "wound_type" "public"."wound_type_enum" NOT NULL,
+    "peri_wound_temperature" "text",
+    "wound_length_cm" numeric,
+    "wound_width_cm" numeric,
+    "wound_depth_cm" numeric,
+    "wound_description" "text",
+    "drainage_description" "text"[] DEFAULT '{}'::"text"[],
+    "drainage_consistency" "text"[] DEFAULT '{}'::"text"[],
+    "wound_odor" "text"[] DEFAULT '{}'::"text"[],
+    "drainage_amount" "text",
+    "wound_edges" "text",
+    "closure" "text",
+    "suture_staple_line" "text",
+    "sutures_intact" "text",
+    "notes" "text",
+    "created_by" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "entered_by" "text"
+);
 
--- -- Name: tenant_users tenant_users_tenant_id_user_id_key; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.tenant_users
-    ADD CONSTRAINT tenant_users_tenant_id_user_id_key UNIQUE (tenant_id, user_id);
+ALTER TABLE "public"."wounds" OWNER TO "postgres";
 
--- -- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.tenants
-    ADD CONSTRAINT tenants_pkey PRIMARY KEY (id);
+COMMENT ON COLUMN "public"."wounds"."entered_by" IS 'Name of the nurse/clinician who entered/documented this wound';
 
--- -- Name: simulation_participants unique_participant; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_participants
-    ADD CONSTRAINT unique_participant UNIQUE (simulation_id, user_id);
 
--- -- Name: tenants unique_subdomain; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_table_config" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."simulation_table_config_id_seq"'::"regclass");
 
-ALTER TABLE ONLY public.tenants
-    ADD CONSTRAINT unique_subdomain UNIQUE (subdomain);
 
--- -- Name: simulation_templates unique_template_name; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_templates
-    ADD CONSTRAINT unique_template_name UNIQUE (name);
+ALTER TABLE ONLY "public"."audit_logs"
+    ADD CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id");
 
--- -- Name: user_profiles user_profiles_email_key; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_profiles
-    ADD CONSTRAINT user_profiles_email_key UNIQUE (email);
 
--- -- Name: user_profiles user_profiles_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."avatar_locations"
+    ADD CONSTRAINT "avatar_locations_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.user_profiles
-    ADD CONSTRAINT user_profiles_pkey PRIMARY KEY (id);
 
--- -- Name: user_programs user_programs_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_programs
-    ADD CONSTRAINT user_programs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY "public"."bowel_records"
+    ADD CONSTRAINT "bowel_records_pkey" PRIMARY KEY ("id");
 
--- -- Name: user_programs user_programs_unique; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_programs
-    ADD CONSTRAINT user_programs_unique UNIQUE (user_id, program_id);
 
--- -- Name: user_sessions user_sessions_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."contact_submissions"
+    ADD CONSTRAINT "contact_submissions_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.user_sessions
-    ADD CONSTRAINT user_sessions_pkey PRIMARY KEY (id);
 
--- -- Name: wound_assessments wound_assessments_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_assessments
-    ADD CONSTRAINT wound_assessments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY "public"."device_assessments"
+    ADD CONSTRAINT "device_assessments_pkey" PRIMARY KEY ("id");
 
--- -- Name: wound_treatments wound_treatments_pkey; Type: CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_treatments
-    ADD CONSTRAINT wound_treatments_pkey PRIMARY KEY (id);
 
--- -- Name: wounds wounds_pkey; Type: CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."devices"
+    ADD CONSTRAINT "devices_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.wounds
-    ADD CONSTRAINT wounds_pkey PRIMARY KEY (id);
 
 
--- ============================================================
--- FK CONSTRAINTS
--- ============================================================
+ALTER TABLE ONLY "public"."diabetic_records"
+    ADD CONSTRAINT "diabetic_records_pkey" PRIMARY KEY ("id");
 
--- -- Name: audit_logs audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.audit_logs
-    ADD CONSTRAINT audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
 
--- -- Name: avatar_locations avatar_locations_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."doctors_orders"
+    ADD CONSTRAINT "doctors_orders_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.avatar_locations
-    ADD CONSTRAINT avatar_locations_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: avatar_locations avatar_locations_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.avatar_locations
-    ADD CONSTRAINT avatar_locations_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."handover_notes"
+    ADD CONSTRAINT "handover_notes_pkey" PRIMARY KEY ("id");
 
--- -- Name: avatar_locations avatar_locations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.avatar_locations
-    ADD CONSTRAINT avatar_locations_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: backup_audit_log backup_audit_log_user_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."kb_walkthroughs"
+    ADD CONSTRAINT "kb_walkthroughs_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.backup_audit_log
-    ADD CONSTRAINT backup_audit_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: backup_files backup_files_backup_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.backup_files
-    ADD CONSTRAINT backup_files_backup_id_fkey FOREIGN KEY (backup_id) REFERENCES public.backup_metadata(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."lab_ack_events"
+    ADD CONSTRAINT "lab_ack_events_pkey" PRIMARY KEY ("id");
 
--- -- Name: backup_metadata backup_metadata_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.backup_metadata
-    ADD CONSTRAINT backup_metadata_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: device_assessments device_assessments_device_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."lab_orders"
+    ADD CONSTRAINT "lab_orders_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.device_assessments
-    ADD CONSTRAINT device_assessments_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id) ON DELETE CASCADE;
 
--- -- Name: device_assessments device_assessments_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.device_assessments
-    ADD CONSTRAINT device_assessments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."lab_panels"
+    ADD CONSTRAINT "lab_panels_pkey" PRIMARY KEY ("id");
 
--- -- Name: devices devices_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.devices
-    ADD CONSTRAINT devices_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: devices devices_location_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."lab_result_refs"
+    ADD CONSTRAINT "lab_result_refs_pkey" PRIMARY KEY ("test_code");
 
-ALTER TABLE ONLY public.devices
-    ADD CONSTRAINT devices_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.avatar_locations(id) ON DELETE CASCADE;
 
--- -- Name: devices devices_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.devices
-    ADD CONSTRAINT devices_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."lab_results"
+    ADD CONSTRAINT "lab_results_pkey" PRIMARY KEY ("id");
 
--- -- Name: devices devices_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.devices
-    ADD CONSTRAINT devices_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: diabetic_records diabetic_records_recorded_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."medication_administrations"
+    ADD CONSTRAINT "medication_administrations_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.diabetic_records
-    ADD CONSTRAINT diabetic_records_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.user_profiles(id);
 
--- -- Name: diabetic_records diabetic_records_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.diabetic_records
-    ADD CONSTRAINT diabetic_records_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."medications_catalog"
+    ADD CONSTRAINT "medications_catalog_barcode_unique" UNIQUE ("barcode");
 
--- -- Name: doctors_orders doctors_orders_acknowledged_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.doctors_orders
-    ADD CONSTRAINT doctors_orders_acknowledged_by_fkey FOREIGN KEY (acknowledged_by) REFERENCES public.user_profiles(id);
 
--- -- Name: doctors_orders doctors_orders_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."medications_catalog"
+    ADD CONSTRAINT "medications_catalog_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.doctors_orders
-    ADD CONSTRAINT doctors_orders_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id);
 
--- -- Name: doctors_orders doctors_orders_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.doctors_orders
-    ADD CONSTRAINT doctors_orders_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."multi_tenant_admins"
+    ADD CONSTRAINT "multi_tenant_admins_pkey" PRIMARY KEY ("id");
 
--- -- Name: doctors_orders doctors_orders_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.doctors_orders
-    ADD CONSTRAINT doctors_orders_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: doctors_orders doctors_orders_updated_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."multi_tenant_admins"
+    ADD CONSTRAINT "multi_tenant_admins_user_id_key" UNIQUE ("user_id");
 
-ALTER TABLE ONLY public.doctors_orders
-    ADD CONSTRAINT doctors_orders_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.user_profiles(id);
 
--- -- Name: user_sessions fk_user_sessions_tenant; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_sessions
-    ADD CONSTRAINT fk_user_sessions_tenant FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patient_admission_records"
+    ADD CONSTRAINT "patient_admission_records_patient_id_key" UNIQUE ("patient_id");
 
--- -- Name: handover_notes handover_notes_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.handover_notes
-    ADD CONSTRAINT handover_notes_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: lab_ack_events lab_ack_events_ack_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_admission_records"
+    ADD CONSTRAINT "patient_admission_records_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.lab_ack_events
-    ADD CONSTRAINT lab_ack_events_ack_by_fkey FOREIGN KEY (ack_by) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
 
--- -- Name: lab_ack_events lab_ack_events_panel_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_ack_events
-    ADD CONSTRAINT lab_ack_events_panel_id_fkey FOREIGN KEY (panel_id) REFERENCES public.lab_panels(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patient_advanced_directives"
+    ADD CONSTRAINT "patient_advanced_directives_patient_id_key" UNIQUE ("patient_id");
 
--- -- Name: lab_ack_events lab_ack_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_ack_events
-    ADD CONSTRAINT lab_ack_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: lab_orders lab_orders_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_advanced_directives"
+    ADD CONSTRAINT "patient_advanced_directives_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.lab_orders
-    ADD CONSTRAINT lab_orders_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: lab_orders lab_orders_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_orders
-    ADD CONSTRAINT lab_orders_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patient_alerts"
+    ADD CONSTRAINT "patient_alerts_pkey" PRIMARY KEY ("id");
 
--- -- Name: lab_orders lab_orders_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_orders
-    ADD CONSTRAINT lab_orders_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: lab_orders lab_orders_verified_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_bbit_entries"
+    ADD CONSTRAINT "patient_bbit_entries_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.lab_orders
-    ADD CONSTRAINT lab_orders_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES auth.users(id);
 
--- -- Name: lab_panels lab_panels_entered_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_panels
-    ADD CONSTRAINT lab_panels_entered_by_fkey FOREIGN KEY (entered_by) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."patient_images"
+    ADD CONSTRAINT "patient_images_pkey" PRIMARY KEY ("id");
 
--- -- Name: lab_panels lab_panels_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_panels
-    ADD CONSTRAINT lab_panels_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: lab_results lab_results_ack_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_intake_output_events"
+    ADD CONSTRAINT "patient_intake_output_events_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.lab_results
-    ADD CONSTRAINT lab_results_ack_by_fkey FOREIGN KEY (ack_by) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
 
--- -- Name: lab_results lab_results_entered_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_results
-    ADD CONSTRAINT lab_results_entered_by_fkey FOREIGN KEY (entered_by) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."patient_medications"
+    ADD CONSTRAINT "patient_medications_pkey" PRIMARY KEY ("id");
 
--- -- Name: lab_results lab_results_panel_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.lab_results
-    ADD CONSTRAINT lab_results_panel_id_fkey FOREIGN KEY (panel_id) REFERENCES public.lab_panels(id) ON DELETE CASCADE;
 
--- -- Name: lab_results lab_results_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_medications_templates"
+    ADD CONSTRAINT "patient_medications_templates_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.lab_results
-    ADD CONSTRAINT lab_results_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: medication_administrations medication_administrations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.medication_administrations
-    ADD CONSTRAINT medication_administrations_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
+ALTER TABLE ONLY "public"."patient_neuro_assessments"
+    ADD CONSTRAINT "patient_neuro_assessments_pkey" PRIMARY KEY ("id");
 
--- -- Name: multi_tenant_admins multi_tenant_admins_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.multi_tenant_admins
-    ADD CONSTRAINT multi_tenant_admins_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id) ON DELETE CASCADE;
 
--- -- Name: patient_alerts patient_alerts_acknowledged_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_newborn_assessments"
+    ADD CONSTRAINT "patient_newborn_assessments_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.patient_alerts
-    ADD CONSTRAINT patient_alerts_acknowledged_by_fkey FOREIGN KEY (acknowledged_by) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
 
--- -- Name: patient_alerts patient_alerts_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_alerts
-    ADD CONSTRAINT patient_alerts_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patient_newborn_assessments"
+    ADD CONSTRAINT "patient_newborn_assessments_unique" UNIQUE ("patient_id", "tenant_id");
 
--- -- Name: patient_alerts patient_alerts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_alerts
-    ADD CONSTRAINT patient_alerts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
--- -- Name: patient_bbit_entries patient_bbit_entries_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_notes"
+    ADD CONSTRAINT "patient_notes_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.patient_bbit_entries
-    ADD CONSTRAINT patient_bbit_entries_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: patient_images patient_images_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_images
-    ADD CONSTRAINT patient_images_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patient_system_assessments"
+    ADD CONSTRAINT "patient_system_assessments_pkey" PRIMARY KEY ("id");
 
--- -- Name: patient_images patient_images_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_images
-    ADD CONSTRAINT patient_images_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
--- -- Name: patient_images patient_images_uploaded_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_templates"
+    ADD CONSTRAINT "patient_templates_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.patient_images
-    ADD CONSTRAINT patient_images_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.user_profiles(id);
 
--- -- Name: patient_intake_output_events patient_intake_output_events_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_intake_output_events
-    ADD CONSTRAINT patient_intake_output_events_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id);
+ALTER TABLE ONLY "public"."patient_vitals"
+    ADD CONSTRAINT "patient_vitals_pkey" PRIMARY KEY ("id");
 
--- -- Name: patient_intake_output_events patient_intake_output_events_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_intake_output_events
-    ADD CONSTRAINT patient_intake_output_events_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: patient_intake_output_events patient_intake_output_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patient_vitals_templates"
+    ADD CONSTRAINT "patient_vitals_templates_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.patient_intake_output_events
-    ADD CONSTRAINT patient_intake_output_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: patient_medications patient_medications_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_medications
-    ADD CONSTRAINT patient_medications_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patient_wounds"
+    ADD CONSTRAINT "patient_wounds_pkey" PRIMARY KEY ("id");
 
--- -- Name: patient_medications_templates patient_medications_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_medications_templates
-    ADD CONSTRAINT patient_medications_templates_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: patient_medications patient_medications_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."patients"
+    ADD CONSTRAINT "patients_patient_id_key" UNIQUE ("patient_id");
 
-ALTER TABLE ONLY public.patient_medications
-    ADD CONSTRAINT patient_medications_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id);
 
--- -- Name: patient_neuro_assessments patient_neuro_assessments_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_neuro_assessments
-    ADD CONSTRAINT patient_neuro_assessments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."patients"
+    ADD CONSTRAINT "patients_pkey" PRIMARY KEY ("id");
 
--- -- Name: patient_newborn_assessments patient_newborn_assessments_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_newborn_assessments
-    ADD CONSTRAINT patient_newborn_assessments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: patient_notes patient_notes_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."profiles"
+    ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.patient_notes
-    ADD CONSTRAINT patient_notes_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: patient_notes patient_notes_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_notes
-    ADD CONSTRAINT patient_notes_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."programs"
+    ADD CONSTRAINT "programs_pkey" PRIMARY KEY ("id");
 
--- -- Name: patient_notes patient_notes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_notes
-    ADD CONSTRAINT patient_notes_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: patient_vitals patient_vitals_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."programs"
+    ADD CONSTRAINT "programs_tenant_code_unique" UNIQUE ("tenant_id", "code");
 
-ALTER TABLE ONLY public.patient_vitals
-    ADD CONSTRAINT patient_vitals_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: patient_vitals_templates patient_vitals_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_vitals_templates
-    ADD CONSTRAINT patient_vitals_templates_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
+ALTER TABLE ONLY "public"."simulation_active"
+    ADD CONSTRAINT "simulation_active_pkey" PRIMARY KEY ("id");
 
--- -- Name: patient_vitals patient_vitals_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patient_vitals
-    ADD CONSTRAINT patient_vitals_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE SET NULL;
 
--- -- Name: patient_wounds patient_wounds_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_activity_log"
+    ADD CONSTRAINT "simulation_activity_log_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.patient_wounds
-    ADD CONSTRAINT patient_wounds_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: patients patients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.patients
-    ADD CONSTRAINT patients_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."simulation_auto_students"
+    ADD CONSTRAINT "simulation_auto_students_pkey" PRIMARY KEY ("id");
 
--- -- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.profiles
-    ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: program_announcements program_announcements_author_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_history"
+    ADD CONSTRAINT "simulation_history_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.program_announcements
-    ADD CONSTRAINT program_announcements_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth.users(id);
 
--- -- Name: program_announcements program_announcements_program_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.program_announcements
-    ADD CONSTRAINT program_announcements_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."simulation_participants"
+    ADD CONSTRAINT "simulation_participants_pkey" PRIMARY KEY ("id");
 
--- -- Name: programs programs_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: programs programs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_table_config"
+    ADD CONSTRAINT "simulation_table_config_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: scheduled_simulations scheduled_simulations_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.scheduled_simulations
-    ADD CONSTRAINT scheduled_simulations_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
+ALTER TABLE ONLY "public"."simulation_table_config"
+    ADD CONSTRAINT "simulation_table_config_table_name_key" UNIQUE ("table_name");
 
--- -- Name: scheduled_simulations scheduled_simulations_instructor_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.scheduled_simulations
-    ADD CONSTRAINT scheduled_simulations_instructor_id_fkey FOREIGN KEY (instructor_id) REFERENCES auth.users(id);
 
--- -- Name: scheduled_simulations scheduled_simulations_launched_simulation_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_template_states"
+    ADD CONSTRAINT "simulation_template_states_label_unique" UNIQUE ("template_id", "label");
 
-ALTER TABLE ONLY public.scheduled_simulations
-    ADD CONSTRAINT scheduled_simulations_launched_simulation_id_fkey FOREIGN KEY (launched_simulation_id) REFERENCES public.simulation_active(id);
 
--- -- Name: scheduled_simulations scheduled_simulations_program_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.scheduled_simulations
-    ADD CONSTRAINT scheduled_simulations_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."simulation_template_states"
+    ADD CONSTRAINT "simulation_template_states_pkey" PRIMARY KEY ("id");
 
--- -- Name: scheduled_simulations scheduled_simulations_template_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.scheduled_simulations
-    ADD CONSTRAINT scheduled_simulations_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.simulation_templates(id) ON DELETE CASCADE;
 
--- -- Name: simulation_active simulation_active_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_templates"
+    ADD CONSTRAINT "simulation_templates_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.simulation_active
-    ADD CONSTRAINT simulation_active_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: simulation_active simulation_active_template_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_active
-    ADD CONSTRAINT simulation_active_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.simulation_templates(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY "public"."student_roster"
+    ADD CONSTRAINT "student_roster_pkey" PRIMARY KEY ("id");
 
--- -- Name: simulation_active simulation_active_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_active
-    ADD CONSTRAINT simulation_active_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: simulation_activity_log simulation_activity_log_simulation_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."student_roster"
+    ADD CONSTRAINT "student_roster_unique_student_number" UNIQUE ("student_number");
 
-ALTER TABLE ONLY public.simulation_activity_log
-    ADD CONSTRAINT simulation_activity_log_simulation_id_fkey FOREIGN KEY (simulation_id) REFERENCES public.simulation_active(id) ON DELETE CASCADE;
 
--- -- Name: simulation_activity_log simulation_activity_log_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_activity_log
-    ADD CONSTRAINT simulation_activity_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id);
+ALTER TABLE ONLY "public"."student_roster"
+    ADD CONSTRAINT "student_roster_unique_user_program" UNIQUE ("user_id", "program_id");
 
--- -- Name: simulation_history simulation_history_archived_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_history
-    ADD CONSTRAINT simulation_history_archived_by_fkey FOREIGN KEY (archived_by) REFERENCES public.user_profiles(id);
 
--- -- Name: simulation_history simulation_history_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."system_logs"
+    ADD CONSTRAINT "system_logs_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.simulation_history
-    ADD CONSTRAINT simulation_history_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: simulation_history simulation_history_template_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_history
-    ADD CONSTRAINT simulation_history_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.simulation_templates(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."tenant_users"
+    ADD CONSTRAINT "tenant_users_pkey" PRIMARY KEY ("id");
 
--- -- Name: simulation_participants simulation_participants_granted_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_participants
-    ADD CONSTRAINT simulation_participants_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES auth.users(id);
 
--- -- Name: simulation_participants simulation_participants_simulation_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."tenant_users"
+    ADD CONSTRAINT "tenant_users_tenant_id_user_id_key" UNIQUE ("tenant_id", "user_id");
 
-ALTER TABLE ONLY public.simulation_participants
-    ADD CONSTRAINT simulation_participants_simulation_id_fkey FOREIGN KEY (simulation_id) REFERENCES public.simulation_active(id) ON DELETE CASCADE;
 
--- -- Name: simulation_participants simulation_participants_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_participants
-    ADD CONSTRAINT simulation_participants_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
 
--- -- Name: simulation_template_versions simulation_template_versions_saved_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_template_versions
-    ADD CONSTRAINT simulation_template_versions_saved_by_fkey FOREIGN KEY (saved_by) REFERENCES auth.users(id);
 
--- -- Name: simulation_template_versions simulation_template_versions_template_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."tr_active_living_profiles"
+    ADD CONSTRAINT "tr_active_living_profiles_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.simulation_template_versions
-    ADD CONSTRAINT simulation_template_versions_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.simulation_templates(id) ON DELETE CASCADE;
 
--- -- Name: simulation_templates simulation_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_templates
-    ADD CONSTRAINT simulation_templates_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
+ALTER TABLE ONLY "public"."tr_assessment_scores"
+    ADD CONSTRAINT "tr_assessment_scores_pkey" PRIMARY KEY ("id");
 
--- -- Name: simulation_templates simulation_templates_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.simulation_templates
-    ADD CONSTRAINT simulation_templates_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: student_roster student_roster_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."tr_interdisciplinary_interps"
+    ADD CONSTRAINT "tr_interdisciplinary_interps_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.student_roster
-    ADD CONSTRAINT student_roster_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: student_roster student_roster_program_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.student_roster
-    ADD CONSTRAINT student_roster_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."tr_progress_notes"
+    ADD CONSTRAINT "tr_progress_notes_pkey" PRIMARY KEY ("id");
 
--- -- Name: student_roster student_roster_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.student_roster
-    ADD CONSTRAINT student_roster_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: system_logs system_logs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."tr_screening_entries"
+    ADD CONSTRAINT "tr_screening_entries_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.system_logs
-    ADD CONSTRAINT system_logs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE SET NULL;
 
--- -- Name: system_logs system_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.system_logs
-    ADD CONSTRAINT system_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."tr_treatment_plan_rows"
+    ADD CONSTRAINT "tr_treatment_plan_rows_pkey" PRIMARY KEY ("id");
 
--- -- Name: tenant_users tenant_users_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.tenant_users
-    ADD CONSTRAINT tenant_users_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: tenant_users tenant_users_user_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_participants"
+    ADD CONSTRAINT "unique_participant" UNIQUE ("simulation_id", "user_id");
 
-ALTER TABLE ONLY public.tenant_users
-    ADD CONSTRAINT tenant_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id) ON DELETE CASCADE;
 
--- -- Name: tenants tenants_admin_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.tenants
-    ADD CONSTRAINT tenants_admin_user_id_fkey FOREIGN KEY (admin_user_id) REFERENCES public.user_profiles(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "unique_subdomain" UNIQUE ("subdomain");
 
--- -- Name: tenants tenants_parent_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.tenants
-    ADD CONSTRAINT tenants_parent_tenant_id_fkey FOREIGN KEY (parent_tenant_id) REFERENCES public.tenants(id);
 
--- -- Name: tenants tenants_program_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."simulation_templates"
+    ADD CONSTRAINT "unique_template_name" UNIQUE ("name");
 
-ALTER TABLE ONLY public.tenants
-    ADD CONSTRAINT tenants_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id) ON DELETE CASCADE;
 
--- -- Name: user_profiles user_profiles_default_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_profiles
-    ADD CONSTRAINT user_profiles_default_tenant_id_fkey FOREIGN KEY (default_tenant_id) REFERENCES public.tenants(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."user_profiles"
+    ADD CONSTRAINT "user_profiles_email_key" UNIQUE ("email");
 
--- -- Name: user_profiles user_profiles_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_profiles
-    ADD CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: user_programs user_programs_assigned_by_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."user_profiles"
+    ADD CONSTRAINT "user_profiles_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.user_programs
-    ADD CONSTRAINT user_programs_assigned_by_fkey FOREIGN KEY (assigned_by) REFERENCES auth.users(id);
 
--- -- Name: user_programs user_programs_program_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_programs
-    ADD CONSTRAINT user_programs_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_pkey" PRIMARY KEY ("id");
 
--- -- Name: user_programs user_programs_user_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.user_programs
-    ADD CONSTRAINT user_programs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: user_sessions user_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_unique" UNIQUE ("user_id", "program_id");
 
-ALTER TABLE ONLY public.user_sessions
-    ADD CONSTRAINT user_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- -- Name: wound_assessments wound_assessments_assessor_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_assessments
-    ADD CONSTRAINT wound_assessments_assessor_id_fkey FOREIGN KEY (assessor_id) REFERENCES auth.users(id);
+ALTER TABLE ONLY "public"."user_sessions"
+    ADD CONSTRAINT "user_sessions_pkey" PRIMARY KEY ("id");
 
--- -- Name: wound_assessments wound_assessments_device_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_assessments
-    ADD CONSTRAINT wound_assessments_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id) ON DELETE CASCADE;
 
--- -- Name: wound_assessments wound_assessments_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."wound_assessments"
+    ADD CONSTRAINT "wound_assessments_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.wound_assessments
-    ADD CONSTRAINT wound_assessments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: wound_assessments wound_assessments_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_assessments
-    ADD CONSTRAINT wound_assessments_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."wound_treatments"
+    ADD CONSTRAINT "wound_treatments_pkey" PRIMARY KEY ("id");
 
--- -- Name: wound_assessments wound_assessments_wound_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_assessments
-    ADD CONSTRAINT wound_assessments_wound_id_fkey FOREIGN KEY (wound_id) REFERENCES public.wounds(id) ON DELETE CASCADE;
 
--- -- Name: wound_treatments wound_treatments_administered_by_id_fkey; Type: FK CONSTRAINT; Schema: public
+ALTER TABLE ONLY "public"."wounds"
+    ADD CONSTRAINT "wounds_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY public.wound_treatments
-    ADD CONSTRAINT wound_treatments_administered_by_id_fkey FOREIGN KEY (administered_by_id) REFERENCES auth.users(id);
 
--- -- Name: wound_treatments wound_treatments_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_treatments
-    ADD CONSTRAINT wound_treatments_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
+CREATE INDEX "idx_activity_log_simulation" ON "public"."simulation_activity_log" USING "btree" ("simulation_id", "occurred_at" DESC);
 
--- -- Name: wound_treatments wound_treatments_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wound_treatments
-    ADD CONSTRAINT wound_treatments_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
--- -- Name: wounds wounds_created_by_fkey; Type: FK CONSTRAINT; Schema: public
+CREATE INDEX "idx_activity_log_user" ON "public"."simulation_activity_log" USING "btree" ("user_id", "occurred_at" DESC);
 
-ALTER TABLE ONLY public.wounds
-    ADD CONSTRAINT wounds_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
--- -- Name: wounds wounds_location_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wounds
-    ADD CONSTRAINT wounds_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.avatar_locations(id) ON DELETE CASCADE;
+CREATE INDEX "idx_advanced_directives_student_name" ON "public"."patient_advanced_directives" USING "btree" ("student_name");
 
--- -- Name: wounds wounds_patient_id_fkey; Type: FK CONSTRAINT; Schema: public
 
-ALTER TABLE ONLY public.wounds
-    ADD CONSTRAINT wounds_patient_id_fkey FOREIGN KEY (patient_id) REFERENCES public.patients(id) ON DELETE CASCADE;
 
--- -- Name: wounds wounds_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public
+CREATE INDEX "idx_audit_logs_action" ON "public"."audit_logs" USING "btree" ("action");
 
-ALTER TABLE ONLY public.wounds
-    ADD CONSTRAINT wounds_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id) ON DELETE CASCADE;
 
 
--- ============================================================
--- POLICYS
--- ============================================================
+CREATE INDEX "idx_audit_logs_target_id" ON "public"."audit_logs" USING "btree" ("target_id");
 
--- -- Name: tenants Allow public read access to tenant branding; Type: POLICY; Schema: public
 
-CREATE POLICY "Allow public read access to tenant branding" ON public.tenants FOR SELECT USING (true);
 
--- -- Name: contact_submissions Anyone can submit contact form; Type: POLICY; Schema: public
+CREATE INDEX "idx_audit_logs_timestamp" ON "public"."audit_logs" USING "btree" ("timestamp");
 
-CREATE POLICY "Anyone can submit contact form" ON public.contact_submissions FOR INSERT TO anon, authenticated WITH CHECK (true);
 
--- -- Name: wound_assessments Authenticated users can delete wound assessments; Type: POLICY; Schema: public
 
-CREATE POLICY "Authenticated users can delete wound assessments" ON public.wound_assessments FOR DELETE USING ((( SELECT ( SELECT auth.role() AS role) AS role) = 'authenticated'::text));
+CREATE INDEX "idx_audit_logs_user_id" ON "public"."audit_logs" USING "btree" ("user_id");
 
--- -- Name: audit_logs Authenticated users can insert audit logs; Type: POLICY; Schema: public
 
-CREATE POLICY "Authenticated users can insert audit logs" ON public.audit_logs FOR INSERT WITH CHECK ((user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
 
--- -- Name: wound_assessments Authenticated users can insert wound assessments; Type: POLICY; Schema: public
+CREATE INDEX "idx_avatar_locations_patient" ON "public"."avatar_locations" USING "btree" ("patient_id");
 
-CREATE POLICY "Authenticated users can insert wound assessments" ON public.wound_assessments FOR INSERT WITH CHECK ((( SELECT ( SELECT auth.role() AS role) AS role) = 'authenticated'::text));
 
--- -- Name: wound_assessments Authenticated users can update wound assessments; Type: POLICY; Schema: public
 
-CREATE POLICY "Authenticated users can update wound assessments" ON public.wound_assessments FOR UPDATE USING ((( SELECT ( SELECT auth.role() AS role) AS role) = 'authenticated'::text));
+CREATE INDEX "idx_avatar_locations_tenant" ON "public"."avatar_locations" USING "btree" ("tenant_id");
 
--- -- Name: wound_assessments Authenticated users can view wound assessments; Type: POLICY; Schema: public
 
-CREATE POLICY "Authenticated users can view wound assessments" ON public.wound_assessments FOR SELECT USING ((( SELECT ( SELECT auth.role() AS role) AS role) = 'authenticated'::text));
 
--- -- Name: diabetic_records Authorized users can delete diabetic records within tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_bbit_patient" ON "public"."patient_bbit_entries" USING "btree" ("patient_id");
 
-CREATE POLICY "Authorized users can delete diabetic records within tenant" ON public.diabetic_records FOR DELETE USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'nurse'::public.user_role])) AND (diabetic_records.tenant_id = diabetic_records.tenant_id)))));
 
--- -- Name: multi_tenant_admins Multi-tenant admins can manage multi_tenant_admins; Type: POLICY; Schema: public
 
-CREATE POLICY "Multi-tenant admins can manage multi_tenant_admins" ON public.multi_tenant_admins USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))) OR (user_id = ( SELECT ( SELECT auth.uid() AS uid) AS uid))));
+CREATE INDEX "idx_bbit_recorded_at" ON "public"."patient_bbit_entries" USING "btree" ("patient_id", "recorded_at");
 
--- -- Name: contact_submissions Super admins can update contact submissions; Type: POLICY; Schema: public
 
-CREATE POLICY "Super admins can update contact submissions" ON public.contact_submissions FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
 
--- -- Name: contact_submissions Super admins can view contact submissions; Type: POLICY; Schema: public
+CREATE INDEX "idx_bbit_tenant" ON "public"."patient_bbit_entries" USING "btree" ("tenant_id");
 
-CREATE POLICY "Super admins can view contact submissions" ON public.contact_submissions FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
 
--- -- Name: wound_treatments Tenant isolation for wound treatments; Type: POLICY; Schema: public
 
-CREATE POLICY "Tenant isolation for wound treatments" ON public.wound_treatments USING ((tenant_id = ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)) AND (tenant_users.is_active = true)))));
+CREATE INDEX "idx_bowel_records_patient_id" ON "public"."bowel_records" USING "btree" ("patient_id");
 
--- -- Name: handover_notes Users can create handover notes; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can create handover notes" ON public.handover_notes FOR INSERT WITH CHECK ((( SELECT ( SELECT auth.role() AS role) AS role) = 'authenticated'::text));
 
--- -- Name: patient_admission_records Users can delete admission records for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_bowel_records_recorded_at" ON "public"."bowel_records" USING "btree" ("recorded_at" DESC);
 
-CREATE POLICY "Users can delete admission records for their tenant" ON public.patient_admission_records FOR DELETE USING ((tenant_id = ( SELECT patient_admission_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: patient_advanced_directives Users can delete advanced directives for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can delete advanced directives for their tenant" ON public.patient_advanced_directives FOR DELETE USING ((tenant_id = ( SELECT patient_advanced_directives.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
+CREATE INDEX "idx_bowel_records_student_name" ON "public"."bowel_records" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
 
--- -- Name: bowel_records Users can delete bowel records for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can delete bowel records for their tenant" ON public.bowel_records FOR DELETE USING ((tenant_id = ( SELECT bowel_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: patient_notes Users can delete notes for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_bowel_records_tenant_id" ON "public"."bowel_records" USING "btree" ("tenant_id");
 
-CREATE POLICY "Users can delete notes for their tenant" ON public.patient_notes FOR DELETE USING ((tenant_id = ( SELECT patient_notes.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: handover_notes Users can delete their own new handover notes; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can delete their own new handover notes" ON public.handover_notes FOR DELETE USING ((((( SELECT ( SELECT auth.uid() AS uid) AS uid))::text = (created_by)::text) AND (created_at > (now() - '01:00:00'::interval))));
+CREATE INDEX "idx_contact_submissions_email" ON "public"."contact_submissions" USING "btree" ("email");
 
--- -- Name: patient_admission_records Users can insert admission records for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can insert admission records for their tenant" ON public.patient_admission_records FOR INSERT WITH CHECK ((tenant_id = ( SELECT patient_admission_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: patient_advanced_directives Users can insert advanced directives for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_contact_submissions_processed" ON "public"."contact_submissions" USING "btree" ("processed") WHERE (NOT "processed");
 
-CREATE POLICY "Users can insert advanced directives for their tenant" ON public.patient_advanced_directives FOR INSERT WITH CHECK ((tenant_id = ( SELECT patient_advanced_directives.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: bowel_records Users can insert bowel records for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can insert bowel records for their tenant" ON public.bowel_records FOR INSERT WITH CHECK ((tenant_id = ( SELECT bowel_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
+CREATE INDEX "idx_contact_submissions_submitted_at" ON "public"."contact_submissions" USING "btree" ("submitted_at" DESC);
 
--- -- Name: diabetic_records Users can insert diabetic records for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can insert diabetic records for their tenant" ON public.diabetic_records FOR INSERT WITH CHECK ((tenant_id IN ( SELECT diabetic_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: patient_notes Users can insert notes for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_device_assessments_assessed_at" ON "public"."device_assessments" USING "btree" ("assessed_at" DESC);
 
-CREATE POLICY "Users can insert notes for their tenant" ON public.patient_notes FOR INSERT WITH CHECK ((tenant_id = ( SELECT patient_notes.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: patient_admission_records Users can update admission records for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can update admission records for their tenant" ON public.patient_admission_records FOR UPDATE USING ((tenant_id = ( SELECT patient_admission_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
+CREATE INDEX "idx_device_assessments_data" ON "public"."device_assessments" USING "gin" ("assessment_data");
 
--- -- Name: patient_advanced_directives Users can update advanced directives for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can update advanced directives for their tenant" ON public.patient_advanced_directives FOR UPDATE USING ((tenant_id = ( SELECT patient_advanced_directives.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: bowel_records Users can update bowel records for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_device_assessments_device_id" ON "public"."device_assessments" USING "btree" ("device_id");
 
-CREATE POLICY "Users can update bowel records for their tenant" ON public.bowel_records FOR UPDATE USING ((tenant_id = ( SELECT bowel_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: patient_notes Users can update notes for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can update notes for their tenant" ON public.patient_notes FOR UPDATE USING ((tenant_id = ( SELECT patient_notes.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
+CREATE INDEX "idx_device_assessments_device_type" ON "public"."device_assessments" USING "btree" ("device_type");
 
--- -- Name: diabetic_records Users can update their own diabetic records within tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can update their own diabetic records within tenant" ON public.diabetic_records FOR UPDATE USING (((recorded_by = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)) AND (tenant_id IN ( SELECT diabetic_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))))));
 
--- -- Name: patient_admission_records Users can view admission records for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_device_assessments_patient_id" ON "public"."device_assessments" USING "btree" ("patient_id");
 
-CREATE POLICY "Users can view admission records for their tenant" ON public.patient_admission_records FOR SELECT USING ((tenant_id = ( SELECT patient_admission_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: patient_advanced_directives Users can view advanced directives for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can view advanced directives for their tenant" ON public.patient_advanced_directives FOR SELECT USING ((tenant_id = ( SELECT patient_advanced_directives.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
+CREATE INDEX "idx_device_assessments_student_name" ON "public"."device_assessments" USING "btree" ("student_name");
 
--- -- Name: bowel_records Users can view bowel records for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can view bowel records for their tenant" ON public.bowel_records FOR SELECT USING ((tenant_id = ( SELECT bowel_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: diabetic_records Users can view diabetic records for their tenant; Type: POLICY; Schema: public
+CREATE INDEX "idx_device_assessments_tenant_id" ON "public"."device_assessments" USING "btree" ("tenant_id");
 
-CREATE POLICY "Users can view diabetic records for their tenant" ON public.diabetic_records FOR SELECT USING ((tenant_id IN ( SELECT diabetic_records.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: handover_notes Users can view handover notes for accessible patients; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can view handover notes for accessible patients" ON public.handover_notes FOR SELECT USING ((( SELECT ( SELECT auth.role() AS role) AS role) = 'authenticated'::text));
+CREATE INDEX "idx_devices_location" ON "public"."devices" USING "btree" ("location_id");
 
--- -- Name: patient_notes Users can view notes for their tenant; Type: POLICY; Schema: public
 
-CREATE POLICY "Users can view notes for their tenant" ON public.patient_notes FOR SELECT USING ((tenant_id = ( SELECT patient_notes.tenant_id
-   FROM public.user_profiles
-  WHERE (user_profiles.id = ( SELECT auth.uid() AS uid)))));
 
--- -- Name: simulation_active active_delete_policy; Type: POLICY; Schema: public
+CREATE INDEX "idx_devices_patient" ON "public"."devices" USING "btree" ("patient_id");
 
-CREATE POLICY active_delete_policy ON public.simulation_active FOR DELETE TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_active.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_active.primary_categories)))))))));
 
--- -- Name: simulation_active active_insert_policy; Type: POLICY; Schema: public
 
-CREATE POLICY active_insert_policy ON public.simulation_active FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role, 'coordinator'::public.user_role]))))));
+CREATE INDEX "idx_devices_tenant" ON "public"."devices" USING "btree" ("tenant_id");
 
--- -- Name: simulation_active active_select_instructor_programs; Type: POLICY; Schema: public
 
-CREATE POLICY active_select_instructor_programs ON public.simulation_active FOR SELECT TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_active.tenant_id) AND (tu.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.simulation_participants sp
-  WHERE ((sp.simulation_id = simulation_active.id) AND (sp.user_id = ( SELECT auth.uid() AS uid))))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_active.primary_categories)))))))));
 
--- -- Name: simulation_active active_update_policy; Type: POLICY; Schema: public
+CREATE INDEX "idx_diabetic_records_date" ON "public"."diabetic_records" USING "btree" ("date");
 
-CREATE POLICY active_update_policy ON public.simulation_active FOR UPDATE TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_active.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_active.primary_categories))))))))) WITH CHECK (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role]))))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_active.primary_categories)))))))));
 
--- -- Name: simulation_activity_log activity_log_delete_policy; Type: POLICY; Schema: public
 
-CREATE POLICY activity_log_delete_policy ON public.simulation_activity_log FOR DELETE USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role)))));
+CREATE INDEX "idx_diabetic_records_patient_date" ON "public"."diabetic_records" USING "btree" ("patient_id", "date");
 
--- -- Name: simulation_activity_log activity_log_insert_policy; Type: POLICY; Schema: public
 
-CREATE POLICY activity_log_insert_policy ON public.simulation_activity_log FOR INSERT WITH CHECK ((user_id = ( SELECT auth.uid() AS uid)));
 
--- -- Name: simulation_activity_log activity_log_select_policy; Type: POLICY; Schema: public
+CREATE INDEX "idx_diabetic_records_patient_id" ON "public"."diabetic_records" USING "btree" ("patient_id");
 
-CREATE POLICY activity_log_select_policy ON public.simulation_activity_log FOR SELECT USING (((user_id = ( SELECT auth.uid() AS uid)) OR (simulation_id IN ( SELECT simulation_participants.simulation_id
-   FROM public.simulation_participants
-  WHERE (simulation_participants.user_id = ( SELECT auth.uid() AS uid)))) OR (simulation_id IN ( SELECT simulation_active.id
-   FROM public.simulation_active
-  WHERE (simulation_active.created_by = ( SELECT auth.uid() AS uid)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))));
 
--- -- Name: audit_logs audit_logs_consolidated_select; Type: POLICY; Schema: public
 
-CREATE POLICY audit_logs_consolidated_select ON public.audit_logs FOR SELECT USING ((user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
+CREATE INDEX "idx_diabetic_records_recorded_at" ON "public"."diabetic_records" USING "btree" ("recorded_at");
 
--- -- Name: backup_audit_log backup_audit_insert_authenticated; Type: POLICY; Schema: public
 
-CREATE POLICY backup_audit_insert_authenticated ON public.backup_audit_log FOR INSERT TO authenticated WITH CHECK ((user_id = ( SELECT auth.uid() AS uid)));
 
--- -- Name: backup_audit_log backup_audit_super_admin_select; Type: POLICY; Schema: public
+CREATE INDEX "idx_diabetic_records_student_name" ON "public"."diabetic_records" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
 
-CREATE POLICY backup_audit_super_admin_select ON public.backup_audit_log FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
 
--- -- Name: backup_files backup_files_super_admin_all; Type: POLICY; Schema: public
 
-CREATE POLICY backup_files_super_admin_all ON public.backup_files USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
+CREATE INDEX "idx_diabetic_records_tenant_id" ON "public"."diabetic_records" USING "btree" ("tenant_id");
 
--- -- Name: backup_metadata backup_metadata_super_admin_all; Type: POLICY; Schema: public
 
-CREATE POLICY backup_metadata_super_admin_all ON public.backup_metadata USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
 
--- -- Name: patient_bbit_entries bbit_entries_tenant_isolation; Type: POLICY; Schema: public
+CREATE INDEX "idx_doctors_orders_acknowledged_by" ON "public"."doctors_orders" USING "btree" ("acknowledged_by_student") WHERE ("acknowledged_by_student" IS NOT NULL);
 
-CREATE POLICY bbit_entries_tenant_isolation ON public.patient_bbit_entries TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: simulation_table_config config_modify_policy; Type: POLICY; Schema: public
 
-CREATE POLICY config_modify_policy ON public.simulation_table_config USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role)))));
+CREATE INDEX "idx_doctors_orders_is_acknowledged" ON "public"."doctors_orders" USING "btree" ("is_acknowledged");
 
--- -- Name: device_assessments device_assessments_tenant_isolation; Type: POLICY; Schema: public
 
-CREATE POLICY device_assessments_tenant_isolation ON public.device_assessments TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: doctors_orders doctors_orders_access; Type: POLICY; Schema: public
+CREATE INDEX "idx_doctors_orders_order_date" ON "public"."doctors_orders" USING "btree" ("order_date");
 
-CREATE POLICY doctors_orders_access ON public.doctors_orders USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = doctors_orders.tenant_id) AND (tenant_users.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = doctors_orders.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: avatar_locations hacmap_avatar_locations_access; Type: POLICY; Schema: public
 
-CREATE POLICY hacmap_avatar_locations_access ON public.avatar_locations USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = avatar_locations.tenant_id) AND (tenant_users.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = avatar_locations.tenant_id) AND (tenant_users.is_active = true))))));
+CREATE INDEX "idx_doctors_orders_patient_id" ON "public"."doctors_orders" USING "btree" ("patient_id");
 
--- -- Name: devices hacmap_devices_access; Type: POLICY; Schema: public
 
-CREATE POLICY hacmap_devices_access ON public.devices USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = devices.tenant_id) AND (tenant_users.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = devices.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: wounds hacmap_wounds_access; Type: POLICY; Schema: public
+CREATE INDEX "idx_doctors_orders_tenant_id" ON "public"."doctors_orders" USING "btree" ("tenant_id");
 
-CREATE POLICY hacmap_wounds_access ON public.wounds USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = wounds.tenant_id) AND (tenant_users.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = wounds.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: handover_notes handover_notes_update; Type: POLICY; Schema: public
 
-CREATE POLICY handover_notes_update ON public.handover_notes FOR UPDATE TO authenticated USING (((patient_id IN ( SELECT p.id
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((tu.tenant_id = p.tenant_id)))
-  WHERE ((tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((patient_id IN ( SELECT p.id
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((tu.tenant_id = p.tenant_id)))
-  WHERE ((tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
+CREATE INDEX "idx_handover_notes_acknowledged" ON "public"."handover_notes" USING "btree" ("acknowledged_by") WHERE ("acknowledged_by" IS NOT NULL);
 
--- -- Name: simulation_history history_insert_policy; Type: POLICY; Schema: public
 
-CREATE POLICY history_insert_policy ON public.simulation_history FOR INSERT WITH CHECK (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))));
 
--- -- Name: simulation_history history_select_policy; Type: POLICY; Schema: public
+CREATE INDEX "idx_handover_notes_created_at" ON "public"."handover_notes" USING "btree" ("created_at" DESC);
 
-CREATE POLICY history_select_policy ON public.simulation_history FOR SELECT USING (((created_by = ( SELECT auth.uid() AS uid)) OR (participants @> jsonb_build_array(jsonb_build_object('user_id', (( SELECT auth.uid() AS uid))::text))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))));
 
--- -- Name: simulation_history history_update_policy; Type: POLICY; Schema: public
 
-CREATE POLICY history_update_policy ON public.simulation_history FOR UPDATE USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role])))))));
+CREATE INDEX "idx_handover_notes_patient_id" ON "public"."handover_notes" USING "btree" ("patient_id");
 
--- -- Name: patient_intake_output_events intake_output_events_tenant_isolation; Type: POLICY; Schema: public
 
-CREATE POLICY intake_output_events_tenant_isolation ON public.patient_intake_output_events TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: lab_ack_events lab_ack_events_insert; Type: POLICY; Schema: public
+CREATE INDEX "idx_handover_notes_priority" ON "public"."handover_notes" USING "btree" ("priority");
 
-CREATE POLICY lab_ack_events_insert ON public.lab_ack_events FOR INSERT TO authenticated WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND (ack_by = ( SELECT auth.uid() AS uid))));
 
--- -- Name: lab_ack_events lab_ack_events_select; Type: POLICY; Schema: public
 
-CREATE POLICY lab_ack_events_select ON public.lab_ack_events FOR SELECT TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
+CREATE INDEX "idx_handover_notes_shift" ON "public"."handover_notes" USING "btree" ("shift");
 
--- -- Name: lab_orders lab_orders_access; Type: POLICY; Schema: public
 
-CREATE POLICY lab_orders_access ON public.lab_orders USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = lab_orders.tenant_id) AND (tenant_users.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = lab_orders.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: lab_panels lab_panels_delete; Type: POLICY; Schema: public
+CREATE INDEX "idx_handover_notes_student_name" ON "public"."handover_notes" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
 
-CREATE POLICY lab_panels_delete ON public.lab_panels FOR DELETE TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role])))))));
 
--- -- Name: lab_panels lab_panels_insert; Type: POLICY; Schema: public
 
-CREATE POLICY lab_panels_insert ON public.lab_panels FOR INSERT TO authenticated WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role])))))));
+CREATE INDEX "idx_io_direction" ON "public"."patient_intake_output_events" USING "btree" ("tenant_id", "patient_id", "direction");
 
--- -- Name: lab_panels lab_panels_select; Type: POLICY; Schema: public
 
-CREATE POLICY lab_panels_select ON public.lab_panels FOR SELECT TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: lab_panels lab_panels_update; Type: POLICY; Schema: public
+CREATE INDEX "idx_io_student_name" ON "public"."patient_intake_output_events" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
 
-CREATE POLICY lab_panels_update ON public.lab_panels FOR UPDATE TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role])))))));
 
--- -- Name: lab_result_refs lab_result_refs_delete; Type: POLICY; Schema: public
 
-CREATE POLICY lab_result_refs_delete ON public.lab_result_refs FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role]))))));
+CREATE INDEX "idx_io_tenant_patient_time" ON "public"."patient_intake_output_events" USING "btree" ("tenant_id", "patient_id", "event_timestamp" DESC);
 
--- -- Name: lab_result_refs lab_result_refs_insert; Type: POLICY; Schema: public
 
-CREATE POLICY lab_result_refs_insert ON public.lab_result_refs FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role]))))));
 
--- -- Name: lab_result_refs lab_result_refs_select; Type: POLICY; Schema: public
+CREATE INDEX "idx_kb_walkthroughs_active_order" ON "public"."kb_walkthroughs" USING "btree" ("is_active", "display_order");
 
-CREATE POLICY lab_result_refs_select ON public.lab_result_refs FOR SELECT TO authenticated USING ((( SELECT auth.uid() AS uid) IS NOT NULL));
 
--- -- Name: lab_result_refs lab_result_refs_update; Type: POLICY; Schema: public
 
-CREATE POLICY lab_result_refs_update ON public.lab_result_refs FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role]))))));
+CREATE INDEX "idx_lab_ack_events_ack_by" ON "public"."lab_ack_events" USING "btree" ("ack_by");
 
--- -- Name: lab_results lab_results_delete; Type: POLICY; Schema: public
 
-CREATE POLICY lab_results_delete ON public.lab_results FOR DELETE TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role])))))));
 
--- -- Name: lab_results lab_results_insert; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_ack_events_panel" ON "public"."lab_ack_events" USING "btree" ("panel_id");
 
-CREATE POLICY lab_results_insert ON public.lab_results FOR INSERT TO authenticated WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role])))))));
 
--- -- Name: lab_results lab_results_select; Type: POLICY; Schema: public
 
-CREATE POLICY lab_results_select ON public.lab_results FOR SELECT TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
+CREATE INDEX "idx_lab_ack_events_student_name" ON "public"."lab_ack_events" USING "btree" ("student_name");
 
--- -- Name: lab_results lab_results_update; Type: POLICY; Schema: public
 
-CREATE POLICY lab_results_update ON public.lab_results FOR UPDATE TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) AND ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role]))))) OR ((ack_by = ( SELECT auth.uid() AS uid)) AND (ack_at IS NOT NULL)))));
 
--- -- Name: medication_administrations medication_administrations_secure_access; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_ack_events_tenant_patient" ON "public"."lab_ack_events" USING "btree" ("tenant_id", "patient_id");
 
-CREATE POLICY medication_administrations_secure_access ON public.medication_administrations USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (patient_id IN ( SELECT (p.id)::text AS id
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((p.tenant_id = tu.tenant_id)))
-  WHERE ((tu.user_id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (tu.is_active = true))))));
 
--- -- Name: patient_neuro_assessments neuro_assessments_tenant_isolation; Type: POLICY; Schema: public
 
-CREATE POLICY neuro_assessments_tenant_isolation ON public.patient_neuro_assessments TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
+CREATE INDEX "idx_lab_orders_date" ON "public"."lab_orders" USING "btree" ("order_date" DESC);
 
--- -- Name: patient_newborn_assessments newborn_assessments_tenant_isolation; Type: POLICY; Schema: public
 
-CREATE POLICY newborn_assessments_tenant_isolation ON public.patient_newborn_assessments TO authenticated USING (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: simulation_participants participants_delete_policy; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_orders_patient" ON "public"."lab_orders" USING "btree" ("patient_id");
 
-CREATE POLICY participants_delete_policy ON public.simulation_participants FOR DELETE USING (((granted_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role])))))));
 
--- -- Name: simulation_participants participants_insert_policy; Type: POLICY; Schema: public
 
-CREATE POLICY participants_insert_policy ON public.simulation_participants FOR INSERT WITH CHECK (((simulation_id IN ( SELECT simulation_active.id
-   FROM public.simulation_active
-  WHERE (simulation_active.created_by = ( SELECT auth.uid() AS uid)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))));
+CREATE INDEX "idx_lab_orders_status" ON "public"."lab_orders" USING "btree" ("status");
 
--- -- Name: simulation_participants participants_select_policy; Type: POLICY; Schema: public
 
-CREATE POLICY participants_select_policy ON public.simulation_participants FOR SELECT USING (((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))));
 
--- -- Name: simulation_participants participants_update_policy; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_orders_student_name" ON "public"."lab_orders" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
 
-CREATE POLICY participants_update_policy ON public.simulation_participants FOR UPDATE USING (((simulation_id IN ( SELECT simulation_active.id
-   FROM public.simulation_active
-  WHERE (simulation_active.created_by = ( SELECT auth.uid() AS uid)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role])))))));
 
--- -- Name: patient_alerts patient_alerts_consolidated_delete; Type: POLICY; Schema: public
 
-CREATE POLICY patient_alerts_consolidated_delete ON public.patient_alerts FOR DELETE USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
+CREATE INDEX "idx_lab_orders_tenant" ON "public"."lab_orders" USING "btree" ("tenant_id");
 
--- -- Name: patient_alerts patient_alerts_consolidated_insert; Type: POLICY; Schema: public
 
-CREATE POLICY patient_alerts_consolidated_insert ON public.patient_alerts FOR INSERT WITH CHECK ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: patient_alerts patient_alerts_consolidated_select; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_panels_entered_by" ON "public"."lab_panels" USING "btree" ("entered_by");
 
-CREATE POLICY patient_alerts_consolidated_select ON public.patient_alerts FOR SELECT USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: patient_alerts patient_alerts_consolidated_update; Type: POLICY; Schema: public
 
-CREATE POLICY patient_alerts_consolidated_update ON public.patient_alerts FOR UPDATE USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))))) WITH CHECK ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
+CREATE INDEX "idx_lab_panels_panel_time" ON "public"."lab_panels" USING "btree" ("panel_time" DESC);
 
--- -- Name: patient_images patient_images_consolidated_delete; Type: POLICY; Schema: public
 
-CREATE POLICY patient_images_consolidated_delete ON public.patient_images FOR DELETE USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: patient_images patient_images_consolidated_insert; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_panels_status" ON "public"."lab_panels" USING "btree" ("status");
 
-CREATE POLICY patient_images_consolidated_insert ON public.patient_images FOR INSERT WITH CHECK ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: patient_images patient_images_consolidated_select; Type: POLICY; Schema: public
 
-CREATE POLICY patient_images_consolidated_select ON public.patient_images FOR SELECT USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
+CREATE INDEX "idx_lab_panels_tenant_patient" ON "public"."lab_panels" USING "btree" ("tenant_id", "patient_id");
 
--- -- Name: patient_images patient_images_consolidated_update; Type: POLICY; Schema: public
 
-CREATE POLICY patient_images_consolidated_update ON public.patient_images FOR UPDATE USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))))) WITH CHECK ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE (tenant_users.user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)))));
 
--- -- Name: patient_medications patient_medications_delete; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_results_ack" ON "public"."lab_results" USING "btree" ("ack_by", "ack_at") WHERE ("ack_at" IS NULL);
 
-CREATE POLICY patient_medications_delete ON public.patient_medications FOR DELETE USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = patient_medications.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: patient_medications patient_medications_insert; Type: POLICY; Schema: public
 
-CREATE POLICY patient_medications_insert ON public.patient_medications FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = patient_medications.tenant_id) AND (tenant_users.is_active = true))))));
+CREATE INDEX "idx_lab_results_ack_by" ON "public"."lab_results" USING "btree" ("ack_by");
 
--- -- Name: patient_medications patient_medications_select; Type: POLICY; Schema: public
 
-CREATE POLICY patient_medications_select ON public.patient_medications FOR SELECT USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = patient_medications.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: patient_medications patient_medications_update; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_results_acknowledged_by" ON "public"."lab_results" USING "btree" ("acknowledged_by_student") WHERE ("acknowledged_by_student" IS NOT NULL);
 
-CREATE POLICY patient_medications_update ON public.patient_medications FOR UPDATE USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = patient_medications.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: patient_vitals patient_vitals_delete; Type: POLICY; Schema: public
 
-CREATE POLICY patient_vitals_delete ON public.patient_vitals FOR DELETE USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((tu.tenant_id = p.tenant_id)))
-  WHERE ((p.id = patient_vitals.patient_id) AND (tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true))))));
+CREATE INDEX "idx_lab_results_category" ON "public"."lab_results" USING "btree" ("category");
 
--- -- Name: patient_vitals patient_vitals_insert; Type: POLICY; Schema: public
 
-CREATE POLICY patient_vitals_insert ON public.patient_vitals FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((tu.tenant_id = p.tenant_id)))
-  WHERE ((p.id = patient_vitals.patient_id) AND (tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true))))));
 
--- -- Name: patient_vitals patient_vitals_select; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_results_entered_by" ON "public"."lab_results" USING "btree" ("entered_by");
 
-CREATE POLICY patient_vitals_select ON public.patient_vitals FOR SELECT USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((tu.tenant_id = p.tenant_id)))
-  WHERE ((p.id = patient_vitals.patient_id) AND (tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true))))));
 
--- -- Name: patient_vitals patient_vitals_update; Type: POLICY; Schema: public
 
-CREATE POLICY patient_vitals_update ON public.patient_vitals FOR UPDATE USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM (public.patients p
-     JOIN public.tenant_users tu ON ((tu.tenant_id = p.tenant_id)))
-  WHERE ((p.id = patient_vitals.patient_id) AND (tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true))))));
+CREATE INDEX "idx_lab_results_flag" ON "public"."lab_results" USING "btree" ("flag");
 
--- -- Name: patient_wounds patient_wounds_delete; Type: POLICY; Schema: public
 
-CREATE POLICY patient_wounds_delete ON public.patient_wounds FOR DELETE TO authenticated USING (((patient_id IN ( SELECT patients.id
-   FROM public.patients
-  WHERE (patients.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (tenant_users.is_active = true)))))) AND (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = ANY (ARRAY['admin'::public.user_role, 'super_admin'::public.user_role])))))));
 
--- -- Name: patient_wounds patient_wounds_select; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_results_note" ON "public"."lab_results" USING "btree" ("note") WHERE ("note" IS NOT NULL);
 
-CREATE POLICY patient_wounds_select ON public.patient_wounds FOR SELECT TO authenticated USING (((patient_id IN ( SELECT patients.id
-   FROM public.patients
-  WHERE (patients.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (tenant_users.is_active = true)))))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: patient_wounds patient_wounds_tenant_insert; Type: POLICY; Schema: public
 
-CREATE POLICY patient_wounds_tenant_insert ON public.patient_wounds FOR INSERT TO authenticated WITH CHECK ((patient_id IN ( SELECT patients.id
-   FROM public.patients
-  WHERE (patients.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))))));
+CREATE INDEX "idx_lab_results_panel" ON "public"."lab_results" USING "btree" ("panel_id");
 
--- -- Name: patient_wounds patient_wounds_update; Type: POLICY; Schema: public
 
-CREATE POLICY patient_wounds_update ON public.patient_wounds FOR UPDATE TO authenticated USING (((patient_id IN ( SELECT patients.id
-   FROM public.patients
-  WHERE (patients.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (tenant_users.is_active = true)))))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))))) WITH CHECK (((patient_id IN ( SELECT patients.id
-   FROM public.patients
-  WHERE (patients.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (tenant_users.is_active = true)))))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT ( SELECT auth.uid() AS uid) AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role))))));
 
--- -- Name: patients patients_tenant_isolation; Type: POLICY; Schema: public
+CREATE INDEX "idx_lab_results_tenant_patient" ON "public"."lab_results" USING "btree" ("tenant_id", "patient_id");
 
-CREATE POLICY patients_tenant_isolation ON public.patients TO authenticated USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = patients.tenant_id) AND (tenant_users.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role) AND (user_profiles.is_active = true)))) OR (EXISTS ( SELECT 1
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.tenant_id = patients.tenant_id) AND (tenant_users.is_active = true))))));
 
--- -- Name: profiles profiles_consolidated_select; Type: POLICY; Schema: public
 
-CREATE POLICY profiles_consolidated_select ON public.profiles FOR SELECT USING ((id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
+CREATE INDEX "idx_medication_administrations_administered_by_id" ON "public"."medication_administrations" USING "btree" ("administered_by_id");
 
--- -- Name: profiles profiles_consolidated_update; Type: POLICY; Schema: public
 
-CREATE POLICY profiles_consolidated_update ON public.profiles FOR UPDATE USING ((id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))) WITH CHECK ((id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
 
--- -- Name: profiles profiles_insert_own; Type: POLICY; Schema: public
+CREATE INDEX "idx_medication_administrations_medication_id" ON "public"."medication_administrations" USING "btree" ("medication_id");
 
-CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK ((id = ( SELECT auth.uid() AS uid)));
 
--- -- Name: program_announcements program_announcements_delete; Type: POLICY; Schema: public
 
-CREATE POLICY program_announcements_delete ON public.program_announcements FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'instructor'::public.user_role, 'admin'::public.user_role]))))));
+CREATE INDEX "idx_medication_administrations_patient_id" ON "public"."medication_administrations" USING "btree" ("patient_id");
 
--- -- Name: program_announcements program_announcements_insert; Type: POLICY; Schema: public
 
-CREATE POLICY program_announcements_insert ON public.program_announcements FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'instructor'::public.user_role, 'admin'::public.user_role]))))));
 
--- -- Name: program_announcements program_announcements_update; Type: POLICY; Schema: public
+CREATE INDEX "idx_medication_administrations_student_name" ON "public"."medication_administrations" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
 
-CREATE POLICY program_announcements_update ON public.program_announcements FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'instructor'::public.user_role, 'admin'::public.user_role])))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'instructor'::public.user_role, 'admin'::public.user_role]))))));
 
--- -- Name: program_announcements program_announcements_view_program; Type: POLICY; Schema: public
 
-CREATE POLICY program_announcements_view_program ON public.program_announcements FOR SELECT TO authenticated USING ((program_id IN ( SELECT p.id
-   FROM public.programs p
-  WHERE (p.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))))));
+CREATE INDEX "idx_medication_administrations_tenant_id" ON "public"."medication_administrations" USING "btree" ("tenant_id");
 
--- -- Name: programs programs_delete; Type: POLICY; Schema: public
 
-CREATE POLICY programs_delete ON public.programs FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))));
 
--- -- Name: programs programs_insert; Type: POLICY; Schema: public
+CREATE INDEX "idx_medication_administrations_timestamp" ON "public"."medication_administrations" USING "btree" ("timestamp" DESC);
 
-CREATE POLICY programs_insert ON public.programs FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))));
 
--- -- Name: programs programs_super_admin_select; Type: POLICY; Schema: public
 
-CREATE POLICY programs_super_admin_select ON public.programs FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
+CREATE INDEX "idx_medications_catalog_barcode" ON "public"."medications_catalog" USING "btree" ("barcode");
 
--- -- Name: programs programs_tenant_isolation; Type: POLICY; Schema: public
 
-CREATE POLICY programs_tenant_isolation ON public.programs FOR SELECT TO authenticated USING ((tenant_id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))));
 
--- -- Name: programs programs_update; Type: POLICY; Schema: public
+CREATE INDEX "idx_medications_catalog_name" ON "public"."medications_catalog" USING "btree" ("name");
 
-CREATE POLICY programs_update ON public.programs FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role])))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))));
 
--- -- Name: scheduled_simulations scheduled_simulations_delete; Type: POLICY; Schema: public
 
-CREATE POLICY scheduled_simulations_delete ON public.scheduled_simulations FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
+CREATE INDEX "idx_medications_catalog_tenant_id" ON "public"."medications_catalog" USING "btree" ("tenant_id");
 
--- -- Name: scheduled_simulations scheduled_simulations_insert; Type: POLICY; Schema: public
 
-CREATE POLICY scheduled_simulations_insert ON public.scheduled_simulations FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
 
--- -- Name: scheduled_simulations scheduled_simulations_update; Type: POLICY; Schema: public
+CREATE INDEX "idx_neuro_patient" ON "public"."patient_neuro_assessments" USING "btree" ("patient_id");
 
-CREATE POLICY scheduled_simulations_update ON public.scheduled_simulations FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
 
--- -- Name: scheduled_simulations scheduled_simulations_view_program; Type: POLICY; Schema: public
 
-CREATE POLICY scheduled_simulations_view_program ON public.scheduled_simulations FOR SELECT TO authenticated USING ((program_id IN ( SELECT p.id
-   FROM public.programs p
-  WHERE (p.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))))));
+CREATE INDEX "idx_neuro_recorded_at" ON "public"."patient_neuro_assessments" USING "btree" ("patient_id", "recorded_at");
 
--- -- Name: simulation_history simulation_history_delete_instructor_programs; Type: POLICY; Schema: public
 
-CREATE POLICY simulation_history_delete_instructor_programs ON public.simulation_history FOR DELETE TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_history.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_history.primary_categories)))))))));
 
--- -- Name: student_roster student_roster_delete; Type: POLICY; Schema: public
+CREATE INDEX "idx_neuro_tenant" ON "public"."patient_neuro_assessments" USING "btree" ("tenant_id");
 
-CREATE POLICY student_roster_delete ON public.student_roster FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
 
--- -- Name: student_roster student_roster_insert; Type: POLICY; Schema: public
 
-CREATE POLICY student_roster_insert ON public.student_roster FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
+CREATE INDEX "idx_newborn_patient" ON "public"."patient_newborn_assessments" USING "btree" ("patient_id");
 
--- -- Name: student_roster student_roster_update; Type: POLICY; Schema: public
 
-CREATE POLICY student_roster_update ON public.student_roster FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role])))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
 
--- -- Name: student_roster student_roster_view_program; Type: POLICY; Schema: public
+CREATE INDEX "idx_newborn_tenant" ON "public"."patient_newborn_assessments" USING "btree" ("tenant_id");
 
-CREATE POLICY student_roster_view_program ON public.student_roster FOR SELECT TO authenticated USING ((program_id IN ( SELECT p.id
-   FROM public.programs p
-  WHERE (p.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))))));
 
--- -- Name: system_logs super_admin_delete_system_logs; Type: POLICY; Schema: public
 
-CREATE POLICY super_admin_delete_system_logs ON public.system_logs FOR DELETE USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
+CREATE INDEX "idx_newborn_tenant_recorded" ON "public"."patient_newborn_assessments" USING "btree" ("tenant_id", "recorded_at" DESC);
 
--- -- Name: user_sessions super_admin_sessions_access; Type: POLICY; Schema: public
 
-CREATE POLICY super_admin_sessions_access ON public.user_sessions USING (
+
+CREATE INDEX "idx_patient_admission_records_patient_id" ON "public"."patient_admission_records" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patient_admission_records_tenant_id" ON "public"."patient_admission_records" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_patient_advanced_directives_patient_id" ON "public"."patient_advanced_directives" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patient_advanced_directives_tenant_id" ON "public"."patient_advanced_directives" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_patient_alerts_acknowledged" ON "public"."patient_alerts" USING "btree" ("acknowledged");
+
+
+
+CREATE INDEX "idx_patient_alerts_created_at" ON "public"."patient_alerts" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "idx_patient_alerts_expires_at" ON "public"."patient_alerts" USING "btree" ("expires_at");
+
+
+
+CREATE INDEX "idx_patient_alerts_patient_id" ON "public"."patient_alerts" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patient_alerts_priority" ON "public"."patient_alerts" USING "btree" ("priority");
+
+
+
+CREATE INDEX "idx_patient_alerts_tenant_id" ON "public"."patient_alerts" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_patient_alerts_type" ON "public"."patient_alerts" USING "btree" ("alert_type");
+
+
+
+CREATE INDEX "idx_patient_images_created_at" ON "public"."patient_images" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "idx_patient_images_image_type" ON "public"."patient_images" USING "btree" ("image_type");
+
+
+
+CREATE INDEX "idx_patient_images_patient_id" ON "public"."patient_images" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patient_medications_barcode" ON "public"."patient_medications" USING "btree" ("barcode");
+
+
+
+CREATE INDEX "idx_patient_medications_catalog_id" ON "public"."patient_medications" USING "btree" ("catalog_id");
+
+
+
+CREATE INDEX "idx_patient_medications_category" ON "public"."patient_medications" USING "btree" ("category");
+
+
+
+CREATE INDEX "idx_patient_medications_next_due" ON "public"."patient_medications" USING "btree" ("next_due");
+
+
+
+CREATE INDEX "idx_patient_medications_patient_id" ON "public"."patient_medications" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patient_medications_tenant_id" ON "public"."patient_medications" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_patient_notes_student_name" ON "public"."patient_notes" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_patient_notes_type" ON "public"."patient_notes" USING "btree" ("type");
+
+
+
+CREATE INDEX "idx_patient_templates_primary_categories" ON "public"."patient_templates" USING "gin" ("primary_categories");
+
+
+
+CREATE INDEX "idx_patient_templates_tenant_id" ON "public"."patient_templates" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_patient_vitals_patient_id" ON "public"."patient_vitals" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patient_vitals_recorded_at" ON "public"."patient_vitals" USING "btree" ("recorded_at");
+
+
+
+CREATE INDEX "idx_patient_vitals_student_name" ON "public"."patient_vitals" USING "btree" ("student_name") WHERE ("student_name" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_patient_vitals_tenant_id" ON "public"."patient_vitals" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_patient_vitals_tenant_patient" ON "public"."patient_vitals" USING "btree" ("tenant_id", "patient_id");
+
+
+
+CREATE INDEX "idx_patient_wounds_assessment_date" ON "public"."patient_wounds" USING "btree" ("assessment_date");
+
+
+
+CREATE INDEX "idx_patients_avatar_id" ON "public"."patients" USING "btree" ("avatar_id");
+
+
+
+CREATE INDEX "idx_patients_patient_id" ON "public"."patients" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_patients_room" ON "public"."patients" USING "btree" ("room_number", "bed_number");
+
+
+
+CREATE INDEX "idx_patients_tenant_created" ON "public"."patients" USING "btree" ("tenant_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_patients_tenant_id" ON "public"."patients" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_profiles_email" ON "public"."profiles" USING "btree" ("email");
+
+
+
+CREATE INDEX "idx_profiles_role" ON "public"."profiles" USING "btree" ("role");
+
+
+
+CREATE INDEX "idx_programs_code" ON "public"."programs" USING "btree" ("code");
+
+
+
+CREATE INDEX "idx_programs_is_active" ON "public"."programs" USING "btree" ("is_active");
+
+
+
+CREATE INDEX "idx_programs_tenant_id" ON "public"."programs" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_psa_patient_tenant" ON "public"."patient_system_assessments" USING "btree" ("patient_id", "tenant_id");
+
+
+
+CREATE INDEX "idx_psa_recorded_at" ON "public"."patient_system_assessments" USING "btree" ("recorded_at" DESC);
+
+
+
+CREATE INDEX "idx_psa_student_entries" ON "public"."patient_system_assessments" USING "btree" ("tenant_id") WHERE ("is_baseline" = false);
+
+
+
+CREATE INDEX "idx_psa_system_type" ON "public"."patient_system_assessments" USING "btree" ("system_type", "tenant_id");
+
+
+
+CREATE INDEX "idx_psa_tenant" ON "public"."patient_system_assessments" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_simulation_active_ends_at" ON "public"."simulation_active" USING "btree" ("ends_at") WHERE ("status" = 'running'::"public"."simulation_active_status");
+
+
+
+CREATE INDEX "idx_simulation_active_status" ON "public"."simulation_active" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_simulation_active_status_ends" ON "public"."simulation_active" USING "btree" ("status", "ends_at") WHERE ("status" = 'running'::"public"."simulation_active_status");
+
+
+
+CREATE INDEX "idx_simulation_active_template" ON "public"."simulation_active" USING "btree" ("template_id");
+
+
+
+CREATE INDEX "idx_simulation_active_tenant" ON "public"."simulation_active" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_simulation_active_tenant_status" ON "public"."simulation_active" USING "btree" ("tenant_id", "status");
+
+
+
+CREATE INDEX "idx_simulation_auto_students_simulation_id" ON "public"."simulation_auto_students" USING "btree" ("simulation_id");
+
+
+
+CREATE INDEX "idx_simulation_history_archived" ON "public"."simulation_history" USING "btree" ("archived", "completed_at" DESC);
+
+
+
+CREATE INDEX "idx_simulation_history_completed" ON "public"."simulation_history" USING "btree" ("completed_at" DESC);
+
+
+
+CREATE INDEX "idx_simulation_history_created_by" ON "public"."simulation_history" USING "btree" ("created_by");
+
+
+
+CREATE INDEX "idx_simulation_history_instructor_name" ON "public"."simulation_history" USING "btree" ("instructor_name");
+
+
+
+CREATE INDEX "idx_simulation_history_template" ON "public"."simulation_history" USING "btree" ("template_id");
+
+
+
+CREATE INDEX "idx_simulation_participants_simulation_id" ON "public"."simulation_participants" USING "btree" ("simulation_id");
+
+
+
+CREATE INDEX "idx_simulation_participants_user_id" ON "public"."simulation_participants" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_simulation_participants_user_role" ON "public"."simulation_participants" USING "btree" ("user_id", "role");
+
+
+
+CREATE INDEX "idx_simulation_templates_created_by" ON "public"."simulation_templates" USING "btree" ("created_by");
+
+
+
+CREATE INDEX "idx_simulation_templates_folder" ON "public"."simulation_templates" USING "btree" ("folder");
+
+
+
+CREATE INDEX "idx_simulation_templates_status" ON "public"."simulation_templates" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_simulation_templates_tenant" ON "public"."simulation_templates" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_student_roster_cohort_id" ON "public"."student_roster" USING "btree" ("cohort_id") WHERE ("cohort_id" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_student_roster_program_active" ON "public"."student_roster" USING "btree" ("program_id", "is_active") WHERE ("is_active" = true);
+
+
+
+CREATE INDEX "idx_student_roster_program_id" ON "public"."student_roster" USING "btree" ("program_id");
+
+
+
+CREATE INDEX "idx_student_roster_student_number" ON "public"."student_roster" USING "btree" ("student_number");
+
+
+
+CREATE INDEX "idx_student_roster_user_id" ON "public"."student_roster" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_system_logs_component" ON "public"."system_logs" USING "btree" ("component", "timestamp" DESC);
+
+
+
+CREATE INDEX "idx_system_logs_level" ON "public"."system_logs" USING "btree" ("log_level", "timestamp" DESC);
+
+
+
+CREATE INDEX "idx_system_logs_tenant_id" ON "public"."system_logs" USING "btree" ("tenant_id", "timestamp" DESC);
+
+
+
+CREATE INDEX "idx_system_logs_timestamp" ON "public"."system_logs" USING "btree" ("timestamp" DESC);
+
+
+
+CREATE INDEX "idx_system_logs_type" ON "public"."system_logs" USING "btree" ("log_type", "timestamp" DESC);
+
+
+
+CREATE INDEX "idx_system_logs_user_id" ON "public"."system_logs" USING "btree" ("user_id", "timestamp" DESC);
+
+
+
+CREATE INDEX "idx_template_states_template" ON "public"."simulation_template_states" USING "btree" ("template_id", "sort_order");
+
+
+
+CREATE INDEX "idx_tenant_users_active" ON "public"."tenant_users" USING "btree" ("is_active");
+
+
+
+CREATE INDEX "idx_tenant_users_tenant_id" ON "public"."tenant_users" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_tenant_users_user_id" ON "public"."tenant_users" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_tenant_users_user_tenant" ON "public"."tenant_users" USING "btree" ("user_id", "tenant_id");
+
+
+
+CREATE INDEX "idx_tenant_users_user_tenant_active" ON "public"."tenant_users" USING "btree" ("user_id", "tenant_id", "is_active") WHERE ("is_active" = true);
+
+
+
+CREATE INDEX "idx_tenants_admin_user_id" ON "public"."tenants" USING "btree" ("admin_user_id");
+
+
+
+CREATE INDEX "idx_tenants_id" ON "public"."tenants" USING "btree" ("id");
+
+
+
+CREATE INDEX "idx_tenants_program_id" ON "public"."tenants" USING "btree" ("program_id");
+
+
+
+CREATE INDEX "idx_tenants_simulation" ON "public"."tenants" USING "btree" ("is_simulation") WHERE ("is_simulation" = true);
+
+
+
+CREATE INDEX "idx_tenants_status" ON "public"."tenants" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_tenants_subdomain" ON "public"."tenants" USING "btree" ("subdomain");
+
+
+
+CREATE INDEX "idx_tenants_type" ON "public"."tenants" USING "btree" ("tenant_type");
+
+
+
+CREATE INDEX "idx_tr_alp_patient_tenant" ON "public"."tr_active_living_profiles" USING "btree" ("patient_id", "tenant_id");
+
+
+
+CREATE INDEX "idx_tr_alp_tenant" ON "public"."tr_active_living_profiles" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_tr_interps_group" ON "public"."tr_interdisciplinary_interps" USING "btree" ("tenant_id", "score_group");
+
+
+
+CREATE INDEX "idx_tr_interps_patient_tenant" ON "public"."tr_interdisciplinary_interps" USING "btree" ("patient_id", "tenant_id");
+
+
+
+CREATE INDEX "idx_tr_notes_patient_tenant" ON "public"."tr_progress_notes" USING "btree" ("patient_id", "tenant_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_tr_notes_tenant" ON "public"."tr_progress_notes" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_tr_plan_patient_tenant" ON "public"."tr_treatment_plan_rows" USING "btree" ("patient_id", "tenant_id", "sort_order");
+
+
+
+CREATE INDEX "idx_tr_plan_tenant" ON "public"."tr_treatment_plan_rows" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_tr_scores_baseline" ON "public"."tr_assessment_scores" USING "btree" ("tenant_id", "is_baseline");
+
+
+
+CREATE INDEX "idx_tr_scores_patient_tenant" ON "public"."tr_assessment_scores" USING "btree" ("patient_id", "tenant_id");
+
+
+
+CREATE INDEX "idx_tr_scores_tool" ON "public"."tr_assessment_scores" USING "btree" ("tenant_id", "tool_name");
+
+
+
+CREATE INDEX "idx_tr_screening_baseline" ON "public"."tr_screening_entries" USING "btree" ("tenant_id", "is_baseline");
+
+
+
+CREATE INDEX "idx_tr_screening_patient_tenant" ON "public"."tr_screening_entries" USING "btree" ("patient_id", "tenant_id");
+
+
+
+CREATE INDEX "idx_tr_screening_tenant" ON "public"."tr_screening_entries" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_user_profiles_active" ON "public"."user_profiles" USING "btree" ("is_active");
+
+
+
+CREATE INDEX "idx_user_profiles_default_tenant_id" ON "public"."user_profiles" USING "btree" ("default_tenant_id");
+
+
+
+CREATE INDEX "idx_user_profiles_email" ON "public"."user_profiles" USING "btree" ("email");
+
+
+
+CREATE INDEX "idx_user_profiles_id" ON "public"."user_profiles" USING "btree" ("id");
+
+
+
+COMMENT ON INDEX "public"."idx_user_profiles_id" IS 'Speeds up user profile lookups during authentication';
+
+
+
+CREATE INDEX "idx_user_profiles_id_role" ON "public"."user_profiles" USING "btree" ("id", "role");
+
+
+
+CREATE INDEX "idx_user_profiles_role" ON "public"."user_profiles" USING "btree" ("role");
+
+
+
+CREATE INDEX "idx_user_profiles_role_active" ON "public"."user_profiles" USING "btree" ("role", "is_active");
+
+
+
+CREATE INDEX "idx_user_profiles_simulation_only" ON "public"."user_profiles" USING "btree" ("simulation_only") WHERE ("simulation_only" = true);
+
+
+
+CREATE INDEX "idx_user_profiles_super_admin_check" ON "public"."user_profiles" USING "btree" ("id") WHERE (("role" = 'super_admin'::"public"."user_role") AND ("is_active" = true));
+
+
+
+CREATE INDEX "idx_user_programs_program_id" ON "public"."user_programs" USING "btree" ("program_id");
+
+
+
+CREATE INDEX "idx_user_programs_user_id" ON "public"."user_programs" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_user_sessions_status" ON "public"."user_sessions" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_user_sessions_tenant_id" ON "public"."user_sessions" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_user_sessions_user_id" ON "public"."user_sessions" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_user_tenant_active" ON "public"."tenant_users" USING "btree" ("user_id", "is_active") WHERE ("is_active" = true);
+
+
+
+COMMENT ON INDEX "public"."idx_user_tenant_active" IS 'Optimizes tenant assignment queries for active users';
+
+
+
+CREATE INDEX "idx_user_tenant_cache_tenant_id" ON "public"."user_tenant_cache" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_user_tenant_cache_user" ON "public"."user_tenant_cache" USING "btree" ("user_id");
+
+
+
+CREATE UNIQUE INDEX "idx_user_tenant_cache_user_tenant" ON "public"."user_tenant_cache" USING "btree" ("user_id", "tenant_id");
+
+
+
+COMMENT ON INDEX "public"."idx_user_tenant_cache_user_tenant" IS 'Allows users (especially super admins) to be cached for multiple tenants';
+
+
+
+CREATE INDEX "idx_wound_assessments_assessed_at" ON "public"."wound_assessments" USING "btree" ("assessed_at" DESC);
+
+
+
+CREATE INDEX "idx_wound_assessments_assessment_data" ON "public"."wound_assessments" USING "gin" ("assessment_data");
+
+
+
+CREATE INDEX "idx_wound_assessments_assessment_date" ON "public"."wound_assessments" USING "btree" ("assessment_date");
+
+
+
+CREATE INDEX "idx_wound_assessments_assessor_id" ON "public"."wound_assessments" USING "btree" ("assessor_id");
+
+
+
+CREATE INDEX "idx_wound_assessments_device_id" ON "public"."wound_assessments" USING "btree" ("device_id");
+
+
+
+CREATE INDEX "idx_wound_assessments_device_type" ON "public"."wound_assessments" USING "btree" ("device_type") WHERE ("device_type" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_wound_assessments_patient_id" ON "public"."wound_assessments" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_wound_assessments_student_name" ON "public"."wound_assessments" USING "btree" ("student_name");
+
+
+
+CREATE INDEX "idx_wound_assessments_tenant_id" ON "public"."wound_assessments" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_wound_assessments_wound_id" ON "public"."wound_assessments" USING "btree" ("wound_id");
+
+
+
+CREATE INDEX "idx_wound_treatments_administered_by_id" ON "public"."wound_treatments" USING "btree" ("administered_by_id");
+
+
+
+CREATE INDEX "idx_wound_treatments_assessment_id" ON "public"."wound_treatments" USING "btree" ("wound_assessment_id");
+
+
+
+CREATE INDEX "idx_wound_treatments_patient_id" ON "public"."wound_treatments" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_wound_treatments_tenant_id" ON "public"."wound_treatments" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_wound_treatments_treatment_date" ON "public"."wound_treatments" USING "btree" ("treatment_date");
+
+
+
+CREATE INDEX "idx_wounds_location" ON "public"."wounds" USING "btree" ("location_id");
+
+
+
+CREATE INDEX "idx_wounds_patient" ON "public"."wounds" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "idx_wounds_tenant" ON "public"."wounds" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "patient_notes_patient_id_idx" ON "public"."patient_notes" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "patient_notes_tenant_id_idx" ON "public"."patient_notes" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "patient_wounds_patient_id_idx" ON "public"."patient_wounds" USING "btree" ("patient_id");
+
+
+
+CREATE INDEX "user_sessions_logout_time_idx" ON "public"."user_sessions" USING "btree" ("logout_time");
+
+
+
+CREATE OR REPLACE TRIGGER "after_program_insert_create_tenant" AFTER INSERT ON "public"."programs" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_create_program_tenant"();
+
+
+
+CREATE OR REPLACE TRIGGER "avatar_locations_set_tenant_id" BEFORE INSERT ON "public"."avatar_locations" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "devices_set_tenant_id" BEFORE INSERT ON "public"."devices" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "devices_set_updated_at" BEFORE UPDATE ON "public"."devices" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "lab_orders_set_tenant_id" BEFORE INSERT ON "public"."lab_orders" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "lab_orders_set_updated_at" BEFORE UPDATE ON "public"."lab_orders" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "medication_admin_set_tenant_id" BEFORE INSERT ON "public"."medication_administrations" FOR EACH ROW EXECUTE FUNCTION "public"."set_medication_admin_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "medication_administrations_updated_at" BEFORE UPDATE ON "public"."medication_administrations" FOR EACH ROW EXECUTE FUNCTION "public"."update_medication_administrations_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "patient_alerts_tenant_trigger" BEFORE INSERT OR UPDATE ON "public"."patient_alerts" FOR EACH ROW EXECUTE FUNCTION "public"."set_alert_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "prevent_medication_id_changes" BEFORE UPDATE ON "public"."patient_medications" FOR EACH ROW EXECUTE FUNCTION "public"."protect_medication_identifiers"();
+
+
+
+CREATE OR REPLACE TRIGGER "prevent_patient_id_changes" BEFORE UPDATE ON "public"."patients" FOR EACH ROW EXECUTE FUNCTION "public"."protect_patient_identifiers"();
+
+
+
+CREATE OR REPLACE TRIGGER "programs_updated_at_trigger" BEFORE UPDATE ON "public"."programs" FOR EACH ROW EXECUTE FUNCTION "public"."update_programs_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_super_admin_role_trigger" BEFORE UPDATE ON "public"."user_profiles" FOR EACH ROW EXECUTE FUNCTION "public"."protect_super_admin_role"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_patient_notes_updated_at" BEFORE UPDATE ON "public"."patient_notes" FOR EACH ROW EXECUTE FUNCTION "public"."update_patient_notes_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."bowel_records" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."diabetic_records" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."medication_administrations" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patient_admission_records" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patient_advanced_directives" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patient_alerts" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patient_medications" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patient_notes" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patient_vitals" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_tenant_id_before_insert" BEFORE INSERT ON "public"."patients" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."tenant_users" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."user_profiles" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "student_roster_updated_at_trigger" BEFORE UPDATE ON "public"."student_roster" FOR EACH ROW EXECUTE FUNCTION "public"."update_student_roster_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "tenant_users_cache_refresh" AFTER INSERT OR DELETE OR UPDATE ON "public"."tenant_users" FOR EACH STATEMENT EXECUTE FUNCTION "public"."trigger_refresh_user_tenant_cache"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_auto_tag_simulation" BEFORE INSERT ON "public"."simulation_active" FOR EACH ROW EXECUTE FUNCTION "public"."auto_tag_simulation_from_template"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_set_wound_assessment_tenant_id" BEFORE INSERT ON "public"."wound_assessments" FOR EACH ROW EXECUTE FUNCTION "public"."set_wound_assessment_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_set_wound_treatment_tenant_id" BEFORE INSERT ON "public"."wound_treatments" FOR EACH ROW EXECUTE FUNCTION "public"."set_wound_treatment_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_update_patient_intake_output_events_updated_at" BEFORE UPDATE ON "public"."patient_intake_output_events" FOR EACH ROW EXECUTE FUNCTION "public"."update_patient_intake_output_events_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_wound_assessments_updated_at" BEFORE UPDATE ON "public"."wound_assessments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_wound_treatments_updated_at" BEFORE UPDATE ON "public"."wound_treatments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_contact_submissions_updated_at" BEFORE UPDATE ON "public"."contact_submissions" FOR EACH ROW EXECUTE FUNCTION "public"."update_contact_submissions_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_device_assessments_updated_at" BEFORE UPDATE ON "public"."device_assessments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_handover_notes_updated_at" BEFORE UPDATE ON "public"."handover_notes" FOR EACH ROW EXECUTE FUNCTION "public"."update_handover_notes_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_kb_walkthroughs_updated_at" BEFORE UPDATE ON "public"."kb_walkthroughs" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_lab_panels_updated_at" BEFORE UPDATE ON "public"."lab_panels" FOR EACH ROW EXECUTE FUNCTION "public"."update_lab_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_lab_result_refs_updated_at" BEFORE UPDATE ON "public"."lab_result_refs" FOR EACH ROW EXECUTE FUNCTION "public"."update_lab_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_lab_results_updated_at" BEFORE UPDATE ON "public"."lab_results" FOR EACH ROW EXECUTE FUNCTION "public"."update_lab_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_panel_status_on_result_ack" AFTER UPDATE OF "ack_at" ON "public"."lab_results" FOR EACH ROW EXECUTE FUNCTION "public"."update_lab_panel_status"();
+
+
+
+CREATE OR REPLACE TRIGGER "wounds_set_tenant_id" BEFORE INSERT ON "public"."wounds" FOR EACH ROW EXECUTE FUNCTION "public"."auto_set_tenant_id"();
+
+
+
+CREATE OR REPLACE TRIGGER "wounds_set_updated_at" BEFORE UPDATE ON "public"."wounds" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+ALTER TABLE ONLY "public"."audit_logs"
+    ADD CONSTRAINT "audit_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."avatar_locations"
+    ADD CONSTRAINT "avatar_locations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."avatar_locations"
+    ADD CONSTRAINT "avatar_locations_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."avatar_locations"
+    ADD CONSTRAINT "avatar_locations_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."device_assessments"
+    ADD CONSTRAINT "device_assessments_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "public"."devices"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."device_assessments"
+    ADD CONSTRAINT "device_assessments_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."devices"
+    ADD CONSTRAINT "devices_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."devices"
+    ADD CONSTRAINT "devices_location_id_fkey" FOREIGN KEY ("location_id") REFERENCES "public"."avatar_locations"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."devices"
+    ADD CONSTRAINT "devices_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."devices"
+    ADD CONSTRAINT "devices_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."diabetic_records"
+    ADD CONSTRAINT "diabetic_records_recorded_by_fkey" FOREIGN KEY ("recorded_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."diabetic_records"
+    ADD CONSTRAINT "diabetic_records_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."doctors_orders"
+    ADD CONSTRAINT "doctors_orders_acknowledged_by_fkey" FOREIGN KEY ("acknowledged_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."doctors_orders"
+    ADD CONSTRAINT "doctors_orders_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."doctors_orders"
+    ADD CONSTRAINT "doctors_orders_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."doctors_orders"
+    ADD CONSTRAINT "doctors_orders_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."doctors_orders"
+    ADD CONSTRAINT "doctors_orders_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."user_sessions"
+    ADD CONSTRAINT "fk_user_sessions_tenant" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."handover_notes"
+    ADD CONSTRAINT "handover_notes_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."kb_walkthroughs"
+    ADD CONSTRAINT "kb_walkthroughs_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."lab_ack_events"
+    ADD CONSTRAINT "lab_ack_events_ack_by_fkey" FOREIGN KEY ("ack_by") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+COMMENT ON CONSTRAINT "lab_ack_events_ack_by_fkey" ON "public"."lab_ack_events" IS 'Foreign key to user_profiles for Supabase joins';
+
+
+
+ALTER TABLE ONLY "public"."lab_ack_events"
+    ADD CONSTRAINT "lab_ack_events_panel_id_fkey" FOREIGN KEY ("panel_id") REFERENCES "public"."lab_panels"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."lab_ack_events"
+    ADD CONSTRAINT "lab_ack_events_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."lab_orders"
+    ADD CONSTRAINT "lab_orders_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."lab_orders"
+    ADD CONSTRAINT "lab_orders_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."lab_orders"
+    ADD CONSTRAINT "lab_orders_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."lab_orders"
+    ADD CONSTRAINT "lab_orders_verified_by_fkey" FOREIGN KEY ("verified_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."lab_panels"
+    ADD CONSTRAINT "lab_panels_entered_by_fkey" FOREIGN KEY ("entered_by") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+COMMENT ON CONSTRAINT "lab_panels_entered_by_fkey" ON "public"."lab_panels" IS 'Foreign key to user_profiles for Supabase joins';
+
+
+
+ALTER TABLE ONLY "public"."lab_panels"
+    ADD CONSTRAINT "lab_panels_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."lab_results"
+    ADD CONSTRAINT "lab_results_ack_by_fkey" FOREIGN KEY ("ack_by") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+COMMENT ON CONSTRAINT "lab_results_ack_by_fkey" ON "public"."lab_results" IS 'Foreign key to user_profiles for Supabase joins';
+
+
+
+ALTER TABLE ONLY "public"."lab_results"
+    ADD CONSTRAINT "lab_results_entered_by_fkey" FOREIGN KEY ("entered_by") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+COMMENT ON CONSTRAINT "lab_results_entered_by_fkey" ON "public"."lab_results" IS 'Foreign key to user_profiles for Supabase joins';
+
+
+
+ALTER TABLE ONLY "public"."lab_results"
+    ADD CONSTRAINT "lab_results_panel_id_fkey" FOREIGN KEY ("panel_id") REFERENCES "public"."lab_panels"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."lab_results"
+    ADD CONSTRAINT "lab_results_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."medication_administrations"
+    ADD CONSTRAINT "medication_administrations_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id");
+
+
+
+ALTER TABLE ONLY "public"."medications_catalog"
+    ADD CONSTRAINT "medications_catalog_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."medications_catalog"
+    ADD CONSTRAINT "medications_catalog_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."multi_tenant_admins"
+    ADD CONSTRAINT "multi_tenant_admins_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user_profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_alerts"
+    ADD CONSTRAINT "patient_alerts_acknowledged_by_fkey" FOREIGN KEY ("acknowledged_by") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."patient_alerts"
+    ADD CONSTRAINT "patient_alerts_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_alerts"
+    ADD CONSTRAINT "patient_alerts_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_bbit_entries"
+    ADD CONSTRAINT "patient_bbit_entries_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_images"
+    ADD CONSTRAINT "patient_images_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_images"
+    ADD CONSTRAINT "patient_images_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_images"
+    ADD CONSTRAINT "patient_images_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_intake_output_events"
+    ADD CONSTRAINT "patient_intake_output_events_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_intake_output_events"
+    ADD CONSTRAINT "patient_intake_output_events_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_intake_output_events"
+    ADD CONSTRAINT "patient_intake_output_events_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_medications"
+    ADD CONSTRAINT "patient_medications_catalog_id_fkey" FOREIGN KEY ("catalog_id") REFERENCES "public"."medications_catalog"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."patient_medications"
+    ADD CONSTRAINT "patient_medications_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_medications_templates"
+    ADD CONSTRAINT "patient_medications_templates_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_medications"
+    ADD CONSTRAINT "patient_medications_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_neuro_assessments"
+    ADD CONSTRAINT "patient_neuro_assessments_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_newborn_assessments"
+    ADD CONSTRAINT "patient_newborn_assessments_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_notes"
+    ADD CONSTRAINT "patient_notes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_notes"
+    ADD CONSTRAINT "patient_notes_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_notes"
+    ADD CONSTRAINT "patient_notes_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_system_assessments"
+    ADD CONSTRAINT "patient_system_assessments_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_system_assessments"
+    ADD CONSTRAINT "patient_system_assessments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_vitals"
+    ADD CONSTRAINT "patient_vitals_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patient_vitals_templates"
+    ADD CONSTRAINT "patient_vitals_templates_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."patient_vitals"
+    ADD CONSTRAINT "patient_vitals_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."patient_wounds"
+    ADD CONSTRAINT "patient_wounds_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."patients"
+    ADD CONSTRAINT "patients_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."profiles"
+    ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."programs"
+    ADD CONSTRAINT "programs_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."programs"
+    ADD CONSTRAINT "programs_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_active"
+    ADD CONSTRAINT "simulation_active_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_active"
+    ADD CONSTRAINT "simulation_active_current_state_id_fkey" FOREIGN KEY ("current_state_id") REFERENCES "public"."simulation_template_states"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."simulation_active"
+    ADD CONSTRAINT "simulation_active_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "public"."simulation_templates"("id") ON DELETE RESTRICT;
+
+
+
+ALTER TABLE ONLY "public"."simulation_active"
+    ADD CONSTRAINT "simulation_active_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_activity_log"
+    ADD CONSTRAINT "simulation_activity_log_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "public"."simulation_active"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_activity_log"
+    ADD CONSTRAINT "simulation_activity_log_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_auto_students"
+    ADD CONSTRAINT "simulation_auto_students_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_auto_students"
+    ADD CONSTRAINT "simulation_auto_students_program_id_fkey" FOREIGN KEY ("program_id") REFERENCES "public"."programs"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."simulation_auto_students"
+    ADD CONSTRAINT "simulation_auto_students_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "public"."simulation_active"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_auto_students"
+    ADD CONSTRAINT "simulation_auto_students_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_history"
+    ADD CONSTRAINT "simulation_history_archived_by_fkey" FOREIGN KEY ("archived_by") REFERENCES "public"."user_profiles"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_history"
+    ADD CONSTRAINT "simulation_history_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_history"
+    ADD CONSTRAINT "simulation_history_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "public"."simulation_templates"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_participants"
+    ADD CONSTRAINT "simulation_participants_granted_by_fkey" FOREIGN KEY ("granted_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_participants"
+    ADD CONSTRAINT "simulation_participants_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "public"."simulation_active"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_participants"
+    ADD CONSTRAINT "simulation_participants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_template_states"
+    ADD CONSTRAINT "simulation_template_states_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."simulation_template_states"
+    ADD CONSTRAINT "simulation_template_states_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "public"."simulation_templates"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_template_states"
+    ADD CONSTRAINT "simulation_template_states_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."simulation_templates"
+    ADD CONSTRAINT "simulation_templates_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."simulation_templates"
+    ADD CONSTRAINT "simulation_templates_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."student_roster"
+    ADD CONSTRAINT "student_roster_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."student_roster"
+    ADD CONSTRAINT "student_roster_program_id_fkey" FOREIGN KEY ("program_id") REFERENCES "public"."programs"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."student_roster"
+    ADD CONSTRAINT "student_roster_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."system_logs"
+    ADD CONSTRAINT "system_logs_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."system_logs"
+    ADD CONSTRAINT "system_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."tenant_users"
+    ADD CONSTRAINT "tenant_users_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tenant_users"
+    ADD CONSTRAINT "tenant_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user_profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_admin_user_id_fkey" FOREIGN KEY ("admin_user_id") REFERENCES "public"."user_profiles"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_parent_tenant_id_fkey" FOREIGN KEY ("parent_tenant_id") REFERENCES "public"."tenants"("id");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_program_id_fkey" FOREIGN KEY ("program_id") REFERENCES "public"."programs"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_active_living_profiles"
+    ADD CONSTRAINT "tr_active_living_profiles_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_active_living_profiles"
+    ADD CONSTRAINT "tr_active_living_profiles_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_assessment_scores"
+    ADD CONSTRAINT "tr_assessment_scores_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_assessment_scores"
+    ADD CONSTRAINT "tr_assessment_scores_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_interdisciplinary_interps"
+    ADD CONSTRAINT "tr_interdisciplinary_interps_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_interdisciplinary_interps"
+    ADD CONSTRAINT "tr_interdisciplinary_interps_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_progress_notes"
+    ADD CONSTRAINT "tr_progress_notes_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_progress_notes"
+    ADD CONSTRAINT "tr_progress_notes_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_screening_entries"
+    ADD CONSTRAINT "tr_screening_entries_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_screening_entries"
+    ADD CONSTRAINT "tr_screening_entries_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_treatment_plan_rows"
+    ADD CONSTRAINT "tr_treatment_plan_rows_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tr_treatment_plan_rows"
+    ADD CONSTRAINT "tr_treatment_plan_rows_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_profiles"
+    ADD CONSTRAINT "user_profiles_default_tenant_id_fkey" FOREIGN KEY ("default_tenant_id") REFERENCES "public"."tenants"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."user_profiles"
+    ADD CONSTRAINT "user_profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_assigned_by_fkey" FOREIGN KEY ("assigned_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_program_id_fkey" FOREIGN KEY ("program_id") REFERENCES "public"."programs"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_sessions"
+    ADD CONSTRAINT "user_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wound_assessments"
+    ADD CONSTRAINT "wound_assessments_assessor_id_fkey" FOREIGN KEY ("assessor_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."wound_assessments"
+    ADD CONSTRAINT "wound_assessments_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "public"."devices"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wound_assessments"
+    ADD CONSTRAINT "wound_assessments_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wound_assessments"
+    ADD CONSTRAINT "wound_assessments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wound_assessments"
+    ADD CONSTRAINT "wound_assessments_wound_id_fkey" FOREIGN KEY ("wound_id") REFERENCES "public"."wounds"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wound_treatments"
+    ADD CONSTRAINT "wound_treatments_administered_by_id_fkey" FOREIGN KEY ("administered_by_id") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."wound_treatments"
+    ADD CONSTRAINT "wound_treatments_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wound_treatments"
+    ADD CONSTRAINT "wound_treatments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wounds"
+    ADD CONSTRAINT "wounds_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id");
+
+
+
+ALTER TABLE ONLY "public"."wounds"
+    ADD CONSTRAINT "wounds_location_id_fkey" FOREIGN KEY ("location_id") REFERENCES "public"."avatar_locations"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wounds"
+    ADD CONSTRAINT "wounds_patient_id_fkey" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."wounds"
+    ADD CONSTRAINT "wounds_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+CREATE POLICY "Anyone can submit contact form" ON "public"."contact_submissions" FOR INSERT TO "anon", "authenticated" WITH CHECK (true);
+
+
+
+CREATE POLICY "Authenticated users can delete wound assessments" ON "public"."wound_assessments" FOR DELETE USING ((( SELECT ( SELECT "auth"."role"() AS "role") AS "role") = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Authenticated users can insert audit logs" ON "public"."audit_logs" FOR INSERT WITH CHECK (("user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
+
+
+
+CREATE POLICY "Authenticated users can insert wound assessments" ON "public"."wound_assessments" FOR INSERT WITH CHECK ((( SELECT ( SELECT "auth"."role"() AS "role") AS "role") = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Authenticated users can update wound assessments" ON "public"."wound_assessments" FOR UPDATE USING ((( SELECT ( SELECT "auth"."role"() AS "role") AS "role") = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Authenticated users can view wound assessments" ON "public"."wound_assessments" FOR SELECT USING ((( SELECT ( SELECT "auth"."role"() AS "role") AS "role") = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Authorized users can delete diabetic records within tenant" ON "public"."diabetic_records" FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'nurse'::"public"."user_role"])) AND ("diabetic_records"."tenant_id" = "diabetic_records"."tenant_id")))));
+
+
+
+CREATE POLICY "Multi-tenant admins can manage multi_tenant_admins" ON "public"."multi_tenant_admins" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))) OR ("user_id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid"))));
+
+
+
+CREATE POLICY "Super admins can update contact submissions" ON "public"."contact_submissions" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "Super admins can view contact submissions" ON "public"."contact_submissions" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "Tenant isolation for wound treatments" ON "public"."wound_treatments" USING (("tenant_id" = ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")) AND ("tenant_users"."is_active" = true)))));
+
+
+
+CREATE POLICY "Users can create handover notes" ON "public"."handover_notes" FOR INSERT WITH CHECK ((( SELECT ( SELECT "auth"."role"() AS "role") AS "role") = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Users can delete admission records for their tenant" ON "public"."patient_admission_records" FOR DELETE USING (("tenant_id" = ( SELECT "patient_admission_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can delete advanced directives for their tenant" ON "public"."patient_advanced_directives" FOR DELETE USING (("tenant_id" = ( SELECT "patient_advanced_directives"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can delete bowel records for their tenant" ON "public"."bowel_records" FOR DELETE USING (("tenant_id" = ( SELECT "bowel_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can delete notes for their tenant" ON "public"."patient_notes" FOR DELETE USING (("tenant_id" = ( SELECT "patient_notes"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can delete their own new handover notes" ON "public"."handover_notes" FOR DELETE USING ((((( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid"))::"text" = ("created_by")::"text") AND ("created_at" > ("now"() - '01:00:00'::interval))));
+
+
+
+CREATE POLICY "Users can insert admission records for their tenant" ON "public"."patient_admission_records" FOR INSERT WITH CHECK (("tenant_id" = ( SELECT "patient_admission_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can insert advanced directives for their tenant" ON "public"."patient_advanced_directives" FOR INSERT WITH CHECK (("tenant_id" = ( SELECT "patient_advanced_directives"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can insert bowel records for their tenant" ON "public"."bowel_records" FOR INSERT WITH CHECK (("tenant_id" = ( SELECT "bowel_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can insert diabetic records for their tenant" ON "public"."diabetic_records" FOR INSERT WITH CHECK (("tenant_id" IN ( SELECT "diabetic_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "Users can insert notes for their tenant" ON "public"."patient_notes" FOR INSERT WITH CHECK (("tenant_id" = ( SELECT "patient_notes"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update admission records for their tenant" ON "public"."patient_admission_records" FOR UPDATE USING (("tenant_id" = ( SELECT "patient_admission_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update advanced directives for their tenant" ON "public"."patient_advanced_directives" FOR UPDATE USING (("tenant_id" = ( SELECT "patient_advanced_directives"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update bowel records for their tenant" ON "public"."bowel_records" FOR UPDATE USING (("tenant_id" = ( SELECT "bowel_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update notes for their tenant" ON "public"."patient_notes" FOR UPDATE USING (("tenant_id" = ( SELECT "patient_notes"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update their own diabetic records within tenant" ON "public"."diabetic_records" FOR UPDATE USING ((("recorded_by" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")) AND ("tenant_id" IN ( SELECT "diabetic_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))))));
+
+
+
+CREATE POLICY "Users can view admission records for their tenant" ON "public"."patient_admission_records" FOR SELECT USING (("tenant_id" = ( SELECT "patient_admission_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can view advanced directives for their tenant" ON "public"."patient_advanced_directives" FOR SELECT USING (("tenant_id" = ( SELECT "patient_advanced_directives"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can view bowel records for their tenant" ON "public"."bowel_records" FOR SELECT USING (("tenant_id" = ( SELECT "bowel_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can view diabetic records for their tenant" ON "public"."diabetic_records" FOR SELECT USING (("tenant_id" IN ( SELECT "diabetic_records"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "Users can view handover notes for accessible patients" ON "public"."handover_notes" FOR SELECT USING ((( SELECT ( SELECT "auth"."role"() AS "role") AS "role") = 'authenticated'::"text"));
+
+
+
+CREATE POLICY "Users can view notes for their tenant" ON "public"."patient_notes" FOR SELECT USING (("tenant_id" = ( SELECT "patient_notes"."tenant_id"
+   FROM "public"."user_profiles"
+  WHERE ("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "active_delete_policy" ON "public"."simulation_active" FOR DELETE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_active"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_active"."primary_categories")))))))));
+
+
+
+COMMENT ON POLICY "active_delete_policy" ON "public"."simulation_active" IS 'Instructors can delete simulations for their assigned programs. Super admins, coordinators, admins, and creators have full access.';
+
+
+
+CREATE POLICY "active_insert_policy" ON "public"."simulation_active" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
+
+
+
+COMMENT ON POLICY "active_insert_policy" ON "public"."simulation_active" IS 'Super admins, coordinators, admins, and instructors can create simulations. Categories are validated by application logic.';
+
+
+
+CREATE POLICY "active_select_instructor_programs" ON "public"."simulation_active" FOR SELECT TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_active"."tenant_id") AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."simulation_participants" "sp"
+  WHERE (("sp"."simulation_id" = "simulation_active"."id") AND ("sp"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_active"."primary_categories")))))))));
+
+
+
+COMMENT ON POLICY "active_select_instructor_programs" ON "public"."simulation_active" IS 'Instructors see active simulations tagged with their assigned program codes. Super admins, coordinators, creators, and participants see relevant sims.';
+
+
+
+CREATE POLICY "active_update_policy" ON "public"."simulation_active" FOR UPDATE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_active"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_active"."primary_categories"))))))))) WITH CHECK ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role", 'admin'::"public"."user_role"]))))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_active"."primary_categories")))))))));
+
+
+
+COMMENT ON POLICY "active_update_policy" ON "public"."simulation_active" IS 'Instructors can update (start/stop/pause) simulations for their assigned programs. Super admins, coordinators, admins, and creators have full access.';
+
+
+
+CREATE POLICY "activity_log_delete_policy" ON "public"."simulation_activity_log" FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "activity_log_insert_policy" ON "public"."simulation_activity_log" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "activity_log_select_policy" ON "public"."simulation_activity_log" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR ("simulation_id" IN ( SELECT "simulation_participants"."simulation_id"
+   FROM "public"."simulation_participants"
+  WHERE ("simulation_participants"."user_id" = ( SELECT "auth"."uid"() AS "uid")))) OR ("simulation_id" IN ( SELECT "simulation_active"."id"
+   FROM "public"."simulation_active"
+  WHERE ("simulation_active"."created_by" = ( SELECT "auth"."uid"() AS "uid")))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"])))))));
+
+
+
+ALTER TABLE "public"."audit_logs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "audit_logs_consolidated_select" ON "public"."audit_logs" FOR SELECT USING (("user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
+
+
+
+ALTER TABLE "public"."avatar_locations" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "bbit_entries_tenant_isolation" ON "public"."patient_bbit_entries" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+ALTER TABLE "public"."bowel_records" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "catalog_admin_write" ON "public"."medications_catalog" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "catalog_read_all" ON "public"."medications_catalog" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "catalog_super_admin_write" ON "public"."medications_catalog" TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "config_modify_policy" ON "public"."simulation_table_config" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+ALTER TABLE "public"."contact_submissions" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."device_assessments" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "device_assessments_tenant_isolation" ON "public"."device_assessments" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+ALTER TABLE "public"."devices" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."diabetic_records" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."doctors_orders" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "doctors_orders_access" ON "public"."doctors_orders" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "doctors_orders"."tenant_id") AND ("tenant_users"."is_active" = true)))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "doctors_orders"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+CREATE POLICY "hacmap_avatar_locations_access" ON "public"."avatar_locations" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "avatar_locations"."tenant_id") AND ("tenant_users"."is_active" = true)))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "avatar_locations"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+CREATE POLICY "hacmap_devices_access" ON "public"."devices" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "devices"."tenant_id") AND ("tenant_users"."is_active" = true)))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "devices"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+CREATE POLICY "hacmap_wounds_access" ON "public"."wounds" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "wounds"."tenant_id") AND ("tenant_users"."is_active" = true)))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "wounds"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."handover_notes" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "handover_notes_update" ON "public"."handover_notes" FOR UPDATE TO "authenticated" USING ((("patient_id" IN ( SELECT "p"."id"
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "p"."tenant_id")))
+  WHERE (("tu"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("patient_id" IN ( SELECT "p"."id"
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "p"."tenant_id")))
+  WHERE (("tu"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "history_insert_policy" ON "public"."simulation_history" FOR INSERT WITH CHECK ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "history_select_policy" ON "public"."simulation_history" FOR SELECT USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR ("participants" @> "jsonb_build_array"("jsonb_build_object"('user_id', (( SELECT "auth"."uid"() AS "uid"))::"text"))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "history_update_policy" ON "public"."simulation_history" FOR UPDATE USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "intake_output_events_tenant_isolation" ON "public"."patient_intake_output_events" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+ALTER TABLE "public"."kb_walkthroughs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "kb_walkthroughs_delete" ON "public"."kb_walkthroughs" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "kb_walkthroughs_insert" ON "public"."kb_walkthroughs" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "kb_walkthroughs_select" ON "public"."kb_walkthroughs" FOR SELECT TO "authenticated" USING ((("is_active" = true) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "kb_walkthroughs_update" ON "public"."kb_walkthroughs" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = 'super_admin'::"public"."user_role"))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+ALTER TABLE "public"."lab_ack_events" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "lab_ack_events_insert" ON "public"."lab_ack_events" FOR INSERT TO "authenticated" WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND ("ack_by" = ( SELECT "auth"."uid"() AS "uid"))));
+
+
+
+CREATE POLICY "lab_ack_events_select" ON "public"."lab_ack_events" FOR SELECT TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+ALTER TABLE "public"."lab_orders" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "lab_orders_access" ON "public"."lab_orders" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "lab_orders"."tenant_id") AND ("tenant_users"."is_active" = true)))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "lab_orders"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."lab_panels" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "lab_panels_delete" ON "public"."lab_panels" FOR DELETE TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "lab_panels_insert" ON "public"."lab_panels" FOR INSERT TO "authenticated" WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"])))))));
+
+
+
+COMMENT ON POLICY "lab_panels_insert" ON "public"."lab_panels" IS 'Super admins bypass tenant check, regular admins must be in tenant cache';
+
+
+
+CREATE POLICY "lab_panels_select" ON "public"."lab_panels" FOR SELECT TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "lab_panels_update" ON "public"."lab_panels" FOR UPDATE TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"])))))));
+
+
+
+ALTER TABLE "public"."lab_result_refs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "lab_result_refs_delete" ON "public"."lab_result_refs" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "lab_result_refs_insert" ON "public"."lab_result_refs" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "lab_result_refs_select" ON "public"."lab_result_refs" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "lab_result_refs_update" ON "public"."lab_result_refs" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"]))))));
+
+
+
+ALTER TABLE "public"."lab_results" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "lab_results_delete" ON "public"."lab_results" FOR DELETE TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "lab_results_insert" ON "public"."lab_results" FOR INSERT TO "authenticated" WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"])))))));
+
+
+
+COMMENT ON POLICY "lab_results_insert" ON "public"."lab_results" IS 'Super admins bypass tenant check, regular admins must be in tenant cache';
+
+
+
+CREATE POLICY "lab_results_select" ON "public"."lab_results" FOR SELECT TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "lab_results_update" ON "public"."lab_results" FOR UPDATE TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) AND ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"]))))) OR (("ack_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("ack_at" IS NOT NULL)))));
+
+
+
+ALTER TABLE "public"."medication_administrations" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "medication_administrations_secure_access" ON "public"."medication_administrations" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR ("patient_id" IN ( SELECT ("p"."id")::"text" AS "id"
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("p"."tenant_id" = "tu"."tenant_id")))
+  WHERE (("tu"."user_id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("tu"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."medications_catalog" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."multi_tenant_admins" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "neuro_assessments_tenant_isolation" ON "public"."patient_neuro_assessments" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "newborn_assessments_tenant_isolation" ON "public"."patient_newborn_assessments" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "participants_delete_policy" ON "public"."simulation_participants" FOR DELETE USING ((("granted_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "participants_insert_policy" ON "public"."simulation_participants" FOR INSERT WITH CHECK ((("simulation_id" IN ( SELECT "simulation_active"."id"
+   FROM "public"."simulation_active"
+  WHERE ("simulation_active"."created_by" = ( SELECT "auth"."uid"() AS "uid")))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "participants_select_policy" ON "public"."simulation_participants" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"])))))));
+
+
+
+COMMENT ON POLICY "participants_select_policy" ON "public"."simulation_participants" IS 'Allow users to see their own participant records or admins/instructors to see all';
+
+
+
+CREATE POLICY "participants_update_policy" ON "public"."simulation_participants" FOR UPDATE USING ((("simulation_id" IN ( SELECT "simulation_active"."id"
+   FROM "public"."simulation_active"
+  WHERE ("simulation_active"."created_by" = ( SELECT "auth"."uid"() AS "uid")))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role"])))))));
+
+
+
+ALTER TABLE "public"."patient_admission_records" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_advanced_directives" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_alerts" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_alerts_consolidated_delete" ON "public"."patient_alerts" FOR DELETE USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "patient_alerts_consolidated_insert" ON "public"."patient_alerts" FOR INSERT WITH CHECK (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "patient_alerts_consolidated_select" ON "public"."patient_alerts" FOR SELECT USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "patient_alerts_consolidated_update" ON "public"."patient_alerts" FOR UPDATE USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))))) WITH CHECK (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+ALTER TABLE "public"."patient_bbit_entries" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_images" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_images_consolidated_delete" ON "public"."patient_images" FOR DELETE USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "patient_images_consolidated_insert" ON "public"."patient_images" FOR INSERT WITH CHECK (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "patient_images_consolidated_select" ON "public"."patient_images" FOR SELECT USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+CREATE POLICY "patient_images_consolidated_update" ON "public"."patient_images" FOR UPDATE USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))))) WITH CHECK (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE ("tenant_users"."user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")))));
+
+
+
+ALTER TABLE "public"."patient_intake_output_events" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_medications" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_medications_delete" ON "public"."patient_medications" FOR DELETE USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "patient_medications"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+CREATE POLICY "patient_medications_insert" ON "public"."patient_medications" FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "patient_medications"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+CREATE POLICY "patient_medications_select" ON "public"."patient_medications" FOR SELECT USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "patient_medications"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."patient_medications_templates" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_medications_update" ON "public"."patient_medications" FOR UPDATE USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "patient_medications"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."patient_neuro_assessments" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_newborn_assessments" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_notes" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_system_assessments" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."patient_templates" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_templates_delete" ON "public"."patient_templates" FOR DELETE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "patient_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("patient_templates"."primary_categories")))))))));
+
+
+
+CREATE POLICY "patient_templates_insert_policy" ON "public"."patient_templates" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "patient_templates_select" ON "public"."patient_templates" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "patient_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("patient_templates"."primary_categories")))))))));
+
+
+
+CREATE POLICY "patient_templates_update" ON "public"."patient_templates" FOR UPDATE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "patient_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("patient_templates"."primary_categories"))))))))) WITH CHECK ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "patient_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("patient_templates"."primary_categories")))))))));
+
+
+
+ALTER TABLE "public"."patient_vitals" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_vitals_delete" ON "public"."patient_vitals" FOR DELETE USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "p"."tenant_id")))
+  WHERE (("p"."id" = "patient_vitals"."patient_id") AND ("tu"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tu"."is_active" = true))))));
+
+
+
+CREATE POLICY "patient_vitals_insert" ON "public"."patient_vitals" FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "p"."tenant_id")))
+  WHERE (("p"."id" = "patient_vitals"."patient_id") AND ("tu"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tu"."is_active" = true))))));
+
+
+
+CREATE POLICY "patient_vitals_select" ON "public"."patient_vitals" FOR SELECT USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "p"."tenant_id")))
+  WHERE (("p"."id" = "patient_vitals"."patient_id") AND ("tu"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tu"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."patient_vitals_templates" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_vitals_update" ON "public"."patient_vitals" FOR UPDATE USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM ("public"."patients" "p"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "p"."tenant_id")))
+  WHERE (("p"."id" = "patient_vitals"."patient_id") AND ("tu"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tu"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."patient_wounds" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patient_wounds_delete" ON "public"."patient_wounds" FOR DELETE TO "authenticated" USING ((("patient_id" IN ( SELECT "patients"."id"
+   FROM "public"."patients"
+  WHERE ("patients"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("tenant_users"."is_active" = true)))))) AND (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("user_profiles"."role" = ANY (ARRAY['admin'::"public"."user_role", 'super_admin'::"public"."user_role"])))))));
+
+
+
+CREATE POLICY "patient_wounds_select" ON "public"."patient_wounds" FOR SELECT TO "authenticated" USING ((("patient_id" IN ( SELECT "patients"."id"
+   FROM "public"."patients"
+  WHERE ("patients"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("tenant_users"."is_active" = true)))))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+CREATE POLICY "patient_wounds_tenant_insert" ON "public"."patient_wounds" FOR INSERT TO "authenticated" WITH CHECK (("patient_id" IN ( SELECT "patients"."id"
+   FROM "public"."patients"
+  WHERE ("patients"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))))));
+
+
+
+CREATE POLICY "patient_wounds_update" ON "public"."patient_wounds" FOR UPDATE TO "authenticated" USING ((("patient_id" IN ( SELECT "patients"."id"
+   FROM "public"."patients"
+  WHERE ("patients"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("tenant_users"."is_active" = true)))))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("patient_id" IN ( SELECT "patients"."id"
+   FROM "public"."patients"
+  WHERE ("patients"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("tenant_users"."is_active" = true)))))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+ALTER TABLE "public"."patients" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "patients_tenant_isolation" ON "public"."patients" TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "patients"."tenant_id") AND ("tenant_users"."is_active" = true)))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role") AND ("user_profiles"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."tenant_id" = "patients"."tenant_id") AND ("tenant_users"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "profiles_consolidated_select" ON "public"."profiles" FOR SELECT USING (("id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
+
+
+
+CREATE POLICY "profiles_consolidated_update" ON "public"."profiles" FOR UPDATE USING (("id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))) WITH CHECK (("id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
+
+
+
+CREATE POLICY "profiles_insert_own" ON "public"."profiles" FOR INSERT TO "authenticated" WITH CHECK (("id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+ALTER TABLE "public"."programs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "programs_delete" ON "public"."programs" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "programs_insert" ON "public"."programs" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "programs_super_admin_select" ON "public"."programs" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "programs_tenant_isolation" ON "public"."programs" FOR SELECT TO "authenticated" USING (("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))));
+
+
+
+CREATE POLICY "programs_update" ON "public"."programs" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "psa_tenant_isolation" ON "public"."patient_system_assessments" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
+
+
+
+ALTER TABLE "public"."simulation_active" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."simulation_activity_log" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."simulation_auto_students" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "simulation_auto_students_insert" ON "public"."simulation_auto_students" FOR INSERT TO "authenticated" WITH CHECK (("created_by" = "auth"."uid"()));
+
+
+
+CREATE POLICY "simulation_auto_students_select" ON "public"."simulation_auto_students" FOR SELECT TO "authenticated" USING ((("created_by" = "auth"."uid"()) OR (EXISTS ( SELECT 1
+   FROM ("public"."simulation_active" "sa"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."tenant_id" = "sa"."tenant_id")))
+  WHERE (("sa"."id" = "simulation_auto_students"."simulation_id") AND ("tu"."user_id" = "auth"."uid"()) AND ("tu"."is_active" = true))))));
+
+
+
+ALTER TABLE "public"."simulation_history" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "simulation_history_delete_instructor_programs" ON "public"."simulation_history" FOR DELETE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_history"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_history"."primary_categories")))))))));
+
+
+
+COMMENT ON POLICY "simulation_history_delete_instructor_programs" ON "public"."simulation_history" IS 'Instructors can delete simulation history for their assigned programs. Super admins, coordinators, admins, and creators have full access.';
+
+
+
+ALTER TABLE "public"."simulation_participants" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."simulation_table_config" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."simulation_template_states" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."simulation_templates" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."student_roster" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "student_roster_delete" ON "public"."student_roster" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "student_roster_insert" ON "public"."student_roster" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "student_roster_update" ON "public"."student_roster" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"])))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"]))))));
+
+
+
+CREATE POLICY "student_roster_view_program" ON "public"."student_roster" FOR SELECT TO "authenticated" USING (("program_id" IN ( SELECT "p"."id"
+   FROM "public"."programs" "p"
+  WHERE ("p"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))))));
+
+
+
+CREATE POLICY "super_admin_delete_system_logs" ON "public"."system_logs" FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))));
+
+
+
+CREATE POLICY "super_admin_sessions_access" ON "public"."user_sessions" USING (
 CASE
-    WHEN public.current_user_is_super_admin() THEN true
-    ELSE (user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))
+    WHEN "public"."current_user_is_super_admin"() THEN true
+    ELSE ("user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))
 END);
 
--- -- Name: system_logs super_admin_view_system_logs; Type: POLICY; Schema: public
-
-CREATE POLICY super_admin_view_system_logs ON public.system_logs FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))));
-
--- -- Name: system_logs system_logs_insert_authenticated; Type: POLICY; Schema: public
-
-CREATE POLICY system_logs_insert_authenticated ON public.system_logs FOR INSERT TO authenticated WITH CHECK (((user_id IS NULL) OR (user_id = ( SELECT auth.uid() AS uid))));
-
--- -- Name: simulation_template_versions template_versions_tenant_isolation; Type: POLICY; Schema: public
 
-CREATE POLICY template_versions_tenant_isolation ON public.simulation_template_versions TO authenticated USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))) OR (EXISTS ( SELECT 1
-   FROM (public.simulation_templates st
-     JOIN public.tenant_users tu ON ((tu.tenant_id = st.tenant_id)))
-  WHERE ((st.id = simulation_template_versions.template_id) AND (tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true)))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))) OR (EXISTS ( SELECT 1
-   FROM (public.simulation_templates st
-     JOIN public.tenant_users tu ON ((tu.tenant_id = st.tenant_id)))
-  WHERE ((st.id = simulation_template_versions.template_id) AND (tu.user_id = ( SELECT auth.uid() AS uid)) AND (tu.is_active = true))))));
-
--- -- Name: simulation_templates templates_delete; Type: POLICY; Schema: public
-
-CREATE POLICY templates_delete ON public.simulation_templates FOR DELETE TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_templates.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_templates.primary_categories)))))))));
 
--- -- Name: simulation_templates templates_insert_policy; Type: POLICY; Schema: public
+CREATE POLICY "super_admin_view_system_logs" ON "public"."system_logs" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))));
 
-CREATE POLICY templates_insert_policy ON public.simulation_templates FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'admin'::public.user_role, 'instructor'::public.user_role]))))));
 
--- -- Name: simulation_templates templates_select; Type: POLICY; Schema: public
 
-CREATE POLICY templates_select ON public.simulation_templates FOR SELECT TO authenticated USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_templates.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_templates.primary_categories))))))) OR (status = 'ready'::public.simulation_template_status)));
+ALTER TABLE "public"."system_logs" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_templates templates_update; Type: POLICY; Schema: public
 
-CREATE POLICY templates_update ON public.simulation_templates FOR UPDATE TO authenticated USING (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_templates.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_templates.primary_categories))))))))) WITH CHECK (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))) OR (EXISTS ( SELECT 1
-   FROM (public.user_profiles up
-     JOIN public.tenant_users tu ON ((tu.user_id = up.id)))
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'admin'::public.user_role) AND (tu.tenant_id = simulation_templates.tenant_id) AND (tu.is_active = true)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'instructor'::public.user_role)))) AND ((primary_categories IS NULL) OR (primary_categories = '{}'::text[]) OR (EXISTS ( SELECT 1
-   FROM (public.user_programs up_prog
-     JOIN public.programs prog ON ((prog.id = up_prog.program_id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (prog.code = ANY (simulation_templates.primary_categories)))))))));
+CREATE POLICY "system_logs_insert_authenticated" ON "public"."system_logs" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" IS NULL) OR ("user_id" = ( SELECT "auth"."uid"() AS "uid"))));
 
--- -- Name: tenant_users tenant_users_auth_delete; Type: POLICY; Schema: public
 
-CREATE POLICY tenant_users_auth_delete ON public.tenant_users FOR DELETE USING ((user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
 
--- -- Name: tenant_users tenant_users_auth_insert; Type: POLICY; Schema: public
+CREATE POLICY "template_states_delete" ON "public"."simulation_template_states" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."tenant_users" "tu"
+  WHERE (("tu"."tenant_id" = "simulation_template_states"."tenant_id") AND ("tu"."user_id" = "auth"."uid"()) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))));
 
-CREATE POLICY tenant_users_auth_insert ON public.tenant_users FOR INSERT WITH CHECK ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL));
 
--- -- Name: tenant_users tenant_users_auth_select; Type: POLICY; Schema: public
 
-CREATE POLICY tenant_users_auth_select ON public.tenant_users FOR SELECT USING ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL));
+CREATE POLICY "template_states_insert" ON "public"."simulation_template_states" FOR INSERT TO "authenticated" WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."tenant_users" "tu"
+  WHERE (("tu"."tenant_id" = "simulation_template_states"."tenant_id") AND ("tu"."user_id" = "auth"."uid"()) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))));
 
--- -- Name: tenant_users tenant_users_auth_update; Type: POLICY; Schema: public
 
-CREATE POLICY tenant_users_auth_update ON public.tenant_users FOR UPDATE USING ((user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))) WITH CHECK ((user_id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
 
--- -- Name: tenants tenants_auth_delete; Type: POLICY; Schema: public
+CREATE POLICY "template_states_select" ON "public"."simulation_template_states" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."tenant_users" "tu"
+  WHERE (("tu"."tenant_id" = "simulation_template_states"."tenant_id") AND ("tu"."user_id" = "auth"."uid"()) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))));
 
-CREATE POLICY tenants_auth_delete ON public.tenants FOR DELETE USING ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL));
 
--- -- Name: tenants tenants_auth_insert; Type: POLICY; Schema: public
 
-CREATE POLICY tenants_auth_insert ON public.tenants FOR INSERT WITH CHECK ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL));
+CREATE POLICY "template_states_update" ON "public"."simulation_template_states" FOR UPDATE TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."tenant_users" "tu"
+  WHERE (("tu"."tenant_id" = "simulation_template_states"."tenant_id") AND ("tu"."user_id" = "auth"."uid"()) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))))) WITH CHECK (((EXISTS ( SELECT 1
+   FROM "public"."tenant_users" "tu"
+  WHERE (("tu"."tenant_id" = "simulation_template_states"."tenant_id") AND ("tu"."user_id" = "auth"."uid"()) AND ("tu"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = "auth"."uid"()) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))));
 
--- -- Name: tenants tenants_auth_update; Type: POLICY; Schema: public
 
-CREATE POLICY tenants_auth_update ON public.tenants FOR UPDATE USING ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL)) WITH CHECK ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL));
 
--- -- Name: tenants tenants_authenticated_select; Type: POLICY; Schema: public
+CREATE POLICY "templates_delete" ON "public"."simulation_templates" FOR DELETE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_templates"."primary_categories")))))))));
 
-CREATE POLICY tenants_authenticated_select ON public.tenants FOR SELECT TO authenticated USING (((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role)))) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'coordinator'::public.user_role)))) OR (id IN ( SELECT tenant_users.tenant_id
-   FROM public.tenant_users
-  WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))) OR ((tenant_type = 'program'::text) AND (program_id IN ( SELECT p.id
-   FROM (public.programs p
-     JOIN public.user_programs up_prog ON ((up_prog.program_id = p.id)))
-  WHERE ((up_prog.user_id = ( SELECT auth.uid() AS uid)) AND (p.is_active = true)))))));
 
--- -- Name: tenants tenants_super_admin_delete; Type: POLICY; Schema: public
 
-CREATE POLICY tenants_super_admin_delete ON public.tenants FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role)))));
+CREATE POLICY "templates_insert_policy" ON "public"."simulation_templates" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'admin'::"public"."user_role", 'instructor'::"public"."user_role"]))))));
 
--- -- Name: tenants tenants_super_admin_insert; Type: POLICY; Schema: public
 
-CREATE POLICY tenants_super_admin_insert ON public.tenants FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role)))));
 
--- -- Name: tenants tenants_super_admin_update; Type: POLICY; Schema: public
+CREATE POLICY "templates_select" ON "public"."simulation_templates" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_templates"."primary_categories"))))))) OR ("status" = 'ready'::"public"."simulation_template_status")));
 
-CREATE POLICY tenants_super_admin_update ON public.tenants FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'super_admin'::public.user_role)))));
 
--- -- Name: user_profiles user_profiles_auth_insert; Type: POLICY; Schema: public
 
-CREATE POLICY user_profiles_auth_insert ON public.user_profiles FOR INSERT WITH CHECK ((id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
+CREATE POLICY "templates_update" ON "public"."simulation_templates" FOR UPDATE TO "authenticated" USING ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_templates"."primary_categories"))))))))) WITH CHECK ((("created_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_profiles" "up"
+     JOIN "public"."tenant_users" "tu" ON (("tu"."user_id" = "up"."id")))
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'admin'::"public"."user_role") AND ("tu"."tenant_id" = "simulation_templates"."tenant_id") AND ("tu"."is_active" = true)))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'instructor'::"public"."user_role")))) AND (("primary_categories" IS NULL) OR ("primary_categories" = '{}'::"text"[]) OR (EXISTS ( SELECT 1
+   FROM ("public"."user_programs" "up_prog"
+     JOIN "public"."programs" "prog" ON (("prog"."id" = "up_prog"."program_id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("prog"."code" = ANY ("simulation_templates"."primary_categories")))))))));
 
--- -- Name: user_profiles user_profiles_auth_select; Type: POLICY; Schema: public
 
-CREATE POLICY user_profiles_auth_select ON public.user_profiles FOR SELECT USING ((( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid) IS NOT NULL));
 
--- -- Name: user_profiles user_profiles_auth_update; Type: POLICY; Schema: public
+ALTER TABLE "public"."tenant_users" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY user_profiles_auth_update ON public.user_profiles FOR UPDATE USING ((id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid))) WITH CHECK ((id = ( SELECT ( SELECT ( SELECT auth.uid() AS uid) AS uid) AS uid)));
 
--- -- Name: user_profiles user_profiles_delete; Type: POLICY; Schema: public
+CREATE POLICY "tenant_users_auth_delete" ON "public"."tenant_users" FOR DELETE USING (("user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
 
-CREATE POLICY user_profiles_delete ON public.user_profiles FOR DELETE TO authenticated USING (((id = ( SELECT auth.uid() AS uid)) OR public.current_user_is_super_admin()));
 
--- -- Name: user_programs user_programs_delete; Type: POLICY; Schema: public
 
-CREATE POLICY user_programs_delete ON public.user_programs FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))));
+CREATE POLICY "tenant_users_auth_insert" ON "public"."tenant_users" FOR INSERT WITH CHECK ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL));
 
--- -- Name: user_programs user_programs_insert; Type: POLICY; Schema: public
 
-CREATE POLICY user_programs_insert ON public.user_programs FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))));
 
--- -- Name: user_programs user_programs_select; Type: POLICY; Schema: public
+CREATE POLICY "tenant_users_auth_select" ON "public"."tenant_users" FOR SELECT USING ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL));
 
-CREATE POLICY user_programs_select ON public.user_programs FOR SELECT TO authenticated USING (((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
-   FROM public.user_profiles
-  WHERE ((user_profiles.id = ( SELECT auth.uid() AS uid)) AND (user_profiles.role = 'super_admin'::public.user_role)))) OR ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = 'coordinator'::public.user_role)))) AND (program_id IN ( SELECT p.id
-   FROM public.programs p
-  WHERE (p.tenant_id IN ( SELECT tenant_users.tenant_id
-           FROM public.tenant_users
-          WHERE ((tenant_users.user_id = ( SELECT auth.uid() AS uid)) AND (tenant_users.is_active = true)))))))));
 
--- -- Name: user_programs user_programs_update; Type: POLICY; Schema: public
 
-CREATE POLICY user_programs_update ON public.user_programs FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role])))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.user_profiles up
-  WHERE ((up.id = ( SELECT auth.uid() AS uid)) AND (up.role = ANY (ARRAY['super_admin'::public.user_role, 'coordinator'::public.user_role]))))));
+CREATE POLICY "tenant_users_auth_update" ON "public"."tenant_users" FOR UPDATE USING (("user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))) WITH CHECK (("user_id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
 
 
--- ============================================================
--- ROW SECURITYS
--- ============================================================
 
--- -- Name: audit_logs; Type: ROW SECURITY; Schema: public
+ALTER TABLE "public"."tenants" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
--- -- Name: avatar_locations; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tenants_auth_delete" ON "public"."tenants" FOR DELETE USING ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL));
 
-ALTER TABLE public.avatar_locations ENABLE ROW LEVEL SECURITY;
 
--- -- Name: backup_audit_log; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.backup_audit_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tenants_auth_insert" ON "public"."tenants" FOR INSERT WITH CHECK ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL));
 
--- -- Name: backup_files; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.backup_files ENABLE ROW LEVEL SECURITY;
 
--- -- Name: backup_metadata; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tenants_auth_update" ON "public"."tenants" FOR UPDATE USING ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL)) WITH CHECK ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL));
 
-ALTER TABLE public.backup_metadata ENABLE ROW LEVEL SECURITY;
 
--- -- Name: bowel_records; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.bowel_records ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tenants_authenticated_select" ON "public"."tenants" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role")))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'coordinator'::"public"."user_role")))) OR ("id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))) OR (("tenant_type" = 'program'::"text") AND ("program_id" IN ( SELECT "p"."id"
+   FROM ("public"."programs" "p"
+     JOIN "public"."user_programs" "up_prog" ON (("up_prog"."program_id" = "p"."id")))
+  WHERE (("up_prog"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("p"."is_active" = true)))))));
 
--- -- Name: contact_submissions; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.contact_submissions ENABLE ROW LEVEL SECURITY;
 
--- -- Name: device_assessments; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tenants_super_admin_delete" ON "public"."tenants" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
 
-ALTER TABLE public.device_assessments ENABLE ROW LEVEL SECURITY;
 
--- -- Name: devices; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.devices ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tenants_super_admin_insert" ON "public"."tenants" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
 
--- -- Name: diabetic_records; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.diabetic_records ENABLE ROW LEVEL SECURITY;
 
--- -- Name: doctors_orders; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tenants_super_admin_update" ON "public"."tenants" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role"))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'super_admin'::"public"."user_role")))));
 
-ALTER TABLE public.doctors_orders ENABLE ROW LEVEL SECURITY;
 
--- -- Name: handover_notes; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.handover_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."tr_active_living_profiles" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: lab_ack_events; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.lab_ack_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tr_alp_tenant_isolation" ON "public"."tr_active_living_profiles" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
 
--- -- Name: lab_orders; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.lab_orders ENABLE ROW LEVEL SECURITY;
 
--- -- Name: lab_panels; Type: ROW SECURITY; Schema: public
+ALTER TABLE "public"."tr_assessment_scores" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.lab_panels ENABLE ROW LEVEL SECURITY;
 
--- -- Name: lab_result_refs; Type: ROW SECURITY; Schema: public
+ALTER TABLE "public"."tr_interdisciplinary_interps" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.lab_result_refs ENABLE ROW LEVEL SECURITY;
 
--- -- Name: lab_results; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tr_interps_tenant_isolation" ON "public"."tr_interdisciplinary_interps" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
 
-ALTER TABLE public.lab_results ENABLE ROW LEVEL SECURITY;
 
--- -- Name: medication_administrations; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.medication_administrations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tr_notes_tenant_isolation" ON "public"."tr_progress_notes" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
 
--- -- Name: multi_tenant_admins; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.multi_tenant_admins ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_admission_records; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tr_plan_tenant_isolation" ON "public"."tr_treatment_plan_rows" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
 
-ALTER TABLE public.patient_admission_records ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_advanced_directives; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_advanced_directives ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."tr_progress_notes" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_alerts; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_alerts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tr_scores_tenant_isolation" ON "public"."tr_assessment_scores" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
 
--- -- Name: patient_bbit_entries; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_bbit_entries ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_images; Type: ROW SECURITY; Schema: public
+ALTER TABLE "public"."tr_screening_entries" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.patient_images ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_intake_output_events; Type: ROW SECURITY; Schema: public
+CREATE POLICY "tr_screening_tenant_isolation" ON "public"."tr_screening_entries" TO "authenticated" USING ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))))) WITH CHECK ((("tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+   FROM "public"."tenant_users"
+  WHERE (("tenant_users"."user_id" = "auth"."uid"()) AND ("tenant_users"."is_active" = true)))) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = "auth"."uid"()) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role"))))));
 
-ALTER TABLE public.patient_intake_output_events ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_medications; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_medications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."tr_treatment_plan_rows" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_medications_templates; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_medications_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."user_profiles" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_neuro_assessments; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_neuro_assessments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_profiles_auth_insert" ON "public"."user_profiles" FOR INSERT WITH CHECK (("id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
 
--- -- Name: patient_newborn_assessments; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_newborn_assessments ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_notes; Type: ROW SECURITY; Schema: public
+CREATE POLICY "user_profiles_auth_select" ON "public"."user_profiles" FOR SELECT USING ((( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid") IS NOT NULL));
 
-ALTER TABLE public.patient_notes ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_vitals; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_vitals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_profiles_auth_update" ON "public"."user_profiles" FOR UPDATE USING (("id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid"))) WITH CHECK (("id" = ( SELECT ( SELECT ( SELECT "auth"."uid"() AS "uid") AS "uid") AS "uid")));
 
--- -- Name: patient_vitals_templates; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patient_vitals_templates ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patient_wounds; Type: ROW SECURITY; Schema: public
+CREATE POLICY "user_profiles_delete" ON "public"."user_profiles" FOR DELETE TO "authenticated" USING ((("id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."current_user_is_super_admin"()));
 
-ALTER TABLE public.patient_wounds ENABLE ROW LEVEL SECURITY;
 
--- -- Name: patients; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."user_programs" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: profiles; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_programs_delete" ON "public"."user_programs" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
 
--- -- Name: program_announcements; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.program_announcements ENABLE ROW LEVEL SECURITY;
 
--- -- Name: programs; Type: ROW SECURITY; Schema: public
+CREATE POLICY "user_programs_insert" ON "public"."user_programs" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
 
-ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 
--- -- Name: scheduled_simulations; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.scheduled_simulations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_programs_select" ON "public"."user_programs" FOR SELECT TO "authenticated" USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."user_profiles"
+  WHERE (("user_profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("user_profiles"."role" = 'super_admin'::"public"."user_role")))) OR ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = 'coordinator'::"public"."user_role")))) AND ("program_id" IN ( SELECT "p"."id"
+   FROM "public"."programs" "p"
+  WHERE ("p"."tenant_id" IN ( SELECT "tenant_users"."tenant_id"
+           FROM "public"."tenant_users"
+          WHERE (("tenant_users"."user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("tenant_users"."is_active" = true)))))))));
 
--- -- Name: simulation_active; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.simulation_active ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_activity_log; Type: ROW SECURITY; Schema: public
+CREATE POLICY "user_programs_update" ON "public"."user_programs" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"])))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."user_profiles" "up"
+  WHERE (("up"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("up"."role" = ANY (ARRAY['super_admin'::"public"."user_role", 'coordinator'::"public"."user_role"]))))));
 
-ALTER TABLE public.simulation_activity_log ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_history; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.simulation_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."user_sessions" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_participants; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.simulation_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."wound_assessments" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_table_config; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.simulation_table_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."wound_treatments" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_template_versions; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.simulation_template_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."wounds" ENABLE ROW LEVEL SECURITY;
 
--- -- Name: simulation_templates; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.simulation_templates ENABLE ROW LEVEL SECURITY;
+GRANT USAGE ON SCHEMA "public" TO "postgres";
+GRANT USAGE ON SCHEMA "public" TO "anon";
+GRANT USAGE ON SCHEMA "public" TO "authenticated";
+GRANT USAGE ON SCHEMA "public" TO "service_role";
 
--- -- Name: student_roster; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.student_roster ENABLE ROW LEVEL SECURITY;
 
--- -- Name: system_logs; Type: ROW SECURITY; Schema: public
+REVOKE ALL ON FUNCTION "public"."acknowledge_alert_for_tenant"("p_alert_id" "uuid", "p_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."acknowledge_alert_for_tenant"("p_alert_id" "uuid", "p_tenant_id" "uuid") TO "service_role";
 
-ALTER TABLE public.system_logs ENABLE ROW LEVEL SECURITY;
 
--- -- Name: tenant_users; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.tenant_users ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON FUNCTION "public"."add_patient_template_to_simulation_template"("p_patient_template_id" "uuid", "p_simulation_template_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."add_patient_template_to_simulation_template"("p_patient_template_id" "uuid", "p_simulation_template_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."add_patient_template_to_simulation_template"("p_patient_template_id" "uuid", "p_simulation_template_id" "uuid") TO "service_role";
 
--- -- Name: tenants; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 
--- -- Name: user_profiles; Type: ROW SECURITY; Schema: public
+GRANT ALL ON TABLE "public"."student_roster" TO "anon";
+GRANT ALL ON TABLE "public"."student_roster" TO "authenticated";
+GRANT ALL ON TABLE "public"."student_roster" TO "service_role";
 
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 
--- -- Name: user_programs; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.user_programs ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON FUNCTION "public"."add_student_to_roster_admin"("p_program_id" "uuid", "p_user_id" "uuid", "p_student_number" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."add_student_to_roster_admin"("p_program_id" "uuid", "p_user_id" "uuid", "p_student_number" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."add_student_to_roster_admin"("p_program_id" "uuid", "p_user_id" "uuid", "p_student_number" "text") TO "service_role";
 
--- -- Name: user_sessions; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.user_sessions ENABLE ROW LEVEL SECURITY;
 
--- -- Name: wound_assessments; Type: ROW SECURITY; Schema: public
+REVOKE ALL ON FUNCTION "public"."archive_landing_content_version"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."archive_landing_content_version"() TO "service_role";
 
-ALTER TABLE public.wound_assessments ENABLE ROW LEVEL SECURITY;
 
--- -- Name: wound_treatments; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.wound_treatments ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON FUNCTION "public"."auto_set_tenant_id"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."auto_set_tenant_id"() TO "service_role";
 
--- -- Name: wounds; Type: ROW SECURITY; Schema: public
 
-ALTER TABLE public.wounds ENABLE ROW LEVEL SECURITY;
 
+REVOKE ALL ON FUNCTION "public"."auto_tag_simulation_from_template"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."auto_tag_simulation_from_template"() TO "service_role";
 
--- ============================================================
--- DEFAULTS
--- ============================================================
 
--- -- Name: simulation_table_config id; Type: DEFAULT; Schema: public
 
-ALTER TABLE ONLY public.simulation_table_config ALTER COLUMN id SET DEFAULT nextval('public.simulation_table_config_id_seq'::regclass);
+REVOKE ALL ON FUNCTION "public"."bulk_assign_students_to_simulation"("p_simulation_id" "uuid", "p_student_user_ids" "uuid"[], "p_role" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."bulk_assign_students_to_simulation"("p_simulation_id" "uuid", "p_student_user_ids" "uuid"[], "p_role" "text") TO "service_role";
 
 
--- ============================================================
--- COMMENTS
--- ============================================================
 
--- -- Name: TYPE user_role; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."calculate_simulation_metrics"("p_simulation_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."calculate_simulation_metrics"("p_simulation_id" "uuid") TO "service_role";
 
-COMMENT ON TYPE public.user_role IS 'User roles: super_admin (cross-tenant), coordinator (tenant-wide), admin (tenant admin), instructor (program-scoped), nurse (clinical staff), student (learner)';
 
--- -- Name: FUNCTION acknowledge_alert_for_tenant(p_alert_id uuid, p_tenant_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.acknowledge_alert_for_tenant(p_alert_id uuid, p_tenant_id uuid) IS 'Allows super admins and admins to acknowledge patient alerts across tenants, bypassing RLS policies';
+REVOKE ALL ON FUNCTION "public"."cleanup_all_problem_simulations"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cleanup_all_problem_simulations"() TO "service_role";
 
--- -- Name: FUNCTION auto_tag_simulation_from_template(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.auto_tag_simulation_from_template() IS 'Automatically copy primary_categories from template to simulation when launching';
 
--- -- Name: FUNCTION cleanup_backup_audit_logs(); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."cleanup_backup_audit_logs"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cleanup_backup_audit_logs"() TO "service_role";
 
-COMMENT ON FUNCTION public.cleanup_backup_audit_logs() IS 'Removes audit logs older than 1 year';
 
--- -- Name: FUNCTION cleanup_expired_simulations(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.cleanup_expired_simulations() IS 'Removes expired simulation tenants and their data';
+REVOKE ALL ON FUNCTION "public"."cleanup_expired_simulations"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cleanup_expired_simulations"() TO "service_role";
 
--- -- Name: FUNCTION cleanup_old_user_sessions(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.cleanup_old_user_sessions() IS 'Deletes user_sessions older than 7 days to prevent table bloat. Run manually or schedule via Edge Function.';
 
--- -- Name: FUNCTION compare_simulation_template_patients(p_simulation_id uuid); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."cleanup_old_sessions"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cleanup_old_sessions"() TO "service_role";
 
-COMMENT ON FUNCTION public.compare_simulation_template_patients(p_simulation_id uuid) IS 'Compares simulation vs template patient lists to determine if barcodes can be preserved during sync';
 
--- -- Name: FUNCTION compare_simulation_vs_template(p_simulation_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.compare_simulation_vs_template(p_simulation_id uuid) IS 'Compares active simulation current data with template current snapshot for accurate sync preview';
+REVOKE ALL ON FUNCTION "public"."cleanup_old_user_sessions"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cleanup_old_user_sessions"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."cleanup_old_user_sessions"() TO "service_role";
 
--- -- Name: FUNCTION complete_simulation(p_simulation_id uuid, p_activities jsonb, p_instructor_name text); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.complete_simulation(p_simulation_id uuid, p_activities jsonb, p_instructor_name text) IS 'Complete simulation and archive to history with categories preserved';
 
--- -- Name: FUNCTION create_program_tenant(p_program_id uuid, p_parent_tenant_id uuid); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."cleanup_orphaned_users"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."cleanup_orphaned_users"() TO "service_role";
 
-COMMENT ON FUNCTION public.create_program_tenant(p_program_id uuid, p_parent_tenant_id uuid) IS 'Creates a dedicated tenant workspace for a program. Called when programs are created.';
 
--- -- Name: FUNCTION create_simulation_subtenant(p_simulation_id uuid, p_simulation_name text, p_parent_tenant_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.create_simulation_subtenant(p_simulation_id uuid, p_simulation_name text, p_parent_tenant_id uuid) IS 'Creates a new sub-tenant for a simulation with isolated data and auto-generated subdomain';
+REVOKE ALL ON FUNCTION "public"."compare_simulation_template_patients"("p_simulation_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."compare_simulation_template_patients"("p_simulation_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."compare_simulation_template_patients"("p_simulation_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION create_simulation_template(p_name text, p_description text, p_default_duration_minutes integer, p_primary_categories text[]); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.create_simulation_template(p_name text, p_description text, p_default_duration_minutes integer, p_primary_categories text[]) IS 'Creates a new simulation template with optional program categories. Categories determine which instructors can see and use the template.';
 
--- -- Name: FUNCTION create_snapshot(p_template_id uuid, p_name text, p_description text); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."compare_simulation_vs_template"("p_simulation_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."compare_simulation_vs_template"("p_simulation_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."compare_simulation_vs_template"("p_simulation_id" "uuid") TO "service_role";
 
-COMMENT ON FUNCTION public.create_snapshot(p_template_id uuid, p_name text, p_description text) IS 'Creates snapshot from template including hacMap data with body_view field';
 
 
-SET default_tablespace = '';
+REVOKE ALL ON FUNCTION "public"."complete_simulation"("p_simulation_id" "uuid", "p_activities" "jsonb", "p_instructor_name" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."complete_simulation"("p_simulation_id" "uuid", "p_activities" "jsonb", "p_instructor_name" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."complete_simulation"("p_simulation_id" "uuid", "p_activities" "jsonb", "p_instructor_name" "text") TO "service_role";
 
-SET default_table_access_method = heap;
 
--- -- Name: COLUMN user_profiles.primary_program; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.user_profiles.primary_program IS 'DEPRECATED: Primary program code. Use user_programs junction table instead.';
+REVOKE ALL ON FUNCTION "public"."confirm_simulation_student_email"("p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."confirm_simulation_student_email"("p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."confirm_simulation_student_email"("p_user_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN user_profiles.default_tenant_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.user_profiles.default_tenant_id IS 'Instructors default program tenant. Auto-set to their first program tenant or manually chosen.';
 
--- -- Name: FUNCTION create_user_profile(user_id uuid, user_email text, first_name text, last_name text, user_role public.user_role); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."confirm_user_email"("target_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."confirm_user_email"("target_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."confirm_user_email"("target_user_id" "uuid") TO "service_role";
 
-COMMENT ON FUNCTION public.create_user_profile(user_id uuid, user_email text, first_name text, last_name text, user_role public.user_role) IS 'Creates a user profile with immutable search path for security';
 
--- -- Name: FUNCTION create_user_session(p_ip_address inet, p_user_agent text, p_tenant_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.create_user_session(p_ip_address inet, p_user_agent text, p_tenant_id uuid) IS 'Creates or updates user session with IP tracking on login';
+REVOKE ALL ON FUNCTION "public"."create_medication_super_admin"("p_patient_id" "uuid", "p_name" "text", "p_dosage" "text", "p_frequency" "text", "p_route" "text", "p_start_date" "date", "p_end_date" "date", "p_prescribed_by" "text", "p_category" "text", "p_admin_time" "text", "p_status" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_medication_super_admin"("p_patient_id" "uuid", "p_name" "text", "p_dosage" "text", "p_frequency" "text", "p_route" "text", "p_start_date" "date", "p_end_date" "date", "p_prescribed_by" "text", "p_category" "text", "p_admin_time" "text", "p_status" "text") TO "service_role";
 
--- -- Name: FUNCTION delete_medication_super_admin(p_medication_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.delete_medication_super_admin(p_medication_id uuid) IS 'Allows super admins and admins to delete medications across tenant boundaries, bypassing RLS';
 
--- -- Name: FUNCTION delete_simulation(p_simulation_id uuid, p_archive_to_history boolean); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."create_patient_template"("p_name" "text", "p_description" "text", "p_primary_categories" "text"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_patient_template"("p_name" "text", "p_description" "text", "p_primary_categories" "text"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_patient_template"("p_name" "text", "p_description" "text", "p_primary_categories" "text"[]) TO "service_role";
 
-COMMENT ON FUNCTION public.delete_simulation(p_simulation_id uuid, p_archive_to_history boolean) IS 'Deletes an active simulation and its associated tenant. 
-Handles child tenants (program tenants) before deleting parent.
-Optionally archives to simulation_history before deletion.
-Uses SECURITY DEFINER to bypass RLS for complete cleanup.';
 
--- -- Name: FUNCTION delete_simulation_history(p_history_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.delete_simulation_history(p_history_id uuid) IS 'Permanently deletes a simulation history record and its debrief data.
-Uses SECURITY DEFINER to bypass RLS.';
+REVOKE ALL ON FUNCTION "public"."create_program_tenant"("p_program_id" "uuid", "p_parent_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_program_tenant"("p_program_id" "uuid", "p_parent_tenant_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_program_tenant"("p_program_id" "uuid", "p_parent_tenant_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION duplicate_patient_to_tenant(p_source_patient_id text, p_target_tenant_id uuid, p_new_patient_id text, p_include_vitals boolean, p_include_medications boolean, p_include_assessments boolean, p_include_handover_notes boolean, p_include_alerts boolean, p_include_diabetic_records boolean, p_include_bowel_records boolean, p_include_wound_care boolean, p_include_doctors_orders boolean, p_include_labs boolean, p_include_hacmap boolean, p_include_intake_output boolean); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.duplicate_patient_to_tenant(p_source_patient_id text, p_target_tenant_id uuid, p_new_patient_id text, p_include_vitals boolean, p_include_medications boolean, p_include_assessments boolean, p_include_handover_notes boolean, p_include_alerts boolean, p_include_diabetic_records boolean, p_include_bowel_records boolean, p_include_wound_care boolean, p_include_doctors_orders boolean, p_include_labs boolean, p_include_hacmap boolean, p_include_intake_output boolean) IS 'Duplicates a patient and ALL associated data to another tenant. Includes labs, hacMap, intake/output, and all other clinical data with proper foreign key mapping.';
 
--- -- Name: FUNCTION end_user_session(); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."create_simulation_subtenant"("p_simulation_id" "uuid", "p_simulation_name" "text", "p_parent_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_simulation_subtenant"("p_simulation_id" "uuid", "p_simulation_name" "text", "p_parent_tenant_id" "uuid") TO "service_role";
 
-COMMENT ON FUNCTION public.end_user_session() IS 'Ends user session and records logout time';
 
--- -- Name: FUNCTION ensure_user_profile(user_id uuid, user_email text); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.ensure_user_profile(user_id uuid, user_email text) IS 'Creates or retrieves a user profile. Uses immutable search path for security.';
+REVOKE ALL ON FUNCTION "public"."create_simulation_template"("p_name" "text", "p_description" "text", "p_default_duration_minutes" integer, "p_primary_categories" "text"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_simulation_template"("p_name" "text", "p_description" "text", "p_default_duration_minutes" integer, "p_primary_categories" "text"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_simulation_template"("p_name" "text", "p_description" "text", "p_default_duration_minutes" integer, "p_primary_categories" "text"[]) TO "service_role";
 
--- -- Name: FUNCTION get_backup_statistics(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.get_backup_statistics() IS 'Returns comprehensive backup system statistics';
 
--- -- Name: FUNCTION get_user_accessible_simulations(p_user_id uuid); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."create_snapshot"("p_template_id" "uuid", "p_name" "text", "p_description" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_snapshot"("p_template_id" "uuid", "p_name" "text", "p_description" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_snapshot"("p_template_id" "uuid", "p_name" "text", "p_description" "text") TO "service_role";
 
-COMMENT ON FUNCTION public.get_user_accessible_simulations(p_user_id uuid) IS 'Debug function to see what simulations a user can access and why';
 
--- -- Name: FUNCTION get_user_program_codes(p_user_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.get_user_program_codes(p_user_id uuid) IS 'Returns array of program codes assigned to user';
+GRANT ALL ON TABLE "public"."user_profiles" TO "anon";
+GRANT ALL ON TABLE "public"."user_profiles" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_profiles" TO "service_role";
 
--- -- Name: FUNCTION get_user_program_tenants(p_user_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.get_user_program_tenants(p_user_id uuid) IS 'Returns all program tenants that a user has access to via their program assignments';
 
--- -- Name: FUNCTION get_user_simulation_assignments(p_user_id uuid); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."create_user_profile"("user_id" "uuid", "user_email" "text", "first_name" "text", "last_name" "text", "user_role" "public"."user_role") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_user_profile"("user_id" "uuid", "user_email" "text", "first_name" "text", "last_name" "text", "user_role" "public"."user_role") TO "service_role";
 
-COMMENT ON FUNCTION public.get_user_simulation_assignments(p_user_id uuid) IS 'Gets simulation assignments for a user, bypassing RLS restrictions. Used by simulation portal.';
 
--- -- Name: FUNCTION get_user_simulation_tenant_access(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.get_user_simulation_tenant_access() IS 'Returns NULL for super_admin (access all tenants) or tenant_id for regular users';
+REVOKE ALL ON FUNCTION "public"."create_user_session"("p_ip_address" "inet", "p_user_agent" "text", "p_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."create_user_session"("p_ip_address" "inet", "p_user_agent" "text", "p_tenant_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION launch_run(p_snapshot_id uuid, p_run_name text); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.launch_run(p_snapshot_id uuid, p_run_name text) IS 'Launches active simulation from snapshot';
 
--- -- Name: FUNCTION launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[], p_primary_categories text[], p_sub_categories text[]); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."current_user_is_super_admin"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."current_user_is_super_admin"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."current_user_is_super_admin"() TO "service_role";
 
-COMMENT ON FUNCTION public.launch_simulation(p_template_id uuid, p_name text, p_duration_minutes integer, p_participant_user_ids uuid[], p_participant_roles text[], p_primary_categories text[], p_sub_categories text[]) IS 'Launch simulation with category tags for organization and filtering. Instructor (launcher) is explicitly added to tenant_users for debrief RLS access.';
 
--- -- Name: FUNCTION mark_expired_backups(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.mark_expired_backups() IS 'Automatically marks backups as expired based on expiry_date';
+REVOKE ALL ON FUNCTION "public"."deactivate_user"("target_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."deactivate_user"("target_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."deactivate_user"("target_user_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION protect_medication_identifiers(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.protect_medication_identifiers() IS 'Protects medication IDs from changes to preserve barcode validity';
 
--- -- Name: FUNCTION protect_patient_identifiers(); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."delete_medication_super_admin"("p_medication_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_medication_super_admin"("p_medication_id" "uuid") TO "service_role";
 
-COMMENT ON FUNCTION public.protect_patient_identifiers() IS 'Protects patient_id from changes to preserve pre-printed label validity';
 
--- -- Name: FUNCTION protect_super_admin_role(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.protect_super_admin_role() IS 'Prevents non-super-admins from changing super_admin roles, but allows super_admins to demote other super_admins. Includes audit logging for security compliance.';
+REVOKE ALL ON FUNCTION "public"."delete_patient_template"("p_patient_template_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_patient_template"("p_patient_template_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."delete_patient_template"("p_patient_template_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION reassign_user_tenant(p_user_id uuid, p_new_tenant_id uuid, p_role text); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.reassign_user_tenant(p_user_id uuid, p_new_tenant_id uuid, p_role text) IS 'Reassigns a user to a different tenant. Uses SECURITY DEFINER to bypass RLS. 
-Only callable by super_admins. Removes all existing tenant assignments and creates a new one.';
 
--- -- Name: FUNCTION reset_run(p_run_id uuid); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."delete_simulation"("p_simulation_id" "uuid", "p_archive_to_history" boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_simulation"("p_simulation_id" "uuid", "p_archive_to_history" boolean) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."delete_simulation"("p_simulation_id" "uuid", "p_archive_to_history" boolean) TO "service_role";
 
-COMMENT ON FUNCTION public.reset_run(p_run_id uuid) IS 'Resets simulation by deleting only event data, preserving printed IDs';
 
--- -- Name: FUNCTION reset_simulation_for_next_session(p_simulation_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.reset_simulation_for_next_session(p_simulation_id uuid) IS 'Reset simulation for next session - preserves patient/medication barcodes, sets status to pending (manual start required)';
+REVOKE ALL ON FUNCTION "public"."delete_simulation_history"("p_history_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_simulation_history"("p_history_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION reset_simulation_with_template_updates(p_simulation_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.reset_simulation_with_template_updates(p_simulation_id uuid) IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged.';
 
--- -- Name: FUNCTION restore_snapshot_to_tenant(p_tenant_id uuid, p_snapshot jsonb, p_id_mappings jsonb, p_barcode_mappings jsonb, p_preserve_barcodes boolean, p_skip_patients boolean); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."delete_simulation_template"("p_template_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_simulation_template"("p_template_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."delete_simulation_template"("p_template_id" "uuid") TO "service_role";
 
-COMMENT ON FUNCTION public.restore_snapshot_to_tenant(p_tenant_id uuid, p_snapshot jsonb, p_id_mappings jsonb, p_barcode_mappings jsonb, p_preserve_barcodes boolean, p_skip_patients boolean) IS 'Restores snapshot data to a tenant. FIXED: Patient mapping uses demographics (first/last/dob) instead of positional ORDER BY created_at OFFSET — the old approach was non-deterministic because simulation patients share the same created_at from being inserted in one transaction.';
 
--- -- Name: FUNCTION save_template_snapshot_v2(p_template_id uuid); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.save_template_snapshot_v2(p_template_id uuid) IS 'Schema-agnostic snapshot creation V2. Automatically discovers and captures ALL tenant data without hardcoded table names. Works with future schema changes automatically.';
+REVOKE ALL ON FUNCTION "public"."delete_tenant_secure"("target_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_tenant_secure"("target_tenant_id" "uuid") TO "service_role";
 
--- -- Name: FUNCTION trigger_create_program_tenant(); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.trigger_create_program_tenant() IS 'Trigger function that creates a program tenant when a new program is inserted';
 
--- -- Name: FUNCTION update_lab_panel_status(); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."delete_user_permanently"("target_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."delete_user_permanently"("target_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."delete_user_permanently"("target_user_id" "uuid") TO "service_role";
 
-COMMENT ON FUNCTION public.update_lab_panel_status() IS 'Auto-update panel status when results are acknowledged';
 
--- -- Name: COLUMN patient_medications.category; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_medications.category IS 'Medication category: scheduled (default), unscheduled, prn, continuous, diabetic, stat. Defaults to scheduled for backward compatibility with snapshot restoration.';
+REVOKE ALL ON FUNCTION "public"."duplicate_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid", "p_new_patient_id" "text", "p_include_vitals" boolean, "p_include_medications" boolean, "p_include_assessments" boolean, "p_include_handover_notes" boolean, "p_include_alerts" boolean, "p_include_diabetic_records" boolean, "p_include_bowel_records" boolean, "p_include_wound_care" boolean, "p_include_doctors_orders" boolean, "p_include_labs" boolean, "p_include_hacmap" boolean, "p_include_intake_output" boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."duplicate_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid", "p_new_patient_id" "text", "p_include_vitals" boolean, "p_include_medications" boolean, "p_include_assessments" boolean, "p_include_handover_notes" boolean, "p_include_alerts" boolean, "p_include_diabetic_records" boolean, "p_include_bowel_records" boolean, "p_include_wound_care" boolean, "p_include_doctors_orders" boolean, "p_include_labs" boolean, "p_include_hacmap" boolean, "p_include_intake_output" boolean) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."duplicate_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid", "p_new_patient_id" "text", "p_include_vitals" boolean, "p_include_medications" boolean, "p_include_assessments" boolean, "p_include_handover_notes" boolean, "p_include_alerts" boolean, "p_include_diabetic_records" boolean, "p_include_bowel_records" boolean, "p_include_wound_care" boolean, "p_include_doctors_orders" boolean, "p_include_labs" boolean, "p_include_hacmap" boolean, "p_include_intake_output" boolean) TO "service_role";
 
--- -- Name: COLUMN patient_medications.admin_time; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_medications.admin_time IS 'Time of day when medication should be administered (HH:MM format)';
 
--- -- Name: FUNCTION update_medication_super_admin(p_medication_id uuid, p_updates jsonb); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."enable_rls_on_new_tables"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."enable_rls_on_new_tables"() TO "service_role";
 
-COMMENT ON FUNCTION public.update_medication_super_admin(p_medication_id uuid, p_updates jsonb) IS 'Allows super admins and admins to update medications across tenant boundaries, bypassing RLS';
 
--- -- Name: FUNCTION update_simulation_categories(p_simulation_id uuid, p_primary_categories text[], p_sub_categories text[]); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.update_simulation_categories(p_simulation_id uuid, p_primary_categories text[], p_sub_categories text[]) IS 'Safely update category tags on existing active simulations';
+REVOKE ALL ON FUNCTION "public"."end_user_session"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."end_user_session"() TO "service_role";
 
--- -- Name: FUNCTION update_simulation_history_categories(p_simulation_id uuid, p_primary_categories text[], p_sub_categories text[]); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.update_simulation_history_categories(p_simulation_id uuid, p_primary_categories text[], p_sub_categories text[]) IS 'Safely update category tags on completed simulations in history';
 
--- -- Name: FUNCTION update_user_profile_admin(p_user_id uuid, p_first_name text, p_last_name text, p_role text, p_department text, p_license_number text, p_phone text, p_is_active boolean, p_simulation_only boolean); Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."ensure_user_profile"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."ensure_user_profile"() TO "service_role";
 
-COMMENT ON FUNCTION public.update_user_profile_admin(p_user_id uuid, p_first_name text, p_last_name text, p_role text, p_department text, p_license_number text, p_phone text, p_is_active boolean, p_simulation_only boolean) IS 'Allows admins to update user profiles, bypassing RLS restrictions. Includes simulation_only flag for auto-routing users to simulation lobby. Note: p_department parameter is deprecated, now using user_programs junction table.';
 
--- -- Name: FUNCTION user_has_program_access(p_user_id uuid, p_program_code text); Type: COMMENT; Schema: public
 
-COMMENT ON FUNCTION public.user_has_program_access(p_user_id uuid, p_program_code text) IS 'Check if user is assigned to a specific program';
+REVOKE ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text") TO "service_role";
 
--- -- Name: COLUMN avatar_locations.body_view; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.avatar_locations.body_view IS 'View where marker was placed: front or back. NULL for regions visible on both views (head, arms, etc.)';
 
--- -- Name: TABLE backup_audit_log; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."fetch_medications_for_tenant"("target_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."fetch_medications_for_tenant"("target_tenant_id" "uuid") TO "service_role";
 
-COMMENT ON TABLE public.backup_audit_log IS 'Comprehensive audit trail for backup operations';
 
--- -- Name: TABLE backup_files; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.backup_files IS 'Stores backup file data (replace with cloud storage in production)';
+REVOKE ALL ON FUNCTION "public"."find_user_by_email"("email_param" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."find_user_by_email"("email_param" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."find_user_by_email"("email_param" "text") TO "service_role";
 
--- -- Name: TABLE backup_metadata; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.backup_metadata IS 'Stores metadata for system backups with security controls';
 
--- -- Name: COLUMN backup_metadata.options; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."generate_simulation_id_sets"("p_template_id" "uuid", "p_session_count" integer, "p_session_names" "text"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."generate_simulation_id_sets"("p_template_id" "uuid", "p_session_count" integer, "p_session_names" "text"[]) TO "service_role";
 
-COMMENT ON COLUMN public.backup_metadata.options IS 'JSON configuration used to create the backup';
 
--- -- Name: COLUMN backup_metadata.checksum; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.backup_metadata.checksum IS 'SHA-256 checksum for data integrity verification';
+REVOKE ALL ON FUNCTION "public"."get_available_admin_users"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_available_admin_users"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_available_admin_users"() TO "service_role";
 
--- -- Name: COLUMN backup_metadata.download_count; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.backup_metadata.download_count IS 'Number of times backup has been downloaded (max 10)';
 
--- -- Name: TABLE bowel_records; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_available_tenants_for_transfer"("p_source_patient_id" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_available_tenants_for_transfer"("p_source_patient_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_available_tenants_for_transfer"("p_source_patient_id" "text") TO "service_role";
 
-COMMENT ON TABLE public.bowel_records IS 'Bowel movement records with RLS enabled for multi-tenant isolation';
 
--- -- Name: COLUMN bowel_records.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.bowel_records.student_name IS 'Full name of student who created bowel record';
+REVOKE ALL ON FUNCTION "public"."get_cohort_students"("p_cohort_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_cohort_students"("p_cohort_id" "uuid") TO "service_role";
 
--- -- Name: TABLE contact_submissions; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.contact_submissions IS 'Stores contact form submissions from the landing page';
 
--- -- Name: COLUMN contact_submissions.processed; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_secure_alerts"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_secure_alerts"() TO "service_role";
 
-COMMENT ON COLUMN public.contact_submissions.processed IS 'Whether the submission has been reviewed/responded to';
 
--- -- Name: TABLE device_assessments; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.device_assessments IS 'Tracks device assessments over time for monitoring and documentation';
+REVOKE ALL ON FUNCTION "public"."get_simulation_label_data"("p_template_id" "uuid", "p_session_number" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_simulation_label_data"("p_template_id" "uuid", "p_session_number" integer) TO "service_role";
 
--- -- Name: COLUMN device_assessments.device_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.device_assessments.device_id IS 'Links to device being assessed';
 
--- -- Name: COLUMN device_assessments.student_name; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_simulation_students"("p_simulation_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_simulation_students"("p_simulation_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.device_assessments.student_name IS 'Name of student who performed the assessment (for debrief tracking)';
 
--- -- Name: COLUMN device_assessments.device_type; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.device_assessments.device_type IS 'Cached device type from devices table for quick filtering';
+REVOKE ALL ON FUNCTION "public"."get_super_admin_tenant_context"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_super_admin_tenant_context"() TO "service_role";
 
--- -- Name: COLUMN device_assessments.output_amount_ml; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.device_assessments.output_amount_ml IS 'Generic output amount for drains, tubes, catheters';
 
--- -- Name: COLUMN device_assessments.assessment_data; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."tenants" TO "anon";
+GRANT ALL ON TABLE "public"."tenants" TO "authenticated";
+GRANT ALL ON TABLE "public"."tenants" TO "service_role";
 
-COMMENT ON COLUMN public.device_assessments.assessment_data IS 'Device-specific assessment data stored as JSONB for flexibility';
 
--- -- Name: COLUMN devices.gauge; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.gauge IS 'IV gauge size (e.g., 18G, 20G, 22G)';
+REVOKE ALL ON FUNCTION "public"."get_tenant_by_subdomain_public"("p_subdomain" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_tenant_by_subdomain_public"("p_subdomain" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_tenant_by_subdomain_public"("p_subdomain" "text") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_tenant_by_subdomain_public"("p_subdomain" "text") TO "anon";
 
--- -- Name: COLUMN devices.site_side; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.site_side IS 'Side of body (Left/Right)';
 
--- -- Name: COLUMN devices.route; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_tenant_users"("target_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_tenant_users"("target_tenant_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_tenant_users"("target_tenant_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.devices.route IS 'Feeding tube route (NG, OG, PEG, PEJ, GJ, Other)';
 
--- -- Name: COLUMN devices.external_length_cm; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.external_length_cm IS 'External length at skin in centimeters';
+REVOKE ALL ON FUNCTION "public"."get_user_accessible_simulations"("p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_accessible_simulations"("p_user_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN devices.initial_xray_confirmed; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.initial_xray_confirmed IS 'X-ray confirmation of initial placement';
 
--- -- Name: COLUMN devices.initial_ph; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_user_auth_status"("p_user_ids" "uuid"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_auth_status"("p_user_ids" "uuid"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_user_auth_status"("p_user_ids" "uuid"[]) TO "service_role";
 
-COMMENT ON COLUMN public.devices.initial_ph IS 'Initial pH check value';
 
--- -- Name: COLUMN devices.initial_aspirate_appearance; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.initial_aspirate_appearance IS 'Initial aspirate appearance (milky, green, clear, bloody, other)';
+REVOKE ALL ON FUNCTION "public"."get_user_current_tenant"("target_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_current_tenant"("target_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_user_current_tenant"("target_user_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN devices.placement_confirmed; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.placement_confirmed IS 'Placement confirmed prior to first use';
 
--- -- Name: COLUMN devices.site_location; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_user_program_codes"("p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_program_codes"("p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_user_program_codes"("p_user_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.devices.site_location IS 'Anatomical location description (e.g., left antecubital, right forearm)';
 
--- -- Name: COLUMN devices.ostomy_construction; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.ostomy_construction IS 'Ostomy type: Colostomy, Ileostomy, Urostomy, Other';
+REVOKE ALL ON FUNCTION "public"."get_user_program_tenants"("p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_program_tenants"("p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_user_program_tenants"("p_user_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN devices.stoma_side; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.devices.stoma_side IS 'Side of abdomen: Left, Right';
 
--- -- Name: COLUMN diabetic_records.student_name; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_user_role"("user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_role"("user_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.diabetic_records.student_name IS 'Full name of student who created diabetic record';
 
--- -- Name: TABLE doctors_orders; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.doctors_orders IS 'Stores physician orders with acknowledgment tracking and support for phone/verbal orders';
+REVOKE ALL ON FUNCTION "public"."get_user_simulation_assignments"("p_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_simulation_assignments"("p_user_id" "uuid") TO "service_role";
+GRANT ALL ON FUNCTION "public"."get_user_simulation_assignments"("p_user_id" "uuid") TO "authenticated";
 
--- -- Name: COLUMN doctors_orders.order_text; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.doctors_orders.order_text IS 'The actual physician order content';
 
--- -- Name: COLUMN doctors_orders.order_type; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."get_user_simulation_tenant_access"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."get_user_simulation_tenant_access"() TO "service_role";
 
-COMMENT ON COLUMN public.doctors_orders.order_type IS 'Type of order: Direct (admin/super admin), Phone Order, or Verbal Order (nurses)';
 
--- -- Name: COLUMN doctors_orders.is_acknowledged; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.doctors_orders.is_acknowledged IS 'Whether the order has been acknowledged by nursing staff';
+REVOKE ALL ON FUNCTION "public"."handle_new_user"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
--- -- Name: COLUMN doctors_orders.doctor_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.doctors_orders.doctor_name IS 'Name of the doctor who created the order (for admin/super admin entries)';
 
--- -- Name: COLUMN doctors_orders.acknowledged_by_student; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."handle_patient_tenant_assignment"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."handle_patient_tenant_assignment"() TO "service_role";
 
-COMMENT ON COLUMN public.doctors_orders.acknowledged_by_student IS 'Full name of student who acknowledged order';
 
--- -- Name: TABLE handover_notes; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.handover_notes IS 'SBAR (Situation, Background, Assessment, Recommendations) handover notes for patient care transitions';
+REVOKE ALL ON FUNCTION "public"."handle_user_profile_update"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."handle_user_profile_update"() TO "service_role";
 
--- -- Name: COLUMN handover_notes.situation; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.handover_notes.situation IS 'Current situation and purpose of communication';
 
--- -- Name: COLUMN handover_notes.background; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."instantiate_simulation_patients"("p_simulation_id" "uuid", "p_scenario_template_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."instantiate_simulation_patients"("p_simulation_id" "uuid", "p_scenario_template_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.handover_notes.background IS 'Relevant context and patient history';
 
--- -- Name: COLUMN handover_notes.assessment; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.handover_notes.assessment IS 'Professional clinical judgment and assessment';
+REVOKE ALL ON FUNCTION "public"."is_admin_user"("user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_admin_user"("user_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN handover_notes.recommendations; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.handover_notes.recommendations IS 'Proposed actions and next steps';
 
--- -- Name: COLUMN handover_notes.shift; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."is_super_admin"("check_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_super_admin"("check_user_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.handover_notes.shift IS 'Shift during which the handover note was created';
 
--- -- Name: COLUMN handover_notes.priority; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.handover_notes.priority IS 'Priority level of the handover communication';
+REVOKE ALL ON FUNCTION "public"."is_super_admin_direct"("user_uuid" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_super_admin_direct"("user_uuid" "uuid") TO "service_role";
 
--- -- Name: COLUMN handover_notes.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.handover_notes.student_name IS 'Name of the student who acknowledged this handover note. Used for debrief reporting to track student activity.';
 
--- -- Name: COLUMN handover_notes.nursing_notes; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."is_super_admin_user"("user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_super_admin_user"("user_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.handover_notes.nursing_notes IS 'Free-text nursing observations, displayed above the SBAR fields in the handover form.';
 
--- -- Name: TABLE lab_ack_events; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.lab_ack_events IS 'Audit log for lab acknowledgements';
+REVOKE ALL ON FUNCTION "public"."is_tenant_admin"("tenant_uuid" "uuid", "user_uuid" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_tenant_admin"("tenant_uuid" "uuid", "user_uuid" "uuid") TO "service_role";
 
--- -- Name: COLUMN lab_ack_events.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.lab_ack_events.student_name IS 'Name of the student who acknowledged the labs (for debrief reporting)';
 
--- -- Name: COLUMN lab_orders.student_name; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."launch_run"("p_snapshot_id" "uuid", "p_run_name" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."launch_run"("p_snapshot_id" "uuid", "p_run_name" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."launch_run"("p_snapshot_id" "uuid", "p_run_name" "text") TO "service_role";
 
-COMMENT ON COLUMN public.lab_orders.student_name IS 'Full name of student who ordered lab';
 
--- -- Name: TABLE lab_panels; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.lab_panels IS 'Lab panel batches with acknowledgement tracking';
+REVOKE ALL ON FUNCTION "public"."launch_simulation"("p_template_id" "uuid", "p_name" "text", "p_duration_minutes" integer, "p_participant_user_ids" "uuid"[], "p_participant_roles" "text"[], "p_primary_categories" "text"[], "p_sub_categories" "text"[], "p_state_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."launch_simulation"("p_template_id" "uuid", "p_name" "text", "p_duration_minutes" integer, "p_participant_user_ids" "uuid"[], "p_participant_roles" "text"[], "p_primary_categories" "text"[], "p_sub_categories" "text"[], "p_state_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."launch_simulation"("p_template_id" "uuid", "p_name" "text", "p_duration_minutes" integer, "p_participant_user_ids" "uuid"[], "p_participant_roles" "text"[], "p_primary_categories" "text"[], "p_sub_categories" "text"[], "p_state_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN lab_panels.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.lab_panels.student_name IS 'Full name of student who created panel';
 
--- -- Name: TABLE lab_result_refs; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."load_template_state"("p_template_id" "uuid", "p_state_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."load_template_state"("p_template_id" "uuid", "p_state_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."load_template_state"("p_template_id" "uuid", "p_state_id" "uuid") TO "service_role";
 
-COMMENT ON TABLE public.lab_result_refs IS 'Seeded with ABG, Hematology, and Chemistry reference ranges';
 
--- -- Name: COLUMN lab_result_refs.sex_ref; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.lab_result_refs.sex_ref IS 'Sex-specific ranges in JSON format';
+REVOKE ALL ON FUNCTION "public"."mark_welcome_seen"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."mark_welcome_seen"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."mark_welcome_seen"() TO "service_role";
 
--- -- Name: TABLE lab_results; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.lab_results IS 'Individual lab test results with reference ranges';
 
--- -- Name: COLUMN lab_results.flag; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."move_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."move_patient_to_tenant"("p_source_patient_id" "text", "p_target_tenant_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.lab_results.flag IS 'Auto-computed from value vs reference range';
 
--- -- Name: COLUMN lab_results.acknowledged_by_student; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.lab_results.acknowledged_by_student IS 'Full name of student who acknowledged result';
+REVOKE ALL ON FUNCTION "public"."move_patient_to_tenant"("p_patient_id" "uuid", "p_target_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."move_patient_to_tenant"("p_patient_id" "uuid", "p_target_tenant_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN lab_results.note; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.lab_results.note IS 'Student note added when acknowledging lab result';
 
--- -- Name: TABLE medication_administrations; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."protect_medication_identifiers"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."protect_medication_identifiers"() TO "service_role";
 
-COMMENT ON TABLE public.medication_administrations IS 'Medication administration records. Can be deleted by reset_simulation_for_next_session function with SECURITY DEFINER bypass.';
 
--- -- Name: COLUMN medication_administrations.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.medication_administrations.student_name IS 'Name of the student who administered the medication (for simulation tracking)';
+REVOKE ALL ON FUNCTION "public"."protect_patient_identifiers"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."protect_patient_identifiers"() TO "service_role";
 
--- -- Name: COLUMN medication_administrations.barcode_scanned; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.medication_administrations.barcode_scanned IS 'Whether this medication was administered using barcode scanning (BCMA compliant)';
 
--- -- Name: COLUMN medication_administrations.patient_barcode_scanned; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."protect_super_admin_role"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."protect_super_admin_role"() TO "service_role";
 
-COMMENT ON COLUMN public.medication_administrations.patient_barcode_scanned IS 'The patient barcode that was scanned (for audit trail)';
 
--- -- Name: COLUMN medication_administrations.medication_barcode_scanned; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.medication_administrations.medication_barcode_scanned IS 'The medication barcode that was scanned (for audit trail)';
+REVOKE ALL ON FUNCTION "public"."reactivate_user"("target_user_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."reactivate_user"("target_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reactivate_user"("target_user_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN medication_administrations.override_reason; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.medication_administrations.override_reason IS 'Reason provided when student manually overrides barcode scanning requirement';
 
--- -- Name: COLUMN medication_administrations.witness_name; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."reassign_user_tenant"("p_user_id" "uuid", "p_new_tenant_id" "uuid", "p_role" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."reassign_user_tenant"("p_user_id" "uuid", "p_new_tenant_id" "uuid", "p_role" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reassign_user_tenant"("p_user_id" "uuid", "p_new_tenant_id" "uuid", "p_role" "text") TO "service_role";
 
-COMMENT ON COLUMN public.medication_administrations.witness_name IS 'Name of witness when manual override is used (for safety compliance)';
 
--- -- Name: COLUMN medication_administrations.administered_dose; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.medication_administrations.administered_dose IS 'Volume/units drawn up and administered by the student (e.g., "2 mL"). Distinct from dosage which stores the label concentration (e.g., "500mg/2mL"). Populated via the BCMA verify step where students enter their calculated dose.';
+REVOKE ALL ON FUNCTION "public"."refresh_user_tenant_cache"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."refresh_user_tenant_cache"() TO "service_role";
 
--- -- Name: TABLE patient_admission_records; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.patient_admission_records IS 'Patient admission records with RLS enabled for multi-tenant isolation';
 
--- -- Name: TABLE patient_advanced_directives; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."remove_user_from_tenant"("tenant_uuid" "uuid", "user_uuid" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."remove_user_from_tenant"("tenant_uuid" "uuid", "user_uuid" "uuid") TO "service_role";
 
-COMMENT ON TABLE public.patient_advanced_directives IS 'Patient advanced care directives with RLS enabled for multi-tenant isolation';
 
--- -- Name: COLUMN patient_advanced_directives.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_advanced_directives.student_name IS 'Name of the student who filled out the advanced directives (for debrief reporting)';
+REVOKE ALL ON FUNCTION "public"."reset_run"("p_run_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."reset_run"("p_run_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reset_run"("p_run_id" "uuid") TO "service_role";
 
--- -- Name: TABLE tenants; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.tenants IS 'Stores tenant/organization information for multi-tenant architecture';
 
--- -- Name: COLUMN tenants.settings; Type: COMMENT; Schema: public
+GRANT ALL ON FUNCTION "public"."reset_simulation_for_next_session"("p_simulation_id" "uuid", "p_state_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reset_simulation_for_next_session"("p_simulation_id" "uuid", "p_state_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.tenants.settings IS 'JSON configuration for tenant-specific settings and features';
 
--- -- Name: COLUMN tenants.program_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.tenants.program_id IS 'Links program tenants to their program record. NULL for non-program tenants.';
+GRANT ALL ON FUNCTION "public"."reset_simulation_with_template_updates"("p_simulation_id" "uuid", "p_state_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reset_simulation_with_template_updates"("p_simulation_id" "uuid", "p_state_id" "uuid") TO "service_role";
 
--- -- Name: TABLE patient_intake_output_events; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.patient_intake_output_events IS 'Tracks fluid intake and output events for patients. Used for calculating fluid balance in nursing care.';
 
--- -- Name: COLUMN patient_intake_output_events.direction; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."restore_snapshot_to_tenant"("p_tenant_id" "uuid", "p_snapshot" "jsonb", "p_id_mappings" "jsonb", "p_barcode_mappings" "jsonb", "p_preserve_barcodes" boolean, "p_skip_patients" boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."restore_snapshot_to_tenant"("p_tenant_id" "uuid", "p_snapshot" "jsonb", "p_id_mappings" "jsonb", "p_barcode_mappings" "jsonb", "p_preserve_barcodes" boolean, "p_skip_patients" boolean) TO "service_role";
 
-COMMENT ON COLUMN public.patient_intake_output_events.direction IS 'Either intake (fluids going in) or output (fluids coming out)';
 
--- -- Name: COLUMN patient_intake_output_events.category; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_intake_output_events.category IS 'Type of I&O: oral, iv_fluid, iv_med, blood, tube_feed, urine, stool, emesis, drain';
+REVOKE ALL ON FUNCTION "public"."rls_auto_enable"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "service_role";
 
--- -- Name: COLUMN patient_intake_output_events.amount_ml; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_intake_output_events.amount_ml IS 'Volume in milliliters (mL). Always positive number.';
 
--- -- Name: COLUMN patient_intake_output_events.student_name; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."save_patient_template_snapshot"("p_patient_template_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."save_patient_template_snapshot"("p_patient_template_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_patient_template_snapshot"("p_patient_template_id" "uuid") TO "service_role";
 
-COMMENT ON COLUMN public.patient_intake_output_events.student_name IS 'Name of student who recorded this event. Used for activity tracking in simulation debrief reports.';
 
--- -- Name: TABLE patient_notes; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.patient_notes IS 'Stores clinical assessments, nursing notes, and patient documentation';
+REVOKE ALL ON FUNCTION "public"."save_template_snapshot_v2"("p_template_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."save_template_snapshot_v2"("p_template_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_template_snapshot_v2"("p_template_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN patient_notes.tenant_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_notes.tenant_id IS 'Auto-set by trigger based on patient tenant';
 
--- -- Name: COLUMN patient_notes.type; Type: COMMENT; Schema: public
+GRANT ALL ON FUNCTION "public"."save_template_state"("p_template_id" "uuid", "p_label" "text", "p_changelog_note" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_template_state"("p_template_id" "uuid", "p_label" "text", "p_changelog_note" "text") TO "service_role";
 
-COMMENT ON COLUMN public.patient_notes.type IS 'Type of note: Assessment, Progress Note, Shift Note, etc.';
 
--- -- Name: COLUMN patient_notes.priority; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_notes.priority IS 'Priority level: Low, Medium, High, Critical';
+REVOKE ALL ON FUNCTION "public"."set_alert_tenant_id"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_alert_tenant_id"() TO "service_role";
 
--- -- Name: COLUMN patient_notes.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_notes.student_name IS 'Full name of student who created note';
 
--- -- Name: TABLE patient_vitals; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."set_medication_admin_tenant_id"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_medication_admin_tenant_id"() TO "service_role";
 
-COMMENT ON TABLE public.patient_vitals IS 'Patient vital signs records. All vital fields are optional to support clinical scenarios where not all measurements can be obtained (e.g., newborns without BP). At least one vital sign must be present per record.';
 
--- -- Name: COLUMN patient_vitals.oxygen_delivery; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_vitals.oxygen_delivery IS 'Oxygen delivery method: Room Air, O2 1 L/min through O2 15 L/min';
+REVOKE ALL ON FUNCTION "public"."set_super_admin_tenant_context"("target_tenant_id" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_super_admin_tenant_context"("target_tenant_id" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_super_admin_tenant_context"("target_tenant_id" "text") TO "service_role";
 
--- -- Name: COLUMN patient_vitals.student_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patient_vitals.student_name IS 'Full name of student who recorded vitals';
 
--- -- Name: COLUMN patient_vitals.oxygen_flow_rate; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."set_tenant_id_on_insert"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_tenant_id_on_insert"() TO "service_role";
 
-COMMENT ON COLUMN public.patient_vitals.oxygen_flow_rate IS 'Oxygen flow rate: N/A, <1L, 1L-15L, >15L. Separates device type from flow rate for clinical accuracy.';
 
--- -- Name: CONSTRAINT patient_vitals_at_least_one_vital ON patient_vitals; Type: COMMENT; Schema: public
 
-COMMENT ON CONSTRAINT patient_vitals_at_least_one_vital ON public.patient_vitals IS 'Ensures at least one vital sign measurement is recorded per entry';
+REVOKE ALL ON FUNCTION "public"."set_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "service_role";
 
--- -- Name: CONSTRAINT patient_vitals_bp_pair ON patient_vitals; Type: COMMENT; Schema: public
 
-COMMENT ON CONSTRAINT patient_vitals_bp_pair ON public.patient_vitals IS 'Ensures blood pressure values are recorded together (both systolic and diastolic or neither)';
 
--- -- Name: COLUMN patients.assigned_nurse; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."set_wound_assessment_tenant_id"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_wound_assessment_tenant_id"() TO "service_role";
 
-COMMENT ON COLUMN public.patients.assigned_nurse IS 'Optional assigned nurse name (TEXT field, not a foreign key). Legacy field from production nursing workflows. Not required for simulation environments.';
 
--- -- Name: COLUMN patients.avatar_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.patients.avatar_id IS 'Patient avatar identifier (avatar-1 through avatar-10)';
+REVOKE ALL ON FUNCTION "public"."set_wound_treatment_tenant_id"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."set_wound_treatment_tenant_id"() TO "service_role";
 
--- -- Name: TABLE program_announcements; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.program_announcements IS 'Announcements and updates for program communications';
 
--- -- Name: COLUMN program_announcements.is_pinned; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."shift_snapshot_timestamps"("p_snapshot" "jsonb", "p_shift" interval) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."shift_snapshot_timestamps"("p_snapshot" "jsonb", "p_shift" interval) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."shift_snapshot_timestamps"("p_snapshot" "jsonb", "p_shift" interval) TO "service_role";
 
-COMMENT ON COLUMN public.program_announcements.is_pinned IS 'Pinned announcements appear at the top';
 
--- -- Name: COLUMN program_announcements.author_name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.program_announcements.author_name IS 'Cached author name for performance';
+REVOKE ALL ON FUNCTION "public"."trigger_create_program_tenant"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."trigger_create_program_tenant"() TO "service_role";
 
--- -- Name: COLUMN program_announcements.expires_at; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.program_announcements.expires_at IS 'Optional expiration date for temporary announcements';
 
--- -- Name: TABLE programs; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."trigger_refresh_user_tenant_cache"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."trigger_refresh_user_tenant_cache"() TO "service_role";
 
-COMMENT ON TABLE public.programs IS 'Programs within tenants (e.g., NESA, PN, SIM Hub, BNAD)';
 
--- -- Name: COLUMN programs.code; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.programs.code IS 'Short code for program (e.g., NESA, PN) - used in simulation categories';
+REVOKE ALL ON FUNCTION "public"."update_bowel_records_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_bowel_records_updated_at"() TO "service_role";
 
--- -- Name: COLUMN programs.name; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.programs.name IS 'Full program name';
 
--- -- Name: TABLE scheduled_simulations; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_contact_submissions_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_contact_submissions_updated_at"() TO "service_role";
 
-COMMENT ON TABLE public.scheduled_simulations IS 'Calendar of scheduled simulation sessions for programs';
 
--- -- Name: COLUMN scheduled_simulations.recurrence_rule; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.scheduled_simulations.recurrence_rule IS 'iCal RRULE format for recurring sessions (Phase 2)';
+REVOKE ALL ON FUNCTION "public"."update_handover_notes_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_handover_notes_updated_at"() TO "service_role";
 
--- -- Name: TABLE simulation_active; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.simulation_active IS 'Active running simulations - RLS enforced';
 
--- -- Name: COLUMN simulation_active.primary_categories; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_lab_panel_status"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_lab_panel_status"() TO "service_role";
 
-COMMENT ON COLUMN public.simulation_active.primary_categories IS 'Primary program categories: PN, NESA, SIM Hub, BNAD';
 
--- -- Name: COLUMN simulation_active.sub_categories; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_active.sub_categories IS 'Sub-categories: Labs, Simulation, Testing';
+REVOKE ALL ON FUNCTION "public"."update_lab_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_lab_updated_at"() TO "service_role";
 
--- -- Name: COLUMN simulation_active.template_snapshot_version_launched; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_active.template_snapshot_version_launched IS 'Template version when simulation was originally launched';
 
--- -- Name: COLUMN simulation_active.template_snapshot_version_synced; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_landing_content_timestamp"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_landing_content_timestamp"() TO "service_role";
 
-COMMENT ON COLUMN public.simulation_active.template_snapshot_version_synced IS 'Template version last synced to (NULL if never synced)';
 
--- -- Name: TABLE simulation_activity_log; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.simulation_activity_log IS 'Simulation activity audit log - RLS enforced';
+REVOKE ALL ON FUNCTION "public"."update_medication_administrations_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_medication_administrations_updated_at"() TO "service_role";
 
--- -- Name: TABLE simulation_history; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.simulation_history IS 'Completed simulation history - RLS enforced';
 
--- -- Name: COLUMN simulation_history.archived_at; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."patient_medications" TO "anon";
+GRANT ALL ON TABLE "public"."patient_medications" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_medications" TO "service_role";
 
-COMMENT ON COLUMN public.simulation_history.archived_at IS 'Timestamp when the simulation was archived';
 
--- -- Name: COLUMN simulation_history.student_activities; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_history.student_activities IS 'Snapshot of student activities at completion time for debrief reports';
+REVOKE ALL ON FUNCTION "public"."update_medication_super_admin"("p_medication_id" "uuid", "p_updates" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_medication_super_admin"("p_medication_id" "uuid", "p_updates" "jsonb") TO "service_role";
 
--- -- Name: COLUMN simulation_history.primary_categories; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_history.primary_categories IS 'Primary program categories from active simulation';
 
--- -- Name: COLUMN simulation_history.sub_categories; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_patient_intake_output_events_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_patient_intake_output_events_updated_at"() TO "service_role";
 
-COMMENT ON COLUMN public.simulation_history.sub_categories IS 'Sub-categories from active simulation';
 
--- -- Name: COLUMN simulation_history.archived; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_history.archived IS 'Whether this simulation has been archived by an instructor';
+REVOKE ALL ON FUNCTION "public"."update_patient_notes_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_patient_notes_updated_at"() TO "service_role";
 
--- -- Name: COLUMN simulation_history.archived_by; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_history.archived_by IS 'User ID of the instructor who archived this simulation';
 
--- -- Name: COLUMN simulation_history.instructor_name; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_programs_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_programs_updated_at"() TO "service_role";
 
-COMMENT ON COLUMN public.simulation_history.instructor_name IS 'Name of the instructor who completed and debriefed this simulation';
 
--- -- Name: COLUMN simulation_history.archive_folder; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_history.archive_folder IS 'Archive folder structure: InstructorName/CompletionDate (e.g., "John Smith/2025-11-30")';
+REVOKE ALL ON FUNCTION "public"."update_simulation_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_simulation_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) TO "service_role";
 
--- -- Name: TABLE simulation_participants; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.simulation_participants IS 'User access to simulations - RLS enforced';
 
--- -- Name: TABLE simulation_table_config; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_simulation_history_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_simulation_history_categories"("p_simulation_id" "uuid", "p_primary_categories" "text"[], "p_sub_categories" "text"[]) TO "service_role";
 
-COMMENT ON TABLE public.simulation_table_config IS 'Configuration for patient-related tables in simulation snapshot/restore system';
 
--- -- Name: COLUMN simulation_table_config.requires_id_mapping; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_table_config.requires_id_mapping IS 'TRUE if IDs must be preserved for barcodes (patients, medications, wounds, lab_panels)';
+REVOKE ALL ON FUNCTION "public"."update_student_roster_updated_at"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_student_roster_updated_at"() TO "service_role";
 
--- -- Name: COLUMN simulation_table_config.delete_order; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_table_config.delete_order IS 'Order for deletion in reset: lower numbers first (delete children before parents)';
 
--- -- Name: TABLE simulation_template_versions; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_template_state_snapshot"("p_template_id" "uuid", "p_state_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_template_state_snapshot"("p_template_id" "uuid", "p_state_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_template_state_snapshot"("p_template_id" "uuid", "p_state_id" "uuid") TO "service_role";
 
-COMMENT ON TABLE public.simulation_template_versions IS 'Archives every template snapshot change for version history and rollback';
 
--- -- Name: TABLE simulation_templates; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.simulation_templates IS 'Simulation templates with snapshot data - RLS enforced';
+REVOKE ALL ON FUNCTION "public"."update_updated_at_column"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
--- -- Name: COLUMN simulation_templates.folder; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.simulation_templates.folder IS 'Optional display folder for organizing templates in the UI. No referential integrity — purely cosmetic. NULL = uncategorized.';
 
--- -- Name: TABLE student_roster; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."update_user_profile_admin"("p_user_id" "uuid", "p_first_name" "text", "p_last_name" "text", "p_role" "text", "p_department" "text", "p_license_number" "text", "p_phone" "text", "p_is_active" boolean, "p_simulation_only" boolean) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."update_user_profile_admin"("p_user_id" "uuid", "p_first_name" "text", "p_last_name" "text", "p_role" "text", "p_department" "text", "p_license_number" "text", "p_phone" "text", "p_is_active" boolean, "p_simulation_only" boolean) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_user_profile_admin"("p_user_id" "uuid", "p_first_name" "text", "p_last_name" "text", "p_role" "text", "p_department" "text", "p_license_number" "text", "p_phone" "text", "p_is_active" boolean, "p_simulation_only" boolean) TO "service_role";
 
-COMMENT ON TABLE public.student_roster IS 'Student enrollments in programs with cohort tracking';
 
--- -- Name: COLUMN student_roster.cohort_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.student_roster.cohort_id IS 'Optional cohort grouping (e.g., Fall 2025, Spring 2026)';
+REVOKE ALL ON FUNCTION "public"."user_has_patient_access"("patient_tenant_id" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."user_has_patient_access"("patient_tenant_id" "uuid") TO "service_role";
 
--- -- Name: COLUMN student_roster.student_number; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.student_roster.student_number IS 'Institutional student ID (unique across all programs)';
 
--- -- Name: VIEW student_roster_with_profiles; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."user_has_permission"("user_uuid" "uuid", "permission_name" "text", "tenant_uuid" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."user_has_permission"("user_uuid" "uuid", "permission_name" "text", "tenant_uuid" "uuid") TO "service_role";
 
-COMMENT ON VIEW public.student_roster_with_profiles IS 'Student roster with joined user profile information for easy querying';
 
--- -- Name: TABLE system_logs; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.system_logs IS 'Comprehensive system logging for super admin monitoring and troubleshooting. Tracks errors, user actions, and system events with full context.';
+REVOKE ALL ON FUNCTION "public"."user_has_program_access"("p_user_id" "uuid", "p_program_code" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."user_has_program_access"("p_user_id" "uuid", "p_program_code" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."user_has_program_access"("p_user_id" "uuid", "p_program_code" "text") TO "service_role";
 
--- -- Name: TABLE tenant_users; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.tenant_users IS 'Maps users to tenants with role-based access control';
 
--- -- Name: COLUMN tenant_users.permissions; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."user_has_tenant_access"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."user_has_tenant_access"() TO "service_role";
 
-COMMENT ON COLUMN public.tenant_users.permissions IS 'Array of permission strings for granular access control';
 
--- -- Name: CONSTRAINT tenant_users_role_check ON tenant_users; Type: COMMENT; Schema: public
 
-COMMENT ON CONSTRAINT tenant_users_role_check ON public.tenant_users IS 'Validates role: super_admin, coordinator, admin, instructor, nurse, student, viewer';
+REVOKE ALL ON FUNCTION "public"."user_has_tenant_access"("user_uuid" "uuid", "tenant_uuid" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."user_has_tenant_access"("user_uuid" "uuid", "tenant_uuid" "uuid") TO "service_role";
 
--- -- Name: VIEW tenant_statistics; Type: COMMENT; Schema: public
 
-COMMENT ON VIEW public.tenant_statistics IS 'Tenant statistics view - Uses security_invoker=on to enforce calling user permissions and RLS policies';
 
--- -- Name: TABLE user_programs; Type: COMMENT; Schema: public
+REVOKE ALL ON FUNCTION "public"."user_is_super_admin"("user_uuid" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."user_is_super_admin"("user_uuid" "uuid") TO "service_role";
 
-COMMENT ON TABLE public.user_programs IS 'Many-to-many: users assigned to programs';
 
--- -- Name: VIEW user_roles; Type: COMMENT; Schema: public
 
-COMMENT ON VIEW public.user_roles IS 'User roles view - Uses security_invoker=on to enforce calling user permissions and RLS policies';
+REVOKE ALL ON FUNCTION "public"."validate_subdomain"("subdomain_input" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."validate_subdomain"("subdomain_input" "text") TO "service_role";
 
--- -- Name: TABLE user_sessions; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.user_sessions IS 'Tracks user login sessions with IP addresses and timestamps';
 
--- -- Name: VIEW user_tenant_access; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."audit_logs" TO "anon";
+GRANT ALL ON TABLE "public"."audit_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."audit_logs" TO "service_role";
 
-COMMENT ON VIEW public.user_tenant_access IS 'User-tenant access mapping - Uses security_invoker=on to enforce calling user permissions and RLS policies';
 
--- -- Name: MATERIALIZED VIEW user_tenant_cache; Type: COMMENT; Schema: public
 
-COMMENT ON MATERIALIZED VIEW public.user_tenant_cache IS 'Cached user-tenant relationships for performance. Currently accessible to authenticated users. TODO: Refactor application code to use RLS-protected functions instead of direct access.';
+GRANT ALL ON TABLE "public"."avatar_locations" TO "anon";
+GRANT ALL ON TABLE "public"."avatar_locations" TO "authenticated";
+GRANT ALL ON TABLE "public"."avatar_locations" TO "service_role";
 
--- -- Name: TABLE wound_assessments; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.wound_assessments IS 'Multi-purpose table: legacy wound care assessments + new hacMap device/wound assessments';
 
--- -- Name: COLUMN wound_assessments.student_name; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."bowel_records" TO "anon";
+GRANT ALL ON TABLE "public"."bowel_records" TO "authenticated";
+GRANT ALL ON TABLE "public"."bowel_records" TO "service_role";
 
-COMMENT ON COLUMN public.wound_assessments.student_name IS 'Full name of student who performed assessment';
 
--- -- Name: COLUMN wound_assessments.device_id; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.device_id IS 'Links to device being assessed (NULL if wound assessment)';
+GRANT ALL ON TABLE "public"."contact_submissions" TO "anon";
+GRANT ALL ON TABLE "public"."contact_submissions" TO "authenticated";
+GRANT ALL ON TABLE "public"."contact_submissions" TO "service_role";
 
--- -- Name: COLUMN wound_assessments.site_condition; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.site_condition IS 'Condition of IV site (devices) or surrounding skin (wounds)';
 
--- -- Name: COLUMN wound_assessments.device_functioning; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."device_assessments" TO "anon";
+GRANT ALL ON TABLE "public"."device_assessments" TO "authenticated";
+GRANT ALL ON TABLE "public"."device_assessments" TO "service_role";
 
-COMMENT ON COLUMN public.wound_assessments.device_functioning IS 'Is the device patent and functioning properly?';
 
--- -- Name: COLUMN wound_assessments.output_amount_ml; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.output_amount_ml IS 'Amount of drainage from device (for drains, tubes, catheters)';
+GRANT ALL ON TABLE "public"."devices" TO "anon";
+GRANT ALL ON TABLE "public"."devices" TO "authenticated";
+GRANT ALL ON TABLE "public"."devices" TO "service_role";
 
--- -- Name: COLUMN wound_assessments.drainage_type; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.drainage_type IS 'Array of drainage types: serous, sanguineous, serosanguineous, purulent, none';
 
--- -- Name: COLUMN wound_assessments.drainage_amount; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."diabetic_records" TO "anon";
+GRANT ALL ON TABLE "public"."diabetic_records" TO "authenticated";
+GRANT ALL ON TABLE "public"."diabetic_records" TO "service_role";
 
-COMMENT ON COLUMN public.wound_assessments.drainage_amount IS 'Amount of drainage: none, scant, small, moderate, large, copious';
 
--- -- Name: COLUMN wound_assessments.wound_length_cm; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.wound_length_cm IS 'Wound length in centimeters';
+GRANT ALL ON TABLE "public"."doctors_orders" TO "anon";
+GRANT ALL ON TABLE "public"."doctors_orders" TO "authenticated";
+GRANT ALL ON TABLE "public"."doctors_orders" TO "service_role";
 
--- -- Name: COLUMN wound_assessments.wound_width_cm; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.wound_width_cm IS 'Wound width in centimeters';
 
--- -- Name: COLUMN wound_assessments.wound_depth_cm; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."handover_notes" TO "anon";
+GRANT ALL ON TABLE "public"."handover_notes" TO "authenticated";
+GRANT ALL ON TABLE "public"."handover_notes" TO "service_role";
 
-COMMENT ON COLUMN public.wound_assessments.wound_depth_cm IS 'Wound depth in centimeters';
 
--- -- Name: COLUMN wound_assessments.wound_appearance; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.wound_appearance IS 'Wound appearance: clean, granulating, epithelializing, slough, eschar, necrotic, infected';
+GRANT ALL ON TABLE "public"."kb_walkthroughs" TO "anon";
+GRANT ALL ON TABLE "public"."kb_walkthroughs" TO "authenticated";
+GRANT ALL ON TABLE "public"."kb_walkthroughs" TO "service_role";
 
--- -- Name: COLUMN wound_assessments.notes; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.notes IS 'Additional notes or observations about the assessment';
 
--- -- Name: COLUMN wound_assessments.assessment_data; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."lab_ack_events" TO "anon";
+GRANT ALL ON TABLE "public"."lab_ack_events" TO "authenticated";
+GRANT ALL ON TABLE "public"."lab_ack_events" TO "service_role";
 
-COMMENT ON COLUMN public.wound_assessments.assessment_data IS 'Device/wound-specific assessment fields stored as JSONB (e.g., IV site details, feeding tube residuals)';
 
--- -- Name: COLUMN wound_assessments.device_type; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wound_assessments.device_type IS 'Cached device type from devices table for quick filtering';
+GRANT ALL ON TABLE "public"."lab_orders" TO "anon";
+GRANT ALL ON TABLE "public"."lab_orders" TO "authenticated";
+GRANT ALL ON TABLE "public"."lab_orders" TO "service_role";
 
--- -- Name: TABLE wound_treatments; Type: COMMENT; Schema: public
 
-COMMENT ON TABLE public.wound_treatments IS 'Tracks wound treatment history, procedures, and outcomes';
 
--- -- Name: COLUMN wound_treatments.photos_after; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."lab_panels" TO "anon";
+GRANT ALL ON TABLE "public"."lab_panels" TO "authenticated";
+GRANT ALL ON TABLE "public"."lab_panels" TO "service_role";
 
-COMMENT ON COLUMN public.wound_treatments.photos_after IS 'Array of Supabase Storage URLs for post-treatment photos';
 
--- -- Name: COLUMN wounds.entered_by; Type: COMMENT; Schema: public
 
-COMMENT ON COLUMN public.wounds.entered_by IS 'Name of the nurse/clinician who entered/documented this wound';
+GRANT ALL ON TABLE "public"."lab_result_refs" TO "anon";
+GRANT ALL ON TABLE "public"."lab_result_refs" TO "authenticated";
+GRANT ALL ON TABLE "public"."lab_result_refs" TO "service_role";
 
--- -- Name: INDEX idx_user_profiles_id; Type: COMMENT; Schema: public
 
-COMMENT ON INDEX public.idx_user_profiles_id IS 'Speeds up user profile lookups during authentication';
 
--- -- Name: INDEX idx_user_tenant_active; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."lab_results" TO "anon";
+GRANT ALL ON TABLE "public"."lab_results" TO "authenticated";
+GRANT ALL ON TABLE "public"."lab_results" TO "service_role";
 
-COMMENT ON INDEX public.idx_user_tenant_active IS 'Optimizes tenant assignment queries for active users';
 
--- -- Name: INDEX idx_user_tenant_cache_user_tenant; Type: COMMENT; Schema: public
 
-COMMENT ON INDEX public.idx_user_tenant_cache_user_tenant IS 'Allows users (especially super admins) to be cached for multiple tenants';
+GRANT ALL ON TABLE "public"."medication_administrations" TO "anon";
+GRANT ALL ON TABLE "public"."medication_administrations" TO "authenticated";
+GRANT ALL ON TABLE "public"."medication_administrations" TO "service_role";
 
--- -- Name: CONSTRAINT lab_ack_events_ack_by_fkey ON lab_ack_events; Type: COMMENT; Schema: public
 
-COMMENT ON CONSTRAINT lab_ack_events_ack_by_fkey ON public.lab_ack_events IS 'Foreign key to user_profiles for Supabase joins';
 
--- -- Name: CONSTRAINT lab_panels_entered_by_fkey ON lab_panels; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."medications_catalog" TO "anon";
+GRANT ALL ON TABLE "public"."medications_catalog" TO "authenticated";
+GRANT ALL ON TABLE "public"."medications_catalog" TO "service_role";
 
-COMMENT ON CONSTRAINT lab_panels_entered_by_fkey ON public.lab_panels IS 'Foreign key to user_profiles for Supabase joins';
 
--- -- Name: CONSTRAINT lab_results_ack_by_fkey ON lab_results; Type: COMMENT; Schema: public
 
-COMMENT ON CONSTRAINT lab_results_ack_by_fkey ON public.lab_results IS 'Foreign key to user_profiles for Supabase joins';
+GRANT ALL ON TABLE "public"."multi_tenant_admins" TO "anon";
+GRANT ALL ON TABLE "public"."multi_tenant_admins" TO "authenticated";
+GRANT ALL ON TABLE "public"."multi_tenant_admins" TO "service_role";
 
--- -- Name: CONSTRAINT lab_results_entered_by_fkey ON lab_results; Type: COMMENT; Schema: public
 
-COMMENT ON CONSTRAINT lab_results_entered_by_fkey ON public.lab_results IS 'Foreign key to user_profiles for Supabase joins';
 
--- -- Name: POLICY active_delete_policy ON simulation_active; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."patient_admission_records" TO "anon";
+GRANT ALL ON TABLE "public"."patient_admission_records" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_admission_records" TO "service_role";
 
-COMMENT ON POLICY active_delete_policy ON public.simulation_active IS 'Instructors can delete simulations for their assigned programs. Super admins, coordinators, admins, and creators have full access.';
 
--- -- Name: POLICY active_insert_policy ON simulation_active; Type: COMMENT; Schema: public
 
-COMMENT ON POLICY active_insert_policy ON public.simulation_active IS 'Super admins, coordinators, admins, and instructors can create simulations. Categories are validated by application logic.';
+GRANT ALL ON TABLE "public"."patient_advanced_directives" TO "anon";
+GRANT ALL ON TABLE "public"."patient_advanced_directives" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_advanced_directives" TO "service_role";
 
--- -- Name: POLICY active_select_instructor_programs ON simulation_active; Type: COMMENT; Schema: public
 
-COMMENT ON POLICY active_select_instructor_programs ON public.simulation_active IS 'Instructors see active simulations tagged with their assigned program codes. Super admins, coordinators, creators, and participants see relevant sims.';
 
--- -- Name: POLICY active_update_policy ON simulation_active; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."patient_alerts" TO "anon";
+GRANT ALL ON TABLE "public"."patient_alerts" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_alerts" TO "service_role";
 
-COMMENT ON POLICY active_update_policy ON public.simulation_active IS 'Instructors can update (start/stop/pause) simulations for their assigned programs. Super admins, coordinators, admins, and creators have full access.';
 
--- -- Name: POLICY lab_panels_insert ON lab_panels; Type: COMMENT; Schema: public
 
-COMMENT ON POLICY lab_panels_insert ON public.lab_panels IS 'Super admins bypass tenant check, regular admins must be in tenant cache';
+GRANT ALL ON TABLE "public"."patient_alerts_view" TO "anon";
+GRANT ALL ON TABLE "public"."patient_alerts_view" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_alerts_view" TO "service_role";
 
--- -- Name: POLICY lab_results_insert ON lab_results; Type: COMMENT; Schema: public
 
-COMMENT ON POLICY lab_results_insert ON public.lab_results IS 'Super admins bypass tenant check, regular admins must be in tenant cache';
 
--- -- Name: POLICY participants_select_policy ON simulation_participants; Type: COMMENT; Schema: public
+GRANT ALL ON TABLE "public"."patient_bbit_entries" TO "anon";
+GRANT ALL ON TABLE "public"."patient_bbit_entries" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_bbit_entries" TO "service_role";
 
-COMMENT ON POLICY participants_select_policy ON public.simulation_participants IS 'Allow users to see their own participant records or admins/instructors to see all';
 
--- -- Name: POLICY simulation_history_delete_instructor_programs ON simulation_history; Type: COMMENT; Schema: public
 
-COMMENT ON POLICY simulation_history_delete_instructor_programs ON public.simulation_history IS 'Instructors can delete simulation history for their assigned programs. Super admins, coordinators, admins, and creators have full access.';
+GRANT ALL ON TABLE "public"."patient_images" TO "anon";
+GRANT ALL ON TABLE "public"."patient_images" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_images" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_intake_output_events" TO "anon";
+GRANT ALL ON TABLE "public"."patient_intake_output_events" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_intake_output_events" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_medications_templates" TO "anon";
+GRANT ALL ON TABLE "public"."patient_medications_templates" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_medications_templates" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_neuro_assessments" TO "anon";
+GRANT ALL ON TABLE "public"."patient_neuro_assessments" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_neuro_assessments" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_newborn_assessments" TO "anon";
+GRANT ALL ON TABLE "public"."patient_newborn_assessments" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_newborn_assessments" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_notes" TO "anon";
+GRANT ALL ON TABLE "public"."patient_notes" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_notes" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_system_assessments" TO "anon";
+GRANT ALL ON TABLE "public"."patient_system_assessments" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_system_assessments" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_templates" TO "anon";
+GRANT ALL ON TABLE "public"."patient_templates" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_templates" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_vitals" TO "anon";
+GRANT ALL ON TABLE "public"."patient_vitals" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_vitals" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_vitals_templates" TO "anon";
+GRANT ALL ON TABLE "public"."patient_vitals_templates" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_vitals_templates" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patient_wounds" TO "anon";
+GRANT ALL ON TABLE "public"."patient_wounds" TO "authenticated";
+GRANT ALL ON TABLE "public"."patient_wounds" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."patients" TO "anon";
+GRANT ALL ON TABLE "public"."patients" TO "authenticated";
+GRANT ALL ON TABLE "public"."patients" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."profiles" TO "anon";
+GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
+GRANT ALL ON TABLE "public"."profiles" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."programs" TO "anon";
+GRANT ALL ON TABLE "public"."programs" TO "authenticated";
+GRANT ALL ON TABLE "public"."programs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_active" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_active" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_active" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_activity_log" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_activity_log" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_activity_log" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_auto_students" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_auto_students" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_auto_students" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_history" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_history" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_history" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_participants" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_participants" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_participants" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_table_config" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_table_config" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_table_config" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."simulation_table_config_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."simulation_table_config_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."simulation_table_config_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_template_states" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_template_states" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_template_states" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."simulation_templates" TO "anon";
+GRANT ALL ON TABLE "public"."simulation_templates" TO "authenticated";
+GRANT ALL ON TABLE "public"."simulation_templates" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."student_roster_with_profiles" TO "anon";
+GRANT ALL ON TABLE "public"."student_roster_with_profiles" TO "authenticated";
+GRANT ALL ON TABLE "public"."student_roster_with_profiles" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."system_logs" TO "anon";
+GRANT ALL ON TABLE "public"."system_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."system_logs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tenant_users" TO "anon";
+GRANT ALL ON TABLE "public"."tenant_users" TO "authenticated";
+GRANT ALL ON TABLE "public"."tenant_users" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tenant_statistics" TO "anon";
+GRANT ALL ON TABLE "public"."tenant_statistics" TO "authenticated";
+GRANT ALL ON TABLE "public"."tenant_statistics" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tr_active_living_profiles" TO "anon";
+GRANT ALL ON TABLE "public"."tr_active_living_profiles" TO "authenticated";
+GRANT ALL ON TABLE "public"."tr_active_living_profiles" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tr_assessment_scores" TO "anon";
+GRANT ALL ON TABLE "public"."tr_assessment_scores" TO "authenticated";
+GRANT ALL ON TABLE "public"."tr_assessment_scores" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tr_interdisciplinary_interps" TO "anon";
+GRANT ALL ON TABLE "public"."tr_interdisciplinary_interps" TO "authenticated";
+GRANT ALL ON TABLE "public"."tr_interdisciplinary_interps" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tr_progress_notes" TO "anon";
+GRANT ALL ON TABLE "public"."tr_progress_notes" TO "authenticated";
+GRANT ALL ON TABLE "public"."tr_progress_notes" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tr_screening_entries" TO "anon";
+GRANT ALL ON TABLE "public"."tr_screening_entries" TO "authenticated";
+GRANT ALL ON TABLE "public"."tr_screening_entries" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tr_treatment_plan_rows" TO "anon";
+GRANT ALL ON TABLE "public"."tr_treatment_plan_rows" TO "authenticated";
+GRANT ALL ON TABLE "public"."tr_treatment_plan_rows" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."user_programs" TO "anon";
+GRANT ALL ON TABLE "public"."user_programs" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_programs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."user_roles" TO "anon";
+GRANT ALL ON TABLE "public"."user_roles" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_roles" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."user_sessions" TO "anon";
+GRANT ALL ON TABLE "public"."user_sessions" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_sessions" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."user_tenant_access" TO "anon";
+GRANT ALL ON TABLE "public"."user_tenant_access" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_tenant_access" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."user_tenant_cache" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."wound_assessments" TO "anon";
+GRANT ALL ON TABLE "public"."wound_assessments" TO "authenticated";
+GRANT ALL ON TABLE "public"."wound_assessments" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."wound_treatments" TO "anon";
+GRANT ALL ON TABLE "public"."wound_treatments" TO "authenticated";
+GRANT ALL ON TABLE "public"."wound_treatments" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."wounds" TO "anon";
+GRANT ALL ON TABLE "public"."wounds" TO "authenticated";
+GRANT ALL ON TABLE "public"."wounds" TO "service_role";
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
+
+
+
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
+
+
+
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
+
+
+
+
+
+
+

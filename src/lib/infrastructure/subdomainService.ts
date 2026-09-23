@@ -10,6 +10,22 @@ import { Tenant } from '../../types';
 import { secureLogger } from '../security/secureLogger';
 
 /**
+ * Hostnames that are environment/infrastructure, not tenants. A hostname whose
+ * first label is one of these is treated as "no subdomain", so tenant
+ * resolution is skipped entirely.
+ */
+const RESERVED_SUBDOMAINS = new Set([
+  'www',
+  'dev',
+  'staging',
+  'preview',
+  'app',
+  'api',
+  'admin',
+  'simulation',
+]);
+
+/**
  * Extract subdomain from current URL
  */
 export function getCurrentSubdomain(): string | null {
@@ -32,6 +48,14 @@ export function getCurrentSubdomain(): string | null {
     return null;
   }
 
+  // Netlify-generated hostnames (branch deploys and deploy previews, e.g.
+  // `deploy-preview-12--haccare.netlify.app`) are not tenants. Without this the
+  // first label is read as a tenant subdomain and every page load attempts a
+  // doomed tenant lookup.
+  if (hostname.endsWith('.netlify.app')) {
+    return null;
+  }
+
   // Split hostname into parts
   const parts = hostname.split('.');
   
@@ -40,9 +64,14 @@ export function getCurrentSubdomain(): string | null {
     return null;
   }
 
-  // Return the first part as subdomain (unless it's 'www')
+  // Return the first part as subdomain, unless it names infrastructure rather
+  // than a tenant. Without this, dev.haccare.app resolves subdomain 'dev' and
+  // the app tries to load a tenant called 'dev' on every page load, behaving
+  // like a broken tenant login. Verified 2026-09-21 that no tenant uses any of
+  // these names. 'simulation' is handled separately in App.tsx, which matches
+  // hostname.startsWith('simulation.') directly.
   const subdomain = parts[0];
-  const result = subdomain === 'www' ? null : subdomain;
+  const result = RESERVED_SUBDOMAINS.has(subdomain) ? null : subdomain;
   
   secureLogger.debug('Subdomain detected', { result });
   return result;

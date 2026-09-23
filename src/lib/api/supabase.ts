@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { secureLogger } from '../security/secureLogger';
+import { isValidSupabaseUrl } from './supabaseUrl';
 
 /**
  * Supabase Configuration and Client Setup
@@ -36,9 +37,7 @@ if (import.meta.env.DEV) {
  */
 // Validate configuration - strict validation for production environment
 // Support both legacy JWT format and new sb_publishable_ format
-const isValidUrl = supabaseUrl && (
-  supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co')
-);
+const isValidUrl = isValidSupabaseUrl(supabaseUrl);
 const isValidKey = supabaseAnonKey && 
   supabaseAnonKey.length > 30 && 
   (
