@@ -24,8 +24,9 @@ npx vitest run -t "name of the test"
 ```
 
 Vitest is configured inline in `vite.config.ts` (`test` block): `environment: 'node'`,
-`include: ['src/**/*.test.ts']` — **only `.ts`, not `.tsx`**, so component tests are not picked up
-by the default glob. Test coverage is currently thin (2 files); most verification is manual.
+`include: ['src/**/*.test.{ts,tsx}']`. Rendering a component test needs a DOM environment, which
+is **not installed** — add `jsdom` and `@testing-library/react`, then a `// @vitest-environment
+jsdom` docblock in the file. Test coverage is thin (2 files); most verification is manual.
 
 Path alias: `@` → `./src`.
 
@@ -144,5 +145,11 @@ patients, labs), `database/`, `operations/` (deployment, troubleshooting), `user
 
 Deployment is Netlify (`netlify.toml`), with SPA fallback and a `simulation.haccare.app` subdomain
 redirect. CI (`.github/workflows/ci.yml`) runs lint, type-check, tests, build, plus npm audit,
-Snyk, and CodeQL — lint and test steps are `continue-on-error`, so a green check does not mean
-they passed.
+Snyk, and CodeQL. Lint, type-check, tests and `npm audit --audit-level=high` all block as of
+2026-09-22; before that they were `continue-on-error` and a green check meant nothing. Lint runs
+as `lint:ci` (gates on errors only) because the tree carries 424 warnings — ratchet those down,
+then switch it to `npm run lint`.
+
+`main` requires linear history, so PRs squash- or rebase-merge; a merge commit is not offered.
+After a squash-merge of `develop`, merge `main` back into `develop` or the next PR conflicts.
+Required checks are `Test & Lint` and `Security Audit`.

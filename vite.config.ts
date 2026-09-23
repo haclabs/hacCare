@@ -111,6 +111,11 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    // Matches .tsx too. The previous glob was .ts-only, so a component test
+    // was never collected -- and with --passWithNoTests that looked like a
+    // pass. A .tsx test will now be picked up; rendering one needs a DOM
+    // environment (`npm i -D jsdom @testing-library/react`, then a
+    // `// @vitest-environment jsdom` docblock in the file).
+    include: ['src/**/*.test.{ts,tsx}'],
   }
 })
