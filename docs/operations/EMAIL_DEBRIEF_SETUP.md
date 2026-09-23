@@ -1,5 +1,11 @@
 # Email Debrief Report Feature
 
+> **Never paste a real API key into this file.** A live SMTP2GO key was
+> committed here on 2025-11-20 and sat in a public repository until 2026-09-22.
+> It has been revoked. Use the placeholder below and keep the real value in
+> Supabase secrets only — `supabase secrets list` shows what is set without
+> printing values.
+
 ## Overview
 Send debrief reports via email with PDF attachments. Only accessible to instructors, admins, and super_admins.
 
@@ -13,19 +19,19 @@ The Edge Function requires the SMTP2GO API key to be set as a secret in Supabase
 
 ```bash
 # Set the secret via Supabase CLI
-supabase secrets set SMTP2GO_API_KEY=api-3D1735AEF52540A4B2C5E8337FBDCD7E
+supabase secrets set SMTP2GO_API_KEY=<your-smtp2go-api-key>
 ```
 
 Or set it via the Supabase Dashboard:
 1. Go to Project Settings → Edge Functions
-2. Add new secret: `SMTP2GO_API_KEY` with value `api-3D1735AEF52540A4B2C5E8337FBDCD7E`
+2. Add new secret: `SMTP2GO_API_KEY` with value `<your-smtp2go-api-key>`
 
 #### For Local Development:
 
 Create a `.env` file in the `supabase/functions` directory:
 
 ```bash
-SMTP2GO_API_KEY=api-3D1735AEF52540A4B2C5E8337FBDCD7E
+SMTP2GO_API_KEY=<your-smtp2go-api-key>
 ```
 
 Or update `supabase/config.toml`:
@@ -38,7 +44,7 @@ SMTP2GO_API_KEY = "env(SMTP2GO_API_KEY)"
 Then set the environment variable before running Supabase:
 
 ```bash
-export SMTP2GO_API_KEY=api-3D1735AEF52540A4B2C5E8337FBDCD7E
+export SMTP2GO_API_KEY=<your-smtp2go-api-key>
 supabase start
 ```
 
