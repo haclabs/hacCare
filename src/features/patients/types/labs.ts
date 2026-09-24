@@ -1,3 +1,4 @@
+import type { Row } from '../../../lib/api/tables';
 // Lab Results System Types
 // Multi-tenant lab management with category-based organization
 
@@ -56,91 +57,39 @@ export interface SexSpecificRange {
 }
 
 // Master reference range
-export interface LabResultRef {
-  test_code: string;
-  category: LabCategory;
-  test_name: string;
-  units: string | null;
-  ref_low: number | null;
-  ref_high: number | null;
-  ref_operator: RefOperator;
+/**
+ * Derived from the schema so nullability cannot drift. `sex_ref` is JSONB,
+ * which the generated types describe as `Json`; it always holds a
+ * SexSpecificRange, so that one field is overridden.
+ */
+export type LabResultRef = Omit<Row<'lab_result_refs'>, 'sex_ref'> & {
   sex_ref: SexSpecificRange | null;
-  critical_low: number | null;
-  critical_high: number | null;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
-}
+};
 
 // Lab panel (batch/collection)
-export interface LabPanel {
-  id: string;
-  tenant_id: string;
-  patient_id: string;
-  panel_time: string;
-  source: string | null;
-  entered_by: string | null;
-  status: LabPanelStatus;
-  ack_required: boolean;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  
-  // Computed fields (from joins/aggregations)
+/** Schema row plus the fields computed from joins and aggregations. */
+export type LabPanel = Row<'lab_panels'> & {
   entered_by_name?: string;
   result_count?: number;
   abnormal_count?: number;
   critical_count?: number;
   unacked_count?: number;
-}
+};
 
 // Individual lab result
-export interface LabResult {
-  id: string;
-  tenant_id: string;
-  patient_id: string;
-  panel_id: string;
-  category: LabCategory;
-  test_code: string;
-  test_name: string;
-  value: number | null;
-  units: string | null;
-  ref_low: number | null;
-  ref_high: number | null;
-  ref_operator: RefOperator;
+/** Schema row plus computed names; `sex_ref` JSONB typed properly. */
+export type LabResult = Omit<Row<'lab_results'>, 'sex_ref'> & {
   sex_ref: SexSpecificRange | null;
-  critical_low: number | null;
-  critical_high: number | null;
-  flag: LabFlag;
-  entered_by: string | null;
-  entered_at: string;
-  ack_by: string | null;
-  ack_at: string | null;
-  comments: string | null;
-  created_at: string;
-  updated_at: string;
-  
-  // Computed fields
   entered_by_name?: string;
   ack_by_name?: string;
-}
+};
 
 // Acknowledgement event
-export interface LabAckEvent {
-  id: string;
-  tenant_id: string;
-  patient_id: string;
-  panel_id: string;
-  ack_scope: AckScope;
-  ack_by: string;
-  ack_at: string;
+/** Schema row plus computed name; `abnormal_summary` JSONB typed properly. */
+export type LabAckEvent = Omit<Row<'lab_ack_events'>, 'abnormal_summary'> & {
   abnormal_summary: AbnormalResultSummary[] | null;
-  note: string | null;
-  created_at: string;
-  
-  // Computed
   ack_by_name?: string;
-}
+};
 
 // Abnormal result summary for modal
 export interface AbnormalResultSummary {
@@ -149,7 +98,8 @@ export interface AbnormalResultSummary {
   value: number;
   units: string | null;
   ref_range: string;
-  flag: LabFlag;
+  // lab_results.flag is nullable.
+  flag: LabFlag | null;
 }
 
 // For creating a new panel
@@ -171,8 +121,9 @@ export interface CreateLabResultInput {
   units?: string;
   ref_low?: number;
   ref_high?: number;
-  ref_operator?: RefOperator;
-  sex_ref?: SexSpecificRange;
+  // Copied from a lab_result_refs row, where both columns are nullable.
+  ref_operator?: RefOperator | null;
+  sex_ref?: SexSpecificRange | null;
   critical_low?: number;
   critical_high?: number;
   comments?: string;
@@ -194,7 +145,7 @@ export interface EffectiveRange {
 }
 
 // Lab panel with aggregated stats
-export interface LabPanelWithStats extends LabPanel {
+export type LabPanelWithStats = LabPanel & {
   results: LabResult[];
   total_results: number;
   abnormal_results: number;
@@ -223,8 +174,9 @@ export function getCategoryLabel(category: LabCategory): string {
 }
 
 // Helper to get flag display
-export function getFlagLabel(flag: LabFlag): string {
+export function getFlagLabel(flag: LabFlag | null): string {
   switch (flag) {
+    case null: return '—';
     case 'normal': return 'Normal';
     case 'abnormal_high': return 'High';
     case 'abnormal_low': return 'Low';
@@ -235,8 +187,9 @@ export function getFlagLabel(flag: LabFlag): string {
 }
 
 // Helper to get flag color class
-export function getFlagColorClass(flag: LabFlag): string {
+export function getFlagColorClass(flag: LabFlag | null): string {
   switch (flag) {
+    case null: return 'bg-gray-100 text-gray-800';
     case 'normal': return 'bg-gray-100 text-gray-800';
     case 'abnormal_high': return 'bg-yellow-100 text-yellow-800';
     case 'abnormal_low': return 'bg-yellow-100 text-yellow-800';
@@ -247,8 +200,9 @@ export function getFlagColorClass(flag: LabFlag): string {
 }
 
 // Helper to get status label
-export function getStatusLabel(status: LabPanelStatus): string {
+export function getStatusLabel(status: LabPanelStatus | null): string {
   switch (status) {
+    case null: return 'Unknown';
     case 'new': return 'New';
     case 'partial_ack': return 'Partially Acknowledged';
     case 'acknowledged': return 'Acknowledged';
@@ -257,8 +211,9 @@ export function getStatusLabel(status: LabPanelStatus): string {
 }
 
 // Helper to get status color class
-export function getStatusColorClass(status: LabPanelStatus): string {
+export function getStatusColorClass(status: LabPanelStatus | null): string {
   switch (status) {
+    case null: return 'bg-gray-100 text-gray-800';
     case 'new': return 'bg-blue-100 text-blue-800';
     case 'partial_ack': return 'bg-yellow-100 text-yellow-800';
     case 'acknowledged': return 'bg-green-100 text-green-800';
@@ -272,14 +227,17 @@ export function getStatusColorClass(status: LabPanelStatus): string {
 export function getEffectiveRangeDisplay(
   ref_low: number | null,
   ref_high: number | null,
-  ref_operator: RefOperator,
-  sex_ref: any | null,
+  // Both are nullable columns on lab_results / lab_result_refs. The `default`
+  // branch of the switch below already returns 'N/A', so null needs no extra
+  // handling -- only an honest signature.
+  ref_operator: RefOperator | null,
+  sex_ref: SexSpecificRange | null,
   patientSex: string | null
 ): string {
   // Handle sex-specific ranges
   if (ref_operator === 'sex-specific' && sex_ref) {
     const sexKey = patientSex?.toLowerCase() || 'male';
-    const sexRange = sex_ref[sexKey] || sex_ref['male'];
+    const sexRange = sex_ref[sexKey as keyof SexSpecificRange] ?? sex_ref.male;
     
     if (sexRange) {
       if (sexRange.low !== undefined && sexRange.high !== undefined) {

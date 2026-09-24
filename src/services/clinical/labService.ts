@@ -1,7 +1,7 @@
 // Lab Service
 // Handles CRUD operations and flag computation for lab results
 
-import { supabase } from '../../lib/api/supabase';
+import { db as supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
 import { CATEGORICAL_FLAG_MAP } from '../../features/patients/types/labs';
 import type {
@@ -20,6 +20,27 @@ import type {
   LabCategory,
 } from '../../features/patients/types/labs';
 import type { ServiceError } from '../../lib/api/serviceResult';
+import { asJsonObject } from '../../lib/api/json';
+import type { Json } from '../../types/supabase';
+import type { Row, Update } from '../../lib/api/tables';
+
+/**
+ * Row -> domain converters.
+ *
+ * The domain types are derived from the schema, so the only fields that differ
+ * are the JSONB ones: Postgres hands them back as `Json`, and these narrow them
+ * to the shapes the UI expects. Everything else passes through unchanged, which
+ * is the point of deriving the types rather than hand-writing them.
+ */
+const toLabResultRef = (row: Row<'lab_result_refs'>): LabResultRef => ({
+  ...row,
+  sex_ref: asJsonObject<SexSpecificRange>(row.sex_ref),
+});
+
+const toLabResult = (row: Row<'lab_results'>): LabResult => ({
+  ...row,
+  sex_ref: asJsonObject<SexSpecificRange>(row.sex_ref),
+});
 
 // ============================================================================
 // FLAG COMPUTATION
@@ -32,7 +53,8 @@ export function computeLabFlag(
   value: number | null,
   ref_low: number | null,
   ref_high: number | null,
-  ref_operator: RefOperator,
+  // Nullable on lab_results and lab_result_refs.
+  ref_operator: RefOperator | null,
   sex_ref: SexSpecificRange | null,
   patient_sex: PatientSex | null,
   critical_low: number | null,
@@ -105,7 +127,8 @@ export function computeLabFlag(
 export function getEffectiveBounds(
   ref_low: number | null,
   ref_high: number | null,
-  ref_operator: RefOperator,
+  // Nullable on lab_results and lab_result_refs.
+  ref_operator: RefOperator | null,
   sex_ref: SexSpecificRange | null,
   patient_sex: PatientSex | null
 ): { low: number | null; high: number | null } {
@@ -139,10 +162,17 @@ export function getEffectiveBounds(
 /**
  * Get display string for reference range
  */
+/**
+ * NOTE: a different function with this same name, returning a plain string,
+ * lives in features/patients/types/labs.ts. LabPanelDetail imports this one;
+ * LabAcknowledgeModal imports that one. Worth consolidating -- same name,
+ * different return type, different callers.
+ */
 export function getEffectiveRangeDisplay(
   ref_low: number | null,
   ref_high: number | null,
-  ref_operator: RefOperator,
+  // Nullable on lab_results and lab_result_refs.
+  ref_operator: RefOperator | null,
   sex_ref: SexSpecificRange | null,
   patient_sex: PatientSex | null
 ): EffectiveRange {
@@ -231,7 +261,7 @@ export async function getLabResultRefs(): Promise<{ data: LabResultRef[] | null;
     .order('category')
     .order('display_order');
 
-  return { data, error };
+  return { data: data ? data.map(toLabResultRef) : null, error };
 }
 
 /**
@@ -246,7 +276,7 @@ export async function getLabResultRefsByCategory(
     .eq('category', category)
     .order('display_order');
 
-  return { data, error };
+  return { data: data ? data.map(toLabResultRef) : null, error };
 }
 
 /**
@@ -261,7 +291,7 @@ export async function getLabResultRef(
     .eq('test_code', test_code)
     .single();
 
-  return { data, error };
+  return { data: data ? toLabResultRef(data) : null, error };
 }
 
 // ============================================================================
@@ -356,7 +386,7 @@ export async function createLabPanel(
  */
 export async function updateLabPanel(
   panelId: string,
-  updates: Partial<LabPanel>
+  updates: Update<'lab_panels'>
 ): Promise<{ error: ServiceError | null }> {
   const { error } = await supabase
     .from('lab_panels')
@@ -421,9 +451,11 @@ export async function getLabResults(
 export async function getPreviousLabResult(
   patientId: string,
   testCode: string,
-  currentResultCreatedAt: string,
+  // lab_results.created_at is nullable; callers pass it straight through.
+  currentResultCreatedAt: string | null,
   tenantId: string
 ): Promise<{ data: LabResult | null; error: ServiceError | null }> {
+  if (!currentResultCreatedAt) return { data: null, error: null };
   // Join through lab_panels to filter by patient_id
   // lab_results doesn't have patient_id, only panel_id
   const { data, error } = await supabase
@@ -498,7 +530,8 @@ export async function createLabResult(
       ref_low: input.ref_low,
       ref_high: input.ref_high,
       ref_operator: input.ref_operator || 'between',
-      sex_ref: input.sex_ref,
+      // SexSpecificRange is a narrowed view of this JSONB column.
+      sex_ref: (input.sex_ref ?? null) as Json,
       critical_low: input.critical_low,
       critical_high: input.critical_high,
       flag,
@@ -507,8 +540,7 @@ export async function createLabResult(
     })
     .select()
     .single();
-
-  return { data, error };
+  return { data: data ? toLabResult(data) : null, error };
 }
 
 /**
@@ -516,7 +548,7 @@ export async function createLabResult(
  */
 export async function updateLabResult(
   resultId: string,
-  updates: Partial<LabResult>,
+  updates: Update<'lab_results'>,
   patientId: string
 ): Promise<{ error: ServiceError | null }> {
   // If value or comments changed, recompute flag
@@ -547,7 +579,7 @@ export async function updateLabResult(
           updates.ref_low ?? result.ref_low,
           updates.ref_high ?? result.ref_high,
           updates.ref_operator ?? result.ref_operator,
-          updates.sex_ref ?? result.sex_ref,
+          asJsonObject<SexSpecificRange>(updates.sex_ref ?? result.sex_ref),
           patientSex,
           updates.critical_low ?? result.critical_low,
           updates.critical_high ?? result.critical_high
@@ -622,7 +654,7 @@ export async function acknowledgeLabs(
         r.ref_low,
         r.ref_high,
         r.ref_operator,
-        r.sex_ref,
+        asJsonObject<SexSpecificRange>(r.sex_ref),
         null
       ).display,
       flag: r.flag,
@@ -651,7 +683,8 @@ export async function acknowledgeLabs(
     ack_scope: input.scope,
     ack_by: userId,
     student_name: studentName || null, // 🆕 Track student name for debrief
-    abnormal_summary: abnormal_summary.length > 0 ? abnormal_summary : null,
+    // abnormal_summary is JSONB; AbnormalResultSummary[] is the narrowed view.
+    abnormal_summary: (abnormal_summary.length > 0 ? abnormal_summary : null) as Json,
     note: input.note,
   };
   
