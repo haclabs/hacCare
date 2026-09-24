@@ -468,3 +468,131 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 SELECT 'Medication catalog and patient library loaded' AS status;
+
+-- ============================================================================
+-- simulation_table_config  -- the snapshot/reset registry
+-- ============================================================================
+-- Copied from production 2026-09-23. 27 rows of pure configuration:
+-- which tables the simulation machinery captures, how they relate, and the
+-- order they must be deleted in. No patient or user data.
+--
+-- WITHOUT THESE ROWS THE SIMULATION LIFECYCLE SILENTLY DOES NOTHING.
+-- save_template_snapshot_v2() walks this registry to decide what to capture, so
+-- an empty table yields an empty snapshot; launch then restores nothing and
+-- reset has nothing to restore. That is not an error anywhere -- it just
+-- produces empty simulations.
+--
+-- They are missing from a fresh database because the rows were inserted by the
+-- hand-applied migrations now in database/migrations/history/, while the
+-- schema baseline is a --schema-only dump that carries structure but no rows.
+
+INSERT INTO public.simulation_table_config
+  (table_name, category, has_tenant_id, has_patient_id, parent_table, parent_column, requires_id_mapping, delete_order) VALUES
+  ('lab_results', 'labs', true, false, 'lab_panels', 'panel_id', false, 5),
+  ('medication_administrations', 'medications', true, false, NULL, 'patient_id', false, 5),
+  ('patient_alerts', 'clinical', true, false, NULL, NULL, false, 5),
+  ('patient_bbit_entries', 'student_work', true, true, NULL, NULL, true, 5),
+  ('patient_images', 'clinical', true, true, NULL, NULL, false, 5),
+  ('patient_neuro_assessments', 'student_work', true, true, NULL, NULL, true, 5),
+  ('patient_newborn_assessments', 'student_work', true, true, NULL, NULL, true, 5),
+  ('patient_notes', 'clinical', true, true, NULL, NULL, false, 5),
+  ('patient_vitals', 'clinical', true, true, NULL, NULL, false, 5),
+  ('lab_panels', 'labs', true, true, NULL, NULL, true, 6),
+  ('patient_system_assessments', 'student_work', true, true, NULL, NULL, true, 6),
+  ('wound_assessments', 'clinical', true, true, 'patient_wounds', 'wound_id', false, 6),
+  ('patient_wounds', 'clinical', true, true, NULL, NULL, true, 7),
+  ('tr_active_living_profiles', 'student_work', true, true, NULL, NULL, true, 7),
+  ('tr_assessment_scores', 'student_work', true, true, NULL, NULL, true, 7),
+  ('tr_interdisciplinary_interps', 'student_work', true, true, NULL, NULL, true, 7),
+  ('tr_progress_notes', 'student_work', true, true, NULL, NULL, false, 7),
+  ('tr_screening_entries', 'student_work', true, true, NULL, NULL, true, 7),
+  ('tr_treatment_plan_rows', 'student_work', true, true, NULL, NULL, true, 7),
+  ('bowel_records', 'assessments', false, true, NULL, NULL, false, 8),
+  ('diabetic_records', 'assessments', true, true, NULL, NULL, false, 8),
+  ('doctors_orders', 'clinical', true, true, NULL, NULL, false, 8),
+  ('handover_notes', 'clinical', false, true, NULL, NULL, false, 8),
+  ('patient_admission_records', 'assessments', false, true, NULL, NULL, false, 8),
+  ('patient_advanced_directives', 'assessments', false, true, NULL, NULL, false, 8),
+  ('patient_medications', 'medications', true, true, NULL, NULL, true, 10),
+  ('patients', 'core', true, false, NULL, NULL, true, 999)
+ON CONFLICT (table_name) DO NOTHING;
+
+-- ============================================================================
+-- Make the simulation lifecycle actually exercisable
+-- ============================================================================
+-- Launching needs students who are members of the tenant the instructor is
+-- launching from -- get_tenant_users() is scoped to that tenant, so a student
+-- who exists only inside a running simulation cannot be picked as a
+-- participant for a new one.
+
+INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password,
+                        email_confirmed_at, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data)
+SELECT ('e000000' || n || '-0000-0000-0000-00000000000' || n)::uuid,
+       '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+       'student' || n || '@local.test', crypt('password123', gen_salt('bf')),
+       now(), now(), now(),
+       '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb
+FROM generate_series(1, 6) AS n
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.user_profiles (id, email, first_name, last_name, role, is_active)
+SELECT ('e000000' || n || '-0000-0000-0000-00000000000' || n)::uuid,
+       'student' || n || '@local.test',
+       (ARRAY['Ava','Ben','Chloe','Diego','Emma','Finn'])[n],
+       (ARRAY['Nolan','Ortiz','Park','Rivera','Singh','Tremblay'])[n],
+       'student', true
+FROM generate_series(1, 6) AS n
+ON CONFLICT (id) DO NOTHING;
+
+-- Cohort members of the institution, so they are selectable when launching.
+INSERT INTO public.tenant_users (tenant_id, user_id, role, is_active)
+SELECT '11111111-1111-1111-1111-111111111111',
+       ('e000000' || n || '-0000-0000-0000-00000000000' || n)::uuid, 'student', true
+FROM generate_series(1, 6) AS n
+ON CONFLICT DO NOTHING;
+
+-- The template tenant needs content, or its snapshot is empty and every
+-- simulation launched from it starts blank.
+INSERT INTO public.patients
+  (id, patient_id, first_name, last_name, date_of_birth, gender, room_number, bed_number,
+   admission_date, condition, diagnosis, allergies, blood_type, emergency_contact_name,
+   emergency_contact_relationship, emergency_contact_phone, tenant_id) VALUES
+  ('aa000000-0000-0000-0000-000000000003', 'PT-TMPL-001', 'Mary', 'Sims',
+   '1948-03-11', 'Female', '101', 'A', '2026-09-20', 'Stable',
+   'Community-acquired pneumonia', ARRAY['Penicillin'], 'O+',
+   'John Sims', 'Spouse', '555-0101', '33333333-3333-3333-3333-333333333333')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.patient_medications
+  (patient_id, tenant_id, name, dosage, frequency, route, start_date,
+   prescribed_by, next_due, status, category, admin_times) VALUES
+  ('aa000000-0000-0000-0000-000000000003', '33333333-3333-3333-3333-333333333333',
+   'Ceftriaxone', '1 g', 'Once daily', 'IV', '2026-09-20', 'Dr. Patel',
+   now() + interval '4 hours', 'Active', 'scheduled', '["08:00"]'::jsonb),
+  ('aa000000-0000-0000-0000-000000000003', '33333333-3333-3333-3333-333333333333',
+   'Acetaminophen', '650 mg', 'Every 6 hours PRN', 'PO', '2026-09-20', 'Dr. Patel',
+   now() + interval '2 hours', 'Active', 'prn', '[]'::jsonb)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.patient_vitals
+  (patient_id, tenant_id, temperature, blood_pressure_systolic, blood_pressure_diastolic,
+   heart_rate, respiratory_rate, oxygen_saturation, oxygen_delivery, oxygen_flow_rate, recorded_at)
+VALUES
+  ('aa000000-0000-0000-0000-000000000003', '33333333-3333-3333-3333-333333333333',
+   38.9, 104, 62, 112, 26, 91, 'Nasal Prongs', '1L-15L', now() - interval '8 hours')
+ON CONFLICT DO NOTHING;
+
+-- Build the template snapshot the way the app does. save_template_snapshot_v2
+-- is SECURITY DEFINER and reads auth.uid(), so impersonate the instructor for
+-- the call rather than reimplementing it here.
+DO $$
+BEGIN
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', 'b0000000-0000-0000-0000-000000000001',
+                      'role', 'authenticated')::text, true);
+  PERFORM public.save_template_snapshot_v2('f0000000-0000-0000-0000-000000000001');
+  PERFORM set_config('request.jwt.claims', NULL, true);
+END $$;
+
+SELECT 'Simulation lifecycle fixture loaded' AS status;
