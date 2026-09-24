@@ -60,6 +60,34 @@ VALUES
    now(), now(), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
+-- GoTrue scans these columns into Go `string`, not `*string`, so a NULL makes
+-- login fail with "Database error querying schema" -- which looks like a
+-- connection problem and is not. They must be empty strings, never NULL.
+UPDATE auth.users SET
+  confirmation_token         = COALESCE(confirmation_token, ''),
+  recovery_token             = COALESCE(recovery_token, ''),
+  email_change               = COALESCE(email_change, ''),
+  email_change_token_new     = COALESCE(email_change_token_new, ''),
+  email_change_token_current = COALESCE(email_change_token_current, ''),
+  phone_change               = COALESCE(phone_change, ''),
+  phone_change_token         = COALESCE(phone_change_token, ''),
+  reauthentication_token     = COALESCE(reauthentication_token, '')
+WHERE email LIKE '%@local.test';
+
+-- Email sign-in also needs an identity row per user; inserting into auth.users
+-- alone is not enough on current GoTrue.
+INSERT INTO auth.identities (provider_id, user_id, identity_data, provider,
+                             last_sign_in_at, created_at, updated_at)
+SELECT u.id::text, u.id,
+       jsonb_build_object('sub', u.id::text, 'email', u.email,
+                          'email_verified', true, 'phone_verified', false),
+       'email', now(), now(), now()
+FROM auth.users u
+WHERE u.email LIKE '%@local.test'
+  AND NOT EXISTS (
+    SELECT 1 FROM auth.identities i WHERE i.user_id = u.id AND i.provider = 'email'
+  );
+
 -- ----------------------------------------------------------------------------
 -- Tenants
 -- ----------------------------------------------------------------------------
