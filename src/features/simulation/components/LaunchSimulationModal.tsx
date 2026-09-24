@@ -103,8 +103,17 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
   }, [template.id]);
 
   const loadUsers = async () => {
-    if (!currentTenant) return;
+    // Returning here without clearing loadingUsers left the spinner running
+    // forever with nothing in the console -- no error had occurred, the load
+    // simply never started. A super admin hits this every time, because
+    // currentTenant stays null until they pick a tenant.
+    if (!currentTenant) {
+      setUsers([]);
+      setLoadingUsers(false);
+      return;
+    }
 
+    setLoadingUsers(true);
     try {
       // Scope to this institution: its own tenant plus every program tenant
       // underneath it (never pull users from other institutions).
@@ -821,6 +830,12 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
             {loadingUsers ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="border border-slate-300 dark:border-slate-600 rounded-lg p-4 text-sm text-slate-600 dark:text-slate-300">
+                {!currentTenant
+                  ? 'No institution selected. Super admins span every tenant, so pick one with the tenant switcher before launching.'
+                  : 'No users found in this institution. Participants are drawn from the institution and its program tenants.'}
               </div>
             ) : (
               <div className="border border-slate-300 dark:border-slate-600 rounded-lg max-h-64 overflow-y-auto">
