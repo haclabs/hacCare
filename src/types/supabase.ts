@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       audit_logs: {
@@ -2819,6 +2844,7 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           created_by: string
+          current_state_id: string | null
           duration_minutes: number
           ends_at: string | null
           id: string
@@ -2840,6 +2866,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           created_by: string
+          current_state_id?: string | null
           duration_minutes: number
           ends_at?: string | null
           id?: string
@@ -2863,6 +2890,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           created_by?: string
+          current_state_id?: string | null
           duration_minutes?: number
           ends_at?: string | null
           id?: string
@@ -2881,6 +2909,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "simulation_active_current_state_id_fkey"
+            columns: ["current_state_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_template_states"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "simulation_active_template_id_fkey"
             columns: ["template_id"]
@@ -3191,55 +3226,63 @@ export type Database = {
         }
         Relationships: []
       }
-      simulation_template_versions: {
+      simulation_template_states: {
         Row: {
-          change_notes: string | null
-          device_count: number | null
+          changelog_note: string | null
+          created_at: string
+          created_by: string | null
           id: string
-          medication_count: number | null
-          order_count: number | null
-          patient_count: number | null
-          saved_at: string | null
-          saved_by: string | null
+          label: string
           snapshot_data: Json
+          sort_order: number
           template_id: string
-          version: number
-          wound_count: number | null
+          tenant_id: string
+          updated_at: string
         }
         Insert: {
-          change_notes?: string | null
-          device_count?: number | null
+          changelog_note?: string | null
+          created_at?: string
+          created_by?: string | null
           id?: string
-          medication_count?: number | null
-          order_count?: number | null
-          patient_count?: number | null
-          saved_at?: string | null
-          saved_by?: string | null
+          label: string
           snapshot_data: Json
+          sort_order?: number
           template_id: string
-          version: number
-          wound_count?: number | null
+          tenant_id: string
+          updated_at?: string
         }
         Update: {
-          change_notes?: string | null
-          device_count?: number | null
+          changelog_note?: string | null
+          created_at?: string
+          created_by?: string | null
           id?: string
-          medication_count?: number | null
-          order_count?: number | null
-          patient_count?: number | null
-          saved_at?: string | null
-          saved_by?: string | null
+          label?: string
           snapshot_data?: Json
+          sort_order?: number
           template_id?: string
-          version?: number
-          wound_count?: number | null
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "simulation_template_versions_template_id_fkey"
+            foreignKeyName: "simulation_template_states_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "simulation_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_template_states_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_template_states_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -4866,6 +4909,13 @@ export type Database = {
         Args: { p_simulation_id: string }
         Returns: Json
       }
+      caller_may_administer_tenant: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
+      }
+      caller_profile_role: { Args: never; Returns: string }
+      caller_tenant_comember_ids: { Args: never; Returns: string[] }
+      caller_tenant_ids: { Args: never; Returns: string[] }
       cleanup_all_problem_simulations: { Args: never; Returns: Json }
       cleanup_backup_audit_logs: { Args: never; Returns: number }
       cleanup_expired_simulations: { Args: never; Returns: number }
@@ -4878,14 +4928,6 @@ export type Database = {
       }
       compare_simulation_vs_template: {
         Args: { p_simulation_id: string }
-        Returns: Json
-      }
-      compare_template_versions: {
-        Args: {
-          p_template_id: string
-          p_version_new: number
-          p_version_old: number
-        }
         Returns: Json
       }
       complete_simulation: {
@@ -5063,6 +5105,7 @@ export type Database = {
         }[]
       }
       end_user_session: { Args: never; Returns: boolean }
+      ensure_tenant_access: { Args: { p_tenant_id: string }; Returns: boolean }
       ensure_user_profile: {
         Args: { user_email: string; user_id: string }
         Returns: {
@@ -5183,6 +5226,37 @@ export type Database = {
         }[]
       }
       get_super_admin_tenant_context: { Args: never; Returns: string }
+      get_tenant_by_subdomain_public: {
+        Args: { p_subdomain: string }
+        Returns: {
+          admin_user_id: string | null
+          auto_cleanup_at: string | null
+          created_at: string | null
+          id: string
+          is_simulation: boolean | null
+          logo_url: string | null
+          max_patients: number
+          max_users: number
+          name: string
+          parent_tenant_id: string | null
+          primary_color: string | null
+          program_id: string | null
+          settings: Json
+          simulation_config: Json | null
+          simulation_id: string | null
+          status: string
+          subdomain: string
+          subscription_plan: string
+          tenant_type: string | null
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tenants"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_tenant_users: {
         Args: { target_tenant_id: string }
         Returns: {
@@ -5264,6 +5338,7 @@ export type Database = {
           p_participant_roles?: string[]
           p_participant_user_ids: string[]
           p_primary_categories?: string[]
+          p_state_id?: string
           p_sub_categories?: string[]
           p_template_id: string
         }
@@ -5272,6 +5347,10 @@ export type Database = {
           simulation_id: string
           tenant_id: string
         }[]
+      }
+      load_template_state: {
+        Args: { p_state_id?: string; p_template_id: string }
+        Returns: Json
       }
       mark_welcome_seen: { Args: never; Returns: string }
       move_patient_to_tenant:
@@ -5299,11 +5378,11 @@ export type Database = {
       }
       reset_run: { Args: { p_run_id: string }; Returns: Json }
       reset_simulation_for_next_session: {
-        Args: { p_simulation_id: string }
+        Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json
       }
       reset_simulation_with_template_updates: {
-        Args: { p_simulation_id: string }
+        Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json
       }
       restore_snapshot_to_tenant: {
@@ -5317,15 +5396,6 @@ export type Database = {
         }
         Returns: Json
       }
-      restore_template_version: {
-        Args: {
-          p_restore_notes?: string
-          p_template_id: string
-          p_user_id?: string
-          p_version_to_restore: number
-        }
-        Returns: Json
-      }
       save_patient_template_snapshot: {
         Args: { p_patient_template_id: string }
         Returns: Json
@@ -5334,18 +5404,21 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: Json
       }
-      save_template_version: {
+      save_template_state: {
         Args: {
-          p_change_notes?: string
-          p_new_snapshot: Json
+          p_changelog_note?: string
+          p_label: string
           p_template_id: string
-          p_user_id?: string
         }
         Returns: Json
       }
       set_super_admin_tenant_context: {
         Args: { target_tenant_id: string }
         Returns: undefined
+      }
+      shift_snapshot_timestamps: {
+        Args: { p_shift: string; p_snapshot: Json }
+        Returns: Json
       }
       update_medication_super_admin: {
         Args: { p_medication_id: string; p_updates: Json }
@@ -5393,6 +5466,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_template_state_snapshot: {
+        Args: { p_state_id: string; p_template_id: string }
+        Returns: Json
+      }
       update_user_profile_admin: {
         Args: {
           p_department?: string
@@ -5427,6 +5504,7 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { tenant_uuid: string; user_uuid: string }; Returns: boolean }
       user_is_super_admin: { Args: { user_uuid: string }; Returns: boolean }
+      user_may_join_tenant: { Args: { p_tenant_id: string }; Returns: boolean }
       validate_subdomain: {
         Args: { subdomain_input: string }
         Returns: boolean
@@ -5627,6 +5705,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       ack_scope: ["panel", "result"],
