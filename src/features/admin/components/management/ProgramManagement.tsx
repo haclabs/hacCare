@@ -46,7 +46,7 @@ export const ProgramManagement: React.FC = () => {
     
     if (error) {
       setError('Failed to load programs');
-      secureLogger.error(error);
+      secureLogger.error('Failed to load programs', error);
     } else {
       setPrograms(data || []);
     }
@@ -131,7 +131,7 @@ export const ProgramManagement: React.FC = () => {
     
     if (error) {
       setError('Failed to delete program');
-      secureLogger.error(error);
+      secureLogger.error('Failed to delete program', error);
     } else {
       setSuccess('Program deleted successfully');
       await loadPrograms();
