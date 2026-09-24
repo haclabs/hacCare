@@ -19,6 +19,7 @@ import type {
   AbnormalResultSummary,
   LabCategory,
 } from '../../features/patients/types/labs';
+import type { ServiceError } from '../../lib/api/serviceResult';
 
 // ============================================================================
 // FLAG COMPUTATION
@@ -223,7 +224,7 @@ export function getEffectiveRangeDisplay(
 /**
  * Get all reference ranges
  */
-export async function getLabResultRefs(): Promise<{ data: LabResultRef[] | null; error: any }> {
+export async function getLabResultRefs(): Promise<{ data: LabResultRef[] | null; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_result_refs')
     .select('*')
@@ -238,7 +239,7 @@ export async function getLabResultRefs(): Promise<{ data: LabResultRef[] | null;
  */
 export async function getLabResultRefsByCategory(
   category: LabCategory
-): Promise<{ data: LabResultRef[] | null; error: any }> {
+): Promise<{ data: LabResultRef[] | null; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_result_refs')
     .select('*')
@@ -253,7 +254,7 @@ export async function getLabResultRefsByCategory(
  */
 export async function getLabResultRef(
   test_code: string
-): Promise<{ data: LabResultRef | null; error: any }> {
+): Promise<{ data: LabResultRef | null; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_result_refs')
     .select('*')
@@ -273,7 +274,7 @@ export async function getLabResultRef(
 export async function getLabPanels(
   patientId: string,
   tenantId: string
-): Promise<{ data: LabPanel[] | null; error: any }> {
+): Promise<{ data: LabPanel[] | null; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_panels')
     .select(`
@@ -300,7 +301,7 @@ export async function getLabPanels(
  */
 export async function getLabPanel(
   panelId: string
-): Promise<{ data: LabPanel | null; error: any }> {
+): Promise<{ data: LabPanel | null; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_panels')
     .select(`
@@ -329,7 +330,7 @@ export async function getLabPanel(
 export async function createLabPanel(
   input: CreateLabPanelInput,
   tenantId: string
-): Promise<{ data: LabPanel | null; error: any }> {
+): Promise<{ data: LabPanel | null; error: ServiceError | null }> {
   const { data: userData } = await supabase.auth.getUser();
   
   const { data, error } = await supabase
@@ -356,7 +357,7 @@ export async function createLabPanel(
 export async function updateLabPanel(
   panelId: string,
   updates: Partial<LabPanel>
-): Promise<{ error: any }> {
+): Promise<{ error: ServiceError | null }> {
   const { error } = await supabase
     .from('lab_panels')
     .update(updates)
@@ -368,7 +369,7 @@ export async function updateLabPanel(
 /**
  * Delete a lab panel (cascades to results)
  */
-export async function deleteLabPanel(panelId: string): Promise<{ error: any }> {
+export async function deleteLabPanel(panelId: string): Promise<{ error: ServiceError | null }> {
   const { error } = await supabase
     .from('lab_panels')
     .delete()
@@ -386,7 +387,7 @@ export async function deleteLabPanel(panelId: string): Promise<{ error: any }> {
  */
 export async function getLabResults(
   panelId: string
-): Promise<{ data: LabResult[] | null; error: any }> {
+): Promise<{ data: LabResult[] | null; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_results')
     .select(`
@@ -422,7 +423,7 @@ export async function getPreviousLabResult(
   testCode: string,
   currentResultCreatedAt: string,
   tenantId: string
-): Promise<{ data: LabResult | null; error: any }> {
+): Promise<{ data: LabResult | null; error: ServiceError | null }> {
   // Join through lab_panels to filter by patient_id
   // lab_results doesn't have patient_id, only panel_id
   const { data, error } = await supabase
@@ -455,7 +456,7 @@ export async function createLabResult(
   input: CreateLabResultInput,
   patientId: string,
   tenantId: string
-): Promise<{ data: LabResult | null; error: any }> {
+): Promise<{ data: LabResult | null; error: ServiceError | null }> {
   const { data: userData } = await supabase.auth.getUser();
 
   // Get patient sex for flag computation
@@ -517,7 +518,7 @@ export async function updateLabResult(
   resultId: string,
   updates: Partial<LabResult>,
   patientId: string
-): Promise<{ error: any }> {
+): Promise<{ error: ServiceError | null }> {
   // If value or comments changed, recompute flag
   if (updates.value !== undefined || updates.comments !== undefined) {
     const { data: result } = await supabase
@@ -566,7 +567,7 @@ export async function updateLabResult(
 /**
  * Delete a lab result
  */
-export async function deleteLabResult(resultId: string): Promise<{ error: any }> {
+export async function deleteLabResult(resultId: string): Promise<{ error: ServiceError | null }> {
   const { error } = await supabase
     .from('lab_results')
     .delete()
@@ -587,12 +588,12 @@ export async function acknowledgeLabs(
   patientId: string,
   tenantId: string,
   studentName?: string
-): Promise<{ error: any }> {
+): Promise<{ error: ServiceError | null }> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
 
   if (!userId) {
-    return { error: { message: 'User not authenticated' } };
+    return { error: new Error('User not authenticated') };
   }
 
   // Get results to acknowledge
@@ -674,7 +675,7 @@ export async function acknowledgeLabs(
 export async function hasUnacknowledgedLabs(
   patientId: string,
   tenantId: string
-): Promise<{ hasUnacked: boolean; error: any }> {
+): Promise<{ hasUnacked: boolean; error: ServiceError | null }> {
   const { data, error } = await supabase
     .from('lab_panels')
     .select('id')
@@ -694,11 +695,11 @@ export async function createStandardLabSet(
   category: LabCategory,
   patientId: string,
   tenantId: string
-): Promise<{ error: any }> {
+): Promise<{ error: ServiceError | null }> {
   // Get reference tests for category
   const { data: refs, error: refError } = await getLabResultRefsByCategory(category);
   
-  if (refError || !refs) return { error: refError || { message: 'No reference data found' } };
+  if (refError || !refs) return { error: refError || new Error('No reference data found') };
 
   // Create results for each test (with null values initially)
   const results = refs.map(ref => ({

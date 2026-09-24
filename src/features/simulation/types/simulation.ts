@@ -226,16 +226,28 @@ export interface SaveDebriefParams {
 
 export interface SimulationFunctionResult {
   success: boolean;
+  // `message` is absent from the failure payloads the reset functions build,
+  // which return `error` and `detail` instead.
+  message?: string;
   simulation_id?: string;
   tenant_id?: string;
   template_id?: string;
-  message: string;
+  // Failure fields. reset_simulation_for_next_session and
+  // reset_simulation_with_template_updates both return these, and callers read
+  // `error` -- it was only reachable before because the RPC result was untyped.
+  error?: string;
+  detail?: string;
+  status?: string;
+  // Returned by the reset functions, verified against the deployed definitions.
+  state_id?: string;
+  patients_preserved?: number;
+  medications_preserved?: number;
   // Additional fields returned by specific RPC functions
   medications_added?: number;
   template_version_synced?: number;
   restore_details?: {
     restored_counts?: Record<string, number>;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   records_captured?: number;
   tables_captured?: number;

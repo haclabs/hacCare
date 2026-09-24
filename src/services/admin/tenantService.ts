@@ -1,6 +1,8 @@
 import { supabase } from '../../lib/api/supabase';
 import { Tenant, TenantUser, ManagementDashboardStats } from '../../types';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { toError } from '../../lib/errors';
+import type { ServiceError } from '../../lib/api/serviceResult';
 
 /**
  * Tenant Service
@@ -15,7 +17,7 @@ import { secureLogger } from '../../lib/security/secureLogger';
 /**
  * Create a new tenant
  */
-export async function createTenant(tenantData: Omit<Tenant, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: Tenant | null; error: any }> {
+export async function createTenant(tenantData: Omit<Tenant, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: Tenant | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('tenants')
@@ -24,7 +26,7 @@ export async function createTenant(tenantData: Omit<Tenant, 'id' | 'created_at' 
 
     if (error) {
       secureLogger.error('Error creating tenant:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     if (!data || data.length === 0) {
@@ -35,14 +37,14 @@ export async function createTenant(tenantData: Omit<Tenant, 'id' | 'created_at' 
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
     secureLogger.error('Error creating tenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get all tenants (for management dashboard)
  */
-export async function getAllTenants(): Promise<{ data: Tenant[] | null; error: any }> {
+export async function getAllTenants(): Promise<{ data: Tenant[] | null; error: ServiceError | null }> {
   try {
     // Add cache busting by adding a timestamp to force fresh data
     const { data, error } = await supabase
@@ -52,21 +54,21 @@ export async function getAllTenants(): Promise<{ data: Tenant[] | null; error: a
 
     if (error) {
       secureLogger.error('Error fetching tenants:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     secureLogger.debug(`📊 Fetched ${data?.length || 0} tenants from database at ${new Date().toISOString()}`);
     return { data, error };
   } catch (error) {
     secureLogger.error('Error fetching tenants:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get tenant by ID
  */
-export async function getTenantById(tenantId: string): Promise<{ data: Tenant | null; error: any }> {
+export async function getTenantById(tenantId: string): Promise<{ data: Tenant | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('tenants')
@@ -74,7 +76,7 @@ export async function getTenantById(tenantId: string): Promise<{ data: Tenant | 
       .eq('id', tenantId);
 
     if (error) {
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     if (!data || data.length === 0) {
@@ -88,14 +90,14 @@ export async function getTenantById(tenantId: string): Promise<{ data: Tenant | 
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
     secureLogger.error('Error fetching tenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Update tenant
  */
-export async function updateTenant(tenantId: string, updates: Partial<Tenant>): Promise<{ data: Tenant | null; error: any }> {
+export async function updateTenant(tenantId: string, updates: Partial<Tenant>): Promise<{ data: Tenant | null; error: ServiceError | null }> {
   try {
     // First check if the tenant exists
     const { data: existingTenant, error: checkError } = await supabase
@@ -120,7 +122,7 @@ export async function updateTenant(tenantId: string, updates: Partial<Tenant>): 
 
     if (error) {
       secureLogger.error('Update error:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     // If no data is returned, it could mean no changes were made or there was an issue
@@ -155,24 +157,24 @@ export async function updateTenant(tenantId: string, updates: Partial<Tenant>): 
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
     secureLogger.error('Error updating tenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Delete tenant (soft delete by setting status to inactive)
  */
-export async function deleteTenant(tenantId: string): Promise<{ error: any }> {
+export async function deleteTenant(tenantId: string): Promise<{ error: ServiceError | null }> {
   try {
     const { error } = await supabase
       .from('tenants')
       .update({ status: 'inactive', updated_at: new Date().toISOString() })
       .eq('id', tenantId);
 
-    return { error };
+    return { error: toError(error) };
   } catch (error) {
     secureLogger.error('Error deleting tenant:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
@@ -180,7 +182,7 @@ export async function deleteTenant(tenantId: string): Promise<{ error: any }> {
  * Permanently delete tenant and all related data
  * WARNING: This is irreversible and will delete all tenant data
  */
-export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error: any }> {
+export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error: ServiceError | null }> {
   try {
     // First, check if tenant exists
     const { data: tenant, error: fetchError } = await supabase
@@ -385,14 +387,14 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
 
   } catch (error) {
     secureLogger.error('Error permanently deleting tenant:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
 /**
  * Add user to tenant
  */
-export async function addUserToTenant(tenantId: string, userId: string, role: string): Promise<{ data: TenantUser | null; error: any }> {
+export async function addUserToTenant(tenantId: string, userId: string, role: string): Promise<{ data: TenantUser | null; error: ServiceError | null }> {
   try {
     const tenantUser = {
       tenant_id: tenantId,
@@ -413,14 +415,14 @@ export async function addUserToTenant(tenantId: string, userId: string, role: st
     return { data, error };
   } catch (error) {
     secureLogger.error('Error adding user to tenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get users for a tenant
  */
-export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUser[] | null; error: any }> {
+export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUser[] | null; error: ServiceError | null }> {
   try {
     // Use the RPC function to avoid RLS conflicts
     const { data, error } = await supabase
@@ -428,7 +430,7 @@ export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUs
 
     if (error) {
       secureLogger.error('Error fetching tenant users:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     // Transform the data to match the expected TenantUser interface
@@ -461,14 +463,14 @@ export async function getTenantUsers(tenantId: string): Promise<{ data: TenantUs
     return { data: tenantUsers, error: null };
   } catch (error) {
     secureLogger.error('Error in getTenantUsers:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Remove user from tenant
  */
-export async function removeUserFromTenant(tenantId: string, userId: string): Promise<{ error: any }> {
+export async function removeUserFromTenant(tenantId: string, userId: string): Promise<{ error: ServiceError | null }> {
   try {
     const { error } = await supabase
       .from('tenant_users')
@@ -476,17 +478,17 @@ export async function removeUserFromTenant(tenantId: string, userId: string): Pr
       .eq('tenant_id', tenantId)
       .eq('user_id', userId);
 
-    return { error };
+    return { error: toError(error) };
   } catch (error) {
     secureLogger.error('Error removing user from tenant:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
 /**
  * Get management dashboard statistics
  */
-export async function getManagementDashboardStats(): Promise<{ data: ManagementDashboardStats | null; error: any }> {
+export async function getManagementDashboardStats(): Promise<{ data: ManagementDashboardStats | null; error: ServiceError | null }> {
   try {
     // Get tenant counts
     const { data: tenants, error: tenantsError } = await supabase
@@ -528,14 +530,14 @@ export async function getManagementDashboardStats(): Promise<{ data: ManagementD
     return { data: stats, error: null };
   } catch (error) {
     secureLogger.error('Error fetching dashboard stats:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get all users available to be tenant admins
  */
-export async function getAvailableAdminUsers(): Promise<{ data: { id: string; email: string; first_name: string; last_name: string; role: string; }[] | null; error: any }> {
+export async function getAvailableAdminUsers(): Promise<{ data: { id: string; email: string; first_name: string; last_name: string; role: string; }[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('user_profiles')
@@ -547,14 +549,14 @@ export async function getAvailableAdminUsers(): Promise<{ data: { id: string; em
     return { data, error };
   } catch (error) {
     secureLogger.error('Error fetching available admin users:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get current user's tenant
  */
-export async function getCurrentUserTenant(userId: string): Promise<{ data: Tenant | null; error: any }> {
+export async function getCurrentUserTenant(userId: string): Promise<{ data: Tenant | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('🔍 getCurrentUserTenant: Starting for user:', userId);
     
@@ -678,7 +680,7 @@ export async function getCurrentUserTenant(userId: string): Promise<{ data: Tena
     return { data: tenant, error: null };
   } catch (error) {
     secureLogger.error('Error fetching current user tenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -766,7 +768,7 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 /**
  * Get all tenants for super admin tenant switching
  */
-export async function getTenantsForSwitching(): Promise<{ data: Pick<Tenant, 'id' | 'name' | 'status' | 'tenant_type' | 'parent_tenant_id'>[] | null; error: any }> {
+export async function getTenantsForSwitching(): Promise<{ data: Pick<Tenant, 'id' | 'name' | 'status' | 'tenant_type' | 'parent_tenant_id'>[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('tenants')
@@ -777,7 +779,7 @@ export async function getTenantsForSwitching(): Promise<{ data: Pick<Tenant, 'id
     return { data, error };
   } catch (error) {
     secureLogger.error('Error fetching tenants for switching:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -803,7 +805,7 @@ export function getSuperAdminSelectedTenant(): string | null {
 /**
  * Get tenant by subdomain
  */
-export async function getTenantBySubdomain(subdomain: string): Promise<{ data: Tenant | null; error: any }> {
+export async function getTenantBySubdomain(subdomain: string): Promise<{ data: Tenant | null; error: ServiceError | null }> {
   try {
     // Uses a SECURITY DEFINER RPC (not a direct table select) so an anon/pre-login
     // caller can only ever fetch the one tenant matching this exact subdomain,
@@ -812,7 +814,7 @@ export async function getTenantBySubdomain(subdomain: string): Promise<{ data: T
       .rpc('get_tenant_by_subdomain_public', { p_subdomain: subdomain });
 
     if (error) {
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     // Handle case where no tenant is found (empty array)
@@ -824,7 +826,7 @@ export async function getTenantBySubdomain(subdomain: string): Promise<{ data: T
     return { data: data[0] as Tenant, error: null };
   } catch (error) {
     secureLogger.error('Error fetching tenant by subdomain:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 

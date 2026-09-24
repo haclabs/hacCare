@@ -63,7 +63,7 @@ export const LabAcknowledgeModal: React.FC<LabAcknowledgeModalProps> = ({
 
     if (err) {
       setError('Failed to acknowledge labs');
-      secureLogger.error(err);
+      secureLogger.error('Failed to acknowledge labs', err);
       setLoading(false);
       throw err; // Re-throw to let modal handle error display
     } else {

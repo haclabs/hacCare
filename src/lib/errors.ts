@@ -88,3 +88,16 @@ export function errorMessageIncludes(error: unknown, needle: string): boolean {
   const message = error instanceof Error ? error.message : asRecord(error)?.message;
   return typeof message === 'string' && message.includes(needle);
 }
+
+/**
+ * Normalise a caught value into a real `Error`.
+ *
+ * `catch` bindings are `unknown` — a string, a number or a plain object are all
+ * possible. Service functions that report `{ data, error }` need something with
+ * a `.message`, because that is what every call site reads. Wrapping here keeps
+ * that contract true without widening the type back to `any`.
+ */
+export function toError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  return new Error(getErrorMessage(error));
+}

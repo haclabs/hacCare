@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/api/supabase';
 import { Medication, MedicationAdministration } from '../../types';
 import { secureLogger } from '../../lib/security/secureLogger';
+import type { Row, Update } from '../../lib/api/tables';
 
 /**
  * Medication Service
@@ -62,45 +63,14 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         timestamp: cleanAdministration.timestamp
       }
     );
-    */export const fetchPatientMedications = async (patientId: string, simulationId?: string): Promise<Medication[]> => {
+    */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
-    // If simulation mode, fetch from simulation_patient_medications
-    if (simulationId) {
-      secureLogger.debug('Fetching simulation medications for patient:', patientId, 'simulation:', simulationId);
-      
-      const { data: simData, error: simError } = await supabase
-        .from('simulation_patient_medications')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
+    // Simulation branch removed 2026-09-23: it queried simulation_patient_medications,
+    // which does not exist in
+    // the database. It was also unreachable -- launch_simulation never sets
+    // tenants.simulation_id, so the caller's simulationId was always undefined.
+    // Simulations run on the same tables in their own tenant (see CLAUDE.md).
 
-      if (simError) {
-        secureLogger.error('Error fetching simulation medications:', simError);
-        throw simError;
-      }
-
-      const medications: Medication[] = (simData || []).map(dbMed => ({
-        id: dbMed.id,
-        patient_id: dbMed.patient_id,
-        name: dbMed.name,
-        category: dbMed.category || 'scheduled',
-        dosage: dbMed.dosage,
-        frequency: dbMed.frequency,
-        route: dbMed.route,
-        start_date: dbMed.start_date,
-        end_date: dbMed.end_date,
-        prescribed_by: dbMed.prescribed_by || '',
-        last_administered: dbMed.last_administered,
-        next_due: dbMed.next_due || new Date().toISOString(),
-        status: dbMed.status || 'Active',
-        catalog_id: dbMed.catalog_id ?? null,
-        barcode: dbMed.barcode ?? null,
-      } as Medication));
-
-      secureLogger.debug('Found', medications.length, 'simulation medications');
-      return medications;
-    }
-    
     // Standard query for non-simulation mode
     const { data, error } = await supabase
       .from('patient_medications')
@@ -110,7 +80,7 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
 
     // If successful (even with empty results), return the data
     if (!error && data) {
-      const medications: Medication[] = data.map(dbMed => ({
+      const medications: Medication[] = data.map((dbMed: Row<'patient_medications'>) => ({
         id: dbMed.id,
         patient_id: dbMed.patient_id,
         name: dbMed.name,
@@ -295,7 +265,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     secureLogger.debug('Found existing medication:', existingMed);
     
     // Map Medication interface fields to database column names for the update
-    const dbUpdates: any = {};
+    const dbUpdates: Update<'patient_medications'> = {};
     
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.dosage !== undefined) dbUpdates.dosage = updates.dosage;
@@ -832,7 +802,8 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     
     // Log all medication IDs for debugging
     secureLogger.debug('All medication IDs in database:');
-    data.forEach(med => {
+    // .select('id, patient_id, name, category') -- a subset, so Pick, not Row.
+    data.forEach((med: Pick<Row<'patient_medications'>, 'id' | 'patient_id' | 'name' | 'category'>) => {
       secureLogger.debug(`- Medication ID: ${med.id}, Patient ID: ${med.patient_id}, Name: ${med.name}, Category: ${med.category || 'scheduled'}`);
     });
     
@@ -994,7 +965,8 @@ export const fetchPatientAdministrationHistory24h = async (patientId: string): P
         medicationsMap = medicationData.reduce((acc, med) => {
           acc[med.id] = med;
           return acc;
-        }, {} as Record<string, any>);
+          // .select('id, name, dosage, route, frequency') -- a subset, so Pick.
+        }, {} as Record<string, Pick<Row<'patient_medications'>, 'id' | 'name' | 'dosage' | 'route' | 'frequency'>>);
       }
     }
 

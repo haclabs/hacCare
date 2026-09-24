@@ -29,6 +29,14 @@ interface CreatePatientTemplateModalProps {
   onSuccess: () => void;
 }
 
+const GENDERS = ['Male', 'Female', 'Other'] as const;
+const CONDITIONS = ['Critical', 'Stable', 'Improving', 'Discharged'] as const;
+type Gender = (typeof GENDERS)[number];
+type Condition = (typeof CONDITIONS)[number];
+
+const isGender = (v: string): v is Gender => (GENDERS as readonly string[]).includes(v);
+const isCondition = (v: string): v is Condition => (CONDITIONS as readonly string[]).includes(v);
+
 interface PatientFieldsState {
   first_name: string;
   last_name: string;
@@ -142,6 +150,11 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
     if (!patientFields.emergency_contact_name.trim()) errors.emergency_contact_name = 'Emergency contact name is required';
     if (!patientFields.emergency_contact_relationship.trim()) errors.emergency_contact_relationship = 'Relationship is required';
     if (!patientFields.emergency_contact_phone.trim()) errors.emergency_contact_phone = 'Emergency contact phone is required';
+    // The selects only offer valid options, but the DOM returns `string`, and
+    // the patients table has CHECK constraints on both columns. Rejecting here
+    // gives a field error instead of a 400 from Postgres.
+    if (!isGender(patientFields.gender)) errors.gender = 'Select a valid gender';
+    if (!isCondition(patientFields.condition)) errors.condition = 'Select a valid condition';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -178,11 +191,11 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
           first_name: sanitize(patientFields.first_name),
           last_name: sanitize(patientFields.last_name),
           date_of_birth: patientFields.date_of_birth,
-          gender: patientFields.gender,
+          gender: isGender(patientFields.gender) ? patientFields.gender : undefined,
           room_number: sanitize(patientFields.room_number),
           bed_number: sanitize(patientFields.bed_number),
           admission_date: new Date().toISOString().split('T')[0],
-          condition: patientFields.condition,
+          condition: isCondition(patientFields.condition) ? patientFields.condition : undefined,
           diagnosis: sanitize(patientFields.diagnosis),
           allergies: patientFields.allergies.map(sanitize),
           blood_type: patientFields.blood_type,

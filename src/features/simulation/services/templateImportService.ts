@@ -16,6 +16,7 @@ import type {
   TemplateImportResult,
   TemplateValidationResult,
 } from '../types/templateSnapshot';
+import { asJsonObject } from '../../../lib/api/json';
 
 /**
  * Validate a template export package before import
@@ -143,15 +144,17 @@ export async function importSimulationTemplate(
       };
     }
 
-    if (!createResult || !createResult.success) {
+    // create_patient_template returns JSONB; narrow before reading its fields.
+    const created = asJsonObject<{ success?: boolean; template_id?: string; tenant_id?: string }>(createResult);
+    if (!created || !created.success) {
       return {
         success: false,
         error: 'Failed to create template: No result returned',
       };
     }
 
-    const templateId = createResult.template_id;
-    const tenantId = createResult.tenant_id;
+    const templateId = created.template_id;
+    const tenantId = created.tenant_id;
 
     // Prepare snapshot data
     // If preserving patient IDs, include the original UUIDs and barcodes

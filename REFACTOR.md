@@ -195,6 +195,137 @@ extractions did not.
 
 ---
 
+## Phase 4 — Connect the generated types to the Supabase client
+
+**The single highest-value change available, and the root cause of the `any` debt.**
+
+`src/lib/api/supabase.ts` calls `createClient(...)` without the `<Database>`
+generic. The 69 generated `Row` types in `src/types/supabase.ts` are therefore
+wired to nothing: every `.from('patients').select('*')` returns untyped rows.
+`npm run supabase:types` regenerates the file dutifully and no code consumes it.
+
+That is why 319 `no-explicit-any` warnings existed. They are a symptom. Typing
+the client makes the Postgres schema the compile-time source of truth, which is
+the only durable defence against the silent-data-bug class this project keeps
+hitting.
+
+### Measured cost (2026-09-23)
+
+Adding the generic and running `tsc`:
+
+```
+397 errors across 47 files
+  215  TS2322  not assignable      (mostly nullable column -> non-null field)
+   66  TS2345  argument mismatch
+   50  TS2339  property missing    (see below -- mostly cascades)
+   23  TS2769  no overload matches (insert/update shapes)
+   23  TS2352  unsafe conversion
+    8  TS18047 possibly null
+```
+
+Concentrated: `services/clinical` 92, `services/patient` 84,
+`services/simulation` 41, `hooks/useSimulation.ts` 30,
+`scripts/migrateMedications.ts` 27.
+
+### 397 errors is NOT 397 fixes
+
+The TS2339s look alarming ("property does not exist") but most cascade from a
+handful of malformed `.select()` strings. Example: one select in
+`medicationService.ts` makes Supabase's parser resolve `frequency` against
+`user_profiles`, producing ~20 errors from a single root cause. Fix the select,
+the cascade disappears.
+
+The TS2322 majority is nullability -- Postgres `column | null` meeting an
+interface that declared it required. Mechanical, and each one is a latent
+`undefined` at runtime.
+
+### Do it in this order
+
+- [x] **4.1** Fix the malformed `.select()` strings first, with the client still
+      untyped. **DONE 2026-09-23 — all 50 TS2339s cleared, total 397 -> 326.**
+      They were not malformed selects. Three causes:
+      - `simulation_patients` / `_vitals` / `_medications` / `_notes` do not
+        exist. Three code paths queried them behind `if (simulationId)`, which
+        was unreachable because `launch_simulation` never sets
+        `tenants.simulation_id`. Dead code that looked load-bearing; deleted
+        along with its parameters and eight call-site lookups.
+      - `src/scripts/migrateMedications.ts`, a one-off already applied and
+        imported by nothing, contributed 27. Deleted.
+      - The rest were property access on `Json` at `supabase.rpc()` boundaries
+        and JSONB columns. Added `lib/api/json.ts` with `asJsonObject()` and
+        `expectJsonObject()`, which validate at runtime instead of asserting.
+        `SimulationFunctionResult` was also missing `error`, `detail`, `status`,
+        `state_id`, `patients_preserved` and `medications_preserved`, all of
+        which the deployed reset functions return -- callers were reading
+        `error` only because the value was untyped.
+- [x] **4.2** Provide a per-file opt-in instead of a global switch.
+      **DONE 2026-09-23** — `src/lib/api/supabase.ts` now also exports `db`, the
+      same runtime client with `<Database>` applied. A service migrates by
+      changing one import; everything else keeps working and the build stays
+      green. Validated on `labService.ts`: switching its import surfaced exactly
+      that file's 12 errors and nothing else.
+
+      **Correction to the original plan.** It claimed that annotating call sites
+      with `Row<'table'>` would "get most of the safety without a big bang" and
+      thereby shrink the migration. Only the first half is true. Annotating
+      `medicationService.ts` and `doctorsOrdersService.ts` validated their loop
+      bodies and fixed real defects, but the typed-client error count barely
+      moved (326 -> 325): annotations check what the body does with a row, while
+      the client surfaces what the query itself returns. Overlapping sets, not
+      the same one. Do both, but do not expect annotation alone to reduce 4.4.
+
+      Shared helpers now live in `src/lib/api/`:
+      `tables.ts` (`Row`, `Insert`, `Update`, `orUndefined`) and `json.ts`
+      (`asJsonObject`, `expectJsonObject`).
+
+      Use `Pick<Row<'t'>, 'a' | 'b'>` for a narrowed `.select('a, b')`. Claiming
+      the full `Row` there asserts columns the query never fetched, which is the
+      same lie the `any` was telling.
+- [ ] **4.3** Migrate services to `db` one at a time, in risk order:
+      `services/clinical` -> `services/patient` -> `services/simulation` ->
+      hooks -> features. Current cost per area, measured 2026-09-23:
+      clinical 73, patient 72, simulation 33, `hooks/useSimulation.ts` 31,
+      admin 29, hacmap 19.
+
+      **Expect hand-written domain types to be the real work.** `LabResultRef`
+      is a 13-field mirror of `lab_result_refs` that differs only in nullability
+      and in typing the `sex_ref` JSONB properly. Deriving it
+      (`Omit<Row<'lab_result_refs'>, 'sex_ref'> & { sex_ref: SexSpecificRange | null }`)
+      makes drift impossible, but ripples to every consumer, and `LabPanel` and
+      `LabResult` need the same. Attempted and reverted on 2026-09-23 as a
+      whole-domain change rather than a per-file one -- budget it that way.
+- [ ] **4.4** Only once the count is low, add `<Database>` to `createClient` and
+      clear the remainder. This is the commit that makes drift impossible, so it
+      lands last, not first.
+- [ ] **4.5** Add `npm run supabase:types` to the release checklist. The file had
+      drifted 185 lines by 2026-09-23 because nothing consumed it; once the
+      client is typed, staleness becomes a build failure instead of silence.
+
+### What it buys
+
+A renamed or dropped column fails the build instead of silently producing
+`undefined` in a chart. Tonight's pass, covering three service areas and the
+debrief pipeline, found by this method alone:
+
+- `bloodPressure` emitted as `{systolic: null, diastolic: null}`, making
+  `if (vitals.bloodPressure)` truthy for a patient with no BP recorded
+- five debrief fields reading columns that do not exist, always undefined
+- `wound_assessments.drainage_type` declared `string`, actually `text[]`
+- unvalidated enum values reaching CHECK-constrained columns
+- seven `secureLogger.error(err)` calls putting the error in the message slot
+
+None of these would have been found by reading the code.
+
+### Risks
+
+- It is a large diff touching clinical services. Land it in area-sized PRs, not
+  one change.
+- Some errors will be genuine behaviour decisions rather than mechanical fixes
+  (a dead field could be removed or remapped -- those are product calls).
+- Do not "fix" errors with `as any`. That reintroduces exactly what this removes.
+
+---
+
 ## Ongoing / Housekeeping
 
 ### Type Safety

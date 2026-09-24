@@ -1,5 +1,7 @@
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { toError } from '../../lib/errors';
+import type { ServiceError } from '../../lib/api/serviceResult';
 
 /**
  * Program Type Definitions
@@ -76,7 +78,7 @@ export interface StudentRoster {
 export async function createProgramTenant(
   programId: string,
   parentTenantId: string
-): Promise<{ data: CreateProgramTenantResult | null; error: any }> {
+): Promise<{ data: CreateProgramTenantResult | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase.rpc('create_program_tenant', {
       p_program_id: programId,
@@ -87,7 +89,7 @@ export async function createProgramTenant(
     return { data: data as CreateProgramTenantResult, error: null };
   } catch (error) {
     secureLogger.error('Error creating program tenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -96,7 +98,7 @@ export async function createProgramTenant(
  */
 export async function getUserProgramTenants(
   userId: string
-): Promise<{ data: ProgramTenant[] | null; error: any }> {
+): Promise<{ data: ProgramTenant[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase.rpc('get_user_program_tenants', {
       p_user_id: userId
@@ -106,14 +108,14 @@ export async function getUserProgramTenants(
     return { data: data as ProgramTenant[], error: null };
   } catch (error) {
     secureLogger.error('Error fetching user program tenants:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get all programs for a tenant
  */
-export async function getPrograms(tenantId: string): Promise<{ data: Program[] | null; error: any }> {
+export async function getPrograms(tenantId: string): Promise<{ data: Program[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('programs')
@@ -126,14 +128,14 @@ export async function getPrograms(tenantId: string): Promise<{ data: Program[] |
     return { data, error: null };
   } catch (error) {
     secureLogger.error('Error fetching programs:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get all programs with user counts
  */
-export async function getProgramsWithUserCounts(tenantId: string): Promise<{ data: ProgramWithUserCount[] | null; error: any }> {
+export async function getProgramsWithUserCounts(tenantId: string): Promise<{ data: ProgramWithUserCount[] | null; error: ServiceError | null }> {
   try {
     const { data: programs, error: programError } = await supabase
       .from('programs')
@@ -163,7 +165,7 @@ export async function getProgramsWithUserCounts(tenantId: string): Promise<{ dat
     return { data: programsWithCounts, error: null };
   } catch (error) {
     secureLogger.error('Error fetching programs with counts:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -175,7 +177,7 @@ export async function createProgram(
   code: string,
   name: string,
   description?: string
-): Promise<{ data: Program | null; error: any }> {
+): Promise<{ data: Program | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('programs')
@@ -193,7 +195,7 @@ export async function createProgram(
     return { data, error: null };
   } catch (error) {
     secureLogger.error('Error creating program:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -203,7 +205,7 @@ export async function createProgram(
 export async function updateProgram(
   programId: string,
   updates: Partial<Pick<Program, 'name' | 'description' | 'is_active'>>
-): Promise<{ data: Program | null; error: any }> {
+): Promise<{ data: Program | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('programs')
@@ -219,14 +221,14 @@ export async function updateProgram(
     return { data, error: null };
   } catch (error) {
     secureLogger.error('Error updating program:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Delete a program (soft delete by setting is_active = false)
  */
-export async function deleteProgram(programId: string): Promise<{ error: any }> {
+export async function deleteProgram(programId: string): Promise<{ error: ServiceError | null }> {
   try {
     // Soft delete - set is_active to false
     const { error } = await supabase
@@ -238,14 +240,14 @@ export async function deleteProgram(programId: string): Promise<{ error: any }> 
     return { error: null };
   } catch (error) {
     secureLogger.error('Error deleting program:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
 /**
  * Get programs assigned to a user
  */
-export async function getUserPrograms(userId: string): Promise<{ data: UserProgram[] | null; error: any }> {
+export async function getUserPrograms(userId: string): Promise<{ data: UserProgram[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('user_programs')
@@ -259,14 +261,14 @@ export async function getUserPrograms(userId: string): Promise<{ data: UserProgr
     return { data, error: null };
   } catch (error) {
     secureLogger.error('Error fetching user programs:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Get program codes for a user (returns just the code strings)
  */
-export async function getUserProgramCodes(userId: string): Promise<{ data: string[] | null; error: any }> {
+export async function getUserProgramCodes(userId: string): Promise<{ data: string[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .rpc('get_user_program_codes', { p_user_id: userId });
@@ -275,7 +277,7 @@ export async function getUserProgramCodes(userId: string): Promise<{ data: strin
     return { data: data || [], error: null };
   } catch (error) {
     secureLogger.error('Error fetching user program codes:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -285,7 +287,7 @@ export async function getUserProgramCodes(userId: string): Promise<{ data: strin
 export async function assignUserToProgram(
   userId: string,
   programId: string
-): Promise<{ data: UserProgram | null; error: any }> {
+): Promise<{ data: UserProgram | null; error: ServiceError | null }> {
   try {
     const currentUser = await supabase.auth.getUser();
     
@@ -303,7 +305,7 @@ export async function assignUserToProgram(
     return { data, error: null };
   } catch (error) {
     secureLogger.error('Error assigning user to program:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -313,7 +315,7 @@ export async function assignUserToProgram(
 export async function removeUserFromProgram(
   userId: string,
   programId: string
-): Promise<{ error: any }> {
+): Promise<{ error: ServiceError | null }> {
   try {
     const { error } = await supabase
       .from('user_programs')
@@ -325,7 +327,7 @@ export async function removeUserFromProgram(
     return { error: null };
   } catch (error) {
     secureLogger.error('Error removing user from program:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
@@ -335,7 +337,7 @@ export async function removeUserFromProgram(
 export async function bulkAssignUserToPrograms(
   userId: string,
   programIds: string[]
-): Promise<{ error: any }> {
+): Promise<{ error: ServiceError | null }> {
   try {
     const currentUser = await supabase.auth.getUser();
     
@@ -403,14 +405,14 @@ export async function bulkAssignUserToPrograms(
     return { error: null };
   } catch (error) {
     secureLogger.error('Error bulk assigning user to programs:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
 /**
  * Get users assigned to a program
  */
-export async function getProgramUsers(programId: string): Promise<{ data: any[] | null; error: any }> {
+export async function getProgramUsers(programId: string): Promise<{ data: any[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('user_programs')
@@ -430,7 +432,7 @@ export async function getProgramUsers(programId: string): Promise<{ data: any[] 
     return { data, error: null };
   } catch (error) {
     secureLogger.error('Error fetching program users:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -440,7 +442,7 @@ export async function getProgramUsers(programId: string): Promise<{ data: any[] 
 export async function checkUserProgramAccess(
   userId: string,
   programCode: string
-): Promise<{ hasAccess: boolean; error: any }> {
+): Promise<{ hasAccess: boolean; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .rpc('user_has_program_access', {
@@ -452,7 +454,7 @@ export async function checkUserProgramAccess(
     return { hasAccess: data || false, error: null };
   } catch (error) {
     secureLogger.error('Error checking program access:', error);
-    return { hasAccess: false, error };
+    return { hasAccess: false, error: toError(error) };
   }
 }
 
@@ -467,7 +469,7 @@ export async function addStudentToRoster(
   programId: string,
   userId: string,
   studentNumber: string
-): Promise<{ data: StudentRoster | null; error: any }> {
+): Promise<{ data: StudentRoster | null; error: ServiceError | null }> {
   try {
     // Uses a SECURITY DEFINER RPC rather than a direct table insert so this
     // doesn't depend on student_roster's RLS policy exactly matching what's
@@ -484,7 +486,7 @@ export async function addStudentToRoster(
     return { data: data as StudentRoster, error: null };
   } catch (error) {
     secureLogger.error('Error adding student to roster:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 

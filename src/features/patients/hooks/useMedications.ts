@@ -12,7 +12,6 @@ import {
 } from '../../../services/clinical/medicationService';
 import { Medication, MedicationAdministration } from '../../../types';
 import { queryKeys } from '../../../lib/api/queryClient';
-import { useTenant } from '../../../contexts/TenantContext';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 // ========================================
@@ -24,12 +23,10 @@ import { secureLogger } from '../../../lib/security/secureLogger';
  * Replaces manual medication fetching from components
  */
 export function usePatientMedications(patientId: string) {
-  const { currentTenant } = useTenant();
-  const simulationId = currentTenant?.simulation_id;
   
   return useQuery({
     queryKey: queryKeys.patientMedications(patientId),
-    queryFn: () => fetchPatientMedications(patientId, simulationId),
+    queryFn: () => fetchPatientMedications(patientId),
     staleTime: 2 * 60 * 1000, // 2 minutes - medication data needs regular updates
     gcTime: 5 * 60 * 1000, // 5 minutes in cache
     enabled: !!patientId,

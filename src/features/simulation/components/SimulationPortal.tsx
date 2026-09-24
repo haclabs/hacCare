@@ -117,7 +117,9 @@ const SimulationPortal: React.FC = () => {
         return;
       }
       
-      const data = rpcData || [];
+      // get_user_simulation_assignments returns JSONB; narrow before use rather
+      // than trusting it to be an array.
+      const data: SimulationAssignment[] = Array.isArray(rpcData) ? (rpcData as SimulationAssignment[]) : [];
       secureLogger.debug('✅ loadAssignments: Received', data.length, 'assignments', data);
       setAssignments(data);
 

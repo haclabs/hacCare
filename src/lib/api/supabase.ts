@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { secureLogger } from '../security/secureLogger';
 import { isValidSupabaseUrl } from './supabaseUrl';
 import { getErrorMessage, getErrorName } from '@/lib/errors';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../../types/supabase';
 
 /**
  * Supabase Configuration and Client Setup
@@ -89,6 +91,20 @@ export const supabase = createClient(
     }
   }
 );
+
+/**
+ * The same client, with the generated schema types applied.
+ *
+ * `supabase` is created without `<Database>`, so every query it returns is
+ * untyped. Retyping it in place would surface ~325 errors across 46 files at
+ * once (measured 2026-09-23), which is not a landable change.
+ *
+ * `db` is the same runtime object with the schema attached, so a service can
+ * migrate by changing its import and fixing only its own errors. The build
+ * stays green throughout. When every service has moved, `supabase` gains the
+ * generic and this alias goes away. See Phase 4 in REFACTOR.md.
+ */
+export const db = supabase as unknown as SupabaseClient<Database>;
 
 /**
  * Configuration status flag

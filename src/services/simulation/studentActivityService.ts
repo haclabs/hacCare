@@ -8,6 +8,25 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import type { Json } from '../../types/supabase';
+import type { Row } from '../../lib/api/tables';
+
+
+/**
+ * Narrow a JSONB column to an object shape.
+ *
+ * JSONB genuinely can hold anything, so unlike the table columns above these
+ * cannot be typed from the generated schema. Rather than assert blindly, this
+ * checks at runtime and returns null when the value is not a plain object --
+ * so a malformed row degrades to an empty section of the debrief instead of
+ * throwing partway through building it.
+ */
+function asJsonObject<T extends object>(value: Json | undefined): T | null {
+  return value !== null && value !== undefined
+    && typeof value === 'object' && !Array.isArray(value)
+    ? (value as T)
+    : null;
+}
 
 export interface StudentActivity {
   studentName: string;
@@ -43,14 +62,14 @@ export interface StudentActivity {
 
 interface VitalsEntry {
   id: string;
-  recorded_at: string;
+  recorded_at: string | null;
   blood_pressure_systolic: number | null;
   blood_pressure_diastolic: number | null;
   heart_rate: number | null;
   respiratory_rate: number | null;
   temperature: number | null;
   oxygen_saturation: number | null;
-  pain_score: number | null;
+  // REMOVED 2026-09-23: patient_vitals has no pain_score column. Always undefined; the debrief modal never rendered it.
   patient_name?: string;
 }
 
@@ -77,13 +96,13 @@ interface LabOrderEntry {
   test_name: string;
   priority: string;
   specimen_type: string;
-  status: string;
+  status: string | null;
   patient_name?: string;
 }
 
 interface LabAcknowledgementEntry {
   id: string;
-  acknowledged_at: string;
+  acknowledged_at: string | null;
   test_name: string;
   result_value: string;
   abnormal_flag: boolean;
@@ -93,29 +112,29 @@ interface LabAcknowledgementEntry {
 
 interface DoctorsOrderEntry {
   id: string;
-  acknowledged_at: string;
-  order_type: string;
+  acknowledged_at: string | null;
+  order_type: string | null;
   order_text: string | null;
-  order_details: any;
+  // REMOVED 2026-09-23: doctors_orders has no order_details column (the body is order_text). Always undefined; the debrief modal never rendered it.
   patient_name?: string;
 }
 
 interface PatientNoteEntry {
   id: string;
-  created_at: string;
-  note_type: string;
-  subject: string;
-  content: string;
+  created_at: string | null;
+  note_type: string | null;
+  // REMOVED 2026-09-23: patient_notes has no subject column (it carries content/note_type). Always undefined; the debrief modal never rendered it.
+  content: string | null;
   patient_name?: string;
 }
 
 interface HandoverNoteEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   acknowledged_at?: string | null;
   updated_at?: string | null;
   entry_type: 'created' | 'acknowledged';
-  nursing_notes?: string;
+  nursing_notes?: string | null;
   situation: string;
   background: string;
   assessment: string;
@@ -179,7 +198,7 @@ interface NewbornAssessmentEntry {
 
 interface HacMapDeviceEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   type: string;
   placement_date: string | null;
   inserted_by: string | null;
@@ -198,14 +217,14 @@ interface HacMapDeviceEntry {
 
 interface HacMapWoundEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   wound_type: string;
   wound_description: string | null;
   wound_length_cm: number | null;
   wound_width_cm: number | null;
   wound_depth_cm: number | null;
-  wound_stage: string | null;
-  wound_appearance: string | null;
+  // REMOVED 2026-09-23: wounds has no wound_stage column. Always undefined; the debrief modal never rendered it.
+  // REMOVED 2026-09-23: wounds has no wound_appearance column (nearest real field: wound_description). Always undefined; the debrief modal never rendered it.
   drainage_type: string[] | null;
   drainage_amount: string | null;
   location: string | null;
@@ -225,11 +244,11 @@ interface DeviceAssessmentEntry {
 
 interface WoundAssessmentEntry {
   id: string;
-  assessed_at: string;
+  assessed_at: string | null;
   site_condition: string | null;
   pain_level: number | null;
   wound_appearance: string | null;
-  drainage_type: string | null;
+  drainage_type: string[] | null;  // text[] in Postgres, not text
   drainage_amount: string | null;
   treatment_applied: string | null;
   dressing_type: string | null;
@@ -239,19 +258,19 @@ interface WoundAssessmentEntry {
 
 interface BowelAssessmentEntry {
   id: string;
-  created_at: string;
-  bowel_incontinence: string;
-  stool_appearance: string;
-  stool_consistency: string;
-  stool_colour: string;
-  stool_amount: string;
+  created_at: string | null;
+  bowel_incontinence: string | null;
+  stool_appearance: string | null;
+  stool_consistency: string | null;
+  stool_colour: string | null;
+  stool_amount: string | null;
   patient_name?: string;
 }
 
 interface IntakeOutputEntry {
   id: string;
   event_timestamp: string;
-  direction: 'intake' | 'output';
+  direction: 'intake' | 'output' | null;
   category: string;
   route: string | null;
   description: string | null;
@@ -261,7 +280,7 @@ interface IntakeOutputEntry {
 
 interface AdvancedDirectiveEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   dnr_status: string | null;
   living_will_status: string | null;
   healthcare_proxy_name: string | null;
@@ -272,7 +291,7 @@ interface AdvancedDirectiveEntry {
 
 interface AdmissionRecordEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   admission_type: string | null;
   attending_physician: string | null;
   chief_complaint: string | null;
@@ -304,14 +323,14 @@ interface SystemAssessmentEntry {
   system_type: string;
   recorded_at: string;
   nurse_name: string | null;
-  assessment_data: Record<string, unknown>;
+  assessment_data: Record<string, unknown> | null;
   patient_name?: string;
 }
 
 // 🆕 Therapeutic Recreation module — 6 dedicated tables
 interface TRScreeningEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   recorded_by: string | null;
   tr_recommendation: string | null;
   leisure_satisfaction_rating: number | null;
@@ -329,7 +348,7 @@ interface TRScreeningEntry {
 
 interface TRActiveLivingProfileEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   recorded_by: string | null;
   narrative: string | null;
   patient_name?: string;
@@ -337,7 +356,7 @@ interface TRActiveLivingProfileEntry {
 
 interface TRAssessmentScoreEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   recorded_by: string | null;
   tool_name: string;
   subscale_scores: Record<string, number> | null;
@@ -349,7 +368,7 @@ interface TRAssessmentScoreEntry {
 
 interface TRTreatmentPlanRowEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   recorded_by: string | null;
   sort_order: number;
   target_area: string | null;
@@ -364,7 +383,7 @@ interface TRTreatmentPlanRowEntry {
 
 interface TRInterdisciplinaryInterpEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   recorded_by: string | null;
   score_group: string;
   interpretation: string | null;
@@ -373,7 +392,7 @@ interface TRInterdisciplinaryInterpEntry {
 
 interface TRProgressNoteEntry {
   id: string;
-  created_at: string;
+  created_at: string | null;
   clinician_name: string | null;
   note_type: string;
   subjective: string | null;
@@ -808,10 +827,15 @@ export async function getStudentActivitiesBySimulation(
     const studentMap = new Map<string, StudentActivity>();
 
     // Helper to initialize student entry
-    const getOrCreateStudent = (name: string): StudentActivity => {
+    // Accepts null because every source column is nullable in Postgres, even
+    // though each query filters with .not('student_name', 'is', null). The
+    // fallback is therefore unreachable in practice and exists so a data
+    // anomaly surfaces as a visible row in the debrief rather than a crash.
+    const getOrCreateStudent = (name: string | null): StudentActivity => {
+      const safeName = name ?? 'Unknown student';
       // Normalize student name: trim whitespace and lowercase for lookup
-      const normalizedName = name.trim().toLowerCase();
-      const trimmedName = name.trim();
+      const normalizedName = safeName.trim().toLowerCase();
+      const trimmedName = safeName.trim();
       
       if (!studentMap.has(normalizedName)) {
         studentMap.set(normalizedName, {
@@ -850,7 +874,7 @@ export async function getStudentActivitiesBySimulation(
     };
 
     // Process vitals
-    vitalsData.data?.forEach((vital: any) => {
+    vitalsData.data?.forEach((vital: Row<'patient_vitals'>) => {
       const student = getOrCreateStudent(vital.student_name);
       student.activities.vitals.push({
         id: vital.id,
@@ -861,8 +885,10 @@ export async function getStudentActivitiesBySimulation(
         respiratory_rate: vital.respiratory_rate,
         temperature: vital.temperature,
         oxygen_saturation: vital.oxygen_saturation,
-        pain_score: vital.pain_score,
-        patient_name: patientNameMap.get(vital.patient_id),
+        // REMOVED 2026-09-23: patient_vitals has no pain_score column, so this
+        // was always undefined. Pain lives on patient_neuro_assessments.pain_score
+        // and wound_assessments.pain_level. Re-add by sourcing it from there.
+        patient_name: vital.patient_id ? patientNameMap.get(vital.patient_id) : undefined,
       });
       student.totalEntries++;
     });
@@ -870,7 +896,7 @@ export async function getStudentActivitiesBySimulation(
     // Process medication administrations (BCMA)
     secureLogger.debug('💊 Processing medications:', medicationsData.data?.length || 0);
     secureLogger.debug('💊 ALL medication data:', medicationsData.data);
-    medicationsData.data?.forEach((med: any) => {
+    medicationsData.data?.forEach((med: Row<'medication_administrations'>) => {
       secureLogger.debug('💊 Med details:', {
         id: med.id,
         student_name: med.student_name,
@@ -904,7 +930,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process lab orders
-    labOrdersData.data?.forEach((lab: any) => {
+    labOrdersData.data?.forEach((lab: Row<'lab_orders'>) => {
       const student = getOrCreateStudent(lab.student_name);
       student.activities.labOrders.push({
         id: lab.id,
@@ -920,7 +946,7 @@ export async function getStudentActivitiesBySimulation(
 
     // Process lab acknowledgements from lab_ack_events (has student_name and note)
     secureLogger.debug('🧪 Processing lab ack events:', labAcksData.data?.length || 0);
-    labAcksData.data?.forEach((ackEvent: any) => {
+    labAcksData.data?.forEach((ackEvent: Row<'lab_ack_events'>) => {
       secureLogger.debug('🧪 Lab ack event:', {
         id: ackEvent.id,
         student_name: ackEvent.student_name,
@@ -968,27 +994,29 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process doctor's orders acknowledgements
-    doctorsOrdersData.data?.forEach((order: any) => {
+    doctorsOrdersData.data?.forEach((order: Row<'doctors_orders'>) => {
       const student = getOrCreateStudent(order.acknowledged_by_student);
       student.activities.doctorsOrders.push({
         id: order.id,
         acknowledged_at: order.acknowledged_at,
         order_type: order.order_type,
         order_text: order.order_text,
-        order_details: order.order_details,
+        // REMOVED 2026-09-23: doctors_orders has no order_details column; the
+        // order body is `order_text` (with `notes` alongside). Always undefined.
         patient_name: patientNameMap.get(order.patient_id),
       });
       student.totalEntries++;
     });
 
     // Process patient notes
-    patientNotesData.data?.forEach((note: any) => {
+    patientNotesData.data?.forEach((note: Row<'patient_notes'>) => {
       const student = getOrCreateStudent(note.student_name);
       student.activities.patientNotes.push({
         id: note.id,
         created_at: note.created_at,
         note_type: note.note_type,
-        subject: note.subject,
+        // REMOVED 2026-09-23: patient_notes has no subject column; it carries
+        // `content` and `note_type`. Always undefined.
         content: note.content,
         patient_name: patientNameMap.get(note.patient_id),
       });
@@ -998,7 +1026,7 @@ export async function getStudentActivitiesBySimulation(
     // Process handover notes — student_name is set for both created and acknowledged entries.
     // acknowledged_by null  → student created the note themselves
     // acknowledged_by set   → student acknowledged an existing instructor/template note
-    handoverNotesData.data?.forEach((note: any) => {
+    handoverNotesData.data?.forEach((note: Row<'handover_notes'>) => {
       if (!note.student_name) return;
 
       const baseEntry = {
@@ -1022,7 +1050,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process devices (from HAC Map)
-    devicesData.data?.forEach((device: any) => {
+    devicesData.data?.forEach((device: Row<'devices'>) => {
       // Use inserted_by as student name (text field from form)
       const studentName = device.inserted_by;
       if (studentName) {
@@ -1050,7 +1078,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process wounds (from HAC Map)
-    woundsData.data?.forEach((wound: any) => {
+    woundsData.data?.forEach((wound: Row<'wounds'>) => {
       // Use entered_by as student name (text field from form)
       const studentName = wound.entered_by;
       if (studentName) {
@@ -1063,8 +1091,9 @@ export async function getStudentActivitiesBySimulation(
           wound_length_cm: wound.wound_length_cm,
           wound_width_cm: wound.wound_width_cm,
           wound_depth_cm: wound.wound_depth_cm,
-          wound_stage: wound.wound_stage,
-          wound_appearance: wound.wound_appearance,
+          // REMOVED 2026-09-23: wounds has no wound_stage column. Always undefined.
+          // REMOVED 2026-09-23: wounds has no wound_appearance column; the nearest
+        // real field is `wound_description`. Always undefined.
           drainage_type: wound.drainage_description,
           drainage_amount: wound.drainage_amount,
           location: wound.location_id,
@@ -1075,7 +1104,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process device assessments (hacMap v2) - NEW
-    deviceAssessmentsData.data?.forEach((assessment: any) => {
+    deviceAssessmentsData.data?.forEach((assessment: Row<'device_assessments'>) => {
       const student = getOrCreateStudent(assessment.student_name);
       student.activities.deviceAssessments.push({
         id: assessment.id,
@@ -1091,7 +1120,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process wound assessments (hacMap v2) - NEW
-    woundAssessmentsData.data?.forEach((assessment: any) => {
+    woundAssessmentsData.data?.forEach((assessment: Row<'wound_assessments'>) => {
       const student = getOrCreateStudent(assessment.student_name);
       student.activities.woundAssessments.push({
         id: assessment.id,
@@ -1110,7 +1139,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process bowel assessments
-    bowelData.data?.forEach((bowel: any) => {
+    bowelData.data?.forEach((bowel: Row<'bowel_records'>) => {
       const student = getOrCreateStudent(bowel.student_name);
       student.activities.bowelAssessments.push({
         id: bowel.id,
@@ -1128,11 +1157,12 @@ export async function getStudentActivitiesBySimulation(
     // Process intake & output events
     secureLogger.debug('💧 Processing intake/output:', intakeOutputData.data?.length || 0);
     secureLogger.debug('💧 ALL I&O data:', intakeOutputData.data);
-    intakeOutputData.data?.forEach((io: any) => {
+    intakeOutputData.data?.forEach((io: Row<'patient_intake_output_events'>) => {
       secureLogger.debug('💧 I&O entry:', {
         id: io.id,
         student_name: io.student_name,
-        direction: io.direction,
+        // Postgres types this `text`; a CHECK constrains it to intake|output.
+        direction: io.direction === 'intake' || io.direction === 'output' ? io.direction : null,
         category: io.category,
         amount_ml: io.amount_ml,
         event_timestamp: io.event_timestamp
@@ -1146,7 +1176,8 @@ export async function getStudentActivitiesBySimulation(
       student.activities.intakeOutput.push({
         id: io.id,
         event_timestamp: io.event_timestamp,
-        direction: io.direction,
+        // Postgres types this `text`; a CHECK constrains it to intake|output.
+        direction: io.direction === 'intake' || io.direction === 'output' ? io.direction : null,
         category: io.category,
         route: io.route,
         description: io.description,
@@ -1157,7 +1188,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process advanced directives - 🆕 NEW
-    advancedDirectivesData.data?.forEach((directive: any) => {
+    advancedDirectivesData.data?.forEach((directive: Row<'patient_advanced_directives'>) => {
       const student = getOrCreateStudent(directive.student_name);
       student.activities.advancedDirectives.push({
         id: directive.id,
@@ -1173,7 +1204,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process admission records
-    admissionRecordsData.data?.forEach((record: any) => {
+    admissionRecordsData.data?.forEach((record: Row<'patient_admission_records'>) => {
       const student = getOrCreateStudent(record.student_name);
       student.activities.admissionRecords.push({
         id: record.id,
@@ -1188,7 +1219,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process neuro assessments
-    neuroAssessmentsData.data?.forEach((neuro: any) => {
+    neuroAssessmentsData.data?.forEach((neuro: Row<'patient_neuro_assessments'>) => {
       const student = getOrCreateStudent(neuro.student_name);
       student.activities.neuroAssessments.push({
         id: neuro.id,
@@ -1218,7 +1249,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process BBIT entries
-    bbitData.data?.forEach((bbit: any) => {
+    bbitData.data?.forEach((bbit: Row<'patient_bbit_entries'>) => {
       const student = getOrCreateStudent(bbit.student_name);
       student.activities.bbitEntries.push({
         id: bbit.id,
@@ -1241,7 +1272,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process Newborn Assessments
-    newbornAssessmentData.data?.forEach((nb: any) => {
+    newbornAssessmentData.data?.forEach((nb: Row<'patient_newborn_assessments'>) => {
       const student = getOrCreateStudent(nb.student_name);
       student.activities.newbornAssessments.push({
         id: nb.id,
@@ -1264,7 +1295,7 @@ export async function getStudentActivitiesBySimulation(
         // Erythromycin
         erythromycin_given: nb.erythromycin_given,
         erythromycin_time: nb.erythromycin_time,
-        physical_observations: nb.physical_observations,
+        physical_observations: asJsonObject<Record<string, Record<string, unknown>>>(nb.physical_observations),
         completed_by: nb.completed_by,
         student_name: nb.student_name,
         patient_name: patientNameMap.get(nb.patient_id),
@@ -1273,7 +1304,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process system assessments (Flowsheets Hub native forms) - 🆕 NEW
-    systemAssessmentsData.data?.forEach((sa: any) => {
+    systemAssessmentsData.data?.forEach((sa: Row<'patient_system_assessments'>) => {
       if (!sa.nurse_name) return;
       const student = getOrCreateStudent(sa.nurse_name);
       student.activities.systemAssessments.push({
@@ -1281,14 +1312,14 @@ export async function getStudentActivitiesBySimulation(
         system_type: sa.system_type,
         recorded_at: sa.recorded_at,
         nurse_name: sa.nurse_name,
-        assessment_data: sa.assessment_data,
+        assessment_data: asJsonObject<Record<string, unknown>>(sa.assessment_data),
         patient_name: patientNameMap.get(sa.patient_id),
       });
       student.totalEntries++;
     });
 
     // Process TR screening entries - 🆕 NEW
-    trScreeningsData.data?.forEach((entry: any) => {
+    trScreeningsData.data?.forEach((entry: Row<'tr_screening_entries'>) => {
       if (!entry.recorded_by) return;
       const student = getOrCreateStudent(entry.recorded_by);
       student.activities.trScreenings.push({
@@ -1312,7 +1343,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process TR active living profiles - 🆕 NEW
-    trActiveLivingProfilesData.data?.forEach((entry: any) => {
+    trActiveLivingProfilesData.data?.forEach((entry: Row<'tr_active_living_profiles'>) => {
       if (!entry.recorded_by) return;
       const student = getOrCreateStudent(entry.recorded_by);
       student.activities.trActiveLivingProfiles.push({
@@ -1326,7 +1357,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process TR assessment scores - 🆕 NEW
-    trAssessmentScoresData.data?.forEach((entry: any) => {
+    trAssessmentScoresData.data?.forEach((entry: Row<'tr_assessment_scores'>) => {
       if (!entry.recorded_by) return;
       const student = getOrCreateStudent(entry.recorded_by);
       student.activities.trAssessmentScores.push({
@@ -1334,7 +1365,7 @@ export async function getStudentActivitiesBySimulation(
         created_at: entry.created_at,
         recorded_by: entry.recorded_by,
         tool_name: entry.tool_name,
-        subscale_scores: entry.subscale_scores,
+        subscale_scores: asJsonObject<Record<string, number>>(entry.subscale_scores),
         total_score: entry.total_score,
         interpretation: entry.interpretation,
         date_administered: entry.date_administered,
@@ -1344,7 +1375,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process TR treatment plan rows - 🆕 NEW
-    trTreatmentPlanRowsData.data?.forEach((entry: any) => {
+    trTreatmentPlanRowsData.data?.forEach((entry: Row<'tr_treatment_plan_rows'>) => {
       if (!entry.recorded_by) return;
       const student = getOrCreateStudent(entry.recorded_by);
       student.activities.trTreatmentPlanRows.push({
@@ -1365,7 +1396,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process TR interdisciplinary interpretations - 🆕 NEW
-    trInterdisciplinaryInterpsData.data?.forEach((entry: any) => {
+    trInterdisciplinaryInterpsData.data?.forEach((entry: Row<'tr_interdisciplinary_interps'>) => {
       if (!entry.recorded_by) return;
       const student = getOrCreateStudent(entry.recorded_by);
       student.activities.trInterdisciplinaryInterps.push({
@@ -1380,7 +1411,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Process TR progress notes - 🆕 NEW
-    trProgressNotesData.data?.forEach((entry: any) => {
+    trProgressNotesData.data?.forEach((entry: Row<'tr_progress_notes'>) => {
       if (!entry.clinician_name) return;
       const student = getOrCreateStudent(entry.clinician_name);
       student.activities.trProgressNotes.push({

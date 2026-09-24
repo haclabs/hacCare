@@ -6,7 +6,6 @@ import { formatLocalTime } from '../../../../utils/dateUtils';
 // import { MedicationAdministrationHistory } from './MedicationAdministrationHistory'; // Component not found
 import { MedicationForm } from '../forms/MedicationForm';
 import { useAuth } from '../../../../hooks/useAuth';
-import { useTenant } from '../../../../contexts/TenantContext';
 import { fetchPatientMedications, deleteMedication } from '../../../../services/clinical/medicationService';
 // import { usePatients } from '../../hooks/usePatients'; // Commented out as not currently used
 import { Medication } from '../../../../types';
@@ -39,7 +38,6 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
   onRefresh
 }) => {
   const { hasRole } = useAuth();
-  const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState<'overview' | 'scheduled' | 'prn' | 'continuous'>(
     initialCategory === 'scheduled' || initialCategory === 'prn' || initialCategory === 'continuous' 
       ? initialCategory 
@@ -65,8 +63,7 @@ export const MedicationAdministration: React.FC<MedicationAdministrationProps> =
     try {
         const now = new Date();
         secureLogger.debug('Refreshing medications for patient:', patientId, now.toISOString());
-        const simulationId = currentTenant?.simulation_id;
-        const updatedMedications = await fetchPatientMedications(patientId, simulationId);
+          const updatedMedications = await fetchPatientMedications(patientId);
         secureLogger.debug(`Fetched ${updatedMedications.length} medications`);
         setAllMedications(updatedMedications);
         onRefresh();

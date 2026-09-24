@@ -10,6 +10,7 @@
 import { supabase } from '../../../lib/api/supabase';
 import type { TemplateExportPackage } from '../types/templateSnapshot';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { asJsonObject } from '../../../lib/api/json';
 
 /**
  * Export a simulation template with complete snapshot data
@@ -135,13 +136,19 @@ export async function getExportSummary(templateId: string): Promise<{
     if (error) throw error;
     if (!template) throw new Error('Template not found');
 
-    const snapshotData = template.snapshot_data || {};
+    // snapshot_data is JSONB: narrow before reading, so a malformed snapshot
+    // reports zero counts instead of throwing on a property of a string.
+    const snapshotData = asJsonObject<{
+      patients?: unknown[];
+      patient_medications?: unknown[];
+      snapshot_metadata?: { total_tables_scanned?: number; total_records_captured?: number };
+    }>(template.snapshot_data) ?? {};
     const patientCount = snapshotData.patients?.length || 0;
     // Key is 'patient_medications' in the dynamic snapshot (save_template_snapshot_v2), not 'medications'
     const medicationCount = snapshotData.patient_medications?.length || 0;
     // save_template_snapshot_v2 auto-discovers every tenant table and records these totals —
     // surface them so the export confirmation reflects everything actually captured, not just patients/meds
-    const metadata = snapshotData.snapshot_metadata || {};
+    const metadata = snapshotData.snapshot_metadata ?? {};
     const tableCount = metadata.total_tables_scanned ?? 0;
     const recordCount = metadata.total_records_captured ?? 0;
 
