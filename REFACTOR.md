@@ -241,10 +241,23 @@ interface that declared it required. Mechanical, and each one is a latent
 
 ### Do it in this order
 
-- [ ] **4.1** Fix the malformed `.select()` strings first, with the client still
-      untyped. They are bugs today: a mis-associated join means the query does
-      not return what the code reads. Start with `medicationService.ts` and
-      `migrateMedications.ts` (37 of the 50 TS2339s between them).
+- [x] **4.1** Fix the malformed `.select()` strings first, with the client still
+      untyped. **DONE 2026-09-23 — all 50 TS2339s cleared, total 397 -> 326.**
+      They were not malformed selects. Three causes:
+      - `simulation_patients` / `_vitals` / `_medications` / `_notes` do not
+        exist. Three code paths queried them behind `if (simulationId)`, which
+        was unreachable because `launch_simulation` never sets
+        `tenants.simulation_id`. Dead code that looked load-bearing; deleted
+        along with its parameters and eight call-site lookups.
+      - `src/scripts/migrateMedications.ts`, a one-off already applied and
+        imported by nothing, contributed 27. Deleted.
+      - The rest were property access on `Json` at `supabase.rpc()` boundaries
+        and JSONB columns. Added `lib/api/json.ts` with `asJsonObject()` and
+        `expectJsonObject()`, which validate at runtime instead of asserting.
+        `SimulationFunctionResult` was also missing `error`, `detail`, `status`,
+        `state_id`, `patients_preserved` and `medications_preserved`, all of
+        which the deployed reset functions return -- callers were reading
+        `error` only because the value was untyped.
 - [ ] **4.2** Type the client behind a per-file opt-in rather than globally:
       annotate call sites with `Row<'table'>` as done in
       `studentActivityService.ts`. Gets most of the safety without a 397-error

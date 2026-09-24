@@ -11,6 +11,7 @@ import type {
   SimulationFunctionResult,
   SimulationActiveFilters,
 } from '../../features/simulation/types/simulation';
+import { expectJsonObject } from '../../lib/api/json';
 
 // ============================================================================
 // LAUNCH & QUERIES
@@ -245,10 +246,11 @@ export async function resetSimulationForNextSession(
     });
 
     if (error) throw error;
-    if (!data.success) throw new Error(data.error || 'Reset operation failed');
+    const result = expectJsonObject<SimulationFunctionResult>(data, 'reset_simulation_for_next_session');
+    if (!result.success) throw new Error(result.error || 'Reset operation failed');
 
-    secureLogger.debug('Reset completed with barcode preservation:', data);
-    return data as SimulationFunctionResult;
+    secureLogger.debug('Reset completed with barcode preservation:', result);
+    return result;
   } catch (error: unknown) {
     secureLogger.error('Error resetting simulation:', error);
     throw error;
@@ -307,11 +309,11 @@ export async function resetSimulationWithTemplateUpdates(
       throw error;
     }
 
-    if (!data) throw new Error('No response from reset function');
-    if (!data.success) throw new Error(data.error || 'Reset operation failed');
+    const result = expectJsonObject<SimulationFunctionResult>(data, 'reset_simulation_with_template_updates');
+    if (!result.success) throw new Error(result.error || 'Reset operation failed');
 
-    secureLogger.debug('Reset with template updates completed:', data);
-    return data as SimulationFunctionResult;
+    secureLogger.debug('Reset with template updates completed:', result);
+    return result;
   } catch (error: unknown) {
     secureLogger.error('Error resetting simulation with template updates:', error);
     throw error;
