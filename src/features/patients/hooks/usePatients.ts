@@ -22,17 +22,13 @@ import { secureLogger } from '../../../lib/security/secureLogger';
  * Hook to fetch all patients
  * Replaces the patients state in PatientContext
  * Automatically filters by current tenant for multi-tenant isolation
- * For active simulation tenants, fetches from simulation_patients table
  */
 export function usePatients() {
   const { currentTenant } = useTenant();
   
-  // For active simulation tenants, use the simulation_id
-  const simulationId = currentTenant?.simulation_id;
-  
   return useQuery({
-    queryKey: [...queryKeys.patients, currentTenant?.id, simulationId],
-    queryFn: () => fetchPatients(simulationId, currentTenant?.id), // Pass simulation_id first, then tenant_id
+    queryKey: [...queryKeys.patients, currentTenant?.id],
+    queryFn: () => fetchPatients(currentTenant?.id),
     staleTime: 2 * 60 * 1000, // Patient list is fresh for 2 minutes
     select: (patients) => {
       // Safety check: ensure patients is an array before sorting
@@ -89,12 +85,9 @@ export function usePatientNotes(patientId: string | undefined) {
  * Hook to fetch patient medications
  */
 export function usePatientMedications(patientId: string | undefined) {
-  const { currentTenant } = useTenant();
-  const simulationId = currentTenant?.simulation_id;
-  
   return useQuery({
     queryKey: queryKeys.patientMedications(patientId!),
-    queryFn: () => fetchPatientMedications(patientId!, simulationId),
+    queryFn: () => fetchPatientMedications(patientId!),
     enabled: !!patientId,
     staleTime: 2 * 60 * 1000, // Medications are fresh for 2 minutes
   });

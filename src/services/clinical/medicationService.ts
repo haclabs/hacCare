@@ -62,45 +62,14 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         timestamp: cleanAdministration.timestamp
       }
     );
-    */export const fetchPatientMedications = async (patientId: string, simulationId?: string): Promise<Medication[]> => {
+    */export const fetchPatientMedications = async (patientId: string): Promise<Medication[]> => {
   try {
-    // If simulation mode, fetch from simulation_patient_medications
-    if (simulationId) {
-      secureLogger.debug('Fetching simulation medications for patient:', patientId, 'simulation:', simulationId);
-      
-      const { data: simData, error: simError } = await supabase
-        .from('simulation_patient_medications')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
+    // Simulation branch removed 2026-09-23: it queried simulation_patient_medications,
+    // which does not exist in
+    // the database. It was also unreachable -- launch_simulation never sets
+    // tenants.simulation_id, so the caller's simulationId was always undefined.
+    // Simulations run on the same tables in their own tenant (see CLAUDE.md).
 
-      if (simError) {
-        secureLogger.error('Error fetching simulation medications:', simError);
-        throw simError;
-      }
-
-      const medications: Medication[] = (simData || []).map(dbMed => ({
-        id: dbMed.id,
-        patient_id: dbMed.patient_id,
-        name: dbMed.name,
-        category: dbMed.category || 'scheduled',
-        dosage: dbMed.dosage,
-        frequency: dbMed.frequency,
-        route: dbMed.route,
-        start_date: dbMed.start_date,
-        end_date: dbMed.end_date,
-        prescribed_by: dbMed.prescribed_by || '',
-        last_administered: dbMed.last_administered,
-        next_due: dbMed.next_due || new Date().toISOString(),
-        status: dbMed.status || 'Active',
-        catalog_id: dbMed.catalog_id ?? null,
-        barcode: dbMed.barcode ?? null,
-      } as Medication));
-
-      secureLogger.debug('Found', medications.length, 'simulation medications');
-      return medications;
-    }
-    
     // Standard query for non-simulation mode
     const { data, error } = await supabase
       .from('patient_medications')

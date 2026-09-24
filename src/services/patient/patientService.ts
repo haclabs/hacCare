@@ -4,24 +4,7 @@ import { logAction } from '../operations/auditService';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 // Legacy type for simulation_patients table (older approach pre-multi-tenant)
-interface SimulationPatient {
-  id: string;
-  patient_id: string;
-  patient_name: string;
-  date_of_birth: string;
-  gender?: string;
-  room_number?: string;
-  bed_number?: string;
-  admission_date?: string;
-  condition?: string;
-  diagnosis?: string;
-  allergies?: string[];
-  blood_type?: string;
-  emergency_contact_name?: string;
-  emergency_contact_relationship?: string;
-  emergency_contact_phone?: string;
-  assigned_nurse?: string;
-}
+// SimulationPatient removed 2026-09-23: the simulation_patients table it described does not exist.
 
 /**
  *    // Fetch vitals for all patients
@@ -160,79 +143,19 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
 /**
  * Convert simulation patient to app patient format for compatibility
  */
-const convertSimulationPatient = (simulationPatient: SimulationPatient): Patient => {
-  // Split patient_name into first and last names
-  const nameParts = simulationPatient.patient_name.split(' ');
-  const firstName = nameParts[0] || '';
-  const lastName = nameParts.slice(1).join(' ') || '';
-
-  return {
-    id: simulationPatient.id,
-    patient_id: simulationPatient.patient_id,
-    tenant_id: '', // Simulation patients don't have tenant_id in the interface
-    first_name: firstName,
-    last_name: lastName,
-    date_of_birth: simulationPatient.date_of_birth,
-    gender: simulationPatient.gender as 'Male' | 'Female' | 'Other' || 'Other',
-    room_number: simulationPatient.room_number || '',
-    bed_number: simulationPatient.bed_number || '',
-    admission_date: simulationPatient.admission_date || '',
-    condition: simulationPatient.condition as 'Critical' | 'Stable' | 'Improving' | 'Discharged' || 'Stable',
-    diagnosis: simulationPatient.diagnosis || '',
-    allergies: simulationPatient.allergies || [],
-    blood_type: simulationPatient.blood_type || '',
-    emergency_contact_name: simulationPatient.emergency_contact_name || '',
-    emergency_contact_relationship: simulationPatient.emergency_contact_relationship || '',
-    emergency_contact_phone: simulationPatient.emergency_contact_phone || '',
-    assigned_nurse: simulationPatient.assigned_nurse || '',
-    avatar_id: undefined, // Simulation patients don't have avatars yet
-    vitals: [], // Will be populated from simulation_patient_vitals
-    medications: [], // Will be populated from simulation_patient_medications  
-    notes: [] // Will be populated from simulation_patient_notes
-  };
-};
+// convertSimulationPatient removed 2026-09-23 with the dead simulation branches.
 
 /**
  * Fetch all patients from database or simulation
  */
-export const fetchPatients = async (simulationId?: string, tenantId?: string): Promise<Patient[]> => {
+export const fetchPatients = async (tenantId?: string): Promise<Patient[]> => {
   try {
-    // If simulation mode, fetch simulation patients
-    if (simulationId) {
-      secureLogger.debug('Fetching simulation patients for simulation:', simulationId);
-      
-      const { data: simulationPatients, error: simError } = await supabase
-        .from('simulation_patients')
-        .select(`
-          *,
-          vitals:simulation_patient_vitals(*),
-          medications:simulation_patient_medications(*),
-          notes:simulation_patient_notes(*)
-        `)
-        .eq('active_simulation_id', simulationId)
-        .eq('is_template', false)
-        .order('created_at', { ascending: false });
+    // Simulation branch removed 2026-09-23: it queried simulation_patients /
+    // simulation_patient_vitals / _medications / _notes, none of which exist in
+    // the database. It was also unreachable -- launch_simulation never sets
+    // tenants.simulation_id, so the caller's simulationId was always undefined.
+    // Simulations run on the same tables in their own tenant (see CLAUDE.md).
 
-      if (simError) {
-        throw simError;
-      }
-
-      if (!simulationPatients || simulationPatients.length === 0) {
-        secureLogger.debug('No simulation patients found');
-        return [];
-      }
-
-      secureLogger.debug(`Found ${simulationPatients.length} simulation patients`);
-      
-      // Convert simulation patients to Patient format
-      const convertedPatients = simulationPatients.map(convertSimulationPatient);
-      secureLogger.debug('Simulation patients converted successfully');
-      return convertedPatients;
-    }
-    
-    secureLogger.debug('Fetching patients from database...', tenantId ? `for tenant: ${tenantId}` : '(all tenants)');
-    
-    // Build query for patients
     let query = supabase
       .from('patients')
       .select('*');
@@ -293,44 +216,16 @@ export const fetchPatients = async (simulationId?: string, tenantId?: string): P
 /**
  * Fetch a single patient by ID from database
  */
-export const fetchPatientById = async (patientId: string, simulationId?: string): Promise<Patient | null> => {
+export const fetchPatientById = async (patientId: string): Promise<Patient | null> => {
   try {
     secureLogger.debug('Fetching patient by ID:', patientId);
     
-    // If simulation mode, fetch simulation patient
-    if (simulationId) {
-      secureLogger.debug('Fetching simulation patient for simulation:', simulationId);
-      
-      const { data: simulationPatient, error: simError } = await supabase
-        .from('simulation_patients')
-        .select(`
-          *,
-          vitals:simulation_patient_vitals(*),
-          medications:simulation_patient_medications(*),
-          notes:simulation_patient_notes(*)
-        `)
-        .eq('id', patientId)
-        .eq('active_simulation_id', simulationId)
-        .eq('is_template', false)
-        .single();
+    // Simulation branch removed 2026-09-23: it queried simulation_patients /
+    // simulation_patient_vitals / _medications / _notes, none of which exist in
+    // the database. It was also unreachable -- launch_simulation never sets
+    // tenants.simulation_id, so the caller's simulationId was always undefined.
+    // Simulations run on the same tables in their own tenant (see CLAUDE.md).
 
-      if (simError) {
-        if (simError.code === 'PGRST116') {
-          secureLogger.debug('Simulation patient not found:', patientId);
-          return null;
-        }
-        throw simError;
-      }
-
-      if (!simulationPatient) {
-        secureLogger.debug('Simulation patient not found:', patientId);
-        return null;
-      }
-
-      secureLogger.debug('Found simulation patient:', simulationPatient.patient_name);
-      return convertSimulationPatient(simulationPatient);
-    }
-    
     // Fetch patient
     const { data: patient, error: patientError } = await supabase
       .from('patients')

@@ -16,7 +16,6 @@ import { NotesContent } from './NotesContent';
 import { PatientAssessmentsTab } from './PatientAssessmentsTab';
 import { ModernPatientManagement } from '../../../../components/ModernPatientManagement';
 import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
-import { useTenant } from '../../../../contexts/TenantContext';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 // ─── condition colour helpers (shared with overview panel) ────────────────────
@@ -100,7 +99,6 @@ export const PatientDetailTabs: React.FC<PatientDetailTabsProps> = ({
   onMedicationsUpdated,
   onShowBracelet,
 }) => {
-  const { currentTenant } = useTenant();
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const totalMedications = medications.filter(m => m.status === 'Active').length;
 
@@ -314,8 +312,7 @@ export const PatientDetailTabs: React.FC<PatientDetailTabsProps> = ({
             onMedicationUpdate={async (updated) => {
               onMedicationsUpdated(updated);
               try {
-                const simulationId = currentTenant?.simulation_id;
-                const fresh = await fetchPatientMedications(patientId, simulationId);
+                        const fresh = await fetchPatientMedications(patientId);
                 onMedicationsUpdated(fresh);
               } catch (err) {
                 secureLogger.error('Error refreshing medications after update:', err);

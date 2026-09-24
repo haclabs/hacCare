@@ -3,7 +3,6 @@ import { Pill, Clock, Droplets } from 'lucide-react';
 
 import type { Patient, Medication } from '../../../../types';
 import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
-import { useTenant } from '../../../../contexts/TenantContext';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
 import { BarcodeGenerator } from '../../components/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
@@ -62,7 +61,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
   hasNewOrders = false,
   hasNewNotes = false,
 }) => {
-  const { currentTenant } = useTenant();
   const [activeView, setActiveView] = useState<MARView>('administration');
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -75,7 +73,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const handleBCMAComplete = async (success: boolean, log?: any) => {
     if (success && log) {
       try {
-        const freshMedications = await fetchPatientMedications(patient.id, currentTenant?.simulation_id);
+        const freshMedications = await fetchPatientMedications(patient.id);
         if (typeof onMedicationUpdate === 'function') {
           await onMedicationUpdate(freshMedications);
         }

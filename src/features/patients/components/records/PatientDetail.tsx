@@ -31,7 +31,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
   // ─── Server state (React Query) ────────────────────────────────────────────
   const { data: patient, isLoading: loadingPatient, error: patientError } = useQuery({
     queryKey: ['patient', id, simulationId],
-    queryFn: () => fetchPatientById(id!, simulationId),
+    queryFn: () => fetchPatientById(id!),
     enabled: !!id,
   });
 
@@ -43,7 +43,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ onShowBracelet }) 
 
   const { data: medications = [] } = useQuery<Medication[]>({
     queryKey: ['patient-medications', id, simulationId],
-    queryFn: () => fetchPatientMedications(id!, simulationId),
+    queryFn: () => fetchPatientMedications(id!),
     enabled: !!id,
   });
 
