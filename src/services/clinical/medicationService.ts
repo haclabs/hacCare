@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/api/supabase';
 import { Medication, MedicationAdministration } from '../../types';
 import { secureLogger } from '../../lib/security/secureLogger';
+import type { Row, Update } from '../../lib/api/tables';
 
 /**
  * Medication Service
@@ -79,7 +80,7 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
 
     // If successful (even with empty results), return the data
     if (!error && data) {
-      const medications: Medication[] = data.map(dbMed => ({
+      const medications: Medication[] = data.map((dbMed: Row<'patient_medications'>) => ({
         id: dbMed.id,
         patient_id: dbMed.patient_id,
         name: dbMed.name,
@@ -264,7 +265,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     secureLogger.debug('Found existing medication:', existingMed);
     
     // Map Medication interface fields to database column names for the update
-    const dbUpdates: any = {};
+    const dbUpdates: Update<'patient_medications'> = {};
     
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.dosage !== undefined) dbUpdates.dosage = updates.dosage;
@@ -801,7 +802,8 @@ export const getPatientByMedicationId = async (medicationId: string): Promise<{ 
     
     // Log all medication IDs for debugging
     secureLogger.debug('All medication IDs in database:');
-    data.forEach(med => {
+    // .select('id, patient_id, name, category') -- a subset, so Pick, not Row.
+    data.forEach((med: Pick<Row<'patient_medications'>, 'id' | 'patient_id' | 'name' | 'category'>) => {
       secureLogger.debug(`- Medication ID: ${med.id}, Patient ID: ${med.patient_id}, Name: ${med.name}, Category: ${med.category || 'scheduled'}`);
     });
     
@@ -963,7 +965,8 @@ export const fetchPatientAdministrationHistory24h = async (patientId: string): P
         medicationsMap = medicationData.reduce((acc, med) => {
           acc[med.id] = med;
           return acc;
-        }, {} as Record<string, any>);
+          // .select('id, name, dosage, route, frequency') -- a subset, so Pick.
+        }, {} as Record<string, Pick<Row<'patient_medications'>, 'id' | 'name' | 'dosage' | 'route' | 'frequency'>>);
       }
     }
 

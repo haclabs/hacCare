@@ -8,20 +8,9 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
-import type { Database, Json } from '../../types/supabase';
+import type { Json } from '../../types/supabase';
+import type { Row } from '../../lib/api/tables';
 
-/**
- * A row as Postgres actually returns it, from the generated schema types.
- *
- * NOTE: the Supabase client is NOT created with `createClient<Database>()`, so
- * query results arrive untyped and these annotations are the only thing tying
- * this pipeline to the real schema. They still earn their keep — each loop body
- * is now checked against the actual columns, so a renamed or dropped column
- * fails the build here instead of silently emptying a section of the debrief.
- * Typing the client globally is the proper fix and is tracked separately.
- */
-type Row<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row'];
 
 /**
  * Narrow a JSONB column to an object shape.

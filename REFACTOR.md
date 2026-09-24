@@ -258,14 +258,42 @@ interface that declared it required. Mechanical, and each one is a latent
         `state_id`, `patients_preserved` and `medications_preserved`, all of
         which the deployed reset functions return -- callers were reading
         `error` only because the value was untyped.
-- [ ] **4.2** Type the client behind a per-file opt-in rather than globally:
-      annotate call sites with `Row<'table'>` as done in
-      `studentActivityService.ts`. Gets most of the safety without a 397-error
-      big bang, and each file is independently reviewable.
-- [ ] **4.3** Work through the areas in risk order:
+- [x] **4.2** Provide a per-file opt-in instead of a global switch.
+      **DONE 2026-09-23** — `src/lib/api/supabase.ts` now also exports `db`, the
+      same runtime client with `<Database>` applied. A service migrates by
+      changing one import; everything else keeps working and the build stays
+      green. Validated on `labService.ts`: switching its import surfaced exactly
+      that file's 12 errors and nothing else.
+
+      **Correction to the original plan.** It claimed that annotating call sites
+      with `Row<'table'>` would "get most of the safety without a big bang" and
+      thereby shrink the migration. Only the first half is true. Annotating
+      `medicationService.ts` and `doctorsOrdersService.ts` validated their loop
+      bodies and fixed real defects, but the typed-client error count barely
+      moved (326 -> 325): annotations check what the body does with a row, while
+      the client surfaces what the query itself returns. Overlapping sets, not
+      the same one. Do both, but do not expect annotation alone to reduce 4.4.
+
+      Shared helpers now live in `src/lib/api/`:
+      `tables.ts` (`Row`, `Insert`, `Update`, `orUndefined`) and `json.ts`
+      (`asJsonObject`, `expectJsonObject`).
+
+      Use `Pick<Row<'t'>, 'a' | 'b'>` for a narrowed `.select('a, b')`. Claiming
+      the full `Row` there asserts columns the query never fetched, which is the
+      same lie the `any` was telling.
+- [ ] **4.3** Migrate services to `db` one at a time, in risk order:
       `services/clinical` -> `services/patient` -> `services/simulation` ->
-      hooks -> features. Clinical first: that is where a wrong shape becomes a
-      wrong vital sign.
+      hooks -> features. Current cost per area, measured 2026-09-23:
+      clinical 73, patient 72, simulation 33, `hooks/useSimulation.ts` 31,
+      admin 29, hacmap 19.
+
+      **Expect hand-written domain types to be the real work.** `LabResultRef`
+      is a 13-field mirror of `lab_result_refs` that differs only in nullability
+      and in typing the `sex_ref` JSONB properly. Deriving it
+      (`Omit<Row<'lab_result_refs'>, 'sex_ref'> & { sex_ref: SexSpecificRange | null }`)
+      makes drift impossible, but ripples to every consumer, and `LabPanel` and
+      `LabResult` need the same. Attempted and reverted on 2026-09-23 as a
+      whole-domain change rather than a per-file one -- budget it that way.
 - [ ] **4.4** Only once the count is low, add `<Database>` to `createClient` and
       clear the remainder. This is the commit that makes drift impossible, so it
       lands last, not first.

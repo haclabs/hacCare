@@ -6,6 +6,21 @@
 import { supabase } from '../../lib/api/supabase';
 import { DoctorsOrder } from '../../types';
 import { secureLogger } from '../../lib/security/secureLogger';
+import type { Row } from '../../lib/api/tables';
+import { orUndefined } from '../../lib/api/tables';
+
+/**
+ * A `doctors_orders` row with the two `user_profiles` joins the queries select.
+ *
+ * PostgREST returns a to-one embed as a single object or null, not an array,
+ * and only the columns named in the select -- hence Pick rather than the whole
+ * profile row.
+ */
+type ProfileName = Pick<Row<'user_profiles'>, 'first_name' | 'last_name'>;
+type OrderWithProfiles = Row<'doctors_orders'> & {
+  created_by_profile: ProfileName | null;
+  acknowledged_by_profile: ProfileName | null;
+};
 
 export interface CreateDoctorsOrderData {
   patient_id: string;
@@ -50,7 +65,7 @@ export const fetchDoctorsOrders = async (patientId: string): Promise<DoctorsOrde
     }
 
     // Transform the data to include user names
-    return (data || []).map(order => ({
+    return (data || []).map((order: OrderWithProfiles) => ({
       id: order.id,
       patient_id: order.patient_id,
       tenant_id: order.tenant_id,
@@ -58,22 +73,25 @@ export const fetchDoctorsOrders = async (patientId: string): Promise<DoctorsOrde
       order_time: order.order_time,
       order_text: order.order_text,
       ordering_doctor: order.ordering_doctor,
-      notes: order.notes,
-      order_type: order.order_type,
-      is_acknowledged: order.is_acknowledged,
-      acknowledged_by: order.acknowledged_by,
+      notes: orUndefined(order.notes),
+      // Postgres types this `text`; the domain narrows it to the three
+      // values the UI offers. A row outside that set is a data problem, so
+      // fall back to 'Direct' rather than widening the domain type.
+      order_type: (order.order_type as DoctorsOrder['order_type']) ?? 'Direct',
+      is_acknowledged: order.is_acknowledged ?? false,
+      acknowledged_by: orUndefined(order.acknowledged_by),
       acknowledged_by_name: order.acknowledged_by_profile 
         ? `${order.acknowledged_by_profile.first_name} ${order.acknowledged_by_profile.last_name}`
         : undefined,
-      acknowledged_at: order.acknowledged_at,
-      doctor_name: order.doctor_name,
+      acknowledged_at: orUndefined(order.acknowledged_at),
+      doctor_name: orUndefined(order.doctor_name),
       created_by: order.created_by,
       created_by_name: order.created_by_profile 
         ? `${order.created_by_profile.first_name} ${order.created_by_profile.last_name}`
         : 'Unknown',
-      created_at: order.created_at,
-      updated_by: order.updated_by,
-      updated_at: order.updated_at
+      created_at: order.created_at ?? '',
+      updated_by: orUndefined(order.updated_by),
+      updated_at: orUndefined(order.updated_at)
     }));
   } catch (error) {
     secureLogger.error('Error in fetchDoctorsOrders:', error);
