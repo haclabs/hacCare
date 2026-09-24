@@ -32,6 +32,30 @@ Path alias: `@` → `./src`.
 
 Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env` (see `.env.example`).
 
+## Three environments
+
+| Where | Database | Deploys from |
+|---|---|---|
+| Local | `supabase start` on 127.0.0.1:54321, seeded by `supabase/seed.sql` | — |
+| `devhaccare.netlify.app` | **hacCare Dev** `zzjmpkzkmqimexojvibu` | `develop` |
+| `haccare.app` | **hacCare Canada** `ydmbinljlpzcbleupjaa` | `main` (Netlify site `adorable-puppy-ff302c`) |
+
+**The CLI is linked to PRODUCTION.** A bare `supabase db push` hits the live
+database. Always name the target:
+
+```bash
+supabase db push --project-ref zzjmpkzkmqimexojvibu --dry-run   # Dev, check first
+supabase db push --project-ref ydmbinljlpzcbleupjaa             # production
+supabase db query --linked --project-ref <ref> -f file.sql      # run SQL (--project-ref needs --linked)
+supabase projects list                                          # confirm which is linked
+```
+
+Dev carries the same migrations as production and the `seed.sql` fixture. Test
+logins are `superadmin@`, `instructor@`, `student@` and `nurse-b@local.test`,
+all with password `password123`. Seeded users need both non-NULL token columns
+and an `auth.identities` row or GoTrue login fails with "Database error querying
+schema" — `seed.sql` handles both; do not insert into `auth.users` alone.
+
 ## Architecture
 
 hacCare is a multi-tenant healthcare simulation platform (a teaching EMR) for clinical education.
