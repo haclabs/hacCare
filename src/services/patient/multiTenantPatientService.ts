@@ -4,40 +4,26 @@ import type { NeuroAssessment, NeuroAssessmentInput } from '../../features/patie
 import type { BBITEntry, BBITEntryInput } from '../../features/patients/types/bbitEntry';
 import type { NewbornAssessment, NewbornAssessmentInput } from '../../features/patients/types/newbornAssessment';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { toError } from '../../lib/errors';
+import type { ServiceError } from '../../lib/api/serviceResult';
+import type { DatabasePatient, DatabaseVitals } from './patientService';
+
+/** A `patients` row with the nested vitals/notes the list query selects. */
+type PatientRowWithVitals = DatabasePatient & {
+  patient_vitals?: DatabaseVitals[];
+  patient_notes?: unknown[];
+};
 
 /**
  * Multi-Tenant Patient Service
  * Handles all database operations for patient data with tenant isolation
  */
 
-export interface DatabasePatient {
-  id: string;
-  patient_id: string;
-  tenant_id?: string;
-  first_name: string;
-  last_name: string;
-  date_of_birth: string;
-  gender: string;
-  room_number: string;
-  bed_number: string;
-  admission_date: string;
-  condition: string;
-  diagnosis: string;
-  allergies: string[];
-  blood_type: string;
-  emergency_contact_name: string;
-  emergency_contact_relationship: string;
-  emergency_contact_phone: string;
-  assigned_nurse?: string;
-  avatar_id?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 /**
  * Get all patients for a specific tenant
  */
-export async function getPatientsByTenant(tenantId: string): Promise<{ data: Patient[] | null; error: any }> {
+export async function getPatientsByTenant(tenantId: string): Promise<{ data: Patient[] | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('📋 Fetching patients for tenant:', tenantId);
     
@@ -53,18 +39,18 @@ export async function getPatientsByTenant(tenantId: string): Promise<{ data: Pat
 
     if (error) {
       secureLogger.error('Error fetching patients:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     // Convert to Patient format
-    const convertedPatients = patients?.map((dbPatient: any) => 
+    const convertedPatients = patients?.map((dbPatient: PatientRowWithVitals) => 
       convertDatabasePatient(dbPatient, dbPatient.patient_vitals)
     ) || [];
 
     return { data: convertedPatients, error: null };
   } catch (error) {
     secureLogger.error('Error in getPatientsByTenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -72,9 +58,9 @@ export async function getPatientsByTenant(tenantId: string): Promise<{ data: Pat
  * Create a new patient with tenant association
  */
 export async function createPatientWithTenant(
-  patientData: any, // Accept any data and filter it
+  patientData: Partial<Patient>,
   tenantId: string
-): Promise<{ data: Patient | null; error: any }> {
+): Promise<{ data: Patient | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('👤 Creating new patient for tenant:', tenantId);
 
@@ -96,7 +82,7 @@ export async function createPatientWithTenant(
 
     if (error) {
       secureLogger.error('Error creating patient:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     const convertedPatient = convertDatabasePatient(patient);
@@ -104,7 +90,7 @@ export async function createPatientWithTenant(
     return { data: convertedPatient, error: null };
   } catch (error) {
     secureLogger.error('Error in createPatientWithTenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -113,9 +99,9 @@ export async function createPatientWithTenant(
  */
 export async function updatePatientWithTenant(
   patientId: string, 
-  updates: any, // Accept any data and filter it
+  updates: Partial<Patient>,
   tenantId: string
-): Promise<{ data: Patient | null; error: any }> {
+): Promise<{ data: Patient | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('✏️ Updating patient:', patientId, 'for tenant:', tenantId);
 
@@ -128,7 +114,7 @@ export async function updatePatientWithTenant(
       .single();
 
     if (fetchError || !existingPatient) {
-      return { data: null, error: { message: 'Patient not found or access denied' } };
+      return { data: null, error: new Error('Patient not found or access denied') };
     }
 
     // Remove fields that don't belong in the patients table
@@ -144,7 +130,7 @@ export async function updatePatientWithTenant(
 
     if (error) {
       secureLogger.error('Error updating patient:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     const convertedPatient = convertDatabasePatient(patient);
@@ -152,14 +138,14 @@ export async function updatePatientWithTenant(
     return { data: convertedPatient, error: null };
   } catch (error) {
     secureLogger.error('Error in updatePatientWithTenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Delete patient (with tenant validation)
  */
-export async function deletePatientWithTenant(patientId: string, tenantId: string): Promise<{ error: any }> {
+export async function deletePatientWithTenant(patientId: string, tenantId: string): Promise<{ error: ServiceError | null }> {
   try {
     secureLogger.debug('🗑️ Deleting patient:', patientId, 'for tenant:', tenantId);
 
@@ -172,7 +158,7 @@ export async function deletePatientWithTenant(patientId: string, tenantId: strin
       .single();
 
     if (fetchError || !existingPatient) {
-      return { error: { message: 'Patient not found or access denied' } };
+      return { error: new Error('Patient not found or access denied') };
     }
 
     // patient_id on these two tables is text (not a real FK), so no ON DELETE
@@ -188,7 +174,7 @@ export async function deletePatientWithTenant(patientId: string, tenantId: strin
 
     if (error) {
       secureLogger.error('Error deleting patient:', error);
-      return { error };
+      return { error: toError(error) };
     }
 
     // Log the deletion action
@@ -196,14 +182,14 @@ export async function deletePatientWithTenant(patientId: string, tenantId: strin
     return { error: null };
   } catch (error) {
     secureLogger.error('Error in deletePatientWithTenant:', error);
-    return { error };
+    return { error: toError(error) };
   }
 }
 
 /**
  * Get patient by ID with tenant validation
  */
-export async function getPatientByIdWithTenant(patientId: string, tenantId: string): Promise<{ data: Patient | null; error: any }> {
+export async function getPatientByIdWithTenant(patientId: string, tenantId: string): Promise<{ data: Patient | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('🔍 Fetching patient:', patientId, 'for tenant:', tenantId);
     
@@ -220,14 +206,14 @@ export async function getPatientByIdWithTenant(patientId: string, tenantId: stri
 
     if (error) {
       secureLogger.error('Error fetching patient:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     const convertedPatient = convertDatabasePatient(patient, patient.patient_vitals);
     return { data: convertedPatient, error: null };
   } catch (error) {
     secureLogger.error('Error in getPatientByIdWithTenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -238,7 +224,7 @@ export async function addVitalsWithTenant(
   patientId: string, 
   vitals: Omit<VitalSigns, 'id'>, 
   tenantId: string
-): Promise<{ data: VitalSigns | null; error: any }> {
+): Promise<{ data: VitalSigns | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('📊 Adding vitals for patient:', patientId, 'tenant:', tenantId);
 
@@ -251,7 +237,7 @@ export async function addVitalsWithTenant(
       .single();
 
     if (fetchError || !existingPatient) {
-      return { data: null, error: { message: 'Patient not found or access denied' } };
+      return { data: null, error: new Error('Patient not found or access denied') };
     }
 
     // Build insert object dynamically - only include fields that have values
@@ -293,7 +279,7 @@ export async function addVitalsWithTenant(
       dbVitals.blood_pressure_systolic != null;
 
     if (!hasAtLeastOneVital) {
-      return { data: null, error: { message: 'At least one vital sign measurement must be provided' } };
+      return { data: null, error: new Error('At least one vital sign measurement must be provided') };
     }
 
     secureLogger.debug('📊 Recording partial vitals:', Object.keys(dbVitals).filter(k => k.includes('_') && dbVitals[k] != null));
@@ -306,7 +292,7 @@ export async function addVitalsWithTenant(
 
     if (error) {
       secureLogger.error('Error adding vitals:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     const convertedVitals: VitalSigns = {
@@ -328,7 +314,7 @@ export async function addVitalsWithTenant(
     return { data: convertedVitals, error: null };
   } catch (error) {
     secureLogger.error('Error in addVitalsWithTenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -339,7 +325,7 @@ export async function addPatientNoteWithTenant(
   patientId: string, 
   note: Omit<PatientNote, 'id' | 'created_at'>, 
   tenantId: string
-): Promise<{ data: PatientNote | null; error: any }> {
+): Promise<{ data: PatientNote | null; error: ServiceError | null }> {
   try {
     secureLogger.debug('📝 Adding note for patient:', patientId, 'tenant:', tenantId);
 
@@ -352,7 +338,7 @@ export async function addPatientNoteWithTenant(
       .single();
 
     if (fetchError || !existingPatient) {
-      return { data: null, error: { message: 'Patient not found or access denied' } };
+      return { data: null, error: new Error('Patient not found or access denied') };
     }
 
     const dbNote = {
@@ -369,13 +355,13 @@ export async function addPatientNoteWithTenant(
 
     if (error) {
       secureLogger.error('Error adding note:', error);
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     return { data: newNote, error: null };
   } catch (error) {
     secureLogger.error('Error in addPatientNoteWithTenant:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -388,7 +374,7 @@ export async function getTenantPatientStats(tenantId: string): Promise<{
     by_condition: Record<string, number>; 
     recent_admissions: number; 
   } | null; 
-  error: any 
+  error: ServiceError | null 
 }> {
   try {
     const { data: patients, error } = await supabase
@@ -397,7 +383,7 @@ export async function getTenantPatientStats(tenantId: string): Promise<{
       .eq('tenant_id', tenantId);
 
     if (error) {
-      return { data: null, error };
+      return { data: null, error: toError(error) };
     }
 
     const total = patients?.length || 0;
@@ -423,14 +409,14 @@ export async function getTenantPatientStats(tenantId: string): Promise<{
     };
   } catch (error) {
     secureLogger.error('Error in getTenantPatientStats:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
 /**
  * Convert database patient to app patient format
  */
-const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: any[]): Patient => {
+const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVitals[]): Patient => {
   return {
     id: dbPatient.id,
     patient_id: dbPatient.patient_id,
@@ -467,7 +453,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: any[]): Pat
 export async function getNeuroAssessments(
   patientId: string,
   tenantId: string
-): Promise<{ data: NeuroAssessment[] | null; error: any }> {
+): Promise<{ data: NeuroAssessment[] | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('patient_neuro_assessments')
@@ -476,11 +462,11 @@ export async function getNeuroAssessments(
       .eq('tenant_id', tenantId)
       .order('recorded_at', { ascending: true });
 
-    if (error) return { data: null, error };
+    if (error) return { data: null, error: toError(error) };
     return { data: data as NeuroAssessment[], error: null };
   } catch (error) {
     secureLogger.error('Error in getNeuroAssessments:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -492,7 +478,7 @@ export async function addNeuroAssessment(
   tenantId: string,
   assessment: NeuroAssessmentInput,
   studentName?: string
-): Promise<{ data: NeuroAssessment | null; error: any }> {
+): Promise<{ data: NeuroAssessment | null; error: ServiceError | null }> {
   try {
     const { data, error } = await supabase
       .from('patient_neuro_assessments')
@@ -506,11 +492,11 @@ export async function addNeuroAssessment(
       .select()
       .single();
 
-    if (error) return { data: null, error };
+    if (error) return { data: null, error: toError(error) };
     return { data: data as NeuroAssessment, error: null };
   } catch (error) {
     secureLogger.error('Error in addNeuroAssessment:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -525,11 +511,11 @@ export async function getBBITEntries(patientId: string, tenantId: string) {
       .eq('tenant_id', tenantId)
       .order('recorded_at', { ascending: true });
 
-    if (error) return { data: null, error };
+    if (error) return { data: null, error: toError(error) };
     return { data: data as BBITEntry[], error: null };
   } catch (error) {
     secureLogger.error('Error in getBBITEntries:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -552,11 +538,11 @@ export async function addBBITEntry(
       .select()
       .single();
 
-    if (error) return { data: null, error };
+    if (error) return { data: null, error: toError(error) };
     return { data: data as BBITEntry, error: null };
   } catch (error) {
     secureLogger.error('Error in addBBITEntry:', error);
-    return { data: null, error };
+    return { data: null, error: toError(error) };
   }
 }
 
@@ -645,17 +631,30 @@ export async function saveNewbornAssessment(
 /**
  * Convert database vitals to app vitals format
  */
-const convertDatabaseVitals = (dbVitals: any[]): VitalSigns[] => {
+const convertDatabaseVitals = (dbVitals: DatabaseVitals[]): VitalSigns[] => {
+  // Postgres returns NULL for vitals that were not measured; the domain type
+  // uses `undefined`. Partial vitals entry is supported deliberately (newborns
+  // without BP, for example), so this conversion is load-bearing, not cosmetic.
+  const orUndefined = (v: number | null | undefined) => (v ?? undefined);
   return dbVitals.map(vital => ({
     id: vital.id,
-    temperature: vital.temperature,
-    bloodPressure: {
-      systolic: vital.blood_pressure_systolic,
-      diastolic: vital.blood_pressure_diastolic
-    },
-    heartRate: vital.heart_rate,
-    respiratoryRate: vital.respiratory_rate,
-    oxygenSaturation: vital.oxygen_saturation,
+    temperature: orUndefined(vital.temperature),
+    // Blood pressure is all-or-nothing: VitalSigns declares systolic and
+    // diastolic as required *within* an optional object, mirroring the insert
+    // path ("include both or neither"). Emitting {systolic: null,
+    // diastolic: null} for an unmeasured BP made `if (vitals.bloodPressure)`
+    // truthy for a patient who has no blood pressure recorded. `any` hid it.
+    ...(vital.blood_pressure_systolic != null && vital.blood_pressure_diastolic != null
+      ? {
+          bloodPressure: {
+            systolic: vital.blood_pressure_systolic,
+            diastolic: vital.blood_pressure_diastolic,
+          },
+        }
+      : {}),
+    heartRate: orUndefined(vital.heart_rate),
+    respiratoryRate: orUndefined(vital.respiratory_rate),
+    oxygenSaturation: orUndefined(vital.oxygen_saturation),
     recorded_at: vital.recorded_at,
     lastUpdated: vital.recorded_at
   }));

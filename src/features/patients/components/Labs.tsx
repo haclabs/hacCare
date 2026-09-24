@@ -94,7 +94,7 @@ export const Labs: React.FC<LabsProps> = ({
 
     if (err) {
       setError('Failed to load lab panels');
-      secureLogger.error(err);
+      secureLogger.error('Failed to load lab panels', err);
     } else {
       setPanels(data || []);
     }
