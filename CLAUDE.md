@@ -51,10 +51,27 @@ supabase projects list                                          # confirm which 
 ```
 
 Dev carries the same migrations as production and the `seed.sql` fixture. Test
-logins are `superadmin@`, `instructor@`, `student@` and `nurse-b@local.test`,
-all with password `password123`. Seeded users need both non-NULL token columns
-and an `auth.identities` row or GoTrue login fails with "Database error querying
-schema" — `seed.sql` handles both; do not insert into `auth.users` alone.
+logins are `superadmin@`, `instructor@`, `student@`, `student1..6@` and
+`nurse-b@local.test`, all with password `password123`. Seeded users need both
+non-NULL token columns and an `auth.identities` row or GoTrue login fails with
+"Database error querying schema" — `seed.sql` handles both; do not insert into
+`auth.users` alone.
+
+**An environment is three things, not one:** schema, Edge Functions, and
+secrets. Doing only the first leaves a site that loads and then fails the moment
+a feature calls a function — and a missing function 404s the CORS preflight, so
+the browser reports it as a CORS error rather than a missing resource.
+
+```bash
+supabase db push --project-ref <ref>                 # 1. schema
+supabase functions deploy <name> --project-ref <ref> # 2. every function in supabase/functions/
+supabase secrets set KEY=value --project-ref <ref>   # 3. secrets
+```
+
+`SMTP2GO_API_KEY` is deliberately **not** set on Dev, so `invite-user` and
+`send-contact-email` return 500 there. That is intentional: dev should not send
+mail to real people. `create-simulation-student` does not need it —
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
 
 ## Architecture
 
