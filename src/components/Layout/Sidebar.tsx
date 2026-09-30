@@ -92,9 +92,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
       { id: 'patients', label: 'Patients', icon: Users, color: 'text-blue-600' }
     ] : []),
     { id: 'enter-sim', label: 'Enter Sim', icon: MonitorPlay, color: 'text-cyan-600', route: '/simulation-portal' },
-    { id: 'sim-templates', label: 'Sim Templates', icon: FileText, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'templates' } },
-    { id: 'active-sims', label: 'Active Sims', icon: Beaker, color: 'text-amber-600', tab: 'simulations', tabState: { initialTab: 'active' } },
-    { id: 'debrief-reports', label: 'Debrief Reports', icon: History, color: 'text-green-600', tab: 'simulations', tabState: { initialTab: 'history' } },
+    // Students (nurse role) only get "Enter Sim" - template/active/debrief views are instructor-facing
+    ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
+      { id: 'sim-templates', label: 'Sim Templates', icon: FileText, color: 'text-violet-600', tab: 'simulations', tabState: { initialTab: 'templates' } },
+      { id: 'active-sims', label: 'Active Sims', icon: Beaker, color: 'text-amber-600', tab: 'simulations', tabState: { initialTab: 'active' } },
+      { id: 'debrief-reports', label: 'Debrief Reports', icon: History, color: 'text-green-600', tab: 'simulations', tabState: { initialTab: 'history' } },
+    ] : []),
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),

@@ -31,13 +31,37 @@ interface ChangelogEntry {
  * @returns {JSX.Element} The changelog component
  */
 export const Changelog: React.FC = () => {
-  const [selectedVersion, setSelectedVersion] = useState<string>('5.2.0-rc5');
+  const [selectedVersion, setSelectedVersion] = useState<string>('6.0.1');
 
   /**
    * Changelog data
    * Contains all version history with categorized changes
    */
   const changelogData: ChangelogEntry[] = [
+    {
+      version: "6.0.1",
+      codename: "Snuggs",
+      date: "2026-09-30",
+      isMajor: true,
+      changes: [
+        {
+          type: "feature",
+          description: "hacCare is officially out of beta! This is our first Production Release, stable and ready for full classroom and lab use."
+        },
+        {
+          type: "improvement",
+          description: "Cleaner medication administration (MAR) view for IV/Continuous medications"
+        },
+        {
+          type: "improvement",
+          description: "Simplified simulation menu for students - students now see just \"Enter Sim\" to jump straight into their assigned simulation"
+        },
+        {
+          type: "improvement",
+          description: "General polish and stability improvements across the platform"
+        },
+      ]
+    },
     {
       version: "5.2.0-rc5",
       codename: "BUGGLER",
