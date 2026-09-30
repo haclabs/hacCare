@@ -139,34 +139,33 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
           <div className="flex-1">
             <div className="flex items-center space-x-3">
               <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  category === 'prn'
-                    ? 'bg-blue-100 text-blue-800'
+              {category !== 'continuous' && (
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    category === 'prn'
+                      ? 'bg-blue-100 text-blue-800'
+                      : category === 'scheduled'
+                      ? 'bg-green-100 text-green-800'
+                      : medication.category === 'diabetic'
+                      ? 'bg-orange-100 text-orange-800'
+                      : category === 'stat'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {category === 'prn'
+                    ? 'PRN'
                     : category === 'scheduled'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'Scheduled'
                     : medication.category === 'diabetic'
-                    ? 'bg-orange-100 text-orange-800'
-                    : category === 'continuous'
-                    ? 'bg-purple-100 text-purple-800'
+                    ? '💉 Diabetic'
                     : category === 'stat'
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {category === 'prn'
-                  ? 'PRN'
-                  : category === 'scheduled'
-                  ? 'Scheduled'
-                  : medication.category === 'diabetic'
-                  ? '💉 Diabetic'
-                  : category === 'continuous'
-                  ? 'IV/Continuous'
-                  : category === 'stat'
-                  ? 'STAT'
-                  : category}
-              </span>
+                    ? 'STAT'
+                    : category}
+                </span>
+              )}
               {shouldAlert && isDue && category !== 'scheduled' && (
+
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
                     category === 'continuous'
@@ -178,7 +177,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                   <span>{category === 'continuous' ? 'RUNNING' : 'DUE'}</span>
                 </span>
               )}
-              {medication.last_administered && (
+              {category !== 'continuous' && medication.last_administered && (
                 <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 bg-blue-100 text-blue-800">
                   <CheckCircle className="h-3 w-3" />
                   <span>
@@ -191,11 +190,9 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
             <p className="text-gray-600 mt-1">
               {medication.dosage} • {medication.route} • {medication.frequency}
             </p>
-            {medication.next_due && category !== 'prn' && category !== 'stat' && (
+            {medication.next_due && category === 'continuous' && (
               <p className="text-sm text-gray-500 mt-1">
-                {category === 'continuous'
-                  ? 'Continuous infusion'
-                  : `Due at: ${formatLocalTime(new Date(medication.next_due), 'HH:mm')}`}
+                Continuous infusion
               </p>
             )}
           </div>
