@@ -190,11 +190,9 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
             <p className="text-gray-600 mt-1">
               {medication.dosage} • {medication.route} • {medication.frequency}
             </p>
-            {medication.next_due && category !== 'prn' && category !== 'stat' && (
+            {medication.next_due && category === 'continuous' && (
               <p className="text-sm text-gray-500 mt-1">
-                {category === 'continuous'
-                  ? 'Continuous infusion'
-                  : `Due at: ${formatLocalTime(new Date(medication.next_due), 'HH:mm')}`}
+                Continuous infusion
               </p>
             )}
           </div>
