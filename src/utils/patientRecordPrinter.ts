@@ -284,6 +284,9 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                           ${admissionData.admission_type ? `<div><span style="font-weight:600;color:#854d0e;">Admission Type:</span> <span>${e(admissionData.admission_type)}</span></div>` : ''}
                           ${admissionData.chief_complaint ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#854d0e;">Chief Complaint:</span> <span>${e(admissionData.chief_complaint)}</span></div>` : ''}
                           ${admissionData.attending_physician ? `<div><span style="font-weight:600;color:#854d0e;">Attending Physician:</span> <span>${e(admissionData.attending_physician)}</span></div>` : ''}
+                          ${admissionData.medical_history ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#854d0e;">Medical History:</span> <span>${e(admissionData.medical_history)}</span></div>` : ''}
+                          ${admissionData.surgical_history ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#854d0e;">Surgical History:</span> <span>${e(admissionData.surgical_history)}</span></div>` : ''}
+                          ${admissionData.current_living_arrangements ? `<div style="grid-column:span 2;"><span style="font-weight:600;color:#854d0e;">Current Living Arrangements:</span> <span>${e(admissionData.current_living_arrangements)}</span></div>` : ''}
                         </div>
                         ${admissionData.secondary_contact_name ? `
                           <div style="background:#f8fafc;padding:10px;border-radius:6px;margin-top:10px;">

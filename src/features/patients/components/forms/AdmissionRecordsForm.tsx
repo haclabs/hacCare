@@ -37,6 +37,9 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
         insurance_policy: '',
         admission_source: '',
         chief_complaint: '',
+        medical_history: '',
+        surgical_history: '',
+        current_living_arrangements: '',
         height: '',
         weight: '',
         bmi: '',
@@ -272,6 +275,45 @@ export const AdmissionRecordsForm: React.FC<AdmissionRecordsFormProps> = ({
                   required
                 />
               </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Medical History
+              </label>
+              <textarea
+                value={formData.medical_history}
+                onChange={(e) => updateField('medical_history', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="Relevant past medical history"
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Surgical History
+              </label>
+              <textarea
+                value={formData.surgical_history}
+                onChange={(e) => updateField('surgical_history', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="Relevant past surgical history"
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Current Living Arrangements
+              </label>
+              <textarea
+                value={formData.current_living_arrangements}
+                onChange={(e) => updateField('current_living_arrangements', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="e.g. lives alone, with family, long-term care"
+              />
             </div>
           </div>
 

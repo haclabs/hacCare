@@ -17,6 +17,9 @@ export interface AdmissionRecord {
   insurance_policy: string;
   admission_source: string;
   chief_complaint: string;
+  medical_history?: string;
+  surgical_history?: string;
+  current_living_arrangements?: string;
   height: string;
   weight: string;
   bmi: string;
@@ -190,6 +193,9 @@ export const createDefaultAdmissionRecord = async (patientId: string): Promise<A
     insurance_policy: '',
     admission_source: '',
     chief_complaint: '',
+    medical_history: '',
+    surgical_history: '',
+    current_living_arrangements: '',
     height: '',
     weight: '',
     bmi: '',
