@@ -310,6 +310,21 @@ export const admissionAssessmentSchema: AssessmentSchema = {
       description: 'Patient\'s primary reason for admission',
       required: true
     },
+    medicalHistory: {
+      type: 'textarea',
+      title: 'Medical History',
+      description: 'Relevant past medical history'
+    },
+    surgicalHistory: {
+      type: 'textarea',
+      title: 'Surgical History',
+      description: 'Relevant past surgical history'
+    },
+    currentLivingArrangements: {
+      type: 'textarea',
+      title: 'Current Living Arrangements',
+      description: 'Patient\'s living situation (e.g. lives alone, with family, long-term care)'
+    },
     allergies: {
       type: 'multiselect',
       title: 'Known Allergies',
@@ -359,7 +374,7 @@ export const admissionAssessmentSchema: AssessmentSchema = {
       {
         id: 'basic-info',
         title: 'Admission Information',
-        fields: ['patientId', 'admissionDate', 'admittingDiagnosis', 'chiefComplaint']
+        fields: ['patientId', 'admissionDate', 'admittingDiagnosis', 'chiefComplaint', 'medicalHistory', 'surgicalHistory', 'currentLivingArrangements']
       },
       {
         id: 'medical-history',

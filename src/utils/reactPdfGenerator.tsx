@@ -487,6 +487,9 @@ const formatAdmissionRecord = (a: Record<string, unknown>): string[] => [
   a.attending_physician ? `Attending: ${a.attending_physician}` : null,
   a.admission_source ? `Source: ${a.admission_source}` : null,
   a.chief_complaint ? `Chief Complaint: ${String(a.chief_complaint)}` : null,
+  a.medical_history ? `Medical History: ${String(a.medical_history)}` : null,
+  a.surgical_history ? `Surgical History: ${String(a.surgical_history)}` : null,
+  a.current_living_arrangements ? `Current Living Arrangements: ${String(a.current_living_arrangements)}` : null,
 ].filter((item): item is string => Boolean(item));
 
 const formatSystemAssessment = (s: Record<string, unknown>): string[] => {
