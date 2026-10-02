@@ -30,9 +30,11 @@
  * the most clinically meaningful metric for that system type.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
 import { useSystemAssessmentHistory } from '../hooks/useSystemAssessment';
+import { AssessmentDetailModal } from './AssessmentDetailModal';
+import type { SystemAssessmentRow } from '../types';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -48,6 +50,8 @@ interface AssessmentHistoryStripProps {
   tenantId: string;
   systemType: string;
   formatSummary: (data: Record<string, unknown>) => AssessmentSummary;
+  /** Title shown in the detail modal header. Defaults to a humanized systemType. */
+  title?: string;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -70,6 +74,13 @@ const COLOR_CLASSES: Record<AssessmentSummaryColor, string> = {
   gray:  'bg-gray-100  text-gray-700  border-gray-200',
 };
 
+function defaultTitle(systemType: string): string {
+  return systemType
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
@@ -77,8 +88,10 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
   tenantId,
   systemType,
   formatSummary,
+  title,
 }) => {
   const { data: history, isLoading } = useSystemAssessmentHistory(patientId, tenantId, systemType);
+  const [selectedEntry, setSelectedEntry] = useState<SystemAssessmentRow | null>(null);
 
   // Nothing to show yet — render nothing rather than an empty container
   if (isLoading || !history?.length) return null;
@@ -100,9 +113,11 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
         {history.map((entry) => {
           const summary = formatSummary(entry.assessment_data as Record<string, unknown>);
           return (
-            <div
+            <button
+              type="button"
               key={entry.id}
-              className="flex-shrink-0 w-40 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 space-y-1.5"
+              onClick={() => setSelectedEntry(entry)}
+              className="flex-shrink-0 w-40 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 space-y-1.5 text-left hover:bg-gray-100 hover:border-gray-300 transition-colors"
             >
               {/* Relative timestamp */}
               <p className="text-[11px] font-medium text-gray-400 leading-none">
@@ -120,10 +135,21 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
               <p className="text-[11px] text-gray-500 truncate leading-none">
                 {entry.nurse_name ?? '—'}
               </p>
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {/* Detail modal */}
+      {selectedEntry && (
+        <AssessmentDetailModal
+          title={title ?? defaultTitle(systemType)}
+          recordedAt={selectedEntry.recorded_at}
+          nurseName={selectedEntry.nurse_name}
+          data={selectedEntry.assessment_data}
+          onClose={() => setSelectedEntry(null)}
+        />
+      )}
     </div>
   );
 };

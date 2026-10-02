@@ -436,6 +436,7 @@ export const BPMHForm: React.FC<FlowsheetFormProps> = ({
         tenantId={tenantId}
         systemType={SYSTEM_TYPE}
         formatSummary={formatBPMHSummary}
+        title="BPMH"
       />
 
       {/* ── History sources ── */}
