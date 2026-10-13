@@ -62,7 +62,7 @@ export const LabPanelDetail: React.FC<LabPanelDetailProps> = ({
   const [showAckModal, setShowAckModal] = useState(false);
   const [selectedResult, setSelectedResult] = useState<LabResult | null>(null);
 
-  const isAdmin = hasRole('admin') || hasRole('super_admin');
+  const isAdmin = hasRole(['admin', 'super_admin', 'coordinator', 'instructor']);
   const canAcknowledge = panel.status !== 'acknowledged' && panel.ack_required;
 
   const loadResults = async () => {
