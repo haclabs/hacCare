@@ -82,7 +82,7 @@ export const Labs: React.FC<LabsProps> = ({
   const [cancellingOrder, setCancellingOrder] = useState(false);
   const [cancelError, setCancelError] = useState('');
 
-  const isAdmin = hasRole('admin') || hasRole('super_admin');
+  const isAdmin = hasRole(['admin', 'super_admin', 'coordinator', 'instructor']);
 
   const loadPanels = useCallback(async () => {
     if (!currentTenant) return;
