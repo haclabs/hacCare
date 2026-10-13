@@ -79,7 +79,7 @@ export const FlowsheetsHub: React.FC<FlowsheetsHubProps> = ({
 }) => {
   const { currentTenant } = useTenant();
   const tenantId = currentTenant?.id ?? '';
-  const isBaseline = currentTenant?.tenant_type === 'simulation_template';
+  const isBaseline = currentTenant?.tenant_type === 'simulation_template' || currentTenant?.tenant_type === 'patient_template';
 
   const [hubView, setHubView] = useState<HubView>({ mode: 'grid' });
   const headerRef = useRef<HTMLDivElement>(null);

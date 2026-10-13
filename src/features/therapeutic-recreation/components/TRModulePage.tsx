@@ -79,7 +79,7 @@ export const TRModulePage: React.FC<TRModulePageProps> = ({
   };
 
   const tenantId = currentTenant?.id ?? '';
-  const isBaseline = currentTenant?.tenant_type === 'simulation_template';
+  const isBaseline = currentTenant?.tenant_type === 'simulation_template' || currentTenant?.tenant_type === 'patient_template';
 
   const trUser: TRCurrentUser = currentUser
     ? { id: currentUser.id, name: currentUser.name, role: currentUser.role }

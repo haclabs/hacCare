@@ -36,13 +36,17 @@ export function useUserProgramAccess() {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // Tags have been saved as 'SIM HUB' while the program code is 'SIM Hub'
+  const normalizedCodes = programCodes.map(c => c.toLowerCase());
+  const matchesProgram = (cat: string) => normalizedCodes.includes(cat.toLowerCase());
+
   /**
    * Check if user has access to a specific program
    */
   const hasProgram = (programCode: string): boolean => {
     if (canSeeAllPrograms) return true;
     if (!programCodes || programCodes.length === 0) return false;
-    return programCodes.includes(programCode);
+    return matchesProgram(programCode);
   };
 
   /**
@@ -62,7 +66,7 @@ export function useUserProgramAccess() {
       }
       
       // Check if any of the item's categories match user's programs
-      return item.primary_categories.some(cat => programCodes.includes(cat));
+      return item.primary_categories.some(matchesProgram);
     });
   };
 
@@ -74,7 +78,7 @@ export function useUserProgramAccess() {
     if (!categories || categories.length === 0) return true; // Uncategorized items visible to all
     if (!programCodes || programCodes.length === 0) return false;
     
-    return categories.some(cat => programCodes.includes(cat));
+    return categories.some(matchesProgram);
   };
 
   return {
