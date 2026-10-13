@@ -546,7 +546,7 @@ function App() {
                         key={patient.id}
                         patient={patient}
                         onClick={() => handlePatientSelect(patient)}
-                        onEdit={currentTenant?.tenant_type === 'simulation_template' ? () => setEditingPatient(patient) : undefined}
+                        onEdit={currentTenant?.tenant_type === 'simulation_template' || currentTenant?.tenant_type === 'patient_template' ? () => setEditingPatient(patient) : undefined}
                         onDelete={currentTenant?.tenant_type === 'simulation_template' ? () => {
                           if (!confirm(`Remove ${patient.first_name} ${patient.last_name} from this simulation template? This cannot be undone.`)) return;
                           deletePatient(patient.id).catch((err) => {
