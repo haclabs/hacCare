@@ -16,6 +16,9 @@ import type { LabPanel, LabResult } from '../features/patients/types/labs';
 import type { Patient } from '../types';
 import { secureLogger } from '../lib/security/secureLogger';
 import { escapeHtml as e } from './sanitization';
+// Embedded rather than "/images/logo.svg": the report loads from a blob: URL,
+// where root-relative paths don't resolve to the app origin.
+import { HACCARE_LOGO_BASE64 } from './logoBase64';
 
 export async function printPatientRecord(patient: Patient, tenantId: string): Promise<void> {
   if (!patient?.id) {
@@ -131,7 +134,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
 
           <div class="record-container">
             <div class="hospital-header">
-              <img src="/images/logo.svg" alt="HacCare Logo" class="logo-img" />
+              <img src="${HACCARE_LOGO_BASE64}" alt="HacCare Logo" class="logo-img" />
               <div class="hospital-logo">HACCARE MEDICAL CENTER</div>
               <div class="hospital-address">
                 1234 Healthcare Drive • Medical City, MC 12345<br>
