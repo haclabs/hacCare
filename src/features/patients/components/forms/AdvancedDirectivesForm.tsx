@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle } from 'lucide-react';
-import { upsertAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
+import { upsertAdvancedDirective, fetchAdvancedDirective, AdvancedDirective } from '../../../../api/advancedDirectives';
 import { secureLogger } from '../../../../lib/security/secureLogger';
+import { useAuth } from '../../../../contexts/auth/useAuth';
 
 interface AdvancedDirectivesFormProps {
   patientId: string;
@@ -15,6 +16,8 @@ interface AdvancedDirectivesFormProps {
   onSave
 }) => {
   const [formData, setFormData] = useState<AdvancedDirective | null>(null);
+  const { profile } = useAuth();
+  const canEditCharted = ['instructor', 'admin', 'coordinator', 'super_admin'].includes(profile?.role || '');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -39,7 +42,9 @@ interface AdvancedDirectivesFormProps {
         special_instructions: ''
       };
       
-      setFormData(emptyDirective);
+      // Students always start blank; staff edit the record already on file
+      const existing = canEditCharted ? await fetchAdvancedDirective(patientId) : null;
+      setFormData(existing ? { ...existing, student_name: '' } : emptyDirective);
     } catch (err: unknown) {
       secureLogger.error('Error loading advanced directive:', err);
       setError(err instanceof Error ? err.message : 'Failed to load advanced directive');
@@ -52,7 +57,7 @@ interface AdvancedDirectivesFormProps {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAdvancedDirective();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId]);
+  }, [patientId, canEditCharted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

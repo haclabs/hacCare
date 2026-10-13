@@ -214,55 +214,18 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
 };
 
 /**
- * Update an existing assessment
+ * Overwrite a saved nursing assessment's form data (stored as JSON in patient_notes.content)
  */
-export const updateAssessment = async (assessmentId: string, updates: Partial<PatientAssessment>): Promise<PatientAssessment> => {
-  try {
-    secureLogger.debug('Updating assessment note:', assessmentId, updates);
-    
-    // Create updated note content
-    let noteContent = `Assessment Type: ${updates.assessment_type || 'Physical'}\n\n`;
-    if (updates.assessment_notes) noteContent += `Assessment Notes: ${updates.assessment_notes}\n`;
-    if (updates.recommendations) noteContent += `Recommendations: ${updates.recommendations}\n`;
-    noteContent += `Priority: ${updates.priority_level || 'routine'}\n`;
-    noteContent += `Follow-up Required: ${updates.follow_up_required ? 'Yes' : 'No'}`;
+export const updateAssessmentFormData = async (assessmentId: string, formData: Record<string, unknown>): Promise<void> => {
+  const { error } = await supabase
+    .from('patient_notes')
+    .update({ content: JSON.stringify(formData) })
+    .eq('id', assessmentId)
+    .eq('type', 'Assessment');
 
-    const { data, error } = await supabase
-      .from('patient_notes')
-      .update({
-        content: noteContent,
-        priority: updates.priority_level === 'critical' ? 'Critical' : 
-                 updates.priority_level === 'urgent' ? 'High' : 'Medium'
-      })
-      .eq('id', assessmentId)
-      .select()
-      .single();
-
-    if (error) {
-      secureLogger.error('Error updating assessment note:', error);
-      throw new Error(`Failed to update assessment: ${error.message}`);
-    }
-
-    // Convert back to assessment format
-    const updatedAssessment: PatientAssessment = {
-      id: data.id,
-      patient_id: data.patient_id,
-      nurse_id: data.nurse_id,
-      nurse_name: data.nurse_name,
-      assessment_type: updates.assessment_type || 'physical',
-      assessment_date: data.created_at,
-      assessment_notes: updates.assessment_notes || '',
-      recommendations: updates.recommendations,
-      follow_up_required: updates.follow_up_required || false,
-      priority_level: updates.priority_level || 'routine',
-      created_at: data.created_at
-    };
-
-    secureLogger.debug('Assessment updated successfully:', updatedAssessment);
-    return updatedAssessment;
-  } catch (error: unknown) {
-    secureLogger.error('Error updating assessment:', error);
-    throw new Error(`Failed to update assessment: ${getErrorMessage(error) || 'Unknown error'}`);
+  if (error) {
+    secureLogger.error('Error updating assessment note:', error);
+    throw new Error(`Failed to update assessment: ${error.message}`);
   }
 };
 
