@@ -9,13 +9,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Clipboard, Stethoscope, User, Save, CheckCircle, X } from 'lucide-react';
+import { FileText, Clipboard, Stethoscope, User, Save, CheckCircle, X, Pencil } from 'lucide-react';
 import { DynamicForm } from '../../../components/forms/DynamicForm';
 import { schemaEngine } from '../../../lib/infrastructure/schemaEngine';
 import { nursingAssessmentSchema, admissionAssessmentSchema, bowelAssessmentSchema } from '../../../schemas/formsSchemas';
 import { Patient } from '../../../types';
 import { FormData, ValidationResult, FormGenerationContext } from '../../../types/schema';
-import { fetchPatientAssessments } from '../../../services/patient/assessmentService';
+import { fetchPatientAssessments, updateAssessmentFormData } from '../../../services/patient/assessmentService';
+import { fetchAdmissionRecord } from '../../../services/patient/admissionService';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface FormsModuleProps {
@@ -30,6 +31,9 @@ interface FormsModuleProps {
 
 type FormsView = 'nursing-assessment' | 'admission-assessment' | 'bowel-assessment' | 'custom-forms' | 'history';
 
+// Students (nurse role) always chart from a blank form; staff can review/correct what's on file.
+const STAFF_ROLES = ['instructor', 'admin', 'coordinator', 'super_admin'];
+
 export const FormsModule: React.FC<FormsModuleProps> = ({
   patient,
   onAssessmentSave,
@@ -42,6 +46,29 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
   const [schemasRegistered, setSchemasRegistered] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [openedAssessment, setOpenedAssessment] = useState<{ id: string; data: FormData; submittedAt: string; mode: 'view' | 'edit' } | null>(null);
+  const [admissionPrefill, setAdmissionPrefill] = useState<FormData | null>(null);
+  const canEditCharted = STAFF_ROLES.includes(currentUser?.role || '');
+
+  useEffect(() => {
+    if (!canEditCharted) return;
+    fetchAdmissionRecord(patient.id)
+      .then(record => {
+        if (!record) return;
+        setAdmissionPrefill({
+          admissionType: record.admission_type,
+          chiefComplaint: record.chief_complaint,
+          medicalHistory: record.medical_history,
+          surgicalHistory: record.surgical_history,
+          currentLivingArrangements: record.current_living_arrangements,
+          attendingPhysician: record.attending_physician,
+          emergencyContactName: record.secondary_contact_name,
+          emergencyContactRelationship: record.secondary_contact_relationship,
+          emergencyContactPhone: record.secondary_contact_phone,
+        });
+      })
+      .catch(error => secureLogger.error('Error loading admission record for prefill:', error));
+  }, [patient.id, canEditCharted]);
 
   // Register schemas immediately on component mount
   useEffect(() => {
@@ -128,6 +155,16 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
 
     setIsLoading(true);
     try {
+      if (activeView === 'nursing-assessment' && openedAssessment?.mode === 'edit') {
+        await updateAssessmentFormData(openedAssessment.id, data);
+        setCompletedAssessments(prev => prev.map(a => (a.id === openedAssessment.id ? { ...a, data } : a)));
+        setOpenedAssessment(null);
+        setSuccessMessage('Nursing Assessment updated.');
+        setShowSuccessBanner(true);
+        setTimeout(() => setShowSuccessBanner(false), 3000);
+        return;
+      }
+
       const assessment = {
         // eslint-disable-next-line react-hooks/purity
         id: `assessment-${Date.now()}`,  
@@ -155,6 +192,7 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
       secureLogger.debug('Assessment saved successfully');
     } catch (error) {
       secureLogger.error('Error saving assessment:', error);
+      alert(error instanceof Error ? error.message : 'Failed to save assessment');
     } finally {
       setIsLoading(false);
     }
@@ -231,7 +269,10 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
           return (
             <button
               key={formType.id}
-              onClick={() => setActiveView(formType.id as FormsView)}
+              onClick={() => {
+                setOpenedAssessment(null);
+                setActiveView(formType.id as FormsView);
+              }}
               className={`p-6 rounded-lg border-2 text-left transition-all ${
                 isActive
                   ? 'border-blue-500 bg-blue-50'
@@ -254,6 +295,11 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
         })}
       </div>
     );
+  };
+
+  const openAssessment = (assessment: { id: string; data: FormData; submittedAt: string }, mode: 'view' | 'edit') => {
+    setOpenedAssessment({ id: assessment.id, data: assessment.data, submittedAt: assessment.submittedAt, mode });
+    setActiveView('nursing-assessment');
   };
 
   // Render assessment history
@@ -289,12 +335,21 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  <button
+                    onClick={() => openAssessment(assessment, 'view')}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
                     View
                   </button>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
-                    Print
-                  </button>
+                  {canEditCharted && (
+                    <button
+                      onClick={() => openAssessment(assessment, 'edit')}
+                      className="px-4 py-2 border border-blue-300 rounded-lg text-blue-700 hover:bg-blue-50 flex items-center gap-1"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -351,7 +406,10 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
         {/* View Toggle */}
         <div className="flex space-x-2">
           <button
-            onClick={() => setActiveView('nursing-assessment')}
+            onClick={() => {
+              setOpenedAssessment(null);
+              setActiveView('nursing-assessment');
+            }}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeView.includes('assessment')
                 ? 'bg-blue-600 text-white'
@@ -403,18 +461,37 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
             {activeView === 'nursing-assessment' && (
               <>
                 <h3 className="text-lg font-medium text-gray-900 mb-6">Comprehensive Nursing Assessment</h3>
+                {openedAssessment && (
+                  <div className="mb-6 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                    <span>
+                      {openedAssessment.mode === 'edit' ? 'Editing' : 'Viewing'} assessment from{' '}
+                      {new Date(openedAssessment.submittedAt).toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setOpenedAssessment(null);
+                        setActiveView('history');
+                      }}
+                      className="font-medium hover:underline"
+                    >
+                      {openedAssessment.mode === 'edit' ? 'Cancel' : 'Close'}
+                    </button>
+                  </div>
+                )}
                 {schemasRegistered ? (
                   <DynamicForm
+                    key={openedAssessment ? `${openedAssessment.mode}-${openedAssessment.id}` : 'new'}
                     schemaId="nursing-assessment-v1"
-                    initialData={{
+                    initialData={openedAssessment?.data ?? {
                       patientId: patient.patient_id,
                       nurseName: currentUser?.name || '',
                       assessmentDate: new Date().toISOString().slice(0, 16)
                     }}
+                    readOnly={openedAssessment?.mode === 'view'}
                     context={generateFormContext()}
                     onSubmit={handleAssessmentSubmission}
-                    onChange={handleFormAutoSave}
-                    autoSave={true}
+                    onChange={openedAssessment ? undefined : handleFormAutoSave}
+                    autoSave={!openedAssessment}
                     autoSaveInterval={60000} // Auto-save every minute
                     className="max-w-none"
                   />
@@ -434,8 +511,10 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
                 <h3 className="text-lg font-medium text-gray-900 mb-6">Patient Admission Assessment</h3>
                 {schemasRegistered ? (
                   <DynamicForm
+                    key={admissionPrefill ? 'admission-prefilled' : 'admission-new'}
                     schemaId="admission-assessment-v1"
                     initialData={{
+                      ...admissionPrefill,
                       patientId: patient.patient_id,
                       admissionDate: new Date().toISOString().slice(0, 16)
                     }}
