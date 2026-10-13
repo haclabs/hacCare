@@ -69,17 +69,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fails the build on high or critical advisories. There are currently
-      # zero vulnerabilities at any severity, so this blocks regressions
-      # rather than existing debt. The step this replaced only ever printed
-      # a ::warning:: and could never fail, which made a required check
-      # that always passed.
+      # Fails the build on high or critical advisories. The step this replaced
+      # only ever printed a ::warning:: and could never fail, which made a
+      # required check that always passed.
+      #
+      # --omit=dev: scoped to production deps only. ts-prune (dead-code-
+      # detection devDependency) pulls in a braces/micromatch/fast-glob chain
+      # with an unfixed advisory (GHSA-vfj7-8cjw-p6xm, stack-exhaustion DoS) --
+      # no patched braces release exists above 3.0.3, so a full-tree audit
+      # fails permanently on a package that never ships to production.
       - name: Run security audit
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
   snyk:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
+    # Dependabot PR runs don't get repository secrets (SNYK_TOKEN), so this
+    # job can only ever fail auth (SNYK-0005) on those runs -- not a real
+    # finding. Skip rather than report a false failure; human PRs still run it.
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
       security-events: write  # Required to upload SARIF results to GitHub Security tab
