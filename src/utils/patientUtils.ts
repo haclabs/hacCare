@@ -73,7 +73,8 @@ export const formatDOB = (dateOfBirth: string): string => {
  */
 export const calculateAge = (dateOfBirth: string): number => {
   const today = new Date();
-  const birthDate = new Date(dateOfBirth);
+  // parseISO reads a date-only string as local midnight; new Date() would read it as UTC
+  const birthDate = parseISO(dateOfBirth);
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
   

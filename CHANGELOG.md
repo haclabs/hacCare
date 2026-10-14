@@ -7,6 +7,39 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-14 - DATE OF BIRTH OFF BY ONE DAY
+===============================================================================
+
+* Fixed date of birth showing one day early on the BCMA screens
+  - A DOB stored as 1963-08-01 displayed as July 31, 1963 during medication
+    administration. new Date('YYYY-MM-DD') parses as UTC midnight, which is
+    the previous evening anywhere west of Greenwich (Alberta included)
+  - Same fix in the Date of Birth field on the patient detail tabs
+  - Files: BCMAAdministration.tsx, BCMAVerification.tsx, PatientDetailTabs.tsx
+
+* Fixed ages counting a birthday one day early
+  - calculateAge and calculatePreciseAge now parse with date-fns parseISO,
+    which reads a date-only string as local midnight. calculatePreciseAge
+    drives vital-sign age bands, so newborns could land in the wrong band
+  - PatientDetailTabs showed age as a bare year subtraction, ignoring month
+    and day entirely; it now uses calculateAge
+  - The "DOB in the future" check in PatientForm used the same parsing
+  - The printed patient record had both bugs (DOB a day early, age by year
+    subtraction); it now uses formatDOB and calculateAge
+  - Files: patientUtils.ts, vitalRanges.ts, PatientForm.tsx,
+    patientRecordPrinter.ts
+
+* Removed duplicate and dead date helpers
+  - Five private copies of calculateAge (PatientOverview, FormsModule,
+    PatientManagement, PatientCard, bulkLabelService) all carried the bug;
+    the components now use the shared one from patientUtils
+  - Deleted unused bulkLabelService exports: calculateAge,
+    formatDateForLabel, formatPatientNameForLabel; and unused formatAge
+    in formatters.ts
+  - Added patientUtils.test.ts, pinned to America/Edmonton so it fails on
+    the old parsing even though CI runs in UTC
+
+===============================================================================
 [Unreleased] - 2026-09-22 - TENANT ISOLATION SECURITY FIX
 ===============================================================================
 

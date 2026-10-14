@@ -221,22 +221,3 @@ export function formatTime(time24: string): string {
   
   return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
-
-/**
- * Format age from birthdate
- * @param birthDate - Birth date string or Date object
- * @returns Formatted age string
- */
-export function formatAge(birthDate: string | Date): string {
-  const birth = typeof birthDate === 'string' ? new Date(birthDate) : birthDate;
-  const today = new Date();
-  
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  
-  return `${age} years old`;
-}

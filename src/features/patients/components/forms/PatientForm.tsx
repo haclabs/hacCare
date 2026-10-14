@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, MapPin, Phone, AlertTriangle, Save } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { parseISO } from 'date-fns';
 import { Patient } from '../../../../types';
 import { generateSecurePatientId } from '../../../../utils/secureRandom';
 import { PATIENT_AVATARS, getRandomAvatarId } from '../../../../data/patientAvatars';
@@ -114,7 +115,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ patient, onClose, onSa
 
     // Date validation
     if (formData.date_of_birth) {
-      const birthDate = new Date(formData.date_of_birth);
+      const birthDate = parseISO(formData.date_of_birth);
       const today = new Date();
       if (birthDate > today) {
         newErrors.date_of_birth = 'Date of birth cannot be in the future';

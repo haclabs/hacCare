@@ -16,6 +16,7 @@ import type { LabPanel, LabResult } from '../features/patients/types/labs';
 import type { Patient } from '../types';
 import { secureLogger } from '../lib/security/secureLogger';
 import { escapeHtml as e } from './sanitization';
+import { calculateAge, formatDOB } from './patientUtils';
 // Embedded rather than "/images/logo.svg": the report loads from a blob: URL,
 // where root-relative paths don't resolve to the app origin.
 import { HACCARE_LOGO_BASE64 } from './logoBase64';
@@ -148,7 +149,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
             </div>
 
             <div class="patient-id-bar">
-              PATIENT: ${e(patient.first_name?.toUpperCase())} ${e(patient.last_name?.toUpperCase())} | ID: ${e(patient.patient_id)} | DOB: ${e(new Date(patient.date_of_birth).toLocaleDateString())}
+              PATIENT: ${e(patient.first_name?.toUpperCase())} ${e(patient.last_name?.toUpperCase())} | ID: ${e(patient.patient_id)} | DOB: ${e(formatDOB(patient.date_of_birth))}
             </div>
 
             <div class="form-section">
@@ -158,8 +159,8 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                   <div>
                     <div class="info-row"><span class="info-label">Last Name:</span><span class="info-value">${e(patient.last_name)}</span></div>
                     <div class="info-row"><span class="info-label">First Name:</span><span class="info-value">${e(patient.first_name)}</span></div>
-                    <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${e(new Date(patient.date_of_birth).toLocaleDateString())}</span></div>
-                    <div class="info-row"><span class="info-label">Age:</span><span class="info-value">${new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} years</span></div>
+                    <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${e(formatDOB(patient.date_of_birth))}</span></div>
+                    <div class="info-row"><span class="info-label">Age:</span><span class="info-value">${calculateAge(patient.date_of_birth)} years</span></div>
                   </div>
                   <div>
                     <div class="info-row"><span class="info-label">Gender:</span><span class="info-value">${e(patient.gender)}</span></div>

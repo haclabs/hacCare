@@ -7,6 +7,8 @@
  * Based on pediatric clinical standards for simulated EMR education.
  */
 
+import { parseISO } from 'date-fns';
+
 /**
  * Age band categories for vital signs reference
  */
@@ -62,7 +64,8 @@ export interface AgeBandVitalRanges {
  */
 export function calculatePreciseAge(dateOfBirth: string): PatientAge {
   const today = new Date();
-  const birthDate = new Date(dateOfBirth);
+  // parseISO reads a date-only string as local midnight; new Date() would read it as UTC
+  const birthDate = parseISO(dateOfBirth);
   
   // Calculate total days
   const timeDiff = today.getTime() - birthDate.getTime();

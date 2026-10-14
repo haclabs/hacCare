@@ -18,6 +18,7 @@ import { FormData, ValidationResult, FormGenerationContext } from '../../../type
 import { fetchPatientAssessments, updateAssessmentFormData } from '../../../services/patient/assessmentService';
 import { fetchAdmissionRecord } from '../../../services/patient/admissionService';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { calculateAge } from '../../../utils/patientUtils';
 
 interface FormsModuleProps {
   patient: Patient;
@@ -215,20 +216,6 @@ export const FormsModule: React.FC<FormsModuleProps> = ({
       );
       return [draftAssessment, ...filtered];
     });
-  };
-
-  // Calculate age from birth date
-  const calculateAge = (birthDate: string): number => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    
-    return age;
   };
 
   // Get available form types
