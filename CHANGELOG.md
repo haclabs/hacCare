@@ -7,6 +7,24 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-14 - INSTRUCTORS CAN EDIT/DELETE TEMPLATE MEDICATIONS
+===============================================================================
+
+* Instructors can now edit and delete medications while editing a template
+  - The MAR showed Edit/Delete only to admin and super_admin, so an
+    instructor building a template could add a medication but never remove
+    or correct it. RLS already permitted it (tenant membership is granted by
+    ensure_tenant_access on entering the template)
+  - Instructors get the buttons in simulation_template and patient_template
+    tenants only; live simulations and production stay admin-only
+  - Coordinators now get them everywhere, like admins (they rank above admin)
+  - Files: MedicationAdministrationGrid.tsx, medicationPermissions.ts (+ test)
+
+* Removed unused records/MedicationAdministration.tsx
+  - Not imported anywhere; carried a stale admin-only check and a leftover
+    yellow "Debug Info" box
+
+===============================================================================
 [Unreleased] - 2026-10-14 - DATE OF BIRTH OFF BY ONE DAY
 ===============================================================================
 

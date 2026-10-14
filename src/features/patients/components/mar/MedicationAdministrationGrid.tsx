@@ -13,6 +13,8 @@ import {
 
 import type { Patient, Medication } from '../../../../types';
 import { deleteMedication } from '../../../../services/clinical/medicationService';
+import { useTenant } from '../../../../contexts/TenantContext';
+import { canManageMedicationOrders } from './medicationPermissions';
 import { formatLocalTime } from '../../../../utils/time';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -85,11 +87,14 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const isAdmin =
-    currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin');
+  const { currentTenant } = useTenant();
+  const isTemplateTenant =
+    currentTenant?.tenant_type === 'simulation_template' ||
+    currentTenant?.tenant_type === 'patient_template';
+  const canManageMedications = canManageMedicationOrders(currentUser?.role, isTemplateTenant);
 
   const handleDelete = async (medicationId: string) => {
-    if (!isAdmin) {
+    if (!canManageMedications) {
       alert('You do not have permission to delete medications');
       return;
     }
@@ -223,7 +228,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                 <span>{category === 'prn' ? 'Give PRN' : 'Administer'}</span>
               </button>
 
-              {isAdmin && (
+              {canManageMedications && (
                 <>
                   <button
                     onClick={(e) => {
