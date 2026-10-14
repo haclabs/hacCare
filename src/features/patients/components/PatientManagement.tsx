@@ -12,7 +12,7 @@ import PatientTransferModal from './PatientTransferModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { getTenantsForSwitching } from '../../../services/admin/tenantService';
 import { useTenant } from '../../../contexts/TenantContext';
-import { formatRoomBed } from '../../../utils/patientUtils';
+import { calculateAge, formatRoomBed } from '../../../utils/patientUtils';
 
 /**
  * Patient Management Component
@@ -262,26 +262,6 @@ export const PatientManagement: React.FC = () => {
       case 'Discharged': return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
       default: return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
     }
-  };
-
-  /**
-   * Calculate patient age
-   * @param {string} dateOfBirth - Patient's date of birth
-   * @returns {number} Age in years
-   */
-  const calculateAge = (dateOfBirth: string) => {
-    if (!dateOfBirth) return 'N/A';
-    
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
   };
 
   /**
@@ -579,7 +559,7 @@ export const PatientManagement: React.FC = () => {
                             {patient.first_name} {patient.last_name}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {patient.patient_id} • {calculateAge(patient.date_of_birth)} years • {patient.gender}
+                            {patient.patient_id} • {patient.date_of_birth ? calculateAge(patient.date_of_birth) : 'N/A'} years • {patient.gender}
                           </div>
                           {patient.allergies && patient.allergies.length > 0 && (
                             <div className="flex items-center mt-1">

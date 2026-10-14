@@ -197,7 +197,7 @@ export const BCMAVerification: React.FC<BCMAVerificationProps> = ({
                 {patient.first_name} {patient.last_name}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                DOB: {formatLocalTime(new Date(patient.date_of_birth), 'dd MMM yyyy')}
+                DOB: {formatLocalTime(patient.date_of_birth, 'dd MMM yyyy')}
               </p>
               
               {/* Medication Details */}

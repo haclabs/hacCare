@@ -420,7 +420,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 </div>
                 <div>
                   <p className="font-bold text-slate-900 leading-tight">{patient.first_name} {patient.last_name}</p>
-                  <p className="text-xs text-slate-500">DOB: {new Date(patient.date_of_birth).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
+                  <p className="text-xs text-slate-500">DOB: {new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
                   <p className="text-xs text-slate-400">ID: {patient.patient_id}</p>
                 </div>
               </div>

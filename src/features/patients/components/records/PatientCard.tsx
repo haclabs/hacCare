@@ -1,9 +1,9 @@
 import React from 'react';
 import { Patient } from '../../../../types';
 import { User, MapPin, AlertTriangle, QrCode, Trash2, Pencil } from 'lucide-react';
-import { isValid } from 'date-fns';
+import { isValid, parseISO } from 'date-fns';
 import { getAvatarById } from '../../../../data/patientAvatars';
-import { formatRoomBed, formatDOB } from '../../../../utils/patientUtils';
+import { calculateAge, formatRoomBed, formatDOB } from '../../../../utils/patientUtils';
 
 /**
  * Patient Card Component
@@ -75,18 +75,9 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
     }
   };
 
-  // Calculate patient age with date validation
-  const birthDate = new Date(patient.date_of_birth);
-  const age = (() => {
-    if (!isValid(birthDate)) return 'N/A';
-    const today = new Date();
-    let years = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      years--;
-    }
-    return years;
-  })();
+  const age = patient.date_of_birth && isValid(parseISO(patient.date_of_birth))
+    ? calculateAge(patient.date_of_birth)
+    : 'N/A';
 
   return (
     <div 

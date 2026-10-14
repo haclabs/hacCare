@@ -18,6 +18,7 @@ import { ModernPatientManagement } from '../../../../components/ModernPatientMan
 import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { secureLogger } from '../../../../lib/security/secureLogger';
+import { calculateAge, formatDOB } from '../../../../utils/patientUtils';
 
 // ─── condition colour helpers (shared with overview panel) ────────────────────
 export const getConditionColor = (condition: Patient['condition']) => {
@@ -125,7 +126,7 @@ export const PatientDetailTabs: React.FC<PatientDetailTabsProps> = ({
                       {patient.first_name} {patient.last_name}
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center space-x-2 mt-1">
-                      <span>{new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} years old</span>
+                      <span>{calculateAge(patient.date_of_birth)} years old</span>
                       <span className="w-1 h-1 bg-gray-400 rounded-full" />
                       <span>{patient.gender}</span>
                     </p>
@@ -163,7 +164,7 @@ export const PatientDetailTabs: React.FC<PatientDetailTabsProps> = ({
                 <div className="space-y-3">
                   {[
                     ['Patient ID', patient.patient_id],
-                    ['Date of Birth', new Date(patient.date_of_birth).toLocaleDateString()],
+                    ['Date of Birth', formatDOB(patient.date_of_birth)],
                     ['Gender', patient.gender],
                     ['Blood Type', patient.blood_type],
                     ['Room', `${patient.room_number} - ${patient.bed_number}`],

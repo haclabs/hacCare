@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { getAvatarById } from '../../../data/patientAvatars';
 import { calculatePreciseAge } from '../../../utils/vitalRanges';
-import { formatDOB } from '../../../utils/patientUtils';
+import { calculateAge, formatDOB } from '../../../utils/patientUtils';
 import type { Patient } from '../../../types';
 
 type ActiveModule =
@@ -66,15 +66,6 @@ const AGE_BAND_LABELS: Record<string, string> = {
   ADOLESCENT: 'Adolescent (13-18 years)',
   ADULT: 'Adult (18+ years)',
 };
-
-function calculateAge(birthDate: string): number {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
-  return age;
-}
 
 export const PatientOverview: React.FC<PatientOverviewProps> = ({
   patient,
