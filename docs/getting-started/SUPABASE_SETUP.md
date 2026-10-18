@@ -195,7 +195,6 @@ WHERE table_schema = 'public';
 - `launch_simulation` - Start simulations
 - `save_template_snapshot` - Save simulation state
 - `restore_snapshot_to_tenant` - Restore simulation
-- `duplicate_patient_to_tenant_enhanced` - Patient transfer
 - `current_user_is_super_admin` - Admin check
 - `user_has_patient_access` - Access verification
 - And more...

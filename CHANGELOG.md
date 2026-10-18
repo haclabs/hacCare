@@ -7,6 +7,26 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-18 - REMOVED LEGACY PATIENT TRANSFER
+===============================================================================
+
+* Removed the "Transfer Patient" button from Patient Management
+  - Copied a patient into another tenant. Superseded by patient templates,
+    which instructors now use instead
+  - Its copy function used a hardcoded column list, so it silently dropped
+    any column added after it was written (e.g. admission history, order
+    release delays)
+  - Deleted PatientTransferModal.tsx, patientTransferService.ts, and the
+    already-unused PatientTransferActions.tsx and usePatientTransfer.ts
+  - Migration 20261018000001_drop_patient_transfer.sql drops
+    duplicate_patient_to_tenant and get_available_tenants_for_transfer.
+    Verified against the live DB that nothing else references them. This
+    also closes the follow-up from the 2026-09-07 security relock, which left
+    get_available_tenants_for_transfer callable pending a permission check
+  - Removed transfer steps from docs/database/ADDING_PATIENT_FEATURES.md and
+    PATIENT_TABLES_REFERENCE.md
+
+===============================================================================
 [Unreleased] - 2026-10-14 - INSTRUCTORS CAN EDIT/DELETE TEMPLATE MEDICATIONS
 ===============================================================================
 
