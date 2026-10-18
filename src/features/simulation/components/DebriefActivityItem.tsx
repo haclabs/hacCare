@@ -44,6 +44,12 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                 </p>
               </div>
             </div>
+            {item.glucose_reading != null && (
+              <p className="mt-1.5 text-xs text-orange-800 bg-orange-50 border border-orange-200 rounded px-2 py-1 w-fit">
+                🩸 Glucose {Number(item.glucose_reading).toFixed(1)} mmol/L
+                {item.sliding_scale_dose && <> → sliding scale: <span className="font-bold">{item.sliding_scale_dose}</span></>}
+              </p>
+            )}
             <div className="mt-1 flex flex-col space-y-1">
               {item.barcode_scanned ? (
                 <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded inline-block w-fit">✓ BCMA Compliant</span>

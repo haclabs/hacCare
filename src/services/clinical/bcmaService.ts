@@ -286,7 +286,8 @@ class BCMAService {
     overrideReason?: string,
     witnessName?: string,
     administeredDose?: string,
-    dryRun: boolean = false
+    dryRun: boolean = false,
+    glucose?: { reading: number; scaleDose?: string }
   ): Promise<AdministrationLog> {
     secureLogger.debug('🔵 BCMA: Creating administration record in database...');
     
@@ -322,6 +323,8 @@ class BCMAService {
         notes: notes ? `BCMA Administration. ${notes}` : 'BCMA Administration',
         dosage: medication.dosage, // Label concentration (e.g., "500mg/2mL")
         administered_dose: administeredDose || undefined, // Student-calculated dose (e.g., "2 mL")
+        glucose_reading: glucose?.reading,
+        sliding_scale_dose: glucose?.scaleDose,
         route: medication.route,
         status: 'completed',
         medication_name: medication.name,
