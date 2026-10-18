@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Trash2, CheckCircle, Printer, FileText } from 'lucide-react';
+import { Play, RotateCcw, Trash2, CheckCircle, Printer, FileText } from 'lucide-react';
 
 export const SimulationInstructorGuide: React.FC = () => {
   return (
@@ -54,8 +54,8 @@ export const SimulationInstructorGuide: React.FC = () => {
             </div>
           </div>
 
-          {/* Start/Pause */}
-          <div className="bg-gradient-to-r from-green-50 to-yellow-50 dark:from-green-900/20 dark:to-yellow-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4">
+          {/* Start */}
+          <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-4">
             <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2">
               <div className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">2</div>
               <Play className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -66,10 +66,6 @@ export const SimulationInstructorGuide: React.FC = () => {
               <li className="flex items-start gap-2">
                 <Play className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
                 <span><strong>Play:</strong> Starts timer and enables student access</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Pause className="h-3 w-3 text-yellow-600 mt-1 flex-shrink-0" />
-                <span><strong>Pause:</strong> Freezes timer if needed</span>
               </li>
             </ul>
           </div>

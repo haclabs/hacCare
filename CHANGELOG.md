@@ -7,6 +7,23 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-18 - REMOVED SIMULATION PAUSE
+===============================================================================
+
+* Removed the Pause button from Active Simulations
+  - Pause only set status = 'paused' (hiding the sim from students); it never
+    froze the timer, since ends_at kept counting down. Removing it makes
+    "minutes since Play" unambiguous, which upcoming timed doctors' orders
+    rely on
+  - Any rows already paused still list, and Play returns them to running
+    without changing starts_at. The 'paused' enum value is left in the
+    database
+  - Removed the unreachable "restart completed simulation" branch of
+    handleResume (renamed handleStart); every caller passed isCompleted=false
+  - Files: useActiveSimulations.ts, ActiveSimulations.tsx, SimulationCard.tsx,
+    SimulationInstructorGuide.tsx, SimulationStatusSummary.tsx, docs
+
+===============================================================================
 [Unreleased] - 2026-10-14 - INSTRUCTORS CAN EDIT/DELETE TEMPLATE MEDICATIONS
 ===============================================================================
 

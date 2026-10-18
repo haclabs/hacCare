@@ -115,7 +115,7 @@ While students work, you can monitor their progress from the Active tab.
 
 - Time remaining in session
 - Number of participants
-- Current status (Running, Paused, Expired)
+- Current status (Pending, Running, Expired)
 - Quick actions: Complete, Reset, or Terminate
 
 ### Timer Behavior:

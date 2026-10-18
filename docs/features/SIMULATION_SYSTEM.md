@@ -131,7 +131,7 @@ Template definitions with baseline snapshots.
 Currently running simulations.
 - `tenant_id` - Simulation's isolated data space
 - `template_id` - Which template it's based on
-- `status` - running, paused, completed
+- `status` - pending, running, completed (`paused` is legacy; pausing was removed)
 
 ### `simulation_history`
 Completed simulations with student work.
@@ -320,9 +320,9 @@ WHERE id = p_simulation_id;
 #### 2. Component Updates: `ActiveSimulations.tsx`
 Add status indicators and update button logic:
 - **Reset button**: Only show if status is 'completed', 'running', or 'paused'
-- **Play button**: Only show if status is 'pending' or 'paused'
+- **Play button**: Only show if status is not 'running' (pause was removed in 2026-10)
 - **Complete button**: Only show if status is 'running' or 'paused'
-- Remove auto-add instructor logic from handleResume function
+- Remove auto-add instructor logic from handleStart (formerly handleResume)
 
 #### 3. Status Visual Indicators
 ```tsx

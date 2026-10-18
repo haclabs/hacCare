@@ -64,56 +64,35 @@ export function useActiveSimulations() {
     return () => clearInterval(interval);
   }, []);
 
-  const handlePause = async (id: string) => {
+  const handleStart = async (id: string) => {
     setActionLoading(id);
     try {
-      await updateSimulationStatus(id, 'paused');
+      const sim = simulations.find(s => s.id === id);
+
+      if (sim?.status === 'pending') {
+        const now = new Date();
+        const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
+
+        const { error } = await supabase
+          .from('simulation_active')
+          .update({
+            status: 'running',
+            starts_at: now.toISOString(),
+            ends_at: endsAt.toISOString()
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+      } else {
+        // Pause was removed, but rows paused before then still exist. Play returns them to
+        // running without touching starts_at, so elapsed time is unaffected.
+        await updateSimulationStatus(id, 'running');
+      }
+
       await loadSimulations();
     } catch (error) {
-      secureLogger.error('Error pausing simulation:', error);
-      alert('Failed to pause simulation');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleResume = async (id: string, isCompleted: boolean = false) => {
-    secureLogger.debug('🎯 handleResume called:', { id, isCompleted });
-    setActionLoading(id);
-    try {
-      if (isCompleted) {
-        const result = await resetSimulationForNextSession(id);
-        secureLogger.debug('✅ Simulation reset and restarted:', result);
-        alert('Simulation restarted with fresh timer! Reloading data...');
-        await loadSimulations();
-      } else {
-        const sim = simulations.find(s => s.id === id);
-
-        if (sim?.status === 'pending') {
-          secureLogger.debug('▶️ Starting pending simulation with timer...');
-          const now = new Date();
-          const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
-
-          const { error } = await supabase
-            .from('simulation_active')
-            .update({
-              status: 'running',
-              starts_at: now.toISOString(),
-              ends_at: endsAt.toISOString()
-            })
-            .eq('id', id);
-
-          if (error) throw error;
-        } else {
-          secureLogger.debug('▶️ Resuming paused simulation...');
-          await updateSimulationStatus(id, 'running');
-        }
-
-        await loadSimulations();
-      }
-    } catch (error) {
-      secureLogger.error('❌ Error resuming simulation:', error);
-      alert('Failed to resume simulation: ' + (error instanceof Error ? error.message : String(error)));
+      secureLogger.error('❌ Error starting simulation:', error);
+      alert('Failed to start simulation: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setActionLoading(null);
     }
@@ -520,8 +499,7 @@ export function useActiveSimulations() {
     pendingCompletion, setPendingCompletion,
     versionComparisonModal, setVersionComparisonModal,
     completionSummary, setCompletionSummary,
-    handlePause,
-    handleResume,
+    handleStart,
     handleReset,
     confirmReset,
     handleViewTemplateChanges,
