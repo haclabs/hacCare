@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, formatDOB, SimulationParticipant } from './labelPrintingUtils';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
-import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, medicationNameHtml } from '../../../services/operations/bulkLabelService';
 interface AllLabelsModalProps {
   patients: PatientLabelData[];
   medicationItems: BarcodeLabelItem[];
@@ -199,6 +199,15 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               text-overflow: ellipsis;
               max-width: 1.75in;
             }
+            .medication-label .med-brand {
+              font-size: 10px;
+              font-weight: 700;
+              color: #374151;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 1.75in;
+            }
             .medication-label .dose-line { display: flex; flex-direction: column; align-items: flex-start; margin-top: 2px; }
             .medication-label .dose-value { font-size: 17px; font-weight: 800; color: #14776a; line-height: 1; }
             .medication-label .dose-form { font-size: 8px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
@@ -304,7 +313,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
               
               return `
               <div class="label medication-label" style="left: ${leftPos}; top: ${topPos}; border-left-color: ${MEDICATION_LABEL_ACCENT_COLOR};">
-                <div class="med-name">${item.name}</div>
+                ${medicationNameHtml(item.name, 'med-name', 'med-brand')}
                 <div class="dose-line">
                   <span class="dose-value">${splitMedicationSubtitle(item.subtitle).dose}</span>
                   <span class="dose-form">${splitMedicationSubtitle(item.subtitle).form}</span>
