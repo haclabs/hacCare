@@ -2,6 +2,11 @@
 
 This guide ensures new patient-related features are properly integrated across all system functions.
 
+> **Current checklist:** the authoritative steps for a new `patient_*` table are the four wirings in
+> [CLAUDE.md](../../CLAUDE.md#two-rules-that-cause-silent-data-bugs) (reset functions, `simulation_table_config`,
+> `studentActivityService.ts`, `EnhancedDebriefModal.tsx`). Snapshot save/restore is now table-driven, so
+> parts of Steps 2-3 below describe the older hand-written approach.
+
 ## When Adding a New Patient Table
 
 ### Step 1: Create the Table
@@ -39,49 +44,7 @@ CREATE POLICY "new_patient_feature_tenant_access" ON new_patient_feature
   );
 ```
 
-### Step 2: Update duplicate_patient_to_tenant
-Location: `database/functions/duplicate_patient_to_tenant_enhanced.sql`
-
-Add parameter:
-```sql
-p_include_new_feature BOOLEAN DEFAULT TRUE,
-```
-
-Add counter:
-```sql
-v_new_feature_count INTEGER := 0;
-```
-
-Add copy logic:
-```sql
--- Copy new_patient_feature
-IF p_include_new_feature THEN
-  INSERT INTO new_patient_feature (
-    patient_id,
-    tenant_id,
-    -- your columns
-  )
-  SELECT
-    v_new_patient_uuid,
-    p_target_tenant_id,
-    -- your columns
-  FROM new_patient_feature
-  WHERE patient_id::text = v_source_patient_uuid::text;
-  
-  GET DIAGNOSTICS v_new_feature_count = ROW_COUNT;
-  RAISE NOTICE 'Copied % new feature records', v_new_feature_count;
-END IF;
-```
-
-Add to results:
-```sql
-v_records_created := jsonb_build_object(
-  -- existing...
-  'new_feature', v_new_feature_count
-);
-```
-
-### Step 3: Update save_template_snapshot
+### Step 2: Update save_template_snapshot
 Location: `database/schema.sql` around line 4233
 
 Add to snapshot capture:
@@ -97,7 +60,7 @@ v_snapshot := jsonb_build_object(
   -- continue...
 ```
 
-### Step 4: Update restore_snapshot_to_tenant
+### Step 3: Update restore_snapshot_to_tenant
 Location: `database/schema.sql` around line 4368
 
 Add restore logic:
@@ -120,26 +83,19 @@ IF p_snapshot->'new_patient_feature' IS NOT NULL THEN
 END IF;
 ```
 
-### Step 5: Update PATIENT_TABLES_REFERENCE.md
+### Step 4: Update PATIENT_TABLES_REFERENCE.md
 Location: `docs/database/PATIENT_TABLES_REFERENCE.md`
 
 Add new section with:
 - Table name and purpose
 - Complete column list
 - Relationship description
-- Transfer/snapshot status
+- Snapshot status
 
 Update table count (currently 16).
 
-### Step 6: Test Everything
+### Step 5: Test Everything
 ```sql
--- Test patient transfer
-SELECT * FROM duplicate_patient_to_tenant(
-  p_source_patient_id := 'P001',
-  p_target_tenant_id := 'target-tenant-uuid',
-  p_include_new_feature := true
-);
-
 -- Test snapshot save
 SELECT save_template_snapshot('template-uuid');
 
@@ -160,11 +116,9 @@ SELECT * FROM new_patient_feature WHERE tenant_id = 'sim-tenant-uuid';
 - [ ] Table created with tenant_id column
 - [ ] Indexes on patient_id and tenant_id
 - [ ] RLS policies for tenant isolation
-- [ ] Added to duplicate_patient_to_tenant (with flag)
 - [ ] Added to save_template_snapshot (capture)
 - [ ] Added to restore_snapshot_to_tenant (restore)
 - [ ] Updated PATIENT_TABLES_REFERENCE.md
-- [ ] Tested patient transfer
 - [ ] Tested simulation snapshot/restore
 - [ ] Updated this checklist if needed
 

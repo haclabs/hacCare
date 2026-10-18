@@ -1,7 +1,6 @@
 # Patient Data Tables Reference
 
 This document maps all patient-related tables and their columns for use in:
-- Patient Transfer (duplicate_patient_to_tenant)
 - Simulation Snapshot (save_template_snapshot)
 - Simulation Restore (restore_snapshot_to_tenant)
 - Backup/Export Functions
@@ -56,7 +55,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many vitals records per patient
-TRANSFER: Yes (if p_include_vitals = true)
 
 ---
 
@@ -84,7 +82,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many medications per patient
-TRANSFER: Yes (if p_include_medications = true)
 NOTE: Generates new barcode via UUID for BCMA scanning
 
 ---
@@ -107,7 +104,6 @@ COLUMNS:
 - created_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many administrations per medication
-TRANSFER: Yes (if p_include_medications = true)
 
 ---
 
@@ -126,7 +122,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many notes per patient
-TRANSFER: Yes (if p_include_assessments = true)
 NOTE: Nursing assessments stored here with specific note_types
 
 ---
@@ -150,7 +145,6 @@ COLUMNS:
 - created_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many alerts per patient
-TRANSFER: Yes (if p_include_alerts = true)
 
 ---
 
@@ -173,7 +167,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many handover notes per patient
-TRANSFER: Yes (if p_include_handover_notes = true)
 
 ---
 
@@ -197,7 +190,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many orders per patient
-TRANSFER: Yes (if p_include_doctors_orders = true)
 
 ---
 
@@ -221,7 +213,6 @@ COLUMNS:
 - created_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many records per patient
-TRANSFER: Yes (if p_include_diabetic_records = true)
 
 ---
 
@@ -245,7 +236,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many records per patient
-TRANSFER: Yes (if p_include_bowel_records = true)
 
 ---
 
@@ -270,7 +260,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many wounds per patient
-TRANSFER: Yes (if p_include_wound_care = true)
 
 ---
 
@@ -298,7 +287,6 @@ COLUMNS:
 - created_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many assessments per wound
-TRANSFER: Yes (if p_include_wound_care = true)
 
 ---
 
@@ -320,7 +308,6 @@ COLUMNS:
 - created_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many treatments per wound
-TRANSFER: Yes (if p_include_wound_care = true)
 
 ---
 
@@ -354,7 +341,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: One admission record per patient
-TRANSFER: Yes (included in patient transfer)
 
 ---
 
@@ -378,7 +364,6 @@ COLUMNS:
 - updated_at (TIMESTAMPTZ)
 
 RELATIONSHIP: One directives record per patient
-TRANSFER: Yes (included in patient transfer)
 
 ---
 
@@ -397,7 +382,6 @@ COLUMNS:
 - created_at (TIMESTAMPTZ)
 
 RELATIONSHIP: Many images per patient
-TRANSFER: Optional (not currently included in standard transfer)
 NOTE: Requires file storage handling, not just database copy
 
 ---
@@ -424,45 +408,6 @@ patients (1)
 ```
 
 ## Functions That Use These Tables
-
-### duplicate_patient_to_tenant
-Copies patient and selected data types to another tenant
-
-PARAMETERS:
-- p_source_patient_id (TEXT): Source patient identifier
-- p_target_tenant_id (UUID): Destination tenant
-- p_new_patient_id (TEXT, optional): New patient ID
-- p_include_vitals (BOOLEAN): Copy vitals
-- p_include_medications (BOOLEAN): Copy medications
-- p_include_assessments (BOOLEAN): Copy notes/assessments
-- p_include_handover_notes (BOOLEAN): Copy SBAR notes
-- p_include_alerts (BOOLEAN): Copy alerts
-- p_include_diabetic_records (BOOLEAN): Copy glucose records
-- p_include_bowel_records (BOOLEAN): Copy bowel records
-- p_include_wound_care (BOOLEAN): Copy wounds/assessments/treatments
-- p_include_doctors_orders (BOOLEAN): Copy physician orders
-
-TABLES COPIED:
-1. patients (always)
-2. patient_vitals (if p_include_vitals)
-3. patient_medications (if p_include_medications)
-4. medication_administrations (if p_include_medications)
-5. patient_notes (if p_include_assessments)
-6. handover_notes (if p_include_handover_notes)
-7. patient_alerts (if p_include_alerts)
-8. diabetic_records (if p_include_diabetic_records)
-9. bowel_records (if p_include_bowel_records)
-10. patient_wounds (if p_include_wound_care)
-11. wound_assessments (if p_include_wound_care)
-12. wound_treatments (if p_include_wound_care)
-13. doctors_orders (if p_include_doctors_orders)
-14. patient_admission_records (always, if exists)
-15. patient_advanced_directives (always, if exists)
-
-NOT COPIED:
-- patient_images (requires file storage handling)
-
----
 
 ### save_template_snapshot
 Saves simulation state including all patient data
@@ -525,15 +470,6 @@ Barcodes auto-generate from UUIDs when labels printed:
 ---
 
 ## ✅ Function Coverage Status (Updated Oct 30, 2025)
-
-### duplicate_patient_to_tenant - ✅ COMPLETE
-**Location:** `database/functions/duplicate_patient_to_tenant_enhanced.sql`
-**Status:** All 15 tables implemented
-**Includes:**
-- All core tables (patients, vitals, medications, medication_administrations)
-- All assessment tables (notes, alerts, handover_notes, doctors_orders)
-- All specialized records (diabetic_records, bowel_records, wounds, wound_assessments, wound_treatments)
-- All administrative records (patient_admission_records, patient_advanced_directives)
 
 ### save_template_snapshot - ✅ COMPLETE
 **Location:** `database/schema.sql` line 4233

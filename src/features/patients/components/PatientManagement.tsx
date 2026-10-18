@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Users, Plus, Edit, Trash2, Search, Eye, 
-  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw, ArrowRightLeft, Building2
+  Calendar, MapPin, Heart, AlertTriangle, User, RefreshCw, Building2
 } from 'lucide-react';
 import { Patient } from '../../../types';
 import { usePatients, useCreatePatient, useUpdatePatient, useDeletePatient } from '../hooks/usePatients';
 import { PatientForm } from './forms/PatientForm';
-import PatientTransferModal from './PatientTransferModal';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { getTenantsForSwitching } from '../../../services/admin/tenantService';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -71,8 +70,6 @@ export const PatientManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [patientToTransfer, setPatientToTransfer] = useState<Patient | null>(null);
   const [filterCondition, setFilterCondition] = useState<string>('all');
   const [filterTenant, setFilterTenant] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'room' | 'admission' | 'condition'>('name');
@@ -222,30 +219,6 @@ export const PatientManagement: React.FC = () => {
       alert('Failed to save patient. Please try again.');
     } finally {
       setActionLoading(false);
-    }
-  };
-
-  /**
-   * Handle patient transfer
-   */
-  const handleTransferPatient = (patient: Patient) => {
-    setPatientToTransfer(patient);
-    setShowTransferModal(true);
-  };
-
-  /**
-   * Handle transfer completion
-   */
-  const handleTransferComplete = (success: boolean, message: string) => {
-    if (success) {
-      // Refresh the patient list to reflect changes
-      refreshPatients();
-      // You can also show a success toast notification here
-      secureLogger.debug('✅ Transfer successful:', message);
-    } else {
-      // Show error message
-      secureLogger.error('❌ Transfer failed:', message);
-      alert(`Transfer failed: ${message}`);
     }
   };
 
@@ -629,13 +602,6 @@ export const PatientManagement: React.FC = () => {
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleTransferPatient(patient)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1 rounded"
-                          title="Transfer Patient"
-                        >
-                          <ArrowRightLeft className="h-4 w-4" />
-                        </button>
-                        <button
                           onClick={() => handleDeletePatient(patient.id)}
                           className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1 rounded"
                           title="Delete Patient"
@@ -665,18 +631,6 @@ export const PatientManagement: React.FC = () => {
         />
       )}
 
-      {/* Patient Transfer Modal */}
-      {showTransferModal && patientToTransfer && (
-        <PatientTransferModal
-          isOpen={showTransferModal}
-          patient={patientToTransfer}
-          onClose={() => {
-            setShowTransferModal(false);
-            setPatientToTransfer(null);
-          }}
-          onTransferComplete={handleTransferComplete}
-        />
-      )}
 
       {/* Bulk Label Print Modal - Commented out until implemented */}
       {/* {showBulkPrint && (
