@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, CheckCircle, Trash2, Tag, Printer, ClipboardList, KeyRound, AlertTriangle, X, Filter, Info } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Trash2, Tag, Printer, ClipboardList, KeyRound, AlertTriangle, X, Filter, Info } from 'lucide-react';
 import { SUB_CATEGORIES } from '../types/simulation';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -72,8 +72,7 @@ const ActiveSimulations: React.FC = () => {
     pendingCompletion, setPendingCompletion,
     versionComparisonModal, setVersionComparisonModal,
     completionSummary, setCompletionSummary,
-    handlePause,
-    handleResume,
+    handleStart,
     handleReset,
     confirmReset,
     handleViewTemplateChanges,
@@ -143,7 +142,7 @@ const ActiveSimulations: React.FC = () => {
       case 'running':
         return sim.status === 'running' && !sim.is_expired;
       case 'needs-completing':
-        return (sim.status === 'running' || sim.status === 'paused') && !!sim.is_expired;
+        return sim.status === 'running' && !!sim.is_expired;
       case 'needs-reset':
         return sim.status === 'completed';
       case 'ready':
@@ -263,8 +262,7 @@ const ActiveSimulations: React.FC = () => {
               { icon: Printer, color: 'text-indigo-600', label: 'Print Labels' },
               { icon: ClipboardList, color: 'text-teal-700', label: 'Print Checklist' },
               { icon: KeyRound, color: 'text-teal-600', label: 'View Student Logins' },
-              { icon: Play, color: 'text-green-600', label: 'Start / Resume' },
-              { icon: Pause, color: 'text-yellow-600', label: 'Pause' },
+              { icon: Play, color: 'text-green-600', label: 'Start' },
               { icon: RotateCcw, color: 'text-blue-600', label: 'Reset' },
               { icon: CheckCircle, color: 'text-emerald-600', label: 'Complete' },
               { icon: Trash2, color: 'text-red-600', label: 'Delete' },
@@ -304,8 +302,7 @@ const ActiveSimulations: React.FC = () => {
               key={sim.id}
               sim={sim}
               actionLoading={actionLoading}
-              onPause={handlePause}
-              onResume={handleResume}
+              onStart={handleStart}
               onReset={handleReset}
               onComplete={handleComplete}
               onDelete={handleDelete}

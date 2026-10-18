@@ -16,6 +16,7 @@ export interface CreateDoctorsOrderData {
   notes?: string;
   order_type: 'Direct' | 'Phone Order' | 'Verbal Order';
   doctor_name?: string; // Doctor who created the order (for admin/super admin)
+  release_after_minutes?: number | null;
 }
 
 export interface UpdateDoctorsOrderData {
@@ -26,6 +27,7 @@ export interface UpdateDoctorsOrderData {
   notes?: string;
   order_type?: 'Direct' | 'Phone Order' | 'Verbal Order';
   doctor_name?: string; // Doctor who created the order (for admin/super admin)
+  release_after_minutes?: number | null;
 }
 
 /**
@@ -66,6 +68,7 @@ export const fetchDoctorsOrders = async (patientId: string): Promise<DoctorsOrde
         ? `${order.acknowledged_by_profile.first_name} ${order.acknowledged_by_profile.last_name}`
         : undefined,
       acknowledged_at: order.acknowledged_at,
+      release_after_minutes: order.release_after_minutes ?? null,
       doctor_name: order.doctor_name,
       created_by: order.created_by,
       created_by_name: order.created_by_profile 
@@ -135,6 +138,7 @@ export const createDoctorsOrder = async (orderData: CreateDoctorsOrderData): Pro
       is_acknowledged: data.is_acknowledged,
       acknowledged_by: data.acknowledged_by,
       acknowledged_at: data.acknowledged_at,
+      release_after_minutes: data.release_after_minutes ?? null,
       doctor_name: data.doctor_name,
       created_by: data.created_by,
       created_by_name: data.created_by_profile 
@@ -197,6 +201,7 @@ export const updateDoctorsOrder = async (orderId: string, orderData: UpdateDocto
         ? `${data.acknowledged_by_profile.first_name} ${data.acknowledged_by_profile.last_name}`
         : undefined,
       acknowledged_at: data.acknowledged_at,
+      release_after_minutes: data.release_after_minutes ?? null,
       created_by: data.created_by,
       created_by_name: data.created_by_profile 
         ? `${data.created_by_profile.first_name} ${data.created_by_profile.last_name}`
@@ -281,6 +286,7 @@ export const acknowledgeDoctorsOrder = async (orderId: string, studentName?: str
         ? `${data.acknowledged_by_profile.first_name} ${data.acknowledged_by_profile.last_name}`
         : undefined,
       acknowledged_at: data.acknowledged_at,
+      release_after_minutes: data.release_after_minutes ?? null,
       created_by: data.created_by,
       created_by_name: data.created_by_profile 
         ? `${data.created_by_profile.first_name} ${data.created_by_profile.last_name}`

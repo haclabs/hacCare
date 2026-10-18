@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { QrCode, Check, X, User, Pill, CheckCircle } from 'lucide-react';
 import { Patient, Medication } from '../../../types';
 import { bcmaService, BCMAValidationResult } from '../../../services/clinical/bcmaService';
@@ -12,8 +11,7 @@ import { BarcodeGenerator } from './BarcodeGenerator';
 import { simulateBarcodeScan } from '../../../lib/barcode/barcodeScanner';
 import { setBCMAActive } from '../../../services/simulation/bcmaState';
 import { secureLogger } from '../../../lib/security/secureLogger';
-import { useTenant } from '../../../contexts/TenantContext';
-import { supabase } from '../../../lib/api/supabase';
+import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
 
 interface BCMAAdministrationProps {
   patient: Patient;
@@ -37,28 +35,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   onCancel,
   practiceMode = false
 }) => {
-  const { currentTenant } = useTenant();
-
-  const isSimulationTenant = currentTenant?.tenant_type === 'simulation_active' || !!currentTenant?.is_simulation;
-
-  // Fetch when the current simulation session started so we can ignore
+  // When the current simulation session started, so we can ignore
   // last_administered / next_due values from a previous group's run.
-  // Query by tenant_id (simulation_active.tenant_id = currentTenant.id).
-  const { data: simulationStartsAt } = useQuery({
-    queryKey: ['simulation-starts-at', currentTenant?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('simulation_active')
-        .select('starts_at')
-        .eq('tenant_id', currentTenant!.id)
-        .maybeSingle();
-      // null means simulation exists but hasn't been started yet (pending/reset)
-      // undefined/no row means not found — treat same as null (safe default)
-      return data?.starts_at ?? null;
-    },
-    enabled: isSimulationTenant && !!currentTenant?.id,
-    staleTime: 30 * 1000, // 30 s — refresh after instructor clicks Play
-  });
+  const { data: simulationStartsAt, isSimulationTenant } = useSimulationStartsAt();
 
   const [scannedPatientId, setScannedPatientId] = useState<string>('');
   const [scannedMedicationId, setScannedMedicationId] = useState<string>('');

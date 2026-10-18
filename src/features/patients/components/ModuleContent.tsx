@@ -197,7 +197,7 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
         currentUser={{
           id: currentUser?.id || 'unknown',
           name: currentUser?.name || 'Unknown User',
-          role: (currentUser?.role as 'nurse' | 'admin' | 'super_admin') || 'nurse',
+          role: (currentUser?.role as React.ComponentProps<typeof DoctorsOrders>['currentUser']['role']) || 'nurse',
         }}
         onOrdersChange={onOrdersChange}
         {...navProps}

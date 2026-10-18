@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound, ClipboardList, Layers } from 'lucide-react';
+import { Play, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Printer, Tag, Package, FlaskConical, Loader2, KeyRound, ClipboardList, Layers } from 'lucide-react';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
@@ -7,8 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 interface SimulationCardProps {
   sim: SimulationActiveWithDetails;
   actionLoading: string | null;
-  onPause: (id: string) => void;
-  onResume: (id: string, isCompleted: boolean) => void;
+  onStart: (id: string) => void;
   onReset: (id: string) => void;
   onComplete: (sim: SimulationActiveWithDetails) => void;
   onDelete: (id: string) => void;
@@ -28,8 +27,7 @@ interface SimulationCardProps {
 export const SimulationCard: React.FC<SimulationCardProps> = ({
   sim,
   actionLoading,
-  onPause,
-  onResume,
+  onStart,
   onReset,
   onComplete,
   onDelete,
@@ -175,21 +173,12 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
           >
             <KeyRound className="h-4 w-4" />
           </button>
-          {sim.status === 'running' ? (
+          {sim.status !== 'running' && (
             <button
-              onClick={() => onPause(sim.id)}
-              disabled={actionLoading === sim.id}
-              className="p-1.5 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 transition-colors disabled:opacity-50"
-              title="Pause simulation"
-            >
-              <Pause className="h-4 w-4" />
-            </button>
-          ) : (
-            <button
-              onClick={() => onResume(sim.id, false)}
+              onClick={() => onStart(sim.id)}
               disabled={actionLoading === sim.id}
               className="p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50"
-              title={sim.status === 'pending' ? 'Start simulation' : sim.status === 'paused' ? 'Resume simulation' : 'Start simulation'}
+              title="Start simulation"
             >
               <Play className="h-4 w-4" />
             </button>

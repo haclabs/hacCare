@@ -54,6 +54,24 @@ Once your template is created, add patient data that students will work with dur
 - Student entries (vitals they record, meds they give) are tracked separately
 - Baseline data is restored each time you reset between student groups
 
+### Timed Doctors' Orders
+
+You can hold a doctor's order back so students only see it partway through the simulation
+(for example, a new order that arrives 30 minutes in).
+
+1. While editing the template, open **Orders** and add or edit the order
+2. Enter a number in **Show to students after (minutes into simulation)**. Leave it blank or 0 to
+   show the order immediately
+3. Save the template snapshot as usual
+
+- The countdown starts when you **launch** the simulation. After a reset it restarts when you press
+  **Play** for the next group
+- Until then, students cannot see the order at all. It appears on their screen within about 30
+  seconds of its release time, with the usual **NEW** badge
+- Instructors and admins always see the order, with a purple **"30 min delay"** bubble. In a running
+  simulation it also shows the release time ("30 min delay · hidden until 14:30"). Students never see it
+- Simulations can no longer be paused, so "30 minutes in" always means 30 minutes after launch / Play
+
 **[SCREENSHOT PLACEHOLDER: Template editing interface showing patient data sections]**
 
 ---
@@ -115,7 +133,7 @@ While students work, you can monitor their progress from the Active tab.
 
 - Time remaining in session
 - Number of participants
-- Current status (Running, Paused, Expired)
+- Current status (Pending, Running, Expired)
 - Quick actions: Complete, Reset, or Terminate
 
 ### Timer Behavior:
