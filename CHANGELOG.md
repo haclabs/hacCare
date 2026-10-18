@@ -7,6 +7,24 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-18 - MEDICATION LABEL BRAND NAME ON ITS OWN LINE
+===============================================================================
+
+* Medication labels now print a trailing "(Brand)" on a second line under the
+  generic name, so brand names are no longer cut off (instructor request)
+  - e.g. "INSULIN LISPRO" / "(Admelog)"; names with brackets mid-name, like
+    "Qvar (Beclomethasone) MDI", stay on one line
+  - Applies to Avery 5160 and small vial sheets, simulation medication labels
+    and the combined all-labels sheet, plus their on-screen previews
+  - Medication names are now HTML-escaped in the print window
+* Data fixes on hacCare Canada (recorded in database/fixes/):
+  - Insulin Degludec catalog entry had "(Tresiba)" in generic_name; moved it
+    into the name
+  - Corrected "Ademelog" to "Admelog" across the catalog, Code Blue State 1/2
+    templates and snapshots, their pending simulation, and the Sandy Tallman
+    patient template. simulation_history left as recorded
+
+===============================================================================
 [Unreleased] - 2026-10-18 - REMOVED LEGACY PATIENT TRANSFER
 ===============================================================================
 
