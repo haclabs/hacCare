@@ -248,15 +248,9 @@ export const BBITTab: React.FC<BBITTabProps> = ({
   const setField = <K extends keyof BBITEntryInput>(field: K, value: BBITEntryInput[K] | '') =>
     setForm(prev => ({ ...prev, [field]: value === '' ? undefined : value }));
 
-  const formatColHeader = (e: BBITEntry) => {
-    const label = e.time_label?.trim();
-    if (label) return { primary: label, secondary: new Date(e.recorded_at!).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) };
-    const d = new Date(e.recorded_at!);
-    return {
-      primary: d.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      secondary: d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }),
-    };
-  };
+  const formatColHeader = (e: BBITEntry) =>
+    e.time_label?.trim() ||
+    new Date(e.recorded_at!).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   // ── Column styling helpers (matches NeuroAssessmentTab) ───────────────────
   const colHeaderCls = (ci: number, filled: boolean) => {
@@ -334,13 +328,12 @@ export const BBITTab: React.FC<BBITTabProps> = ({
                         </th>
                       );
                     }
-                    const { primary, secondary } = formatColHeader(e);
+                    const primary = formatColHeader(e);
                     return (
                       <th key={e.id} className={`px-3 py-3 text-center font-medium whitespace-nowrap min-w-[120px] ${hdrCls}`}>
                         <div className="inline-block bg-purple-600 text-white text-sm font-bold px-3 py-0.5 rounded-full mb-1 shadow-sm">
                           {primary}
                         </div>
-                        <div className="text-xs font-semibold text-gray-600 tracking-wide">{secondary}</div>
                         {e.student_name && (
                           <div
                             className="mt-1.5 inline-block text-xs text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5 truncate max-w-[110px] font-medium"
