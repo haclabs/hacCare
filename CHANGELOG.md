@@ -21,7 +21,11 @@ documented in this file.
   - Orders page and the orders alert badge poll every 30 s in simulation tenants
     so released orders appear without a reload
   - No snapshot/reset changes needed: snapshots copy all columns, and reset
-    clears starts_at so the countdown restarts on the next Play
+    clears starts_at so the countdown restarts on the next Play. On first
+    launch the clock starts immediately (launch_simulation sets starts_at)
+  - Known gap: duplicate_patient_to_tenant (patient transfer) copies orders
+    with a hardcoded column list, so a transferred order loses its delay and
+    shows immediately
   - Moved the simulation start-time query out of BCMAAdministration into a
     shared useSimulationStartsAt hook
   - Migration: supabase/migrations/20261018000000_add_doctors_orders_release_delay.sql

@@ -31,8 +31,8 @@ export const ReleaseDelayField: React.FC<ReleaseDelayFieldProps> = ({ value, onC
         className="w-28 px-3 py-2 border border-purple-300 rounded-lg bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
       />
       <p className="text-xs text-purple-800">
-        Leave blank or 0 to show immediately. The countdown starts when the simulation is started
-        (Play) and restarts after a reset. Instructors and admins always see the order.
+        Leave blank or 0 to show immediately. The countdown starts when the simulation is launched,
+        and restarts when you press Play after a reset. Instructors and admins always see the order.
       </p>
     </div>
   </div>
@@ -65,7 +65,7 @@ export const ReleaseDelayBadge: React.FC<ReleaseDelayBadgeProps> = ({ releaseAft
       : {
           label: delay,
           cls: 'bg-purple-100 text-purple-800 border-purple-300',
-          title: `Students see this order ${formatReleaseDelay(status.minutes)} after the simulation is started (Play). Only staff see this badge.`,
+          title: `Students see this order ${formatReleaseDelay(status.minutes)} after the simulation is launched (or Play after a reset). Only staff see this badge.`,
         };
 
   return (
