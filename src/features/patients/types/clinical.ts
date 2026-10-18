@@ -78,6 +78,8 @@ export interface DoctorsOrder {
   acknowledged_by_name?: string; // user name for display
   acknowledged_at?: string; // ISO timestamp
   doctor_name?: string; // Doctor who created the order (for admin/super admin entries)
+  /** Minutes after simulation start before students see this order. null/0 = immediately. */
+  release_after_minutes?: number | null;
   created_by: string; // user ID
   created_by_name?: string; // user name for display
   created_at: string; // ISO timestamp

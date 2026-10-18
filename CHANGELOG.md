@@ -7,6 +7,31 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-18 - TIMED DOCTORS' ORDERS
+===============================================================================
+
+* Instructors can hold a doctor's order back until N minutes into a simulation
+  - New "Show to students after (minutes into simulation)" field on the order
+    form, for staff in template and simulation tenants
+  - New column doctors_orders.release_after_minutes (NULL/0 = immediately)
+  - Enforced in the database: RESTRICTIVE RLS policy
+    doctors_orders_hide_unreleased + SECURITY DEFINER doctors_order_is_released().
+    Students only see an order once simulation_active.starts_at + delay has
+    passed; super_admin/coordinator/admin/instructor always see it
+  - Orders page and the orders alert badge poll every 30 s in simulation tenants
+    so released orders appear without a reload
+  - No snapshot/reset changes needed: snapshots copy all columns, and reset
+    clears starts_at so the countdown restarts on the next Play
+  - Moved the simulation start-time query out of BCMAAdministration into a
+    shared useSimulationStartsAt hook
+  - Migration: supabase/migrations/20261018000000_add_doctors_orders_release_delay.sql
+    (apply before relying on the field; saving an order without a delay works
+    either way)
+  - Files: DoctorsOrders.tsx, DoctorsOrderRelease.tsx, orderRelease.ts (+ test),
+    useSimulationStartsAt.ts, useDoctorsOrdersAlert.ts, doctorsOrdersService.ts,
+    BCMAAdministration.tsx, ModuleContent.tsx, clinical.ts
+
+===============================================================================
 [Unreleased] - 2026-10-18 - REMOVED SIMULATION PAUSE
 ===============================================================================
 
