@@ -23,7 +23,7 @@ export const SimulationStatusSummary: React.FC<SimulationStatusSummaryProps> = (
 }) => {
   const runningCount = simulations.filter(s => s.status === 'running' && !s.is_expired).length;
   const needsCompletingCount = simulations.filter(
-    s => (s.status === 'running' || s.status === 'paused') && s.is_expired
+    s => s.status === 'running' && s.is_expired
   ).length;
   const needsResetCount = simulations.filter(s => s.status === 'completed').length;
   const readyCount = simulations.filter(s => s.status === 'pending').length;

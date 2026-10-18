@@ -26,6 +26,48 @@ documented in this file.
   - Removed transfer steps from docs/database/ADDING_PATIENT_FEATURES.md and
     PATIENT_TABLES_REFERENCE.md
 
+[Unreleased] - 2026-10-18 - TIMED DOCTORS' ORDERS
+===============================================================================
+
+* Instructors can hold a doctor's order back until N minutes into a simulation
+  - New "Show to students after (minutes into simulation)" field on the order
+    form, for staff in template and simulation tenants
+  - New column doctors_orders.release_after_minutes (NULL/0 = immediately)
+  - Enforced in the database: RESTRICTIVE RLS policy
+    doctors_orders_hide_unreleased + SECURITY DEFINER doctors_order_is_released().
+    Students only see an order once simulation_active.starts_at + delay has
+    passed; super_admin/coordinator/admin/instructor always see it
+  - Orders page and the orders alert badge poll every 30 s in simulation tenants
+    so released orders appear without a reload
+  - No snapshot/reset changes needed: snapshots copy all columns, and reset
+    clears starts_at so the countdown restarts on the next Play. On first
+    launch the clock starts immediately (launch_simulation sets starts_at)
+  - Moved the simulation start-time query out of BCMAAdministration into a
+    shared useSimulationStartsAt hook
+  - Migration: supabase/migrations/20261018000000_add_doctors_orders_release_delay.sql
+    (apply before relying on the field; saving an order without a delay works
+    either way)
+  - Files: DoctorsOrders.tsx, DoctorsOrderRelease.tsx, orderRelease.ts (+ test),
+    useSimulationStartsAt.ts, useDoctorsOrdersAlert.ts, doctorsOrdersService.ts,
+    BCMAAdministration.tsx, ModuleContent.tsx, clinical.ts
+
+===============================================================================
+[Unreleased] - 2026-10-18 - REMOVED SIMULATION PAUSE
+===============================================================================
+
+* Removed the Pause button from Active Simulations
+  - Pause only set status = 'paused' (hiding the sim from students); it never
+    froze the timer, since ends_at kept counting down. Removing it makes
+    "minutes since Play" unambiguous, which upcoming timed doctors' orders
+    rely on
+  - Any rows already paused still list, and Play returns them to running
+    without changing starts_at. The 'paused' enum value is left in the
+    database
+  - Removed the unreachable "restart completed simulation" branch of
+    handleResume (renamed handleStart); every caller passed isCompleted=false
+  - Files: useActiveSimulations.ts, ActiveSimulations.tsx, SimulationCard.tsx,
+    SimulationInstructorGuide.tsx, SimulationStatusSummary.tsx, docs
+
 ===============================================================================
 [Unreleased] - 2026-10-14 - INSTRUCTORS CAN EDIT/DELETE TEMPLATE MEDICATIONS
 ===============================================================================

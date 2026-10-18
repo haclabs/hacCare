@@ -19,13 +19,21 @@ import {
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
 import { PatientActionBar } from '../../../components/PatientActionBar';
 import { secureLogger } from '../../../lib/security/secureLogger';
+import { useTenant } from '../../../contexts/TenantContext';
+import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
+import { parseReleaseAfterMinutes } from '../utils/orderRelease';
+import { ReleaseDelayField, ReleaseDelayBadge } from './DoctorsOrderRelease';
+
+const STAFF_ROLES = ['super_admin', 'coordinator', 'admin', 'instructor'];
+// Held orders are released by the database clock; students' screens pick them up on this cadence.
+const SIMULATION_POLL_MS = 30_000;
 
 interface DoctorsOrdersProps {
   patientId: string;
   currentUser: {
     id: string;
     name: string;
-    role: 'nurse' | 'admin' | 'super_admin';
+    role: 'nurse' | 'student' | 'instructor' | 'coordinator' | 'admin' | 'super_admin';
   };
   onOrdersChange?: () => void; // Callback to notify parent of order changes
   // Top PatientActionBar nav — same props every other module receives
@@ -53,7 +61,19 @@ interface OrderFormData {
   notes: string;
   order_type: 'Direct' | 'Phone Order' | 'Verbal Order';
   doctor_name: string; // Doctor who created the order (for admin/super admin)
+  release_after_minutes: string; // form text; '' = show immediately
 }
+
+const blankForm = (role: DoctorsOrdersProps['currentUser']['role']): OrderFormData => ({
+  order_date: new Date().toISOString().split('T')[0],
+  order_time: new Date().toTimeString().slice(0, 5),
+  order_text: '',
+  ordering_doctor: '',
+  notes: '',
+  order_type: role === 'nurse' ? 'Phone Order' : 'Direct',
+  doctor_name: '',
+  release_after_minutes: '',
+});
 
 /** The UI prepends "Dr." itself when displaying a name — strip any "Dr"/"Dr." the user typed to avoid "Dr. Dr. Smith" */
 function stripDoctorTitle(name: string): string {
@@ -83,15 +103,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<DoctorsOrder | null>(null);
-  const [formData, setFormData] = useState<OrderFormData>({
-    order_date: new Date().toISOString().split('T')[0],
-    order_time: new Date().toTimeString().slice(0, 5),
-    order_text: '',
-    ordering_doctor: '',
-    notes: '',
-    order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
-    doctor_name: ''
-  });
+  const [formData, setFormData] = useState<OrderFormData>(() => blankForm(currentUser.role));
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [acknowledgingOrderId, setAcknowledgingOrderId] = useState<string | null>(null);
@@ -99,22 +111,36 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   // Check if user has admin privileges
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin';
 
-  // Load orders on component mount
+  const { currentTenant } = useTenant();
+  const { data: simulationStartsAt, isSimulationTenant } = useSimulationStartsAt();
+  const isTemplateTenant =
+    currentTenant?.tenant_type === 'simulation_template' ||
+    currentTenant?.tenant_type === 'patient_template';
+  const isStaff = STAFF_ROLES.includes(currentUser.role);
+  const canSetReleaseDelay = isStaff && (isTemplateTenant || isSimulationTenant);
+
+  // Load orders on mount; in a simulation keep polling so held orders appear once released
   useEffect(() => {
-    async function loadOrders() {
+    let cancelled = false;
+    async function loadOrders(showSpinner: boolean) {
       try {
-        setLoading(true);
+        if (showSpinner) setLoading(true);
         const ordersData = await fetchDoctorsOrders(patientId);
-        setOrders(ordersData);
+        if (!cancelled) setOrders(ordersData);
       } catch (error) {
         secureLogger.error('Error loading doctors orders:', error);
-        setError('Failed to load doctors orders');
+        if (!cancelled && showSpinner) setError('Failed to load doctors orders');
       } finally {
-        setLoading(false);
+        if (!cancelled && showSpinner) setLoading(false);
       }
     }
-    loadOrders();
-  }, [patientId]);
+    loadOrders(true);
+    const interval = isSimulationTenant ? setInterval(() => loadOrders(false), SIMULATION_POLL_MS) : undefined;
+    return () => {
+      cancelled = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [patientId, isSimulationTenant]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +150,17 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       setSubmitting(true);
       setError('');
 
-      const normalizedFormData = { ...formData, ordering_doctor: stripDoctorTitle(formData.ordering_doctor) };
+      const { release_after_minutes: releaseInput, ...orderFields } = formData;
+      const releaseAfterMinutes = parseReleaseAfterMinutes(releaseInput);
+      const normalizedFormData = {
+        ...orderFields,
+        ordering_doctor: stripDoctorTitle(formData.ordering_doctor),
+        // Only send the column when it carries a value (or clears one), so saving ordinary orders
+        // keeps working if the client ships before the release-delay migration is applied.
+        ...(releaseAfterMinutes !== null || editingOrder?.release_after_minutes
+          ? { release_after_minutes: releaseAfterMinutes }
+          : {}),
+      };
 
       if (editingOrder) {
         // Update existing order
@@ -142,15 +178,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       }
 
       // Reset form
-      setFormData({
-        order_date: new Date().toISOString().split('T')[0],
-        order_time: new Date().toTimeString().slice(0, 5),
-        order_text: '',
-        ordering_doctor: '',
-        notes: '',
-        order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
-        doctor_name: ''
-      });
+      setFormData(blankForm(currentUser.role));
       
       // Notify parent component of the change
       onOrdersChange?.();
@@ -171,7 +199,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
       ordering_doctor: stripDoctorTitle(order.ordering_doctor), // self-heals any previously double-prefixed "Dr. Dr." records
       notes: order.notes || '',
       order_type: order.order_type,
-      doctor_name: order.doctor_name || ''
+      doctor_name: order.doctor_name || '',
+      release_after_minutes: order.release_after_minutes ? String(order.release_after_minutes) : ''
     });
     setShowAddForm(true);
   };
@@ -228,15 +257,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingOrder(null);
-    setFormData({
-      order_date: new Date().toISOString().split('T')[0],
-      order_time: new Date().toTimeString().slice(0, 5),
-      order_text: '',
-      ordering_doctor: '',
-      notes: '',
-      order_type: currentUser.role === 'nurse' ? 'Phone Order' : 'Direct',
-      doctor_name: ''
-    });
+    setFormData(blankForm(currentUser.role));
     setError('');
   };
 
@@ -438,6 +459,13 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                   />
                 </div>
 
+                {canSetReleaseDelay && (
+                  <ReleaseDelayField
+                    value={formData.release_after_minutes}
+                    onChange={(value) => setFormData({ ...formData, release_after_minutes: value })}
+                  />
+                )}
+
                 {/* Form Actions */}
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
@@ -503,6 +531,13 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                           {getOrderTypeIcon(order.order_type)}
                           <span>{order.order_type}</span>
                         </div>
+
+                        {isStaff && (
+                          <ReleaseDelayBadge
+                            releaseAfterMinutes={order.release_after_minutes}
+                            simulationStartsAt={simulationStartsAt}
+                          />
+                        )}
 
                         {!order.is_acknowledged ? (
                           <div className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 border-red-200 text-xs font-bold space-x-1 animate-pulse">
