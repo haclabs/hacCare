@@ -7,6 +7,18 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-18 - INSTRUCTORS CAN EDIT/DELETE TEMPLATE ORDERS
+===============================================================================
+
+* Instructors can now edit and delete doctors' orders while editing a template
+  - Edit/Delete showed only to admin and super_admin, so an instructor could
+    not add a release delay to an existing order. RLS already permitted it
+  - Same rule as template medications (canManageMedicationOrders): instructors
+    in simulation_template and patient_template tenants; coordinators, admins
+    and super admins everywhere
+  - Files: DoctorsOrders.tsx
+
+===============================================================================
 [Unreleased] - 2026-10-18 - MEDICATION LABEL BRAND NAME ON ITS OWN LINE
 ===============================================================================
 

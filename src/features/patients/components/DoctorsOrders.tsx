@@ -2,7 +2,8 @@
  * Doctors Orders Component
  * 
  * Manages physician orders with role-based permissions:
- * - Admin/Super Admin: Full CRUD access
+ * - Admin/Super Admin/Coordinator: Full CRUD access
+ * - Instructors: Full CRUD in template tenants; add + release delay in simulations
  * - Nurses: View, Add (Phone/Verbal orders), and Acknowledge
  */
 
@@ -23,6 +24,7 @@ import { useTenant } from '../../../contexts/TenantContext';
 import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
 import { parseReleaseAfterMinutes } from '../utils/orderRelease';
 import { ReleaseDelayField, ReleaseDelayBadge } from './DoctorsOrderRelease';
+import { canManageMedicationOrders } from './mar/medicationPermissions';
 
 const STAFF_ROLES = ['super_admin', 'coordinator', 'admin', 'instructor'];
 // Held orders are released by the database clock; students' screens pick them up on this cadence.
@@ -118,6 +120,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
     currentTenant?.tenant_type === 'patient_template';
   const isStaff = STAFF_ROLES.includes(currentUser.role);
   const canSetReleaseDelay = isStaff && (isTemplateTenant || isSimulationTenant);
+  const canManageOrders = canManageMedicationOrders(currentUser.role, isTemplateTenant);
 
   // Load orders on mount; in a simulation keep polling so held orders appear once released
   useEffect(() => {
@@ -597,8 +600,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                         </button>
                       )}
 
-                      {/* Edit Button - Only for admin/super admin */}
-                      {isAdmin && (
+                      {/* Edit Button */}
+                      {canManageOrders && (
                         <button
                           onClick={() => handleEdit(order)}
                           className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
@@ -608,8 +611,8 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                         </button>
                       )}
 
-                      {/* Delete Button - Only for admin/super admin */}
-                      {isAdmin && (
+                      {/* Delete Button */}
+                      {canManageOrders && (
                         <button
                           onClick={() => handleDelete(order.id)}
                           className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
