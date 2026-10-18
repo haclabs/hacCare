@@ -60,6 +60,8 @@ interface MedicationAdministrationEntry {
   medication_name: string | null;
   dosage: string | null; // Label concentration (e.g., "500mg/2mL")
   administered_dose?: string | null; // Student-calculated dose drawn up (e.g., "2 mL")
+  glucose_reading?: number | null;
+  sliding_scale_dose?: string | null; // Scale row that applied, e.g. "2 units"
   route: string | null;
   status: string | null;
   notes: string | null;
@@ -889,6 +891,8 @@ export async function getStudentActivitiesBySimulation(
         medication_name: med.medication_name,
         dosage: med.dosage,
         administered_dose: med.administered_dose,
+        glucose_reading: med.glucose_reading,
+        sliding_scale_dose: med.sliding_scale_dose,
         route: med.route,
         status: med.status,
         notes: med.notes,

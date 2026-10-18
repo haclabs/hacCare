@@ -3,6 +3,8 @@
  * Medical and clinical care related data structures
  */
 
+import type { SlidingScaleRow } from '../utils/slidingScale';
+
 /**
  * Medication prescription and administration data
  */
@@ -25,6 +27,7 @@ export interface Medication {
   administrations?: MedicationAdministration[];
   catalog_id?: string | null; // FK to medications_catalog (null = free-entry)
   barcode?: string | null;    // Pre-resolved stable barcode (catalog entry) or hash-generated (free-entry)
+  sliding_scale?: SlidingScaleRow[] | null; // Diabetic meds only; shown on BCMA
 }
 
 /**
@@ -58,6 +61,8 @@ export interface MedicationAdministration {
   override_reason?: string; // ✅ Reason if BCMA checks were overridden
   witness_name?: string; // ✅ Witness name for manual overrides
   administered_dose?: string; // ✅ Volume/units drawn up by student (weight-based calc result)
+  glucose_reading?: number; // mmol/L, diabetic medications
+  sliding_scale_dose?: string; // Scale row that applied at the time, e.g. "2 units"
 }
 
 /**

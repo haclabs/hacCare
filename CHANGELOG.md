@@ -7,6 +7,35 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-18 - INSULIN SLIDING SCALE ON BCMA
+===============================================================================
+
+* Diabetic medications can carry a sliding (correction) scale, shown on BCMA
+  - Instructors add rows (glucose from/to → units, Call MD or Hold) on the
+    Add/Edit Medication forms when the category is Diabetic
+  - BCMA shows the scale once the medication is scanned and highlights the row
+    matching the student's glucose reading. The student still enters the dose
+  - New column patient_medications.sliding_scale (JSONB array)
+* BCMA now saves the blood glucose reading with the administration
+  - It was required on screen but never stored. New columns
+    medication_administrations.glucose_reading and sliding_scale_dose
+  - Debrief (screen and PDF) shows "Glucose 13.2 mmol/L → sliding scale:
+    2 units" next to the dose the student gave
+* reset_simulation_with_template_updates redeployed (from the live definition)
+  so template sync copies the scale to new medications and refreshes it on
+  existing ones; it previously skipped medications already in the simulation.
+  Launch, reset and snapshots copy all columns and needed no change
+  - Migration: supabase/migrations/20261018000002_add_medication_sliding_scale.sql
+    (apply BEFORE deploying: BCMA writes the new administration columns)
+  - Verified against hacCare Canada inside a rolled-back transaction: insert
+    and update sync paths, barcode preserved, CHECK rejects non-arrays
+  - Files: slidingScale.ts (+ test), SlidingScaleEditor.tsx,
+    SlidingScaleTable.tsx, AddMedicationForm.tsx, EditMedicationForm.tsx,
+    BCMAAdministration.tsx, bcmaService.ts, medicationService.ts, clinical.ts,
+    studentActivityService.ts, DebriefActivityItem.tsx, reactPdfGenerator.tsx,
+    database/functions/reset_simulation_with_template_updates.sql
+
+===============================================================================
 [Unreleased] - 2026-10-18 - INSTRUCTORS CAN EDIT/DELETE TEMPLATE ORDERS
 ===============================================================================
 

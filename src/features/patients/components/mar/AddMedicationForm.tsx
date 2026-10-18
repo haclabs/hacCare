@@ -5,6 +5,8 @@ import type { Patient, Medication } from '../../../../types';
 import { createMedication, fetchMedicationCatalog } from '../../../../services/clinical/medicationService';
 import { CatalogMedicationPicker } from './CatalogMedicationPicker';
 import type { CatalogEntry } from './CatalogMedicationPicker';
+import { SlidingScaleEditor } from './SlidingScaleEditor';
+import { fromDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AddMedicationFormProps {
@@ -269,6 +271,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
   const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedCatalog, setSelectedCatalog] = useState<CatalogEntry | null>(null);
+  const [scaleRows, setScaleRows] = useState<SlidingScaleDraftRow[]>([]);
 
   useEffect(() => {
     fetchMedicationCatalog()
@@ -331,6 +334,13 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
       return;
     }
 
+    const { scale, error: scaleError } =
+      form.category === 'diabetic' ? fromDraftRows(scaleRows) : { scale: null, error: null };
+    if (scaleError) {
+      alert(scaleError);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const medicationData: Omit<Medication, 'id'> = {
@@ -353,6 +363,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
         admin_times: form.admin_times.length > 1 ? form.admin_times : null,
         catalog_id: form.catalog_id,
         barcode: form.barcode,
+        sliding_scale: scale,
       };
 
       secureLogger.debug('Creating medication in database:', medicationData);
@@ -467,6 +478,8 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 <option value="diabetic">🩸 Diabetic - Glucose monitoring</option>
               </select>
             </div>
+
+            {form.category === 'diabetic' && <SlidingScaleEditor rows={scaleRows} onChange={setScaleRows} />}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Dosage *</label>

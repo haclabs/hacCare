@@ -12,6 +12,8 @@ import { simulateBarcodeScan } from '../../../lib/barcode/barcodeScanner';
 import { setBCMAActive } from '../../../services/simulation/bcmaState';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
+import { SlidingScaleTable } from './mar/SlidingScaleTable';
+import { findScaleRowIndex, formatScaleResult } from '../utils/slidingScale';
 
 interface BCMAAdministrationProps {
   patient: Patient;
@@ -201,15 +203,10 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     setSubmissionError(null);
 
     try {
-      const administrationData = {
-        ...medication,
-        // Keep dosage as the label concentration — do NOT overwrite with student's dose
-        glucoseReading: requiresGlucoseReading ? glucoseReading : null,
-        glucoseTimestamp: requiresGlucoseReading ? glucoseTimestamp : null
-      };
+      const scaleRowIndex = slidingScale && glucoseValue !== null ? findScaleRowIndex(slidingScale, glucoseValue) : -1;
 
       const log = await bcmaService.createAdministrationLog(
-        administrationData,
+        medication,
         patient,
         currentUser,
         scannedPatientId,
@@ -221,7 +218,13 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         overriddenChecks.length > 0 ? overrideReason : undefined,
         undefined, // witnessName - can be added later if needed
         administeredDose.trim() || undefined,
-        practiceMode
+        practiceMode,
+        glucoseValue !== null
+          ? {
+              reading: glucoseValue,
+              scaleDose: scaleRowIndex >= 0 ? formatScaleResult(slidingScale![scaleRowIndex]) : undefined,
+            }
+          : undefined
       );
 
       setCompletionLog(log);
@@ -318,6 +321,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const isValidGlucose = requiresGlucoseReading
     ? !!glucoseReading && parseFloat(glucoseReading) >= 1 && parseFloat(glucoseReading) <= 35
     : true;
+
+  const slidingScale = requiresGlucoseReading && medication.sliding_scale?.length ? medication.sliding_scale : null;
+  const glucoseValue = requiresGlucoseReading && isValidGlucose ? parseFloat(glucoseReading) : null;
 
   // Derived readiness flags
   const allReady = !!validationResult?.isValid
@@ -624,6 +630,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 )}
 
                 {/* If glucose + notes both needed, show notes below */}
+                {slidingScale && <SlidingScaleTable scale={slidingScale} glucose={glucoseValue} />}
+
                 {requiresGlucoseReading && (
                   <div className="col-span-2 bg-white rounded-xl border border-slate-200 p-4">
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>

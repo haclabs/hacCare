@@ -5,6 +5,8 @@ import type { Medication } from '../../../../types';
 import { updateMedication, fetchMedicationCatalog } from '../../../../services/clinical/medicationService';
 import { CatalogMedicationPicker } from './CatalogMedicationPicker';
 import type { CatalogEntry } from './CatalogMedicationPicker';
+import { SlidingScaleEditor } from './SlidingScaleEditor';
+import { fromDraftRows, toDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface EditMedicationFormProps {
@@ -155,6 +157,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
   const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedCatalog, setSelectedCatalog] = useState<CatalogEntry | null>(null);
+  const [scaleRows, setScaleRows] = useState<SlidingScaleDraftRow[]>(() => toDraftRows(medication.sliding_scale));
 
   useEffect(() => {
     fetchMedicationCatalog()
@@ -212,6 +215,12 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const { scale, error: scaleError } =
+      form.category === 'diabetic' ? fromDraftRows(scaleRows) : { scale: null, error: null };
+    if (scaleError) {
+      alert(scaleError);
+      return;
+    }
     setIsLoading(true);
     try {
       const updated = await updateMedication(medication.id, {
@@ -227,6 +236,8 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
         admin_times: form.admin_times,
         catalog_id: form.catalog_id,
         barcode: form.barcode,
+        // Only touch the column when there is (or was) a scale, so edits work before the migration
+        ...(scale || medication.sliding_scale ? { sliding_scale: scale } : {}),
       });
 
       const updatedList = medications.map((m) => (m.id === medication.id ? updated : m));
@@ -393,6 +404,8 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 <option value="continuous">Continuous</option>
               </select>
             </div>
+
+            {form.category === 'diabetic' && <SlidingScaleEditor rows={scaleRows} onChange={setScaleRows} />}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

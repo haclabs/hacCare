@@ -95,6 +95,7 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         status: dbMed.status || 'Active',
         catalog_id: dbMed.catalog_id ?? null,
         barcode: dbMed.barcode ?? null,
+        sliding_scale: dbMed.sliding_scale ?? null,
       } as Medication));
 
       secureLogger.debug('Found', medications.length, 'simulation medications');
@@ -126,6 +127,7 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         status: dbMed.status || 'Active',
         catalog_id: dbMed.catalog_id ?? null,
         barcode: dbMed.barcode ?? null,
+        sliding_scale: dbMed.sliding_scale ?? null,
       } as Medication));
 
       return medications;
@@ -181,6 +183,8 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       tenant_id: patientData?.tenant_id, // Explicitly set tenant_id from patient
       catalog_id: medication.catalog_id || null,
       barcode: medication.barcode || null,
+      // Omitted when unset so saving works before the sliding_scale migration is applied
+      ...(medication.sliding_scale ? { sliding_scale: medication.sliding_scale } : {}),
     };
     
     const { data, error } = await supabase
@@ -212,6 +216,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       status: data.status || 'Active',
       catalog_id: data.catalog_id ?? null,
       barcode: data.barcode ?? null,
+      sliding_scale: data.sliding_scale ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs
@@ -312,6 +317,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.admin_times !== undefined) dbUpdates.admin_times = updates.admin_times;
     if (updates.catalog_id !== undefined) dbUpdates.catalog_id = updates.catalog_id;
     if (updates.barcode !== undefined) dbUpdates.barcode = updates.barcode;
+    if (updates.sliding_scale !== undefined) dbUpdates.sliding_scale = updates.sliding_scale;
     
     secureLogger.debug('Database updates:', dbUpdates);
     
@@ -370,6 +376,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       status: data.status || 'Active', // Use 'status' column directly
       catalog_id: data.catalog_id ?? null,
       barcode: data.barcode ?? null,
+      sliding_scale: data.sliding_scale ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs
@@ -523,7 +530,9 @@ export const recordMedicationAdministration = async (administration: Omit<Medica
       medication_barcode_scanned: administration.medication_barcode_scanned,
       override_reason: administration.override_reason,
       witness_name: administration.witness_name,
-      administered_dose: administration.administered_dose
+      administered_dose: administration.administered_dose,
+      glucose_reading: administration.glucose_reading,
+      sliding_scale_dose: administration.sliding_scale_dose
     };
     
     // Remove undefined values to avoid Supabase issues

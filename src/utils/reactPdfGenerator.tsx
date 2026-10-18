@@ -352,6 +352,9 @@ const formatVital = (v: Record<string, unknown>): string[] => {
 
 const formatMedication = (m: Record<string, unknown>): string[] => [
   `${m.medication_name || 'N/A'}${m.dosage ? ` - ${m.dosage}` : ''}${m.route ? ` via ${m.route}` : ''}`,
+  ...(m.glucose_reading != null
+    ? [`Glucose ${Number(m.glucose_reading).toFixed(1)} mmol/L${m.sliding_scale_dose ? ` - sliding scale: ${m.sliding_scale_dose}` : ''}${m.administered_dose ? ` - given: ${m.administered_dose}` : ''}`]
+    : []),
   `BCMA: ${m.barcode_scanned ? '✓ Scanned' : '⚠ Manual entry'}${m.override_reason ? ` - Override: ${m.override_reason}` : ''}`
 ];
 
