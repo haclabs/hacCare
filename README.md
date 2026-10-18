@@ -85,7 +85,7 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 - **React Image Marker 1.2** for body mapping (device/wound placement)
 
 ### Backend & Database
-- **Supabase** (PostgreSQL 15) hosted in **ca-central-1** (Canada) for data residency
+- **Supabase** (PostgreSQL 17) hosted in **ca-central-1** (Canada) for data residency
 - **Row Level Security (RLS)** enforcing multi-tenant isolation on every table
 - **SECURITY DEFINER** functions for privileged cross-tenant operations
 - **Supabase JS 2.112** client SDK

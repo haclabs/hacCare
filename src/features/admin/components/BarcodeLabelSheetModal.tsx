@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Printer, X } from 'lucide-react';
-import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, paginateLabelsByItem } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, splitMedicationName, medicationNameHtml, paginateLabelsByItem } from '../../../services/operations/bulkLabelService';
 
 export type { BarcodeLabelItem };
 
@@ -108,6 +108,10 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
               letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
               max-width: 1.75in;
             }
+            .med-brand {
+              font-size: 10px; font-weight: 700; color: #374151; white-space: nowrap;
+              overflow: hidden; text-overflow: ellipsis; max-width: 1.75in;
+            }
             .dose-line { display: flex; flex-direction: column; align-items: flex-start; margin-top: 2px; }
             .dose-value { font-size: 17px; font-weight: 800; color: #14776a; line-height: 1; }
             .dose-form { font-size: 9px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 1px; }
@@ -134,7 +138,7 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
               .map(
                 (item) => `
               <div class="label" style="border-left-color: ${MEDICATION_LABEL_ACCENT_COLOR};">
-                <div class="med-name">${item.name}</div>
+                ${medicationNameHtml(item.name, 'med-name', 'med-brand')}
                 <div class="dose-line">
                   <span class="dose-value">${splitMedicationSubtitle(item.subtitle).dose}</span>
                   <span class="dose-form">${splitMedicationSubtitle(item.subtitle).form}</span>
@@ -205,13 +209,17 @@ export const BarcodeLabelSheetModal: React.FC<BarcodeLabelSheetModalProps> = ({
           <div className="grid grid-cols-3 gap-2" style={{ gridTemplateColumns: 'repeat(3, 2.625in)' }}>
             {items.slice(0, 15).map((item) => {
               const { dose, form } = splitMedicationSubtitle(item.subtitle);
+              const { generic, brand } = splitMedicationName(item.name);
               return (
                 <div
                   key={item.id}
                   className="relative border border-gray-300 bg-white flex flex-col justify-between rounded shadow-sm overflow-hidden px-3 py-2"
                   style={{ width: '2.625in', height: '1in', borderLeftWidth: '4px', borderLeftColor: MEDICATION_LABEL_ACCENT_COLOR }}
                 >
-                  <span className="text-xs font-extrabold uppercase tracking-wide text-gray-900 truncate pr-16">{item.name}</span>
+                  <div className="min-w-0 pr-16">
+                    <span className="block text-xs font-extrabold uppercase tracking-wide text-gray-900 truncate">{generic}</span>
+                    {brand && <span className="block text-[10px] font-bold text-gray-700 truncate">{brand}</span>}
+                  </div>
                   <div className="flex flex-col items-start mt-0.5">
                     <span className="text-lg font-extrabold leading-none" style={{ color: '#14776a' }}>{dose}</span>
                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{form}</span>
