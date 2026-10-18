@@ -1,6 +1,6 @@
 import React from 'react';
 import { Timer } from 'lucide-react';
-import { getOrderReleaseStatus, MAX_RELEASE_AFTER_MINUTES } from '../utils/orderRelease';
+import { getOrderReleaseStatus, formatReleaseDelay, MAX_RELEASE_AFTER_MINUTES } from '../utils/orderRelease';
 
 const formatClock = (d: Date) =>
   d.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -48,23 +48,24 @@ export const ReleaseDelayBadge: React.FC<ReleaseDelayBadgeProps> = ({ releaseAft
   const status = getOrderReleaseStatus(releaseAfterMinutes, simulationStartsAt);
   if (status.kind === 'immediate') return null;
 
+  const delay = `${formatReleaseDelay(status.minutes)} delay`;
   const { label, cls, title } =
     status.kind === 'held'
       ? {
-          label: `Hidden from students until ${formatClock(status.releaseAt)}`,
+          label: `${delay} · hidden until ${formatClock(status.releaseAt)}`,
           cls: 'bg-purple-100 text-purple-800 border-purple-300',
-          title: `Releases ${status.minutes} min after the simulation started`,
+          title: 'Students cannot see this order yet. Only staff see this badge.',
         }
       : status.kind === 'released'
       ? {
-          label: `Released to students at ${formatClock(status.releaseAt)}`,
+          label: `${delay} · released ${formatClock(status.releaseAt)}`,
           cls: 'bg-gray-100 text-gray-700 border-gray-200',
-          title: `Released ${status.minutes} min after the simulation started`,
+          title: 'Students can now see this order. Only staff see this badge.',
         }
       : {
-          label: `Shows to students ${status.minutes} min after start`,
+          label: delay,
           cls: 'bg-purple-100 text-purple-800 border-purple-300',
-          title: 'Hidden from students until this many minutes after the simulation is started',
+          title: `Students see this order ${formatReleaseDelay(status.minutes)} after the simulation is started (Play). Only staff see this badge.`,
         };
 
   return (

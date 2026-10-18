@@ -67,7 +67,8 @@ You can hold a doctor's order back so students only see it partway through the s
 - The countdown starts when you press **Play** on the simulation and restarts after every reset
 - Until then, students cannot see the order at all. It appears on their screen within about 30
   seconds of its release time, with the usual **NEW** badge
-- Instructors and admins always see the order, with a purple badge showing when it releases
+- Instructors and admins always see the order, with a purple **"30 min delay"** bubble. In a running
+  simulation it also shows the release time ("30 min delay · hidden until 14:30"). Students never see it
 - Simulations can no longer be paused, so "30 minutes in" always means 30 minutes after Play
 
 **[SCREENSHOT PLACEHOLDER: Template editing interface showing patient data sections]**

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getOrderReleaseStatus, parseReleaseAfterMinutes, MAX_RELEASE_AFTER_MINUTES } from './orderRelease';
+import { getOrderReleaseStatus, parseReleaseAfterMinutes, formatReleaseDelay, MAX_RELEASE_AFTER_MINUTES } from './orderRelease';
 
 const START = '2026-10-18T14:00:00.000Z';
 const at = (iso: string) => new Date(iso);
@@ -25,6 +25,15 @@ describe('getOrderReleaseStatus', () => {
   it('is released exactly at starts_at + delay, matching the RLS "<= now()" check', () => {
     expect(getOrderReleaseStatus(30, START, at('2026-10-18T14:30:00.000Z')).kind).toBe('released');
     expect(getOrderReleaseStatus(30, START, at('2026-10-18T15:00:00.000Z')).kind).toBe('released');
+  });
+});
+
+describe('formatReleaseDelay', () => {
+  it('formats minutes and hours', () => {
+    expect(formatReleaseDelay(30)).toBe('30 min');
+    expect(formatReleaseDelay(60)).toBe('1 h');
+    expect(formatReleaseDelay(90)).toBe('1 h 30 min');
+    expect(formatReleaseDelay(1440)).toBe('24 h');
   });
 });
 
