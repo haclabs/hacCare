@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { escapeHtml } from '../../utils/sanitization';
 
 export interface PatientLabelData {
   id: string;
@@ -50,6 +51,19 @@ export const MEDICATION_LABEL_ACCENT_COLOR = '#3fbf9a';
 export function splitMedicationSubtitle(subtitle: string): { dose: string; form: string } {
   const [dose = '', form = ''] = subtitle.split(' · ');
   return { dose, form };
+}
+
+/** Splits a trailing "(Brand)" off a medication name, e.g. "Insulin Lispro (Admelog)". */
+export function splitMedicationName(name: string): { generic: string; brand: string } {
+  const match = name.match(/^(.+?)\s*(\([^()]+\))\s*$/);
+  return match ? { generic: match[1], brand: match[2] } : { generic: name, brand: '' };
+}
+
+/** Print-window HTML for a label's name, with any brand name on its own line. */
+export function medicationNameHtml(name: string, nameClass: string, brandClass: string): string {
+  const { generic, brand } = splitMedicationName(name);
+  const brandLine = brand ? `<div class="${brandClass}">${escapeHtml(brand)}</div>` : '';
+  return `<div><div class="${nameClass}">${escapeHtml(generic)}</div>${brandLine}</div>`;
 }
 
 /**

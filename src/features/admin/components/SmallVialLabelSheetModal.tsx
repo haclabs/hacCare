@@ -1,7 +1,7 @@
 import React from 'react';
 import { Printer, X } from 'lucide-react';
 import { QrThumbnail } from './BarcodeLabelSheetModal';
-import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, paginateLabelsByItem } from '../../../services/operations/bulkLabelService';
+import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, splitMedicationName, medicationNameHtml, paginateLabelsByItem } from '../../../services/operations/bulkLabelService';
 
 interface SmallVialLabelSheetModalProps {
   items: BarcodeLabelItem[];
@@ -63,6 +63,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
             .vlabel:nth-child(4n+4) { left: 6.45in; }
             .vlabel-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
             .vlabel-name { font-size: 8px; font-weight: 800; color: #111827; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .vlabel-brand { font-size: 7px; font-weight: 700; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .vlabel-dose { display: flex; align-items: baseline; gap: 3px; margin-top: 1px; }
             .vlabel-dose-value { font-size: 11px; font-weight: 800; color: #14776a; line-height: 1; white-space: nowrap; }
             .vlabel-dose-form { font-size: 6.5px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
@@ -89,7 +90,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
                   rows.push(`
                     <div class="vlabel" style="top: ${top}; border-left-color: ${MEDICATION_LABEL_ACCENT_COLOR};">
                       <div class="vlabel-text">
-                        <div class="vlabel-name">${item.name}</div>
+                        ${medicationNameHtml(item.name, 'vlabel-name', 'vlabel-brand')}
                         <div class="vlabel-dose">
                           <span class="vlabel-dose-value">${dose}</span>
                           <span class="vlabel-dose-form">${form}</span>
@@ -142,6 +143,7 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
           <div className="grid grid-cols-4 gap-2" style={{ gridTemplateColumns: 'repeat(4, 1.75in)' }}>
             {items.slice(0, 20).map((item) => {
               const { dose, form } = splitMedicationSubtitle(item.subtitle);
+              const { generic, brand } = splitMedicationName(item.name);
               return (
                 <div
                   key={item.id}
@@ -149,7 +151,8 @@ export const SmallVialLabelSheetModal: React.FC<SmallVialLabelSheetModalProps> =
                   style={{ width: '1.75in', height: '0.5in', borderLeftWidth: '3px', borderLeftColor: MEDICATION_LABEL_ACCENT_COLOR }}
                 >
                   <div className="flex flex-col justify-center min-w-0 overflow-hidden">
-                    <span className="text-[8px] font-extrabold uppercase tracking-wide text-gray-900 truncate">{item.name}</span>
+                    <span className="text-[8px] font-extrabold uppercase tracking-wide text-gray-900 truncate">{generic}</span>
+                    {brand && <span className="text-[7px] font-bold text-gray-700 truncate">{brand}</span>}
                     <div className="flex items-baseline gap-1 mt-0.5">
                       <span className="text-[11px] font-extrabold leading-none" style={{ color: '#14776a' }}>{dose}</span>
                       <span className="text-[6.5px] font-bold text-gray-500 uppercase tracking-wide">{form}</span>

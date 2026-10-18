@@ -5,7 +5,7 @@
 **Last Updated:** March 23, 2026
 
 ## System Overview
-hacCare is a **multi-tenant healthcare simulation platform** for clinical education. React 19 + TypeScript + Supabase (PostgreSQL 15) with strict Row-Level Security (RLS) for HIPAA compliance.
+hacCare is a **multi-tenant healthcare simulation platform** for clinical education. React 19 + TypeScript + Supabase (PostgreSQL 17) with strict Row-Level Security (RLS) for HIPAA compliance.
 
 ### Architecture Highlights
 - **Multi-tenant isolation**: Every table has `tenant_id UUID NOT NULL` with RLS policies enforcing tenant isolation
