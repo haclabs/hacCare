@@ -182,12 +182,15 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                   <span>{category === 'continuous' ? 'RUNNING' : 'DUE'}</span>
                 </span>
               )}
-              {category !== 'continuous' && medication.last_administered && (
-                <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 bg-blue-100 text-blue-800">
+              {medication.last_administered && (
+                // Cleared by both simulation resets (last_administered = NULL), so it never carries over
+                <span
+                  className="px-2 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300"
+                  title={`Last administered ${new Date(medication.last_administered).toLocaleString()}`}
+                >
                   <CheckCircle className="h-3 w-3" />
                   <span>
-                    Last Given:{' '}
-                    {formatLocalTime(new Date(medication.last_administered), 'HH:mm')}
+                    Given {formatLocalTime(new Date(medication.last_administered), 'HH:mm')}
                   </span>
                 </span>
               )}

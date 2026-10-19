@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Info, Package, Plus, X } from 'lucide-react';
 import { FieldError, FieldWarning } from '../../../types/schema';
-import { fetchMedicationCatalog, CatalogEntry } from '../../../services/clinical/medicationService';
+import { fetchMedicationCatalog, catalogDisplayName, CatalogEntry } from '../../../services/clinical/medicationService';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface ProcessedField {
@@ -313,7 +313,7 @@ export const MedicationLookupField: React.FC<BaseFieldProps> = ({
     ? []
     : catalog.filter((e) =>
         e.name.toLowerCase().includes(search.toLowerCase()) ||
-        (e.generic_name?.toLowerCase().includes(search.toLowerCase()) ?? false)
+        (e.brand_name?.toLowerCase().includes(search.toLowerCase()) ?? false)
       ).slice(0, 8);
 
   const addMedication = (name: string) => {
@@ -385,11 +385,11 @@ export const MedicationLookupField: React.FC<BaseFieldProps> = ({
                 <li key={entry.id}>
                   <button
                     type="button"
-                    onMouseDown={(e) => { e.preventDefault(); addMedication(`${entry.name} ${entry.strength}`.trim()); }}
+                    onMouseDown={(e) => { e.preventDefault(); addMedication(`${catalogDisplayName(entry)} ${entry.strength}`.trim()); }}
                     className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
                   >
                     <span className="flex-1 min-w-0">
-                      <span className="block text-sm font-medium text-gray-900 truncate">{entry.name}</span>
+                      <span className="block text-sm font-medium text-gray-900 truncate">{catalogDisplayName(entry)}</span>
                       <span className="block text-xs text-gray-500">{entry.strength} · {entry.formulation}</span>
                     </span>
                   </button>

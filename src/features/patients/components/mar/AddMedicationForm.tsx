@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Lock } from 'lucide-react';
 
 import type { Patient, Medication } from '../../../../types';
-import { createMedication, fetchMedicationCatalog } from '../../../../services/clinical/medicationService';
+import { createMedication, fetchMedicationCatalog, catalogDisplayName } from '../../../../services/clinical/medicationService';
 import { CatalogMedicationPicker } from './CatalogMedicationPicker';
 import type { CatalogEntry } from './CatalogMedicationPicker';
 import { SlidingScaleEditor } from './SlidingScaleEditor';
 import { fromDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
+import {
+  CATEGORY_OPTIONS,
+  FREQUENCY_OPTIONS,
+  ROUTE_OPTIONS,
+  generateFreeEntryBarcode,
+  mapCatalogCategory,
+  mapCatalogRoute,
+} from '../../utils/medicationFormOptions';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AddMedicationFormProps {
@@ -45,29 +53,6 @@ const defaultForm: MedFormState = {
   catalog_id: null,
   barcode: null,
 };
-
-/** Generate a random M-series barcode for free-entry (non-catalog) medications. */
-function generateFreeEntryBarcode(name: string): string {
-  const prefix = (name.replace(/[^A-Za-z]/g, '').charAt(0) || 'X').toUpperCase();
-  const code = Math.floor(10000 + Math.random() * 90000);
-  return `M${prefix}${code}`;
-}
-
-/** Map catalog route (lowercase) → Add form route value */
-function mapCatalogRoute(catalogRoute: string): string {
-  const map: Record<string, string> = {
-    oral: 'Oral',
-    intravenous: 'IV',
-    intramuscular: 'IM',
-    subcutaneous: 'SC',
-    topical: 'Topical',
-    inhalation: 'Inhalation',
-    rectal: 'Rectal',
-    transdermal: 'Topical',
-    sublingual: 'Oral',
-  };
-  return map[catalogRoute.toLowerCase()] ?? '';
-}
 
 function calculateNextDue(
   frequency: string,
@@ -284,9 +269,9 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
     setSelectedCatalog(entry);
     setForm((prev) => ({
       ...prev,
-      name: entry.name,
-      route: mapCatalogRoute(entry.route),
-      category: entry.category,
+      name: catalogDisplayName(entry),
+      route: mapCatalogRoute(entry.route) || prev.route,
+      category: mapCatalogCategory(entry.category) || prev.category,
       catalog_id: entry.id,
       barcode: entry.barcode,
     }));
@@ -349,7 +334,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
         dosage: form.dosage,
         route: form.route,
         frequency: form.frequency,
-        category: form.category as any,
+        category: form.category as Medication['category'],
         status: 'Active',
         prescribed_by: form.prescribed_by,
         start_date: form.start_date,
@@ -451,7 +436,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 onChange={(e) => {
                   updateField('name', e.target.value);
                   // If user manually edits name after catalog selection, detach from catalog
-                  if (selectedCatalog && e.target.value !== selectedCatalog.name) {
+                  if (selectedCatalog && e.target.value !== catalogDisplayName(selectedCatalog)) {
                     setSelectedCatalog(null);
                     setForm((prev) => ({ ...prev, name: e.target.value, catalog_id: null, barcode: generateFreeEntryBarcode(e.target.value) }));
                   }
@@ -471,11 +456,9 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select category</option>
-                <option value="prn">PRN (As Needed) - No alerts</option>
-                <option value="scheduled">Scheduled - Time-based alerts</option>
-                <option value="continuous">IV/Continuous - Critical alerts</option>
-                <option value="stat">STAT (No Alert)</option>
-                <option value="diabetic">🩸 Diabetic - Glucose monitoring</option>
+                {CATEGORY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
 
@@ -491,6 +474,11 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 10mg, 5ml"
               />
+              {selectedCatalog && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Catalog product: {selectedCatalog.strength} {selectedCatalog.formulation} — enter the ordered dose
+                </p>
+              )}
             </div>
 
             <div>
@@ -502,13 +490,9 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select route</option>
-                <option value="Oral">Oral</option>
-                <option value="IV">Intravenous (IV)</option>
-                <option value="IM">Intramuscular (IM)</option>
-                <option value="SC">Subcutaneous (SC)</option>
-                <option value="Topical">Topical</option>
-                <option value="Inhalation">Inhalation</option>
-                <option value="Rectal">Rectal</option>
+                {ROUTE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
 
@@ -521,14 +505,9 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select frequency</option>
-                <option value="1 time daily">1 time daily</option>
-                <option value="2 times daily">2 times daily</option>
-                <option value="3 times daily">3 times daily</option>
-                <option value="4 times daily">4 times daily</option>
-                <option value="Every 4 hours">Every 4 hours</option>
-                <option value="As needed (PRN)">As needed (PRN)</option>
-                <option value="One Time Admin (Now)">One Time Admin (Now)</option>
-                <option value="Continuous">Continuous infusion</option>
+                {FREQUENCY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
 
@@ -610,7 +589,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-haccare-teal text-white rounded-lg hover:bg-haccare-teal-dark transition-colors disabled:opacity-50"
               >
                 {isLoading ? 'Adding...' : 'Add Medication'}
               </button>

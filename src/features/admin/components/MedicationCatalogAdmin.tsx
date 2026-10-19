@@ -15,9 +15,19 @@ import { useAuth } from '../../../hooks/useAuth';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 import type { CatalogEntry } from '../../patients/components/mar/CatalogMedicationPicker';
+import { catalogDisplayName } from '../../../services/clinical/medicationService';
 import { BarcodeLabelSheetModal, type BarcodeLabelItem } from './BarcodeLabelSheetModal';
 import { SmallVialLabelSheetModal } from './SmallVialLabelSheetModal';
 import { getErrorCode, getErrorMessage } from '@/lib/errors';
+import { withCurrentValue } from '../../patients/utils/medicationFormOptions';
+import {
+  CATALOG_FORMULATIONS,
+  BRAND_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  STRENGTH_MAX_LENGTH,
+  getCatalogEntryWarnings,
+  normalizeStrength,
+} from '../utils/catalogLabelChecks';
 
 const ROUTES = [
   { value: 'oral',         label: 'Oral' },
@@ -41,12 +51,10 @@ const CATEGORIES = [
   { value: 'unscheduled', label: 'Unscheduled' },
 ];
 
-const FORMULATIONS = ['tablet', 'capsule', 'injection', 'IV solution', 'cream', 'patch', 'inhaler', 'drops', 'suppository', 'spray'];
-
 interface FormState {
   barcode: string;
   name: string;
-  generic_name: string;
+  brand_name: string;
   formulation: string;
   strength: string;
   route: string;
@@ -57,7 +65,7 @@ interface FormState {
 const emptyForm = (): FormState => ({
   barcode: '',
   name: '',
-  generic_name: '',
+  brand_name: '',
   formulation: 'tablet',
   strength: '',
   route: 'oral',
@@ -87,6 +95,19 @@ const ROUTE_COLORS: Record<string, string> = {
   transdermal:   'bg-violet-100 text-violet-700',
 };
 
+/** Amber, non-blocking hints about how a catalog field will print on labels. */
+const FieldWarnings: React.FC<{ messages: string[] }> = ({ messages }) =>
+  messages.length === 0 ? null : (
+    <ul className="mt-1 space-y-0.5">
+      {messages.map((m) => (
+        <li key={m} className="flex items-start gap-1 text-xs text-amber-700">
+          <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+          {m}
+        </li>
+      ))}
+    </ul>
+  );
+
 export const MedicationCatalogAdmin: React.FC = () => {
   const { hasRole } = useAuth();
   const [entries, setEntries] = useState<CatalogEntry[]>([]);
@@ -103,6 +124,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [printQuantity, setPrintQuantity] = useState(1);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showSmallPrintModal, setShowSmallPrintModal] = useState(false);
+  const labelWarnings = getCatalogEntryWarnings(form);
 
   const canView = hasRole(['super_admin', 'admin', 'instructor']);
   const canManage = hasRole(['super_admin', 'admin']);
@@ -111,7 +133,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
     setLoading(true);
     const { data, error: err } = await supabase
       .from('medications_catalog')
-      .select('id, barcode, name, generic_name, formulation, strength, route, category, display_order')
+      .select('id, barcode, name, brand_name, formulation, strength, route, category, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true, nullsFirst: false });
 
@@ -151,7 +173,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
     setForm({
       barcode:      entry.barcode,
       name:         entry.name,
-      generic_name: entry.generic_name ?? '',
+      brand_name:   entry.brand_name ?? '',
       formulation:  entry.formulation,
       strength:     entry.strength,
       route:        entry.route,
@@ -180,9 +202,9 @@ export const MedicationCatalogAdmin: React.FC = () => {
           .update({
             barcode:      form.barcode.trim().toUpperCase(),
             name:         form.name.trim(),
-            generic_name: form.generic_name.trim() || null,
+            brand_name:   form.brand_name.trim() || null,
             formulation:  form.formulation,
-            strength:     form.strength.trim(),
+            strength:     normalizeStrength(form.strength),
             route:        form.route,
             category:     form.category,
             notes:        form.notes.trim() || null,
@@ -197,9 +219,9 @@ export const MedicationCatalogAdmin: React.FC = () => {
           .insert({
             barcode:       form.barcode.trim().toUpperCase(),
             name:          form.name.trim(),
-            generic_name:  form.generic_name.trim() || null,
+            brand_name:    form.brand_name.trim() || null,
             formulation:   form.formulation,
-            strength:      form.strength.trim(),
+            strength:      normalizeStrength(form.strength),
             route:         form.route,
             category:      form.category,
             notes:         form.notes.trim() || null,
@@ -245,7 +267,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
     ? entries.filter((e) =>
         e.name.toLowerCase().includes(filterText.toLowerCase()) ||
         e.barcode.toLowerCase().includes(filterText.toLowerCase()) ||
-        (e.generic_name?.toLowerCase().includes(filterText.toLowerCase()) ?? false)
+        (e.brand_name?.toLowerCase().includes(filterText.toLowerCase()) ?? false)
       )
     : entries;
 
@@ -281,7 +303,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
     .map((e) => ({
       id: e.id,
       barcode: e.barcode,
-      name: e.name,
+      name: catalogDisplayName(e),
       subtitle: `${e.strength} · ${e.formulation}`,
       category: e.category,
       quantity: printQuantity,
@@ -330,7 +352,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
           {canManage && (
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-haccare-teal text-white rounded-lg hover:bg-haccare-teal-dark transition-colors text-sm font-medium"
             >
               <Plus className="h-4 w-4" />
               Add Entry
@@ -455,8 +477,8 @@ export const MedicationCatalogAdmin: React.FC = () => {
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900">{entry.name}</p>
-                    {entry.generic_name && (
-                      <p className="text-xs text-gray-400">{entry.generic_name}</p>
+                    {entry.brand_name && (
+                      <p className="text-xs text-gray-400">{entry.brand_name}</p>
                     )}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-gray-600">
@@ -571,10 +593,13 @@ export const MedicationCatalogAdmin: React.FC = () => {
                     type="text"
                     value={form.strength}
                     onChange={(e) => setForm((p) => ({ ...p, strength: e.target.value }))}
+                    onBlur={() => setForm((p) => ({ ...p, strength: normalizeStrength(p.strength) }))}
                     required
+                    maxLength={STRENGTH_MAX_LENGTH}
                     placeholder="e.g. 25 mg"
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  <FieldWarnings messages={labelWarnings.strength} />
                 </div>
               </div>
 
@@ -585,22 +610,27 @@ export const MedicationCatalogAdmin: React.FC = () => {
                   value={form.name}
                   onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                   required
-                  placeholder="e.g. Metoprolol Tartrate"
+                  maxLength={NAME_MAX_LENGTH}
+                  placeholder="e.g. Insulin Lispro"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <FieldWarnings messages={labelWarnings.name} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Generic Name <span className="text-xs text-gray-400 font-normal">(optional)</span>
+                  Brand Name <span className="text-xs text-gray-400 font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
-                  value={form.generic_name}
-                  onChange={(e) => setForm((p) => ({ ...p, generic_name: e.target.value }))}
-                  placeholder="e.g. Metoprolol"
+                  value={form.brand_name}
+                  onChange={(e) => setForm((p) => ({ ...p, brand_name: e.target.value }))}
+                  maxLength={BRAND_MAX_LENGTH}
+                  placeholder="e.g. Admelog"
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <p className="text-xs text-gray-400 mt-1">Prints in brackets on its own line under the name</p>
+                <FieldWarnings messages={labelWarnings.brand} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -612,8 +642,11 @@ export const MedicationCatalogAdmin: React.FC = () => {
                     required
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    {FORMULATIONS.map((f) => (
-                      <option key={f} value={f}>{f}</option>
+                    {withCurrentValue(
+                      CATALOG_FORMULATIONS.map((f) => ({ value: f, label: f })),
+                      form.formulation
+                    ).map((f) => (
+                      <option key={f.value} value={f.value}>{f.label}</option>
                     ))}
                   </select>
                 </div>
@@ -670,7 +703,7 @@ export const MedicationCatalogAdmin: React.FC = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-haccare-teal text-white rounded-lg hover:bg-haccare-teal-dark transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   {submitting ? 'Saving…' : editing ? 'Save Changes' : 'Add to Catalog'}
                 </button>

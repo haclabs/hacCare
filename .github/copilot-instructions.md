@@ -758,8 +758,19 @@ grep -r "TODO.*old" src/
 <button className="text-gray-600 hover:text-gray-900">
 ```
 
+**Primary Action Buttons** - Submit, Save, Add, etc. use the hacCare teal:
+```tsx
+// ✅ hacCare teal (colours in the @theme block of src/index.css); white on teal passes WCAG AA (5.4:1)
+<button type="submit" className="px-4 py-2 bg-haccare-teal hover:bg-haccare-teal-dark text-white rounded-lg">
+
+// ❌ White text on the bright mint fails WCAG AA (2.3:1) — use mint for focus rings/accents only
+<button className="bg-haccare-mint text-white">
+```
+Older screens still have blue submit buttons; switch them to teal when you touch them.
+
 **Color Semantics** - Consistent color meanings:
-- **Blue** (primary): Main actions, navigation, info
+- **hacCare teal**: Primary actions (submit, save, add)
+- **Blue**: Navigation, info
 - **Green**: Success, active simulations, safe actions
 - **Amber/Orange**: Templates, warnings, editing mode
 - **Purple**: Program-related, instructor features

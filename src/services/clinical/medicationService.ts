@@ -11,7 +11,7 @@ export interface CatalogEntry {
   id: string;
   barcode: string;
   name: string;
-  generic_name: string | null;
+  brand_name: string | null;
   formulation: string;
   strength: string;
   route: string;
@@ -19,10 +19,19 @@ export interface CatalogEntry {
   display_order: number | null;
 }
 
+/**
+ * Name copied onto patient medications when picked from the catalog: "Insulin Aspart (NovoRapid)".
+ * Labels print the bracketed brand on its own line (splitMedicationName in bulkLabelService).
+ */
+export function catalogDisplayName(entry: Pick<CatalogEntry, 'name' | 'brand_name'>): string {
+  const brand = entry.brand_name?.trim();
+  return brand ? `${entry.name} (${brand})` : entry.name;
+}
+
 export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
   const { data, error } = await supabase
     .from('medications_catalog')
-    .select('id, barcode, name, generic_name, formulation, strength, route, category, display_order')
+    .select('id, barcode, name, brand_name, formulation, strength, route, category, display_order')
     .eq('is_active', true)
     .order('display_order', { ascending: true, nullsFirst: false });
 

@@ -2,11 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Lock } from 'lucide-react';
 
 import type { Medication } from '../../../../types';
-import { updateMedication, fetchMedicationCatalog } from '../../../../services/clinical/medicationService';
+import { updateMedication, fetchMedicationCatalog, catalogDisplayName } from '../../../../services/clinical/medicationService';
 import { CatalogMedicationPicker } from './CatalogMedicationPicker';
 import type { CatalogEntry } from './CatalogMedicationPicker';
 import { SlidingScaleEditor } from './SlidingScaleEditor';
 import { fromDraftRows, toDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
+import {
+  CATEGORY_OPTIONS,
+  FREQUENCY_OPTIONS,
+  ROUTE_OPTIONS,
+  dosesPerDay,
+  generateFreeEntryBarcode,
+  mapCatalogCategory,
+  mapCatalogRoute,
+  normalizeRoute,
+  withCurrentValue,
+} from '../../utils/medicationFormOptions';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface EditMedicationFormProps {
@@ -31,37 +42,8 @@ interface EditFormState {
   barcode: string | null;
 }
 
-/** Generate a random M-series barcode for free-entry (non-catalog) medications. */
-function generateFreeEntryBarcode(name: string): string {
-  const prefix = (name.replace(/[^A-Za-z]/g, '').charAt(0) || 'X').toUpperCase();
-  const code = Math.floor(10000 + Math.random() * 90000);
-  return `M${prefix}${code}`;
-}
-
-/** Map catalog route (lowercase) → Edit form route value */
-function mapCatalogRoute(catalogRoute: string): string {
-  const map: Record<string, string> = {
-    oral: 'PO',
-    intravenous: 'IV',
-    intramuscular: 'IM',
-    subcutaneous: 'SC',
-    sublingual: 'SL',
-    topical: 'TOP',
-    inhalation: 'INH',
-    transdermal: 'TOP',
-  };
-  return map[catalogRoute.toLowerCase()] ?? '';
-}
-
 function initForm(medication: Medication): EditFormState {
-  const expectedCount =
-    medication.frequency.includes('Four times') || medication.frequency.includes('QID')
-      ? 4
-      : medication.frequency.includes('Three times') || medication.frequency.includes('TID')
-      ? 3
-      : medication.frequency.includes('Twice') || medication.frequency.includes('BID')
-      ? 2
-      : 1;
+  const expectedCount = dosesPerDay(medication.frequency) || 1;
 
   let adminTimes = medication.admin_times || [medication.admin_time || '08:00'];
   if (!medication.admin_times || adminTimes.length !== expectedCount) {
@@ -76,7 +58,7 @@ function initForm(medication: Medication): EditFormState {
     name: medication.name,
     category: medication.category || 'scheduled',
     dosage: medication.dosage,
-    route: medication.route,
+    route: normalizeRoute(medication.route),
     frequency: medication.frequency,
     admin_time: medication.admin_time || '08:00',
     admin_times: adminTimes,
@@ -177,9 +159,9 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
     setSelectedCatalog(entry);
     setForm((prev) => ({
       ...prev,
-      name: entry.name,
-      route: mapCatalogRoute(entry.route),
-      category: entry.category,
+      name: catalogDisplayName(entry),
+      route: mapCatalogRoute(entry.route) || prev.route,
+      category: mapCatalogCategory(entry.category) || prev.category,
       catalog_id: entry.id,
       barcode: entry.barcode,
     }));
@@ -228,7 +210,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
         dosage: form.dosage,
         route: form.route,
         frequency: form.frequency,
-        category: form.category as any,
+        category: form.category as Medication['category'],
         prescribed_by: form.prescribed_by,
         start_date: form.start_date,
         end_date: form.end_date || undefined,
@@ -329,7 +311,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 onChange={(e) => {
                   updateField('name', e.target.value);
                   // Detach from catalog if name is manually changed
-                  if (selectedCatalog && e.target.value !== selectedCatalog.name) {
+                  if (selectedCatalog && e.target.value !== catalogDisplayName(selectedCatalog)) {
                     setSelectedCatalog(null);
                     setForm((prev) => ({ ...prev, name: e.target.value, catalog_id: null, barcode: generateFreeEntryBarcode(e.target.value) }));
                   }
@@ -349,6 +331,11 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 placeholder="e.g., 10mg, 2 tablets"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {selectedCatalog && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Catalog product: {selectedCatalog.strength} {selectedCatalog.formulation} — enter the ordered dose
+                </p>
+              )}
             </div>
 
             <div>
@@ -360,13 +347,9 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select route...</option>
-                <option value="PO">PO (Oral)</option>
-                <option value="IV">IV (Intravenous)</option>
-                <option value="IM">IM (Intramuscular)</option>
-                <option value="SC">SC (Subcutaneous)</option>
-                <option value="SL">SL (Sublingual)</option>
-                <option value="TOP">Topical</option>
-                <option value="INH">Inhaled</option>
+                {withCurrentValue(ROUTE_OPTIONS, form.route).map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
 
@@ -379,13 +362,9 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select frequency...</option>
-                <option value="Once daily">Once daily</option>
-                <option value="BID (Twice daily)">BID (Twice daily)</option>
-                <option value="TID (Three times daily)">TID (Three times daily)</option>
-                <option value="QID (Four times daily)">QID (Four times daily)</option>
-                <option value="PRN (As needed)">PRN (As needed)</option>
-                <option value="Once monthly">Once monthly</option>
-                <option value="Continuous">Continuous</option>
+                {withCurrentValue(FREQUENCY_OPTIONS, form.frequency).map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
 
@@ -398,10 +377,9 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select category...</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="prn">PRN (As Needed)</option>
-                <option value="diabetic">💉 Diabetic</option>
-                <option value="continuous">Continuous</option>
+                {withCurrentValue(CATEGORY_OPTIONS, form.category).map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
             </div>
 
@@ -479,7 +457,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-haccare-teal text-white rounded-lg hover:bg-haccare-teal-dark transition-colors disabled:opacity-50"
               >
                 {isLoading ? 'Updating...' : 'Update Medication'}
               </button>

@@ -2,6 +2,18 @@
 
 @variant dark (.dark &);
 
+/*
+ * hacCare brand colours. Primary action buttons (Submit/Save/Add) use
+ * `bg-haccare-teal hover:bg-haccare-teal-dark text-white` — white on teal passes WCAG AA (5.4:1).
+ * White on mint does not (2.3:1), so mint is for focus rings, accents and tinted backgrounds.
+ */
+@theme {
+  --color-haccare-teal: #14776a;
+  --color-haccare-teal-dark: #0f5c52;
+  --color-haccare-mint: #3fbf9a;
+  --color-haccare-mint-dark: #2f9e80;
+}
+
 @layer base {
   body {
     @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100;

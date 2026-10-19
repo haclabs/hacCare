@@ -15,6 +15,7 @@
 import { supabase } from '../../../lib/api/supabase';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import type { Patient, Medication } from '../../../types';
+import { catalogDisplayName } from '../../../services/clinical/medicationService';
 
 export const TRAINING_PATIENT_ID = 'P00001';
 
@@ -33,6 +34,7 @@ interface GlobalCatalogRow {
   id: string;
   barcode: string;
   name: string;
+  brand_name: string | null;
   strength: string;
   route: string;
   category: string;
@@ -66,7 +68,7 @@ export function buildTrainingPatient(): Patient {
 export async function fetchTrainingMedications(): Promise<Medication[]> {
   const { data, error } = await supabase
     .from('medications_catalog')
-    .select('id, barcode, name, strength, route, category')
+    .select('id, barcode, name, brand_name, strength, route, category')
     .is('tenant_id', null)
     .eq('is_active', true)
     .order('display_order', { ascending: true, nullsFirst: false });
@@ -86,7 +88,7 @@ export async function fetchTrainingMedications(): Promise<Medication[]> {
     acc.push({
       id: `training-med-${category}`,
       patient_id: TRAINING_PATIENT_ID,
-      name: entry.name,
+      name: catalogDisplayName(entry),
       category: category as Medication['category'],
       dosage: entry.strength,
       frequency: DEFAULT_FREQUENCY[category],
