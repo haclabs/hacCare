@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -543,6 +543,7 @@ export type Database = {
           order_type: string | null
           ordering_doctor: string
           patient_id: string
+          release_after_minutes: number | null
           tenant_id: string
           updated_at: string | null
           updated_by: string | null
@@ -563,6 +564,7 @@ export type Database = {
           order_type?: string | null
           ordering_doctor: string
           patient_id: string
+          release_after_minutes?: number | null
           tenant_id: string
           updated_at?: string | null
           updated_by?: string | null
@@ -583,6 +585,7 @@ export type Database = {
           order_type?: string | null
           ordering_doctor?: string
           patient_id?: string
+          release_after_minutes?: number | null
           tenant_id?: string
           updated_at?: string | null
           updated_by?: string | null
@@ -1187,6 +1190,7 @@ export type Database = {
           barcode_scanned: boolean | null
           created_at: string | null
           dosage: string | null
+          glucose_reading: number | null
           id: string
           medication_barcode_scanned: string | null
           medication_id: string | null
@@ -1196,6 +1200,7 @@ export type Database = {
           patient_barcode_scanned: string | null
           patient_id: string
           route: string | null
+          sliding_scale_dose: string | null
           status: string | null
           student_name: string | null
           tenant_id: string
@@ -1210,6 +1215,7 @@ export type Database = {
           barcode_scanned?: boolean | null
           created_at?: string | null
           dosage?: string | null
+          glucose_reading?: number | null
           id?: string
           medication_barcode_scanned?: string | null
           medication_id?: string | null
@@ -1219,6 +1225,7 @@ export type Database = {
           patient_barcode_scanned?: string | null
           patient_id: string
           route?: string | null
+          sliding_scale_dose?: string | null
           status?: string | null
           student_name?: string | null
           tenant_id: string
@@ -1233,6 +1240,7 @@ export type Database = {
           barcode_scanned?: boolean | null
           created_at?: string | null
           dosage?: string | null
+          glucose_reading?: number | null
           id?: string
           medication_barcode_scanned?: string | null
           medication_id?: string | null
@@ -1242,6 +1250,7 @@ export type Database = {
           patient_barcode_scanned?: string | null
           patient_id?: string
           route?: string | null
+          sliding_scale_dose?: string | null
           status?: string | null
           student_name?: string | null
           tenant_id?: string
@@ -1269,6 +1278,7 @@ export type Database = {
       medications_catalog: {
         Row: {
           barcode: string
+          brand_name: string | null
           category: string
           created_at: string
           created_by: string | null
@@ -1285,6 +1295,7 @@ export type Database = {
         }
         Insert: {
           barcode: string
+          brand_name?: string | null
           category?: string
           created_at?: string
           created_by?: string | null
@@ -1301,6 +1312,7 @@ export type Database = {
         }
         Update: {
           barcode?: string
+          brand_name?: string | null
           category?: string
           created_at?: string
           created_by?: string | null
@@ -1380,6 +1392,7 @@ export type Database = {
           bmi: string | null
           chief_complaint: string | null
           created_at: string | null
+          current_living_arrangements: string | null
           current_medications: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -1391,6 +1404,7 @@ export type Database = {
           insurance_policy: string | null
           insurance_provider: string | null
           marital_status: string | null
+          medical_history: string | null
           occupation: string | null
           patient_id: string
           secondary_contact_address: string | null
@@ -1399,6 +1413,7 @@ export type Database = {
           secondary_contact_relationship: string | null
           smoking_status: string | null
           student_name: string | null
+          surgical_history: string | null
           tenant_id: string | null
           updated_at: string | null
           weight: string | null
@@ -1414,6 +1429,7 @@ export type Database = {
           bmi?: string | null
           chief_complaint?: string | null
           created_at?: string | null
+          current_living_arrangements?: string | null
           current_medications?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -1425,6 +1441,7 @@ export type Database = {
           insurance_policy?: string | null
           insurance_provider?: string | null
           marital_status?: string | null
+          medical_history?: string | null
           occupation?: string | null
           patient_id: string
           secondary_contact_address?: string | null
@@ -1433,6 +1450,7 @@ export type Database = {
           secondary_contact_relationship?: string | null
           smoking_status?: string | null
           student_name?: string | null
+          surgical_history?: string | null
           tenant_id?: string | null
           updated_at?: string | null
           weight?: string | null
@@ -1448,6 +1466,7 @@ export type Database = {
           bmi?: string | null
           chief_complaint?: string | null
           created_at?: string | null
+          current_living_arrangements?: string | null
           current_medications?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -1459,6 +1478,7 @@ export type Database = {
           insurance_policy?: string | null
           insurance_provider?: string | null
           marital_status?: string | null
+          medical_history?: string | null
           occupation?: string | null
           patient_id?: string
           secondary_contact_address?: string | null
@@ -1467,6 +1487,7 @@ export type Database = {
           secondary_contact_relationship?: string | null
           smoking_status?: string | null
           student_name?: string | null
+          surgical_history?: string | null
           tenant_id?: string | null
           updated_at?: string | null
           weight?: string | null
@@ -1904,6 +1925,7 @@ export type Database = {
           patient_id: string | null
           prescribed_by: string
           route: string
+          sliding_scale: Json | null
           start_date: string
           status: string
           tenant_id: string | null
@@ -1925,6 +1947,7 @@ export type Database = {
           patient_id?: string | null
           prescribed_by: string
           route: string
+          sliding_scale?: Json | null
           start_date: string
           status?: string
           tenant_id?: string | null
@@ -1946,6 +1969,7 @@ export type Database = {
           patient_id?: string | null
           prescribed_by?: string
           route?: string
+          sliding_scale?: Json | null
           start_date?: string
           status?: string
           tenant_id?: string | null
@@ -2819,6 +2843,7 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           created_by: string
+          current_state_id: string | null
           duration_minutes: number
           ends_at: string | null
           id: string
@@ -2840,6 +2865,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           created_by: string
+          current_state_id?: string | null
           duration_minutes: number
           ends_at?: string | null
           id?: string
@@ -2863,6 +2889,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           created_by?: string
+          current_state_id?: string | null
           duration_minutes?: number
           ends_at?: string | null
           id?: string
@@ -2881,6 +2908,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "simulation_active_current_state_id_fkey"
+            columns: ["current_state_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_template_states"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "simulation_active_template_id_fkey"
             columns: ["template_id"]
@@ -3191,55 +3225,63 @@ export type Database = {
         }
         Relationships: []
       }
-      simulation_template_versions: {
+      simulation_template_states: {
         Row: {
-          change_notes: string | null
-          device_count: number | null
+          changelog_note: string | null
+          created_at: string
+          created_by: string | null
           id: string
-          medication_count: number | null
-          order_count: number | null
-          patient_count: number | null
-          saved_at: string | null
-          saved_by: string | null
+          label: string
           snapshot_data: Json
+          sort_order: number
           template_id: string
-          version: number
-          wound_count: number | null
+          tenant_id: string
+          updated_at: string
         }
         Insert: {
-          change_notes?: string | null
-          device_count?: number | null
+          changelog_note?: string | null
+          created_at?: string
+          created_by?: string | null
           id?: string
-          medication_count?: number | null
-          order_count?: number | null
-          patient_count?: number | null
-          saved_at?: string | null
-          saved_by?: string | null
+          label: string
           snapshot_data: Json
+          sort_order?: number
           template_id: string
-          version: number
-          wound_count?: number | null
+          tenant_id: string
+          updated_at?: string
         }
         Update: {
-          change_notes?: string | null
-          device_count?: number | null
+          changelog_note?: string | null
+          created_at?: string
+          created_by?: string | null
           id?: string
-          medication_count?: number | null
-          order_count?: number | null
-          patient_count?: number | null
-          saved_at?: string | null
-          saved_by?: string | null
+          label?: string
           snapshot_data?: Json
+          sort_order?: number
           template_id?: string
-          version?: number
-          wound_count?: number | null
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "simulation_template_versions_template_id_fkey"
+            foreignKeyName: "simulation_template_states_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "simulation_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_template_states_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_template_states_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -4866,6 +4908,13 @@ export type Database = {
         Args: { p_simulation_id: string }
         Returns: Json
       }
+      caller_may_administer_tenant: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
+      }
+      caller_profile_role: { Args: never; Returns: string }
+      caller_tenant_comember_ids: { Args: never; Returns: string[] }
+      caller_tenant_ids: { Args: never; Returns: string[] }
       cleanup_all_problem_simulations: { Args: never; Returns: Json }
       cleanup_backup_audit_logs: { Args: never; Returns: number }
       cleanup_expired_simulations: { Args: never; Returns: number }
@@ -4878,14 +4927,6 @@ export type Database = {
       }
       compare_simulation_vs_template: {
         Args: { p_simulation_id: string }
-        Returns: Json
-      }
-      compare_template_versions: {
-        Args: {
-          p_template_id: string
-          p_version_new: number
-          p_version_old: number
-        }
         Returns: Json
       }
       complete_simulation: {
@@ -4901,39 +4942,6 @@ export type Database = {
         Returns: undefined
       }
       confirm_user_email: { Args: { target_user_id: string }; Returns: boolean }
-      create_medication_super_admin: {
-        Args: {
-          p_admin_time?: string
-          p_category?: string
-          p_dosage: string
-          p_end_date?: string
-          p_frequency: string
-          p_name: string
-          p_patient_id: string
-          p_prescribed_by?: string
-          p_route: string
-          p_start_date: string
-          p_status?: string
-        }
-        Returns: {
-          admin_time: string
-          category: string
-          created_at: string
-          dosage: string
-          end_date: string
-          frequency: string
-          last_administered: string
-          medication_id: string
-          name: string
-          next_due: string
-          patient_id: string
-          prescribed_by: string
-          route: string
-          start_date: string
-          status: string
-          tenant_id: string
-        }[]
-      }
       create_patient_template: {
         Args: {
           p_description?: string
@@ -5036,33 +5044,12 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: string
       }
-      duplicate_patient_to_tenant: {
-        Args: {
-          p_include_alerts?: boolean
-          p_include_assessments?: boolean
-          p_include_bowel_records?: boolean
-          p_include_diabetic_records?: boolean
-          p_include_doctors_orders?: boolean
-          p_include_hacmap?: boolean
-          p_include_handover_notes?: boolean
-          p_include_intake_output?: boolean
-          p_include_labs?: boolean
-          p_include_medications?: boolean
-          p_include_vitals?: boolean
-          p_include_wound_care?: boolean
-          p_new_patient_id?: string
-          p_source_patient_id: string
-          p_target_tenant_id: string
-        }
-        Returns: {
-          message: string
-          new_patient_id: string
-          new_patient_identifier: string
-          records_created: Json
-          success: boolean
-        }[]
+      doctors_order_is_released: {
+        Args: { p_release_after_minutes: number; p_tenant_id: string }
+        Returns: boolean
       }
       end_user_session: { Args: never; Returns: boolean }
+      ensure_tenant_access: { Args: { p_tenant_id: string }; Returns: boolean }
       ensure_user_profile: {
         Args: { user_email: string; user_id: string }
         Returns: {
@@ -5128,14 +5115,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_available_tenants_for_transfer: {
-        Args: { p_source_patient_id: string }
-        Returns: {
-          subdomain: string
-          tenant_id: string
-          tenant_name: string
-        }[]
-      }
       get_cohort_students: {
         Args: { p_cohort_id: string }
         Returns: {
@@ -5183,6 +5162,37 @@ export type Database = {
         }[]
       }
       get_super_admin_tenant_context: { Args: never; Returns: string }
+      get_tenant_by_subdomain_public: {
+        Args: { p_subdomain: string }
+        Returns: {
+          admin_user_id: string | null
+          auto_cleanup_at: string | null
+          created_at: string | null
+          id: string
+          is_simulation: boolean | null
+          logo_url: string | null
+          max_patients: number
+          max_users: number
+          name: string
+          parent_tenant_id: string | null
+          primary_color: string | null
+          program_id: string | null
+          settings: Json
+          simulation_config: Json | null
+          simulation_id: string | null
+          status: string
+          subdomain: string
+          subscription_plan: string
+          tenant_type: string | null
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tenants"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_tenant_users: {
         Args: { target_tenant_id: string }
         Returns: {
@@ -5264,6 +5274,7 @@ export type Database = {
           p_participant_roles?: string[]
           p_participant_user_ids: string[]
           p_primary_categories?: string[]
+          p_state_id?: string
           p_sub_categories?: string[]
           p_template_id: string
         }
@@ -5272,6 +5283,10 @@ export type Database = {
           simulation_id: string
           tenant_id: string
         }[]
+      }
+      load_template_state: {
+        Args: { p_state_id?: string; p_template_id: string }
+        Returns: Json
       }
       mark_welcome_seen: { Args: never; Returns: string }
       move_patient_to_tenant:
@@ -5299,11 +5314,11 @@ export type Database = {
       }
       reset_run: { Args: { p_run_id: string }; Returns: Json }
       reset_simulation_for_next_session: {
-        Args: { p_simulation_id: string }
+        Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json
       }
       reset_simulation_with_template_updates: {
-        Args: { p_simulation_id: string }
+        Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json
       }
       restore_snapshot_to_tenant: {
@@ -5317,15 +5332,6 @@ export type Database = {
         }
         Returns: Json
       }
-      restore_template_version: {
-        Args: {
-          p_restore_notes?: string
-          p_template_id: string
-          p_user_id?: string
-          p_version_to_restore: number
-        }
-        Returns: Json
-      }
       save_patient_template_snapshot: {
         Args: { p_patient_template_id: string }
         Returns: Json
@@ -5334,18 +5340,21 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: Json
       }
-      save_template_version: {
+      save_template_state: {
         Args: {
-          p_change_notes?: string
-          p_new_snapshot: Json
+          p_changelog_note?: string
+          p_label: string
           p_template_id: string
-          p_user_id?: string
         }
         Returns: Json
       }
       set_super_admin_tenant_context: {
         Args: { target_tenant_id: string }
         Returns: undefined
+      }
+      shift_snapshot_timestamps: {
+        Args: { p_shift: string; p_snapshot: Json }
+        Returns: Json
       }
       update_medication_super_admin: {
         Args: { p_medication_id: string; p_updates: Json }
@@ -5366,6 +5375,7 @@ export type Database = {
           patient_id: string | null
           prescribed_by: string
           route: string
+          sliding_scale: Json | null
           start_date: string
           status: string
           tenant_id: string | null
@@ -5392,6 +5402,10 @@ export type Database = {
           p_sub_categories?: string[]
         }
         Returns: boolean
+      }
+      update_template_state_snapshot: {
+        Args: { p_state_id: string; p_template_id: string }
+        Returns: Json
       }
       update_user_profile_admin: {
         Args: {
@@ -5427,6 +5441,7 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { tenant_uuid: string; user_uuid: string }; Returns: boolean }
       user_is_super_admin: { Args: { user_uuid: string }; Returns: boolean }
+      user_may_join_tenant: { Args: { p_tenant_id: string }; Returns: boolean }
       validate_subdomain: {
         Args: { subdomain_input: string }
         Returns: boolean

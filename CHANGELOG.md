@@ -7,6 +7,125 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-19 - "GIVEN" BUBBLE ON THE MAR
+===============================================================================
+
+* MAR shows a green "✓ Given 14:32" bubble once a medication is administered
+  (was a blue "Last Given" tag that was hidden for continuous infusions). It
+  reads patient_medications.last_administered, which both simulation resets
+  clear, so it never carries into the next session. The History tab already
+  lists each administration and is cleared by resets too
+* MAR History tab shows only the time (no date) in simulations and templates,
+  which are reused for months
+* Removed a 2026-09-09 test dose from the "PNG 1146 - Heather" template, its
+  snapshot and its simulation (database/fixes/20261019_remove_test_dose_from_heather_template.sql)
+* Every patient medication now has a barcode. 12 medications in the Robert
+  Hutchins / Maria Alvarez patient templates and the WALKTHROUGH DKA template
+  had none (inserted outside the Add Medication form), so their labels fell
+  back to a row-id code that changed at every launch and never scanned
+  - Catalog drugs linked to their catalog entry (Ondansetron MZ008, Regular
+    Insulin MZ011, Ceftriaxone MZ088, Prednisone MZ042); custom drugs given
+    fixed free-entry codes; snapshots updated to match
+    (database/fixes/20261019_assign_stable_barcodes_to_template_medications.sql)
+  - Migration 20261019000003 adds a BEFORE INSERT trigger that assigns a
+    free-entry M-code when none is supplied, and drops the unused
+    create_medication_super_admin function
+
+===============================================================================
+[Unreleased] - 2026-10-19 - MEDICATION CATALOG BRAND NAME FIELD
+===============================================================================
+
+* The catalog has an optional Brand Name, replacing the "Generic (Brand)"
+  naming convention instructors had to type by hand
+  - Catalog admin form: Name (generic) + Brand Name; the unused Generic Name
+    field is removed from the form (the generic_name column is left in place)
+  - Picking a catalog medication (MAR Add/Edit, medication-list form fields,
+    training BCMA) still saves "Insulin Aspart (NovoRapid)" as the patient
+    medication's name, so the MAR, BCMA and labels are unchanged
+  - Catalog search matches the brand
+  - Migration: supabase/migrations/20261019000002_add_medication_catalog_brand_name.sql
+    adds medications_catalog.brand_name and splits the 19 "Name (Brand)"
+    entries. Already applied to hacCare Canada (2026-10-19); until this code
+    deploys, the live build drops the brand from catalog picks and labels
+  - src/types/supabase.ts regenerated from production
+
+===============================================================================
+[Unreleased] - 2026-10-19 - CATALOG NAMES STANDARDISED TO "GENERIC (BRAND)"
+===============================================================================
+
+* Catalog names standardised to "Generic (Brand)" (19 entries) so labels can
+  print the brand on its own line (see "MEDICATION LABEL BRAND NAME ON ITS OWN
+  LINE", 2026-10-18): brand-only
+  names gain their generic (Lantus → Insulin Glargine (Lantus), Ancef →
+  Cefazolin (Ancef), …); brands that 20261019000000 moved into notes are
+  restored (Insulin Lispro (Admelog), Insulin Degludec (Tresiba), Insulin
+  Aspart (Trurapi Solostar), …). Fixes Humolog → Humalog and generic
+  Pantoprozole → Pantoprazole
+  - Migration: supabase/migrations/20261019000001_standardise_catalog_generic_brand_names.sql.
+    Dry-run against hacCare Canada in a rolled-back block: 19/19 rows matched
+* Catalog admin form suggests the "Generic (Brand)" format and warns when the
+  brand isn't at the end of the name
+
+===============================================================================
+[Unreleased] - 2026-10-19 - MEDICATION CATALOG CLEANUP FOR LABEL PRINTING
+===============================================================================
+
+* Cleaned up 37 medications_catalog entries that printed badly on barcode
+  labels (names over ~18 characters are cut off; long strengths run under the
+  QR code). Barcodes are unchanged, so printed labels keep scanning, and
+  existing patient medications keep their copied name/dosage
+  - Names no longer repeat the strength/formulation or carry brands in
+    brackets (e.g. "Dextrose 5% in 0.45% Sodium Chloride (D5 ½ NS)" →
+    "D5 0.45% NaCl"; insulins use the generic name, brand moved to notes)
+  - Patient-specific doses stored as strengths replaced with product
+    strengths (Ceftriaxone 221 mg → 250 mg, Ampicillin 55 mg → 250 mg,
+    Acetaminophen 10 mg/kg → 160 mg/5 mL)
+  - Duplicate Amoxicillin 500 mg tablet (MZ032, never used) deactivated;
+    placeholder strengths ("units", "mL", "drops") filled in
+  - Strength formatting made consistent: "1000mg" → "1000 mg", "50mg/ml" →
+    "50 mg/mL", "100 units / mL" → "100 units/mL"
+  - Migration: supabase/migrations/20261019000000_clean_up_medication_catalog_labels.sql
+    (each UPDATE only applies if the entry still holds the 2026-10-19 values).
+    Dry-run against hacCare Canada in a rolled-back block: 36/36 rows matched
+* Catalog admin form warns (without blocking) when a name or strength will
+  print badly, caps name at 40 / strength at 25 characters, and formats the
+  strength on blur and save. Formulation list adds liquid, powder, mini-bag,
+  insulin pen, enema and bottle, and an entry's existing formulation is shown
+  instead of falling back to "tablet"
+
+===============================================================================
+[Unreleased] - 2026-10-19 - MEDICATION FORMS SHARE ONE SET OF OPTIONS
+===============================================================================
+
+* Edit Medication no longer opens with blank Route/Frequency/Category
+  - The Add and Edit forms used different option values (Add saved "Oral",
+    "1 time daily"; Edit offered "PO", "Once daily"), so 233 of 265
+    catalog-linked medications in production opened in Edit with at least one
+    required select blank, which looked like the catalog had not copied them
+  - Both forms now use src/features/patients/utils/medicationFormOptions.ts.
+    Legacy route codes PO/TOP/INH display as Oral/Topical/Inhalation; any
+    other non-standard value (e.g. frequency "Once daily") is shown as-is
+    rather than blanked. Edit now offers STAT
+* Catalog selection maps every catalog route: sublingual → SL (was Oral),
+  transdermal → Transdermal (was Topical), nasal → Nasal (was blank).
+  Catalog category "unscheduled" is left for the instructor to choose — the
+  MAR has no Unscheduled section, so those meds would not be displayed
+* The Dosage field shows the selected catalog product's strength as a hint
+* Removed unused src/features/patients/components/forms/MedicationForm.tsx
+  (917 lines, no imports; superseded by the MAR Add/Edit forms)
+* BCMA "too soon since last dose" check now applies to the Add form's
+  frequency wording. Intervals were keyed on exact strings ("Once daily",
+  "Twice daily"), so "1 time daily" (79 meds in production) and
+  "2 times daily" (24) fell through to a 6-hour default — a once-daily dose
+  could be given again after 6h instead of 20h; twice-daily after 6h instead
+  of 10h; four-times-daily was held 6h instead of 4h
+  - Frequency parsing moved to src/services/clinical/medicationFrequency.ts,
+    which understands "N times daily", BID/TID/QID, "Every N hours", "QnH"
+    and "Once monthly". Gaps for the legacy wording are unchanged
+  - Removed unused src/features/patients/components/BCMAVerification.tsx,
+    which held a third copy of the interval table
+
+===============================================================================
 [Unreleased] - 2026-10-18 - INSULIN SLIDING SCALE ON BCMA
 ===============================================================================
 

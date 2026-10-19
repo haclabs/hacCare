@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Package, X, ChevronDown } from 'lucide-react';
-import type { CatalogEntry } from '../../../../services/clinical/medicationService';
+import { catalogDisplayName, type CatalogEntry } from '../../../../services/clinical/medicationService';
 
 export type { CatalogEntry };
 
@@ -28,7 +28,7 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
     : catalog.filter((e) =>
         e.name.toLowerCase().includes(search.toLowerCase()) ||
         e.barcode.toLowerCase().includes(search.toLowerCase()) ||
-        (e.generic_name?.toLowerCase().includes(search.toLowerCase()) ?? false)
+        (e.brand_name?.toLowerCase().includes(search.toLowerCase()) ?? false)
       );
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
       <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
         <Package className="h-4 w-4 text-green-600 flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-green-800 truncate">{selected.name}</p>
+          <p className="text-sm font-medium text-green-800 truncate">{catalogDisplayName(selected)}</p>
           <p className="text-xs text-green-600">
             <span className="font-mono">{selected.barcode}</span>
             {' · '}{selected.strength}{' · '}{selected.formulation}
@@ -98,7 +98,7 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
                   {entry.barcode}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-gray-900 truncate">{entry.name}</span>
+                  <span className="block text-sm font-medium text-gray-900 truncate">{catalogDisplayName(entry)}</span>
                   <span className="block text-xs text-gray-500">
                     {entry.strength} · {entry.formulation}
                   </span>

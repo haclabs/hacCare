@@ -5,6 +5,7 @@
 
 import { Patient, Medication, MedicationAdministration } from '../../types';
 import { recordMedicationAdministration } from './medicationService';
+import { doseIntervalMs, minimumDoseGapMs } from './medicationFrequency';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface AdministrationLog {
@@ -258,18 +259,7 @@ class BCMAService {
 
   // Get minimum interval between doses
   private getMinimumInterval(frequency: string): number {
-    const intervals: { [key: string]: number } = {
-      'Once daily': 20 * 60 * 60 * 1000, // 20 hours minimum
-      'Twice daily': 10 * 60 * 60 * 1000, // 10 hours minimum
-      'Three times daily': 6 * 60 * 60 * 1000, // 6 hours minimum
-      'Four times daily': 4 * 60 * 60 * 1000, // 4 hours minimum
-      'Every 4 hours': 3 * 60 * 60 * 1000, // 3 hours minimum
-      'Every 6 hours': 4 * 60 * 60 * 1000, // 4 hours minimum
-      'Every 8 hours': 6 * 60 * 60 * 1000, // 6 hours minimum
-      'Every 12 hours': 10 * 60 * 60 * 1000, // 10 hours minimum
-    };
-    
-    return intervals[frequency] || 6 * 60 * 60 * 1000; // Default 6 hours
+    return minimumDoseGapMs(frequency);
   }
 
   // Create administration log
@@ -376,19 +366,7 @@ class BCMAService {
     }
 
     const now = new Date();
-    const frequencyMap: { [key: string]: number } = {
-      'Once daily': 24 * 60 * 60 * 1000,
-      'Twice daily': 12 * 60 * 60 * 1000,
-      'Three times daily': 8 * 60 * 60 * 1000,
-      'Four times daily': 6 * 60 * 60 * 1000,
-      'Every 4 hours': 4 * 60 * 60 * 1000,
-      'Every 6 hours': 6 * 60 * 60 * 1000,
-      'Every 8 hours': 8 * 60 * 60 * 1000,
-      'Every 12 hours': 12 * 60 * 60 * 1000
-    };
-    
-    const interval = frequencyMap[medication.frequency] || 24 * 60 * 60 * 1000;
-    return new Date(now.getTime() + interval).toISOString();
+    return new Date(now.getTime() + doseIntervalMs(medication.frequency)).toISOString();
   }
 }
 

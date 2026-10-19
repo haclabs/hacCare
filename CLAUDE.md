@@ -132,7 +132,13 @@ accumulate across resets or vanish from debriefs:
 - Component size limit is **350 lines**; extract sub-components past that.
 - Tech-debt removal is treated as a first-class task: delete unused code when you find it, and note
   significant cleanup in `CHANGELOG.md`.
-- Color semantics are consistent across the UI: blue = primary/navigation, green = active
+- Primary action buttons (Submit, Save, Add, …) use the hacCare teal:
+  `bg-haccare-teal hover:bg-haccare-teal-dark text-white` (colours in the `@theme` block of
+  `src/index.css` — Tailwind v4 ignores `tailwind.config.js`). Don't
+  put white text on `haccare-mint` (#3fbf9a) — it fails WCAG AA contrast; mint is for focus rings,
+  accents and tinted backgrounds. Older screens still have blue submit buttons; switch them to teal
+  when you touch them.
+- Color semantics are consistent across the UI: blue = navigation/info, green = active
   simulations/success, amber = templates/editing mode, purple = program/instructor features,
   red = destructive/alerts, indigo = system admin.
 - Heavy routes (PDF, barcode) are `React.lazy()`-loaded; manual chunking in `vite.config.ts`

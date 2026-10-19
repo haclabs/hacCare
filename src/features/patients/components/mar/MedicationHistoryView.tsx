@@ -2,6 +2,7 @@ import React from 'react';
 import { Clock, Pill, User, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { MedicationAdministration } from '../../../../types';
 import { usePatientAdministrationHistory24h } from '../../hooks/useMedications';
+import { useTenant } from '../../../../contexts/TenantContext';
 
 interface MedicationHistoryViewProps {
   patientId: string;
@@ -18,11 +19,16 @@ export const MedicationHistoryView: React.FC<MedicationHistoryViewProps> = ({
     error, 
     refetch 
   } = usePatientAdministrationHistory24h(patientId);
+  const { currentTenant } = useTenant();
+  // Simulations and templates are reused for months, so a date would make doses look stale
+  const showTimeOnly =
+    currentTenant?.tenant_type === 'simulation_active' ||
+    currentTenant?.tenant_type === 'simulation_template' ||
+    !!currentTenant?.is_simulation;
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
+      ...(showTimeOnly ? {} : { month: 'short', day: 'numeric' }),
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
