@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Pill, Clock, Droplets } from 'lucide-react';
 
 import type { Patient, Medication } from '../../../../types';
@@ -13,6 +13,11 @@ import { calculatePreciseAge } from '../../../../utils/vitalRanges';
 import { AddMedicationForm } from './AddMedicationForm';
 import { EditMedicationForm } from './EditMedicationForm';
 import { MedicationAdministrationGrid } from './MedicationAdministrationGrid';
+import { useSimulationStartsAt } from '../../../simulation/hooks/useSimulationStartsAt';
+
+const STAFF_ROLES = ['super_admin', 'coordinator', 'admin', 'instructor'];
+// Held medications are released by the database clock; students' screens pick them up on this cadence.
+const SIMULATION_POLL_MS = 30_000;
 
 interface MARModuleProps {
   patient: Patient;
@@ -69,6 +74,38 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [showBBITForm, setShowBBITForm] = useState(false);
 
   const bcma = useBCMA();
+
+  const { isSimulationTenant } = useSimulationStartsAt();
+  const isTemplateTenant =
+    currentTenant?.tenant_type === 'simulation_template' ||
+    currentTenant?.tenant_type === 'patient_template';
+  const canSetReleaseDelay =
+    STAFF_ROLES.includes(currentUser?.role ?? '') && (isTemplateTenant || isSimulationTenant);
+
+  // In a simulation, re-fetch so medications held back by release_after_minutes appear once released
+  // Refs so parent re-renders don't keep restarting the interval
+  const latestRef = useRef({ medications, onMedicationUpdate });
+  useEffect(() => {
+    latestRef.current = { medications, onMedicationUpdate };
+  });
+  useEffect(() => {
+    if (!isSimulationTenant) return;
+    let cancelled = false;
+    const idKey = (meds: Medication[]) => meds.map((m) => m.id).sort().join(',');
+    const interval = setInterval(async () => {
+      try {
+        const fresh = await fetchPatientMedications(patient.id, currentTenant?.simulation_id);
+        const { medications: current, onMedicationUpdate: update } = latestRef.current;
+        if (!cancelled && idKey(fresh) !== idKey(current)) await update(fresh);
+      } catch {
+        // next tick retries
+      }
+    }, SIMULATION_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isSimulationTenant, patient.id, currentTenant?.simulation_id]);
 
   const handleBCMAComplete = async (success: boolean, log?: any) => {
     if (success && log) {
@@ -256,6 +293,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
           currentMedications={medications}
           onMedicationAdded={onMedicationUpdate}
           onClose={() => setShowAddMedication(false)}
+          canSetReleaseDelay={canSetReleaseDelay}
         />
       )}
 
@@ -265,6 +303,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
           medication={editingMedication}
           medications={medications}
           onMedicationUpdated={onMedicationUpdate}
+          canSetReleaseDelay={canSetReleaseDelay}
           onClose={() => {
             setShowEditForm(false);
             setEditingMedication(null);

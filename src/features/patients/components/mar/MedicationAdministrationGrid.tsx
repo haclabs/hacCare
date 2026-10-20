@@ -15,6 +15,8 @@ import type { Patient, Medication } from '../../../../types';
 import { deleteMedication } from '../../../../services/clinical/medicationService';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { canManageMedicationOrders } from './medicationPermissions';
+import { ReleaseDelayBadge } from '../DoctorsOrderRelease';
+import { useSimulationStartsAt } from '../../../simulation/hooks/useSimulationStartsAt';
 import { formatLocalTime } from '../../../../utils/time';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -92,6 +94,8 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     currentTenant?.tenant_type === 'simulation_template' ||
     currentTenant?.tenant_type === 'patient_template';
   const canManageMedications = canManageMedicationOrders(currentUser?.role, isTemplateTenant);
+  const isStaff = ['super_admin', 'coordinator', 'admin', 'instructor'].includes(currentUser?.role ?? '');
+  const { data: simulationStartsAt } = useSimulationStartsAt();
 
   const handleDelete = async (medicationId: string) => {
     if (!canManageMedications) {
@@ -193,6 +197,13 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                     Given {formatLocalTime(new Date(medication.last_administered), 'HH:mm')}
                   </span>
                 </span>
+              )}
+              {isStaff && (
+                <ReleaseDelayBadge
+                  releaseAfterMinutes={medication.release_after_minutes}
+                  simulationStartsAt={simulationStartsAt}
+                  itemLabel="medication"
+                />
               )}
             </div>
             <p className="text-gray-600 mt-1">

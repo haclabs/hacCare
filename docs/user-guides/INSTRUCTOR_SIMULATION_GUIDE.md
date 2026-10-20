@@ -72,6 +72,13 @@ You can hold a doctor's order back so students only see it partway through the s
   simulation it also shows the release time ("30 min delay · hidden until 14:30"). Students never see it
 - Simulations can no longer be paused, so "30 minutes in" always means 30 minutes after launch / Play
 
+### Timed Medications
+
+Medications work the same way. On the **MAR**, add or edit the medication and fill in **Show to
+students after (minutes into simulation)**. Until it is released, students cannot see the
+medication on the MAR or scan it on BCMA; it appears within about 30 seconds of its release time.
+Staff see the same purple delay bubble next to the medication.
+
 **[SCREENSHOT PLACEHOLDER: Template editing interface showing patient data sections]**
 
 ---

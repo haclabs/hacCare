@@ -137,6 +137,7 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         catalog_id: dbMed.catalog_id ?? null,
         barcode: dbMed.barcode ?? null,
         sliding_scale: dbMed.sliding_scale ?? null,
+        release_after_minutes: dbMed.release_after_minutes ?? null,
       } as Medication));
 
       return medications;
@@ -194,6 +195,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       barcode: medication.barcode || null,
       // Omitted when unset so saving works before the sliding_scale migration is applied
       ...(medication.sliding_scale ? { sliding_scale: medication.sliding_scale } : {}),
+      ...(medication.release_after_minutes ? { release_after_minutes: medication.release_after_minutes } : {}),
     };
     
     const { data, error } = await supabase
@@ -226,6 +228,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       catalog_id: data.catalog_id ?? null,
       barcode: data.barcode ?? null,
       sliding_scale: data.sliding_scale ?? null,
+      release_after_minutes: data.release_after_minutes ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs
@@ -327,6 +330,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.catalog_id !== undefined) dbUpdates.catalog_id = updates.catalog_id;
     if (updates.barcode !== undefined) dbUpdates.barcode = updates.barcode;
     if (updates.sliding_scale !== undefined) dbUpdates.sliding_scale = updates.sliding_scale;
+    if (updates.release_after_minutes !== undefined) dbUpdates.release_after_minutes = updates.release_after_minutes;
     
     secureLogger.debug('Database updates:', dbUpdates);
     
@@ -386,6 +390,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       catalog_id: data.catalog_id ?? null,
       barcode: data.barcode ?? null,
       sliding_scale: data.sliding_scale ?? null,
+      release_after_minutes: data.release_after_minutes ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs
