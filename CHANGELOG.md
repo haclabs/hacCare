@@ -22,6 +22,9 @@ documented in this file.
   - Migration: supabase/migrations/20261020000002_add_medication_release_delay.sql.
     Applied to hacCare Canada 2026-10-20 and recorded in schema_migrations;
     src/types/supabase.ts regenerated (release_after_minutes only)
+  - KB: new "Timed Orders & Medications" category (overview, timed orders,
+    timed medications, worked example); the timed-orders article moved there
+    from Orders & Labs
 
 ===============================================================================
 [Unreleased] - 2026-10-20 - PATIENT PHOTOS
