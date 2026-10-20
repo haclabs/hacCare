@@ -189,12 +189,14 @@ Tell us:
 
 Not sure if it's a bug or a feature request? Send it anyway.
 
-## Example
-| What to include | Example |
+## Example report
+Here's what a good report looks like for a medication label that won't scan:
+
+| Part of your email | What you'd write |
 |---|---|
-| **Subject** | Ondansetron label won't scan in BCMA |
+| **Email subject** | Medication label won't scan in BCMA |
 | **Where** | Simulation "Room 201 - DKA Faculty Training", patient Robert Hutchins, Meds |
-| **Steps** | Scanned the wristband (OK), then scanned the Ondansetron label |
+| **Steps** | Scanned the wristband (OK), then scanned the acetaminophen (Tylenol) label |
 | **Expected** | Medication accepted |
 | **Actual** | "Medication barcode does not match expected medication" (screenshot attached) |
 | **When / who** | Oct 20, 10:06, a student on Room 201's auto-generated login |
