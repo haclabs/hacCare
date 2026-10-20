@@ -1,9 +1,6 @@
 # hacCare
 
-Version 6.0 (Preview)
-
-> This is a **preview build** ahead of the full 6.0 release. Core functionality is stable and in
-> active use, with a few finishing touches still being polished before general availability.
+Stable v6.0.3
 
 A multi-tenant healthcare simulation platform for clinical education. Built with React, TypeScript, and Supabase.
 
@@ -11,20 +8,26 @@ A multi-tenant healthcare simulation platform for clinical education. Built with
 
 hacCare is a simulated Electronic Medical Record (EMR) system designed for healthcare education and clinical training. It provides realistic patient care workflows including barcode medication administration (BCMA), vital signs monitoring, clinical documentation, and simulation management with role-based access control.
 
-## What's New in 6.0 (Preview)
+## What's New in 6.0.3
 
-- **More complete debrief reports** — Admission records are now fully included in student debrief
-  reports and reset alongside every other chart entry, giving instructors a more complete picture
-  of student activity during a simulation.
-- **Stronger data isolation between simulations** — Hardened the safeguards that keep each
-  simulation's patient data separate from every other tenant, reducing the chance of data ever
-  appearing in the wrong place.
-- **More reliable template management** — Deleting a simulation template now fully cleans up
-  everything associated with it, so templates no longer leave behind leftover data.
-- **Better cleanup on patient deletion** — Removing a patient now also cleans up related records
-  (like admission info and advance directives) automatically, preventing orphaned data.
-- **New instructor testing tools** — Added the ability to seed sample data directly into a running
-  simulation, making it easier to validate a session's debrief report before students begin.
+- **Timed orders and medications** — Instructors can hold a doctor's order or a medication back
+  from students until a set number of minutes into a simulation, so a scenario can develop on its
+  own.
+- **Patient photos** — Patients can have an uploaded stock photo instead of an illustrated avatar.
+- **Insulin sliding scales on BCMA** — Diabetic medications can carry a correction scale that BCMA
+  shows at the point of administration, with the glucose reading and dose recorded in the debrief.
+- **Instructors edit their own templates** — Instructors can edit and delete medications and
+  doctors' orders, and enter lab panels and results, while editing a template.
+- **Named template states** — Save weekly versions of a template (Week 1, Week 2, …) and launch or
+  reset a simulation into any of them, keeping the same printed labels all course.
+- **Auto-generated student logins** — Launch can create simulation-only student accounts, and new
+  instructors get an email invite to set their own password.
+- **Cleaner medication catalog and labels** — Generic (Brand) names, brand on its own label line, and
+  one shared Add/Edit Medication form.
+- **Fixes and hardening** — Dates of birth no longer show a day early, BCMA accepts a typed Patient
+  ID, wristband codes no longer double their prefix, and tenant isolation was tightened further.
+- **Refreshed Knowledge Base** — Updated articles throughout, including a new Timed Orders &
+  Medications section.
 
 ## Core Features
 
@@ -108,6 +111,18 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 - **rollup-plugin-visualizer 7.1** for bundle analysis (`npm run build -- --analyze`)
 
 ## Version History
+
+### 6.0.3 (Stable — October 2026)
+- Timed doctors' orders and medications that release partway through a simulation
+- Patient photos as an alternative to illustrated avatars
+- Insulin sliding scales shown on BCMA and recorded in debriefs
+- Instructors can edit/delete template medications and orders and enter lab results
+- Named template states for weekly scenarios
+- Auto-generated simulation student logins and email invites for instructors
+- Medication catalog cleanup, label redesign and a unified medication form
+- Simulation pause and legacy patient transfer removed
+- Date-of-birth, BCMA manual entry and wristband code fixes; further tenant isolation hardening
+- Knowledge Base refresh with a Timed Orders & Medications section
 
 ### 6.0 (Preview — August 2026)
 - Admission records now fully tracked in simulation debrief reports and reset between sessions

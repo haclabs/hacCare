@@ -109,6 +109,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
   /**
    * Training items - a practice sandbox available to everyone (nothing here is ever saved)
    */
+  // Hidden from the sidebar (unused); the page still opens at /app?tab=training-bcma
+  const showTraining = false;
   const trainingItems = [
     { id: 'training-bcma', label: 'BCMA Med', icon: GraduationCap, color: 'text-emerald-600' },
   ];
@@ -281,6 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
         </div>
 
         {/* Training Section - Practice sandbox, available to everyone */}
+        {showTraining && (
         <div className="mb-8">
           <div className="my-6 border-t border-gray-200 dark:border-gray-800" />
           {!isCollapsed && (
@@ -332,6 +335,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
             })}
           </ul>
         </div>
+        )}
 
         {/* Program Management Section - Only in Program Tenants */}
         {programItems.length > 0 && (
