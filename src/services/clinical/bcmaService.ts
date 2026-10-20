@@ -77,10 +77,12 @@ class BCMAService {
   }
 
   // Generate patient barcode ID - also shortened
-  generatePatientBarcode(patient: Patient): string {
+  generatePatientBarcode(patient: Pick<Patient, 'patient_id'>): string {
+    const id = patient.patient_id.toUpperCase();
+    // App-created IDs already carry the prefix (PT64280); don't double it
+    if (id.startsWith('PT')) return id;
     // Use last 8 characters of patient_id for shorter barcode
-    const shortId = patient.patient_id.slice(-8).toUpperCase();
-    return `PT${shortId}`;
+    return `PT${id.slice(-8)}`;
   }
 
   // Validate scanned barcodes against expected patient/medication
@@ -133,7 +135,8 @@ class BCMAService {
     const generatedBarcode = this.generatePatientBarcode(patient);
     const validIds = [
       patient.patient_id,           // Direct patient ID (PT12345)
-      generatedBarcode,             // New format (PT12345 -> PT12345)
+      generatedBarcode,             // Wristband code (P58763 -> PTP58763, PT12345 -> PT12345)
+      `PT${patient.patient_id.slice(-8)}`, // Wristbands printed before 2026-10-20 (PT12345 -> PTPT12345)
       `PT-${patient.patient_id}`,   // Legacy format
       `PAT-${patient.patient_id}`   // Alternative legacy format
     ].map((id) => id.toUpperCase());

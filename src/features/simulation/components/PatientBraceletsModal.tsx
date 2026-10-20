@@ -3,6 +3,7 @@ import { X, Printer } from 'lucide-react';
 import { BarcodeGenerator } from '../../patients/components/BarcodeGenerator';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
 import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, formatDOB, SimulationParticipant } from './labelPrintingUtils';
+import { bcmaService } from '../../../services/clinical/bcmaService';
 interface PatientBraceletsModalProps {
   patients: PatientLabelData[];
   simulationName: string;
@@ -47,7 +48,7 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
     // Pre-generate all QR code data URLs before opening the print window.
     // This eliminates the CDN dependency and the polling loop.
     const qrDataURLs = await generateQRDataURLs(
-      duplicatedPatients.map(p => `PT${p.patient_id.slice(-8).toUpperCase()}`),
+      duplicatedPatients.map(p => bcmaService.generatePatientBarcode(p)),
       80
     );
 
@@ -300,7 +301,7 @@ export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ pa
                 </div>
                 <div className="w-20 flex justify-center items-center bg-white border-l border-gray-200 p-1">
                   <BarcodeGenerator
-                    data={`PT${patient.patient_id.slice(-8).toUpperCase()}`}
+                    data={bcmaService.generatePatientBarcode(patient)}
                     type="patient"
                     vertical
                     compact

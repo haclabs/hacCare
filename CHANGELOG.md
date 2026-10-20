@@ -31,6 +31,11 @@ documented in this file.
   Launched patients' IDs start with "P", so Enter Manually rejected them as an
   unknown barcode format. The on-screen ID Bracelet's QR code now encodes the
   same code as printed wristbands
+* Patient wristband codes no longer double the prefix: app-created IDs
+  already start with "PT" (PT64280), so the BCMA reference barcode and printed
+  bracelets showed "PTPT64280". Bracelets, the all-labels sheet and BCMA now
+  share bcmaService.generatePatientBarcode; wristbands already printed with
+  the doubled code still scan
 * Launch dialog no longer says simulations auto-complete when time expires
   (they show Expired until completed) or mentions pause
 * Removed unused code: BulkLabelPrint.tsx (its only entry point was commented
