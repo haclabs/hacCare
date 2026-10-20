@@ -23,11 +23,15 @@ export async function launchSimulation(
   params: LaunchSimulationParams
 ): Promise<SimulationFunctionResult> {
   try {
+    if (!params.name?.trim()) {
+      throw new Error('A simulation name is required');
+    }
+
     secureLogger.debug('Launching simulation with params:', params);
 
     const { data, error } = await supabase.rpc('launch_simulation', {
       p_template_id: params.template_id,
-      p_name: params.name,
+      p_name: params.name.trim(),
       p_duration_minutes: params.duration_minutes,
       p_participant_user_ids: params.participant_user_ids,
       p_participant_roles: params.participant_roles || null,
@@ -208,6 +212,29 @@ export async function updateSimulationStatus(
   } catch (error: unknown) {
     secureLogger.error('Error updating simulation status:', error);
     throw error;
+  }
+}
+
+/**
+ * Rename a simulation. A database trigger keeps the tenant name in step.
+ */
+export async function renameSimulation(simulationId: string, name: string): Promise<void> {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error('A simulation name is required');
+
+  const { data, error } = await supabase
+    .from('simulation_active')
+    .update({ name: trimmed, updated_at: new Date().toISOString() })
+    .eq('id', simulationId)
+    .select('id');
+
+  if (error) {
+    secureLogger.error('Error renaming simulation:', error);
+    throw error;
+  }
+  // RLS filters out rows the user may not update instead of raising an error.
+  if (!data || data.length === 0) {
+    throw new Error('You do not have permission to rename this simulation');
   }
 }
 

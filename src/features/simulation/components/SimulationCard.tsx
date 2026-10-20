@@ -3,6 +3,7 @@ import { Play, RotateCcw, Trash2, Users, Clock, AlertTriangle, CheckCircle, Prin
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import { formatDistanceToNow } from 'date-fns';
+import { SimulationNameEditor } from './SimulationNameEditor';
 
 interface SimulationCardProps {
   sim: SimulationActiveWithDetails;
@@ -11,6 +12,7 @@ interface SimulationCardProps {
   onReset: (id: string) => void;
   onComplete: (sim: SimulationActiveWithDetails) => void;
   onDelete: (id: string) => void;
+  onRename: (id: string, name: string) => Promise<void>;
   onEditCategories: (sim: SimulationActiveWithDetails) => void;
   onPrintLabels: (sim: SimulationActiveWithDetails) => void;
   onViewTemplateChanges: (sim: SimulationActiveWithDetails) => void;
@@ -31,6 +33,7 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
   onReset,
   onComplete,
   onDelete,
+  onRename,
   onEditCategories,
   onPrintLabels,
   onViewTemplateChanges,
@@ -45,7 +48,7 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2.5 mb-2">
-            <h3 className="text-sm font-semibold text-gray-900">{sim.name}</h3>
+            <SimulationNameEditor name={sim.name} onRename={(name) => onRename(sim.id, name)} />
             <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
               sim.status === 'running'
                 ? 'bg-green-100 text-green-700'

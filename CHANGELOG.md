@@ -7,6 +7,27 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-20 - LAUNCH NAMES & MULTI-INSTRUCTOR ROOMS
+===============================================================================
+
+* Simulation Name is now actually required at launch. The Launch button sits
+  outside the <form>, so the input's `required` attribute never fired and
+  blank names went through; the modal now validates (trimmed) and disables
+  Launch, and launchSimulation() rejects a blank name
+* Multiple Rooms launch asks for a Simulation Name and launches each room as
+  "{name} - Room {number}" (was "Room {number} - {template name}"), with a
+  per-room preview. Each room can have several instructors; duplicate room
+  numbers are rejected. Room rows moved to the new RoomLaunchList component
+  - KB "Launching a Simulation" article updated
+* Active Simulations cards have a pencil next to the name to rename a
+  simulation inline. New trigger sync_simulation_tenant_name (migration
+  20261020000003) keeps the tenant name in step, since instructors can't
+  update `tenants`; the subdomain is left unchanged
+  - Named the 7 existing sims that had been launched with a blank name after
+    their templates (database/fixes/20261020_name_unnamed_active_simulations.sql)
+  - KB "Running, Completing and Resetting" article updated
+
+===============================================================================
 [Unreleased] - 2026-10-20 - TIMED MEDICATIONS
 ===============================================================================
 

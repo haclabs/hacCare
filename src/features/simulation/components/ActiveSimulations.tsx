@@ -85,6 +85,7 @@ const ActiveSimulations: React.FC = () => {
     handleDelete,
     handleEditCategories,
     handleSaveCategories,
+    handleRename,
   } = useActiveSimulations();
 
   const handleSeedTestData = async (sim: SimulationActiveWithDetails) => {
@@ -306,6 +307,7 @@ const ActiveSimulations: React.FC = () => {
               onReset={handleReset}
               onComplete={handleComplete}
               onDelete={handleDelete}
+              onRename={handleRename}
               onEditCategories={handleEditCategories}
               onPrintLabels={setPrintLabelsSimulation}
               onViewTemplateChanges={handleViewTemplateChanges}
