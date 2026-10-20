@@ -4,7 +4,7 @@
  * described in kbMarkup.ts (## headings, - bullets, 1. steps, > tips, >! warnings, | tables, **bold**).
  */
 
-import { Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill, Rocket, ClipboardList } from 'lucide-react';
+import { Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill, Rocket, ClipboardList, Timer } from 'lucide-react';
 import type { ElementType } from 'react';
 
 export interface KBArticle {
@@ -225,7 +225,7 @@ Not sure if it's a bug or a feature request? Send it anyway.
 2. A green **Editing Template** bar appears at the top. Anything you enter while it's showing becomes the template's starting data.
 3. Use the normal screens to build the chart:
   - **Add Patient**, or **Add Patient from Library** in the green bar
-  - **Meds**: medications, including sliding scales for diabetic medications
+  - **Meds**: medications, including sliding scales for diabetic medications and timed medications
   - **Orders**: doctors' orders, including timed orders
   - **Labs**, **Vitals & Assess.**, **HacMap** (wounds and devices), **I&O**, **Notes** and **Flowsheets**
 
@@ -305,7 +305,7 @@ Tick the box and choose how many students (up to 10). Exactly one program must b
 - Creates a new, private simulation with the template's data
 - Gives every patient a new Patient ID, so print new wristbands for each new simulation
 - Keeps every medication's barcode from the template, so medication labels already printed for the template still scan
-- Starts the clock immediately. The simulation shows as **running** in Active Sims, and timed doctors' orders start counting down`,
+- Starts the clock immediately. The simulation shows as **running** in Active Sims, and timed orders and medications start counting down`,
       },
       {
         id: 'manage-simulations',
@@ -326,7 +326,7 @@ Tick the box and choose how many students (up to 10). Exactly one program must b
 1. **Launch**: the simulation is running and the clock has started.
 2. **Complete**: enter your name. If hacCare finds charting but no Student Name on any of it, it asks you who did the work (or lets you skip). A summary appears and the card shows **Needs Reset**.
 3. **Reset**: pick a named state if you want one, then click **Reset Anyway**. Student work is cleared, labels keep working, and the card shows **Ready to Start**.
-4. **Play**: the next group begins. The clock and any timed doctors' orders restart from this moment.
+4. **Play**: the next group begins. The clock and any timed orders and medications restart from this moment.
 
 >! Reset permanently deletes everything students entered. If you haven't clicked Complete first, that group's work is gone and won't appear in Debrief Reports.
 
@@ -376,7 +376,7 @@ You can archive completed sessions into folders, restore one to Active, or delet
   {
     id: 'orders-labs',
     title: 'Orders & Labs',
-    description: 'Doctors\' orders, timed orders that appear partway through a simulation, and lab results.',
+    description: 'Doctors\' orders and lab results.',
     icon: ClipboardList,
     iconBg: 'bg-orange-100',
     iconColor: 'text-orange-700',
@@ -389,7 +389,7 @@ You can archive completed sessions into folders, restore one to Active, or delet
 ## Adding an order (instructors)
 1. Click **Add Order**.
 2. Enter the date, time (24-hour), **Ordering Doctor** (without "Dr.", it's added automatically) and the **Order** text. Press Enter for new lines.
-3. Optionally add notes and a release delay (see Timed Doctors' Orders).
+3. Optionally add notes and a release delay (see Timed Orders & Medications).
 4. Save.
 
 While editing a template, instructors can **Edit** and **Delete** orders. In a live simulation, instructors can add orders but only coordinators and admins can edit or delete them.
@@ -397,40 +397,6 @@ While editing a template, instructors can **Edit** and **Delete** orders. In a l
 ## What students do
 - **Acknowledge**: confirms they've read the order. They enter their name, and it shows as "Acknowledged by…" and in the debrief.
 - **Add Phone/Verbal**: students can record a phone or verbal order they received.`,
-      },
-      {
-        id: 'timed-orders',
-        title: 'Timed Doctors\' Orders',
-        content: `A timed order stays hidden from students until a set number of minutes into the simulation, then appears on its own. Use it to bring in a new order mid-scenario without leaving your seat: a new medication, a STAT lab, or a change of plan after a deterioration.
-
-## Set up a timed order
-1. Edit the template (or open the running simulation) and go to the patient's **Orders**.
-2. Add a new order, or **Edit** an existing one in a template.
-3. In the purple box, enter **Show to students after (minutes into simulation)**, for example 30.
-4. Save.
-
-Leave the box blank or 0 to show the order immediately. The longest delay is 1440 minutes (24 hours).
-
-## When does the countdown start?
-- **First group**: at **Launch**. A launched simulation is already running.
-- **After a reset**: when you press **Play**. Reset stops the clock, so every group gets the same timing.
-
-## What you see
-Students never see a held order. Instructors and admins always do, with a purple badge:
-
-| Where you are | Badge |
-|---|---|
-| Template | **30 min delay** |
-| Running simulation, not yet released | **30 min delay · hidden until 14:30** |
-| Running simulation, released | **30 min delay · released 14:30** |
-
-Longer delays show in hours, for example **1 h 30 min delay**.
-
-Once the time passes, the order appears on students' screens within about 30 seconds, without reloading. The **NEW** badge on Orders then prompts them to acknowledge it.
-
-> Timed orders are copied into every simulation launched from the template and are kept through resets and template syncs, so you only set them up once.
-
->! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then reset and press Play, a 30-minute order appears 30 minutes after Play.`,
       },
       {
         id: 'labs',
@@ -447,6 +413,114 @@ Instructors, coordinators and admins can enter results, for example to build a t
 ## What students do
 - Review new results and click **Acknowledge** on the panel, entering their name.
 - Use **Enter Lab Order** to order a specimen and print its label.`,
+      },
+    ],
+  },
+  {
+    id: 'timed-release',
+    title: 'Timed Orders & Medications',
+    description: 'Hold doctors\' orders and medications back from students until partway through a simulation.',
+    icon: Timer,
+    iconBg: 'bg-purple-100',
+    iconColor: 'text-purple-700',
+    articles: [
+      {
+        id: 'timed-release-overview',
+        title: 'How Timed Release Works',
+        content: `You can hold a doctor's order or a medication back so students only see it a set number of minutes into the simulation. It then appears on its own, so you can move the scenario on without leaving your seat: a new order after a deterioration, a STAT medication, or a change of plan.
+
+## Setting a delay
+Both the order form and the medication form have a purple box: **Show to students after (minutes into simulation)**.
+
+- Enter the number of minutes, for example 30.
+- Leave it blank or 0 to show the item immediately.
+- The longest delay is 1440 minutes (24 hours).
+
+Only instructors, coordinators and admins see the box, and only in a template or a simulation.
+
+## When does the countdown start?
+- **First group**: at **Launch**. A launched simulation is already running.
+- **After a reset**: when you press **Play**. Reset stops the clock, so every group gets the same timing.
+
+>! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then reset and press Play, a 30-minute item appears 30 minutes after Play.
+
+## Who sees what
+Students never see a held item anywhere in the chart. Instructors, coordinators and admins always see it, with a purple badge:
+
+| Where you are | Badge |
+|---|---|
+| Template | **30 min delay** |
+| Running simulation, not yet released | **30 min delay · hidden until 14:30** |
+| Running simulation, released | **30 min delay · released 14:30** |
+
+Longer delays show in hours, for example **1 h 30 min delay**.
+
+Once the time passes, the item appears on students' screens within about 30 seconds, without reloading.
+
+> Delays are copied into every simulation launched from the template and kept through resets and template syncs, so you only set them up once.`,
+      },
+      {
+        id: 'timed-orders',
+        title: 'Timed Doctors\' Orders',
+        content: `## Set up a timed order
+1. Edit the template (or open the running simulation) and go to the patient's **Orders**.
+2. Click **Add Order**, or **Edit** an existing one in a template.
+3. In the purple box, enter **Show to students after (minutes into simulation)**, for example 30.
+4. Save. In a template, click **Save & Exit** so the delay is captured in the snapshot.
+
+While editing a template, instructors can add, edit and delete timed orders. In a live simulation, instructors can add a new timed order, but only coordinators and admins can edit or delete one.
+
+## What students see
+Nothing, until the delay passes. Then the order appears in **Orders** and the **NEW** badge on the action bar prompts them to acknowledge it, just like any other new order.`,
+      },
+      {
+        id: 'timed-medications',
+        title: 'Timed Medications',
+        content: `## Set up a timed medication
+1. Edit the template (or open the running simulation) and go to the patient's **Meds**.
+2. Click **Add Medication**, or **Edit** an existing one in a template.
+3. Fill in the medication as usual.
+4. At the bottom of the form, enter **Show to students after (minutes into simulation)**, for example 30.
+5. Save. In a template, click **Save & Exit** so the delay is captured in the snapshot.
+
+While editing a template, instructors can add, edit and delete timed medications. In a live simulation, instructors can add a new timed medication, but only coordinators and admins can edit or delete one.
+
+## What students see
+Nothing, until the delay passes. A held medication isn't on the MAR, isn't in the medication count, and can't be scanned in BCMA. If a student scans its label early, BCMA reports the medication as not found.
+
+Once released, it appears on the MAR like any other medication and can be given through BCMA.
+
+## Plan the administration time
+A held medication keeps its normal due time. If that time has already passed when it's released, students see it as due straight away.
+
+> For a medication meant to arrive 30 minutes in, set its **Administration Time** after the release, or use the **STAT** or **PRN** category.
+
+> Print labels for timed medications along with the others. The label works as soon as the medication is released.`,
+      },
+      {
+        id: 'timed-release-example',
+        title: 'Example: A New Order and Its Medication',
+        content: `A common pattern is a doctor's order and the medication it calls for, arriving together partway through the scenario.
+
+## Scenario
+Thirty minutes in, the patient's pain is uncontrolled and the physician orders morphine.
+
+1. Edit the template and open the patient.
+2. In **Orders**, add the order "Morphine 2 mg IV q4h PRN for pain" with **Show to students after** set to **30**.
+3. In **Meds**, add Morphine 2 mg IV, category **PRN**, with **Show to students after** also set to **30**.
+4. Click **Save & Exit**.
+
+When the simulation runs, both are hidden for the first 30 minutes. At 30 minutes the order appears with a **NEW** badge, and the morphine appears on the MAR, ready to scan.
+
+## Tips
+- Give the order and the medication the same delay so students never see a medication without its order.
+- Stagger delays (for example 15, 30 and 45 minutes) to build a scenario that develops over the session.
+- Check the badges on the Orders and Meds screens to confirm what's held and when it releases.
+
+## Not appearing for students?
+- Check the simulation is running. After a reset, nothing counts down until you press **Play**.
+- Check the badge: **hidden until 14:30** means it isn't due yet.
+- Wait up to 30 seconds after the release time for students' screens to update.`,
       },
     ],
   },
@@ -499,6 +573,7 @@ Skip the catalog and type the name. hacCare assigns its own barcode (M + a lette
 - **Category**: Scheduled, PRN, IV/Continuous, STAT or Diabetic. Choosing Diabetic shows the sliding-scale editor.
 - **Dosage**, **Route** and **Frequency** (for example "2 times daily" or "Every 4 hours"). Frequency controls the BCMA dose-gap check.
 - **Administration Time(s)** in 24-hour format, **Prescribed By** and **Start Date**
+- **Show to students after (minutes into simulation)**: hold the medication back until partway through the simulation (see Timed Orders & Medications)
 
 ## Editing and deleting
 **Edit** and **Delete** appear on the MAR for instructors while editing a template, and for coordinators and admins everywhere. **Edit** opens with every field filled in, including route, frequency and category.`,
