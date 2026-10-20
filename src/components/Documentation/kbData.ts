@@ -189,12 +189,14 @@ Tell us:
 
 Not sure if it's a bug or a feature request? Send it anyway.
 
-## Example
-| What to include | Example |
+## Example report
+Here's what a good report looks like for a medication label that won't scan:
+
+| Part of your email | What you'd write |
 |---|---|
-| **Subject** | Ondansetron label won't scan in BCMA |
+| **Email subject** | Medication label won't scan in BCMA |
 | **Where** | Simulation "Room 201 - DKA Faculty Training", patient Robert Hutchins, Meds |
-| **Steps** | Scanned the wristband (OK), then scanned the Ondansetron label |
+| **Steps** | Scanned the wristband (OK), then scanned the acetaminophen (Tylenol) label |
 | **Expected** | Medication accepted |
 | **Actual** | "Medication barcode does not match expected medication" (screenshot attached) |
 | **When / who** | Oct 20, 10:06, a student on Room 201's auto-generated login |
@@ -638,9 +640,7 @@ If the wristband won't scan, **Enter Manually** lets the student type the Patien
 - **Medication barcode does not match**: the label belongs to a different medication.
 - **Too soon since last dose**, or **Medication due in … minutes**: see BCMA Dose Timing.
 
-The student can click **Override** and enter a reason to continue. Overridden doses show **⚠ Override Applied** with the reason in the debrief, instead of **✓ BCMA Compliant**.
-
-> Students can practise without saving anything using **BCMA Med** in the sidebar (Training). It runs in **PRACTICE MODE**.`,
+The student can click **Override** and enter a reason to continue. Overridden doses show **⚠ Override Applied** with the reason in the debrief, instead of **✓ BCMA Compliant**.`,
       },
       {
         id: 'bcma-timing',
@@ -940,9 +940,7 @@ The **Quick Intro** button reopens the student guide at any time.`,
 - **Too soon since last dose**: this medication was given recently. Check the MAR's **✓ Given** tag and History.
 - **Wristband won't scan**: click **Enter Manually** and type the Patient ID printed on it. If a medication label won't scan, ask your instructor.
 
-**Override** lets you continue with a reason. Your instructor sees every override.
-
-> Want to practise first? **BCMA Med** in the sidebar is a practice sandbox. Nothing you do there is saved.`,
+**Override** lets you continue with a reason. Your instructor sees every override.`,
       },
     ],
   },
