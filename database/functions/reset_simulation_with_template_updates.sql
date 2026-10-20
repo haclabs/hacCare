@@ -237,7 +237,7 @@ BEGIN
             tenant_id, patient_id, name, dosage, route, frequency,
             admin_time, admin_times, category, start_date, end_date,
             next_due, prescribed_by, status, last_administered,
-            catalog_id, barcode, sliding_scale
+            catalog_id, barcode, sliding_scale, release_after_minutes
           ) VALUES (
             v_tenant_id,
             v_patient_id,  -- Mapped to simulation patient
@@ -262,7 +262,8 @@ BEGIN
                  THEN (v_template_med->>'catalog_id')::uuid
                  ELSE NULL END,
             v_template_med->>'barcode',  -- NULL for free-entry meds
-            NULLIF(v_template_med->'sliding_scale', 'null'::jsonb)
+            NULLIF(v_template_med->'sliding_scale', 'null'::jsonb),
+            (v_template_med->>'release_after_minutes')::integer
           );
           
           v_meds_added := v_meds_added + 1;
@@ -271,9 +272,10 @@ BEGIN
           RAISE NOTICE '❌ ERROR inserting medication: % - Error: %', v_template_med->>'name', SQLERRM;
         END;
       ELSE
-        -- Existing meds keep their barcode and history; refresh the sliding scale from the template
+        -- Existing meds keep their barcode and history; refresh the sliding scale and delay from the template
         UPDATE patient_medications
-           SET sliding_scale = NULLIF(v_template_med->'sliding_scale', 'null'::jsonb)
+           SET sliding_scale = NULLIF(v_template_med->'sliding_scale', 'null'::jsonb),
+               release_after_minutes = (v_template_med->>'release_after_minutes')::integer
          WHERE tenant_id = v_tenant_id
            AND patient_id = v_patient_id
            AND name = v_template_med->>'name'
@@ -409,4 +411,4 @@ $$;
 
 GRANT EXECUTE ON FUNCTION reset_simulation_with_template_updates(uuid, uuid) TO authenticated;
 
-COMMENT ON FUNCTION reset_simulation_with_template_updates(uuid, uuid) IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged; their sliding_scale is refreshed from the template. Optional p_state_id syncs from a named template state instead of the template''s default snapshot. Re-bases snapshot wall-clock timestamps to land relative to the reset instant.';
+COMMENT ON FUNCTION reset_simulation_with_template_updates(uuid, uuid) IS 'Smart template sync: Matches medications by properties (patient+name+dosage+route), not UUIDs. Inserts NEW medications with NEW UUIDs/barcodes. Instructor prints labels for newly added medications only. Existing medication barcodes unchanged; their sliding_scale and release_after_minutes are refreshed from the template. Optional p_state_id syncs from a named template state instead of the template''s default snapshot. Re-bases snapshot wall-clock timestamps to land relative to the reset instant.';

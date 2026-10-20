@@ -28,6 +28,8 @@ export interface Medication {
   catalog_id?: string | null; // FK to medications_catalog (null = free-entry)
   barcode?: string | null;    // Pre-resolved stable barcode (catalog entry) or hash-generated (free-entry)
   sliding_scale?: SlidingScaleRow[] | null; // Diabetic meds only; shown on BCMA
+  /** Minutes after simulation start before students see this medication. null/0 = immediately. */
+  release_after_minutes?: number | null;
 }
 
 /**

@@ -7,6 +7,8 @@ import { CatalogMedicationPicker } from './CatalogMedicationPicker';
 import type { CatalogEntry } from './CatalogMedicationPicker';
 import { SlidingScaleEditor } from './SlidingScaleEditor';
 import { fromDraftRows, toDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
+import { parseReleaseAfterMinutes } from '../../utils/orderRelease';
+import { ReleaseDelayField } from '../DoctorsOrderRelease';
 import {
   CATEGORY_OPTIONS,
   FREQUENCY_OPTIONS,
@@ -25,6 +27,7 @@ interface EditMedicationFormProps {
   medications: Medication[];
   onMedicationUpdated: (updatedMedications: Medication[]) => void;
   onClose: () => void;
+  canSetReleaseDelay?: boolean;
 }
 
 interface EditFormState {
@@ -132,6 +135,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
   medications,
   onMedicationUpdated,
   onClose,
+  canSetReleaseDelay = false,
 }) => {
   const [form, setForm] = useState<EditFormState>(() => initForm(medication));
   const [isLoading, setIsLoading] = useState(false);
@@ -140,6 +144,9 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedCatalog, setSelectedCatalog] = useState<CatalogEntry | null>(null);
   const [scaleRows, setScaleRows] = useState<SlidingScaleDraftRow[]>(() => toDraftRows(medication.sliding_scale));
+  const [releaseInput, setReleaseInput] = useState(() =>
+    medication.release_after_minutes ? String(medication.release_after_minutes) : ''
+  );
 
   useEffect(() => {
     fetchMedicationCatalog()
@@ -205,6 +212,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
     }
     setIsLoading(true);
     try {
+      const releaseAfterMinutes = parseReleaseAfterMinutes(releaseInput);
       const updated = await updateMedication(medication.id, {
         name: form.name,
         dosage: form.dosage,
@@ -220,6 +228,9 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
         barcode: form.barcode,
         // Only touch the column when there is (or was) a scale, so edits work before the migration
         ...(scale || medication.sliding_scale ? { sliding_scale: scale } : {}),
+        ...(releaseAfterMinutes !== null || medication.release_after_minutes
+          ? { release_after_minutes: releaseAfterMinutes }
+          : {}),
       });
 
       const updatedList = medications.map((m) => (m.id === medication.id ? updated : m));
@@ -445,6 +456,10 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {canSetReleaseDelay && (
+              <ReleaseDelayField value={releaseInput} onChange={setReleaseInput} itemLabel="medication" />
+            )}
 
             <div className="flex space-x-3 pt-4">
               <button

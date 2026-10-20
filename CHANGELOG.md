@@ -7,6 +7,23 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-20 - TIMED MEDICATIONS
+===============================================================================
+
+* Instructors can hold a medication back from students until N minutes into
+  a simulation, like timed doctors' orders. "Show to students after" field on
+  Add/Edit Medication (staff, template and simulation tenants); staff see the
+  delay bubble on the MAR; the MAR polls every 30s in simulations
+  - patient_medications.release_after_minutes plus RESTRICTIVE RLS policy
+    patient_medications_hide_unreleased, reusing doctors_order_is_released.
+    Held medications are hidden everywhere students read them, including BCMA
+  - reset_simulation_with_template_updates redeployed to copy the delay on
+    insert and refresh it on existing medications
+  - Migration: supabase/migrations/20261020000002_add_medication_release_delay.sql.
+    Applied to hacCare Canada 2026-10-20 and recorded in schema_migrations;
+    src/types/supabase.ts regenerated (release_after_minutes only)
+
+===============================================================================
 [Unreleased] - 2026-10-20 - PATIENT PHOTOS
 ===============================================================================
 

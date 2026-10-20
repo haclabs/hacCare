@@ -7,6 +7,8 @@ import { CatalogMedicationPicker } from './CatalogMedicationPicker';
 import type { CatalogEntry } from './CatalogMedicationPicker';
 import { SlidingScaleEditor } from './SlidingScaleEditor';
 import { fromDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
+import { parseReleaseAfterMinutes } from '../../utils/orderRelease';
+import { ReleaseDelayField } from '../DoctorsOrderRelease';
 import {
   CATEGORY_OPTIONS,
   FREQUENCY_OPTIONS,
@@ -22,6 +24,7 @@ interface AddMedicationFormProps {
   currentMedications: Medication[];
   onMedicationAdded: (updatedMedications: Medication[]) => void;
   onClose: () => void;
+  canSetReleaseDelay?: boolean;
 }
 
 interface MedFormState {
@@ -246,6 +249,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
   currentMedications,
   onMedicationAdded,
   onClose,
+  canSetReleaseDelay = false,
 }) => {
   const [form, setForm] = useState<MedFormState>(() => ({
     ...defaultForm,
@@ -257,6 +261,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedCatalog, setSelectedCatalog] = useState<CatalogEntry | null>(null);
   const [scaleRows, setScaleRows] = useState<SlidingScaleDraftRow[]>([]);
+  const [releaseInput, setReleaseInput] = useState('');
 
   useEffect(() => {
     fetchMedicationCatalog()
@@ -349,6 +354,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
         catalog_id: form.catalog_id,
         barcode: form.barcode,
         sliding_scale: scale,
+        release_after_minutes: parseReleaseAfterMinutes(releaseInput),
       };
 
       secureLogger.debug('Creating medication in database:', medicationData);
@@ -577,6 +583,10 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {canSetReleaseDelay && (
+              <ReleaseDelayField value={releaseInput} onChange={setReleaseInput} itemLabel="medication" />
+            )}
 
             <div className="flex space-x-3 pt-4">
               <button

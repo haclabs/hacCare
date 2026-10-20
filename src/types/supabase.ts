@@ -1924,6 +1924,7 @@ export type Database = {
           next_due: string
           patient_id: string | null
           prescribed_by: string
+          release_after_minutes: number | null
           route: string
           sliding_scale: Json | null
           start_date: string
@@ -1946,6 +1947,7 @@ export type Database = {
           next_due: string
           patient_id?: string | null
           prescribed_by: string
+          release_after_minutes?: number | null
           route: string
           sliding_scale?: Json | null
           start_date: string
@@ -1968,6 +1970,7 @@ export type Database = {
           next_due?: string
           patient_id?: string | null
           prescribed_by?: string
+          release_after_minutes?: number | null
           route?: string
           sliding_scale?: Json | null
           start_date?: string
@@ -5377,6 +5380,7 @@ export type Database = {
           next_due: string
           patient_id: string | null
           prescribed_by: string
+          release_after_minutes: number | null
           route: string
           sliding_scale: Json | null
           start_date: string
