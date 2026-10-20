@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Printer } from 'lucide-react';
 import { PATIENT_COLORS, buildPatientColorMap, generateQRDataURLs, formatDOB, SimulationParticipant } from './labelPrintingUtils';
+import { bcmaService } from '../../../services/clinical/bcmaService';
 import type { PatientLabelData } from '../../../services/operations/bulkLabelService';
 import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, medicationNameHtml } from '../../../services/operations/bulkLabelService';
 interface AllLabelsModalProps {
@@ -64,7 +65,7 @@ export const AllLabelsModal: React.FC<AllLabelsModalProps> = ({
     // Pre-generate all QR data URLs before writing to the print window (no CDN needed)
     const [patientQRs, medicationQRs] = await Promise.all([
       generateQRDataURLs(
-        duplicatedPatients.map(p => `PT${p.patient_id.slice(-8).toUpperCase()}`),
+        duplicatedPatients.map(p => bcmaService.generatePatientBarcode(p)),
         80
       ),
       generateQRDataURLs(
