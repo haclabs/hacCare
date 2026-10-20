@@ -2,7 +2,7 @@ import React from 'react';
 import { Patient } from '../../../../types';
 import { User, MapPin, AlertTriangle, QrCode, Trash2, Pencil } from 'lucide-react';
 import { isValid, parseISO } from 'date-fns';
-import { getAvatarById } from '../../../../data/patientAvatars';
+import { PatientAvatar } from '../visuals/PatientAvatar';
 import { calculateAge, formatRoomBed, formatDOB } from '../../../../utils/patientUtils';
 
 /**
@@ -92,17 +92,14 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onShowBrace
         <div className="flex items-center space-x-4">
           {/* Avatar with glowing ring effect */}
           <div className={`rounded-full overflow-hidden ${getAvatarRingColor(patient.condition)} transition-all duration-300 group-hover:scale-105`} style={{ width: '72px', height: '72px', flexShrink: 0 }}>
-            {patient.avatar_id ? (
-              <div 
-                className="w-full h-full bg-white"
-                dangerouslySetInnerHTML={{ __html: getAvatarById(patient.avatar_id)?.svg || '' }} 
-                title={`Avatar: ${patient.avatar_id}`}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <User className="h-8 w-8 text-gray-500" />
-              </div>
-            )}
+            <PatientAvatar
+              patient={patient}
+              fallback={
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                  <User className="h-8 w-8 text-gray-500" />
+                </div>
+              }
+            />
           </div>
           
           {/* Patient Info */}

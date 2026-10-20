@@ -2673,6 +2673,7 @@ export type Database = {
           id: string
           last_name: string
           patient_id: string
+          photo_data: string | null
           room_number: string
           tenant_id: string | null
           updated_at: string | null
@@ -2696,6 +2697,7 @@ export type Database = {
           id?: string
           last_name: string
           patient_id: string
+          photo_data?: string | null
           room_number: string
           tenant_id?: string | null
           updated_at?: string | null
@@ -2719,6 +2721,7 @@ export type Database = {
           id?: string
           last_name?: string
           patient_id?: string
+          photo_data?: string | null
           room_number?: string
           tenant_id?: string | null
           updated_at?: string | null

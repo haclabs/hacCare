@@ -52,6 +52,7 @@ export interface DatabasePatient {
   emergency_contact_phone: string;
   assigned_nurse?: string;
   avatar_id?: string;
+  photo_data?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -122,6 +123,7 @@ const convertDatabasePatient = (dbPatient: DatabasePatient, vitals?: DatabaseVit
     allergies: dbPatient.allergies || [],
     blood_type: dbPatient.blood_type,
     avatar_id: dbPatient.avatar_id,
+    photo_data: dbPatient.photo_data ?? null,
     emergency_contact_name: dbPatient.emergency_contact_name,
     emergency_contact_relationship: dbPatient.emergency_contact_relationship,
     emergency_contact_phone: dbPatient.emergency_contact_phone,
@@ -153,7 +155,9 @@ const convertToDatabase = (patient: Patient): Omit<DatabasePatient, 'id' | 'crea
     emergency_contact_relationship: patient.emergency_contact_relationship,
     emergency_contact_phone: patient.emergency_contact_phone,
     assigned_nurse: patient.assigned_nurse,
-    avatar_id: patient.avatar_id
+    avatar_id: patient.avatar_id,
+    // Only send when the form touched it, so saves keep working before the column exists
+    ...(patient.photo_data !== undefined ? { photo_data: patient.photo_data } : {})
   };
 };
 

@@ -7,6 +7,31 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-20 - PATIENT PHOTOS
+===============================================================================
+
+* Patients can have a photo instead of an illustrated avatar (instructor
+  request). Upload/Replace/Remove Photo on Edit Patient Details and Create
+  Patient Template; the avatar grid stays as the fallback
+  - The browser centre-crops uploads to 256x256 and re-encodes them as JPEG
+    (~15-30 KB); JPG, PNG and WebP up to 10 MB accepted
+  - Stored on the row as a data URL in the new patients.photo_data column,
+    not in Storage: launch, reset, template sync and Patient Library copy
+    patient rows whole (save_template_snapshot_v2 /
+    restore_snapshot_to_tenant), so the photo follows the patient with no
+    cross-tenant Storage policies. Covered by the existing patients RLS
+  - CHECK patients_photo_data_check allows only data:image/(jpeg|png|webp)
+    base64 up to 200,000 characters; the client validates the same before
+    rendering, and SVG is rejected
+  - Migration: supabase/migrations/20261020000001_add_patient_photo.sql.
+    Applied to hacCare Canada 2026-10-20 and recorded in schema_migrations;
+    src/types/supabase.ts regenerated (photo_data only)
+  - New PatientAvatar (display) and PatientPhotoPicker (upload + avatar grid)
+    components replace the duplicated avatar code in PatientCard,
+    PatientOverview, PatientForm and CreatePatientTemplateModal
+  - KB: "The Patients Page" explains adding a photo
+
+===============================================================================
 [Unreleased] - 2026-10-20 - ROLE GATES, BCMA MANUAL ENTRY, DEAD LABEL CODE
 ===============================================================================
 

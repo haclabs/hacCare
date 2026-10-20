@@ -28,6 +28,7 @@ export interface Patient {
   emergency_contact_phone: string;
   assigned_nurse?: string; // Optional - legacy field from production nursing workflows
   avatar_id?: string; // Patient avatar identifier (avatar-1 through avatar-10)
+  photo_data?: string | null; // Optional JPEG data URL; shown instead of the avatar
   vitals: VitalSigns[];
   medications?: Medication[]; // Optional since medications are loaded separately
   notes: PatientNote[];
