@@ -111,7 +111,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   const [acknowledgingOrderId, setAcknowledgingOrderId] = useState<string | null>(null);
 
   // Check if user has admin privileges
-  const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin';
+  const isAdmin = ['admin', 'coordinator', 'super_admin'].includes(currentUser.role);
 
   const { currentTenant } = useTenant();
   const { data: simulationStartsAt, isSimulationTenant } = useSimulationStartsAt();

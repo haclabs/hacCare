@@ -18,6 +18,8 @@ interface UserFormProps {
 
 export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
   const { hasRole } = useAuth();
+  // user_programs RLS only lets super admins and coordinators assign programs
+  const canAssignPrograms = hasRole(['super_admin', 'coordinator']);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('');
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -356,8 +358,8 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
         }
       }
 
-      // Handle program assignments for instructors and coordinators
-      const userId = user?.id || authData?.user?.id || invitedUserId;
+      // Handle program assignments for instructors and coordinators (left to coordinators when an admin saves)
+      const userId = canAssignPrograms ? user?.id || authData?.user?.id || invitedUserId : undefined;
       if (userId && (formData.role === 'instructor' || formData.role === 'coordinator')) {
         // Always run bulkAssignUserToPrograms - it will clear old assignments if empty
         secureLogger.debug('Assigning programs to user');
@@ -384,7 +386,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     }
   };
 
-  const canEditRole = hasRole('super_admin') || (hasRole('admin') && formData.role === 'nurse');
+  const canEditRole = hasRole('super_admin') || (hasRole(['admin', 'coordinator']) && formData.role === 'nurse');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -541,7 +543,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           )}
 
           {/* Program Assignment for Instructors and Coordinators */}
-          {(formData.role === 'instructor' || formData.role === 'coordinator') && programs.length > 0 && (
+          {canAssignPrograms && (formData.role === 'instructor' || formData.role === 'coordinator') && programs.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Tag className="inline h-4 w-4 mr-1" />

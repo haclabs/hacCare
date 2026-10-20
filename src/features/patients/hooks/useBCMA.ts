@@ -97,14 +97,6 @@ export const useBCMA = () => {
     }
   }, [state]);
 
-  const generateMedicationBarcode = useCallback((medication: Medication) => {
-    return bcmaService.generateMedicationBarcode(medication);
-  }, []);
-
-  const generatePatientBarcode = useCallback((patient: Patient) => {
-    return bcmaService.generatePatientBarcode(patient);
-  }, []);
-
   const completeAdministration = useCallback(async (
     currentUser: { id: string; name: string },
     manualOverrides: string[] = [],
@@ -154,8 +146,6 @@ export const useBCMA = () => {
     startBCMAProcess,
     cancelBCMAProcess,
     handleBarcodeScanned,
-    generateMedicationBarcode,
-    generatePatientBarcode,
     completeAdministration
   };
 };

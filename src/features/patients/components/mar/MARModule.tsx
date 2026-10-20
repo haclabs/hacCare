@@ -5,7 +5,6 @@ import type { Patient, Medication } from '../../../../types';
 import { fetchPatientMedications } from '../../../../services/clinical/medicationService';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { BCMAAdministration } from '../../components/BCMAAdministration';
-import { BarcodeGenerator } from '../../components/BarcodeGenerator';
 import { useBCMA } from '../../hooks/useBCMA';
 import { BBITTab } from './BBITTab';
 import { MedicationHistoryView } from './MedicationHistoryView';
@@ -67,7 +66,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
-  const [showBarcodeLabels, setShowBarcodeLabels] = useState(false);
   const [showBBITForm, setShowBBITForm] = useState(false);
 
   const bcma = useBCMA();
@@ -216,46 +214,6 @@ export const MARModule: React.FC<MARModuleProps> = ({
             <Droplets className="h-3.5 w-3.5" />
             BBIT Chart
           </button>
-        </div>
-      )}
-
-      {/* Barcode Labels Section */}
-      {showBarcodeLabels && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Printable Barcode Labels</h3>
-            <button
-              onClick={() => setShowBarcodeLabels(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BarcodeGenerator
-              data={bcma.generatePatientBarcode(patient)}
-              type="patient"
-              label={`${patient.first_name} ${patient.last_name} - ${patient.patient_id}`}
-            />
-            <div className="space-y-4">
-              <h4 className="font-medium text-gray-900">Active Medications</h4>
-              {medications.filter((m) => m.status === 'Active').slice(0, 3).map((med) => (
-                <BarcodeGenerator
-                  key={med.id}
-                  data={bcma.generateMedicationBarcode(med)}
-                  type="medication"
-                  label={`${med.name} - ${med.dosage}`}
-                />
-              ))}
-              {medications.filter((m) => m.status === 'Active').length > 3 && (
-                <p className="text-sm text-gray-500">
-                  ... and {medications.filter((m) => m.status === 'Active').length - 3} more medications
-                </p>
-              )}
-            </div>
-          </div>
         </div>
       )}
 

@@ -136,14 +136,14 @@ class BCMAService {
       generatedBarcode,             // New format (PT12345 -> PT12345)
       `PT-${patient.patient_id}`,   // Legacy format
       `PAT-${patient.patient_id}`   // Alternative legacy format
-    ];
+    ].map((id) => id.toUpperCase());
     
     secureLogger.debug('🔵 Validating patient barcode:', scannedId);
     secureLogger.debug('🔵 Valid patient IDs:', validIds);
     secureLogger.debug('🔵 Patient ID:', patient.patient_id);
     secureLogger.debug('🔵 Generated barcode:', generatedBarcode);
     
-    return validIds.includes(scannedId);
+    return validIds.includes(scannedId.trim().toUpperCase());
   }
 
   // Validate medication barcode

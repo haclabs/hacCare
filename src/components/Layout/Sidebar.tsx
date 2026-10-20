@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
     ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'patient-library', label: 'Patient Library', icon: UserCog, color: 'text-fuchsia-600' }
     ] : []),
-    ...(hasRole(['super_admin', 'admin', 'instructor']) ? [
+    ...(hasRole(['super_admin', 'coordinator', 'admin', 'instructor']) ? [
       { id: 'med-catalog', label: 'Med Catalog', icon: Package, color: 'text-blue-600' }
     ] : []),
   ];
@@ -124,13 +124,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
   ] : [];
 
   /**
-   * Admin items - for super admins and coordinators
+   * Admin items - User & Roles for admins and up; the rest for super admins and coordinators
    */
-  const adminItems = hasRole(['super_admin', 'coordinator']) ? [
-    { id: 'patient-management', label: 'Patient Templates', icon: UserPlus, color: 'text-purple-600' },
-    { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
-    { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
-  ] : [];
+  const adminItems = [
+    ...(hasRole(['super_admin', 'coordinator']) ? [
+      { id: 'patient-management', label: 'Patient Templates', icon: UserPlus, color: 'text-purple-600' },
+    ] : []),
+    ...(hasRole(['super_admin', 'coordinator', 'admin']) ? [
+      { id: 'user-management', label: 'User & Roles', icon: UserCheck, color: 'text-indigo-600' },
+    ] : []),
+    ...(hasRole(['super_admin', 'coordinator']) ? [
+      { id: 'management', label: 'Tenant Mgmt', icon: Building2, color: 'text-red-600' },
+    ] : []),
+  ];
 
   /**
    * Resource items - available to all authenticated users

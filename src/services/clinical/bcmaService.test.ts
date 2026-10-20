@@ -67,6 +67,13 @@ describe('bcmaService.validateBarcodes - patient identity check', () => {
     expect(result.checks.patient).toBe(true);
   });
 
+  it('matches a typed patient_id regardless of case or surrounding spaces', () => {
+    const patient = makePatient({ patient_id: 'P58763' });
+    const medication = makeMedication();
+    const result = bcmaService.validateBarcodes(' p58763 ', medication.id, patient, medication);
+    expect(result.checks.patient).toBe(true);
+  });
+
   it('matches legacy PT- and PAT- prefixed formats', () => {
     const patient = makePatient();
     const medication = makeMedication();

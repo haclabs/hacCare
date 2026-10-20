@@ -25,6 +25,7 @@ export const UserManagement: React.FC = () => {
   const [filterPendingSetup, setFilterPendingSetup] = useState(false);
   const { hasRole } = useAuth();
   const canSendWelcomeEmail = hasRole(['admin', 'coordinator', 'super_admin']);
+  const canManageUsers = hasRole(['super_admin', 'coordinator', 'admin']);
 
   const fetchUsers = async () => {
     try {
@@ -271,7 +272,7 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const columnCount = 5 + (canSendWelcomeEmail ? 2 : 0) + (hasRole(['admin', 'super_admin']) ? 1 : 0);
+  const columnCount = 5 + (canSendWelcomeEmail ? 2 : 0) + (canManageUsers ? 1 : 0);
 
   const renderUserRow = (user: UserProfile) => (
     <tr key={user.id} className={`hover:bg-gray-50 ${!user.is_active ? 'opacity-60 bg-gray-50' : ''}`}>
@@ -346,7 +347,7 @@ export const UserManagement: React.FC = () => {
           )}
         </td>
       )}
-      {hasRole(['admin', 'super_admin']) && (
+      {canManageUsers && (
         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
           <div className="flex items-center justify-end space-x-2">
             <button
@@ -404,7 +405,7 @@ export const UserManagement: React.FC = () => {
           <Users className="h-8 w-8 text-blue-600" />
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
         </div>
-        {hasRole(['admin', 'super_admin']) && (
+        {canManageUsers && (
           <button
             onClick={() => {
               setSelectedUser(null);
@@ -568,7 +569,7 @@ export const UserManagement: React.FC = () => {
                     Last Sign In
                   </th>
                 )}
-                {hasRole(['admin', 'super_admin']) && (
+                {canManageUsers && (
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>

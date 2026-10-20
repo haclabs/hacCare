@@ -7,6 +7,64 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-20 - ROLE GATES, BCMA MANUAL ENTRY, DEAD LABEL CODE
+===============================================================================
+
+* Coordinators can now manage users like admins (they rank above admin):
+  Add User, Edit and Deactivate/Reactivate in User & Roles. Role checks are
+  exact matches, so these buttons showed for admin/super_admin only
+  - Migration 20261020000000_allow_coordinators_to_deactivate_users.sql lets
+    coordinators call deactivate_user/reactivate_user, with the same tier caps
+    as update_user_profile_admin (admins can't touch coordinators/super admins,
+    coordinators can't touch admins/super admins). Apply before deploying
+  - Permanent delete stays super_admin only
+  - Coordinators also get Edit/Delete on patient notes and the "Order Created
+    By" field on doctors' orders, like admins
+* Admins now see User & Roles in the sidebar (they had the buttons but no
+  link). Program assignment is hidden for admins and left to coordinators,
+  since user_programs RLS only allows super_admin and coordinator
+* Med Catalog: coordinators get the sidebar link (view and print labels).
+  Add/Edit is now super_admin only. Every entry is global (tenant_id NULL) and
+  catalog_admin_write only covers the caller's own tenant, so an admin's Add
+  failed and Edit reported success without saving
+* BCMA accepts a typed or scanned plain Patient ID (e.g. P58763) in any case.
+  Launched patients' IDs start with "P", so Enter Manually rejected them as an
+  unknown barcode format. The on-screen ID Bracelet's QR code now encodes the
+  same code as printed wristbands
+* Launch dialog no longer says simulations auto-complete when time expires
+  (they show Expired until completed) or mentions pause
+* Removed unused code: BulkLabelPrint.tsx (its only entry point was commented
+  out), the MAR's unreachable "Printable Barcode Labels" panel, and the
+  useBCMA barcode generators it used. docs/features/labels updated
+
+===============================================================================
+[Unreleased] - 2026-10-20 - KNOWLEDGE BASE REFRESH
+===============================================================================
+
+* Knowledge Base articles now render with real formatting (headings, numbered
+  steps, bullets, tip/warning callouts, tables) instead of plain pre-wrapped
+  text, plus Previous/Next links between articles in a category
+  - Small safe markup parser (kbMarkup.ts + test) renders React elements, no
+    HTML injection; search ignores the markup characters
+* Every article reviewed against the current code and rewritten where wrong:
+  - Removed the duplicate second "Getting Started" category (same id as the
+    first) and the "Medication Alerts" / "Vital Alert Thresholds" articles,
+    which described a notification system hacCare doesn't have
+  - Corrected patient ID format (P58763, new per launch), medication barcodes
+    (catalog MZ codes or free-entry M + letter + 5 digits, kept across launches),
+    green editing banner, Patient Library location, launch options (rooms,
+    named states, auto-generated logins), Complete → Reset → Play cycle,
+    "Expired" behaviour, Debrief Reports location, MAR sections, Med Catalog
+    permissions and Brand Name, label printing from the simulation card
+  - New articles: Timed Doctors' Orders, Insulin Sliding Scale, BCMA Dose
+    Timing, Named Template States, Debrief Reports, Doctors' Orders, Lab
+    Results, Adding and Editing Medications, Reporting a Problem or Requesting
+    a Feature (support@haccare.app or colin@haclabs.io on Teams, linked from
+    the KB footer)
+* Files: src/components/Documentation/{kbData.ts, kbMarkup.ts,
+  kbMarkup.test.ts, KBArticleContent.tsx, Documentation.tsx}
+
+===============================================================================
 [Unreleased] - 2026-10-19 - "GIVEN" BUBBLE ON THE MAR
 ===============================================================================
 

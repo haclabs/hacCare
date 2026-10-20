@@ -630,28 +630,6 @@ export const PatientManagement: React.FC = () => {
           onSave={handleSavePatient}
         />
       )}
-
-
-      {/* Bulk Label Print Modal - Commented out until implemented */}
-      {/* {showBulkPrint && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                Bulk Label Printing
-              </h3>
-              <button
-                onClick={() => setShowBulkPrint(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="sr-only">Close</span>
-                ✕
-              </button>
-            </div>
-            <BulkLabelPrint />
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

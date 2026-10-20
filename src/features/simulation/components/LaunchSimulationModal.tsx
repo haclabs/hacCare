@@ -662,7 +662,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
               className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-slate-700 dark:text-white"
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Simulation will auto-complete after this time expires
+              When time runs out the simulation shows as Expired. It stays open until you click Complete.
             </p>
           </div>
 
@@ -736,7 +736,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
             </label>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-6">
               Creates a disposable student account (visible under that program's Active Simulation Student Logins page) so you can hand out a login at a shared workstation.
-              It's automatically deleted only when this simulation is deleted — pause/reset/complete won't touch it.
+              It's automatically deleted only when this simulation is deleted — reset and complete won't touch it.
             </p>
             {autoGenerate && (
               <div className="mt-3 ml-6 flex items-center gap-3 flex-wrap">

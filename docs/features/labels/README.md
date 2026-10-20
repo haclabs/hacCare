@@ -9,18 +9,19 @@ labels.
 - **Avery 5167** — 80 labels/sheet (1/2" × 1-3/4"), small vial labels
 - Patient wristbands, medication labels (dose/route/time), chart and specimen
   labels
-- Print preview, and bulk printing across multiple patients
+- Print preview, and printing every label for a simulation from its Active Sims card
 
 ## Where the code lives
 
 | Component | Path |
 |---|---|
-| `BarcodeLabelSheetModal`, `BulkLabelPrint`, `SmallVialLabelSheetModal` | `src/features/admin/components/` |
-| `MedicationLabelsModal`, `AllLabelsModal` | `src/features/simulation/components/` |
-| `PatientBraceletsModal` | `src/features/patients/components/` |
+| `BarcodeLabelSheetModal`, `SmallVialLabelSheetModal` (Med Catalog sheets) | `src/features/admin/components/` |
+| `SimulationLabelPrintModal`, `PatientBraceletsModal`, `MedicationLabelsModal`, `AllLabelsModal` | `src/features/simulation/components/` |
 
-Barcodes are regenerated on every simulation launch, so never match template
-records to simulation records by barcode — see `CLAUDE.md`.
+Patient IDs (and so wristband codes) are regenerated on every simulation launch,
+so never match template records to simulation records by barcode — see
+`CLAUDE.md`. Medication barcodes are stored on the row and carried through
+launch, reset and sync, so medication labels can be reused.
 
 ## Related
 
