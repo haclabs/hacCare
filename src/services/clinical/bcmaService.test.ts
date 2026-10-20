@@ -67,6 +67,18 @@ describe('bcmaService.validateBarcodes - patient identity check', () => {
     expect(result.checks.patient).toBe(true);
   });
 
+  it('does not double the prefix for IDs that already start with PT', () => {
+    expect(bcmaService.generatePatientBarcode(makePatient({ patient_id: 'PT64280' }))).toBe('PT64280');
+    expect(bcmaService.generatePatientBarcode(makePatient({ patient_id: 'P58763' }))).toBe('PTP58763');
+  });
+
+  it('still accepts wristbands printed with the doubled prefix', () => {
+    const patient = makePatient({ patient_id: 'PT64280' });
+    const medication = makeMedication();
+    const result = bcmaService.validateBarcodes('PTPT64280', medication.id, patient, medication);
+    expect(result.checks.patient).toBe(true);
+  });
+
   it('matches a typed patient_id regardless of case or surrounding spaces', () => {
     const patient = makePatient({ patient_id: 'P58763' });
     const medication = makeMedication();

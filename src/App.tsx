@@ -168,7 +168,7 @@ function App() {
           });
         }
         
-        const patient = patients.find(p => p.patient_id === patientId);
+        const patient = patients.find(p => p.patient_id === patientId || p.patient_id === barcode);
         if (patient) {
           navigate(`/app/patient/${patient.id}`);
         } else {
