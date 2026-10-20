@@ -27,7 +27,7 @@ import {
   ClipboardList,
   LayoutGrid,
 } from 'lucide-react';
-import { getAvatarById } from '../../../data/patientAvatars';
+import { PatientAvatar } from './visuals/PatientAvatar';
 import { calculatePreciseAge } from '../../../utils/vitalRanges';
 import { calculateAge, formatDOB } from '../../../utils/patientUtils';
 import type { Patient } from '../../../types';
@@ -100,16 +100,14 @@ export const PatientOverview: React.FC<PatientOverviewProps> = ({
           {/* Premium Avatar with Status Ring */}
           <div className="relative">
             <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-emerald-400 shadow-lg shadow-emerald-200/60">
-              {patient.avatar_id ? (
-                <div
-                  className="w-full h-full bg-white"
-                  dangerouslySetInnerHTML={{ __html: getAvatarById(patient.avatar_id)?.svg || '' }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <User className="h-10 w-10 text-white" />
-                </div>
-              )}
+              <PatientAvatar
+                patient={patient}
+                fallback={
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                    <User className="h-10 w-10 text-white" />
+                  </div>
+                }
+              />
             </div>
             {/* Status Indicator Badge */}
             <div

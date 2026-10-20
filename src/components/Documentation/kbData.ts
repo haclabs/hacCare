@@ -269,7 +269,7 @@ Active simulation cards show a purple badge with the state they were last reset 
 
 ## Create a library patient
 1. Open **Patient Library** in the sidebar and click **Create Patient Template**.
-2. Fill in demographics: name, date of birth, gender, room/bed, condition, diagnosis, allergies and emergency contact.
+2. Fill in demographics: name, date of birth, gender, room/bed, condition, diagnosis, allergies and emergency contact. You can also upload a stock photo or pick an avatar (see The Patients Page).
 3. hacCare creates the patient and opens it with the green **Editing Patient Template** bar.
 4. Build the rest of the chart (meds, orders, labs, vitals, assessments, wounds and devices).
 5. Click **Save & Exit**. The patient template becomes **Ready**.
@@ -689,12 +689,23 @@ Use **Avery 5160** (30 labels per sheet). Choose a high-quality print setting so
         title: 'The Patients Page',
         content: `**Patients** in the sidebar lists everyone in the template or simulation you're in, under **My Patients**.
 
-Each card shows the patient's name, age, gender and date of birth, Patient ID, condition, room and bed, and an allergy count when there are allergies. Click a card ("Tap to open full chart") to open the chart.
+Each card shows the patient's photo (or illustrated avatar), name, age, gender and date of birth, Patient ID, condition, room and bed, and an allergy count when there are allergies. Click a card ("Tap to open full chart") to open the chart.
 
 While editing a template:
 - **Add Patient** appears at the top of the page.
 - Each card has **Edit Patient Details** and **Remove Patient** buttons.
 - In a Patient Library patient, Edit Patient Details is available too.
+
+## Adding a patient photo
+1. Edit the template (or Patient Library patient) and click **Edit Patient Details** on the card.
+2. Under **Patient Photo**, click **Upload Photo** and choose a JPG, PNG or WebP image.
+3. Click **Update Patient**.
+
+hacCare crops the photo to a square and shrinks it automatically, so any reasonable size works. The photo replaces the illustrated avatar on the patient card and chart header. **Remove Photo** goes back to the avatar.
+
+>! Use stock or AI-generated photos only, never a picture of a real patient.
+
+Photos are copied into every simulation launched from the template. A simulation that's already running picks up a new or changed photo the next time it's reset or synced (**View Changes & Sync**).
 
 > Program workspaces have no Patients page. Patients live inside templates and simulations.`,
       },

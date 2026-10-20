@@ -22,7 +22,8 @@ import { supabase } from '../../../lib/api/supabase';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { generateSecurePatientId } from '../../../utils/secureRandom';
 import { sanitizeUserInput } from '../../../utils/sanitization';
-import { PATIENT_AVATARS, getRandomAvatarId } from '../../../data/patientAvatars';
+import { getRandomAvatarId } from '../../../data/patientAvatars';
+import { PatientPhotoPicker } from '../../patients/components/forms/PatientPhotoPicker';
 
 interface CreatePatientTemplateModalProps {
   onClose: () => void;
@@ -36,6 +37,7 @@ interface PatientFieldsState {
   gender: string;
   blood_type: string;
   avatar_id: string;
+  photo_data: string | null;
   room_number: string;
   bed_number: string;
   condition: string;
@@ -53,6 +55,7 @@ const initialPatientFields: PatientFieldsState = {
   gender: 'Male',
   blood_type: 'O+',
   avatar_id: getRandomAvatarId(),
+  photo_data: null,
   room_number: '',
   bed_number: 'A',
   condition: 'Stable',
@@ -190,6 +193,7 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
           emergency_contact_relationship: sanitize(patientFields.emergency_contact_relationship),
           emergency_contact_phone: patientFields.emergency_contact_phone,
           avatar_id: patientFields.avatar_id,
+          ...(patientFields.photo_data ? { photo_data: patientFields.photo_data } : {}),
         },
         result.tenant_id
       );
@@ -398,27 +402,12 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
               </div>
             </div>
 
-            {/* Avatar selection */}
-            <div className="mt-4">
-              <label className="block text-xs font-medium text-slate-700 mb-2">Patient Avatar</label>
-              <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
-                {PATIENT_AVATARS.map((avatar) => (
-                  <button
-                    key={avatar.id}
-                    type="button"
-                    onClick={() => updatePatientField('avatar_id', avatar.id)}
-                    className={`relative rounded-lg overflow-hidden transition-all hover:scale-110 ${
-                      patientFields.avatar_id === avatar.id
-                        ? 'ring-4 ring-blue-500 ring-offset-1 scale-105'
-                        : 'ring-1 ring-slate-300 hover:ring-blue-300'
-                    }`}
-                    title={avatar.name}
-                  >
-                    <div className="aspect-square" dangerouslySetInnerHTML={{ __html: avatar.svg }} />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <PatientPhotoPicker
+              photoData={patientFields.photo_data}
+              avatarId={patientFields.avatar_id}
+              onPhotoChange={(photo) => updatePatientField('photo_data', photo)}
+              onAvatarChange={(id) => updatePatientField('avatar_id', id)}
+            />
           </div>
 
           {/* Room & medical info */}
