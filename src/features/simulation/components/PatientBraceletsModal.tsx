@@ -13,7 +13,7 @@ interface PatientBraceletsModalProps {
 }
 
 /**
- * Patient Bracelets Modal - Exact copy from BulkLabelPrint.tsx
+ * Patient Bracelets Modal
  * Uses the same Avery 5160 positioning and QR code generation
  */
 export const PatientBraceletsModal: React.FC<PatientBraceletsModalProps> = ({ patients, simulationName, participants, onClose, quantity, startRow }) => {

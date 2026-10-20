@@ -1,9 +1,10 @@
 /**
  * Knowledge Base Data
- * Article content for the hacCare KB. Organized by category.
+ * Article content for the hacCare KB, organized by category. Content uses the small markup
+ * described in kbMarkup.ts (## headings, - bullets, 1. steps, > tips, >! warnings, | tables, **bold**).
  */
 
-import { BookOpen, Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill, Rocket } from 'lucide-react';
+import { Users, Activity, Shield, PlayCircle, Tag, GraduationCap, Pill, Rocket, ClipboardList } from 'lucide-react';
 import type { ElementType } from 'react';
 
 export interface KBArticle {
@@ -34,611 +35,425 @@ export const KB_CATEGORIES: KBCategory[] = [
       {
         id: 'welcome',
         title: 'Welcome to hacCare',
-        content: `hacCare is a clinical simulation platform. Students use it exactly the way nurses use a real electronic health record — they open a patient chart, review orders, scan a wristband, administer medications, chart vitals, and document assessments.
+        content: `hacCare is a clinical simulation platform, a teaching EMR. Students use it the way nurses use a real electronic health record: they open a patient chart, review orders, scan a wristband, give medications, chart vitals and document assessments.
 
-The difference is that everything happens inside a sealed practice environment that you build and control. Nothing a student does in a simulation can reach real patient data, and nothing from one class section can reach another. hacCare contains no real patient information — every chart you see is one an instructor built.
+Everything happens inside a sealed practice environment that you build and control. hacCare contains no real patient information. Every chart you see is one an instructor built, and each simulation runs in its own separate space.
 
-As an instructor you work on the other side of that glass: you build the scenario, launch it for a class, watch it run, and afterwards review a report of everything each student did.
+As an instructor you build the scenario, launch it for a class, watch it run, and afterwards review a report of everything each student did.
 
-Your Role
-Your account has a role attached to it, and that role decides what appears in your sidebar and which simulations you can open.
-• Instructor — templates and simulations tagged with the program(s) you're assigned to
-• Coordinator — everything within your institution
-• Admin — everything within your institution, plus user management
-• Super Admin — everything, across all institutions
+## Your role
+Your account has a role, and that role decides what appears in your sidebar and which simulations you can open.
 
-Programs are the groupings your institution uses (for example NESA, PN, BNAD, or SIM Hub). You may be assigned to one or several.
+- **Instructor**: templates and simulations tagged with the program(s) you're assigned to
+- **Coordinator**: everything in your institution, including program setup
+- **Admin**: everything in your institution
+- **Super Admin**: everything, across all institutions
 
-If a colleague mentions a template you can't find, it is almost always because that template is tagged for a program you aren't assigned to. Your coordinator can add you to it.`,
+Programs are the groupings your institution uses, for example NESA, PN, BNAD or SIM Hub. You may be assigned to one or several.
+
+> If a colleague mentions a template you can't find, it's almost always tagged for a program you aren't assigned to. Your coordinator can add you to that program.`,
       },
       {
         id: 'activate-account',
         title: 'Activating Your Account',
-        content: `Your account is created by an administrator, not by you. You'll receive an email from noreply@haccare.app with the subject "Welcome to hacCare — Set up your account". Inside is a button that takes you to a page where you choose your own password.
+        content: `An administrator creates your account. You'll get an email from **hacCare <noreply@haccare.app>** with the subject **"Welcome to hacCare - Set up your account"**. The button inside takes you to a page where you choose your own password.
 
-No one at your institution ever sees or sets your password. The invite link is the only way in, and it's yours alone.
+Nobody at your institution ever sees or sets your password.
 
-Step 1 — Activate
-Clicking the button in the email opens the hacCare activation page, which shows a single "Activate Account" button. Click it.
+## Step 1: Activate
+The link opens a page with a single **Activate Account** button. Click it.
 
-Nothing happens until you click, and that's deliberate. Many school email systems automatically open every link in every incoming message to scan it for threats. A normal one-time activation link would be silently used up by that scanner before you ever saw the email, and you'd arrive to find a dead link. Putting a button in the way means the scanner sees a harmless page, and only a real human click activates the account.
+> Nothing happens until you click, and that's deliberate. Many school email systems open every link in incoming mail to scan it. A normal one-time link would be used up by the scanner before you ever saw it. The button means only a real click activates your account.
 
-Step 2 — Choose a password
-You'll be asked to create a password twice — once to set it, once to confirm. It must have:
-• At least 8 characters
-• At least one uppercase letter
-• At least one symbol, for example ! ? # or $
+## Step 2: Choose a password
+Enter your new password twice. It must have:
 
-The page tells you immediately if something is missing, so you won't lose your work by submitting and starting over. Use a password you don't use anywhere else, and let your browser or password manager save it.
+- At least 8 characters
+- At least one uppercase letter
+- At least one symbol, for example ! ? # or $
 
-When both fields match and the rules are satisfied, click the button to finish. You'll be signed in automatically — there's no need to go back to the login page.
+The rules are listed under the field. Click **Set Password & Continue**. If something's missing you'll see a message and can fix it without retyping everything. When it works you'll see **"Password set! Redirecting you into hacCare..."** and you're taken straight in.
 
-Troubleshooting
-• Can't find the email — check your junk or clutter folder. The first message from a new sender often lands there. If it isn't there either, ask your administrator to resend the invitation.
-• "Link expired" or "invalid" — the link has a limited lifetime and can only be used once. Ask your administrator to send a fresh invitation. This is normal and isn't a sign anything is broken.`,
+## Troubleshooting
+- **Can't find the email**: check your junk or clutter folder. If it isn't there, ask your administrator to resend the invitation.
+- **"Invite link invalid or expired"**: links can be used once and expire after a while. Ask your administrator for a fresh invitation. This is normal and doesn't mean anything is broken.`,
       },
       {
         id: 'first-login',
         title: 'Your First Login and Choosing a Program',
-        content: `The first time you land in hacCare, one of two things happens.
+        content: `The first time you sign in, one of two things happens:
 
-If you're assigned to one program, hacCare opens straight into it.
+- **One program**: hacCare opens straight into it.
+- **Several programs**: a chooser asks which program to work in. You aren't locked in, and hacCare remembers your choice for next time.
 
-If you're assigned to several, a chooser appears asking which program you want to work in. Pick one — you aren't locked in. You can switch at any time from the coloured bar at the top of the screen, and hacCare remembers your last choice for next time.
+## The top bar
+The dark bar across the top shows **Program Workspace**, the program you're in, and its short code. Whenever you're unsure which program's material you're looking at, check here.
 
-The program bar
-A blue-to-purple band runs across the top of the screen showing "Program Workspace" followed by the program you're currently in and its short code. This bar is your orientation: whenever you're unsure which program's material you're looking at, glance at it.
+If you belong to more than one program, a **Switch Program** button sits next to the program code.
 
-If you belong to more than one program, a "Switch Program" button sits at the right end of the bar.`,
+> The bar changes while you work. It shows **Editing Template** while you edit a template and **Active Simulation** when you're inside a running simulation.`,
       },
       {
         id: 'workspace-tour',
         title: 'Touring Your Program Workspace',
-        content: `Your program workspace is your home screen, and it's the same screen you'll land on every time you sign in.
+        content: `Your program workspace is the home screen you land on each time you sign in.
 
-The three counters
-• Templates — scenarios available to you, ready to be launched
-• Students — students on your program's roster
-• Sessions — simulations completed this semester
+## The three counters
+- **Templates**: simulation templates available to your program
+- **Student Logins**: auto-generated simulation logins (see Launching a Simulation)
+- **Sessions**: simulations completed this semester
 
-These are live. If a number looks wrong, it's usually a program-tagging question rather than missing data.
+If a number looks wrong, it's usually a program-tagging question rather than missing data.
 
-The six quick links
-• Templates — build and manage simulation scenarios. This is where a scenario is born: you create a template, fill in a patient chart, and save it.
-• Active Simulations — monitor and launch running sessions. Once a template is launched for a class, it lives here.
-• Debrief Reports — review completed session activity. Every action every student took, grouped by student.
-• Students — view auto-generated simulation student logins and their passwords, grouped by which simulation they belong to.
-• Knowledge Base — searchable how-to articles, including this one.
-• Instructor Guide — a walkthrough of the full simulation workflow.
+## Quick links
+- **Templates**: create and edit simulation scenarios, and launch them
+- **Active Simulations**: start, reset, complete and print labels for running sessions
+- **Debrief Reports**: review completed sessions, student by student
+- **Student Logins**: auto-generated student logins and passwords, grouped by simulation
+- **Knowledge Base**: these articles
+- **Instructor Guide**: a walkthrough of the full simulation workflow
 
-The same destinations are in the left sidebar under labels like Sim Templates, Active Sims, Debrief Reports, Students, and Help & Docs. Use whichever you prefer.
+The sidebar has the same destinations as **Sim Templates**, **Active Sims**, **Debrief Reports**, **Patient Library**, **Med Catalog** and **Help & Docs**.
 
-Why there are no patients here
-Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations, not in the workspace itself.`,
+> Your workspace has no patients in it, and that's correct. Patients live inside templates and simulations.`,
       },
       {
         id: 'how-simulations-work',
         title: 'How a Simulation Works (The Short Version)',
-        content: `Knowing the shape of the workflow makes everything else easier to follow. There are four stages.
+        content: `## 1. Build a template
+A template is a complete practice hospital with your patients in it. You enter the chart once (history, medications, orders, labs, vitals, wounds, devices) and save a snapshot. The snapshot is the frozen starting point.
 
-1. Build a template
-A template is a complete practice hospital with your patient in it. You enter the chart once — history, medications, orders, vitals, wounds, devices — and save a snapshot. That snapshot is the frozen starting point.
+## 2. Launch it
+Launching creates a fresh, private copy of the template for one class session. The original template is untouched, so you can launch the same scenario as often as you like. The clock starts as soon as you launch.
 
-2. Launch it
-Launching creates a fresh, private copy of the template for one class session and gives your students access. The original template is untouched, so you can launch the same scenario as many times as you like.
+## 3. Students work
+Students chart, scan and give medications inside their copy. Their work never touches your template.
 
-3. Students work
-They chart, scan, and administer inside their copy. Their work is theirs alone and never touches your template.
+## 4. Complete, then reset
+- **Complete** ends the session and creates the debrief report.
+- **Reset** wipes the students' work and returns the simulation to its starting point (or to a named state, such as "Week 2"). Printed labels keep working.
+- **Play** starts the next group's session after a reset.
 
-4. Reset or complete
-Reset wipes the students' work and returns the scenario to its starting point, ready for the next group — printed barcode labels keep working, so you can reuse them all semester.
-Complete ends the session and generates the debrief report.
+>! Always **Complete** before you **Reset**. Resetting without completing permanently deletes that group's work.
 
-For the full detail on each stage, see the Simulations category and the Instructor Guide tab under Sim Templates.`,
+For the details, see the Simulations category or the **Instructor Guide** tab under Sim Templates.`,
       },
       {
         id: 'where-to-get-help',
         title: 'Where to Get Help',
-        content: `Help & Docs in the sidebar is the first place to look. It has:
-• Articles — short how-to guides, searchable by keyword. Search looks inside the full text of every article, not just the titles.
-• Walkthroughs — recorded click-by-click screen captures of common tasks.
+        content: `**Help & Docs** in the sidebar has:
 
-The Instructor Guide tab inside Sim Templates covers the simulation workflow end to end.
+- **Articles**: short how-to guides. Search looks inside the full text of every article, not just titles.
+- **Walkthroughs**: step-by-step guides for common tasks, when your institution has added them.
 
-The welcome tour you saw when you first signed in can be reopened any time using the "Replay welcome tour" button at the top of this page.
+The **Instructor Guide** tab under Sim Templates covers the simulation workflow end to end. **What's New** in the sidebar lists recent changes.
 
-Still stuck? Contact your program coordinator.`,
+The welcome tour you saw on your first sign-in can be reopened with **Replay welcome tour** at the top of this page.
+
+Still stuck? Contact your program coordinator. To report a problem or ask for a change, see **Reporting a Problem or Requesting a Feature**.`,
+      },
+      {
+        id: 'report-problem-request-feature',
+        title: 'Reporting a Problem or Requesting a Feature',
+        content: `Found something that isn't working, or have an idea that would make hacCare better for your class? Send it to us. A clear report gets fixed much faster than "it's broken".
+
+## Where to send it
+- **Email**: support@haccare.app
+- **Microsoft Teams**: message **colin@haclabs.io**
+
+Use whichever is easier. Teams is quickest for something blocking a class that's running right now.
+
+## Reporting a problem
+Include as much of this as you can:
+
+1. **What you were trying to do**: for example "give insulin through BCMA" or "reset the simulation for the afternoon group".
+2. **Where it happened**: the template or simulation name, the patient, and the screen (Meds, Orders, Labs, Flowsheets…).
+3. **Steps to repeat it**: what you clicked, in order.
+4. **What you expected**, and **what actually happened**.
+5. **The exact error message**, copied or in a screenshot.
+6. **When it happened** (date and time) and **who saw it**: your name and role, or the student login.
+7. **How urgent it is**: is a class blocked right now, or can it wait?
+
+> A screenshot of the whole screen is often the single most useful thing, so the top bar shows which template or simulation you were in. On Windows press **Windows + Shift + S**; on a Mac press **Cmd + Shift + 4**.
+
+>! Never send passwords. A student login's email address is fine, but leave its password out.
+
+## Requesting a feature or change
+Tell us:
+
+- **The problem it solves**: what's slow, confusing or missing today.
+- **What you'd like to happen**: describe it, or sketch it.
+- **Who it helps**: instructors, students, a specific program or course.
+- **An example from your teaching**: the scenario where you needed it.
+- **When you'd need it**: for example "before Week 6 of NESA".
+
+Not sure if it's a bug or a feature request? Send it anyway.
+
+## Example
+| What to include | Example |
+|---|---|
+| **Subject** | Ondansetron label won't scan in BCMA |
+| **Where** | Simulation "Room 201 - DKA Faculty Training", patient Robert Hutchins, Meds |
+| **Steps** | Scanned the wristband (OK), then scanned the Ondansetron label |
+| **Expected** | Medication accepted |
+| **Actual** | "Medication barcode does not match expected medication" (screenshot attached) |
+| **When / who** | Oct 20, 10:06, a student on Room 201's auto-generated login |
+| **Urgency** | Class running now; students are using Override |`,
       },
     ],
   },
   {
     id: 'simulations',
     title: 'Simulations',
-    description: 'Creating templates, launching and managing simulations as an instructor.',
+    description: 'Building templates, named states, launching, running, and debriefing simulations.',
     icon: PlayCircle,
     iconBg: 'bg-green-100',
     iconColor: 'text-green-700',
     articles: [
       {
         id: 'create-template',
-        title: 'Creating a Simulation Template',
-        content: `Templates are the foundation of every simulation. A template is a fully isolated environment where you build a patient scenario that can be launched repeatedly.
+        title: 'Creating and Editing a Template',
+        content: `A template is a self-contained practice environment where you build a patient scenario that can be launched again and again.
 
-Step 1 — Create the Template
-1. Navigate to Simulations → Templates tab
-2. Click "Create Template"
-3. Enter a name, description, and default duration
-4. Click Create — this creates an isolated tenant for the template
+## Create the template
+1. Go to **Sim Templates** and click **Create Template**.
+2. Enter a name, optional folder, description and default duration, and choose the program(s) it belongs to.
+3. Click Create. The template starts as **Draft**.
 
-Step 2 — Build Your Scenario
-Click the Edit button on the template card. An orange "Editing Template" banner appears at the top confirming you're now working inside the template's tenant.
+## Build the scenario
+1. Click **Edit** on the template. hacCare switches you into the template and opens the Patients page.
+2. A green **Editing Template** bar appears at the top. Anything you enter while it's showing becomes the template's starting data.
+3. Use the normal screens to build the chart:
+  - **Add Patient**, or **Add Patient from Library** in the green bar
+  - **Meds**: medications, including sliding scales for diabetic medications
+  - **Orders**: doctors' orders, including timed orders
+  - **Labs**, **Vitals & Assess.**, **HacMap** (wounds and devices), **I&O**, **Notes** and **Flowsheets**
 
-From here, use the normal hacCare interface — the same Overview action bar and Clinical Flowsheets hub students use — to:
-• Add patients with realistic medical histories (or pull one in from the Patient Library — see the Patient Library article)
-• Set up medications and prescriptions (Meds)
-• Configure vitals and assessment data (Vitals & Assess. and the Flowsheets hub)
-• Add device/wound placements (HacMap), intake & output baselines (I&O), and handover notes (Notes)
-• Set up advanced directives or orders as needed (Orders)
+While editing a template, instructors can edit and delete medications and doctors' orders. In a live simulation only coordinators and admins can.
 
-Anything you enter while the orange banner is showing is saved as baseline data — it will be there every time the simulation launches or resets.
+## Save
+Click **Save & Exit** in the green bar. hacCare captures a snapshot and returns you home. The template changes from **Draft** to **Ready**, and only Ready templates can be launched.
 
-Step 3 — Save a Snapshot
-When the scenario is ready:
-1. Click "Save & Exit" in the orange banner
-2. The system captures all template data into a snapshot
-3. Template status changes from Draft → Ready ✓
+>! Don't give medications through BCMA while editing a template. The dose is saved as part of the template and copied into every simulation launched from it.
 
-A snapshot is the frozen copy used when launching simulations. You must save a snapshot before you can launch.`,
+> **Import** at the top of the Templates page and the export button on each template let you move a template between hacCare institutions.`,
+      },
+      {
+        id: 'template-states',
+        title: 'Named Template States (Week 1, Week 2, …)',
+        content: `A template can hold several saved versions of its data, called **named states**. For example, "Week 1 - Admission" and "Week 2 - Deterioration" can share the same patients with different orders, vitals and labs. You can launch or reset a simulation into any of them, so one set of printed labels lasts the whole course.
+
+## Save a new state
+1. Edit the template and change the data for the new week.
+2. Click the arrow next to **Save & Exit** and choose **Save as New State…**.
+3. Enter a label (for example "Week 2 - Deterioration") and an optional changelog note.
+
+The template's default snapshot is left untouched.
+
+## Edit an existing state
+Use **Edit a specific saved state** (the second edit button on the template) and pick the state. The green bar shows **State: Week 2** and the save button reads **Update "Week 2"**.
+
+## Rename or delete a state
+Click **Manage named states** on the template.
+
+## Use a state
+- **Launch**: pick it under **Launch From** in the launch dialog.
+- **Reset**: pick it under **Reset into state** in the reset dialog.
+
+Active simulation cards show a purple badge with the state they were last reset into.`,
       },
       {
         id: 'patient-library',
-        title: 'Patient Library: Reusable Patients Across Templates',
-        content: `The Patient Library lets you build a single patient once — full chart and all — and reuse it in any number of simulation templates, instead of recreating the same patient from scratch every time.
+        title: 'Patient Library: Reusable Patients',
+        content: `The Patient Library lets you build a patient once, with a full chart, and add them to any number of simulation templates.
 
-Creating a Patient Template
-1. Navigate to Simulations → Patient Library tab
-2. Click "Create Patient Template"
-3. Fill in the patient's demographics: name, DOB, gender, room/bed, condition, diagnosis, allergies, and emergency contact
-4. Click Create — this creates a dedicated tenant with the patient already in it, and opens it in the orange "Editing Patient Template" banner
-5. Build out the rest of the chart using the standard action bar and Flowsheets hub (meds, orders, labs, vitals, assessments, wounds/devices)
-6. Click "Save & Exit" to capture a snapshot — the template's status changes to Ready
+## Create a library patient
+1. Open **Patient Library** in the sidebar and click **Create Patient Template**.
+2. Fill in demographics: name, date of birth, gender, room/bed, condition, diagnosis, allergies and emergency contact.
+3. hacCare creates the patient and opens it with the green **Editing Patient Template** bar.
+4. Build the rest of the chart (meds, orders, labs, vitals, assessments, wounds and devices).
+5. Click **Save & Exit**. The patient template becomes **Ready**.
 
-Adding a Library Patient into a Simulation Template
-1. Open (Edit) the simulation template you want to add the patient to — the orange banner appears
-2. Click "Add Patient from Library"
-3. Pick any Ready patient template from the list and click Add
-4. The patient is copied into your simulation template with a brand-new patient ID and barcode
+## Add a library patient to a simulation template
+1. **Edit** the simulation template.
+2. Click **Add Patient from Library** in the green bar.
+3. Click **Add** next to any Ready patient.
+4. Click **Save & Exit** so the new patient is captured in the template's snapshot.
 
-Important notes:
-• This is a one-time copy, not a live link — editing the original Patient Library entry afterward will NOT update copies already placed in simulation templates
-• Only Ready (snapshot-saved) patient templates can be added
-• Instructors only see patient templates tagged with their assigned program(s); admins/coordinators see all
-• Remember to click "Save & Exit" on the simulation template afterward so the newly added patient is captured in its snapshot too`,
+> This is a one-time copy, not a live link. Later changes to the library patient don't update templates that already have a copy, and deleting it doesn't remove those copies.
+
+Instructors see library patients tagged with their program(s). Coordinators and admins see them all.`,
       },
       {
         id: 'launch-simulation',
         title: 'Launching a Simulation',
-        content: `Only templates with status "Ready" (snapshot saved) can be launched.
+        content: `Only **Ready** templates can be launched. If the button is greyed out, edit the template and save a snapshot first.
 
-1. Go to Simulations → Templates tab
-2. Click the ▶ Launch button on a Ready template
-3. Configure the simulation:
-   • Name — a specific name for this session (e.g., "Nursing 101 - Morning Group")
-   • Duration — how long the session runs
-   • Select participants — assign students who will access this simulation
-4. Click Launch
+1. In **Sim Templates**, click **Launch** on the template.
+2. Choose **Single Simulation**, or **Multiple Rooms** to launch one copy per room (each named "Room 201 - Template name", with its own instructor).
+3. Enter a **Simulation Name**, such as a room, section or date.
+4. If the template has named states, choose one under **Launch From**.
+5. Set the **Duration (minutes)**.
+6. Tick the **Primary Category (Program)**, and optionally a **Sub-Category (Type)**.
+7. Add people under **Select Participants**, marking each as Instructor or Student, and/or tick **Auto-generate simulation-only student login(s)**.
+8. Click Launch.
 
-What happens behind the scenes:
-• A new simulation tenant is created
-• All snapshot data is copied into the new tenant (patients, medications, vitals, etc.)
-• Each patient and medication gets a new unique barcode
-• Selected students are granted access
-• Simulation timer starts
+## Auto-generated student logins
+Tick the box and choose how many students (up to 10). Exactly one program must be selected. When the launch finishes, hacCare shows each login's email and password with a **Copy All** button. You can see them again any time with the key icon on the simulation card, or under **Student Logins**. They're deleted only when the simulation is deleted.
 
-Students can then access the simulation from their Simulation Portal.`,
+## What launch does
+- Creates a new, private simulation with the template's data
+- Gives every patient a new Patient ID, so print new wristbands for each new simulation
+- Keeps every medication's barcode from the template, so medication labels already printed for the template still scan
+- Starts the clock immediately. The simulation shows as **running** in Active Sims, and timed doctors' orders start counting down`,
       },
       {
         id: 'manage-simulations',
-        title: 'Managing Active Simulations',
-        content: `View and control running simulations from Simulations → Active tab.
+        title: 'Running, Completing and Resetting',
+        content: `Everything for a live session happens on its card in **Active Sims**.
 
-Available actions:
-• View Details — see which students are assigned and their activity
-• Reset — restore the simulation to the original template snapshot (clinical data cleared, barcodes preserved for label reuse)
-• Complete — mark the simulation as finished and generate a debrief report
-• Delete — permanently remove the simulation
+## Card buttons (left to right)
+- **Edit category tags**: change program and type tags
+- **Print patient and medication labels**
+- **Print medication checklist**
+- **View auto-generated student logins**
+- **Play**: start the simulation (shown when it isn't running)
+- **Reset**: clear student work and set the simulation to Ready to Start
+- **Complete**: end the session and create the debrief (shown while running)
+- **Delete**: permanently remove the simulation and its auto-generated logins
 
-Resetting vs Completing:
-• Reset: Wipes all student-entered data (vitals, MAR, assessments) and restores baseline from the template snapshot. Barcodes stay the same so printed labels still work.
-• Complete: Ends the simulation, locks all data, and creates a debrief report for review.
+## The session cycle
+1. **Launch**: the simulation is running and the clock has started.
+2. **Complete**: enter your name. If hacCare finds charting but no Student Name on any of it, it asks you who did the work (or lets you skip). A summary appears and the card shows **Needs Reset**.
+3. **Reset**: pick a named state if you want one, then click **Reset Anyway**. Student work is cleared, labels keep working, and the card shows **Ready to Start**.
+4. **Play**: the next group begins. The clock and any timed doctors' orders restart from this moment.
 
-Debrief Reports:
-After completing, access the debrief from the History tab. You can review each student's interventions, medications administered, vitals recorded, and clinical documentation — all grouped by student.`,
+>! Reset permanently deletes everything students entered. If you haven't clicked Complete first, that group's work is gone and won't appear in Debrief Reports.
+
+## When time runs out
+The card shows **Time expired** and an **Expired** badge. hacCare doesn't end the session for you. It stays open until you click **Complete**.
+
+## Template updated
+If someone saves changes to the template after you launched, the card shows **Template Updated**. Click **View Changes & Sync →** to compare. If the patient list is the same, syncing resets the simulation with the new template data (barcodes kept) and sets it to Ready to Start. If patients were added or removed, delete the simulation, launch a new one and print new labels.`,
+      },
+      {
+        id: 'debrief-reports',
+        title: 'Debrief Reports',
+        content: `Every time you **Complete** a simulation, hacCare creates a debrief report. Find them under **Debrief Reports** in the sidebar.
+
+Click **View Debrief** on a completed session to see:
+
+- Session overview and BCMA compliance
+- Each student's activity, grouped by the **Student Name** they entered
+- Medications given, with any override reason. Diabetic doses show the glucose reading and the sliding-scale dose, for example "Glucose 13.2 mmol/L → sliding scale: 2 units"
+- Vitals, assessments, flowsheets, wounds and devices, notes and other entries
+- An instructor notes section, and print/PDF output for your records
+
+You can archive completed sessions into folders, restore one to Active, or delete it permanently.
+
+> Students must enter their name on every form. Work saved without a name can't be attributed, which is why Complete asks you about unnamed entries.`,
       },
       {
         id: 'program-filtering',
-        title: 'Program-Based Simulation Filtering',
-        content: `Simulations and templates can be tagged with program categories (e.g., NESA, PN, SIM Hub, BNAD).
+        title: 'Program Tags and Who Sees What',
+        content: `Templates and simulations are tagged with programs (for example NESA, PN, SIM Hub or BNAD) and, optionally, types.
 
-• Instructors only see simulations tagged with their assigned program(s)
-• Admins and coordinators see everything
-• Tags are set when creating or editing a simulation
+- Instructors see only templates and simulations tagged with a program they're assigned to.
+- Coordinators, admins and super admins see everything in their institution.
+- Matching ignores capitals, so "SIM HUB" and "SIM Hub" are the same tag.
 
-To add/change program tags on an existing simulation:
-1. Open the simulation in the Active or History tab
-2. Click Edit Categories
-3. Select the applicable programs
-4. Save
+## Change tags on an active simulation
+1. Click the tag icon (**Edit category tags**) on the simulation card.
+2. Choose the **Primary Category (Program)** and **Sub-Category (Type)**.
+3. Click **Save Categories**. The change applies immediately without disturbing the session.
 
-If a simulation isn't appearing for an instructor, verify:
-• The simulation has the correct program tag(s) applied
-• The instructor is assigned to that program (Admin → User Management → Programs)`,
+## Simulation not showing for an instructor?
+- Check it carries the right program tag.
+- Check the instructor is assigned to that program. Your coordinator manages program assignments.`,
       },
     ],
   },
   {
-    id: 'label-printing',
-    title: 'Label Printing',
-    description: 'Printing and reusing patient and medication barcodes for simulation sessions.',
-    icon: Tag,
-    iconBg: 'bg-amber-100',
-    iconColor: 'text-amber-700',
+    id: 'orders-labs',
+    title: 'Orders & Labs',
+    description: 'Doctors\' orders, timed orders that appear partway through a simulation, and lab results.',
+    icon: ClipboardList,
+    iconBg: 'bg-orange-100',
+    iconColor: 'text-orange-700',
     articles: [
       {
-        id: 'label-overview',
-        title: 'Understanding Simulation Barcodes',
-        content: `hacCare uses barcodes for two purposes in simulations:
+        id: 'doctors-orders',
+        title: 'Doctors\' Orders',
+        content: `Open a patient and click **Orders** in the action bar. A **NEW** badge on Orders means there are orders students haven't acknowledged yet.
 
-1. Patient Barcodes (format: P12345)
-   — Printed on patient wristband labels
-   — Used by students to identify a patient before medication administration
+## Adding an order (instructors)
+1. Click **Add Order**.
+2. Enter the date, time (24-hour), **Ordering Doctor** (without "Dr.", it's added automatically) and the **Order** text. Press Enter for new lines.
+3. Optionally add notes and a release delay (see Timed Doctors' Orders).
+4. Save.
 
-2. Medication Barcodes (format: MZ30512)
-   — Printed on medication packaging labels
-   — Used in the BCMA (Barcode Medication Administration) scanning workflow
+While editing a template, instructors can **Edit** and **Delete** orders. In a live simulation, instructors can add orders but only coordinators and admins can edit or delete them.
 
-Why barcodes persist across resets:
-When you reset a simulation, patient and medication barcodes are preserved intentionally. This means you can print labels once per semester and reuse them every time the simulation resets — students scan the same physical labels throughout the course.
-
-Label Format — Avery 5160 (30 labels per sheet):
-• Patient labels: Name, Room, DOB, Allergies (red), Patient ID + barcode
-• Medication labels: Drug name, dose, route, barcode`,
+## What students do
+- **Acknowledge**: confirms they've read the order. They enter their name, and it shows as "Acknowledged by…" and in the debrief.
+- **Add Phone/Verbal**: students can record a phone or verbal order they received.`,
       },
       {
-        id: 'print-patient-labels',
-        title: 'Printing Patient Labels',
-        content: `Patient labels are printed from the patient record inside a simulation tenant.
+        id: 'timed-orders',
+        title: 'Timed Doctors\' Orders',
+        content: `A timed order stays hidden from students until a set number of minutes into the simulation, then appears on its own. Use it to bring in a new order mid-scenario without leaving your seat: a new medication, a STAT lab, or a change of plan after a deterioration.
 
-1. Log in to (or switch to) the active simulation tenant
-2. Open the patient record
-3. Click "Patient Labels" near the patient ID
-4. A print preview opens showing the Avery 5160 label layout
-5. Print on Avery 5160 sheets (30 labels per sheet)
+## Set up a timed order
+1. Edit the template (or open the running simulation) and go to the patient's **Orders**.
+2. Add a new order, or **Edit** an existing one in a template.
+3. In the purple box, enter **Show to students after (minutes into simulation)**, for example 30.
+4. Save.
 
-Each label includes:
-• Full patient name
-• Room number
-• Date of birth
-• Allergies highlighted in red
-• Patient ID (e.g., P12345) with barcode
+Leave the box blank or 0 to show the order immediately. The longest delay is 1440 minutes (24 hours).
 
-Bulk label printing:
-An instructor can also access Bulk Label Print from the Admin section to print all patient labels for a simulation in one pass — useful before a session starts.
+## When does the countdown start?
+- **First group**: at **Launch**. A launched simulation is already running.
+- **After a reset**: when you press **Play**. Reset stops the clock, so every group gets the same timing.
 
-Tips:
-• Print labels before the simulation begins
-• Laminate wristbands for repeated use across sessions
-• Always verify the barcode scans correctly before distributing`,
+## What you see
+Students never see a held order. Instructors and admins always do, with a purple badge:
+
+| Where you are | Badge |
+|---|---|
+| Template | **30 min delay** |
+| Running simulation, not yet released | **30 min delay · hidden until 14:30** |
+| Running simulation, released | **30 min delay · released 14:30** |
+
+Longer delays show in hours, for example **1 h 30 min delay**.
+
+Once the time passes, the order appears on students' screens within about 30 seconds, without reloading. The **NEW** badge on Orders then prompts them to acknowledge it.
+
+> Timed orders are copied into every simulation launched from the template and are kept through resets and template syncs, so you only set them up once.
+
+>! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then reset and press Play, a 30-minute order appears 30 minutes after Play.`,
       },
       {
-        id: 'print-medication-labels',
-        title: 'Printing Medication Labels',
-        content: `Medication labels are printed from the MAR (Medication Administration Record) within a simulation tenant.
+        id: 'labs',
+        title: 'Lab Results',
+        content: `Click **Labs** in the patient action bar. A **NEW** badge means there are results students haven't acknowledged.
 
-1. Open the simulation tenant
-2. Navigate to a patient → MAR tab
-3. Click the label/print icon next to a medication
-4. The label preview opens with the medication barcode
-5. Print on Avery 5160 or similar label stock
+## Entering results (instructors)
+Instructors, coordinators and admins can enter results, for example to build a template with labs already drawn.
 
-Each medication label includes:
-• Medication name and dosage
-• Route of administration
-• Medication barcode (MZ format)
+1. Click **New Panel** and fill in the panel details.
+2. Open the panel and use **Add Result**, or **+ Add Standard … Test Set** to add a whole set (such as a CBC) in one go.
+3. Results outside the reference range are flagged automatically. Critical values show a **CRITICAL** badge.
 
-For BCMA workflow to work:
-Both the patient wristband and the medication label must be scanned. If either barcode doesn't scan, check:
-• Label is printed from the correct simulation tenant (not a template)
-• The simulation hasn't been deleted and relaunched without reprinting
-• Barcodes are not damaged — reprint if smudged
-
-After a reset:
-Barcodes are preserved on reset, so existing labels remain valid. Only if you delete a simulation and create a new one will you need to reprint.`,
-      },
-    ],
-  },
-  {
-    id: 'student-guide',
-    title: 'Student Guide',
-    description: 'How to navigate hacCare, document care, and use barcode scanning during a simulation.',
-    icon: GraduationCap,
-    iconBg: 'bg-purple-100',
-    iconColor: 'text-purple-700',
-    articles: [
-      {
-        id: 'entering-simulation',
-        title: 'Entering a Simulation',
-        content: `Your instructor will give you access to a simulation session before it begins.
-
-How to enter:
-1. Log in to hacCare with your student credentials
-2. You'll be directed to the Simulation Portal
-3. Your assigned simulation will appear as a card
-4. Click "Enter Simulation" to begin
-
-Important — Student Name requirement:
-Every form and documentation entry in hacCare requires your name at the bottom before saving. This links your work to the debrief report your instructor reviews. Always fill in your full name before submitting.
-
-What you'll see:
-• A list of patients assigned to your simulation
-• Click any patient card to open their full record
-
-Navigation tip:
-Use the module tabs at the top of a patient record (Vitals, MAR, Assessments, etc.) to move between areas. Click "Overview" breadcrumb to return to the main module view.`,
-      },
-      {
-        id: 'documenting-care',
-        title: 'Documenting Patient Care',
-        content: `All clinical documentation is done inside the patient record. Here is what you'll commonly use:
-
-Vitals — Record temperature, blood pressure, heart rate, oxygen saturation, and respiratory rate. Not all measurements are required — enter what is clinically available.
-
-MAR (Medication Administration Record) — View scheduled medications. Use BCMA scanning to administer (see the BCMA article).
-
-Clinical Forms — Nursing assessments, admission assessments, and bowel records are under the Forms tab. Patient ID, date, and your nurse name are pre-filled — do not change them.
-
-Assessments — Quick physical, pain, or neurological assessments under the Assessments tab.
-
-Wound/Device Care — Managed via hacMap (the interactive patient body diagram icon).
-
-Advanced Directives — Review patient wishes from the Advanced Directives tab.
-
-General tips:
-• Fill in your student name on every form before saving
-• You'll see a green confirmation toast at the bottom of the screen when saved
-• If you make an error, let your instructor know — they can review all submissions in the debrief`,
-      },
-      {
-        id: 'bcma-scanning',
-        title: 'Barcode Medication Administration (BCMA)',
-        content: `BCMA is the Five Rights verification workflow for medication administration. You must scan two barcodes before giving any medication.
-
-The Five Rights:
-1. Right Patient
-2. Right Medication
-3. Right Dose
-4. Right Route
-5. Right Time
-
-How to administer using BCMA:
-1. Navigate to the patient's MAR tab
-2. Click the barcode/scan icon next to a medication
-3. Scan 1: Patient wristband barcode (P12345)
-4. Scan 2: Medication label barcode (MZ format)
-5. Both must match — the system verifies identity and medication
-6. Confirm administration details
-7. Enter your student name and submit
-
-If a scan fails:
-• Ensure you are scanning the correct patient's wristband (not another patient's)
-• Ensure the medication label belongs to this patient's prescription
-• If the barcode doesn't scan, type the code manually in the input field
-• If both are correct and it still fails, notify your instructor
-
-Why this matters:
-The BCMA scan creates an audit record tied to your student name. Your instructor can see exactly which medications you administered, in what order, and whether the Five Rights were followed — this forms part of your debrief.`,
-      },
-    ],
-  },
-  {
-    id: 'getting-started',
-    title: 'Getting Started',
-    description: 'System requirements, first login, and orientation for new users.',
-    icon: BookOpen,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-700',
-    articles: [
-      {
-        id: 'welcome',
-        title: 'Welcome to hacCare',
-        content: `hacCare is a healthcare simulation platform designed for clinical education. It supports multi-tenant environments so each institution, program, and active simulation runs in its own isolated space.
-
-Who uses hacCare:
-• Students — participate in patient care simulations
-• Instructors — manage simulations and templates, review debrief reports
-• Coordinators/Admins — manage users, programs, and tenant settings
-• Super Admins — cross-tenant access for platform management
-
-System requirements:
-• Modern web browser: Chrome, Firefox, Safari, or Edge (latest version)
-• Stable internet connection
-• Credentials provided by your administrator
-• Recommended screen resolution: 1920×1080 or higher`,
-      },
-      {
-        id: 'first-login',
-        title: 'First Login & Navigation',
-        content: `Logging in:
-1. Navigate to your hacCare URL
-2. Enter your email and password
-3. Click Sign In
-
-After login:
-• Instructors are directed to their Program Workspace or the Simulation Portal
-• Students are directed to the Simulation Portal if an active simulation is assigned
-• Admins land on the main patient management dashboard
-
-Navigation:
-• Left sidebar — main navigation (role-dependent)
-• Top bar — tenant switcher, user profile
-• Breadcrumbs — appear inside patient records to help you navigate back
-
-Switching tenants:
-Use the tenant switcher in the top bar to move between your home tenant, program workspaces, simulation templates, and active simulations. Only tenants you have access to will appear.`,
-      },
-    ],
-  },
-  {
-    id: 'patient-management',
-    title: 'Patient Management',
-    description: 'Viewing patients, updating records, and managing care documentation.',
-    icon: Users,
-    iconBg: 'bg-indigo-100',
-    iconColor: 'text-indigo-700',
-    articles: [
-      {
-        id: 'patient-list',
-        title: 'Viewing the Patient List',
-        content: `The main dashboard shows all patients in your current tenant. Each patient card displays:
-• Patient name, age, and gender
-• Room and bed number
-• Current condition
-• Recent vital signs summary
-• Allergy alerts (highlighted)
-• Active medication count
-
-Filtering and sorting:
-• Use the search bar to filter by name or room
-• Sort by name, room, or condition
-• Active patients are shown by default; toggle to see discharged patients
-
-Clicking a patient card opens their full record with tabbed navigation.`,
-      },
-      {
-        id: 'patient-record',
-        title: 'The Patient Record',
-        content: `Opening a patient always lands you on the Overview screen. Below the patient's name and status is the action bar — one-click access to every module:
-
-Chart — Full printable patient record (history, assessments, all documentation)
-Flowsheets — Opens the Clinical Flowsheets hub, the central library of assessment and documentation forms (see the Clinical Flowsheets article)
-Vitals & Assess. — Record and review vital signs plus head-to-toe and focused assessments
-Meds — The Medication Administration Record (MAR); review orders and document administration (BCMA scanning happens here)
-Labs — Laboratory results; a "NEW" badge flags unacknowledged results
-Orders — Physician's orders for medications, treatments, and diagnostic tests; a "NEW" badge flags unacknowledged orders
-HacMap — Interactive body diagram for documenting devices (IVs, catheters, tubes) and wound assessments by location
-I&O — Intake & output tracking for fluid balance
-Notes — Handover (SBAR) notes for shift-to-shift communication; a "NEW" badge flags unread notes
-
-Below the action bar are two buttons: ID Bracelet (view/print the patient's identification bracelet) and Quick Intro (reopens the in-app student guide any time).
-
-Each module is self-contained — changes saved in one don't affect another, but all data is linked to the same patient record.`,
-      },
-      {
-        id: 'clinical-flowsheets',
-        title: 'Clinical Flowsheets Hub',
-        content: `The Flowsheets hub (opened from the Flowsheets icon in the action bar) is a single library for every assessment and documentation form, grouped into categories. Some cards open a form directly inline; others shortcut to an existing module (e.g. Vitals, HacMap, I&O).
-
-Categories:
-• Monitoring & Vitals — Vital signs, neurological, newborn, and pain assessments
-• Systems Assessment — Respiratory, cardiovascular, GI, GU, musculoskeletal, and integumentary
-• Risk & Safety — Fall risk (Morse), pressure injury risk (Braden), and restraint documentation
-• Wound & Device Care — Device placement and wound assessment, both plotted on HacMap
-• Fluid & Metabolic — Intake & output, bedside blood glucose (BBIT), and bowel assessment
-• Mental Health & Cognition — Biopsychosocial, cognitive screening, and mood/affect assessments
-• Clinical Documentation — Handover notes, advanced directives, nursing/admission assessments, consents, and BPMH
-
-Use the sticky category nav at the top of the hub to jump straight to a section, or click "Patient Overview" to leave the hub.`,
-      },
-      {
-        id: 'patient-labels',
-        title: 'Generating Patient Labels',
-        content: `Patient identification labels can be printed directly from the patient record.
-
-1. Open the patient record
-2. Click "Patient Labels" near the Patient ID field
-3. A print preview opens with the Avery 5160 layout
-4. Load Avery 5160 sheets (30 labels per sheet) into your printer
-5. Print
-
-Label contents:
-• Full name
-• Room number
-• Date of birth
-• Allergies in red
-• Patient ID with barcode
-
-In simulation environments, these labels are used as patient wristbands for BCMA scanning. See the Label Printing section for details on barcode reuse.`,
-      },
-    ],
-  },
-  {
-    id: 'vital-signs',
-    title: 'Vital Signs',
-    description: 'Recording vitals, viewing trends, and understanding alert thresholds.',
-    icon: Activity,
-    iconBg: 'bg-red-100',
-    iconColor: 'text-red-700',
-    articles: [
-      {
-        id: 'recording-vitals',
-        title: 'Recording Vital Signs',
-        content: `1. Open a patient record → Vitals tab
-2. Click "Record Vitals"
-3. Enter available measurements:
-   • Temperature (°C)
-   • Blood Pressure — systolic and diastolic (must be entered as a pair or not at all)
-   • Heart Rate (bpm)
-   • Oxygen Saturation (%)
-   • Respiratory Rate (breaths/min)
-4. Enter your name in the student/nurse field
-5. Click Save
-
-Not all fields are required — enter only what is clinically available. This supports scenarios where equipment is unavailable or the patient's condition prevents certain measurements.
-
-Blood pressure pairing rule:
-Both systolic and diastolic must be entered together, or left blank together. The system will not accept one without the other.`,
-      },
-      {
-        id: 'vital-trends',
-        title: 'Viewing Vital Trends',
-        content: `After recording at least two sets of vitals, trend charts appear on the Vitals tab.
-
-• Mini-charts show the last 5 readings
-• Click any chart to open a detailed trend view
-• Trends cover up to the last 20 hours
-• Colour indicators flag readings outside normal range
-
-Normal ranges are age-based and applied automatically:
-• Neonates (0–28 days): different HR and RR thresholds than adults
-• Pediatric: age-banded ranges
-• Adult: standard clinical ranges`,
-      },
-      {
-        id: 'vital-alerts',
-        title: 'Alert Thresholds',
-        content: `hacCare automatically monitors vitals and generates alerts when readings fall outside normal ranges.
-
-Alert types generated from vitals:
-• High/low temperature
-• Hypertension or hypotension
-• Tachycardia or bradycardia
-• Low oxygen saturation (SpO2 < 93%)
-• Abnormal respiratory rate
-
-Alert priorities:
-• Critical (red) — Immediate attention required
-• High (orange) — Urgent
-• Medium (yellow) — Important but not immediately critical
-• Low (blue) — Informational
-
-Alerts appear in the notification bell and in the Alerts panel. Click Acknowledge to mark as reviewed. Alerts remain until acknowledged.`,
+## What students do
+- Review new results and click **Acknowledge** on the panel, entering their name.
+- Use **Enter Lab Order** to order a specimen and print its label.`,
       },
     ],
   },
   {
     id: 'medications',
-    title: 'Medications & MAR',
-    description: 'Medication administration records, BCMA scanning, and medication alerts.',
+    title: 'Medications & BCMA',
+    description: 'The MAR, adding medications, insulin sliding scales, BCMA scanning and dose timing, and the Med Catalog.',
     icon: Pill,
     iconBg: 'bg-teal-100',
     iconColor: 'text-teal-700',
@@ -646,146 +461,431 @@ Alerts appear in the notification bell and in the Alerts panel. Click Acknowledg
       {
         id: 'viewing-mar',
         title: 'The Medication Administration Record (MAR)',
-        content: `The MAR lists all active medications for a patient, organized by category:
-• Routine — Scheduled recurring medications
-• PRN — As-needed medications
-• STAT — Immediate/one-time orders
-• IV — Intravenous medications and fluids
+        content: `Click **Meds** in the patient action bar. The MAR has three tabs: **Administration**, **History** and **BBIT Chart**.
 
-Each entry shows:
-• Medication name, dose, and route
-• Scheduled administration times
-• Last administration time and who gave it
-• Status (Due, Overdue, Upcoming, Administered)
+## Administration
+Active medications are grouped into sections. Filter buttons along the top show the count for each:
 
-Overdue medications are highlighted in red. Upcoming medications (due within the hour) are shown in amber.`,
+- **Scheduled**: regular doses at set times
+- **PRN (As Needed)**: given when needed, no due times
+- **Diabetic**: insulin and other diabetic medications. BCMA asks for a blood glucose and shows the sliding scale.
+- **IV/Continuous**: infusions, shown as **RUNNING** when active
+- **STAT**: one-time immediate orders
+
+Each medication shows its dose, route, frequency and prescriber. The **BCMA** button turns yellow when a dose is due.
+
+Once a student gives a medication through BCMA, a green **✓ Given 14:32** tag appears next to it. Hover over it to see the full date and time.
+
+## History
+**Administration History (24 Hours)** lists every dose given in the last 24 hours, with the dose, route and notes. In simulations and templates only the time is shown (no date), since they're reused for months. The student's name for each dose is in the debrief.
+
+> The Given tag and History are cleared when a simulation is reset, so each group starts with a clean MAR.
+
+## BBIT Chart
+The basal-bolus insulin chart: glucose readings, basal and mealtime doses, correction insulin, and hypoglycemia treatment. Use **New Entry** to chart.`,
       },
       {
-        id: 'medication-catalog',
-        title: 'The Medication Catalog',
-        content: `The Medication Catalog is a master list of drugs with stable barcodes (MZ-series), so a medication's printed label barcode stays the same across simulation resets and relaunches — no reprinting needed every session.
+        id: 'adding-medications',
+        title: 'Adding and Editing Medications',
+        content: `Instructors add medications while editing a template. Click **Add Medication** on the MAR.
 
-Two tiers:
-• Global entries — shared starter pack (MZ001–MZ020), managed by super_admin
-• Institution entries — additions scoped to a specific tenant
+## Pick from the catalog (recommended)
+Start typing in **Catalog Lookup** to search the Med Catalog, including brand names. Picking an entry fills in the name, route and category and attaches the catalog's barcode, so printed labels stay the same in every simulation. The **Dosage** field shows the product strength as a reminder. Enter the ordered dose, not the vial strength.
 
-Accessing it:
-Sidebar → Med Catalog (currently visible to super_admin only).
+## Free entry
+Skip the catalog and type the name. hacCare assigns its own barcode (M + a letter + 5 digits). It's stable once saved, so labels still work after resets and launches. Changing the name of a catalog medication turns it into a free-entry one.
 
-Each catalog entry has:
-• Name and generic name
-• Formulation (tablet, capsule, IV solution, injection, cream, patch, inhaler, drops, suppository, spray)
-• Strength (e.g. "25mg", "10mg/mL")
-• Route (oral, intravenous, intramuscular, subcutaneous, topical, inhalation, rectal, sublingual, nasal, transdermal)
-• Category (scheduled, PRN, continuous, diabetic, STAT, unscheduled)
-• A unique barcode
+## The rest of the form
+- **Category**: Scheduled, PRN, IV/Continuous, STAT or Diabetic. Choosing Diabetic shows the sliding-scale editor.
+- **Dosage**, **Route** and **Frequency** (for example "2 times daily" or "Every 4 hours"). Frequency controls the BCMA dose-gap check.
+- **Administration Time(s)** in 24-hour format, **Prescribed By** and **Start Date**
 
-Managing entries:
-1. Click "Add Entry" to create a new catalog medication, or the edit icon on an existing row
-2. Fill in the fields above and Save
-3. Use the search box to filter the list by name or barcode
-4. Select entries with the checkboxes and click "Print Labels" to generate a barcode label sheet for printing
+## Editing and deleting
+**Edit** and **Delete** appear on the MAR for instructors while editing a template, and for coordinators and admins everywhere. **Edit** opens with every field filled in, including route, frequency and category.`,
+      },
+      {
+        id: 'sliding-scale',
+        title: 'Insulin Sliding Scale',
+        content: `You can attach a sliding (correction) scale to any **Diabetic** medication. When a student scans that medication in BCMA, the scale appears and the row matching their glucose reading is highlighted. The student still decides and enters the dose, so the scale is a guide, not an autopilot.
 
-How it's used when prescribing:
-When adding or editing a patient's medication (Meds → Add Medication), a catalog search box lets you pick an existing entry instead of typing everything manually — it auto-fills name, strength, route, and formulation, and attaches the catalog's stable barcode. If you skip the catalog and enter a medication manually (free-entry), the system generates a one-off barcode for it instead, which is fine for one-time simulations but won't produce a reusable printed label.`,
+## Set up a scale
+1. Add or **Edit** the medication on the MAR and set **Category** to **Diabetic**.
+2. In the orange **Sliding Scale (Optional)** box, click **Add row** for each band.
+3. For each row enter **From** and **To** glucose (mmol/L), then choose what happens:
+  - **Give units**, then enter the number of units (0.5 steps allowed)
+  - **Call MD**
+  - **Hold**
+4. Save the medication.
+
+Leave **From** or **To** blank for an open-ended row, for example "18.1 or higher → Call MD". Ranges include both ends.
+
+## Example
+| Glucose (mmol/L) | Dose |
+|---|---|
+| 3.9 or lower | Hold |
+| 4.0 – 8.0 | 0 units |
+| 8.1 – 12.0 | 2 units |
+| 12.1 – 18.0 | 4 units |
+| 18.1 or higher | Call MD |
+
+## What students see in BCMA
+1. They scan the wristband and the medication as usual.
+2. They enter the **Blood Glucose** (required for diabetic medications, 1–35 mmol/L).
+3. The **Sliding Scale** table appears with a ▶ beside the matching row.
+4. They enter the dose they drew up and sign.
+
+If no row covers the reading, BCMA shows "No row covers … mmol/L — check the doctor's orders."
+
+## In the debrief
+Each diabetic dose shows the glucose reading and the scale's answer next to what the student actually gave, for example **Glucose 13.2 mmol/L → sliding scale: 4 units**. A mismatch is easy to spot and discuss.
+
+> Scales are copied into every simulation launched from the template and kept on reset. If you change a scale in the template, **View Changes & Sync** on a running simulation brings it across.`,
       },
       {
         id: 'bcma',
         title: 'Barcode Medication Administration (BCMA)',
-        content: `BCMA enforces the Five Rights of medication administration through a dual-scan workflow.
+        content: `BCMA walks the student through the Five Rights with two scans before any dose is recorded.
 
-To administer a medication:
-1. Click the scan icon on the medication in the MAR
-2. Scan or type the patient wristband barcode (P format)
-3. Scan or type the medication barcode (MZ format)
-4. The system verifies both match the correct patient and prescription
-5. Confirm the administration details
-6. Enter your name and save
+1. On the MAR, click **BCMA** next to the medication.
+2. **Scan Patient Wristband**: scan the QR code on the patient's bracelet.
+3. **Scan Medication Barcode**: scan the medication label.
+4. **Verify**: hacCare checks the patient, the medication and the timing. A green **5 Rights Verified** bar means everything matched.
+5. Complete any extra fields:
+  - **Medication Drawn Up / Administered** for IV, IM and SC routes
+  - **Blood Glucose** for diabetic medications (the sliding scale appears here)
+  - Optional notes
+6. Enter the **Student Name** and submit.
 
-If verification fails:
-• Wrong patient barcode — you are scanning a different patient's wristband
-• Wrong medication barcode — the medication doesn't match this prescription
-• Barcode not found — the medication label may be from a different simulation instance
+If the wristband won't scan, **Enter Manually** lets the student type the Patient ID shown on it (for example P58763) instead.
 
-The Five Rights checked:
-1. Right Patient — wristband scan
-2. Right Medication — medication barcode
-3. Right Dose — confirmed on screen before submission
-4. Right Route — shown on the MAR entry
-5. Right Time — timestamp recorded on submission`,
+## When verification fails
+- **Patient barcode does not match**: wrong patient's wristband.
+- **Medication barcode does not match**: the label belongs to a different medication.
+- **Too soon since last dose**, or **Medication due in … minutes**: see BCMA Dose Timing.
+
+The student can click **Override** and enter a reason to continue. Overridden doses show **⚠ Override Applied** with the reason in the debrief, instead of **✓ BCMA Compliant**.
+
+> Students can practise without saving anything using **BCMA Med** in the sidebar (Training). It runs in **PRACTICE MODE**.`,
       },
       {
-        id: 'medication-alerts',
-        title: 'Medication Alerts',
-        content: `The system generates alerts for medication-related events:
+        id: 'bcma-timing',
+        title: 'BCMA Dose Timing',
+        content: `BCMA stops a scheduled medication being given again too soon. The minimum gap depends on the medication's **Frequency**:
 
-• Medication Due — A scheduled medication is due within the next 30 minutes
-• Medication Overdue — A scheduled medication has passed its administration window
-• Drug Interaction Warning — Two or more active medications have a known interaction
-• Allergy Contraindication — A medication conflicts with a documented allergy
-• Missed Dose — A medication window has closed without administration
+| Frequency | Scheduled every | BCMA blocks a repeat for |
+|---|---|---|
+| 1 time daily | 24 h | 20 h |
+| 2 times daily | 12 h | 10 h |
+| 3 times daily | 8 h | 6 h |
+| 4 times daily / Every 6 hours | 6 h | 4 h |
+| Every 4 hours | 4 h | 3 h |
+| Once monthly | 30 days | 25 days |
 
-Alerts are deduplicated — you won't receive the same alert repeatedly for the same medication.
+Other fixed intervals block for three-quarters of the interval. PRN medications have no timing check.
 
-To manage:
-Acknowledge alerts via the notification panel. Taking action (administering the medication) will automatically resolve the associated alert.`,
+BCMA also warns if a dose is given more than 30 minutes before it's due.
+
+## In a simulation
+Timing only counts doses given in the current session. The first dose after Launch, or after Play following a reset, is never blocked by a previous group's doses.
+
+If a dose really is needed, the student can **Override** with a reason. The override is shown in the debrief.
+
+> This works with any wording the frequency was saved with, including "1 time daily", "Once daily", "BID", "Q4H" or "Every 4 hours".`,
+      },
+      {
+        id: 'medication-catalog',
+        title: 'The Med Catalog',
+        content: `The **Med Catalog** (in the sidebar) is the master list of medications with permanent barcodes (MZ001, MZ002, …). A catalog medication's label prints the same everywhere, so you can print it once and reuse it in any template or simulation.
+
+Everyone except students can view the catalog and print labels. Only super admins can add and edit entries, because the catalog is shared by every institution. Ask your hacCare administrator if you need a new medication added.
+
+## Each entry has
+- **Barcode**: suggested automatically (next MZ number)
+- **Name**: the generic name, for example "Insulin Lispro"
+- **Brand Name** (optional): for example "Admelog", with no brackets. It prints on its own line under the name: **INSULIN LISPRO** / (Admelog).
+- **Strength**: the product strength, for example "100 units/mL" or "25 mg", formatted for you
+- **Formulation**, **Route** and **Category**
+- **Notes**
+
+> The form warns you (without blocking) when a name or strength is long enough to be cut off on a label. Keep names short and don't repeat the strength in the name.
+
+## Printing catalog labels
+Search or tick entries, set a quantity, then use **Print Labels** (Avery 5160) or **Print Small Labels (5167)** for small vials.
+
+Changing a catalog entry doesn't change medications already added to patients. They keep the name and dose they were given.`,
+      },
+    ],
+  },
+  {
+    id: 'label-printing',
+    title: 'Label Printing',
+    description: 'Patient wristbands, medication labels, and when you need to reprint.',
+    icon: Tag,
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-700',
+    articles: [
+      {
+        id: 'label-overview',
+        title: 'Understanding Simulation Barcodes',
+        content: `hacCare prints QR codes that the BCMA scanner reads.
+
+## Patient wristbands
+Each patient has a Patient ID shown on their chart, for example \`P58763\`. The wristband QR code encodes it.
+
+## Medication labels
+- **Catalog medications** use the catalog's permanent code, for example \`MZ011\`.
+- **Free-entry medications** get their own code, for example \`MA26325\`.
+
+Medication labels aren't patient-specific. BCMA confirms the right patient with the wristband scan.
+
+## When do I need to reprint?
+| What happened | Wristbands | Medication labels |
+|---|---|---|
+| Reset (any state) | Keep | Keep |
+| View Changes & Sync | Keep | Keep (print any newly added medications) |
+| New launch from the same template | **Reprint**, new Patient IDs | Keep |
+| Delete and relaunch | **Reprint** | Keep |
+| New medication added to the template | Keep | Print the new one |
+
+> Print labels once per semester for each running simulation and reset it between groups. Wristbands and labels keep working all term.
+
+>! Older templates had a few medications without a stored barcode, so their labels never scanned. That's fixed. If you use **WALKTHROUGH — DKA Faculty Training**, or the **Robert Hutchins** or **Maria Alvarez** patients from the Patient Library, reprint their medication labels.`,
+      },
+      {
+        id: 'print-simulation-labels',
+        title: 'Printing Labels for a Simulation',
+        content: `Print a simulation's wristbands and medication labels from its card.
+
+1. Go to **Active Sims**.
+2. Click the printer icon (**Print patient and medication labels**) on the simulation card.
+3. In **Print Labels**:
+  - **Patient Bracelets**: set **Qty per patient**, then **Print**
+  - **Medication Labels**: one per distinct medication. Set **Qty per medication**, then **Print**
+  - **Print All Labels**: one header label plus all bracelets and medication labels on the same sheets
+4. Use **Start at row** to reuse a partly used sheet.
+
+## Label stock
+Use **Avery 5160** (30 labels per sheet). Choose a high-quality print setting so the QR codes stay sharp, and print one test sheet before a big batch.
+
+## What's on the labels
+- **Patient bracelet**: LAST, First name, DOB, Patient ID, attending physician and QR code. Each patient gets their own colour.
+- **Medication label**: generic name, brand name on its own line when there is one, dose and form, and QR code.
+- **Header label**: simulation name and instructors, to keep sheets organised.
+
+> The **ID Bracelet** button on a patient's Overview shows that patient's bracelet on screen, with the same QR code as the printed wristband. It's handy for checking name, DOB and Patient ID, or for scanning if a wristband goes missing.`,
+      },
+    ],
+  },
+  {
+    id: 'patient-chart',
+    title: 'Patient Chart',
+    description: 'Finding patients, the patient action bar, and the Clinical Flowsheets hub.',
+    icon: Users,
+    iconBg: 'bg-indigo-100',
+    iconColor: 'text-indigo-700',
+    articles: [
+      {
+        id: 'patient-list',
+        title: 'The Patients Page',
+        content: `**Patients** in the sidebar lists everyone in the template or simulation you're in, under **My Patients**.
+
+Each card shows the patient's name, age, gender and date of birth, Patient ID, condition, room and bed, and an allergy count when there are allergies. Click a card ("Tap to open full chart") to open the chart.
+
+While editing a template:
+- **Add Patient** appears at the top of the page.
+- Each card has **Edit Patient Details** and **Remove Patient** buttons.
+- In a Patient Library patient, Edit Patient Details is available too.
+
+> Program workspaces have no Patients page. Patients live inside templates and simulations.`,
+      },
+      {
+        id: 'patient-record',
+        title: 'The Patient Chart and Action Bar',
+        content: `Opening a patient lands on their Overview. The action bar under the patient's name gets you to everything:
+
+- **Chart**: full printable patient record
+- **Flowsheets**: the Clinical Flowsheets hub (see next article)
+- **Vitals & Assess.**: vital signs, neuro and newborn assessments, and clinical assessment forms
+- **Meds**: the MAR and BCMA
+- **Labs**: lab results. **NEW** flags unacknowledged results
+- **Orders**: doctors' orders. **NEW** flags unacknowledged orders
+- **HacMap**: body diagram for devices (IVs, catheters, tubes) and wounds
+- **I&O**: intake and output
+- **Notes**: handover (SBAR) notes. **NEW** flags unread notes
+
+On the Overview, **ID Bracelet** shows the patient's identification bracelet and **Quick Intro** reopens the student guide.
+
+Each area saves on its own, and everything is attached to the same patient.`,
+      },
+      {
+        id: 'clinical-flowsheets',
+        title: 'Clinical Flowsheets Hub',
+        content: `Click **Flowsheets** in the action bar to open **Clinical Flowsheets**, the library of assessment and documentation forms. Some cards open a form right there. Others jump to an existing area, such as Vitals, HacMap or I&O.
+
+- **Monitoring & Vitals**: vital signs, neurological, newborn and pain
+- **Systems Assessment**: respiratory, cardiovascular, GI, GU, musculoskeletal and integumentary
+- **Risk & Safety**: fall risk, pressure injury risk and restraints
+- **Wound & Device Care**: device placement and wound assessment (on HacMap)
+- **Fluid & Metabolic**: intake and output, blood glucose (BBIT) and bowel assessment
+- **Mental Health & Cognition**: biopsychosocial, cognitive screening, and mood and affect
+- **Therapeutic Recreation**: the TR workflow (for programs that use it)
+- **Clinical Documentation**: handover notes, advanced directives, nursing and admission assessments, consents and BPMH
+
+Use the category bar at the top to jump to a section, and **Patient Overview** to leave.
+
+> Past entries open in a read-only detail view. Instructors can correct a charted nursing assessment, admission assessment or advanced directive. Students always start from a blank form.`,
+      },
+    ],
+  },
+  {
+    id: 'vital-signs',
+    title: 'Vital Signs',
+    description: 'Recording vitals, age-based colour coding, and trends.',
+    icon: Activity,
+    iconBg: 'bg-red-100',
+    iconColor: 'text-red-700',
+    articles: [
+      {
+        id: 'recording-vitals',
+        title: 'Recording Vital Signs',
+        content: `1. Open the patient and click **Vitals & Assess.**
+2. On the **Vitals** tab, click **Record Vitals**.
+3. Enter what's available:
+  - Temperature (°C)
+  - Blood pressure: systolic and diastolic, entered together or not at all
+  - Heart rate (bpm)
+  - Respiratory rate (breaths/min)
+  - Oxygen saturation (%), with the oxygen delivery method and flow rate
+4. Enter the **Student Name** and save.
+
+Not every measurement is required. At least one is, which suits scenarios where equipment isn't available or the patient (for example a newborn) can't have a blood pressure taken.
+
+> If systolic isn't higher than diastolic, the form flags the reading so the student can check it.
+
+The same screen has tabs for **Neuro Assessment**, **Newborn Assessment** and **Clinical Assessments**.`,
+      },
+      {
+        id: 'reading-vitals',
+        title: 'Reading Vitals: Colours and Trends',
+        content: `**Latest Vital Signs** shows the most recent reading, colour-coded against normal ranges for the patient's age. The age group (from Newborn to Adult) is shown at the top.
+
+| Colour | Meaning |
+|---|---|
+| Green | Within the normal range for the patient's age |
+| Yellow | Abnormal |
+| Red | Critical |
+| Grey | Not measured |
+
+Arrows show whether each value is rising, falling or stable compared with the previous reading.
+
+## Trends
+Click **View Trends** for charts and a table of the last five readings. **Record Vitals** is right there too.
+
+> Age-based ranges matter: a respiratory rate of 50 is normal for a newborn but critical for an adult.`,
+      },
+    ],
+  },
+  {
+    id: 'student-guide',
+    title: 'Student Guide',
+    description: 'Entering a simulation, documenting care, and giving medications with BCMA.',
+    icon: GraduationCap,
+    iconBg: 'bg-purple-100',
+    iconColor: 'text-purple-700',
+    articles: [
+      {
+        id: 'entering-simulation',
+        title: 'Entering a Simulation',
+        content: `1. Sign in with the login your instructor gave you.
+2. Open **Enter Sim** in the sidebar (simulation-only logins land there automatically).
+3. Your simulation appears as a card. Click **Enter Simulation**.
+4. Read the reminder and click **Understood — Enter Simulation**.
+
+>! Every form has a **Student Name** field at the bottom. Fill it in before saving, or your work won't appear in your instructor's debrief report.
+
+## Recommended shift workflow
+1. Verify patient identity with the **ID Bracelet** button.
+2. Review the chart overview.
+3. Review **Notes** (handover) from the previous shift.
+4. Check **Vitals & Assess.** and record current measurements.
+5. Review **Orders** for anything new.
+6. Give and document scheduled **Meds**.
+7. Check **Labs** for results that need follow-up.
+8. Use **Flowsheets** for other assessments or documentation.
+9. Write a handover **Note** before you finish.
+
+> New orders can appear partway through a simulation. Keep an eye on the **NEW** badge on Orders.
+
+The **Quick Intro** button reopens the student guide at any time.`,
+      },
+      {
+        id: 'documenting-care',
+        title: 'Documenting Patient Care',
+        content: `Everything is documented from the patient's chart, using the action bar:
+
+- **Vitals & Assess.**: record vitals (only what's available) and neuro, newborn and clinical assessments
+- **Meds**: the MAR. Give medications with BCMA.
+- **Orders**: acknowledge new orders, or add a phone/verbal order
+- **Labs**: review and acknowledge results, or enter a lab order
+- **HacMap**: document devices and wounds on the body diagram
+- **I&O**: record intake and output
+- **Notes**: write handover (SBAR) notes
+- **Flowsheets**: every other assessment and form, from pain and fall risk to admission assessments and BPMH
+
+## Tips
+- Enter your **Student Name** on every form.
+- A green confirmation appears when something saves.
+- Made a mistake? Tell your instructor. They see every entry in the debrief.`,
+      },
+      {
+        id: 'bcma-scanning',
+        title: 'Giving Medications with BCMA',
+        content: `1. Open **Meds** and click **BCMA** next to the medication.
+2. Scan the patient's **wristband**.
+3. Scan the **medication label**.
+4. Check the verification. A green bar means the Five Rights matched.
+5. For IV, IM and SC medications, enter the amount you drew up. Check the doctor's orders and calculate the dose first.
+6. For diabetic medications, enter the **blood glucose**. If there's a sliding scale, the matching row is highlighted.
+7. Enter your **Student Name** and submit.
+
+## If something goes wrong
+- **Patient barcode does not match**: you scanned another patient's wristband.
+- **Medication barcode does not match**: that label is for a different medication.
+- **Too soon since last dose**: this medication was given recently. Check the MAR's **✓ Given** tag and History.
+- **Wristband won't scan**: click **Enter Manually** and type the Patient ID printed on it. If a medication label won't scan, ask your instructor.
+
+**Override** lets you continue with a reason. Your instructor sees every override.
+
+> Want to practise first? **BCMA Med** in the sidebar is a practice sandbox. Nothing you do there is saved.`,
       },
     ],
   },
   {
     id: 'user-roles',
-    title: 'User Roles & Permissions',
-    description: 'Understanding role-based access and what each role can do.',
+    title: 'User Roles',
+    description: 'What each role can see and do.',
     icon: Shield,
     iconBg: 'bg-gray-100',
     iconColor: 'text-gray-700',
     articles: [
       {
         id: 'role-overview',
-        title: 'Role Overview',
-        content: `hacCare uses a hierarchical role system. Each role inherits the permissions of the roles below it.
+        title: 'Roles at a Glance',
+        content: `| Role | Sees | Typical work |
+|---|---|---|
+| **Student (nurse)** | Simulations they're assigned to | Charting, BCMA, acknowledging orders and labs |
+| **Instructor** | Templates and simulations tagged with their program(s) | Building templates, launching and running simulations, debriefs |
+| **Admin** | Everything in their institution | As instructors, plus editing medications and orders in live simulations, and adding and editing users in **User & Roles** |
+| **Coordinator** | Everything in their institution | Everything an admin can do, plus program setup (**Tenant Mgmt**) and assigning instructors to programs |
+| **Super Admin** | Everything, across institutions | Platform administration, including the Med Catalog |
 
-Role hierarchy (highest → lowest):
-1. Super Admin — Cross-tenant access, platform management
-2. Coordinator — Tenant-wide management, all simulations/templates visible
-3. Admin — User and tenant management within their tenant
-4. Instructor — Simulation and template management, filtered by assigned programs
-5. Nurse/Student — Patient care documentation within assigned simulations
-
-Role changes require the user to log out and back in to take effect.`,
-      },
-      {
-        id: 'role-permissions',
-        title: 'Permissions by Role',
-        content: `Student / Nurse:
-• Access assigned simulation patients
-• Record vitals, medications, assessments
-• Use BCMA scanning workflow
-• View patient records (read)
-
-Instructor:
-• All student permissions
-• Create and edit simulation templates
-• Launch simulations for their programs
-• Assign students to simulations
-• View debrief reports
-• Only sees simulations/templates tagged with their program(s)
-
-Coordinator:
-• All instructor permissions
-• See all simulations and templates (no program filter)
-• Manage programs and user-to-program assignments
-• Access advanced admin features
-
-Admin:
-• All coordinator permissions
-• User management (create, edit, deactivate)
-• Tenant settings
-
-Super Admin:
-• All admin permissions across all tenants
-• Cross-tenant visibility and switching
-• Platform-wide configuration`,
+## Good to know
+- Instructors can edit and delete medications and doctors' orders while editing a template. In live simulations only coordinators, admins and super admins can.
+- Instructors, coordinators and admins can all enter lab panels and results.
+- Admins and coordinators can add, edit, deactivate and reactivate users. Admins can't change coordinators or super admins, and coordinators can't change admins or super admins. Only super admins can permanently delete a user.
+- Program assignments (which programs an instructor sees) are set by coordinators.
+- Everyone except students can open the **Med Catalog** and print its labels. Only super admins can add or edit entries, because the catalog is shared by every institution.
+- A role change takes effect the next time the person signs in.`,
       },
     ],
   },

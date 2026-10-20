@@ -157,7 +157,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">Patient Notes</h3>
         <div className="flex space-x-2">
-          {notes.length > 0 && hasRole(['admin', 'super_admin']) && (
+          {notes.length > 0 && hasRole(['admin', 'coordinator', 'super_admin']) && (
             <button
               onClick={handleDeleteAllNotes}
               disabled={deleting || refreshing}
@@ -222,7 +222,7 @@ export const NotesContent: React.FC<NotesContentProps> = ({
                 </span>
                 
                 {/* Edit/Delete buttons for super users */}
-                {hasRole(['admin', 'super_admin']) && (
+                {hasRole(['admin', 'coordinator', 'super_admin']) && (
                   <div className="ml-3 flex space-x-2">
                     <button 
                       onClick={() => handleEditNote(note)}

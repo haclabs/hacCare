@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { BookOpen, Search, ChevronRight, ArrowLeft, FileText, Sparkles } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { BookOpen, Search, ChevronRight, ChevronLeft, ArrowLeft, FileText, Sparkles } from 'lucide-react';
 import { KB_CATEGORIES, type KBCategory, type KBArticle } from './kbData';
+import { stripKBMarkup } from './kbMarkup';
+import KBArticleContent from './KBArticleContent';
 import WalkthroughsSection from './WalkthroughsSection';
 import { OPEN_WELCOME_TOUR_EVENT, isWelcomeTourRole } from '../../hooks/useWelcomeModal';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,6 +16,11 @@ export const Documentation: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<KBCategory | null>(null);
   const [activeArticle, setActiveArticle] = useState<KBArticle | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const articleRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeArticle) articleRef.current?.scrollIntoView({ block: 'start' });
+  }, [activeArticle]);
 
   const searchResults = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -23,7 +30,7 @@ export const Documentation: React.FC = () => {
       for (const article of cat.articles) {
         if (
           article.title.toLowerCase().includes(q) ||
-          article.content.toLowerCase().includes(q) ||
+          stripKBMarkup(article.content).toLowerCase().includes(q) ||
           cat.title.toLowerCase().includes(q)
         ) {
           results.push({ category: cat, article });
@@ -59,6 +66,14 @@ export const Documentation: React.FC = () => {
   };
 
   const totalArticles = KB_CATEGORIES.reduce((sum, c) => sum + c.articles.length, 0);
+
+  const reportHelp = KB_CATEGORIES.flatMap((category) =>
+    category.articles.filter((a) => a.id === 'report-problem-request-feature').map((article) => ({ category, article }))
+  )[0];
+
+  const articleIndex = activeCategory && activeArticle ? activeCategory.articles.indexOf(activeArticle) : -1;
+  const prevArticle = articleIndex > 0 ? activeCategory?.articles[articleIndex - 1] : undefined;
+  const nextArticle = articleIndex >= 0 ? activeCategory?.articles[articleIndex + 1] : undefined;
 
   return (
     <div className="space-y-5">
@@ -230,7 +245,7 @@ export const Documentation: React.FC = () => {
 
           {/* Article — full content */}
           {view === 'article' && activeArticle && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div ref={articleRef} className="bg-white border border-gray-200 rounded-xl overflow-hidden scroll-mt-4">
               <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
                 <button
                   onClick={goCategory}
@@ -240,12 +255,33 @@ export const Documentation: React.FC = () => {
                   {activeCategory?.title}
                 </button>
               </div>
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-5">{activeArticle.title}</h2>
-                <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                  {activeArticle.content}
+              <article className="px-6 py-7 sm:px-10 max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">{activeCategory?.title}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">{activeArticle.title}</h2>
+                <KBArticleContent content={activeArticle.content} />
+              </article>
+              {activeCategory && (prevArticle || nextArticle) && (
+                <div className="grid grid-cols-2 gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+                  {prevArticle ? (
+                    <button
+                      onClick={() => openArticle(activeCategory, prevArticle)}
+                      className="flex items-center gap-2 text-left text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 flex-shrink-0" />
+                      <span><span className="block text-xs text-gray-400">Previous</span>{prevArticle.title}</span>
+                    </button>
+                  ) : <span />}
+                  {nextArticle && (
+                    <button
+                      onClick={() => openArticle(activeCategory, nextArticle)}
+                      className="flex items-center justify-end gap-2 text-right text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      <span><span className="block text-xs text-gray-400">Next</span>{nextArticle.title}</span>
+                      <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                    </button>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -254,11 +290,19 @@ export const Documentation: React.FC = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
               <h3 className="font-semibold text-blue-900 mb-2">Still need help?</h3>
               <p className="text-sm text-blue-800">
-                Contact your system administrator for account issues, or reach out to{' '}
+                Contact your system administrator for account issues. To report a problem or request a feature, email{' '}
                 <a href="mailto:support@haccare.app" className="underline hover:text-blue-600">
                   support@haccare.app
                 </a>{' '}
-                for technical support.
+                or message <span className="font-medium">colin@haclabs.io</span> on Microsoft Teams.{' '}
+                {reportHelp && (
+                  <button
+                    onClick={() => openArticle(reportHelp.category, reportHelp.article)}
+                    className="underline font-medium hover:text-blue-600"
+                  >
+                    What to include in a report
+                  </button>
+                )}
               </p>
             </div>
           )}

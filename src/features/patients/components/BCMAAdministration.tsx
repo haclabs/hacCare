@@ -105,8 +105,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       return;
     }
     
-    // Detect barcode type
-    const isPatientBarcode = barcode.startsWith('PT') || barcode.startsWith('PAT-');
+    // Detect barcode type. Typed or on-screen IDs are the plain Patient ID (e.g. P58763)
+    const isPatientBarcode = barcode.startsWith('PT') || barcode.startsWith('PAT-')
+      || barcode.trim().toUpperCase() === patient.patient_id?.toUpperCase();
     // New format: M + letter + 5 digits (e.g., MA26325) OR catalog format MZ + 3+ digits (e.g., MZ001) OR legacy MED format
     const medicationRegex = /^M[A-Z]\d{5}$|^MZ\d{3,}$/;
     const isMedicationBarcode = barcode.startsWith('MED') || medicationRegex.test(barcode);

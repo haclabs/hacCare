@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Patient } from '../../../../types';
 import { X, ShieldCheck } from 'lucide-react';
 import { formatDOB } from '../../../../utils/patientUtils';
+import { bcmaService } from '../../../../services/clinical/bcmaService';
 
 /**
  * Quick-look ID bracelet — a stylized on-screen card for nurses to visually
@@ -87,7 +88,7 @@ const HospitalBracelet: React.FC<HospitalBraceletProps> = ({ patient, onClose })
               </div>
 
               <div className="bg-white rounded-lg p-1.5 shrink-0">
-                <QrCode data={patient.patient_id} />
+                <QrCode data={bcmaService.generatePatientBarcode(patient)} />
               </div>
             </div>
           </div>

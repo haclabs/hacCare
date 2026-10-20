@@ -126,8 +126,9 @@ export const MedicationCatalogAdmin: React.FC = () => {
   const [showSmallPrintModal, setShowSmallPrintModal] = useState(false);
   const labelWarnings = getCatalogEntryWarnings(form);
 
-  const canView = hasRole(['super_admin', 'admin', 'instructor']);
-  const canManage = hasRole(['super_admin', 'admin']);
+  const canView = hasRole(['super_admin', 'coordinator', 'admin', 'instructor']);
+  // Entries are global (tenant_id NULL); RLS only lets super admins write those
+  const canManage = hasRole('super_admin');
 
   const load = useCallback(async () => {
     setLoading(true);
