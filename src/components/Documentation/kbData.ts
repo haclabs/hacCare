@@ -292,13 +292,14 @@ Instructors see library patients tagged with their program(s). Coordinators and 
         content: `Only **Ready** templates can be launched. If the button is greyed out, edit the template and save a snapshot first.
 
 1. In **Sim Templates**, click **Launch** on the template.
-2. Choose **Single Simulation**, or **Multiple Rooms** to launch one copy per room (each named "Room 201 - Template name", with its own instructor).
-3. Enter a **Simulation Name**, such as a room, section or date.
-4. If the template has named states, choose one under **Launch From**.
-5. Set the **Duration (minutes)**.
-6. Tick the **Primary Category (Program)**, and optionally a **Sub-Category (Type)**.
-7. Add people under **Select Participants**, marking each as Instructor or Student, and/or tick **Auto-generate simulation-only student login(s)**.
-8. Click Launch.
+2. Choose **Single Simulation**, or **Multiple Rooms** to launch one copy per room.
+3. Enter a **Simulation Name**, such as a class section or date. This is required. In Multiple Rooms, each room is launched as the name followed by its room number, for example "Class A Morning - Room 201".
+4. For Multiple Rooms, enter each room number and pick one or more instructors for it. Use the instructor drop-down again to add another, or the x on a name to remove one.
+5. If the template has named states, choose one under **Launch From**.
+6. Set the **Duration (minutes)**.
+7. Tick the **Primary Category (Program)**, and optionally a **Sub-Category (Type)**.
+8. Add people under **Select Participants**, marking each as Instructor or Student, and/or tick **Auto-generate simulation-only student login(s)**.
+9. Click Launch.
 
 ## Auto-generated student logins
 Tick the box and choose how many students (up to 10). Exactly one program must be selected. When the launch finishes, hacCare shows each login's email and password with a **Copy All** button. You can see them again any time with the key icon on the simulation card, or under **Student Logins**. They're deleted only when the simulation is deleted.
@@ -313,6 +314,9 @@ Tick the box and choose how many students (up to 10). Exactly one program must b
         id: 'manage-simulations',
         title: 'Running, Completing and Resetting',
         content: `Everything for a live session happens on its card in **Active Sims**.
+
+## Renaming a simulation
+Click the pencil next to the simulation's name, type the new name, and press Enter (or the tick). Esc cancels. Renaming is safe at any time, even while it's running: patients, barcodes, student logins and charting are not affected.
 
 ## Card buttons (left to right)
 - **Edit category tags**: change program and type tags

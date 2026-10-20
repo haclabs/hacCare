@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getActiveSimulations, updateSimulationStatus, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
+import { getActiveSimulations, updateSimulationStatus, renameSimulation, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
@@ -433,6 +433,12 @@ export function useActiveSimulations() {
     });
   };
 
+  /** Throws on failure so the inline editor can stay open and show the error. */
+  const handleRename = async (simulationId: string, name: string) => {
+    await renameSimulation(simulationId, name);
+    await loadSimulations();
+  };
+
   const handleSaveCategories = async () => {
     if (!editCategoriesModal) return;
 
@@ -512,5 +518,6 @@ export function useActiveSimulations() {
     handleDelete,
     handleEditCategories,
     handleSaveCategories,
+    handleRename,
   };
 }
