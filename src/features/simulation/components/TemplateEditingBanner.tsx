@@ -14,6 +14,8 @@ import { savePatientTemplateSnapshot } from '../../../services/simulation/patien
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
 import { AddPatientFromLibraryModal } from './AddPatientFromLibraryModal';
+import { LeaveTemplateEditModal } from './LeaveTemplateEditModal';
+import { TEMPLATE_EDIT_LEAVE_ATTEMPT, type TemplateEditLeaveAttempt } from '../utils/templateEditNavigation';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface TemplateEditingInfo {
@@ -38,6 +40,7 @@ export const TemplateEditingBanner: React.FC = () => {
   const [stateLabel, setStateLabel] = useState('');
   const [stateChangelogNote, setStateChangelogNote] = useState('');
   const [savingState, setSavingState] = useState(false);
+  const [pendingLeave, setPendingLeave] = useState<TemplateEditLeaveAttempt | null>(null);
   const navigate = useNavigate();
   const { currentTenant, enterTemplateTenant, exitTemplateTenant } = useTenant();
   const { profile } = useAuth();
@@ -100,7 +103,14 @@ export const TemplateEditingBanner: React.FC = () => {
     };
   }, [currentTenant, enterTemplateTenant]);
 
-  const handleExitTemplate = async () => {
+  useEffect(() => {
+    const handleLeaveAttempt = (e: Event) => setPendingLeave((e as CustomEvent<TemplateEditLeaveAttempt>).detail);
+    window.addEventListener(TEMPLATE_EDIT_LEAVE_ATTEMPT, handleLeaveAttempt);
+    return () => window.removeEventListener(TEMPLATE_EDIT_LEAVE_ATTEMPT, handleLeaveAttempt);
+  }, []);
+
+  /** Saves the snapshot and leaves the template tenant; `destination` overrides the default return to the template list. */
+  const handleExitTemplate = async (destination?: TemplateEditLeaveAttempt) => {
     if (!editingInfo) return;
 
     secureLogger.debug('🚪 Banner: Exiting template editing mode');
@@ -123,17 +133,19 @@ export const TemplateEditingBanner: React.FC = () => {
         const recordCount = result.records_captured || 0;
         const tableCount = result.tables_captured || 0;
         const savedWhat = editingStateId ? `State "${editingStateLabel}"` : 'Template';
-        alert(`✅ ${savedWhat} saved successfully!\n\n${recordCount} records captured from ${tableCount} tables.\n\nReturning to templates...`);
+        alert(`✅ ${savedWhat} saved successfully!\n\n${recordCount} records captured from ${tableCount} tables.\n\n${destination ? `Going to ${destination.label}...` : 'Returning to templates...'}`);
       } else {
         secureLogger.error('❌ Banner: Failed to save snapshot:', result.message);
         alert(`❌ Failed to save template:\n\n${result.message}`);
         setSaving(false);
+        setPendingLeave(null);
         return; // Don't exit if save failed
       }
       
       // Step 2: Clear the editing state
       sessionStorage.removeItem('editing_template');
       setEditingInfo(null);
+      setPendingLeave(null);
 
       // Step 3: Exit template tenant (returns to home tenant) BEFORE navigating —
       // navigating first let the Templates/Active Simulations tab mount while
@@ -143,15 +155,20 @@ export const TemplateEditingBanner: React.FC = () => {
       await exitTemplateTenant();
       secureLogger.debug('✅ Banner: Successfully exited template tenant');
 
-      // Step 4: Now that tenant context is back to home, land on the list screen.
-      navigate(
-        isPatientTemplate ? '/app?tab=patient-library' : '/app?tab=simulations',
-        isPatientTemplate ? undefined : { state: { initialTab: 'templates' } }
-      );
+      // Step 4: Now that tenant context is back to home, land on the requested screen (or the list screen).
+      if (destination) {
+        navigate(destination.path, destination.state ? { state: destination.state } : undefined);
+      } else {
+        navigate(
+          isPatientTemplate ? '/app?tab=patient-library' : '/app?tab=simulations',
+          isPatientTemplate ? undefined : { state: { initialTab: 'templates' } }
+        );
+      }
       
     } catch (error) {
       secureLogger.error('❌ Banner: Error during save/exit:', error);
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to save template'}`);
+      setPendingLeave(null);
     } finally {
       setSaving(false);
     }
@@ -278,7 +295,7 @@ export const TemplateEditingBanner: React.FC = () => {
             )}
             <div className="relative flex items-center">
               <button
-                onClick={handleExitTemplate}
+                onClick={() => handleExitTemplate()}
                 disabled={saving}
                 className={`flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm shadow-md hover:shadow-lg ${
                   isPatientTemplate ? 'rounded-lg' : 'rounded-l-lg'
@@ -396,6 +413,17 @@ export const TemplateEditingBanner: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Warn before sidebar navigation leaves the template without saving */}
+      {pendingLeave && (
+        <LeaveTemplateEditModal
+          templateName={editingStateId ? `${editingInfo.template_name} (${editingStateLabel})` : editingInfo.template_name}
+          destinationLabel={pendingLeave.label}
+          saving={saving}
+          onSaveAndContinue={() => handleExitTemplate(pendingLeave)}
+          onStay={() => setPendingLeave(null)}
+        />
       )}
 
       {/* Add Patient from Library modal */}

@@ -7,6 +7,20 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-21 - WARN BEFORE LEAVING TEMPLATE EDIT MODE
+===============================================================================
+
+* While editing a template, clicking a sidebar item that leaves the template
+  (Sim Templates, Active Sims, Enter Sim, admin pages, ...) now asks the
+  instructor to "Save & Exit Template" or "Stay & Keep Editing". Previously
+  the click went through and left them stranded inside the template tenant
+  - Save & Exit saves the snapshot (or the loaded named state), returns to
+    the home tenant, then opens the item they clicked
+  - Patients, Help & Docs and What's New stay usable without a warning
+  - Guard lives in features/simulation/utils/templateEditNavigation.ts;
+    prompt is LeaveTemplateEditModal
+
+===============================================================================
 [Unreleased] - 2026-10-21 - DELETE HANDOVER NOTES IN TEMPLATES
 ===============================================================================
 

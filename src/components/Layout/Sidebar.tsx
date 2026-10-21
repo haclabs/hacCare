@@ -4,6 +4,7 @@ import { Users, Settings, UserCheck, BookOpen, FileText, UserPlus, Building2, Be
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../contexts/TenantContext';
 import { SimulationIndicator } from '../../features/simulation/components/SimulationIndicator';
+import { interceptTemplateEditNavigation } from '../../features/simulation/utils/templateEditNavigation';
 
 /**
  * Sidebar Navigation Component
@@ -45,6 +46,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
 
   // Get current program info if in program tenant
   const currentProgram = programTenants.find(pt => pt.tenant_id === currentTenant?.id);
+
+  /** Navigates unless template edit mode intercepts it to warn first; returns whether navigation happened. */
+  const goTo = (itemId: string, label: string, path: string, state?: unknown): boolean => {
+    setIsUserMenuOpen(false);
+    if (interceptTemplateEditNavigation(itemId, { path, state, label })) return false;
+    navigate(path, state ? { state } : undefined);
+    return true;
+  };
+
+  const toAppRoute = (route: string) => (route.startsWith('/') ? `/app${route}` : `/app/${route}`);
 
   // Save collapsed state to localStorage
   useEffect(() => {
@@ -238,16 +249,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                 <li key={item.id}>
                   <button
                     onClick={() => {
-                      setIsUserMenuOpen(false);
                       if ('tab' in item) {
-                        navigate(`/app?tab=${item.tab}`, { state: item.tabState });
+                        goTo(item.id, item.label, `/app?tab=${item.tab}`, item.tabState);
                       } else if ('route' in item && item.route) {
-                        const appRoute = item.route.startsWith('/')
-                          ? `/app${item.route}`
-                          : `/app/${item.route}`;
-                        navigate(appRoute);
+                        goTo(item.id, item.label, toAppRoute(item.route));
                       } else {
-                        navigate(`/app?tab=${item.id}`);
+                        goTo(item.id, item.label, `/app?tab=${item.id}`);
                       }
                     }}
                     data-active-item={isActive}
@@ -302,8 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                 <li key={item.id}>
                   <button
                     onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate(`/app?tab=${item.id}`);
+                      goTo(item.id, item.label, `/app?tab=${item.id}`);
                     }}
                     data-active-item={isActive}
                     title={isCollapsed ? item.label : undefined}
@@ -361,8 +367,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                   <li key={item.id}>
                     <button
                       onClick={() => {
-                        setIsUserMenuOpen(false);
-                        navigate(`/app?tab=${item.id}`);
+                        goTo(item.id, item.label, `/app?tab=${item.id}`);
                       }}
                       data-active-item={isActive}
                       title={isCollapsed ? item.label : undefined}
@@ -430,14 +435,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                   <li key={item.id}>
                     <button
                       onClick={() => {
-                        setIsUserMenuOpen(false);
                         if ('route' in item && item.route) {
-                          const appRoute = (item.route as string).startsWith('/') 
-                            ? `/app${item.route}` 
-                            : `/app/${item.route}`;
-                          navigate(appRoute);
+                          goTo(item.id, item.label, toAppRoute(item.route as string));
                         } else {
-                          navigate(`/app?tab=${item.id}`);
+                          goTo(item.id, item.label, `/app?tab=${item.id}`);
                         }
                       }}
                       data-active-item={isActive}
@@ -491,8 +492,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                 <li key={item.id}>
                   <button
                     onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate(`/app?tab=${item.id}`);
+                      goTo(item.id, item.label, `/app?tab=${item.id}`);
                     }}
                     data-active-item={isActive}
                     title={isCollapsed ? item.label : undefined}
@@ -567,9 +567,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onColl
                   <button
                     key={item.id}
                     onClick={() => {
-                      setIsUserMenuOpen(false);
-                      onTabChange(item.id);
-                      navigate(`/app?tab=${item.id}`);
+                      if (goTo(item.id, item.label, `/app?tab=${item.id}`)) onTabChange(item.id);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150 group ${
                       isActive
