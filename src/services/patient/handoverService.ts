@@ -191,14 +191,20 @@ export const acknowledgeHandoverNote = async (
  */
 export const deleteHandoverNote = async (noteId: string): Promise<void> => {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('handover_notes')
       .delete()
-      .eq('id', noteId);
+      .eq('id', noteId)
+      .select('id');
 
     if (error) {
       secureLogger.error('Error deleting handover note:', error);
       throw error;
+    }
+
+    // RLS-blocked deletes return no error, just zero rows
+    if (!data || data.length === 0) {
+      throw new Error('You do not have permission to delete this handover note.');
     }
   } catch (error) {
     secureLogger.error('Error in deleteHandoverNote:', error);
