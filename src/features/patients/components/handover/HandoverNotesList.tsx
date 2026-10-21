@@ -13,13 +13,14 @@ import {
   Check, 
   Eye,
   Filter,
-  FileText,
-  Activity,
   Target,
-  Info
+  Info,
+  Trash2
 } from 'lucide-react';
-import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote } from '../../../../services/patient/handoverService';
+import { HandoverNote, getPatientHandoverNotes, acknowledgeHandoverNote, deleteHandoverNote } from '../../../../services/patient/handoverService';
+import { HandoverNoteDetails } from './HandoverNoteDetails';
 import { StudentAcknowledgeModal } from '../../../../components/modals/StudentAcknowledgeModal';
+import { useTenant } from '../../../../contexts/TenantContext';
 import { format } from 'date-fns';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -46,6 +47,15 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
   const [selectedNote, setSelectedNote] = useState<HandoverNote | null>(null);
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
   const [acknowledgingNoteId, setAcknowledgingNoteId] = useState<string | null>(null);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+
+  // Mirrors the handover_notes_delete_template RLS policy
+  const { currentTenant } = useTenant();
+  const isTemplateTenant =
+    currentTenant?.tenant_type === 'simulation_template' ||
+    currentTenant?.tenant_type === 'patient_template';
+  const canDeleteNotes =
+    isTemplateTenant && ['super_admin', 'coordinator', 'admin', 'instructor'].includes(currentUser.role);
 
   const loadNotes = async () => {
     try {
@@ -84,6 +94,23 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
       throw error; // Re-throw to let modal handle error display
     } finally {
       setAcknowledging(null);
+    }
+  };
+
+  const handleDelete = async (noteId: string) => {
+    if (!window.confirm('Delete this handover note from the template? This cannot be undone.')) return;
+
+    try {
+      setDeletingNoteId(noteId);
+      await deleteHandoverNote(noteId);
+      setNotes(prev => prev.filter(n => n.id !== noteId));
+      if (selectedNote?.id === noteId) setSelectedNote(null);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      secureLogger.error('Error deleting handover note:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete note. Please try again.');
+    } finally {
+      setDeletingNoteId(null);
     }
   };
 
@@ -222,6 +249,18 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
                     <Eye className="h-3 w-3" />
                     <span>{selectedNote?.id === note.id ? 'Hide' : 'View'} Details</span>
                   </button>
+
+                  {canDeleteNotes && (
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      disabled={deletingNoteId === note.id}
+                      title="Delete handover note"
+                      className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      <span>{deletingNoteId === note.id ? 'Deleting…' : 'Delete'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -255,56 +294,7 @@ export const HandoverNotesList: React.FC<HandoverNotesListProps> = ({
                 </div>
               )}
 
-              {/* Detailed View */}
-              {selectedNote?.id === note.id && (
-                <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-                  {note.nursing_notes && (
-                    <div className="p-4 rounded-lg bg-teal-50 border border-teal-200">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <FileText className="h-4 w-4 text-teal-600" />
-                        <span className="font-medium text-teal-800">Nursing Notes</span>
-                      </div>
-                      <p className="text-gray-700 whitespace-pre-wrap">{note.nursing_notes}</p>
-                    </div>
-                  )}
-                  {[
-                    { key: 'situation', title: 'Situation', icon: Info, color: 'blue' },
-                    { key: 'background', title: 'Background', icon: FileText, color: 'green' },
-                    { key: 'assessment', title: 'Assessment', icon: Activity, color: 'yellow' },
-                    { key: 'recommendations', title: 'Recommendations', icon: Target, color: 'purple' }
-                  ].map((section) => {
-                    const IconComponent = section.icon;
-                    return (
-                      <div key={section.key} className={`p-4 rounded-lg ${
-                        section.color === 'blue' ? 'bg-blue-50 border border-blue-200' :
-                        section.color === 'green' ? 'bg-green-50 border border-green-200' :
-                        section.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' :
-                        'bg-purple-50 border border-purple-200'
-                      }`}>
-                        <div className="flex items-center space-x-2 mb-2">
-                          <IconComponent className={`h-4 w-4 ${
-                            section.color === 'blue' ? 'text-blue-600' :
-                            section.color === 'green' ? 'text-green-600' :
-                            section.color === 'yellow' ? 'text-yellow-600' :
-                            'text-purple-600'
-                          }`} />
-                          <span className={`font-medium ${
-                            section.color === 'blue' ? 'text-blue-800' :
-                            section.color === 'green' ? 'text-green-800' :
-                            section.color === 'yellow' ? 'text-yellow-800' :
-                            'text-purple-800'
-                          }`}>
-                            {section.title}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 whitespace-pre-wrap">
-                          {note[section.key as keyof HandoverNote] as string}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {selectedNote?.id === note.id && <HandoverNoteDetails note={note} />}
             </div>
           ))}
         </div>

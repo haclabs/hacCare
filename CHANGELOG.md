@@ -7,6 +7,22 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-21 - DELETE HANDOVER NOTES IN TEMPLATES
+===============================================================================
+
+* Instructors (and admin/coordinator/super_admin) can delete SBAR handover
+  notes while editing a template. Delete button shows only in
+  simulation_template / patient_template tenants; live simulations and
+  production are unchanged
+  - New RLS policy handover_notes_delete_template (migration
+    20261021000000). The old policy only let a note's creator delete it
+    within an hour, so most baseline notes couldn't be removed
+  - deleteHandoverNote() now raises an error when RLS blocks the delete
+    (Supabase reported it as success with zero rows)
+  - Expanded SBAR view extracted to HandoverNoteDetails to keep
+    HandoverNotesList under 350 lines
+
+===============================================================================
 [Unreleased] - 2026-10-20 - LAUNCH NAMES & MULTI-INSTRUCTOR ROOMS
 ===============================================================================
 
