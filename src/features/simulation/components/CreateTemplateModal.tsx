@@ -6,7 +6,7 @@
  * ===========================================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, FileText, AlertCircle, Tag, UserCog, Folder } from 'lucide-react';
 import { createSimulationTemplate, updateTemplateFolder } from '../../../services/simulation/simulationService';
 import { getPatientTemplates, addPatientTemplateToSimulationTemplate } from '../../../services/simulation/patientTemplateService';
@@ -68,16 +68,22 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
     
     if (!error && data) {
       setPrograms(data);
-      
-      // For instructors, pre-select their assigned programs
-      if (isInstructor && programCodes && programCodes.length > 0) {
-        const userProgramIds = data
-          .filter(p => programCodes.includes(p.code))
-          .map(p => p.id);
-        setSelectedProgramIds(userProgramIds);
-      }
     }
   };
+
+  const isUserProgramCode = (code: string) =>
+    programCodes.some(c => c.toLowerCase() === code.toLowerCase());
+
+  // Pre-select an instructor's own programs once both programs and their codes have loaded.
+  // programCodes arrives asynchronously, so this can't live inside loadPrograms — doing so
+  // left the boxes unchecked and saved templates with primary_categories = NULL.
+  const hasPreselected = useRef(false);
+  useEffect(() => {
+    if (hasPreselected.current || !isInstructor || programs.length === 0 || programCodes.length === 0) return;
+    hasPreselected.current = true;
+    setSelectedProgramIds(programs.filter(p => isUserProgramCode(p.code)).map(p => p.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programs, programCodes, isInstructor]);
 
   // Load programs on mount
   useEffect(() => {
@@ -101,14 +107,22 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Get selected program codes
+    const selectedPrograms = programs
+      .filter(p => selectedProgramIds.includes(p.id))
+      .map(p => p.code);
+
+    // An untagged template is visible to every instructor in every program
+    if (isInstructor && selectedPrograms.length === 0) {
+      setError('Select your program so the template is only visible to your program.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Get selected program codes
-      const selectedPrograms = programs
-        .filter(p => selectedProgramIds.includes(p.id))
-        .map(p => p.code);
 
       const result = await createSimulationTemplate({
         ...formData,
@@ -278,7 +292,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
               </label>
               <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-600 rounded-lg p-4 space-y-2">
                 {programs.map((program) => {
-                  const isUserProgram = programCodes?.includes(program.code);
+                  const isUserProgram = isUserProgramCode(program.code);
                   const isDisabled = isInstructor && !isUserProgram;
                   
                   return (

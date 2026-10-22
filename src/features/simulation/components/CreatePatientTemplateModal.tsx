@@ -11,7 +11,7 @@
  * ===========================================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, UserCog, AlertCircle, Tag, User, MapPin, Phone } from 'lucide-react';
 import { createPatientTemplate, deletePatientTemplate } from '../../../services/simulation/patientTemplateService';
 import { createPatientWithTenant } from '../../../services/patient/multiTenantPatientService';
@@ -119,15 +119,20 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
 
     if (!error && data) {
       setPrograms(data);
-
-      if (isInstructor && programCodes && programCodes.length > 0) {
-        const userProgramIds = data
-          .filter(p => programCodes.includes(p.code))
-          .map(p => p.id);
-        setSelectedProgramIds(userProgramIds);
-      }
     }
   };
+
+  const isUserProgramCode = (code: string) =>
+    programCodes.some(c => c.toLowerCase() === code.toLowerCase());
+
+  // programCodes loads asynchronously, so pre-select once both lists are available
+  const hasPreselected = useRef(false);
+  useEffect(() => {
+    if (hasPreselected.current || !isInstructor || programs.length === 0 || programCodes.length === 0) return;
+    hasPreselected.current = true;
+    setSelectedProgramIds(programs.filter(p => isUserProgramCode(p.code)).map(p => p.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programs, programCodes, isInstructor]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -155,13 +160,20 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
 
     if (!validate()) return;
 
+    const selectedPrograms = programs
+      .filter(p => selectedProgramIds.includes(p.id))
+      .map(p => p.code);
+
+    // An untagged template is visible to every instructor in every program
+    if (isInstructor && selectedPrograms.length === 0) {
+      setError('Select your program so the template is only visible to your program.');
+      return;
+    }
+
     setLoading(true);
     let createdTemplateId: string | undefined;
 
     try {
-      const selectedPrograms = programs
-        .filter(p => selectedProgramIds.includes(p.id))
-        .map(p => p.code);
 
       const result = await createPatientTemplate({
         ...formData,
@@ -291,7 +303,7 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
                 </label>
                 <div className="bg-slate-50 border border-slate-300 rounded-lg p-4 space-y-2">
                   {programs.map((program) => {
-                    const isUserProgram = programCodes?.includes(program.code);
+                    const isUserProgram = isUserProgramCode(program.code);
                     const isDisabled = isInstructor && !isUserProgram;
 
                     return (
