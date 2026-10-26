@@ -31,7 +31,7 @@ Your account has a role attached to it. The role decides what appears in your si
 
 If you are an instructor and a colleague mentions a template you can't find, it is almost always because that template is tagged for a program you aren't assigned to. Your coordinator can add you to it.
 
-**Programs** are the groupings your institution uses — for example NESA, PN, BNAD, or SIM Hub. You may be assigned to one or several.
+**Programs** are the groupings your institution uses — for example BN, LPN or SIM. You may be assigned to one or several.
 
 ---
 

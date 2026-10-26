@@ -54,8 +54,8 @@ Primary Gradients:
 ┌─────────────────────────────────────────────────────────────┐
 │ 🎨 GRADIENT BACKGROUND (Blue → Purple → Indigo)           │
 │ ╔══════════════════════════════════════════════════════╗   │
-│ ║ 📚 NESA Program                     John Doe        ║   │
-│ ║ Code: NESA                          Role: Instructor║   │
+│ ║ 📚 PROG-A Program                   John Doe        ║   │
+│ ║ Code: PROG-A                        Role: Instructor║   │
 │ ║ Program Workspace                                   ║   │
 │ ╚══════════════════════════════════════════════════════╝   │
 │ Animated Dot Pattern Overlay (opacity-10)                  │
@@ -413,8 +413,8 @@ ProgramWorkspace.tsx
 ### Header
 ```
 ═══════════════════════════════════════════════════════════
-║ 📚 NESA Program                          John Doe       ║
-║ NESA • Program Workspace                 Instructor     ║
+║ 📚 PROG-A Program                        John Doe       ║
+║ PROG-A • Program Workspace               Instructor     ║
 ║                                                          ║
 ║ ⠿ ⠿ ⠿ ⠿ ⠿ (Animated dot pattern background)          ║
 ═══════════════════════════════════════════════════════════

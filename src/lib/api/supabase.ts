@@ -125,7 +125,7 @@ export function createEphemeralAuthClient() {
 /**
  * User Role Types
  */
-export type UserRole = 'nurse' | 'admin' | 'super_admin' | 'instructor' | 'coordinator';
+export type UserRole = 'nurse' | 'admin' | 'super_admin' | 'instructor' | 'coordinator' | 'student';
 
 /**
  * User Profile Interface

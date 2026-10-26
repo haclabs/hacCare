@@ -60,7 +60,7 @@ export const TenantUserDebugger: React.FC = () => {
       <div className="mt-2 text-xs text-gray-600">
         <p><strong>Instructions:</strong></p>
         <ol className="list-decimal list-inside">
-          <li>Get LethPoly tenant ID from Supabase: <code>SELECT id FROM tenants WHERE subdomain = 'lethpoly'</code></li>
+          <li>Get the institution's tenant ID from Supabase: <code>SELECT id, name FROM tenants WHERE tenant_type = 'institution'</code></li>
           <li>Paste the ID above and click Test</li>
           <li>Check browser console for detailed logs</li>
           <li>Compare result with what shows in the UI</li>

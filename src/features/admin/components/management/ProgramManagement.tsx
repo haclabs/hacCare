@@ -163,7 +163,7 @@ export const ProgramManagement: React.FC = () => {
           <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium mb-1">About Programs</p>
-            <p>Programs organize instructors, students, and simulations (e.g., NESA, PN, SIM Hub, BNAD). Each program has a dedicated workspace tenant where instructors can manage program-specific content.</p>
+            <p>Programs organize instructors, students, and simulations (e.g., BN, LPN, SIM). Each program has a dedicated workspace tenant where instructors can manage program-specific content.</p>
           </div>
         </div>
       </div>
@@ -297,7 +297,7 @@ export const ProgramManagement: React.FC = () => {
                     required
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="e.g., NESA, PN, BNAD"
+                    placeholder="e.g., BN, LPN, SIM"
                     maxLength={10}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
@@ -317,7 +317,7 @@ export const ProgramManagement: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Practical Nursing Program"
+                  placeholder="e.g., Bachelor of Nursing Program"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>

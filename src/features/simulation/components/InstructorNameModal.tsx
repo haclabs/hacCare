@@ -10,7 +10,7 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 
 interface InstructorNameModalProps {
   simulationName: string;
-  programCodes: string[]; // e.g., ['NESA', 'PN']
+  programCodes: string[]; // e.g., ['PROG-A', 'PROG-B']
   onConfirm: (instructorName: string) => void;
   onCancel: () => void;
 }

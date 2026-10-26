@@ -24,9 +24,10 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
   }
 
   // Check file type
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml', 'image/webp'];
+  // Must match allowed_mime_types on the tenant-logos bucket. SVG is excluded: it can carry script.
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
-    return { valid: false, error: 'File must be an image (JPEG, PNG, SVG, or WebP)' };
+    return { valid: false, error: 'File must be an image (JPEG, PNG, or WebP)' };
   }
 
   return { valid: true };

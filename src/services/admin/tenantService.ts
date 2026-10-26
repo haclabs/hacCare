@@ -275,7 +275,6 @@ export async function permanentlyDeleteTenant(tenantId: string): Promise<{ error
     'patient_notes',    // should have tenant_id
     'patient_medications', // should have tenant_id
     'medication_administrations', // should have tenant_id
-    'patient_images',   // should have tenant_id
   ];
 
   // Tables that might exist (check first before attempting delete)

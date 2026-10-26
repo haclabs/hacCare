@@ -49,7 +49,7 @@ Your account has a role, and that role decides what appears in your sidebar and 
 - **Admin**: everything in your institution
 - **Super Admin**: everything, across all institutions
 
-Programs are the groupings your institution uses, for example NESA, PN, BNAD or SIM Hub. You may be assigned to one or several.
+Programs are the groupings your institution uses, for example BN, LPN or SIM. You may be assigned to one or several.
 
 > If a colleague mentions a template you can't find, it's almost always tagged for a program you aren't assigned to. Your coordinator can add you to that program.`,
       },
@@ -185,7 +185,7 @@ Tell us:
 - **What you'd like to happen**: describe it, or sketch it.
 - **Who it helps**: instructors, students, a specific program or course.
 - **An example from your teaching**: the scenario where you needed it.
-- **When you'd need it**: for example "before Week 6 of NESA".
+- **When you'd need it**: for example "before Week 6 of BN".
 
 Not sure if it's a bug or a feature request? Send it anyway.
 
@@ -362,11 +362,11 @@ You can archive completed sessions into folders, restore one to Active, or delet
       {
         id: 'program-filtering',
         title: 'Program Tags and Who Sees What',
-        content: `Templates and simulations are tagged with programs (for example NESA, PN, SIM Hub or BNAD) and, optionally, types.
+        content: `Templates and simulations are tagged with programs (for example BN, LPN or SIM) and, optionally, types.
 
 - Instructors see only templates and simulations tagged with a program they're assigned to.
 - Coordinators, admins and super admins see everything in their institution.
-- Matching ignores capitals, so "SIM HUB" and "SIM Hub" are the same tag.
+- Matching ignores capitals, so "SIM LAB" and "Sim Lab" are the same tag.
 
 ## Change tags on an active simulation
 1. Click the tag icon (**Edit category tags**) on the simulation card.

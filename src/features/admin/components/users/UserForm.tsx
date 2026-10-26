@@ -192,12 +192,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
           if (assignError) {
             secureLogger.error('Error assigning new user to tenant', assignError);
-            setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
+            setError('User created but failed to assign to institution: ' + parseAuthError(assignError));
             return false;
           }
         } catch (assignError: unknown) {
           secureLogger.error('Error in new user tenant assignment', assignError);
-          setError('User created but failed to assign to tenant: ' + parseAuthError(assignError));
+          setError('User created but failed to assign to institution: ' + parseAuthError(assignError));
           return false;
         }
       }
@@ -257,14 +257,14 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
             if (reassignError) {
               secureLogger.error('Error reassigning user tenant', reassignError);
-              setError('User updated but failed to reassign tenant: ' + parseAuthError(reassignError));
+              setError('User updated but failed to reassign institution: ' + parseAuthError(reassignError));
               return;
             }
 
             secureLogger.debug('Tenant reassignment complete');
           } catch (assignError: unknown) {
             secureLogger.error('Error in tenant reassignment', assignError);
-            setError('User updated but failed to reassign tenant: ' + parseAuthError(assignError));
+            setError('User updated but failed to reassign institution: ' + parseAuthError(assignError));
             return;
           }
         }
@@ -277,7 +277,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
 
         // For super admin, require tenant selection
         if (hasRole('super_admin') && !selectedTenantId) {
-          setError('Please select a tenant for this user');
+          setError('Please select an institution for this user');
           return;
         }
 
@@ -511,18 +511,25 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
           {hasRole('super_admin') && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tenant
+                Institution
               </label>
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <select
                   value={selectedTenantId}
-                  onChange={(e) => setSelectedTenantId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTenantId(e.target.value);
+                    // Programs belong to one institution; ticks from the previous one are no
+                    // longer visible and must not be saved (program codes repeat across institutions)
+                    setSelectedProgramIds([]);
+                  }}
                   required={!user} // Required for new users
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Select a tenant...</option>
-                  {tenants.map((tenant) => (
+                  <option value="">Select an institution...</option>
+                  {tenants
+                    .filter((tenant) => tenant.tenant_type === 'institution' || tenant.id === selectedTenantId)
+                    .map((tenant) => (
                     <option key={tenant.id} value={tenant.id}>
                       {tenant.name}
                     </option>
@@ -531,12 +538,12 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
               </div>
               {!user && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Select which tenant this user will belong to
+                  Select which institution this user will belong to
                 </p>
               )}
               {user && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Changing tenant will reassign the user
+                  Changing institution will reassign the user
                 </p>
               )}
             </div>

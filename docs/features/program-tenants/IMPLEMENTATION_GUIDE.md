@@ -2,7 +2,7 @@
 
 ## Overview
 
-This implementation adds **program tenant workspaces** for instructors in hacCare. Each program (NESA, PN, SIM Hub, BNAD) now has its own dedicated tenant where instructors can manage program-specific content, announcements, templates, and simulation history.
+This implementation adds **program tenant workspaces** for instructors in hacCare. Each program (PROG-A, PROG-B, PROG-C, PROG-D) now has its own dedicated tenant where instructors can manage program-specific content, announcements, templates, and simulation history.
 
 ## What Was Implemented
 
@@ -127,10 +127,10 @@ ADD COLUMN default_tenant_id UUID REFERENCES tenants(id) ON DELETE SET NULL;
 4. Paste and run
 5. Verify output shows:
    - ✅ Added program to tenant_type enum
-   - ✅ Created program tenant: NESA Program
-   - ✅ Created program tenant: PN Program
-   - ✅ Created program tenant: SIM Hub Program
-   - ✅ Created program tenant: BNAD Program
+   - ✅ Created program tenant: PROG-A Program
+   - ✅ Created program tenant: PROG-B Program
+   - ✅ Created program tenant: PROG-C Program
+   - ✅ Created program tenant: PROG-D Program
 
 ### Option 2: Command Line
 ```bash
@@ -176,28 +176,28 @@ ORDER BY up.last_name, p.code;
 ## Testing the Implementation
 
 ### Test Case 1: Single Program Instructor
-1. Assign instructor to only NESA program
+1. Assign instructor to only PROG-A program
 2. Logout and login as that instructor
-3. Should auto-land in NESA program workspace
-4. Verify ProgramContextBanner shows "NESA Program"
-5. Verify Sidebar shows NESA badge
+3. Should auto-land in PROG-A program workspace
+4. Verify ProgramContextBanner shows "PROG-A Program"
+5. Verify Sidebar shows PROG-A badge
 6. Verify localStorage has `current_program_tenant` set
 
 ### Test Case 2: Multi-Program Instructor
-1. Assign instructor to NESA + PN programs
+1. Assign instructor to PROG-A + PROG-B programs
 2. Logout and login
 3. Should see ProgramSelectorModal with both programs
-4. Select NESA
-5. Should land in NESA workspace
+4. Select PROG-A
+5. Should land in PROG-A workspace
 6. Click "Switch Program" in banner
-7. Select PN
-8. Should reload and switch to PN workspace
+7. Select PROG-B
+8. Should reload and switch to PROG-B workspace
 
 ### Test Case 3: Program Tenant Persistence
 1. Login as multi-program instructor
-2. Select NESA program
+2. Select PROG-A program
 3. Refresh page
-4. Should remain in NESA workspace (no modal shown)
+4. Should remain in PROG-A workspace (no modal shown)
 
 ### Test Case 4: Template/Simulation Flow
 1. Login to program workspace
@@ -215,11 +215,11 @@ ORDER BY up.last_name, p.code;
 
 ### Tenant Hierarchy
 ```
-LethPoly (parent_tenant_id = NULL)
-  ├── NESA Program Tenant (parent_tenant_id = LethPoly.id, program_id = NESA.id)
-  ├── PN Program Tenant (parent_tenant_id = LethPoly.id, program_id = PN.id)
-  ├── SIM Hub Program Tenant (parent_tenant_id = LethPoly.id, program_id = SIM_Hub.id)
-  └── BNAD Program Tenant (parent_tenant_id = LethPoly.id, program_id = BNAD.id)
+Institution A (parent_tenant_id = NULL)
+  ├── PROG-A Program Tenant (parent_tenant_id = institution.id, program_id = PROG-A.id)
+  ├── PROG-B Program Tenant (parent_tenant_id = institution.id, program_id = PROG-B.id)
+  ├── PROG-C Program Tenant (parent_tenant_id = institution.id, program_id = PROG-C.id)
+  └── PROG-D Program Tenant (parent_tenant_id = institution.id, program_id = PROG-D.id)
 ```
 
 ### Data Isolation
@@ -237,7 +237,7 @@ LethPoly (parent_tenant_id = NULL)
    - Role: instructors can post, students can view
 
 2. **Template Migration**
-   - Move existing templates from LethPoly to program tenants
+   - Move existing templates from the institution tenant to program tenants
    - Filter by `primary_categories` field
    - Update `create_template` flow to use program tenant
 
