@@ -33,11 +33,11 @@ export async function getPatientTemplates(): Promise<PatientTemplate[]> {
   try {
     const { data, error } = await supabase
       .from('patient_templates')
-      .select('*')
+      .select('*, owner_institution:tenants!patient_templates_owner_institution_id_fkey(name)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as PatientTemplate[];
+    return (data || []) as unknown as PatientTemplate[];
   } catch (error: unknown) {
     secureLogger.error('Error fetching patient templates:', error);
     throw error;

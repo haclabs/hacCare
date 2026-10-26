@@ -16,6 +16,7 @@ import { getPatientTemplates, deletePatientTemplate } from '../../../services/si
 import type { PatientTemplate } from '../types/patientTemplate';
 import CreatePatientTemplateModal from './CreatePatientTemplateModal';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
+import { useAuth } from '../../../hooks/useAuth';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
 const PatientTemplates: React.FC = () => {
@@ -27,6 +28,10 @@ const PatientTemplates: React.FC = () => {
   const navigate = useNavigate();
 
   const { filterByPrograms, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
+  // Everyone else only ever sees their own institution's templates (RLS), so grouping
+  // by institution is only useful for super admins
+  const { hasRole } = useAuth();
+  const groupByInstitution = hasRole('super_admin');
 
   const loadTemplates = async () => {
     try {
@@ -53,6 +58,18 @@ const PatientTemplates: React.FC = () => {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templates, search]);
+
+  const institutionGroups = useMemo(() => {
+    if (!groupByInstitution) return null;
+    const groups = new Map<string, PatientTemplate[]>();
+    displayedTemplates.forEach(t => {
+      const label = t.owner_institution?.name?.trim() || 'No Institution';
+      groups.set(label, [...(groups.get(label) || []), t]);
+    });
+    return [...groups.entries()]
+      .sort(([a], [b]) => (a === 'No Institution' ? 1 : b === 'No Institution' ? -1 : a.localeCompare(b)))
+      .map(([label, items]) => ({ label, items }));
+  }, [groupByInstitution, displayedTemplates]);
 
   const handleEdit = (template: PatientTemplate) => {
     const editInfo = {
@@ -81,6 +98,56 @@ const PatientTemplates: React.FC = () => {
       setActionLoading(null);
     }
   };
+
+  const renderTemplateList = (items: PatientTemplate[]) => (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {items.map((template, idx) => (
+        <div
+          key={template.id}
+          className={`flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 transition-colors border-l-4 ${
+            template.status === 'ready' ? 'border-l-green-500' : 'border-l-amber-400'
+          } ${idx < items.length - 1 ? 'border-b border-gray-100' : ''}`}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-900 truncate">{template.name}</span>
+              <span className={`px-1.5 py-0.5 text-xs rounded-full ${
+                template.status === 'ready' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+              }`}>
+                {template.status === 'ready' ? 'Ready' : 'Draft'}
+              </span>
+              {template.primary_categories?.map(c => (
+                <span key={c} className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+                  {c}
+                </span>
+              ))}
+            </div>
+            {template.description && (
+              <p className="text-xs text-gray-400 truncate mt-0.5">{template.description}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => handleEdit(template)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              <Edit className="h-3.5 w-3.5" />
+              Edit
+            </button>
+            <button
+              onClick={() => handleDelete(template.id)}
+              disabled={actionLoading === template.id}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -156,53 +223,20 @@ const PatientTemplates: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              {displayedTemplates.map((template, idx) => (
-                <div
-                  key={template.id}
-                  className={`flex items-center gap-3 px-4 py-3 bg-white hover:bg-gray-50 transition-colors border-l-4 ${
-                    template.status === 'ready' ? 'border-l-green-500' : 'border-l-amber-400'
-                  } ${idx < displayedTemplates.length - 1 ? 'border-b border-gray-100' : ''}`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900 truncate">{template.name}</span>
-                      <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                        template.status === 'ready' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {template.status === 'ready' ? 'Ready' : 'Draft'}
-                      </span>
-                      {template.primary_categories?.map(c => (
-                        <span key={c} className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
-                          {c}
-                        </span>
-                      ))}
-                    </div>
-                    {template.description && (
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{template.description}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handleEdit(template)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(template.id)}
-                      disabled={actionLoading === template.id}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            institutionGroups ? (
+              <div className="space-y-5">
+                {institutionGroups.map(group => (
+                  <section key={group.label} className="space-y-2">
+                    <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      {group.label} <span className="font-normal normal-case text-gray-400">({group.items.length})</span>
+                    </h2>
+                    {renderTemplateList(group.items)}
+                  </section>
+                ))}
+              </div>
+            ) : (
+              renderTemplateList(displayedTemplates)
+            )
           )}
         </div>
       </div>

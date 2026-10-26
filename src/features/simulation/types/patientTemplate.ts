@@ -15,6 +15,8 @@ export interface PatientTemplate {
   snapshot_taken_at: string | null;
   primary_categories: string[];
   owner_institution_id: string | null;
+  /** Embedded owning institution (only populated where RLS lets the caller read it). */
+  owner_institution?: { name: string } | null;
   created_by: string;
   created_at: string;
   updated_at: string;
