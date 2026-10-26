@@ -48,6 +48,7 @@ DECLARE
   v_last_name TEXT;
   v_dob TEXT;
 BEGIN
+  PERFORM public.assert_can_manage_simulation(p_simulation_id); -- access guard (20261026031253_guard_privileged_rpcs)
   RAISE NOTICE '═══════════════════════════════════════════════════════';
   RAISE NOTICE '🔄 Starting template sync reset for simulation: %', p_simulation_id;
   RAISE NOTICE '═══════════════════════════════════════════════════════';

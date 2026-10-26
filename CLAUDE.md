@@ -107,10 +107,20 @@ the tenant providers. `App.tsx` holds the authenticated routes and lazy-loads he
   `complete_simulation`, `reset_simulation_for_next_session`,
   `reset_simulation_with_template_updates`, `restore_snapshot_to_tenant`,
   `save_template_snapshot_v2`. Call via `supabase.rpc(...)`.
+- **A `SECURITY DEFINER` RPC bypasses RLS, so it must check its caller itself.** Its first
+  statement is a `PERFORM public.assert_*(...)` guard (`assert_can_manage_simulation`,
+  `assert_can_manage_simulation_template`, `assert_can_manage_patient_template`, …) marked
+  `-- access guard`. Keep that line when redeploying a function, and add one to any new RPC;
+  `supabase/tests/verify_rls_isolation.sql` fails if a guard goes missing.
+- Templates and simulations belong to an institution (`owner_institution_id`); restrictive RLS
+  policies hide them from other institutions even when program codes match.
+- Coordinators and admins are institution-scoped, not platform-wide: restrictive `*_institution_scope`
+  policies and `caller_can_administer_user()` limit them to users, programs and tenants of their
+  own institution. Only `super_admin` crosses institutions. Don't add role-only checks for them.
 - RLS policies that query their own table cause infinite recursion. Use a `SECURITY DEFINER`
   function instead of a recursive lookup.
 
-## Two rules that cause silent data bugs
+## Rules that cause silent data bugs
 
 **1. Never match template ↔ simulation records by UUID or barcode.** Launch regenerates both.
 Match on immutable properties instead: patients by `first_name` + `last_name` + `date_of_birth`;
@@ -127,8 +137,47 @@ accumulate across resets or vanish from debriefs:
 3. Query + processing in `src/services/simulation/studentActivityService.ts` (debrief pipeline).
 4. A section in `src/features/simulation/components/EnhancedDebriefModal.tsx` (debrief render).
 
+**3. Program codes are not unique across institutions** (`programs` is `UNIQUE (tenant_id, code)`).
+Never grant access on a code match alone — pair it with the institution (`owner_institution_id`,
+`caller_in_institution()`). New code paths that create templates must pass the current tenant as
+`p_owner_tenant_id`, or the template is stamped with a guessed (or no) institution.
+
+**4. Debrief attribution comes from a name column on each row** (`student_name`, or `nurse_name` /
+`recorded_by` / `clinician_name` on newer tables). Rows without one are dropped from the debrief, and a
+form that saves without asking for the name loses that student's work. Single-row-per-patient
+upserts (e.g. the newborn assessment) credit only the last named writer — never overwrite a stored
+name with an empty one.
+
+## Working on the live database
+
+- **Migration versions:** `supabase db push` and the Supabase MCP `apply_migration` both record a
+  version in `supabase_migrations.schema_migrations`. `apply_migration` stamps the current time, so
+  name the local file with the version it recorded (check `supabase migration list --linked`), or the
+  next `db push` will try to run it again.
+- **Proving an RLS change** (see `supabase/tests/verify_rls_isolation.sql`): impersonate inside a
+  transaction with `SET LOCAL role authenticated` plus `set_config('request.jwt.claims',
+  '{"sub":"<uuid>","role":"authenticated"}', true)`, and end with `RAISE EXCEPTION` so it rolls back.
+  Compare every user's row counts with and without the new policy (drop it inside the same
+  transaction) before shipping. Two traps: look up target IDs *before* switching role (RLS hides them
+  afterwards and you get NULL), and RPCs wrapped in `EXCEPTION WHEN OTHERS` return
+  `{success:false}` instead of raising, so check the result rather than catching an exception.
+- **New institution:** a single `tenants` row with `tenant_type = 'institution'`; nothing else fires.
+  Inserting a `programs` row triggers `create_program_tenant()`, which names the program tenant's
+  subdomain after the lowercased code and falls back to `<code>_<8 chars>` if it's taken. To choose
+  the subdomain, insert the program with `is_active = false`, create its tenant yourself, then
+  activate it.
+- **Building a patient template in SQL:** create the `patient_template` tenant, the
+  `patient_templates` row (with `owner_institution_id`) and a `tenant_users` admin row, insert the
+  clinical rows with that `tenant_id`, then call `save_patient_template_snapshot()` — it captures
+  every table that has a `tenant_id` column. Medications pick up catalog barcodes via `catalog_id`;
+  free-entry ones get one from the `assign_free_entry_medication_barcode` trigger.
+
 ## Conventions
 
+- **Never name a real tenant in anything committed** — code, comments, migrations, tests, docs or
+  `CHANGELOG.md`. No institution or program names, subdomains, tenant/user/patient UUIDs, user
+  emails or patient names. Describe them generically ("a second institution", "a program code") and
+  look real records up at runtime instead of hard-coding them.
 - Component size limit is **350 lines**; extract sub-components past that.
 - Tech-debt removal is treated as a first-class task: delete unused code when you find it, and note
   significant cleanup in `CHANGELOG.md`.

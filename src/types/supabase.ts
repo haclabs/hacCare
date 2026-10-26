@@ -2417,6 +2417,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          owner_institution_id: string | null
           primary_categories: string[] | null
           snapshot_data: Json | null
           snapshot_taken_at: string | null
@@ -2432,6 +2433,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          owner_institution_id?: string | null
           primary_categories?: string[] | null
           snapshot_data?: Json | null
           snapshot_taken_at?: string | null
@@ -2447,6 +2449,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          owner_institution_id?: string | null
           primary_categories?: string[] | null
           snapshot_data?: Json | null
           snapshot_taken_at?: string | null
@@ -2456,7 +2459,22 @@ export type Database = {
           tenant_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "patient_templates_owner_institution_id_fkey"
+            columns: ["owner_institution_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_templates_owner_institution_id_fkey"
+            columns: ["owner_institution_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_vitals: {
         Row: {
@@ -3302,6 +3320,7 @@ export type Database = {
           folder: string | null
           id: string
           name: string
+          owner_institution_id: string | null
           primary_categories: string[] | null
           snapshot_data: Json | null
           snapshot_taken_at: string | null
@@ -3322,6 +3341,7 @@ export type Database = {
           folder?: string | null
           id?: string
           name: string
+          owner_institution_id?: string | null
           primary_categories?: string[] | null
           snapshot_data?: Json | null
           snapshot_taken_at?: string | null
@@ -3342,6 +3362,7 @@ export type Database = {
           folder?: string | null
           id?: string
           name?: string
+          owner_institution_id?: string | null
           primary_categories?: string[] | null
           snapshot_data?: Json | null
           snapshot_taken_at?: string | null
@@ -3354,6 +3375,20 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "simulation_templates_owner_institution_id_fkey"
+            columns: ["owner_institution_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_statistics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulation_templates_owner_institution_id_fkey"
+            columns: ["owner_institution_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "simulation_templates_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -4902,6 +4937,44 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      assert_caller_has_role: {
+        Args: { p_roles: string[] }
+        Returns: undefined
+      }
+      assert_caller_is_staff: { Args: never; Returns: undefined }
+      assert_can_administer_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      assert_can_manage_institution_programs: {
+        Args: { p_institution_id: string }
+        Returns: undefined
+      }
+      assert_can_manage_patient_template: {
+        Args: { p_patient_template_id: string }
+        Returns: undefined
+      }
+      assert_can_manage_program: {
+        Args: { p_program_id: string }
+        Returns: undefined
+      }
+      assert_can_manage_simulation: {
+        Args: { p_simulation_id: string }
+        Returns: undefined
+      }
+      assert_can_manage_simulation_template: {
+        Args: { p_template_id: string }
+        Returns: undefined
+      }
+      assert_can_update_user_profile: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      assert_can_view_tenant_users: {
+        Args: { p_tenant_id: string }
+        Returns: undefined
+      }
+      assert_self_or_admin: { Args: { p_user_id: string }; Returns: undefined }
       bulk_assign_students_to_simulation: {
         Args: {
           p_role?: string
@@ -4914,11 +4987,34 @@ export type Database = {
         Args: { p_simulation_id: string }
         Returns: Json
       }
+      caller_can_administer_user: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
+      caller_has_role: { Args: { p_roles: string[] }; Returns: boolean }
+      caller_in_institution: {
+        Args: { p_institution_id: string }
+        Returns: boolean
+      }
+      caller_in_institution_strict: {
+        Args: { p_institution_id: string }
+        Returns: boolean
+      }
+      caller_is_service_context: { Args: never; Returns: boolean }
+      caller_is_simulation_participant: {
+        Args: { p_simulation_id: string }
+        Returns: boolean
+      }
       caller_may_administer_tenant: {
         Args: { p_tenant_id: string }
         Returns: boolean
       }
       caller_profile_role: { Args: never; Returns: string }
+      caller_program_ids: { Args: never; Returns: string[] }
+      caller_runs_template: {
+        Args: { p_template_id: string }
+        Returns: boolean
+      }
       caller_tenant_comember_ids: { Args: never; Returns: string[] }
       caller_tenant_ids: { Args: never; Returns: string[] }
       cleanup_all_problem_simulations: { Args: never; Returns: Json }
@@ -4952,6 +5048,7 @@ export type Database = {
         Args: {
           p_description?: string
           p_name: string
+          p_owner_tenant_id?: string
           p_primary_categories?: string[]
         }
         Returns: Json
@@ -4973,6 +5070,7 @@ export type Database = {
           p_default_duration_minutes: number
           p_description: string
           p_name: string
+          p_owner_tenant_id?: string
           p_primary_categories?: string[]
         }
         Returns: Json
@@ -5261,6 +5359,7 @@ export type Database = {
         Args: { p_scenario_template_id: string; p_simulation_id: string }
         Returns: number
       }
+      institution_of_tenant: { Args: { p_tenant_id: string }; Returns: string }
       is_admin_user: { Args: { user_id: string }; Returns: boolean }
       is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
       is_super_admin_direct: { Args: { user_uuid?: string }; Returns: boolean }
@@ -5308,6 +5407,7 @@ export type Database = {
               records_updated: Json
             }[]
           }
+      program_institution: { Args: { p_program_id: string }; Returns: string }
       reactivate_user: { Args: { target_user_id: string }; Returns: string }
       reassign_user_tenant: {
         Args: { p_new_tenant_id: string; p_role?: string; p_user_id: string }
@@ -5326,6 +5426,10 @@ export type Database = {
       reset_simulation_with_template_updates: {
         Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json
+      }
+      resolve_owner_institution: {
+        Args: { p_owner_tenant_id: string; p_primary_categories: string[] }
+        Returns: string
       }
       restore_snapshot_to_tenant: {
         Args: {
@@ -5361,6 +5465,14 @@ export type Database = {
       shift_snapshot_timestamps: {
         Args: { p_shift: string; p_snapshot: Json }
         Returns: Json
+      }
+      simulation_owner_institution: {
+        Args: { p_simulation_id: string }
+        Returns: string
+      }
+      template_owner_institution: {
+        Args: { p_template_id: string }
+        Returns: string
       }
       update_medication_super_admin: {
         Args: { p_medication_id: string; p_updates: Json }
@@ -5447,6 +5559,7 @@ export type Database = {
       user_has_tenant_access:
         | { Args: never; Returns: boolean }
         | { Args: { tenant_uuid: string; user_uuid: string }; Returns: boolean }
+      user_institution_ids: { Args: { p_user_id: string }; Returns: string[] }
       user_is_super_admin: { Args: { user_uuid: string }; Returns: boolean }
       user_may_join_tenant: { Args: { p_tenant_id: string }; Returns: boolean }
       validate_subdomain: {

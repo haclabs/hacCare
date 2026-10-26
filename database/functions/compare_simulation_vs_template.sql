@@ -30,6 +30,7 @@ DECLARE
   v_template_version INT;
   v_synced_version INT;
 BEGIN
+  PERFORM public.assert_can_manage_simulation(p_simulation_id); -- access guard (20261026031253_guard_privileged_rpcs)
   -- Get simulation tenant and template
   SELECT sa.tenant_id, sa.template_id, sa.template_snapshot_version_synced,
          st.snapshot_data, st.snapshot_version

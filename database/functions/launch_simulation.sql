@@ -30,6 +30,7 @@ DECLARE
   v_patient_count INTEGER;
   v_template_snapshot_version INTEGER;
 BEGIN
+  PERFORM public.assert_can_manage_simulation_template(p_template_id); -- access guard (20261026031253_guard_privileged_rpcs)
   -- Get user's role from user_profiles
   SELECT up.role INTO v_user_role
   FROM user_profiles up

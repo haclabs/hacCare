@@ -7,6 +7,82 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - SCOPE TEMPLATES & SIMULATIONS TO THEIR INSTITUTION
+===============================================================================
+
+* Simulation templates, patient templates, active simulations and simulation
+  history are now visible only to members of the institution that owns them
+  (plus super_admin, the creator, and simulation participants). Previously
+  visibility matched program codes, which repeat across institutions, so two
+  institutions using the same program code would have shared everything
+  - New owner_institution_id on simulation_templates / patient_templates,
+    backfilled from each template's program tags
+  - Restrictive RLS policies on the four tables; also closes two existing
+    leaks: every ready simulation template was readable by any logged-in
+    user, and every instructor could read all simulation history
+  - user_may_join_tenant() checks the institution before granting
+    coordinator / program-based membership
+  - Create Template, Create Patient Template and Import pass the current
+    tenant so new templates are stamped with their institution
+  - Migration 20261026024148_scope_templates_to_owning_institution.sql
+* Instructors can now read the programs they are assigned to. They could not
+  read any, so patient templates never appeared for them and simulation
+  templates only appeared through the ready-template leak above
+  - Migration 20261026024318_let_users_see_their_assigned_programs.sql
+
+===============================================================================
+[Unreleased] - 2026-10-26 - ACCESS GUARDS ON PRIVILEGED DATABASE FUNCTIONS
+===============================================================================
+
+* 23 SECURITY DEFINER functions checked nothing about the caller, so any
+  logged-in user (including students) could reset, complete or delete any
+  simulation, launch or delete any template, list any tenant's users, or read
+  every account's email. Each now starts with an access check; the rest of
+  the function is unchanged, so reset / delete still clear student data
+  across all clinical tables exactly as before
+  - Allowed: super_admin, the record's creator, or an instructor / admin /
+    coordinator of the owning institution. User lookups: self or admin roles
+  - Refused calls raise "Not authorized ..." (or return success:false from
+    functions that already wrap errors that way)
+  - The anon role (not logged in) can no longer execute them at all
+  - Verified on production: every staff member keeps access to every
+    simulation and template they can see; students and other institutions
+    are refused; a reset run by a non-launching instructor still succeeds
+    and preserves barcodes
+  - Migrations 20261026031253_guard_privileged_rpcs.sql,
+    20261026031433_revoke_anon_on_guarded_rpcs.sql
+  - Redeploying one of these functions must keep its guard line;
+    supabase/tests/verify_rls_isolation.sql fails if one goes missing
+
+===============================================================================
+[Unreleased] - 2026-10-26 - COORDINATORS & ADMINS SCOPED TO THEIR INSTITUTION
+===============================================================================
+
+* Coordinator (and admin) checks were role-only. A coordinator at one
+  institution could enrol themselves into another institution's tenants,
+  edit or delete its programs and assignments, read every user profile,
+  tenant and auto-generated student login, deactivate or re-role anyone,
+  and change anyone's login email. All of that is now limited to their own
+  institution; super_admin is unchanged
+  - Brand-new accounts with no institution yet can still be set up, so
+    creating users and auto-generating simulation students keeps working
+* Fixed two related holes that affected instructors too: any instructor
+  could edit any program's student roster, and update_user_profile_admin
+  only checked the role being assigned, never the target's current role,
+  so an instructor could set another institution's instructor to "student"
+* admin-update-user-email edge function (v5) checks the same institution
+  rule before changing a login email
+* Verified on production: all 49 existing users see exactly what they saw
+  before; a simulated coordinator manages its own institution and is refused
+  everywhere else
+* Migration 20261026032538_scope_coordinator_admin_to_institution.sql
+
+* Fixed: the newborn assessment's physical-observation auto-save cleared the
+  student's name (the form blanks the name on reload so the next student
+  enters their own), leaving that work under a blank name in the debrief.
+  An empty name no longer overwrites the last named author
+
+===============================================================================
 [Unreleased] - 2026-10-21 - WARN BEFORE LEAVING TEMPLATE EDIT MODE
 ===============================================================================
 

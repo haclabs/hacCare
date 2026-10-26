@@ -28,6 +28,7 @@ export async function createSimulationTemplate(
       p_description: params.description || null,
       p_default_duration_minutes: params.default_duration_minutes || 120,
       p_primary_categories: params.primary_categories || null,
+      p_owner_tenant_id: params.owner_tenant_id || null,
     });
 
     if (error) throw error;

@@ -25,6 +25,7 @@ DECLARE
   v_state_id uuid;
   v_state_count integer;
 BEGIN
+  PERFORM public.assert_can_manage_simulation_template(p_template_id); -- access guard (20261026031253_guard_privileged_rpcs)
   SELECT tenant_id INTO v_tenant_id FROM simulation_templates WHERE id = p_template_id;
   IF v_tenant_id IS NULL THEN
     RAISE EXCEPTION 'Template not found: %', p_template_id;
