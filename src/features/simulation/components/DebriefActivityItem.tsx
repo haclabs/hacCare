@@ -36,7 +36,7 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                   ? 'bg-blue-50 border-blue-300'
                   : 'bg-gray-50 border-gray-200'
               }`}>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student Administered <span className="normal-case font-normal">(mL or units)</span></p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student Administered <span className="normal-case font-normal">(mL, units or tablets)</span></p>
                 <p className={`text-sm font-bold mt-0.5 ${
                   item.administered_dose ? 'text-blue-700' : 'text-gray-400 italic'
                 }`}>

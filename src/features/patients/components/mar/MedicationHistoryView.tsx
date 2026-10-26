@@ -169,6 +169,11 @@ export const MedicationHistoryView: React.FC<MedicationHistoryViewProps> = ({
                         <p>
                           <span className="font-medium">Dosage:</span> {record.dosage || record.medication?.dosage || 'Not specified'}
                         </p>
+                        {record.administered_dose && (
+                          <p>
+                            <span className="font-medium">Given:</span> <span className="font-semibold text-blue-700">{record.administered_dose}</span>
+                          </p>
+                        )}
                         <p>
                           <span className="font-medium">Route:</span> {record.route || record.medication?.route || 'Not specified'}
                         </p>
