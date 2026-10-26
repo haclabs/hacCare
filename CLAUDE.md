@@ -43,7 +43,7 @@ application server. Authorization lives in Postgres Row Level Security, not in t
 Every table carries `tenant_id UUID NOT NULL` and RLS policies enforce isolation. `tenant_type`
 distinguishes `production`, `institution`, `program`, `simulation_template`, and `simulation_active`.
 
-- **Institutions** contain **programs** (e.g. NESA, PN, SIM Hub, BNAD). Program tenants are empty
+- **Institutions** contain **programs** (e.g. PROG-A, PROG-B). Program tenants are empty
   instructor workspaces — no patient data, just template and simulation management.
 - **Templates are live tenants**, not frozen data. Editing a template means temporarily switching
   `currentTenant` into that template's tenant (`enterTemplateTenant()` in `TenantContext`), which
@@ -88,7 +88,7 @@ the tenant providers. `App.tsx` holds the authenticated routes and lazy-loads he
   `services/`. Max 3 levels deep; barrel `index.ts` for the public API.
 - `src/services/<area>/` — cross-cutting service modules (`clinical`, `simulation`, `admin`,
   `auth`, `monitoring`, `export`, …).
-- `src/lib/` — infrastructure: `api`, `barcode`, `security`, `validation`, `media`, `infrastructure`.
+- `src/lib/` — infrastructure: `api`, `barcode`, `security`, `validation`, `infrastructure`.
 - `.tsx` for components, `.ts` for everything else. Use `import type` for type-only imports.
 
 ### Database changes

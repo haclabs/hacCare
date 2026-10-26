@@ -130,7 +130,6 @@ BEGIN
   DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_alerts WHERE tenant_id = v_tenant_id;
-  DELETE FROM patient_images WHERE tenant_id = v_tenant_id;
   -- Intake/output: deleted both ways, mirroring reset_simulation_for_next_session.
   -- Rows created before the tenant_id backfill carry only patient_id.
   DELETE FROM patient_intake_output_events WHERE tenant_id = v_tenant_id;

@@ -2,7 +2,7 @@
 
 ## What This Does
 
-Creates dedicated program workspaces for instructors. When they login, they land in their program tenant (NESA, PN, SIM Hub, BNAD) instead of the main LethPoly tenant.
+Creates dedicated program workspaces for instructors. When they login, they land in their program tenant (PROG-A, PROG-B, PROG-C, PROG-D) instead of the main institution tenant.
 
 ## 5-Minute Deployment
 
@@ -11,7 +11,7 @@ Creates dedicated program workspaces for instructors. When they login, they land
 2. Go to SQL Editor
 3. Copy/paste `database/migrations/history/20260127000000_implement_program_tenants.sql`
 4. Click "Run"
-5. Verify you see: ✅ Created program tenant: NESA Program (and others)
+5. Verify you see: ✅ Created program tenant: PROG-A Program (and others)
 
 ### Step 2: Deploy Code (1 min)
 ```bash
@@ -31,14 +31,14 @@ Done! ✅
 ## What Users Will See
 
 ### Single Program Instructor
-- Logs in → Automatically lands in NESA workspace (for example)
+- Logs in → Automatically lands in PROG-A workspace (for example)
 - Sees purple program banner at top
-- Sees "NESA Program" badge in sidebar
+- Sees "PROG-A Program" badge in sidebar
 - No patient data visible (program-focused workspace)
 
 ### Multi-Program Instructor  
 - Logs in → Sees modal: "Select Your Program"
-- Chooses NESA → Lands in NESA workspace
+- Chooses PROG-A → Lands in PROG-A workspace
 - Can switch programs via banner dropdown
 - Selection saved for next login
 
@@ -46,13 +46,13 @@ Done! ✅
 
 ```
 Before:
-Instructor → Login → LethPoly Tenant → See all patients
+Instructor → Login → Institution A Tenant → See all patients
 
 After:
-Instructor → Login → NESA Program Tenant → No patients, program-specific content
+Instructor → Login → PROG-A Program Tenant → No patients, program-specific content
 ```
 
-Each program (NESA, PN, SIM Hub, BNAD) is now its own tenant workspace.
+Each program (PROG-A, PROG-B, PROG-C, PROG-D) is now its own tenant workspace.
 
 ## Files You Need to Know
 

@@ -12,6 +12,19 @@ import {
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
+// Templates, simulations and program workspaces are tenants too, but they are managed
+// from their own screens — show only institutions here unless asked otherwise.
+const DEFAULT_TYPE_FILTER = 'institution';
+
+const TENANT_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'institution', label: 'Institutions' },
+  { value: 'program', label: 'Programs' },
+  { value: 'simulation_template', label: 'Simulation Templates' },
+  { value: 'simulation_active', label: 'Active Simulations' },
+  { value: 'patient_template', label: 'Patient Templates' },
+  { value: 'all', label: 'All Types' },
+];
+
 interface TenantCRUDProps {
   onSelectTenant?: (tenant: Tenant) => void;
 }
@@ -23,6 +36,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>(DEFAULT_TYPE_FILTER);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -63,6 +77,10 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
       filtered = filtered.filter(tenant => tenant.status === statusFilter);
     }
 
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(tenant => tenant.tenant_type === typeFilter);
+    }
+
     setFilteredTenants(filtered);
   };
 
@@ -75,7 +93,7 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     filterTenants();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenants, searchTerm, statusFilter]);
+  }, [tenants, searchTerm, statusFilter, typeFilter]);
 
   const handleCreateTenant = async (tenantData: any) => {
     try {
@@ -240,6 +258,21 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
               </select>
             </div>
           </div>
+          <div className="sm:w-56">
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                aria-label="Filter by tenant type"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {TENANT_TYPE_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -368,11 +401,12 @@ export const TenantCRUD: React.FC<TenantCRUDProps> = ({ onSelectTenant }) => {
         <div className="text-center py-12">
           <Building2 className="h-12 w-12 mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500">No tenants found</p>
-          {searchTerm || statusFilter !== 'all' ? (
+          {searchTerm || statusFilter !== 'all' || typeFilter !== DEFAULT_TYPE_FILTER ? (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setStatusFilter('all');
+                setTypeFilter(DEFAULT_TYPE_FILTER);
               }}
               className="text-blue-600 hover:text-blue-700 mt-2"
             >

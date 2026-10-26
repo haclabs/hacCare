@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor, Tag, Mail, Layers } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Shield, Search, UserX, RotateCcw, Monitor, Tag, Mail, Layers, GraduationCap } from 'lucide-react';
 import { supabase, UserProfile, UserRole } from '../../../../lib/api/supabase';
 import { useAuth } from '../../../../hooks/useAuth';
 import { getUserPrograms } from '../../../../services/admin/programService';
 import { inviteUser } from '../../../../services/admin/inviteUserService';
 import { getUserAuthStatus, UserAuthStatus } from '../../../../services/admin/userAuthStatusService';
+import { getUserInstitutions, UserInstitution } from '../../../../services/admin/userInstitutionService';
 import { UserForm } from './UserForm';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
@@ -23,6 +24,9 @@ export const UserManagement: React.FC = () => {
   const [sendingWelcome, setSendingWelcome] = useState(false);
   const [authStatus, setAuthStatus] = useState<Record<string, UserAuthStatus>>({});
   const [filterPendingSetup, setFilterPendingSetup] = useState(false);
+  // Student accounts are temporary simulation logins, so they're hidden unless asked for
+  const [showStudents, setShowStudents] = useState(false);
+  const [userInstitutions, setUserInstitutions] = useState<Record<string, UserInstitution[]>>({});
   const { hasRole } = useAuth();
   const canSendWelcomeEmail = hasRole(['admin', 'coordinator', 'super_admin']);
   const canManageUsers = hasRole(['super_admin', 'coordinator', 'admin']);
@@ -54,8 +58,13 @@ export const UserManagement: React.FC = () => {
 
         // Last sign-in / email confirmation status, so pending accounts can be spotted
         if (canSendWelcomeEmail && data && data.length > 0) {
-          const { data: statusMap } = await getUserAuthStatus(data.map(u => u.id));
+          const ids = data.map(u => u.id);
+          const [{ data: statusMap }, { data: institutionMap }] = await Promise.all([
+            getUserAuthStatus(ids),
+            getUserInstitutions(ids),
+          ]);
           if (statusMap) setAuthStatus(statusMap);
+          if (institutionMap) setUserInstitutions(institutionMap);
         }
       }
     } catch (error) {
@@ -164,12 +173,18 @@ export const UserManagement: React.FC = () => {
     Object.values(userPrograms).flat()
   )].sort();
 
+  const hiddenStudentCount = showStudents ? 0 : users.filter(u => u.role === 'student').length;
+
   const filteredUsers = users.filter(user => {
+    if (!showStudents && user.role === 'student') return false;
+
     // Search filter
-    const matchesSearch = user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = user.first_name.toLowerCase().includes(term) ||
+      user.last_name.toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term) ||
+      user.role.toLowerCase().includes(term) ||
+      (userInstitutions[user.id] || []).some(i => i.name.toLowerCase().includes(term));
     
     // Status filter
     const matchesStatus = statusFilter === 'all' || 
@@ -191,24 +206,31 @@ export const UserManagement: React.FC = () => {
     a.first_name.localeCompare(b.first_name) || a.last_name.localeCompare(b.last_name)
   );
 
-  // Grouped view — users appear under each program they're assigned to,
-  // with a "No Program" bucket for everyone else (nurses, admins, etc.)
+  // Grouped view — by program when toggled, otherwise by institution. A user appears under
+  // every program/institution they belong to, plus a catch-all bucket for those with none.
+  const groupByInstitution = !groupByProgram && canSendWelcomeEmail;
   const groupedUsers = (() => {
-    if (!groupByProgram) return [];
+    if (!groupByProgram && !groupByInstitution) return [];
     const groups: Record<string, UserProfile[]> = {};
-    const noProgram: UserProfile[] = [];
+    const ungrouped: UserProfile[] = [];
     filteredUsers.forEach(user => {
-      const codes = userPrograms[user.id];
-      if (codes && codes.length > 0) {
-        codes.forEach(code => {
-          (groups[code] = groups[code] || []).push(user);
+      const keys = groupByProgram
+        ? userPrograms[user.id] || []
+        : (userInstitutions[user.id] || []).map(inst => inst.name);
+      if (keys.length > 0) {
+        keys.forEach(key => {
+          (groups[key] = groups[key] || []).push(user);
         });
       } else {
-        noProgram.push(user);
+        ungrouped.push(user);
       }
     });
-    const groupList = Object.keys(groups).sort().map(code => ({ label: code, groupUsers: groups[code] }));
-    if (noProgram.length > 0) groupList.push({ label: 'No Program', groupUsers: noProgram });
+    const groupList = Object.keys(groups)
+      .sort((a, b) => a.localeCompare(b))
+      .map(key => ({ label: key, groupUsers: groups[key] }));
+    if (ungrouped.length > 0) {
+      groupList.push({ label: groupByProgram ? 'No Program' : 'No Institution', groupUsers: ungrouped });
+    }
     return groupList;
   })();
 
@@ -272,7 +294,7 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const columnCount = 5 + (canSendWelcomeEmail ? 2 : 0) + (canManageUsers ? 1 : 0);
+  const columnCount = 5 + (canSendWelcomeEmail ? 3 : 0) + (canManageUsers ? 1 : 0);
 
   const renderUserRow = (user: UserProfile) => (
     <tr key={user.id} className={`hover:bg-gray-50 ${!user.is_active ? 'opacity-60 bg-gray-50' : ''}`}>
@@ -314,6 +336,17 @@ export const UserManagement: React.FC = () => {
           {getRoleLabel(user.role)}
         </span>
       </td>
+      {canSendWelcomeEmail && (
+        <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
+          {userInstitutions[user.id]?.length ? (
+            <div className="flex flex-col gap-0.5">
+              {userInstitutions[user.id].map(inst => (
+                <span key={inst.id}>{inst.name}</span>
+              ))}
+            </div>
+          ) : '-'}
+        </td>
+      )}
       <td className={`px-6 py-4 whitespace-nowrap text-sm ${user.is_active ? 'text-gray-900' : 'text-gray-500'}`}>
         {(user.role === 'instructor' || user.role === 'coordinator') && userPrograms[user.id]?.length > 0 ? (
           <div className="flex flex-wrap gap-1">
@@ -477,6 +510,20 @@ export const UserManagement: React.FC = () => {
               Sim Only
             </button>
 
+            {/* Students toggle chip — student accounts are hidden by default */}
+            <button
+              onClick={() => setShowStudents(v => !v)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                showStudents
+                  ? 'bg-green-600 text-white border-green-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+              title={showStudents ? 'Hide student accounts' : 'Show student accounts'}
+            >
+              <GraduationCap className="h-4 w-4" />
+              Show Students
+            </button>
+
             {/* Group by program toggle chip */}
             {allProgramCodes.length > 0 && (
               <button
@@ -512,10 +559,13 @@ export const UserManagement: React.FC = () => {
           
           {/* Summary */}
           <div className="mt-3 flex items-center gap-3 text-sm text-gray-600">
-            <span>Showing {filteredUsers.length} of {users.length} users</span>
-            {(filterProgram !== 'all' || filterSimOnly || filterPendingSetup || statusFilter !== 'all') && (
+            <span>
+              Showing {filteredUsers.length} of {users.length} users
+              {hiddenStudentCount > 0 && ` (${hiddenStudentCount} student${hiddenStudentCount === 1 ? '' : 's'} hidden)`}
+            </span>
+            {(filterProgram !== 'all' || filterSimOnly || filterPendingSetup || statusFilter !== 'all' || showStudents) && (
               <button
-                onClick={() => { setFilterProgram('all'); setFilterSimOnly(false); setFilterPendingSetup(false); setStatusFilter('all'); setSearchTerm(''); }}
+                onClick={() => { setFilterProgram('all'); setFilterSimOnly(false); setFilterPendingSetup(false); setStatusFilter('all'); setSearchTerm(''); setShowStudents(false); }}
                 className="text-blue-600 hover:text-blue-800"
               >
                 Clear filters
@@ -555,6 +605,11 @@ export const UserManagement: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role
                 </th>
+                {canSendWelcomeEmail && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Institution
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Programs
                 </th>
@@ -577,7 +632,7 @@ export const UserManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {groupByProgram ? (
+              {groupedUsers.length > 0 ? (
                 groupedUsers.map(group => (
                   <React.Fragment key={group.label}>
                     <tr className="bg-gray-100">

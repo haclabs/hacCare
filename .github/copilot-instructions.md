@@ -13,7 +13,7 @@ hacCare is a **multi-tenant healthcare simulation platform** for clinical educat
 - **Simulation system**: Template-based scenarios with snapshot/restore, running in dedicated tenant environments (uses same codebase as production)
 - **BCMA (Barcode Medication Administration)**: Five Rights verification with patient/medication barcode dual-scan workflow
 - **Role hierarchy**: `super_admin` (cross-tenant access) → `coordinator` (tenant-wide) → `admin` → `instructor` (program-based) → `nurse` (simulation-only)
-- **Program-based permissions**: Instructors are assigned to programs (NESA, PN, SIM Hub, BNAD) and only see templates/simulations tagged with their programs
+- **Program-based permissions**: Instructors are assigned to programs (PROG-A, PROG-B, PROG-C, PROG-D) and only see templates/simulations tagged with their programs
 - **Program tenants**: Empty workspaces where instructors land on login (no patients, just simulation/template management)
 
 ### 🧹 CRITICAL: Cleanup Priority
@@ -169,7 +169,7 @@ See [src/App.tsx](../src/App.tsx) lines 17-29 for all lazy-loaded routes.
 
 **Architecture:**
 - `tenant_type` enum includes: `'production'`, `'institution'`, `'hospital'`, `'clinic'`, `'simulation_template'`, `'simulation_active'`, `'program'`
-- Program tenants have `parent_tenant_id` pointing to their institution (e.g., LethPoly)
+- Program tenants have `parent_tenant_id` pointing to their institution (e.g., Institution A)
 - Programs table stores metadata (code, name, description) - tenants table stores actual tenant
 - Automatic trigger creates program tenant when program is created: `trigger_create_program_tenant`
 
@@ -183,7 +183,7 @@ ALTER TABLE tenants ADD COLUMN parent_tenant_id UUID REFERENCES tenants(id);
 CREATE TABLE programs (
   id UUID PRIMARY KEY,
   tenant_id UUID NOT NULL REFERENCES tenants(id),
-  code TEXT UNIQUE,  -- e.g., 'NESA', 'PN', 'SIM Hub', 'BNAD'
+  code TEXT UNIQUE,  -- e.g., 'PROG-A', 'PROG-B', 'PROG-C', 'PROG-D'
   name TEXT,
   ...
 );
@@ -233,11 +233,11 @@ CREATE POLICY tenants_instructors_see_program_tenants
 ```tsx
 // Shows tree structure:
 // 🏢 Organizations
-//   LethPoly (parent institution - bold blue)
-//     └─ 📚 BNAD (program - indented purple)
-//     └─ 📚 NESA
-//     └─ 📚 Practical Nursing
-//     └─ 📚 Simulation Hub
+//   Institution A (parent institution - bold blue)
+//     └─ 📚 PROG-D (program - indented purple)
+//     └─ 📚 PROG-A
+//     └─ 📚 PROG-B
+//     └─ 📚 PROG-C
 // 🎮 Active Simulations (green)
 // 📝 Simulation Templates (amber)
 ```
@@ -543,7 +543,7 @@ ON CONFLICT (tenant_id, user_id) DO UPDATE SET role = 'admin';
 CREATE TABLE programs (
   id UUID PRIMARY KEY,
   tenant_id UUID NOT NULL,
-  code VARCHAR(10) UNIQUE,  -- e.g., 'NESA', 'PN', 'SIM Hub', 'BNAD'
+  code VARCHAR(10) UNIQUE,  -- e.g., 'PROG-A', 'PROG-B', 'PROG-C', 'PROG-D'
   name TEXT,
   description TEXT,
   is_active BOOLEAN DEFAULT true
@@ -614,7 +614,7 @@ const filteredTemplates = filterByPrograms(templates);
 **Important Notes:**
 - User role changes require logout/login to take effect (Auth context refresh)
 - Program filtering applies to Active, Templates, and History tabs
-- Programs are tenant-specific (LethPoly has NESA/PN/SIM Hub/BNAD)
+- Programs are tenant-specific (each institution defines its own program codes, e.g. PROG-A/PROG-B)
 - `get_user_program_codes(user_id)` RPC function returns array of program codes for filtering
 
 ### Simulation Tenant Detection

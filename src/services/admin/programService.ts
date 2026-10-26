@@ -384,20 +384,26 @@ export async function bulkAssignUserToPrograms(
 
         secureLogger.debug(`✅ Granted access to ${programTenants.length} program tenants for user ${userId}`);
       }
-    } else {
-      // Remove user from all program tenants when no programs assigned
-      const { data: programTenants } = await supabase
-        .from('tenants')
-        .select('id')
-        .eq('tenant_type', 'program');
+    }
 
-      if (programTenants && programTenants.length > 0) {
-        await supabase
-          .from('tenant_users')
-          .delete()
-          .eq('user_id', userId)
-          .in('tenant_id', programTenants.map(t => t.id));
-      }
+    // Revoke access to program tenants whose program is no longer assigned
+    const { data: memberships } = await supabase
+      .from('tenant_users')
+      .select('tenant_id, tenants!inner(tenant_type, program_id)')
+      .eq('user_id', userId)
+      .eq('tenants.tenant_type', 'program');
+
+    const staleTenantIds = ((memberships || []) as unknown as { tenant_id: string; tenants: { program_id: string | null } | null }[])
+      .filter(m => !m.tenants?.program_id || !programIds.includes(m.tenants.program_id))
+      .map(m => m.tenant_id);
+
+    if (staleTenantIds.length > 0) {
+      const { error: revokeError } = await supabase
+        .from('tenant_users')
+        .delete()
+        .eq('user_id', userId)
+        .in('tenant_id', staleTenantIds);
+      if (revokeError) throw revokeError;
     }
 
     return { error: null };

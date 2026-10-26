@@ -7,6 +7,54 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - ADMIN LIST FILTERS: INSTITUTIONS & STUDENTS
+===============================================================================
+
+* Tenant Management listed every tenant — simulation/patient templates,
+  active simulations and program workspaces alongside institutions. A new
+  Type filter defaults to Institutions; other types remain selectable,
+  including "All Types"
+* User & Roles hides student accounts (temporary simulation logins) by
+  default, with a "Show Students" toggle and a hidden-count hint
+* User & Roles shows each user's institution(s) in a new column, also
+  searchable, and groups the A–Z list by institution by default
+  ("Group by Program" still switches to program groups). Backed by the new get_user_institutions RPC, which wraps
+  user_institution_ids() with an access guard and the same per-user
+  institution scoping as get_user_auth_status
+  (20261026191843_add_get_user_institutions.sql)
+* UserRole type now includes 'student', matching the database enum
+* Fix: the user form kept program ticks from a previously selected
+  tenant (hidden, but still saved), so switching institution while
+  creating a user could assign same-coded programs in two institutions.
+  Changing the tenant now clears the ticks, and the tenant dropdown
+  lists institutions only (relabelled "Institution", as are its hints
+  and error messages)
+* Fix: institution logo upload (Tenant Management → tenant settings)
+  always failed — the tenant-logos storage bucket it uploads to was never
+  created. Bucket is public-read, 2MB, JPEG/PNG/WebP; writes are
+  super_admin only, matching who may update tenants. SVG is no longer
+  accepted, as an SVG in a public bucket can carry script
+  (20261026193228_create_tenant_logos_bucket.sql)
+* Cleanup: removed the unrouted ImageAnnotation component and
+  src/lib/media/imageService.ts (~690 lines). They used a patient-images
+  storage bucket that never existed; patient photos are stored inline on
+  the patient record (photo_data) with illustrated avatars as fallback.
+* Cleanup: dropped the empty patient_images table and its
+  simulation_table_config row. Both reset functions were redeployed with
+  only their patient_images DELETE removed (live definition edited in
+  place, access guards intact); the three delete functions already skip a
+  missing table. Verified in a rolled-back dry run: both resets, launch,
+  reset of a fresh launch, snapshot saves and all delete RPCs succeed
+  (20261026200056_drop_unused_patient_images.sql)
+* Docs: removed real institution names, program codes, a subdomain and a
+  user email from the changelog, developer docs, user guide, in-app
+  knowledge base and Program Management help text; replaced with generic
+  placeholders
+* Fix: unticking some (not all) programs left the user's program-tenant
+  memberships behind; bulkAssignUserToPrograms now revokes every
+  program-tenant membership whose program is no longer assigned
+
+===============================================================================
 [Unreleased] - 2026-10-26 - FIX: INSTRUCTORS STUCK IN TEMPLATE TENANTS
 ===============================================================================
 
@@ -1059,7 +1107,7 @@ CRITICAL BUGFIXES
   - All restoration paths (auto-login, manual login, refresh) now consistent
   
   Testing:
-  - Verified with hofnurse@lethpolytech.ca (simulation_only=true student nurse)
+  - Verified with a simulation_only=true student nurse account
   - Confirmed patient list loads immediately after login
   - Confirmed medications, vitals, labs, orders all visible
   - Validated no infinite loading states

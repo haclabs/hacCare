@@ -223,7 +223,7 @@ BEGIN
     'get_tenant_users', 'create_program_tenant', 'get_user_current_tenant',
     'create_patient_template', 'create_simulation_template', 'find_user_by_email',
     'get_available_admin_users', 'get_user_program_codes', 'get_user_program_tenants',
-    'user_has_program_access'
+    'user_has_program_access', 'get_user_institutions'
   ]) f
   WHERE NOT EXISTS (
     SELECT 1 FROM pg_proc p

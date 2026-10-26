@@ -536,7 +536,7 @@ deviceAssessmentsData.data?.forEach((assessment: any) => {
 
 - **Nov 20, 2025**: Added simulation category tag system
   - Added `primary_categories` TEXT[] and `sub_categories` TEXT[] columns to both `simulation_active` and `simulation_history` tables
-  - Categories: Primary (PN, NESA, SIM Hub, BNAD), Sub (Labs, Simulation, Testing)
+  - Categories: Primary (program codes, e.g. PROG-A, PROG-B), Sub (Labs, Simulation, Testing)
   - Categories preserved through simulation lifecycle:
     * Selected via checkboxes during launch
     * Displayed with color-coded badges on active simulations

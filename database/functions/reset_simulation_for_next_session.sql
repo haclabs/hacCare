@@ -137,10 +137,6 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % alerts', v_count;
   
-  DELETE FROM patient_images WHERE tenant_id = v_tenant_id;
-  GET DIAGNOSTICS v_count = ROW_COUNT;
-  RAISE NOTICE '🗑️  Deleted % images', v_count;
-  
   DELETE FROM wound_assessments WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🗑️  Deleted % wound assessments', v_count;

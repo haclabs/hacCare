@@ -178,7 +178,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           onChange={handleFileInputChange}
           className="hidden"
         />
@@ -198,7 +198,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({
           </div>
           <p className="text-xs text-gray-500">
             Drag and drop or click to upload<br />
-            Supports JPEG, PNG, SVG, WebP (max 2MB)
+            Supports JPEG, PNG, WebP (max 2MB)
           </p>
         </div>
       </div>

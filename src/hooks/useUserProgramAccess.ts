@@ -7,7 +7,7 @@ import { secureLogger } from '../lib/security/secureLogger';
  * Hook to get current user's assigned program codes and check access
  * 
  * Returns:
- * - programCodes: Array of program codes user has access to (e.g., ['NESA', 'PN'])
+ * - programCodes: Array of program codes user has access to (e.g., ['PROG-A', 'PROG-B'])
  * - hasProgram: Function to check if user has access to a specific program
  * - canSeeAllPrograms: Boolean - true if user is super_admin or coordinator
  * - filterByPrograms: Function to filter arrays based on program access
