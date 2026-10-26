@@ -7,6 +7,20 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - PIN NODE 22.23.4 (OCTOBER 2026 SECURITY RELEASE)
+===============================================================================
+
+* Pinned Node.js to 22.23.4, the October 2026 security release, which fixes
+  the Brotli decoder out-of-bounds write (CVE-2026-111497) and TLS hostname
+  verification bypasses among others. hacCare was not exploitable (no Node
+  runtime in production; nothing decompresses untrusted Brotli), so this is
+  hygiene for build, CI and dev machines
+  - .nvmrc is the single source for CI (setup-node reads node-version-file)
+  - netlify.toml NODE_VERSION and the dev container's Node feature carry the
+    same version — bump all three together
+  - package.json engines raised to >=22.23.4
+
+===============================================================================
 [Unreleased] - 2026-10-21 - WARN BEFORE LEAVING TEMPLATE EDIT MODE
 ===============================================================================
 

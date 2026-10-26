@@ -88,7 +88,7 @@
     "brace-expansion": ">=5.0.8"
   },
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=22.23.4",
     "npm": ">=10.0.0"
   },
   "browserslist": {

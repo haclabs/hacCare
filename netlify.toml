@@ -4,7 +4,8 @@
 
 [build.environment]
   NODE_ENV = "production"
-  NODE_VERSION = "22"
+  # Keep in sync with .nvmrc (CI reads that file). 22.23.4 = Oct 2026 security release.
+  NODE_VERSION = "22.23.4"
   NPM_FLAGS = "--include=dev"
 
 # ============================================================================
