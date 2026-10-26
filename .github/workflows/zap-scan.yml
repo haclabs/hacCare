@@ -1,9 +1,11 @@
 name: OWASP ZAP Security Scan
 
-# Run manually via GitHub Actions UI (Actions → OWASP ZAP Security Scan → Run workflow)
-# Only runs against a live URL — do NOT point at production without prior notice to users.
-# Target the Netlify preview/staging URL or the production URL for formal assessments.
+# Weekly: passive BASELINE scan of production (observes only — safe to run unattended).
+# Manual (Actions → OWASP ZAP Security Scan → Run workflow): choose baseline or full.
+# The FULL scan actively probes the app — do NOT point it at production without notice.
 on:
+  schedule:
+    - cron: '0 9 * * 1'   # Mondays 09:00 UTC
   workflow_dispatch:
     inputs:
       target_url:
@@ -13,7 +15,7 @@ on:
       scan_type:
         description: 'Scan type'
         required: true
-        default: 'full'
+        default: 'baseline'
         type: choice
         options:
           - full      # Full active scan — use for formal security assessments
@@ -28,10 +30,15 @@ jobs:
   zap-scan:
     name: OWASP ZAP ${{ github.event.inputs.scan_type == 'full' && 'Full Active Scan' || 'Baseline Passive Scan' }}
     runs-on: ubuntu-latest
+    # Scheduled runs have no inputs: default to a passive scan of production.
+    # Inputs are passed through env, never interpolated into shell scripts.
+    env:
+      TARGET_URL: ${{ github.event.inputs.target_url || 'https://haccare.app' }}
+      SCAN_TYPE: ${{ github.event.inputs.scan_type || 'baseline' }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: |
             .github
@@ -41,16 +48,16 @@ jobs:
       # Checks for missing security headers, information disclosure, etc.
       # -----------------------------------------------------------------------
       - name: ZAP Baseline Scan
-        if: github.event.inputs.scan_type == 'baseline'
-        uses: zaproxy/action-baseline@v0.15.0
+        if: env.SCAN_TYPE == 'baseline'
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:
-          target: ${{ github.event.inputs.target_url }}
+          target: ${{ env.TARGET_URL }}
           # Rules file lets you tune false positives over time
           rules_file_name: '.github/zap-rules.tsv'
           # Generate all report formats — HTML is most readable for HECVAT
           cmd_options: '-a -j -r zap-report.html -w zap-report.md -J zap-report.json'
           # Open a GitHub issue summarising findings
-          issue_title: 'ZAP Baseline Scan — ${{ github.event.inputs.target_url }}'
+          issue_title: 'ZAP Baseline Scan — ${{ env.TARGET_URL }}'
           fail_action: false  # Don't fail the workflow — we want the report regardless
 
       # -----------------------------------------------------------------------
@@ -58,13 +65,13 @@ jobs:
       # Actively probes the app; do NOT run against production without planning.
       # -----------------------------------------------------------------------
       - name: ZAP Full Scan
-        if: github.event.inputs.scan_type == 'full'
-        uses: zaproxy/action-full-scan@v0.13.0
+        if: env.SCAN_TYPE == 'full'
+        uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
         with:
-          target: ${{ github.event.inputs.target_url }}
+          target: ${{ env.TARGET_URL }}
           rules_file_name: '.github/zap-rules.tsv'
           cmd_options: '-a -j -r zap-report.html -w zap-report.md -J zap-report.json'
-          issue_title: 'ZAP Full Scan — ${{ github.event.inputs.target_url }}'
+          issue_title: 'ZAP Full Scan — ${{ env.TARGET_URL }}'
           fail_action: false
 
       # -----------------------------------------------------------------------
@@ -72,7 +79,7 @@ jobs:
       # Retained for 90 days — download from the Actions run summary page
       # -----------------------------------------------------------------------
       - name: Upload ZAP reports
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: zap-security-report-${{ github.run_number }}
@@ -90,8 +97,8 @@ jobs:
         run: |
           echo "## ZAP Scan Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Target:** ${{ github.event.inputs.target_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Scan type:** ${{ github.event.inputs.scan_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${TARGET_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan type:** ${SCAN_TYPE}" >> $GITHUB_STEP_SUMMARY
           echo "**Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Reports (HTML, JSON, Markdown) are available as artifacts for 90 days." >> $GITHUB_STEP_SUMMARY

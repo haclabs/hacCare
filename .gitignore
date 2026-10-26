@@ -18,6 +18,10 @@ dist-ssr/
 .env.test.local
 .env.production.local
 
+# MCP server config — holds access tokens (e.g. Supabase personal access token)
+.mcp.json
+.vscode/mcp.json
+
 # Test outputs and temporary files
 tests/temp-*
 tests/*.tmp

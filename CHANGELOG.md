@@ -7,6 +7,23 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - REPOSITORY SECURITY HARDENING
+
+* GitHub Actions pinned to full commit SHAs with version comments, so a
+  re-pointed tag can't change what runs in CI. snyk/actions/node moved off
+  the moving `master` branch to the v1.0.0 release (same action code)
+* SECURITY.md: private vulnerability reporting via GitHub, scope, response
+  targets and safe-harbor rules. The public "Security Vulnerability" issue
+  template is replaced by a link to private reporting; the bug template now
+  warns against posting names, logins or patient information
+* .github/CODEOWNERS: owner auto-requested on database, CI and auth changes
+  (code-owner review intentionally not required while solo)
+* OWASP ZAP: weekly passive baseline scan of production (Mondays 09:00 UTC);
+  manual runs default to baseline; workflow inputs no longer interpolated
+  into shell commands
+* .gitignore now covers .mcp.json (it holds the Supabase access token and
+  was only excluded locally)
+* .github/GITHUB_SETUP.md: checklist of the remaining repository settings
 [Unreleased] - 2026-10-26 - NODE 22.23.4 MINIMUM (OCTOBER 2026 SECURITY RELEASE)
 
 * Require Node.js >= 22.23.4, the October 2026 security release, which fixes

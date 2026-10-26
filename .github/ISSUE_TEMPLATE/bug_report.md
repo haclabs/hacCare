@@ -6,6 +6,10 @@ labels: bug
 assignees: ''
 ---
 
+> **Issues are public.** Don't include student or staff names, login details, institution names, or
+> any real patient information — in the text or in screenshots. Security problems go through
+> [private reporting](https://github.com/haclabs/hacCare/security/advisories/new) instead (see SECURITY.md).
+
 ## Bug Description
 <!-- A clear and concise description of what the bug is -->
 
@@ -22,7 +26,7 @@ assignees: ''
 <!-- What actually happened -->
 
 ## Screenshots
-<!-- If applicable, add screenshots to help explain the problem -->
+<!-- If applicable, add screenshots. Blur or crop out names, logins and anything identifying. -->
 
 ## Environment
 **Browser:**

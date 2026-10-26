@@ -4,11 +4,16 @@ This document outlines the recommended GitHub repository settings for hacCare.
 
 ## ✅ Already Configured
 
-- [x] Dependabot for automated dependency updates
+- [x] Dependabot for automated dependency updates (npm + GitHub Actions)
 - [x] CodeQL security scanning
 - [x] CI/CD workflow for testing and linting
-- [x] Issue templates
+- [x] Issue templates (security reports routed to private reporting, not public issues)
 - [x] Netlify auto-deployment on main branch
+- [x] `SECURITY.md` — how to report vulnerabilities privately
+- [x] `.github/CODEOWNERS` — owner auto-requested on database, CI and auth changes
+- [x] All GitHub Actions pinned to full commit SHAs (`@<sha> # vX.Y.Z`); Dependabot updates
+      both the SHA and the version comment
+- [x] Weekly OWASP ZAP **baseline** (passive) scan of production — Mondays 09:00 UTC
 
 ## 🔧 Manual Configuration Needed
 
@@ -57,6 +62,9 @@ If you're working alone, you can:
 - Set approvals to `0` (still requires PR, but no manual approval)
 - Still keep status checks required (catches bugs before merge)
 - Skip signed commits (adds friction without team benefits)
+- Leave **Require review from Code Owners** off — GitHub won't let you approve your own PR, so it
+  would block every merge. `CODEOWNERS` still auto-requests you; turn this on once a second
+  maintainer joins.
 
 ---
 
@@ -92,6 +100,31 @@ phantom conflicts. Judge whether something shipped by diffing content
 **Secret scanning:**
 - [x] Enable for public repositories
 - [x] Push protection (prevents accidental secret commits)
+
+**Private vulnerability reporting** (*Settings → Code security → Private vulnerability reporting*):
+- [ ] **Enable** — `SECURITY.md` and the issue-template link send reporters to
+      `Security → Report a vulnerability`, which only works when this is on
+
+**Actions** (*Settings → Actions → General*):
+- [ ] **Require actions to be pinned to a full-length commit SHA** — enforces the pinning
+      already done in the workflows, so a new unpinned `uses:` fails instead of slipping in
+- [ ] **Workflow permissions → Read repository contents** (default `GITHUB_TOKEN` read-only;
+      jobs request extra permissions explicitly)
+
+**Account / organisation:**
+- [ ] Two-factor authentication on every account with write access
+- [ ] Review *Settings → Collaborators* and *Deploy keys* periodically; remove unused access
+
+**Supabase access tokens** (outside GitHub, but they control production):
+- [ ] Use a **read-only** Supabase MCP token (`read_only=true` in the MCP URL) for everyday AI or
+      tooling sessions; keep a full-access token only for deliberate deploys
+- [ ] Rotate personal access tokens periodically, and immediately if one may have leaked
+- [ ] Keep `.mcp.json` and `.env*` out of git — both are in `.gitignore` (`.mcp.json` was
+      previously only excluded locally via `.git/info/exclude`, which isn't shared)
+
+**Database change process:**
+- [ ] Prefer applying migrations to a staging project (or Supabase Branching) and to production
+      only after the PR is merged, so database changes are reviewed before they go live
 
 ---
 

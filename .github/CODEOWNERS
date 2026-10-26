@@ -1,0 +1,21 @@
+# Code owners are automatically requested for review on pull requests that touch these paths.
+# hacCare is maintained by one developer, so "Require review from Code Owners" is intentionally
+# NOT enabled in branch protection (you cannot approve your own PR). This file still flags
+# sensitive changes and is ready if collaborators join.
+
+# Default owner
+*                         @haclabs
+
+# Database: migrations, RLS policies, privileged functions and edge functions
+/supabase/                @haclabs
+/database/                @haclabs
+
+# CI/CD, security scanning, Dependabot and repository policy
+/.github/                 @haclabs
+/netlify.toml             @haclabs
+/SECURITY.md              @haclabs
+
+# Authentication, tenant context and security utilities
+/src/lib/security/        @haclabs
+/src/contexts/            @haclabs
+/src/services/auth/       @haclabs
