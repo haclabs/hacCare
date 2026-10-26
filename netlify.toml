@@ -4,6 +4,9 @@
 
 [build.environment]
   NODE_ENV = "production"
+  # Float on the major so every build gets the newest 22.x security release automatically
+  # (Dependabot does not bump runtime versions). Keep in sync with .nvmrc, which CI reads.
+  # package.json engines sets the minimum safe version.
   NODE_VERSION = "22"
   NPM_FLAGS = "--include=dev"
 

@@ -7,8 +7,22 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - NODE 22.23.4 MINIMUM (OCTOBER 2026 SECURITY RELEASE)
+
+* Require Node.js >= 22.23.4, the October 2026 security release, which fixes
+  the Brotli decoder out-of-bounds write (CVE-2026-111497) and TLS hostname
+  verification bypasses among others. hacCare was not exploitable (no Node
+  runtime in production; nothing decompresses untrusted Brotli), so this is
+  hygiene for build, CI and dev machines
+  - package.json engines raised to >=22.23.4 (npm warns on older local Node)
+  - Builds float on the major ("22" in .nvmrc, netlify.toml and the dev
+    container) so every Netlify build, CI run and container rebuild picks up
+    the newest 22.x automatically. Dependabot does not update runtime
+    versions, so exact pins would go stale silently
+  - CI's setup-node now reads .nvmrc via node-version-file
+  - Node 22 reaches end-of-life on 30 April 2027: move to the next LTS before
+    then (nothing will flag this automatically)
 [Unreleased] - 2026-10-26 - SCOPE TEMPLATES & SIMULATIONS TO THEIR INSTITUTION
-===============================================================================
 
 * Simulation templates, patient templates, active simulations and simulation
   history are now visible only to members of the institution that owns them
@@ -30,9 +44,7 @@ documented in this file.
   templates only appeared through the ready-template leak above
   - Migration 20261026024318_let_users_see_their_assigned_programs.sql
 
-===============================================================================
 [Unreleased] - 2026-10-26 - ACCESS GUARDS ON PRIVILEGED DATABASE FUNCTIONS
-===============================================================================
 
 * 23 SECURITY DEFINER functions checked nothing about the caller, so any
   logged-in user (including students) could reset, complete or delete any
@@ -54,9 +66,7 @@ documented in this file.
   - Redeploying one of these functions must keep its guard line;
     supabase/tests/verify_rls_isolation.sql fails if one goes missing
 
-===============================================================================
 [Unreleased] - 2026-10-26 - COORDINATORS & ADMINS SCOPED TO THEIR INSTITUTION
-===============================================================================
 
 * Coordinator (and admin) checks were role-only. A coordinator at one
   institution could enrol themselves into another institution's tenants,
