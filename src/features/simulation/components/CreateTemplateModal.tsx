@@ -126,7 +126,8 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
 
       const result = await createSimulationTemplate({
         ...formData,
-        primary_categories: selectedPrograms.length > 0 ? selectedPrograms : undefined
+        primary_categories: selectedPrograms.length > 0 ? selectedPrograms : undefined,
+        owner_tenant_id: currentTenant?.id,
       });
       
       if (result.success) {

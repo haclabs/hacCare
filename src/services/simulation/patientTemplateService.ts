@@ -18,6 +18,7 @@ export async function createPatientTemplate(
       p_name: params.name,
       p_description: params.description || null,
       p_primary_categories: params.primary_categories || null,
+      p_owner_tenant_id: params.owner_tenant_id || null,
     });
 
     if (error) throw error;

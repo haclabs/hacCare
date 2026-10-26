@@ -44,6 +44,9 @@ export interface TemplateImportOptions {
   
   // Optional: Override template description
   template_description_override?: string;
+
+  // Caller's current tenant; the server resolves it to the owning institution
+  owner_tenant_id?: string;
 }
 
 /**

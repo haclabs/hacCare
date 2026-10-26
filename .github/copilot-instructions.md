@@ -151,6 +151,19 @@ See [src/App.tsx](../src/App.tsx) lines 17-29 for all lazy-loaded routes.
 
 ## Key Gotchas
 
+### Institution Isolation & Privileged RPC Guards (October 2026)
+**Isolation is enforced per institution, not just per tenant or program.** See CLAUDE.md
+("Database changes", "Rules that cause silent data bugs", "Working on the live database") for detail.
+- `simulation_templates` / `patient_templates` carry `owner_institution_id`; simulations and history
+  inherit it through `template_id`. Restrictive `*_institution_scope` RLS policies hide them from other
+  institutions even when program codes match — codes are only unique per institution.
+- Coordinators and admins are confined to their own institution (users, programs, tenants, rosters);
+  only `super_admin` crosses institutions.
+- Every `SECURITY DEFINER` RPC starts with a `PERFORM public.assert_*(...)` line marked
+  `-- access guard`. Keep it when redeploying; add one to new RPCs. `assert_*` helpers are not
+  callable by signed-in users directly — only from inside other definer functions.
+- Prove RLS changes with the impersonation pattern in `supabase/tests/verify_rls_isolation.sql`.
+
 ### Program Tenant System (Instructor Workspaces)
 **Program tenants are isolated workspaces for instructors to manage simulations and templates WITHOUT patient data:**
 

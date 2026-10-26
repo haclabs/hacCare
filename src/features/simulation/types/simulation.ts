@@ -205,6 +205,8 @@ export interface CreateTemplateParams {
   description?: string;
   default_duration_minutes?: number;
   primary_categories?: string[];
+  /** Caller's current tenant; the server resolves it to the owning institution. */
+  owner_tenant_id?: string;
 }
 
 export interface LaunchSimulationParams {

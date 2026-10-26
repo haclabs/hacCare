@@ -178,6 +178,7 @@ const CreatePatientTemplateModal: React.FC<CreatePatientTemplateModalProps> = ({
       const result = await createPatientTemplate({
         ...formData,
         primary_categories: selectedPrograms.length > 0 ? selectedPrograms : undefined,
+        owner_tenant_id: currentTenant?.id,
       });
 
       if (!result.success || !result.tenant_id || !result.patient_template_id) {

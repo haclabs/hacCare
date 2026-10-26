@@ -623,6 +623,14 @@ export async function saveNewbornAssessment(
       payload[field] = assessment[field];
     }
   }
+  // The form clears student_name on reload and physical observations auto-save without
+  // prompting, so an empty name here would overwrite the last named author on this
+  // one-row-per-patient upsert and leave the debrief entry unattributed.
+  for (const field of ['student_name', 'completed_by'] as const) {
+    if (typeof payload[field] === 'string' && !(payload[field] as string).trim()) {
+      delete payload[field];
+    }
+  }
   // For date/time fields: skip empty strings entirely (column stays NULL)
   for (const field of dateOrTimeFields) {
     const val = assessment[field];

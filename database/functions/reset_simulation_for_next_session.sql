@@ -32,6 +32,7 @@ DECLARE
   v_count integer;
   v_stats jsonb := '{}'::jsonb;
 BEGIN
+  PERFORM public.assert_can_manage_simulation(p_simulation_id); -- access guard (20261026031253_guard_privileged_rpcs)
   RAISE NOTICE '🔄 Starting session reset for simulation: %', p_simulation_id;
   
   -- Get simulation details

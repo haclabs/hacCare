@@ -14,6 +14,7 @@ export interface PatientTemplate {
   snapshot_data: any;
   snapshot_taken_at: string | null;
   primary_categories: string[];
+  owner_institution_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -23,6 +24,8 @@ export interface CreatePatientTemplateParams {
   name: string;
   description?: string;
   primary_categories?: string[];
+  /** Caller's current tenant; the server resolves it to the owning institution. */
+  owner_tenant_id?: string;
 }
 
 export interface PatientTemplateFunctionResult {

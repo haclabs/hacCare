@@ -36,6 +36,7 @@ DECLARE
   v_template_last TEXT;
   v_template_dob TEXT;
 BEGIN
+  PERFORM public.assert_can_manage_simulation(p_simulation_id); -- access guard (20261026031253_guard_privileged_rpcs)
   -- Get simulation and template info
   SELECT sa.tenant_id, sa.template_id, st.snapshot_data
   INTO v_sim_tenant_id, v_template_id, v_template_snapshot
