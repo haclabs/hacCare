@@ -5075,10 +5075,6 @@ export type Database = {
         }
         Returns: Json
       }
-      create_snapshot: {
-        Args: { p_description?: string; p_name: string; p_template_id: string }
-        Returns: string
-      }
       create_user_profile: {
         Args: {
           first_name?: string
@@ -5368,10 +5364,6 @@ export type Database = {
         Args: { tenant_uuid: string; user_uuid?: string }
         Returns: boolean
       }
-      launch_run: {
-        Args: { p_run_name: string; p_snapshot_id: string }
-        Returns: string
-      }
       launch_simulation: {
         Args: {
           p_duration_minutes: number
@@ -5418,7 +5410,6 @@ export type Database = {
         Args: { tenant_uuid: string; user_uuid: string }
         Returns: boolean
       }
-      reset_run: { Args: { p_run_id: string }; Returns: Json }
       reset_simulation_for_next_session: {
         Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json

@@ -7,6 +7,26 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - FIX: INSTRUCTORS STUCK IN TEMPLATE TENANTS
+===============================================================================
+
+* get_user_program_tenants failed for every user after the RPC access-guard
+  rewrite (plpgsql won't coerce tenants.name varchar to text), so instructors
+  never reached their program workspace. Restored with explicit casts
+* get_user_current_tenant picked an arbitrary tenant_users row, so the
+  fallback could open a template tenant an instructor had once edited —
+  with no editing banner and no way out. It now prefers non-simulation
+  tenants, oldest membership first
+* Migration: supabase/migrations/20261026144156_fix_instructors_landing_in_template_tenants.sql
+* Cleanup: dropped set_tenant_id_on_insert, a trigger function with no
+  trigger attached that could not have worked
+  (20261026144549_drop_unused_set_tenant_id_on_insert.sql)
+* Cleanup: removed the abandoned sim_* "run" architecture — the
+  create_snapshot, launch_run and reset_run RPCs (every sim_* table they
+  used was already gone), the useSimulation hook and the unrouted
+  SimulationRunPage (20261026144821_drop_dead_sim_run_functions.sql)
+
+===============================================================================
 [Unreleased] - 2026-10-26 - REPOSITORY SECURITY HARDENING
 
 * GitHub Actions pinned to full commit SHAs with version comments, so a
