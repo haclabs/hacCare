@@ -7,6 +7,19 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-26 - BCMA: TABLET COUNT FOR ORAL MEDICATIONS
+===============================================================================
+
+* Oral/sublingual/buccal medications with a single per-tablet strength
+  (e.g. "325mg") now ask the student for the number of tablets given
+  (whole or half, 0.5–10) and show the running total dose (2 × 325 mg =
+  650 mg). Required before Administer, like the IV/IM/SC dose field.
+  Oral liquids (strength with "/", e.g. "160mg/5mL") are unchanged
+* Saved to medication_administrations.administered_dose as e.g.
+  "2 tablets (650 mg)" — no schema change. Shown in the debrief, the MAR
+  administration history (new "Given" line) and the debrief PDF
+
+===============================================================================
 [Unreleased] - 2026-10-26 - ADMIN LIST FILTERS: INSTITUTIONS & STUDENTS
 ===============================================================================
 
@@ -23,6 +36,8 @@ documented in this file.
   institution scoping as get_user_auth_status
   (20261026191843_add_get_user_institutions.sql)
 * UserRole type now includes 'student', matching the database enum
+* Patient Library groups templates by owning institution for super admins
+  (everyone else only sees their own institution's templates via RLS)
 * Fix: the user form kept program ticks from a previously selected
   tenant (hidden, but still saved), so switching institution while
   creating a user could assign same-coded programs in two institutions.

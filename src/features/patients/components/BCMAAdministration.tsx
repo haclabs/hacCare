@@ -14,6 +14,8 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
 import { SlidingScaleTable } from './mar/SlidingScaleTable';
 import { findScaleRowIndex, formatScaleResult } from '../utils/slidingScale';
+import { formatTabletDose, isOralTabletMedication, isValidTabletCount, parseTabletStrength } from '../utils/tabletDose';
+import { TabletCountField } from './mar/TabletCountField';
 
 interface BCMAAdministrationProps {
   patient: Patient;
@@ -66,6 +68,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   const [glucoseReading, setGlucoseReading] = useState<string>('');
   const [glucoseTimestamp, setGlucoseTimestamp] = useState<string>('');
   const [administeredDose, setAdministeredDose] = useState<string>('');
+  const [tabletCount, setTabletCount] = useState<string>('');
   const [showBarcodes, setShowBarcodes] = useState(false);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [overrideReason, setOverrideReason] = useState<string>('');
@@ -218,7 +221,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         studentName,
         overriddenChecks.length > 0 ? overrideReason : undefined,
         undefined, // witnessName - can be added later if needed
-        administeredDose.trim() || undefined,
+        recordedDose || undefined,
         practiceMode,
         glucoseValue !== null
           ? {
@@ -295,6 +298,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     setValidationResult(null);
     setNotes('');
     setAdministeredDose('');
+    setTabletCount('');
     setCurrentStep('scan-patient');
     setOverrideReason('');
     setOverriddenChecks([]);
@@ -319,6 +323,16 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       || route.includes('subcutaneous') || route.includes('sc');
   }, [medication.route]);
 
+  const requiresTabletCount = !requiresDrawnUpDose && isOralTabletMedication(medication.route, medication.dosage);
+  const hasDoseField = requiresDrawnUpDose || requiresTabletCount;
+
+  // What gets saved to administered_dose and shown in the debrief / MAR history
+  const recordedDose = requiresDrawnUpDose
+    ? administeredDose.trim()
+    : requiresTabletCount && isValidTabletCount(parseFloat(tabletCount))
+    ? formatTabletDose(parseFloat(tabletCount), parseTabletStrength(medication.dosage))
+    : '';
+
   const isValidGlucose = requiresGlucoseReading
     ? !!glucoseReading && parseFloat(glucoseReading) >= 1 && parseFloat(glucoseReading) <= 35
     : true;
@@ -328,13 +342,13 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
   // Derived readiness flags
   const allReady = !!validationResult?.isValid
-    && (!requiresDrawnUpDose || administeredDose.trim() !== '')
+    && (!hasDoseField || recordedDose !== '')
     && isValidGlucose
     && studentName.trim() !== '';
 
   const nextBlocker = !validationResult?.isValid
     ? 'resolve'
-    : requiresDrawnUpDose && !administeredDose.trim()
+    : hasDoseField && !recordedDose
     ? 'dose'
     : !isValidGlucose
     ? 'glucose'
@@ -443,7 +457,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 {[
                   { label: 'Patient wristband', done: !!scannedPatientId, id: scannedPatientId },
                   { label: 'Medication package', done: !!scannedMedicationId, id: scannedMedicationId },
-                  { label: 'Dose drawn up', done: !!administeredDose.trim(), id: administeredDose.trim() },
+                  { label: requiresTabletCount ? 'Tablets counted' : 'Dose drawn up', done: !!recordedDose, id: recordedDose },
                   ...(requiresGlucoseReading ? [{ label: 'Glucose reading', done: !!glucoseReading, id: glucoseReading ? `${glucoseReading} mmol/L` : '' }] : []),
                   { label: 'Student signed', done: !!studentName.trim(), id: studentName.trim() },
                 ].map((item) => (
@@ -578,9 +592,13 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                   </div>
                 )}
 
+                {requiresTabletCount && (
+                  <TabletCountField dosage={medication.dosage} value={tabletCount} onChange={setTabletCount} />
+                )}
+
                 {/* Glucose or Notes fills the other column (full-width when dose field is hidden) */}
                 {requiresGlucoseReading ? (
-                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!requiresDrawnUpDose ? 'col-span-2' : ''}`}>
+                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'col-span-2' : ''}`}>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                       Blood Glucose <span className="text-red-500">*</span>
                     </label>
@@ -618,7 +636,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     )}
                   </div>
                 ) : (
-                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!requiresDrawnUpDose ? 'col-span-2' : ''}`}>
+                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'col-span-2' : ''}`}>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>
                     <textarea
                       value={notes}
@@ -693,7 +711,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                         ) : (
                           <span className="text-sm">
                             {nextBlocker === 'resolve' ? 'Fix Verification' :
-                             nextBlocker === 'dose'    ? '↑ Enter Dose Drawn Up' :
+                             nextBlocker === 'dose'    ? (requiresTabletCount ? '↑ Enter Tablets Given' : '↑ Enter Dose Drawn Up') :
                              nextBlocker === 'glucose' ? '↑ Enter Glucose' :
                                                         '↑ Enter Name'}
                           </span>
@@ -739,10 +757,10 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                       <span className="text-slate-500">Label concentration</span>
                       <span className="font-semibold text-slate-800">{medication.dosage}</span>
                     </div>
-                    {administeredDose.trim() && (
+                    {recordedDose && (
                       <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                        <span className="text-slate-500">Drawn up</span>
-                        <span className="font-semibold text-blue-700">{administeredDose.trim()}</span>
+                        <span className="text-slate-500">{requiresTabletCount ? 'Given' : 'Drawn up'}</span>
+                        <span className="font-semibold text-blue-700">{recordedDose}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
