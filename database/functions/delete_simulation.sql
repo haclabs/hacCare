@@ -24,6 +24,7 @@ DECLARE
   v_child_tenant_id uuid;
   v_deleted_auto_students integer := 0;
 BEGIN
+  PERFORM public.assert_can_manage_simulation(p_simulation_id); -- access guard (20261026031253_guard_privileged_rpcs)
   -- Get simulation details before deletion
   SELECT tenant_id, name, template_id
   INTO v_simulation_tenant_id, v_simulation_name, v_template_id

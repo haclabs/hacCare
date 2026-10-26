@@ -132,6 +132,7 @@ export async function importSimulationTemplate(
         p_name: templateName,
         p_description: templateDescription,
         p_default_duration_minutes: exportPackage.template.default_duration_minutes,
+        p_owner_tenant_id: options.owner_tenant_id || null,
       }
     );
 

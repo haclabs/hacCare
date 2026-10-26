@@ -11,6 +11,7 @@ import { Upload, X, AlertCircle, CheckCircle, FileJson } from 'lucide-react';
 import { importTemplateFromFile, validateTemplateExport } from '../services/templateImportService';
 import type { TemplateValidationResult, TemplateImportResult } from '../types/templateSnapshot';
 import { getErrorMessage } from '@/lib/errors';
+import { useTenant } from '../../../contexts/TenantContext';
 
 interface TemplateImportModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { currentTenant } = useTenant();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [validation, setValidation] = useState<TemplateValidationResult | null>(null);
   const [importing, setImporting] = useState(false);
@@ -75,6 +77,7 @@ const TemplateImportModal: React.FC<TemplateImportModalProps> = ({
       const result = await importTemplateFromFile(selectedFile, {
         preserve_patient_ids: true, // Always preserve for barcode compatibility
         template_name_override: importedName,
+        owner_tenant_id: currentTenant?.id,
       });
 
       setImportResult(result);
