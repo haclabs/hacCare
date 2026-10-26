@@ -50,16 +50,6 @@ Functions were identified by searching all active source code (excluding `/backu
 
 ---
 
-## Simulation Run Management Functions (3)
-
-| Function | Used In | Purpose |
-|----------|---------|---------|
-| `create_snapshot` | `src/hooks/useSimulation.ts` | Create simulation snapshot |
-| `launch_run` | `src/hooks/useSimulation.ts` | Launch simulation run |
-| `reset_run` | `src/hooks/useSimulation.ts` | Reset simulation to initial state |
-
----
-
 ## Simulation Template/Lifecycle Functions (7)
 
 | Function | Used In | Purpose |
@@ -85,13 +75,12 @@ Functions were identified by searching all active source code (excluding `/backu
 
 ## Summary
 
-**Total Active Functions:** 21
+**Total Active Functions:** 18
 
 ### By Category:
 - User Management: 5
 - Admin Sessions: 3
 - Tenant Management: 1
-- Simulation Runs: 3
 - Simulation Lifecycle: 7
 - Simulation Portal: 2
 
