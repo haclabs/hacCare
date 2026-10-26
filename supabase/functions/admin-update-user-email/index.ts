@@ -11,6 +11,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -100,6 +101,20 @@ Deno.serve(async (req) => {
 
   if (callerProfile.role === 'coordinator' && ['super_admin', 'admin'].includes(targetProfile.role)) {
     return jsonResponse({ error: 'Coordinators may not change the email of an admin or super_admin' }, 403)
+  }
+
+  // Institution scope: the role tiers above don't stop a coordinator/admin at one
+  // institution from taking over an account at another. Ask the database, as the
+  // caller, using the same rule that guards the user-admin RPCs.
+  const supabaseAsCaller = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
+  })
+  const { data: mayAdminister, error: scopeError } = await supabaseAsCaller
+    .rpc('caller_can_administer_user', { p_user_id: userId })
+
+  if (scopeError || mayAdminister !== true) {
+    return jsonResponse({ error: "Not authorized to change this user's email" }, 403)
   }
 
   const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
