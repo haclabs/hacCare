@@ -33,6 +33,7 @@ export interface SimulationTemplate {
   primary_categories?: string[];
   sub_categories?: string[];
   folder?: string | null;
+  owner_institution_id?: string | null;
 }
 
 export interface SimulationActive {

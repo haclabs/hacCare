@@ -8,7 +8,6 @@ documented in this file.
 
 ===============================================================================
 [Unreleased] - 2026-10-27 - PATIENT LIBRARY: PRINT MEDICATION LABELS
-===============================================================================
 
 * Each Patient Library template has a "Med Labels" button that prints one
   label per distinct medication on Avery 5160 sheets (quantity and start
@@ -19,6 +18,14 @@ documented in this file.
   offered here because patient barcodes are regenerated on every copy
 * Instructors who have never opened the template for editing are granted
   access via ensure_tenant_access first (same entitlement rules as Edit)
+[Unreleased] - 2026-10-27 - PROGRAM WORKSPACE: TEMPLATE COUNT SCOPING
+
+* The Templates card on a program workspace counted every template the
+  user could read. Super admins and coordinators skip program filtering,
+  so every workspace showed the platform-wide total, and instructors could
+  be credited with another institution's templates sharing their program
+  code. The card now counts only non-archived templates owned by the
+  workspace's institution and tagged with its program (or untagged)
 
 ===============================================================================
 [Unreleased] - 2026-10-26 - BCMA: TABLET COUNT FOR ORAL MEDICATIONS
