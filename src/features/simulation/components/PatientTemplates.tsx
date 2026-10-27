@@ -10,11 +10,12 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserCog, Plus, Trash2, Edit, Search } from 'lucide-react';
+import { UserCog, Plus, Trash2, Edit, Search, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getPatientTemplates, deletePatientTemplate } from '../../../services/simulation/patientTemplateService';
 import type { PatientTemplate } from '../types/patientTemplate';
 import CreatePatientTemplateModal from './CreatePatientTemplateModal';
+import { PatientTemplateLabelsModal } from './PatientTemplateLabelsModal';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { useAuth } from '../../../hooks/useAuth';
 import { secureLogger } from '../../../lib/security/secureLogger';
@@ -25,6 +26,7 @@ const PatientTemplates: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [labelTemplate, setLabelTemplate] = useState<PatientTemplate | null>(null);
   const navigate = useNavigate();
 
   const { filterByPrograms, canSeeAllPrograms, isInstructor } = useUserProgramAccess();
@@ -128,6 +130,14 @@ const PatientTemplates: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setLabelTemplate(template)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+              title="Print medication labels"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Med Labels
+            </button>
             <button
               onClick={() => handleEdit(template)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
@@ -248,6 +258,14 @@ const PatientTemplates: React.FC = () => {
             setShowCreateModal(false);
             loadTemplates();
           }}
+        />
+      )}
+
+      {labelTemplate && (
+        <PatientTemplateLabelsModal
+          templateName={labelTemplate.name}
+          tenantId={labelTemplate.tenant_id}
+          onClose={() => setLabelTemplate(null)}
         />
       )}
     </>

@@ -10,13 +10,15 @@ interface MedicationLabelsModalProps {
   onClose: () => void;
   quantity: number;
   startRow: number;
+  /** Replaces the "Instructors: …" line on the header label */
+  headerDetail?: string;
 }
 
 /**
  * Medication Labels Modal — one label per distinct medication (no patient info),
  * matching the Medication Catalog's standard label design.
  */
-export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ items, simulationName, participants, onClose, quantity, startRow }) => {
+export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ items, simulationName, participants, onClose, quantity, startRow, headerDetail }) => {
   const [debugMode, setDebugMode] = useState(false);
   
   // Get instructor names
@@ -112,7 +114,7 @@ export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ it
               return `<div class="label" style="left:${left};top:${top};">
                 <div class="label-content" style="padding:0.15in;">
                   <div style="font-size:12px;font-weight:bold;margin-bottom:0.05in;">${simulationName}</div>
-                  <div style="font-size:9px;color:#666;">Instructors: ${instructorNames}</div>
+                  <div style="font-size:9px;color:#666;">${headerDetail ?? `Instructors: ${instructorNames}`}</div>
                   <div style="font-size:8px;color:#999;">${duplicatedItems.length} medication label${duplicatedItems.length !== 1 ? 's' : ''}</div>
                 </div>
               </div>`;
