@@ -49,7 +49,16 @@ export const ProgramWorkspace: React.FC = () => {
   });
 
   const { filterByPrograms } = useUserProgramAccess();
-  const filteredTemplates = filterByPrograms(templates as Array<{ primary_categories?: string[] | null }>);
+  // filterByPrograms is a no-op for super_admin/coordinator, so scope explicitly to this
+  // workspace: program codes are only unique per institution.
+  const institutionId = currentTenant?.parent_tenant_id;
+  const programCode = program?.code?.toLowerCase();
+  const filteredTemplates = filterByPrograms(templates).filter(t =>
+    t.status !== 'archived' &&
+    !!institutionId && t.owner_institution_id === institutionId &&
+    (!t.primary_categories?.length ||
+      (!!programCode && t.primary_categories.some(c => c.toLowerCase() === programCode)))
+  );
 
   // Load count of auto-generated simulation student logins for this program
   const { data: studentCount = 0 } = useQuery({
