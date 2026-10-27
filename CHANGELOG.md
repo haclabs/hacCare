@@ -7,6 +7,20 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-27 - PATIENT LIBRARY: PRINT MEDICATION LABELS
+===============================================================================
+
+* Each Patient Library template has a "Med Labels" button that prints one
+  label per distinct medication on Avery 5160 sheets (quantity and start
+  row selectable), using the standard medication label design
+* Medication barcodes carry through when a patient is copied into a
+  simulation template and on launch, so labels printed from the library
+  scan in every simulation built from that patient. Wristbands are not
+  offered here because patient barcodes are regenerated on every copy
+* Instructors who have never opened the template for editing are granted
+  access via ensure_tenant_access first (same entitlement rules as Edit)
+
+===============================================================================
 [Unreleased] - 2026-10-26 - BCMA: TABLET COUNT FOR ORAL MEDICATIONS
 ===============================================================================
 
