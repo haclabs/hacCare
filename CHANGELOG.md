@@ -7,6 +7,15 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - FIX: STUDENTS TAKE PHONE/VERBAL ORDERS
+===============================================================================
+
+* Simulation logins (role 'student') saw "Add Order" and saved their
+  orders as Direct orders, because only role 'nurse' got the phone/verbal
+  treatment. Students now get "Add Phone/Verbal" with the Phone Order /
+  Verbal Order choice, like nurses — including medication orders
+
+===============================================================================
 [Unreleased] - 2026-10-28 - FIX: PATIENT CHARTS OUTSIDE THEIR WORKSPACE
 ===============================================================================
 

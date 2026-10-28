@@ -68,7 +68,8 @@ const OrderFormBody: React.FC<DoctorsOrderFormProps & { initialMedication: Medic
   onCancel,
   initialMedication,
 }) => {
-  const isNurse = role === 'nurse';
+  // Simulation logins are role 'student'; like nurses they can only take phone/verbal orders
+  const isNurse = role === 'nurse' || role === 'student';
   const isLinkedOrder = !!editingOrder?.order_link_key;
   const [isMedicationOrder, setIsMedicationOrder] = useState(isLinkedOrder);
   const [orderType, setOrderType] = useState<OrderType>(editingOrder?.order_type ?? (isNurse ? 'Phone Order' : 'Direct'));
