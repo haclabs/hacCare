@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getActiveSimulations, updateSimulationStatus, renameSimulation, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
+import { getActiveSimulations, startSimulation, renameSimulation, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
@@ -70,26 +70,7 @@ export function useActiveSimulations() {
     if (!sim || (sim.status !== 'pending' && sim.status !== 'paused')) return;
     setActionLoading(id);
     try {
-      if (sim.status === 'pending') {
-        const now = new Date();
-        const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
-
-        const { error } = await supabase
-          .from('simulation_active')
-          .update({
-            status: 'running',
-            starts_at: now.toISOString(),
-            ends_at: endsAt.toISOString()
-          })
-          .eq('id', id);
-
-        if (error) throw error;
-      } else {
-        // Pause was removed, but rows paused before then still exist. Start returns them to
-        // running without touching starts_at, so elapsed time is unaffected.
-        await updateSimulationStatus(id, 'running');
-      }
-
+      await startSimulation(id);
       await loadSimulations();
     } catch (error) {
       secureLogger.error('❌ Error starting simulation:', error);
