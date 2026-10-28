@@ -12,7 +12,8 @@ import { getSimulationHistory, archiveSimulationHistory, unarchiveSimulationHist
 import type { SimulationHistoryWithDetails } from '../types/simulation';
 import { PRIMARY_CATEGORIES, SUB_CATEGORIES } from '../types/simulation';
 import EnhancedDebriefModal from './EnhancedDebriefModal';
-import { formatDistanceToNow, differenceInMinutes, format } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
+import { formatSessionDuration } from '../utils/formatSessionDuration';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -144,22 +145,8 @@ const SimulationHistory: React.FC = () => {
     setShowDebriefModal(true);
   };
 
-  const calculateDuration = (record: SimulationHistoryWithDetails) => {
-    // Use duration_minutes if available
-    if (record.duration_minutes) {
-      const hours = Math.floor(record.duration_minutes / 60);
-      const mins = record.duration_minutes % 60;
-      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-    }
-    // Otherwise calculate from timestamps
-    if (!record.completed_at || !record.starts_at) return 'N/A';
-    const start = new Date(record.starts_at);
-    const end = new Date(record.completed_at);
-    const minutes = differenceInMinutes(end, start);
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
+  const calculateDuration = (record: SimulationHistoryWithDetails) =>
+    formatSessionDuration(record.started_at, record.completed_at, record.duration_minutes);
 
   const getParticipantCount = (record: SimulationHistoryWithDetails): number => {
     // Parse student_activities JSON to get unique student names
@@ -278,16 +265,6 @@ const SimulationHistory: React.FC = () => {
               View completed simulations and performance reports
             </p>
           </div>
-
-          {/* Auto-Archive Notice - Only on Active Tab */}
-          {activeTab === 'active' && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
-              <Archive className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-blue-700">
-                <strong>Note:</strong> Reports are automatically moved to the Archived tab after 24 hours and organized by instructor and date.
-              </p>
-            </div>
-          )}
 
           {/* Tab Navigation */}
           <div className="flex gap-2 border-b border-gray-200">

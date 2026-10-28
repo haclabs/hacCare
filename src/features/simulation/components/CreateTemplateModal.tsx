@@ -195,7 +195,7 @@ const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ onClose, onSu
               <div className="text-sm text-blue-900 dark:text-blue-100">
                 <strong>Creating a template will:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>Create a new simulation tenant</li>
+                  <li>Create a private workspace for this scenario</li>
                   <li>Allow you to build your scenario (add patients, medications, vitals)</li>
                   <li>Save a snapshot when ready to launch simulations</li>
                 </ul>

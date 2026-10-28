@@ -124,15 +124,15 @@ The sidebar has the same destinations as **Sim Templates**, **Active Sims**, **D
 A template is a complete practice hospital with your patients in it. You enter the chart once (history, medications, orders, labs, vitals, wounds, devices) and save a snapshot. The snapshot is the frozen starting point.
 
 ## 2. Launch it
-Launching creates a fresh, private copy of the template for one class session. The original template is untouched, so you can launch the same scenario as often as you like. A launched simulation is **Ready to Start**: students can't see it and the clock doesn't run until you press **Play**.
+Launching creates a fresh, private copy of the template for one class session. The original template is untouched, so you can launch the same scenario as often as you like. A launched simulation is **Ready to Start**: students can't see it and the clock doesn't run until you press **Start** (▶).
 
 ## 3. Students work
-Press **Play** when students are ready. Students chart, scan and give medications inside their copy. Their work never touches your template.
+Press **Start** when students are ready. Students chart, scan and give medications inside their copy. Their work never touches your template.
 
 ## 4. Complete, then reset
 - **Complete** ends the session and creates the debrief report.
 - **Reset** wipes the students' work and returns the simulation to its starting point (or to a named state, such as "Week 2"). Printed labels keep working.
-- **Play** starts the next group's session after a reset.
+- **Start** begins the next group's session after a reset.
 
 >! Always **Complete** before you **Reset**. Resetting without completing permanently deletes that group's work.
 
@@ -322,17 +322,19 @@ Click the pencil next to the simulation's name, type the new name, and press Ent
 - **Edit category tags**: change program and type tags
 - **Print patient and medication labels**
 - **Print medication checklist**
-- **View auto-generated student logins**
-- **Play**: start the simulation (shown when it isn't running)
-- **Reset**: clear student work and set the simulation to Ready to Start
-- **Complete**: end the session and create the debrief (shown while running)
+- **View Student Logins** (key icon)
+- **Start** (▶): start the simulation (only when the card shows Ready to Start)
+- **Complete**: end the session and save the debrief (only while running)
+- **Reset**: clear student work and set the simulation to Ready to Start (only after Complete)
 - **Delete**: permanently remove the simulation and its auto-generated logins
+
+Start, Complete and Reset always stay in the same place on the card. The ones that don't apply right now are greyed out.
 
 ## The session cycle
 1. **Launch**: the card shows **Ready to Start**. The clock isn't running and students can't see the simulation yet.
-2. **Play**: the group begins. The clock and any timed orders and medications start from this moment.
+2. **Start**: the group begins. The clock and any timed orders and medications start from this moment.
 3. **Complete**: enter your name. If hacCare finds charting but no Student Name on any of it, it asks you who did the work (or lets you skip). A summary appears and the card shows **Needs Reset**.
-4. **Reset**: pick a named state if you want one, then click **Reset Anyway**. Student work is cleared, labels keep working, and the card shows **Ready to Start**. Press **Play** for the next group.
+4. **Reset**: the dialog confirms the debrief is saved. Pick a named state if you want one, then click **Reset**. Student work is cleared, labels and logins keep working, and the card shows **Ready to Start**. Press **Start** for the next group.
 
 >! Reset permanently deletes everything students entered. If you haven't clicked Complete first, that group's work is gone and won't appear in Debrief Reports.
 
@@ -445,9 +447,9 @@ Both the order form and the medication form have a purple box: **Show to student
 Only instructors, coordinators and admins see the box, and only in a template or a simulation.
 
 ## When does the countdown start?
-Every group, including the first, starts when you press **Play**. A launched or reset simulation waits at **Ready to Start** with the clock stopped, so every group gets the same timing.
+Every group, including the first, starts when you press **Start**. A launched or reset simulation waits at **Ready to Start** with the clock stopped, so every group gets the same timing.
 
->! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then press Play, a 30-minute item appears 30 minutes after Play.
+>! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then press Start, a 30-minute item appears 30 minutes after Start.
 
 ## Who sees what
 Students never see a held item anywhere in the chart. Instructors, coordinators and admins always see it, with a purple badge:
@@ -523,7 +525,7 @@ When the simulation runs, both are hidden for the first 30 minutes. At 30 minute
 - Check the badges on the Orders and Meds screens to confirm what's held and when it releases.
 
 ## Not appearing for students?
-- Check the simulation is running. After a reset, nothing counts down until you press **Play**.
+- Check the simulation is running. After a reset, nothing counts down until you press **Start** (▶).
 - Check the badge: **hidden until 14:30** means it isn't due yet.
 - Wait up to 30 seconds after the release time for students' screens to update.`,
       },
@@ -664,7 +666,7 @@ Other fixed intervals block for three-quarters of the interval. PRN medications 
 BCMA also warns if a dose is given more than 30 minutes before it's due.
 
 ## In a simulation
-Timing only counts doses given in the current session. The first dose after Play, whether on a fresh launch or after a reset, is never blocked by a previous group's doses.
+Timing only counts doses given in the current session. The first dose after Start, whether on a fresh launch or after a reset, is never blocked by a previous group's doses.
 
 If a dose really is needed, the student can **Override** with a reason. The override is shown in the debrief.
 
