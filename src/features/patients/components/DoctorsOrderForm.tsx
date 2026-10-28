@@ -17,6 +17,7 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 import { parseReleaseAfterMinutes } from '../utils/orderRelease';
 import { composeMedicationOrderText } from '../utils/medicationOrderText';
 import { stripDoctorTitle } from '../utils/doctorName';
+import { todayLocalISODate } from '../utils/localDate';
 import { ReleaseDelayField } from './DoctorsOrderRelease';
 import { MedicationEntryFields } from './mar/MedicationEntryFields';
 import { useMedicationEntryForm } from './mar/useMedicationEntryForm';
@@ -71,7 +72,7 @@ const OrderFormBody: React.FC<DoctorsOrderFormProps & { initialMedication: Medic
   const isLinkedOrder = !!editingOrder?.order_link_key;
   const [isMedicationOrder, setIsMedicationOrder] = useState(isLinkedOrder);
   const [orderType, setOrderType] = useState<OrderType>(editingOrder?.order_type ?? (isNurse ? 'Phone Order' : 'Direct'));
-  const [orderDate, setOrderDate] = useState(editingOrder?.order_date ?? new Date().toISOString().split('T')[0]);
+  const [orderDate, setOrderDate] = useState(editingOrder?.order_date ?? todayLocalISODate());
   const [orderTime, setOrderTime] = useState(editingOrder?.order_time ?? new Date().toTimeString().slice(0, 5));
   const [orderingDoctor, setOrderingDoctor] = useState(stripDoctorTitle(editingOrder?.ordering_doctor ?? ''));
   const [doctorName, setDoctorName] = useState(editingOrder?.doctor_name ?? '');

@@ -1,3 +1,5 @@
+import { normalizeTimeTyping } from './timeTyping';
+
 /** HH:MM text input with a 15-minute picker overlay, shared by the medication forms. */
 export function TimeInput({
   value,
@@ -7,12 +9,7 @@ export function TimeInput({
   onChange: (v: string) => void;
 }) {
   const handleChange = (raw: string) => {
-    let v = raw.replace(/[^\d:]/g, '');
-    if (v.length === 2 && !v.includes(':')) v = v + ':';
-    const parts = v.split(':');
-    if (parts[0] && parseInt(parts[0]) > 23) parts[0] = '23';
-    if (parts[1] && parseInt(parts[1]) > 59) parts[1] = '59';
-    onChange(parts.join(':'));
+    onChange(normalizeTimeTyping(raw, value));
   };
 
   const handleBlur = (raw: string) => {

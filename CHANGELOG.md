@@ -7,6 +7,23 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - FIX: MEDICATION ORDER POLISH
+===============================================================================
+
+* Doctors' order dates showed a day early in the orders list (a
+  YYYY-MM-DD date was read as UTC midnight); new orders and medications
+  also defaulted to tomorrow's date in the evening (UTC "today"). Both now
+  use the local date
+* Release-delay hint and badge said the countdown starts at launch / Play;
+  it starts when Start is pressed and starts again on Start after a reset
+* BCMA says "Label strength" (was "Label concentration"), matching the
+  order form; the drawn-up dose hint is labelled the same way
+* MAR time fields: typing "20:00" produced "20::0" because the colon was
+  auto-added and then typed again, and backspace could not remove the
+  auto-added colon. Fixed in the shared TimeInput (Add/Edit medication and
+  medication orders)
+
+===============================================================================
 [Unreleased] - 2026-10-28 - FEATURE: MEDICATION DOCTORS' ORDERS ON THE MAR
 ===============================================================================
 
