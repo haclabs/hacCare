@@ -7,6 +7,20 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - FIX: PATIENT CHARTS OUTSIDE THEIR WORKSPACE
+===============================================================================
+
+* A patient chart (/app/patient/:id) opened even when the patient belongs
+  to a different tenant than the current workspace, e.g. an instructor in
+  their Program Workspace using the back button or a bookmark after leaving
+  a template (template editing leaves them in that template's tenant_users,
+  so RLS still lets the chart load). Charting there would stamp new records
+  with the workspace's tenant. The chart now shows "Patient not in this
+  workspace" with a way back instead
+* The MAR / BCMA Doctor's order box looks up orders by the patient's own
+  tenant rather than the current workspace
+
+===============================================================================
 [Unreleased] - 2026-10-28 - FIX: MEDICATION ORDER POLISH
 ===============================================================================
 

@@ -26,6 +26,7 @@ import { supabase } from '../lib/api/supabase';
 import { createAssessment } from '../services/patient/assessmentService';
 import { createBowelRecord } from '../services/clinical/bowelRecordService';
 import { useTenant } from '../contexts/TenantContext';
+import { PatientWorkspaceMismatch } from '../features/patients/components/PatientWorkspaceMismatch';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
 import { secureLogger } from '../lib/security/secureLogger';
 
@@ -254,6 +255,10 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
         </div>
       </div>
     );
+  }
+
+  if (currentTenant && activePatient.tenant_id && activePatient.tenant_id !== currentTenant.id) {
+    return <PatientWorkspaceMismatch />;
   }
 
   // ─── Shared PatientActionBar navigation callbacks ─────────────────────────
