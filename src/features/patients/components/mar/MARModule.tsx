@@ -77,7 +77,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const bcma = useBCMA();
 
   const { isSimulationTenant } = useSimulationStartsAt();
-  const { ordersByKey } = useLinkedMedicationOrders(patient.id, isSimulationTenant);
+  const { ordersByKey } = useLinkedMedicationOrders(patient.id, patient.tenant_id, isSimulationTenant);
   const isTemplateTenant =
     currentTenant?.tenant_type === 'simulation_template' ||
     currentTenant?.tenant_type === 'patient_template';
