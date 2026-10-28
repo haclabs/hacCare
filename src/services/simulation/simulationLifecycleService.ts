@@ -1,5 +1,5 @@
 /**
- * Simulation Lifecycle Service — launch, run, reset, complete, participants, assignments.
+ * Simulation Lifecycle Service — launch, start, reset, complete, delete.
  */
 
 import { supabase } from '../../lib/api/supabase';
@@ -126,77 +126,10 @@ export async function getActiveSimulations(
   }
 }
 
-/**
- * Get a single active simulation by ID
- */
-export async function getActiveSimulation(
-  simulationId: string
-): Promise<SimulationActiveWithDetails | null> {
-  try {
-    const { data, error } = await supabase
-      .from('simulation_active')
-      .select(`
-        *,
-        template:simulation_templates!simulation_active_template_id_fkey(id, name, description),
-        current_state:simulation_template_states(id, label),
-        tenant:tenants!simulation_active_tenant_id_fkey(id, name),
-        participants:simulation_participants(id, user_id, role, granted_at, last_accessed_at)
-      `)
-      .eq('id', simulationId)
-      .single();
-
-    if (error) throw error;
-
-    const endsAt = new Date(data.ends_at);
-    const now = new Date();
-    const timeRemainingMinutes = Math.max(0, Math.floor((endsAt.getTime() - now.getTime()) / 60000));
-
-    return {
-      ...data,
-      time_remaining_minutes: timeRemainingMinutes,
-      is_expired: timeRemainingMinutes === 0 && data.status === 'running',
-      participant_count: data.participants?.length || 0,
-    } as SimulationActiveWithDetails;
-  } catch (error: unknown) {
-    secureLogger.error('Error fetching active simulation:', error);
-    return null;
-  }
-}
-
-/**
- * Get user's accessible simulations (for simulation-only users)
- */
-export async function getUserAccessibleSimulations(): Promise<SimulationActiveWithDetails[]> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
-
-    const { data, error } = await supabase
-      .from('simulation_active')
-      .select(`
-        *,
-        template:simulation_templates!simulation_active_template_id_fkey(id, name, description),
-        tenant:tenants!simulation_active_tenant_id_fkey(id, name),
-        participants!inner(user_id)
-      `)
-      .eq('participants.user_id', user.id)
-      .eq('status', 'running');
-
-    if (error) throw error;
-    return (data || []) as SimulationActiveWithDetails[];
-  } catch (error: unknown) {
-    secureLogger.error('Error fetching user accessible simulations:', error);
-    return [];
-  }
-}
-
 // ============================================================================
 // STATUS & RESET
 // ============================================================================
 
-/**
- * Update simulation status
- */
 /**
  * Start (Ready to Start → running). The RPC first shifts the chart's timestamps forward by the time
  * the simulation waited since launch/reset, so the group starts on a chart that is current.
@@ -277,34 +210,6 @@ export async function resetSimulationForNextSession(
 }
 
 /**
- * Reset simulation to EXACT template snapshot (nuclear option — reprints required).
- */
-export async function resetSimulationToTemplate(
-  simulationId: string
-): Promise<SimulationFunctionResult> {
-  try {
-    const { data, error } = await supabase.rpc('reset_simulation', {
-      p_simulation_id: simulationId,
-    });
-
-    if (error) throw error;
-    return data as SimulationFunctionResult;
-  } catch (error: unknown) {
-    secureLogger.error('Error resetting simulation to template:', error);
-    throw error;
-  }
-}
-
-/**
- * Alias for resetSimulationForNextSession.
- */
-export async function resetSimulation(
-  simulationId: string
-): Promise<SimulationFunctionResult> {
-  return resetSimulationForNextSession(simulationId);
-}
-
-/**
  * Reset simulation and sync to the latest template changes.
  * Requires patient list to be unchanged (no adds/removes). Optional stateId
  * syncs from a named template state instead of the template's default snapshot.
@@ -379,117 +284,6 @@ export async function deleteSimulation(
     return data as SimulationFunctionResult;
   } catch (error: unknown) {
     secureLogger.error('Error deleting simulation:', error);
-    throw error;
-  }
-}
-
-/**
- * Check for and expire any simulations that have passed their end time
- */
-export async function checkExpiredSimulations(): Promise<SimulationFunctionResult> {
-  try {
-    const { data, error } = await supabase.rpc('check_expired_simulations');
-
-    if (error) throw error;
-    return data as SimulationFunctionResult;
-  } catch (error: unknown) {
-    secureLogger.error('Error checking expired simulations:', error);
-    throw error;
-  }
-}
-
-// ============================================================================
-// PARTICIPANT MANAGEMENT
-// ============================================================================
-
-/**
- * Add participants to a simulation
- */
-export async function addSimulationParticipants(
-  simulationId: string,
-  participants: Array<{ user_id: string; role: 'instructor' | 'student' }>
-): Promise<void> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const records = participants.map(p => ({
-      simulation_id: simulationId,
-      user_id: p.user_id,
-      role: p.role,
-      granted_by: user.id,
-    }));
-
-    const { error } = await supabase.from('simulation_participants').insert(records);
-    if (error) throw error;
-  } catch (error: unknown) {
-    secureLogger.error('Error adding simulation participants:', error);
-    throw error;
-  }
-}
-
-/**
- * Remove a participant from a simulation
- */
-export async function removeSimulationParticipant(participantId: string): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('simulation_participants')
-      .delete()
-      .eq('id', participantId);
-
-    if (error) throw error;
-  } catch (error: unknown) {
-    secureLogger.error('Error removing simulation participant:', error);
-    throw error;
-  }
-}
-
-/**
- * Update the current user's last-accessed timestamp for a simulation
- */
-export async function updateParticipantAccess(simulationId: string): Promise<void> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('simulation_participants')
-      .update({ last_accessed_at: new Date().toISOString() })
-      .eq('simulation_id', simulationId)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
-  } catch (error: unknown) {
-    secureLogger.error('Error updating participant access:', error);
-  }
-}
-
-/**
- * Get user's simulation assignments (running simulations they are a participant in)
- */
-export async function getUserSimulationAssignments(userId: string): Promise<any[]> {
-  try {
-    const { data, error } = await supabase
-      .from('simulation_participants')
-      .select(`
-        id,
-        simulation_id,
-        role,
-        granted_at,
-        simulation:simulation_active!inner(
-          id, name, status, starts_at, tenant_id,
-          template:simulation_templates(name, description)
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('simulation.status', 'running')
-      .order('granted_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  } catch (error: unknown) {
-    secureLogger.error('Error getting user simulation assignments:', error);
     throw error;
   }
 }

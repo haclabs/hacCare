@@ -7,6 +7,38 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - CLEANUP: UNUSED DATABASE FUNCTIONS & DEAD CODE
+===============================================================================
+
+* Dropped 51 database functions nothing used (app, edge functions, other
+  functions in any schema, RLS policies, views, triggers, event triggers):
+  pre-guard role checks (is_super_admin*, user_has_*), old session
+  tracking, sub-tenant simulations, old admin/medication helpers and six
+  trigger functions no trigger ran. Many were SECURITY DEFINER with no
+  caller check. Migrations 20261028021622_drop_unused_functions and
+  20261028021923_drop_orphaned_helper_functions (already applied); all RLS
+  isolation checks pass afterwards. 104 functions remain
+* Removed nine uncalled exports from simulationLifecycleService.ts,
+  including resetSimulation() and checkExpiredSimulations(), which called
+  database functions that no longer exist
+* Removed the database/functions/ copies of the dropped functions
+* docs/operations/ACTIVE_SUPABASE_FUNCTIONS.md rebuilt from the live
+  database: every function, who calls it, and whether it's guarded
+* src/types/supabase.ts regenerated (drops removed functions; adds
+  start_simulation and simulation_active.ready_at)
+
+===============================================================================
+[Unreleased] - 2026-10-28 - SECURITY: SUPER-ADMIN USER RPCs
+===============================================================================
+
+* confirm_user_email and delete_user_permanently checked the caller with
+  role != 'super_admin', which is NULL (and let the call through) for a
+  signed-in account with no user_profiles row. Both now start with the
+  standard access guard, which requires an active super_admin profile
+  (migration 20261028020953_guard_super_admin_user_rpcs, already applied)
+* Both added to the access-guard check in verify_rls_isolation.sql
+
+===============================================================================
 [Unreleased] - 2026-10-28 - START MOVES THE CHART TO "NOW"
 ===============================================================================
 
