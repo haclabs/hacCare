@@ -1745,81 +1745,6 @@ export type Database = {
           },
         ]
       }
-      patient_images: {
-        Row: {
-          annotations: Json | null
-          created_at: string | null
-          description: string | null
-          id: string
-          image_type: string
-          image_url: string
-          patient_id: string | null
-          tenant_id: string | null
-          thumbnail_url: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          annotations?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_type: string
-          image_url: string
-          patient_id?: string | null
-          tenant_id?: string | null
-          thumbnail_url?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          annotations?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          image_type?: string
-          image_url?: string
-          patient_id?: string | null
-          tenant_id?: string | null
-          thumbnail_url?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "patient_images_patient_id_fkey"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patient_images_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenant_statistics"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patient_images_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patient_images_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patient_images_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "user_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       patient_intake_output_events: {
         Row: {
           amount_ml: number
@@ -2873,6 +2798,7 @@ export type Database = {
           id: string
           name: string
           primary_categories: string[] | null
+          ready_at: string | null
           starts_at: string | null
           status: Database["public"]["Enums"]["simulation_active_status"] | null
           sub_categories: string[] | null
@@ -2895,6 +2821,7 @@ export type Database = {
           id?: string
           name: string
           primary_categories?: string[] | null
+          ready_at?: string | null
           starts_at?: string | null
           status?:
             | Database["public"]["Enums"]["simulation_active_status"]
@@ -2919,6 +2846,7 @@ export type Database = {
           id?: string
           name?: string
           primary_categories?: string[] | null
+          ready_at?: string | null
           starts_at?: string | null
           status?:
             | Database["public"]["Enums"]["simulation_active_status"]
@@ -4900,10 +4828,6 @@ export type Database = {
       }
     }
     Functions: {
-      acknowledge_alert_for_tenant: {
-        Args: { p_alert_id: string; p_tenant_id: string }
-        Returns: Json
-      }
       add_patient_template_to_simulation_template: {
         Args: {
           p_patient_template_id: string
@@ -4975,18 +4899,6 @@ export type Database = {
         Returns: undefined
       }
       assert_self_or_admin: { Args: { p_user_id: string }; Returns: undefined }
-      bulk_assign_students_to_simulation: {
-        Args: {
-          p_role?: string
-          p_simulation_id: string
-          p_student_user_ids: string[]
-        }
-        Returns: Json
-      }
-      calculate_simulation_metrics: {
-        Args: { p_simulation_id: string }
-        Returns: Json
-      }
       caller_can_administer_user: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -5017,12 +4929,7 @@ export type Database = {
       }
       caller_tenant_comember_ids: { Args: never; Returns: string[] }
       caller_tenant_ids: { Args: never; Returns: string[] }
-      cleanup_all_problem_simulations: { Args: never; Returns: Json }
-      cleanup_backup_audit_logs: { Args: never; Returns: number }
-      cleanup_expired_simulations: { Args: never; Returns: number }
-      cleanup_old_sessions: { Args: never; Returns: number }
       cleanup_old_user_sessions: { Args: never; Returns: undefined }
-      cleanup_orphaned_users: { Args: never; Returns: number }
       compare_simulation_template_patients: {
         Args: { p_simulation_id: string }
         Returns: Json
@@ -5039,10 +4946,6 @@ export type Database = {
         }
         Returns: Json
       }
-      confirm_simulation_student_email: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
       confirm_user_email: { Args: { target_user_id: string }; Returns: boolean }
       create_patient_template: {
         Args: {
@@ -5057,14 +4960,6 @@ export type Database = {
         Args: { p_parent_tenant_id: string; p_program_id: string }
         Returns: Json
       }
-      create_simulation_subtenant: {
-        Args: {
-          p_parent_tenant_id: string
-          p_simulation_id: string
-          p_simulation_name: string
-        }
-        Returns: string
-      }
       create_simulation_template: {
         Args: {
           p_default_duration_minutes: number
@@ -5075,51 +4970,8 @@ export type Database = {
         }
         Returns: Json
       }
-      create_user_profile: {
-        Args: {
-          first_name?: string
-          last_name?: string
-          user_email?: string
-          user_id: string
-          user_role?: Database["public"]["Enums"]["user_role"]
-        }
-        Returns: {
-          created_at: string | null
-          default_tenant_id: string | null
-          email: string
-          first_name: string
-          id: string
-          is_active: boolean | null
-          last_name: string
-          license_number: string | null
-          phone: string | null
-          primary_program: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          simulation_only: boolean | null
-          updated_at: string | null
-          welcome_seen_at: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "user_profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      create_user_session: {
-        Args: {
-          p_ip_address: unknown
-          p_tenant_id?: string
-          p_user_agent?: string
-        }
-        Returns: string
-      }
       current_user_is_super_admin: { Args: never; Returns: boolean }
       deactivate_user: { Args: { target_user_id: string }; Returns: string }
-      delete_medication_super_admin: {
-        Args: { p_medication_id: string }
-        Returns: boolean
-      }
       delete_patient_template: {
         Args: { p_patient_template_id: string }
         Returns: Json
@@ -5128,17 +4980,9 @@ export type Database = {
         Args: { p_archive_to_history?: boolean; p_simulation_id: string }
         Returns: Json
       }
-      delete_simulation_history: {
-        Args: { p_history_id: string }
-        Returns: Json
-      }
       delete_simulation_template: {
         Args: { p_template_id: string }
         Returns: Json
-      }
-      delete_tenant_secure: {
-        Args: { target_tenant_id: string }
-        Returns: string
       }
       delete_user_permanently: {
         Args: { target_user_id: string }
@@ -5148,49 +4992,7 @@ export type Database = {
         Args: { p_release_after_minutes: number; p_tenant_id: string }
         Returns: boolean
       }
-      end_user_session: { Args: never; Returns: boolean }
       ensure_tenant_access: { Args: { p_tenant_id: string }; Returns: boolean }
-      ensure_user_profile: {
-        Args: { user_email: string; user_id: string }
-        Returns: {
-          created_at: string | null
-          default_tenant_id: string | null
-          email: string
-          first_name: string
-          id: string
-          is_active: boolean | null
-          last_name: string
-          license_number: string | null
-          phone: string | null
-          primary_program: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          simulation_only: boolean | null
-          updated_at: string | null
-          welcome_seen_at: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "user_profiles"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      fetch_medications_for_tenant: {
-        Args: { target_tenant_id: string }
-        Returns: {
-          dosage: string
-          frequency: string
-          medication_id: string
-          name: string
-          patient_first_name: string
-          patient_id: string
-          patient_last_name: string
-          prescribed_by: string
-          route: string
-          start_date: string
-          tenant_id: string
-        }[]
-      }
       find_user_by_email: {
         Args: { email_param: string }
         Returns: {
@@ -5198,14 +5000,6 @@ export type Database = {
           email: string
           user_id: string
         }[]
-      }
-      generate_simulation_id_sets: {
-        Args: {
-          p_session_count: number
-          p_session_names?: string[]
-          p_template_id: string
-        }
-        Returns: Json
       }
       get_available_admin_users: {
         Args: never
@@ -5215,53 +5009,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_cohort_students: {
-        Args: { p_cohort_id: string }
-        Returns: {
-          email: string
-          first_name: string
-          last_name: string
-          program_code: string
-          program_id: string
-          student_number: string
-          user_id: string
-        }[]
-      }
-      get_secure_alerts: {
-        Args: never
-        Returns: {
-          acknowledged: boolean
-          acknowledged_at: string
-          acknowledged_by: string
-          alert_id: string
-          alert_type: string
-          created_at: string
-          message: string
-          patient_id: string
-          patient_name: string
-          priority: string
-          tenant_id: string
-          tenant_name: string
-        }[]
-      }
-      get_simulation_label_data: {
-        Args: { p_session_number: number; p_template_id: string }
-        Returns: Json
-      }
-      get_simulation_students: {
-        Args: { p_simulation_id: string }
-        Returns: {
-          email: string
-          first_name: string
-          granted_at: string
-          last_accessed_at: string
-          last_name: string
-          role: Database["public"]["Enums"]["simulation_role"]
-          student_number: string
-          user_id: string
-        }[]
-      }
-      get_super_admin_tenant_context: { Args: never; Returns: string }
       get_tenant_by_subdomain_public: {
         Args: { p_subdomain: string }
         Returns: {
@@ -5306,17 +5053,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_user_accessible_simulations: {
-        Args: { p_user_id: string }
-        Returns: {
-          access_reason: string
-          categories: string[]
-          simulation_id: string
-          simulation_name: string
-          template_id: string
-          template_name: string
-        }[]
-      }
       get_user_auth_status: {
         Args: { p_user_ids: string[] }
         Returns: {
@@ -5333,6 +5069,14 @@ export type Database = {
           tenant_id: string
         }[]
       }
+      get_user_institutions: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          institution_id: string
+          institution_name: string
+          user_id: string
+        }[]
+      }
       get_user_program_codes: { Args: { p_user_id: string }; Returns: string[] }
       get_user_program_tenants: {
         Args: { p_user_id: string }
@@ -5345,25 +5089,11 @@ export type Database = {
           tenant_name: string
         }[]
       }
-      get_user_role: { Args: { user_id: string }; Returns: string }
       get_user_simulation_assignments: {
         Args: { p_user_id: string }
         Returns: Json
       }
-      get_user_simulation_tenant_access: { Args: never; Returns: string }
-      instantiate_simulation_patients: {
-        Args: { p_scenario_template_id: string; p_simulation_id: string }
-        Returns: number
-      }
       institution_of_tenant: { Args: { p_tenant_id: string }; Returns: string }
-      is_admin_user: { Args: { user_id: string }; Returns: boolean }
-      is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
-      is_super_admin_direct: { Args: { user_uuid?: string }; Returns: boolean }
-      is_super_admin_user: { Args: { user_id: string }; Returns: boolean }
-      is_tenant_admin: {
-        Args: { tenant_uuid: string; user_uuid?: string }
-        Returns: boolean
-      }
       launch_simulation: {
         Args: {
           p_duration_minutes: number
@@ -5386,19 +5116,6 @@ export type Database = {
         Returns: Json
       }
       mark_welcome_seen: { Args: never; Returns: string }
-      move_patient_to_tenant:
-        | {
-            Args: { p_patient_id: string; p_target_tenant_id: string }
-            Returns: boolean
-          }
-        | {
-            Args: { p_source_patient_id: string; p_target_tenant_id: string }
-            Returns: {
-              patient_id: string
-              patient_identifier: string
-              records_updated: Json
-            }[]
-          }
       program_institution: { Args: { p_program_id: string }; Returns: string }
       reactivate_user: { Args: { target_user_id: string }; Returns: string }
       reassign_user_tenant: {
@@ -5406,10 +5123,6 @@ export type Database = {
         Returns: Json
       }
       refresh_user_tenant_cache: { Args: never; Returns: undefined }
-      remove_user_from_tenant: {
-        Args: { tenant_uuid: string; user_uuid: string }
-        Returns: boolean
-      }
       reset_simulation_for_next_session: {
         Args: { p_simulation_id: string; p_state_id?: string }
         Returns: Json
@@ -5461,57 +5174,10 @@ export type Database = {
         Args: { p_simulation_id: string }
         Returns: string
       }
+      start_simulation: { Args: { p_simulation_id: string }; Returns: Json }
       template_owner_institution: {
         Args: { p_template_id: string }
         Returns: string
-      }
-      update_medication_super_admin: {
-        Args: { p_medication_id: string; p_updates: Json }
-        Returns: {
-          admin_time: string | null
-          admin_times: Json | null
-          barcode: string | null
-          catalog_id: string | null
-          category: string | null
-          created_at: string | null
-          dosage: string
-          end_date: string | null
-          frequency: string
-          id: string
-          last_administered: string | null
-          name: string
-          next_due: string
-          patient_id: string | null
-          prescribed_by: string
-          release_after_minutes: number | null
-          route: string
-          sliding_scale: Json | null
-          start_date: string
-          status: string
-          tenant_id: string | null
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "patient_medications"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      update_simulation_categories: {
-        Args: {
-          p_primary_categories?: string[]
-          p_simulation_id: string
-          p_sub_categories?: string[]
-        }
-        Returns: boolean
-      }
-      update_simulation_history_categories: {
-        Args: {
-          p_primary_categories?: string[]
-          p_simulation_id: string
-          p_sub_categories?: string[]
-        }
-        Returns: boolean
       }
       update_template_state_snapshot: {
         Args: { p_state_id: string; p_template_id: string }
@@ -5531,32 +5197,12 @@ export type Database = {
         }
         Returns: Json
       }
-      user_has_patient_access: {
-        Args: { patient_tenant_id: string }
-        Returns: boolean
-      }
-      user_has_permission: {
-        Args: {
-          permission_name: string
-          tenant_uuid?: string
-          user_uuid: string
-        }
-        Returns: boolean
-      }
       user_has_program_access: {
         Args: { p_program_code: string; p_user_id: string }
         Returns: boolean
       }
-      user_has_tenant_access:
-        | { Args: never; Returns: boolean }
-        | { Args: { tenant_uuid: string; user_uuid: string }; Returns: boolean }
       user_institution_ids: { Args: { p_user_id: string }; Returns: string[] }
-      user_is_super_admin: { Args: { user_uuid: string }; Returns: boolean }
       user_may_join_tenant: { Args: { p_tenant_id: string }; Returns: boolean }
-      validate_subdomain: {
-        Args: { subdomain_input: string }
-        Returns: boolean
-      }
     }
     Enums: {
       ack_scope: "panel" | "result"
