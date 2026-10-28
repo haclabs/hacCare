@@ -4,7 +4,7 @@
  * Manages physician orders with role-based permissions:
  * - Admin/Super Admin/Coordinator: Full CRUD access
  * - Instructors: Full CRUD in template tenants; add + release delay in simulations
- * - Nurses: View, Add (Phone/Verbal orders), and Acknowledge
+ * - Nurses and students: View, Add (Phone/Verbal orders), and Acknowledge
  */
 
 import React, { useState, useEffect } from 'react';
@@ -252,7 +252,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors space-x-2"
         >
           <Plus className="h-4 w-4" />
-          <span>Add {currentUser.role === 'nurse' ? 'Phone/Verbal' : 'Order'}</span>
+          <span>Add {currentUser.role === 'nurse' || currentUser.role === 'student' ? 'Phone/Verbal' : 'Order'}</span>
         </button>
       </div>
 

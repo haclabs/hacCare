@@ -1,12 +1,31 @@
 # hacCare
 
-Stable v6.0.3
+Stable v6.0.4
 
 A multi-tenant healthcare simulation platform for clinical education. Built with React, TypeScript, and Supabase.
 
 ## Overview
 
 hacCare is a simulated Electronic Medical Record (EMR) system designed for healthcare education and clinical training. It provides realistic patient care workflows including barcode medication administration (BCMA), vital signs monitoring, clinical documentation, and simulation management with role-based access control.
+
+## What's New in 6.0.4
+
+- **Medication doctors' orders** — A doctor's order can be a medication order that adds the
+  medication to the MAR automatically. The order holds the ordered dose (e.g. 50 mg) while the MAR
+  keeps the label strength (e.g. 25 mg tablets), and the MAR and BCMA show the order next to the
+  medication so students work out the dose.
+- **Tablet counting on BCMA** — Oral tablets are given by count, with the total dose recorded.
+- **Ready to Start simulations** — Launch leaves a simulation Ready to Start; pressing Start moves
+  the chart forward to now and starts any timed orders. The instructor quick guide was rebuilt.
+- **Medication labels from the Patient Library** — Print medication labels straight from a patient
+  template.
+- **Institution-scoped access** — Templates, simulations, users and programs are confined to their
+  own institution, and every privileged database function checks its caller.
+- **Template editing improvements** — Instructors can delete handover notes, are warned before
+  leaving edit mode, and no longer get stuck in a template after editing; templates always keep
+  their program tag.
+- **Fixes** — Order dates no longer show a day early, time fields accept "20:00", students take
+  phone/verbal orders like nurses, and a patient chart no longer opens outside its workspace.
 
 ## What's New in 6.0.3
 
@@ -111,6 +130,18 @@ hacCare is a simulated Electronic Medical Record (EMR) system designed for healt
 - **rollup-plugin-visualizer 7.1** for bundle analysis (`npm run build -- --analyze`)
 
 ## Version History
+
+### 6.0.4 (Stable — October 2026)
+- Medication doctors' orders linked to the MAR (ordered dose vs. label strength)
+- BCMA tablet count with total dose for oral medications
+- Simulations launch as Ready to Start; Start moves the chart forward to now
+- Medication label printing from the Patient Library
+- Data scoped to its owning institution; access guards on privileged database functions
+- Template editing fixes: handover note deletion, leave-edit warning, program tag, stuck tenants
+- Required simulation names, named multi-room launches and renaming
+- Order date, time input and release-hint fixes; students take phone/verbal orders
+- Patient charts blocked outside their workspace
+- Repository security hardening and Node.js 22.23.4
 
 ### 6.0.3 (Stable — October 2026)
 - Timed doctors' orders and medications that release partway through a simulation
