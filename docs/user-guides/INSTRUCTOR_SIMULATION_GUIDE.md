@@ -124,8 +124,8 @@ Launch creates a live simulation session that students can access.
 
 - New tenant environment is created with clean patient data
 - Baseline data from snapshot is loaded
-- Timer starts counting down from specified duration
-- Students can now log in and begin clinical activities
+- The simulation appears on the Active tab as **Ready to Start** (timer not running, hidden from students)
+- Press **Start** (▶) when students are ready; the timer begins and students can log in and begin clinical activities
 - All student actions are tracked for the debrief report
 
 **[SCREENSHOT PLACEHOLDER: Launch simulation form with settings]**

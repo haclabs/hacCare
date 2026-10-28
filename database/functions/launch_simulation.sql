@@ -6,6 +6,8 @@
 -- Re-bases the snapshot's wall-clock timestamps (I&O/vitals/orders/meds/etc.,
 -- via shift_snapshot_timestamps()) to land relative to the launch instant
 -- instead of showing whenever the template/state was originally saved.
+-- Lands as 'pending' (Ready to Start) with no clock, like a reset; the
+-- instructor's Start sets starts_at/ends_at (20261028003335).
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.launch_simulation(
@@ -148,10 +150,10 @@ BEGIN
     p_template_id,
     p_name,
     p_duration_minutes,
-    NOW(),
-    NOW() + (p_duration_minutes || ' minutes')::INTERVAL,
+    NULL,  -- clock starts when the instructor presses Start, same as after a reset
+    NULL,
     auth.uid(),
-    'running',
+    'pending',
     v_template_snapshot_version,
     v_template_snapshot_version,  -- Launched at current template version
     p_primary_categories,
@@ -215,7 +217,7 @@ BEGIN
   RETURN QUERY SELECT 
     v_simulation_id AS simulation_id,
     v_simulation_tenant_id AS tenant_id,
-    format('Simulation "%s" launched successfully with %s patients', p_name, v_patient_count) AS message;
+    format('Simulation "%s" launched with %s patients - ready to start', p_name, v_patient_count) AS message;
 END;
 $$;
 

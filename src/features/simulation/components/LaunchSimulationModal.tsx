@@ -507,7 +507,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
                   <ul className="list-disc list-inside mt-1 space-y-1">
                     <li>Create a new simulation tenant with template snapshot data</li>
                     <li>Grant selected participants access to the simulation</li>
-                    <li>Start the simulation timer based on duration selected</li>
+                    <li>Add it to Active Simulations as <strong>Ready to Start</strong>. The timer begins when you press Start</li>
                   </ul>
                 </div>
               </div>

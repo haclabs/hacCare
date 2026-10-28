@@ -390,8 +390,8 @@ const SimulationGuide: React.FC = () => {
               <ul className="text-sm text-green-900 dark:text-green-100 space-y-1">
                 <li>• New tenant environment is created with clean patient data</li>
                 <li>• Baseline data from snapshot is loaded</li>
-                <li>• Timer starts counting down from specified duration</li>
-                <li>• Students can now log in and begin clinical activities</li>
+                <li>• The simulation appears on the Active tab as <strong>Ready to Start</strong> (timer not running)</li>
+                <li>• Press <strong>Start</strong> (▶) when students are ready; the timer begins and students can see it</li>
                 <li>• All student actions are tracked for the debrief report</li>
               </ul>
             </div>

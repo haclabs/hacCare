@@ -124,10 +124,10 @@ The sidebar has the same destinations as **Sim Templates**, **Active Sims**, **D
 A template is a complete practice hospital with your patients in it. You enter the chart once (history, medications, orders, labs, vitals, wounds, devices) and save a snapshot. The snapshot is the frozen starting point.
 
 ## 2. Launch it
-Launching creates a fresh, private copy of the template for one class session. The original template is untouched, so you can launch the same scenario as often as you like. The clock starts as soon as you launch.
+Launching creates a fresh, private copy of the template for one class session. The original template is untouched, so you can launch the same scenario as often as you like. A launched simulation is **Ready to Start**: students can't see it and the clock doesn't run until you press **Play**.
 
 ## 3. Students work
-Students chart, scan and give medications inside their copy. Their work never touches your template.
+Press **Play** when students are ready. Students chart, scan and give medications inside their copy. Their work never touches your template.
 
 ## 4. Complete, then reset
 - **Complete** ends the session and creates the debrief report.
@@ -329,10 +329,10 @@ Click the pencil next to the simulation's name, type the new name, and press Ent
 - **Delete**: permanently remove the simulation and its auto-generated logins
 
 ## The session cycle
-1. **Launch**: the simulation is running and the clock has started.
-2. **Complete**: enter your name. If hacCare finds charting but no Student Name on any of it, it asks you who did the work (or lets you skip). A summary appears and the card shows **Needs Reset**.
-3. **Reset**: pick a named state if you want one, then click **Reset Anyway**. Student work is cleared, labels keep working, and the card shows **Ready to Start**.
-4. **Play**: the next group begins. The clock and any timed orders and medications restart from this moment.
+1. **Launch**: the card shows **Ready to Start**. The clock isn't running and students can't see the simulation yet.
+2. **Play**: the group begins. The clock and any timed orders and medications start from this moment.
+3. **Complete**: enter your name. If hacCare finds charting but no Student Name on any of it, it asks you who did the work (or lets you skip). A summary appears and the card shows **Needs Reset**.
+4. **Reset**: pick a named state if you want one, then click **Reset Anyway**. Student work is cleared, labels keep working, and the card shows **Ready to Start**. Press **Play** for the next group.
 
 >! Reset permanently deletes everything students entered. If you haven't clicked Complete first, that group's work is gone and won't appear in Debrief Reports.
 
@@ -445,10 +445,9 @@ Both the order form and the medication form have a purple box: **Show to student
 Only instructors, coordinators and admins see the box, and only in a template or a simulation.
 
 ## When does the countdown start?
-- **First group**: at **Launch**. A launched simulation is already running.
-- **After a reset**: when you press **Play**. Reset stops the clock, so every group gets the same timing.
+Every group, including the first, starts when you press **Play**. A launched or reset simulation waits at **Ready to Start** with the clock stopped, so every group gets the same timing.
 
->! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then reset and press Play, a 30-minute item appears 30 minutes after Play.
+>! The delay is counted from the simulation clock, not the time of day. If you launch, wait 20 minutes, then press Play, a 30-minute item appears 30 minutes after Play.
 
 ## Who sees what
 Students never see a held item anywhere in the chart. Instructors, coordinators and admins always see it, with a purple badge:
@@ -665,7 +664,7 @@ Other fixed intervals block for three-quarters of the interval. PRN medications 
 BCMA also warns if a dose is given more than 30 minutes before it's due.
 
 ## In a simulation
-Timing only counts doses given in the current session. The first dose after Launch, or after Play following a reset, is never blocked by a previous group's doses.
+Timing only counts doses given in the current session. The first dose after Play, whether on a fresh launch or after a reset, is never blocked by a previous group's doses.
 
 If a dose really is needed, the student can **Override** with a reason. The override is shown in the debrief.
 
