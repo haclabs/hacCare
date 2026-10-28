@@ -68,8 +68,8 @@ The Simulation System v2.0 allows instructors to create reusable simulation temp
 - A new simulation tenant is created
 - All snapshot data is restored to this new tenant
 - Selected participants are granted access
-- Simulation timer starts
-- Participants can log in and work with the simulation data
+- Simulation appears as **Ready to Start**; the timer starts when you press **Start** (▶)
+- Participants can log in and work with the simulation data once it is started
 
 ---
 

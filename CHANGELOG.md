@@ -7,6 +7,27 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - SIMULATIONS LAUNCH AS "READY TO START"
+===============================================================================
+
+* Launching a simulation no longer starts it. The card shows "Ready to
+  Start" and the timer, timed-release orders/medications and student
+  visibility all begin when the instructor presses Start, the same as
+  after a reset, so every group, including the first, gets identical timing
+  (migration 20261028003335_launch_simulation_as_ready_to_start)
+* Simulations waiting to start show "N minutes · not started" instead of
+  "Time expired"
+* Launch dialog, Instructor Guide tab, Knowledge Base and user guides
+  updated to match
+* Active Simulations "Instructor Quick Guide" sidebar rebuilt as a
+  before-class / every-group checklist: print labels, print the
+  medication list and check stock, hand out student logins (and remind
+  students to enter their name), Play, Complete, Reset and restock. Adds
+  notes on expired timers, Template Updated and what Delete costs (new
+  bracelet barcodes, logins removed). Removed the "Timer Colors" legend,
+  which described colours the card never showed
+
+===============================================================================
 [Unreleased] - 2026-10-27 - PATIENT LIBRARY: PRINT MEDICATION LABELS
 
 * Each Patient Library template has a "Med Labels" button that prints one

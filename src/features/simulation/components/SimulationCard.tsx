@@ -122,9 +122,11 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               <span>
-                {(sim.time_remaining_minutes ?? 0) > 0
-                  ? `${sim.time_remaining_minutes} minutes left`
-                  : 'Time expired'}
+                {!sim.ends_at
+                  ? `${sim.duration_minutes} minutes · not started`
+                  : (sim.time_remaining_minutes ?? 0) > 0
+                    ? `${sim.time_remaining_minutes} minutes left`
+                    : 'Time expired'}
               </span>
             </div>
             {sim.starts_at && (
