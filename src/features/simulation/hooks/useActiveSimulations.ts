@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getActiveSimulations, updateSimulationStatus, renameSimulation, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
+import { getActiveSimulations, startSimulation, renameSimulation, resetSimulationForNextSession, resetSimulationWithTemplateUpdates, compareSimulationTemplatePatients, completeSimulation, deleteSimulation, getTemplateStates } from '../../../services/simulation/simulationService';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { supabase } from '../../../lib/api/supabase';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
@@ -90,6 +90,7 @@ export function useActiveSimulations() {
         await updateSimulationStatus(id, 'running');
       }
 
+      await startSimulation(id);
       await loadSimulations();
     } catch (error) {
       secureLogger.error('❌ Error starting simulation:', error);

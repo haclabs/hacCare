@@ -7,6 +7,19 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - START MOVES THE CHART TO "NOW"
+
+* Pressing Start shifts the simulation's chart forward by however long it
+  waited at Ready to Start (vitals, I&O, lab and order times, medication
+  due times, ...), the same re-basing Launch and Reset do. Launching the
+  night before no longer shows the morning group yesterday's vitals and
+  overdue medications
+* New start_simulation() RPC (access-guarded) replaces the client-side
+  status update; simulation_active.ready_at records when the simulation
+  last became Ready to Start, stamped by a trigger on launch and reset
+  (migration 20261028013445_start_simulation_rebases_chart)
+* Removed the now-unused updateSimulationStatus() service helper
+
 [Unreleased] - 2026-10-28 - ACTIVE SIMULATION CARD & DEBRIEF FIXES
 ===============================================================================
 

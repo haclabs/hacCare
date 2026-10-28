@@ -5,7 +5,6 @@
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
 import type {
-  SimulationActive,
   SimulationActiveWithDetails,
   LaunchSimulationParams,
   SimulationFunctionResult,
@@ -198,19 +197,14 @@ export async function getUserAccessibleSimulations(): Promise<SimulationActiveWi
 /**
  * Update simulation status
  */
-export async function updateSimulationStatus(
-  simulationId: string,
-  status: SimulationActive['status']
-): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('simulation_active')
-      .update({ status })
-      .eq('id', simulationId);
-
-    if (error) throw error;
-  } catch (error: unknown) {
-    secureLogger.error('Error updating simulation status:', error);
+/**
+ * Start (Ready to Start → running). The RPC first shifts the chart's timestamps forward by the time
+ * the simulation waited since launch/reset, so the group starts on a chart that is current.
+ */
+export async function startSimulation(simulationId: string): Promise<void> {
+  const { error } = await supabase.rpc('start_simulation', { p_simulation_id: simulationId });
+  if (error) {
+    secureLogger.error('Error starting simulation:', error);
     throw error;
   }
 }
