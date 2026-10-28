@@ -7,6 +7,17 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - SECURITY: SUPER-ADMIN USER RPCs
+===============================================================================
+
+* confirm_user_email and delete_user_permanently checked the caller with
+  role != 'super_admin', which is NULL (and let the call through) for a
+  signed-in account with no user_profiles row. Both now start with the
+  standard access guard, which requires an active super_admin profile
+  (migration 20261028020953_guard_super_admin_user_rpcs, already applied)
+* Both added to the access-guard check in verify_rls_isolation.sql
+
+===============================================================================
 [Unreleased] - 2026-10-28 - START MOVES THE CHART TO "NOW"
 ===============================================================================
 
