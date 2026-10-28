@@ -7,6 +7,42 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - FEATURE: MEDICATION DOCTORS' ORDERS ON THE MAR
+===============================================================================
+
+* Doctors' orders gain a General / Medication toggle (all roles, including
+  nurses' phone/verbal orders). A medication order uses the MAR catalog
+  picker and schedule fields, adds the medication to the MAR when saved,
+  and pre-fills the order text from it ("Metoprolol 25 mg Oral — 2 times
+  daily (08:00, 20:00)") for the instructor to extend with hold parameters
+* The order keeps its own ordered dose (doctors_orders.ordered_dose,
+  migration 20261028200407_add_doctors_orders_ordered_dose, applied) while
+  the MAR entry holds the label strength, filled from the catalog (e.g.
+  ordered 50 mg, label 25 mg per tablet) — students work out the tablet
+  count at BCMA
+* The MAR row and the BCMA screen show the linked doctor's order (text,
+  notes, ordering doctor, date/time); the orders list marks them
+  "Medication order · on MAR"
+* Editing a medication order updates its MAR entry (re-adding it if it was
+  removed); deleting the order deletes the MAR entry and its
+  administrations. The release delay applies to both
+* Order and medication share a new order_link_key column rather than a
+  foreign key, so the pair survives launch, both resets and template
+  states, which all regenerate ids. reset_simulation_with_template_updates
+  is patched in place to copy it (migration
+  20261028195855_link_medication_orders_to_mar, applied)
+* The MAR-side order_link_key index is non-unique (migration
+  20261028201119_relax_medication_order_link_key_index, applied): reset with
+  template updates inserts an edited medication before deleting the old
+  one, and a unique index made that insert fail so the medication vanished
+* MAR medications now load admin_time / admin_times, and new medications
+  save admin_times — multi-dose schedules were previously dropped on create
+  and shown as defaults in the edit form
+* AddMedicationForm split into useMedicationEntryForm + MedicationEntryFields
+  (shared with the order form), and the duplicated TimeInput extracted;
+  the order form moved out of DoctorsOrders.tsx into DoctorsOrderForm.tsx
+
+===============================================================================
 [Unreleased] - 2026-10-28 - CLEANUP: UNUSED DATABASE FUNCTIONS & DEAD CODE
 ===============================================================================
 

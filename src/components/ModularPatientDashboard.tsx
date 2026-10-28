@@ -97,7 +97,11 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
   const [showQuickIntro, setShowQuickIntro] = useState(false);
 
   // ─── Refresh handlers ──────────────────────────────────────────────────────
-  const handleOrdersChange = () => setOrdersRefreshTrigger((prev) => prev + 1);
+  const handleOrdersChange = () => {
+    setOrdersRefreshTrigger((prev) => prev + 1);
+    // Medication orders add/update/remove MAR entries, which ride on the patient query
+    invalidatePatient();
+  };
   const handleLabsChange = () => invalidateLabsCount();
   const handleHandoverRefresh = () => {
     invalidateHandoverCount();

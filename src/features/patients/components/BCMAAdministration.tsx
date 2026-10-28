@@ -16,10 +16,14 @@ import { SlidingScaleTable } from './mar/SlidingScaleTable';
 import { findScaleRowIndex, formatScaleResult } from '../utils/slidingScale';
 import { formatTabletDose, isOralTabletMedication, isValidTabletCount, parseTabletStrength } from '../utils/tabletDose';
 import { TabletCountField } from './mar/TabletCountField';
+import { LinkedOrderNote } from './mar/LinkedOrderNote';
+import type { LinkedMedicationOrder } from '../../../services/clinical/medicationOrderService';
 
 interface BCMAAdministrationProps {
   patient: Patient;
   medication: Medication;
+  /** The doctors' order this MAR entry was created from, if any */
+  linkedOrder?: LinkedMedicationOrder | null;
   currentUser: {
     id: string;
     name: string;
@@ -34,6 +38,7 @@ interface BCMAAdministrationProps {
 export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   patient,
   medication,
+  linkedOrder = null,
   currentUser,
   onAdministrationComplete,
   onCancel,
@@ -448,6 +453,11 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                   </div>
                 )}
               </div>
+              {linkedOrder && (
+                <div className="mt-3">
+                  <LinkedOrderNote order={linkedOrder} compact />
+                </div>
+              )}
             </div>
 
             {/* Checklist — scan steps */}
