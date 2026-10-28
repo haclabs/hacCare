@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, KeyRound } from 'lucide-react';
+import { X, KeyRound, Copy, Check } from 'lucide-react';
 import { getSimulationAutoStudents, type SimulationAutoStudent } from '../../../services/simulation/autoStudentService';
 import { secureLogger } from '../../../lib/security/secureLogger';
 
@@ -27,6 +27,21 @@ export const SimulationAutoStudentsModal: React.FC<SimulationAutoStudentsModalPr
   const [students, setStudents] = useState<SimulationAutoStudent[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyAll = async () => {
+    if (!students?.length) return;
+    const text = students
+      .map(s => `${s.label || s.student_number}\nEmail: ${s.email}\nPassword: ${s.temp_password}\nStudent #: ${s.student_number}`)
+      .join('\n\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API may be unavailable (e.g. insecure context) — credentials are still visible on screen.
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -50,7 +65,7 @@ export const SimulationAutoStudentsModal: React.FC<SimulationAutoStudentsModalPr
               <KeyRound className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Auto-Generated Logins</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Student Logins</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">{simulationName}</p>
             </div>
           </div>
@@ -78,6 +93,16 @@ export const SimulationAutoStudentsModal: React.FC<SimulationAutoStudentsModalPr
               <p className="text-sm font-mono text-slate-800 dark:text-slate-200">{s.temp_password}</p>
             </div>
           ))}
+          {!!students?.length && (
+            <button
+              type="button"
+              onClick={handleCopyAll}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Copied!' : 'Copy All'}
+            </button>
+          )}
         </div>
       </div>
     </div>

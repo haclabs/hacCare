@@ -7,6 +7,32 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-28 - ACTIVE SIMULATION CARD & DEBRIEF FIXES
+===============================================================================
+
+* Start, Complete and Reset keep fixed positions on the card and grey out
+  when they don't apply, so a double-click can't hit the next state's
+  button. Start only works on Ready to Start (pressing it on a Needs Reset
+  card started the next group on the last group's charting), and Reset
+  only after Complete
+* Debrief duration shows how long the session actually ran instead of the
+  planned length; completed cards say "Completed" instead of counting down
+* Reset dialog after Complete confirms the debrief is saved and offers a
+  plain Reset; the red "Reset Anyway" warning is kept for un-completed sims
+  (extracted to ResetSimulationModal)
+* One name for the start button ("Start") across the card, legend, Quick
+  Guide, launch dialog, Knowledge Base and guides; raw "pending" status
+  badge removed; status panel no longer calls Ready to Start "Not yet
+  launched"
+* Removed the Debrief Reports notice claiming reports auto-archive after
+  24 hours (that feature doesn't exist)
+* Wording: "Debrief saved" instead of "Simulation archived successfully";
+  no "tenant" jargon in the launch/create dialogs; logins referred to by
+  the key icon (View Student Logins); Copy All added to the logins box
+* SimulationHistory type corrected to the table's started_at/ended_at
+  columns
+
+===============================================================================
 [Unreleased] - 2026-10-28 - SIMULATIONS LAUNCH AS "READY TO START"
 ===============================================================================
 
@@ -22,7 +48,7 @@ documented in this file.
 * Active Simulations "Instructor Quick Guide" sidebar rebuilt as a
   before-class / every-group checklist: print labels, print the
   medication list and check stock, hand out student logins (and remind
-  students to enter their name), Play, Complete, Reset and restock. Adds
+  students to enter their name), Start, Complete, Reset and restock. Adds
   notes on expired timers, Template Updated and what Delete costs (new
   bracelet barcodes, logins removed). Removed the "Timer Colors" legend,
   which described colours the card never showed

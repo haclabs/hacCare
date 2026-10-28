@@ -22,7 +22,7 @@ const STATUS_BADGE: Record<string, string> = {
  * login is a disposable "simulation-only" account auto-generated from the
  * "auto-generate student" checkbox on Launch Simulation. This page just lets
  * an instructor look up which simulation an account belongs to and reveal
- * its password again (same info shown by the "Logins" button on Active
+ * its password again (same info shown by the key icon, View Student Logins, on Active
  * Simulations), rather than offering roster CRUD that would never be used.
  */
 export const ProgramStudents: React.FC = () => {

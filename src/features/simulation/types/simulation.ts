@@ -67,8 +67,8 @@ export interface SimulationHistory {
   tenant_id: string;
   status: SimulationActiveStatus;
   duration_minutes: number;
-  starts_at: string;
-  ends_at: string;
+  started_at: string | null;
+  ended_at: string | null;
   completed_at: string | null;
   template_snapshot_version: number;
   created_by: string;

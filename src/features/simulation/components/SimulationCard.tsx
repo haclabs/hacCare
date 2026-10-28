@@ -49,17 +49,17 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
         <div className="flex-1">
           <div className="flex items-center gap-2.5 mb-2">
             <SimulationNameEditor name={sim.name} onRename={(name) => onRename(sim.id, name)} />
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-              sim.status === 'running'
-                ? 'bg-green-100 text-green-700'
-                : sim.status === 'paused'
-                ? 'bg-yellow-100 text-yellow-700'
-                : sim.status === 'pending'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {sim.status}
-            </span>
+            {/* Ready to Start / Needs Reset badges below cover pending and completed */}
+            {sim.status === 'running' && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">
+                Running
+              </span>
+            )}
+            {sim.status === 'paused' && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-yellow-100 text-yellow-700">
+                Paused
+              </span>
+            )}
             {sim.status === 'completed' && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700 flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
@@ -122,11 +122,13 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               <span>
-                {!sim.ends_at
-                  ? `${sim.duration_minutes} minutes · not started`
-                  : (sim.time_remaining_minutes ?? 0) > 0
-                    ? `${sim.time_remaining_minutes} minutes left`
-                    : 'Time expired'}
+                {sim.status === 'completed'
+                  ? 'Completed'
+                  : !sim.ends_at
+                    ? `${sim.duration_minutes} minutes · not started`
+                    : (sim.time_remaining_minutes ?? 0) > 0
+                      ? `${sim.time_remaining_minutes} minutes left`
+                      : 'Time expired'}
               </span>
             </div>
             {sim.starts_at && (
@@ -174,40 +176,47 @@ export const SimulationCard: React.FC<SimulationCardProps> = ({
           <button
             onClick={() => onViewLogins(sim)}
             className="p-1.5 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors"
-            title="View auto-generated student logins"
+            title="View Student Logins"
           >
             <KeyRound className="h-4 w-4" />
           </button>
-          {sim.status !== 'running' && (
-            <button
-              onClick={() => onStart(sim.id)}
-              disabled={actionLoading === sim.id}
-              className="p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50"
-              title="Start simulation"
-            >
-              <Play className="h-4 w-4" />
-            </button>
-          )}
-          {(sim.status === 'running' || sim.status === 'paused' || sim.status === 'completed') && (
-            <button
-              onClick={() => onReset(sim.id)}
-              disabled={actionLoading === sim.id}
-              className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
-              title="Reset simulation data and set to ready state"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          )}
-          {(sim.status === 'running' || sim.status === 'paused') && (
-            <button
-              onClick={() => onComplete(sim)}
-              disabled={actionLoading === sim.id}
-              className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors disabled:opacity-50"
-              title="Complete simulation and create debrief"
-            >
-              <CheckCircle className="h-4 w-4" />
-            </button>
-          )}
+          {/* Start / Complete / Reset keep fixed positions and grey out when they don't apply,
+              so a double-click never lands on the next state's button. */}
+          {(() => {
+            const busy = actionLoading === sim.id;
+            const canStart = sim.status === 'pending' || sim.status === 'paused';
+            const canComplete = sim.status === 'running' || sim.status === 'paused';
+            const canReset = sim.status === 'completed';
+            const off = 'disabled:opacity-30 disabled:cursor-not-allowed';
+            return (
+              <>
+                <button
+                  onClick={() => onStart(sim.id)}
+                  disabled={busy || !canStart}
+                  className={`p-1.5 rounded-lg bg-green-50 text-green-600 enabled:hover:bg-green-100 transition-colors ${off}`}
+                  title={canStart ? 'Start simulation' : sim.status === 'completed' ? 'Reset before starting the next group' : 'Already running'}
+                >
+                  <Play className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onComplete(sim)}
+                  disabled={busy || !canComplete}
+                  className={`p-1.5 rounded-lg bg-emerald-50 text-emerald-600 enabled:hover:bg-emerald-100 transition-colors ${off}`}
+                  title={canComplete ? 'Complete simulation and save the debrief' : sim.status === 'completed' ? 'Already completed' : 'Start the simulation first'}
+                >
+                  <CheckCircle className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onReset(sim.id)}
+                  disabled={busy || !canReset}
+                  className={`p-1.5 rounded-lg bg-blue-50 text-blue-600 enabled:hover:bg-blue-100 transition-colors ${off}`}
+                  title={canReset ? 'Reset for the next group' : sim.status === 'pending' ? 'Already ready to start' : 'Complete the simulation before resetting'}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              </>
+            );
+          })()}
           <button
             onClick={() => onDelete(sim.id)}
             disabled={actionLoading === sim.id}

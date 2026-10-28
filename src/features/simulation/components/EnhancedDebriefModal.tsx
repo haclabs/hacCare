@@ -9,7 +9,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Download, Clock, Users, Activity, TrendingUp, CheckCircle, AlertCircle, BarChart3, Award } from 'lucide-react';
-import { format, differenceInMinutes } from 'date-fns';
+import { format } from 'date-fns';
+import { formatSessionDuration } from '../utils/formatSessionDuration';
 import { getStudentActivitiesBySimulation, type StudentActivity } from '../../../services/simulation/studentActivityService';
 import { generateStudentActivityPDF } from '../../../utils/reactPdfGenerator';
 import type { Database } from '../../../types/supabase';
@@ -192,28 +193,8 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
     };
   };
 
-  const calculateDuration = () => {
-    // Try different field name combinations for start/end times
-    const startTime = historyRecord.started_at || historyRecord.created_at;
-    const endTime = historyRecord.completed_at || historyRecord.created_at;
-    
-    // If we have duration_minutes field, use that
-    if (historyRecord.duration_minutes) {
-      const hours = Math.floor(historyRecord.duration_minutes / 60);
-      const mins = historyRecord.duration_minutes % 60;
-      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-    }
-    
-    // Otherwise calculate from timestamps
-    if (!startTime || !endTime) return 'N/A';
-    const minutes = differenceInMinutes(
-      new Date(endTime),
-      new Date(startTime)
-    );
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
+  const calculateDuration = () =>
+    formatSessionDuration(historyRecord.started_at, historyRecord.completed_at, historyRecord.duration_minutes);
 
   const buildPdfData = () => ({
     simulationName: historyRecord.name,

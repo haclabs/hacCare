@@ -83,7 +83,7 @@ The Simulation System v2.0 allows instructors to create reusable simulation temp
 ### Simulation Status
 - **🟡 pending** - Created but not started
 - **🟢 running** - Currently active
-- **🟠 paused** - Legacy status; pausing was removed (Play returns these to running)
+- **🟠 paused** - Legacy status; pausing was removed (Start returns these to running)
 - **✅ completed** - Finished successfully
 - **⏱️ expired** - Time limit reached
 - **❌ cancelled** - Manually stopped
@@ -114,7 +114,7 @@ The Simulation System v2.0 allows instructors to create reusable simulation temp
 
 ### 💡 Duration Management
 - Set realistic durations for your scenarios
-- Simulations cannot be paused; the timer runs from Play until Complete or Reset
+- Simulations cannot be paused; the timer runs from Start until Complete or Reset
 - Expired simulations are automatically archived
 
 ### 💡 Data Isolation

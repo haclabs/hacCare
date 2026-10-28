@@ -390,7 +390,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
 
   // Auto-generated students were created and the simulation launched — show
   // their logins once now, and let the user look them up again later via the
-  // simulation card's "Logins" button.
+  // simulation card's key icon (View Student Logins).
   if (generatedCredentials) {
     const handleCopyAll = async () => {
       const text = generatedCredentials
@@ -417,7 +417,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
 
           <div className="p-6 space-y-4">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Hand these logins to the student(s) at the workstation. You can view them again later from this simulation's "Logins" button.
+              Hand these logins to the student(s) at the workstation. You can view them again later from the key icon (View Student Logins) on this simulation&apos;s card.
             </p>
 
             {generatedCredentials.map((c) => (
@@ -505,7 +505,7 @@ const LaunchSimulationModal: React.FC<LaunchSimulationModalProps> = ({
                 <div className="text-sm text-green-900 dark:text-green-100">
                   <strong>Launching will:</strong>
                   <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Create a new simulation tenant with template snapshot data</li>
+                    <li>Create a fresh copy of this template for your class</li>
                     <li>Grant selected participants access to the simulation</li>
                     <li>Add it to Active Simulations as <strong>Ready to Start</strong>. The timer begins when you press Start</li>
                   </ul>
