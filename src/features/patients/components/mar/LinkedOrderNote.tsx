@@ -3,6 +3,7 @@ import { FileText } from 'lucide-react';
 
 import type { LinkedMedicationOrder } from '../../../../services/clinical/medicationOrderService';
 import { stripDoctorTitle } from '../../utils/doctorName';
+import { formatLocalDate } from '../../utils/localDate';
 
 interface LinkedOrderNoteProps {
   order: LinkedMedicationOrder;
@@ -22,7 +23,7 @@ export const LinkedOrderNote: React.FC<LinkedOrderNoteProps> = ({ order, compact
     {order.notes && <p className="mt-1 text-xs text-gray-600">Notes: {order.notes}</p>}
     <p className="mt-1 text-xs text-blue-700">
       Dr. {stripDoctorTitle(order.ordering_doctor)} · {order.order_type} ·{' '}
-      {new Date(`${order.order_date}T00:00:00`).toLocaleDateString()} {order.order_time.slice(0, 5)}
+      {formatLocalDate(order.order_date)} {order.order_time.slice(0, 5)}
     </p>
   </div>
 );

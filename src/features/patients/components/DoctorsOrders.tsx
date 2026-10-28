@@ -21,6 +21,7 @@ import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStart
 import { ReleaseDelayBadge } from './DoctorsOrderRelease';
 import { DoctorsOrderForm } from './DoctorsOrderForm';
 import { stripDoctorTitle } from '../utils/doctorName';
+import { formatLocalDate } from '../utils/localDate';
 import { queryKeys } from '../../../lib/api/queryClient';
 import { canManageMedicationOrders } from './mar/medicationPermissions';
 
@@ -311,7 +312,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                         <div className="flex items-center space-x-2">
                           <Clock className="h-4 w-4 text-gray-500" />
                           <span className="text-sm font-medium text-gray-900">
-                            {new Date(order.order_date).toLocaleDateString()} at {order.order_time}
+                            {formatLocalDate(order.order_date)} at {order.order_time}
                           </span>
                         </div>
                         

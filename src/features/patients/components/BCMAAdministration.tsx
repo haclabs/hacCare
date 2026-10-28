@@ -439,7 +439,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500">Label concentration</span>
+                  <span className="text-slate-500">Label strength</span>
                   <span className="font-semibold text-slate-800">{medication.dosage}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
@@ -588,7 +588,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                       Medication Drawn Up / Administered <span className="text-red-500">*</span>
                     </label>
-                    <p className="text-xs text-slate-400 mb-2">Dose: <span className="font-semibold text-slate-600">{medication.dosage}</span></p>
+                    <p className="text-xs text-slate-400 mb-2">Label strength: <span className="font-semibold text-slate-600">{medication.dosage}</span></p>
                     <input
                       type="text"
                       value={administeredDose}
@@ -764,7 +764,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                       <span className="font-semibold text-slate-800">{medication.name}</span>
                     </div>
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Label concentration</span>
+                      <span className="text-slate-500">Label strength</span>
                       <span className="font-semibold text-slate-800">{medication.dosage}</span>
                     </div>
                     {recordedDose && (

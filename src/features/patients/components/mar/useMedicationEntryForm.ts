@@ -12,6 +12,7 @@ import {
   normalizeRoute,
 } from '../../utils/medicationFormOptions';
 import { calculateNextDue } from './medicationSchedule';
+import { todayLocalISODate } from '../../utils/localDate';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 export interface MedicationEntryState {
@@ -56,7 +57,7 @@ function blankState(): MedicationEntryState {
     frequency: '1 time daily',
     admin_time: '08:00',
     admin_times: ['08:00'],
-    start_date: new Date().toISOString().split('T')[0],
+    start_date: todayLocalISODate(),
     end_date: '',
     catalog_id: null,
     barcode: generateFreeEntryBarcode(''),
