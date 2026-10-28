@@ -14,6 +14,7 @@ import { AddMedicationForm } from './AddMedicationForm';
 import { EditMedicationForm } from './EditMedicationForm';
 import { MedicationAdministrationGrid } from './MedicationAdministrationGrid';
 import { useSimulationStartsAt } from '../../../simulation/hooks/useSimulationStartsAt';
+import { useLinkedMedicationOrders } from '../../hooks/useLinkedMedicationOrders';
 
 const STAFF_ROLES = ['super_admin', 'coordinator', 'admin', 'instructor'];
 // Held medications are released by the database clock; students' screens pick them up on this cadence.
@@ -76,6 +77,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
   const bcma = useBCMA();
 
   const { isSimulationTenant } = useSimulationStartsAt();
+  const { ordersByKey } = useLinkedMedicationOrders(patient.id, isSimulationTenant);
   const isTemplateTenant =
     currentTenant?.tenant_type === 'simulation_template' ||
     currentTenant?.tenant_type === 'patient_template';
@@ -259,6 +261,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
         <MedicationAdministrationGrid
           patient={patient}
           medications={medications}
+          ordersByKey={ordersByKey}
           currentUser={currentUser}
           onMedicationUpdate={onMedicationUpdate}
           onAddClick={() => setShowAddMedication(true)}
@@ -316,6 +319,11 @@ export const MARModule: React.FC<MARModuleProps> = ({
         <BCMAAdministration
           patient={patient}
           medication={bcma.state.currentMedication}
+          linkedOrder={
+            bcma.state.currentMedication.order_link_key
+              ? ordersByKey.get(bcma.state.currentMedication.order_link_key) ?? null
+              : null
+          }
           currentUser={currentUser || { id: 'system', name: 'System User', role: 'nurse' }}
           onAdministrationComplete={handleBCMAComplete}
           onCancel={() => bcma.cancelBCMAProcess()}

@@ -19,10 +19,14 @@ import { ReleaseDelayBadge } from '../DoctorsOrderRelease';
 import { useSimulationStartsAt } from '../../../simulation/hooks/useSimulationStartsAt';
 import { formatLocalTime } from '../../../../utils/time';
 import { secureLogger } from '../../../../lib/security/secureLogger';
+import type { LinkedMedicationOrder } from '../../../../services/clinical/medicationOrderService';
+import { LinkedOrderNote } from './LinkedOrderNote';
 
 interface MedicationAdministrationGridProps {
   patient: Patient;
   medications: Medication[];
+  /** Medication doctors' orders by order_link_key */
+  ordersByKey?: Map<string, LinkedMedicationOrder>;
   currentUser?: { id: string; name: string; role: string };
   onMedicationUpdate: (medications: Medication[]) => void | Promise<void>;
   onAddClick: () => void;
@@ -78,6 +82,7 @@ const categoryInfo = {
 export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGridProps> = ({
   patient,
   medications,
+  ordersByKey,
   currentUser,
   onMedicationUpdate,
   onAddClick,
@@ -141,6 +146,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     const isDue = medication.next_due && new Date(medication.next_due) <= new Date();
     const shouldAlert =
       category === 'scheduled' || category === 'continuous' || category === 'diabetic';
+    const linkedOrder = medication.order_link_key ? ordersByKey?.get(medication.order_link_key) : undefined;
 
     return (
       <div key={medication.id} className="p-6 hover:bg-gray-50 transition-colors">
@@ -209,6 +215,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
             <p className="text-gray-600 mt-1">
               {medication.dosage} • {medication.route} • {medication.frequency}
             </p>
+            {linkedOrder && <LinkedOrderNote order={linkedOrder} compact />}
             {medication.next_due && category === 'continuous' && (
               <p className="text-sm text-gray-500 mt-1">
                 Continuous infusion

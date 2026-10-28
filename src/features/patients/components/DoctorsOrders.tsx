@@ -8,22 +8,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Check, Clock, Phone, MessageSquare, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, Clock, Phone, MessageSquare, FileText, Pill } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { DoctorsOrder } from '../../../types';
-import { 
-  fetchDoctorsOrders, 
-  createDoctorsOrder, 
-  updateDoctorsOrder, 
-  deleteDoctorsOrder,
-  acknowledgeDoctorsOrder
-} from '../../../services/clinical/doctorsOrdersService';
+import { fetchDoctorsOrders, acknowledgeDoctorsOrder } from '../../../services/clinical/doctorsOrdersService';
+import { deleteOrderWithMedication } from '../../../services/clinical/medicationOrderService';
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
 import { PatientActionBar } from '../../../components/PatientActionBar';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
-import { parseReleaseAfterMinutes } from '../utils/orderRelease';
-import { ReleaseDelayField, ReleaseDelayBadge } from './DoctorsOrderRelease';
+import { ReleaseDelayBadge } from './DoctorsOrderRelease';
+import { DoctorsOrderForm } from './DoctorsOrderForm';
+import { stripDoctorTitle } from '../utils/doctorName';
+import { queryKeys } from '../../../lib/api/queryClient';
 import { canManageMedicationOrders } from './mar/medicationPermissions';
 
 const STAFF_ROLES = ['super_admin', 'coordinator', 'admin', 'instructor'];
@@ -55,33 +53,6 @@ interface DoctorsOrdersProps {
   hasNewNotes?: boolean;
 }
 
-interface OrderFormData {
-  order_date: string;
-  order_time: string;
-  order_text: string;
-  ordering_doctor: string;
-  notes: string;
-  order_type: 'Direct' | 'Phone Order' | 'Verbal Order';
-  doctor_name: string; // Doctor who created the order (for admin/super admin)
-  release_after_minutes: string; // form text; '' = show immediately
-}
-
-const blankForm = (role: DoctorsOrdersProps['currentUser']['role']): OrderFormData => ({
-  order_date: new Date().toISOString().split('T')[0],
-  order_time: new Date().toTimeString().slice(0, 5),
-  order_text: '',
-  ordering_doctor: '',
-  notes: '',
-  order_type: role === 'nurse' ? 'Phone Order' : 'Direct',
-  doctor_name: '',
-  release_after_minutes: '',
-});
-
-/** The UI prepends "Dr." itself when displaying a name — strip any "Dr"/"Dr." the user typed to avoid "Dr. Dr. Smith" */
-function stripDoctorTitle(name: string): string {
-  return name.trim().replace(/^dr\.?\s*/i, '');
-}
-
 export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   patientId,
   currentUser,
@@ -105,15 +76,14 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<DoctorsOrder | null>(null);
-  const [formData, setFormData] = useState<OrderFormData>(() => blankForm(currentUser.role));
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [acknowledgingOrderId, setAcknowledgingOrderId] = useState<string | null>(null);
 
   // Check if user has admin privileges
   const isAdmin = ['admin', 'coordinator', 'super_admin'].includes(currentUser.role);
 
   const { currentTenant } = useTenant();
+  const queryClient = useQueryClient();
   const { data: simulationStartsAt, isSimulationTenant } = useSimulationStartsAt();
   const isTemplateTenant =
     currentTenant?.tenant_type === 'simulation_template' ||
@@ -145,77 +115,37 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
     };
   }, [patientId, isSimulationTenant]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (submitting) return;
-
-    try {
-      setSubmitting(true);
-      setError('');
-
-      const { release_after_minutes: releaseInput, ...orderFields } = formData;
-      const releaseAfterMinutes = parseReleaseAfterMinutes(releaseInput);
-      const normalizedFormData = {
-        ...orderFields,
-        ordering_doctor: stripDoctorTitle(formData.ordering_doctor),
-        // Only send the column when it carries a value (or clears one), so saving ordinary orders
-        // keeps working if the client ships before the release-delay migration is applied.
-        ...(releaseAfterMinutes !== null || editingOrder?.release_after_minutes
-          ? { release_after_minutes: releaseAfterMinutes }
-          : {}),
-      };
-
-      if (editingOrder) {
-        // Update existing order
-        const updatedOrder = await updateDoctorsOrder(editingOrder.id, normalizedFormData);
-        setOrders(orders.map(order => order.id === editingOrder.id ? updatedOrder : order));
-        setEditingOrder(null);
-      } else {
-        // Create new order
-        const newOrder = await createDoctorsOrder({
-          patient_id: patientId,
-          ...normalizedFormData
-        });
-        setOrders([newOrder, ...orders]);
-        setShowAddForm(false);
-      }
-
-      // Reset form
-      setFormData(blankForm(currentUser.role));
-      
-      // Notify parent component of the change
-      onOrdersChange?.();
-    } catch (error) {
-      secureLogger.error('Error saving doctors order:', error);
-      setError('Failed to save doctors order');
-    } finally {
-      setSubmitting(false);
+  const handleSaved = (saved: DoctorsOrder, addedToMar: boolean) => {
+    setOrders((prev) =>
+      editingOrder ? prev.map((order) => (order.id === saved.id ? saved : order)) : [saved, ...prev]
+    );
+    setShowAddForm(false);
+    setEditingOrder(null);
+    setError('');
+    if (addedToMar || saved.order_link_key) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patientMedicationOrders(patientId) });
     }
+    onOrdersChange?.();
   };
 
   const handleEdit = (order: DoctorsOrder) => {
     setEditingOrder(order);
-    setFormData({
-      order_date: order.order_date,
-      order_time: order.order_time,
-      order_text: order.order_text,
-      ordering_doctor: stripDoctorTitle(order.ordering_doctor), // self-heals any previously double-prefixed "Dr. Dr." records
-      notes: order.notes || '',
-      order_type: order.order_type,
-      doctor_name: order.doctor_name || '',
-      release_after_minutes: order.release_after_minutes ? String(order.release_after_minutes) : ''
-    });
     setShowAddForm(true);
   };
 
-  const handleDelete = async (orderId: string) => {
-    if (!confirm('Are you sure you want to delete this doctors order?')) {
-      return;
-    }
+  const handleDelete = async (order: DoctorsOrder) => {
+    const message = order.order_link_key
+      ? 'Delete this medication order? Its medication will also be removed from the MAR, along with any recorded administrations.'
+      : 'Are you sure you want to delete this doctors order?';
+    if (!confirm(message)) return;
 
     try {
-      await deleteDoctorsOrder(orderId);
-      setOrders(orders.filter(order => order.id !== orderId));
+      await deleteOrderWithMedication(order);
+      setOrders(orders.filter((o) => o.id !== order.id));
+      if (order.order_link_key) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.patientMedicationOrders(patientId) });
+        onOrdersChange?.();
+      }
     } catch (error) {
       secureLogger.error('Error deleting doctors order:', error);
       setError('Failed to delete doctors order');
@@ -260,7 +190,6 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingOrder(null);
-    setFormData(blankForm(currentUser.role));
     setError('');
   };
 
@@ -335,161 +264,17 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
 
       {/* Add/Edit Form */}
       {showAddForm && (
-        <div className="bg-gray-50 rounded-lg p-6 border">
-          <h4 className="text-md font-medium text-gray-900 mb-4">
-            {editingOrder ? 'Edit Order' : 'Add New Order'}
-          </h4>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Order Type - Only show for nurses or when editing */}
-                  {(currentUser.role === 'nurse' || editingOrder) && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Order Type
-                      </label>
-                      <select
-                        value={formData.order_type}
-                        onChange={(e) => setFormData({ ...formData, order_type: e.target.value as any })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      >
-                        {currentUser.role === 'nurse' ? (
-                          <>
-                            <option value="Phone Order">Phone Order</option>
-                            <option value="Verbal Order">Verbal Order</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="Direct">Direct Order</option>
-                            <option value="Phone Order">Phone Order</option>
-                            <option value="Verbal Order">Verbal Order</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.order_date}
-                      onChange={(e) => setFormData({ ...formData, order_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-
-                  {/* Time */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time (24hr)
-                    </label>
-                    <input
-                      type="time"
-                      value={formData.order_time}
-                      onChange={(e) => setFormData({ ...formData, order_time: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Ordering Doctor */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ordering Doctor <span className="font-normal text-gray-400">(without "Dr." — added automatically)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ordering_doctor}
-                    onChange={(e) => setFormData({ ...formData, ordering_doctor: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="A. Patel"
-                    required
-                  />
-                </div>
-
-                {/* Doctor/Provider Name - Only show for admin/super admin */}
-                {isAdmin && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Doctor/Provider Name (Order Created By)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.doctor_name}
-                      onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Dr. Johnson (who is entering this order)"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Optional: Name of the doctor/provider who is creating this order entry
-                    </p>
-                  </div>
-                )}
-
-                {/* Order Text */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Order
-                  </label>
-                  <textarea
-                    value={formData.order_text}
-                    onChange={(e) => setFormData({ ...formData, order_text: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 whitespace-pre-wrap"
-                    rows={6}
-                    placeholder="Enter the physician's order (use Enter for new lines)..."
-                    required
-                  />
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows={2}
-                    placeholder="Additional notes or clarifications..."
-                  />
-                </div>
-
-                {canSetReleaseDelay && (
-                  <ReleaseDelayField
-                    value={formData.release_after_minutes}
-                    onChange={(value) => setFormData({ ...formData, release_after_minutes: value })}
-                  />
-                )}
-
-                {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={cancelForm}
-                    disabled={submitting}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {submitting ? 'Saving...' : (editingOrder ? 'Update Order' : 'Add Order')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+        <DoctorsOrderForm
+          key={editingOrder?.id ?? 'new'}
+          patientId={patientId}
+          role={currentUser.role}
+          editingOrder={editingOrder}
+          showDoctorName={isAdmin}
+          canSetReleaseDelay={canSetReleaseDelay}
+          onSaved={handleSaved}
+          onCancel={cancelForm}
+        />
+      )}
 
           {/* Orders List */}
           {loading ? (
@@ -540,6 +325,13 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                             releaseAfterMinutes={order.release_after_minutes}
                             simulationStartsAt={simulationStartsAt}
                           />
+                        )}
+
+                        {order.order_link_key && (
+                          <div className="inline-flex items-center px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-800 text-xs font-medium space-x-1">
+                            <Pill className="h-3 w-3" />
+                            <span>Medication order · on MAR</span>
+                          </div>
                         )}
 
                         {!order.is_acknowledged ? (
@@ -614,7 +406,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                       {/* Delete Button */}
                       {canManageOrders && (
                         <button
-                          onClick={() => handleDelete(order.id)}
+                          onClick={() => handleDelete(order)}
                           className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
                           title="Delete Order"
                         >

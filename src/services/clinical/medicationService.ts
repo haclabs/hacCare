@@ -138,6 +138,9 @@ export const fetchMedicationCatalog = async (): Promise<CatalogEntry[]> => {
         barcode: dbMed.barcode ?? null,
         sliding_scale: dbMed.sliding_scale ?? null,
         release_after_minutes: dbMed.release_after_minutes ?? null,
+        admin_time: dbMed.admin_time ?? undefined,
+        admin_times: dbMed.admin_times ?? null,
+        order_link_key: dbMed.order_link_key ?? null,
       } as Medication));
 
       return medications;
@@ -196,6 +199,8 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       // Omitted when unset so saving works before the sliding_scale migration is applied
       ...(medication.sliding_scale ? { sliding_scale: medication.sliding_scale } : {}),
       ...(medication.release_after_minutes ? { release_after_minutes: medication.release_after_minutes } : {}),
+      ...(medication.admin_times ? { admin_times: medication.admin_times } : {}),
+      ...(medication.order_link_key ? { order_link_key: medication.order_link_key } : {}),
     };
     
     const { data, error } = await supabase
@@ -222,6 +227,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       end_date: data.end_date,
       prescribed_by: data.prescribed_by || '',
       admin_time: data.admin_time,
+      admin_times: data.admin_times ?? null,
       last_administered: data.last_administered,
       next_due: data.next_due || new Date().toISOString(),
       status: data.status || 'Active',
@@ -229,6 +235,7 @@ export const createMedication = async (medication: Omit<Medication, 'id'>): Prom
       barcode: data.barcode ?? null,
       sliding_scale: data.sliding_scale ?? null,
       release_after_minutes: data.release_after_minutes ?? null,
+      order_link_key: data.order_link_key ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs
@@ -331,6 +338,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
     if (updates.barcode !== undefined) dbUpdates.barcode = updates.barcode;
     if (updates.sliding_scale !== undefined) dbUpdates.sliding_scale = updates.sliding_scale;
     if (updates.release_after_minutes !== undefined) dbUpdates.release_after_minutes = updates.release_after_minutes;
+    if (updates.order_link_key !== undefined) dbUpdates.order_link_key = updates.order_link_key;
     
     secureLogger.debug('Database updates:', dbUpdates);
     
@@ -391,6 +399,7 @@ export const updateMedication = async (medicationId: string, updates: Partial<Me
       barcode: data.barcode ?? null,
       sliding_scale: data.sliding_scale ?? null,
       release_after_minutes: data.release_after_minutes ?? null,
+      order_link_key: data.order_link_key ?? null,
     };
 
     // Audit logging temporarily disabled for patient IDs

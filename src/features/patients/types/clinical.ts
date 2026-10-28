@@ -30,6 +30,8 @@ export interface Medication {
   sliding_scale?: SlidingScaleRow[] | null; // Diabetic meds only; shown on BCMA
   /** Minutes after simulation start before students see this medication. null/0 = immediately. */
   release_after_minutes?: number | null;
+  /** Shared with the doctors_orders row that created this MAR entry (null = added directly on the MAR). */
+  order_link_key?: string | null;
 }
 
 /**
@@ -87,6 +89,10 @@ export interface DoctorsOrder {
   doctor_name?: string; // Doctor who created the order (for admin/super admin entries)
   /** Minutes after simulation start before students see this order. null/0 = immediately. */
   release_after_minutes?: number | null;
+  /** Set on medication orders; the linked MAR entry carries the same key. */
+  order_link_key?: string | null;
+  /** Medication orders: dose as ordered; the linked MAR entry's dosage is the label strength. */
+  ordered_dose?: string | null;
   created_by: string; // user ID
   created_by_name?: string; // user name for display
   created_at: string; // ISO timestamp
