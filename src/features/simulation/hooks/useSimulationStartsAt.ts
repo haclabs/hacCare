@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/api/supabase';
 import { useTenant } from '../../../contexts/TenantContext';
 
 /**
- * When the current simulation tenant's session was started (Play), or null if it hasn't been
+ * When the current simulation tenant's session was started (Start), or null if it hasn't been
  * started / was reset. Disabled outside simulation tenants, where `data` stays undefined.
  */
 export function useSimulationStartsAt() {
@@ -23,7 +23,7 @@ export function useSimulationStartsAt() {
       return (data?.starts_at as string | null | undefined) ?? null;
     },
     enabled: isSimulationTenant && !!currentTenant?.id,
-    staleTime: 30 * 1000, // refresh soon after the instructor clicks Play
+    staleTime: 30 * 1000, // refresh soon after the instructor clicks Start
   });
 
   return { ...query, isSimulationTenant };

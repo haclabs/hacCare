@@ -69,7 +69,7 @@ export const SimulationStatusSummary: React.FC<SimulationStatusSummaryProps> = (
     {
       key: 'ready',
       label: 'Ready to Start',
-      sublabel: 'Not yet launched',
+      sublabel: 'Press Start when ready',
       count: readyCount,
       icon: Clock3,
       gradient: 'from-blue-50 to-sky-50 border-blue-200',

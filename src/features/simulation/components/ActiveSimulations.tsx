@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, RotateCcw, CheckCircle, Trash2, Tag, Printer, ClipboardList, KeyRound, AlertTriangle, X, Filter, Info } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle, Trash2, Tag, Printer, ClipboardList, KeyRound, X, Filter, Info } from 'lucide-react';
 import { SUB_CATEGORIES } from '../types/simulation';
 import type { SimulationActiveWithDetails } from '../types/simulation';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -14,6 +14,7 @@ import { SimulationInstructorGuide } from './SimulationInstructorGuide';
 import { SimulationStatusSummary, type StatusQuickFilter } from './SimulationStatusSummary';
 import { EditCategoriesModal } from './EditCategoriesModal';
 import { SimulationAutoStudentsModal } from './SimulationAutoStudentsModal';
+import { ResetSimulationModal } from './ResetSimulationModal';
 import { SeedTestDataResultsPanel } from './SeedTestDataResultsPanel';
 import { seedTestDataForTenant, type SeedPatientResult } from '../utils/seedTestData';
 import { useAuth } from '../../../contexts/auth/useAuth';
@@ -264,8 +265,8 @@ const ActiveSimulations: React.FC = () => {
               { icon: ClipboardList, color: 'text-teal-700', label: 'Print Checklist' },
               { icon: KeyRound, color: 'text-teal-600', label: 'View Student Logins' },
               { icon: Play, color: 'text-green-600', label: 'Start' },
-              { icon: RotateCcw, color: 'text-blue-600', label: 'Reset' },
               { icon: CheckCircle, color: 'text-emerald-600', label: 'Complete' },
+              { icon: RotateCcw, color: 'text-blue-600', label: 'Reset' },
               { icon: Trash2, color: 'text-red-600', label: 'Delete' },
             ].map(({ icon: Icon, color, label }) => (
               <span key={label} className="inline-flex items-center gap-1.5 text-[11px] text-gray-600">
@@ -362,71 +363,20 @@ const ActiveSimulations: React.FC = () => {
       )}
 
       {/* Reset Confirmation Modal */}
-      {resetModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border-4 border-red-400">
-            <div className="bg-red-50 px-6 py-4 border-b border-red-200 flex items-center gap-3 rounded-t-xl">
-              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-bold text-red-900">Reset Simulation Warning</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-700">
-                Ensure you have <span className="font-semibold text-red-700">completed the simulation</span> before resetting.
-              </p>
-              <div className="bg-red-50 border-l-4 border-red-500 rounded-r-lg p-3">
-                <p className="text-sm font-semibold text-red-800">
-                  All student work will be permanently lost if you reset without completing first.
-                </p>
-              </div>
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
-                  <strong>Reminder:</strong> Click "Complete Simulation" first to save student activities to debrief report before resetting.
-                </p>
-              </div>
-              {resetTemplateStates.length > 0 && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Reset into state
-                  </label>
-                  <select
-                    value={selectedResetStateId ?? ''}
-                    onChange={(e) => setSelectedResetStateId(e.target.value || null)}
-                    className="w-full px-3 py-2 text-sm bg-white text-gray-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  >
-                    <option value="">Current / Default</option>
-                    {resetTemplateStates.map((state) => (
-                      <option key={state.id} value={state.id}>
-                        {state.label}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedResetStateId && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      {resetTemplateStates.find(s => s.id === selectedResetStateId)?.changelog_note || 'No changelog note provided.'}
-                    </p>
-                  )}
-                </div>
-              )}
-              <div className="flex gap-3 pt-1">
-                <button
-                  onClick={() => setResetModalOpen(null)}
-                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmReset}
-                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
-                >
-                  Reset Anyway
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {resetModalOpen && (() => {
+        const resetSim = simulations.find(s => s.id === resetModalOpen);
+        return (
+          <ResetSimulationModal
+            simulationName={resetSim?.name ?? ''}
+            completed={resetSim?.status === 'completed'}
+            states={resetTemplateStates}
+            selectedStateId={selectedResetStateId}
+            onSelectState={setSelectedResetStateId}
+            onCancel={() => setResetModalOpen(null)}
+            onConfirm={confirmReset}
+          />
+        );
+      })()}
 
       {/* Instructor Name Modal */}
       {completingSimulation && (

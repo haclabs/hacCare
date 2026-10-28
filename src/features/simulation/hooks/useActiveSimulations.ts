@@ -65,11 +65,12 @@ export function useActiveSimulations() {
   }, []);
 
   const handleStart = async (id: string) => {
+    const sim = simulations.find(s => s.id === id);
+    // A completed simulation must be reset first, or the next group starts on the last group's charting.
+    if (!sim || (sim.status !== 'pending' && sim.status !== 'paused')) return;
     setActionLoading(id);
     try {
-      const sim = simulations.find(s => s.id === id);
-
-      if (sim?.status === 'pending') {
+      if (sim.status === 'pending') {
         const now = new Date();
         const endsAt = new Date(now.getTime() + (sim.duration_minutes * 60000));
 
@@ -84,7 +85,7 @@ export function useActiveSimulations() {
 
         if (error) throw error;
       } else {
-        // Pause was removed, but rows paused before then still exist. Play returns them to
+        // Pause was removed, but rows paused before then still exist. Start returns them to
         // running without touching starts_at, so elapsed time is unaffected.
         await updateSimulationStatus(id, 'running');
       }
@@ -99,12 +100,14 @@ export function useActiveSimulations() {
   };
 
   const handleReset = async (id: string) => {
+    const sim = simulations.find(s => s.id === id);
+    // Reset only follows Complete; otherwise the group's work is wiped without a debrief.
+    if (!sim || sim.status !== 'completed') return;
     setSelectedResetStateId(null);
     setResetTemplateStates([]);
     setResetModalOpen(id);
 
-    const sim = simulations.find(s => s.id === id);
-    if (sim?.template_id) {
+    if (sim.template_id) {
       try {
         const states = await getTemplateStates(sim.template_id);
         setResetTemplateStates(states);
@@ -136,7 +139,7 @@ export function useActiveSimulations() {
         }
       }
 
-      alert('Simulation reset successfully! Status set to "Ready to Start". Click Play when ready to begin. Patient and medication IDs have been preserved.');
+      alert('Reset complete. The simulation is Ready to Start. Press Start when the next group is ready. Bracelets, medication labels and student logins still work.');
       await loadSimulations();
     } catch (error) {
       secureLogger.error('Error resetting simulation:', error);

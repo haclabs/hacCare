@@ -54,7 +54,7 @@ const BEFORE_CLASS: GuideStep[] = [
     title: 'Give Out Student Logins',
     items: [
       'Open the key icon on the card and hand each workstation its login',
-      'Students only see the simulation after you press Play',
+      'Students only see the simulation after you press Start',
       <>Tell students to enter <strong>their own name</strong> on every form. Unnamed work is left out of the debrief</>,
     ],
   },
@@ -66,7 +66,7 @@ const EACH_GROUP: GuideStep[] = [
     icon: Play,
     badge: 'bg-green-600',
     box: 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700',
-    title: 'Press Play to Start',
+    title: 'Press Start',
     items: [
       <>Card shows <strong>Ready to Start</strong> after Launch and after every Reset</>,
       'Starts the timer and timed orders/meds, and opens it to students',

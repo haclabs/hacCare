@@ -117,7 +117,7 @@ export function CompletionSummaryModal({
           {!completed && (
             <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 rounded-lg p-4">
               <p className="text-sm font-bold text-red-800 dark:text-red-200 mb-2">
-                ⚠️ ERROR: Simulation may NOT have been archived
+                ⚠️ ERROR: The debrief may NOT have been saved
               </p>
               <p className="text-sm text-red-700 dark:text-red-300 mb-3">
                 An error occurred during completion. Student data may still be in the simulation.
@@ -160,7 +160,7 @@ export function CompletionSummaryModal({
           {completed && !hasWarnings && (
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
               <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                ✅ Simulation archived successfully. All student records have been saved to the debrief report.
+                ✅ Debrief saved. You&apos;ll find it under Debrief Reports. Press Reset when you&apos;re ready for the next group.
               </p>
             </div>
           )}
