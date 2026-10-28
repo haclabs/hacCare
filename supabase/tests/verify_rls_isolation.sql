@@ -217,7 +217,7 @@ BEGIN
   FROM unnest(ARRAY[
     'reset_simulation_for_next_session', 'reset_simulation_with_template_updates',
     'complete_simulation', 'delete_simulation', 'compare_simulation_template_patients',
-    'compare_simulation_vs_template', 'launch_simulation', 'delete_simulation_template',
+    'compare_simulation_vs_template', 'launch_simulation', 'start_simulation', 'delete_simulation_template',
     'save_template_snapshot_v2', 'save_template_state', 'delete_patient_template',
     'save_patient_template_snapshot', 'add_patient_template_to_simulation_template',
     'get_tenant_users', 'create_program_tenant', 'get_user_current_tenant',

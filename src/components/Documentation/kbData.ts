@@ -332,7 +332,7 @@ Start, Complete and Reset always stay in the same place on the card. The ones th
 
 ## The session cycle
 1. **Launch**: the card shows **Ready to Start**. The clock isn't running and students can't see the simulation yet.
-2. **Start**: the group begins. The clock and any timed orders and medications start from this moment.
+2. **Start**: the group begins. The clock and any timed orders and medications start from this moment, and the chart moves forward to now: vitals, intake and output, lab times and medication due times keep the same spacing they had at Launch or Reset, so it doesn't matter how long the simulation waited.
 3. **Complete**: enter your name. If hacCare finds charting but no Student Name on any of it, it asks you who did the work (or lets you skip). A summary appears and the card shows **Needs Reset**.
 4. **Reset**: the dialog confirms the debrief is saved. Pick a named state if you want one, then click **Reset**. Student work is cleared, labels and logins keep working, and the card shows **Ready to Start**. Press **Start** for the next group.
 
