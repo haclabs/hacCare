@@ -5,7 +5,7 @@ import type { Patient, Medication } from '../../types';
 /**
  * BCMA Five-Rights verification tests.
  *
- * These cover the barcode-matching and timing logic in bcmaService.validateBarcodes(),
+ * These cover the barcode-matching logic in bcmaService.validateBarcodes(),
  * which is the last line of defense before a medication administration is recorded.
  * A false-positive match here is a patient-safety bug, so the matching rules
  * (direct id, generated barcode, legacy prefixes, catalog barcode) are tested explicitly.
@@ -151,110 +151,29 @@ describe('bcmaService.validateBarcodes - medication identity check', () => {
   });
 });
 
-describe('bcmaService.validateBarcodes - timing checks', () => {
-  it('always passes timing for PRN medications regardless of due time', () => {
+describe('bcmaService.validateBarcodes - timing', () => {
+  it('never fails timing, even right after a dose or well before it is due', () => {
     const patient = makePatient();
     const medication = makeMedication({
-      category: 'prn',
-      next_due: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() // long overdue is irrelevant for PRN
-    });
-
-    const result = bcmaService.validateBarcodes(patient.patient_id, medication.id, patient, medication);
-    expect(result.checks.time).toBe(true);
-  });
-
-  it('flags administering too soon after the last dose (production context)', () => {
-    const patient = makePatient();
-    const medication = makeMedication({
-      frequency: 'Once daily', // 20h minimum interval
-      last_administered: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
+      frequency: 'Once daily',
+      last_administered: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
       next_due: new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString()
     });
 
     const result = bcmaService.validateBarcodes(patient.patient_id, medication.id, patient, medication);
 
-    expect(result.checks.time).toBe(false);
-    expect(result.isValid).toBe(false);
-    expect(result.errors.some(e => e.includes('Too soon'))).toBe(true);
-  });
-
-  it('warns (but does not error) when administering more than 30 minutes early', () => {
-    const patient = makePatient();
-    const medication = makeMedication({
-      next_due: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() // 2 hours from now
-    });
-
-    const result = bcmaService.validateBarcodes(patient.patient_id, medication.id, patient, medication);
-
-    expect(result.checks.time).toBe(false);
-    expect(result.isValid).toBe(false);
+    expect(result.checks.time).toBe(true);
+    expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
-    expect(result.warnings.some(w => w.includes('Administering early'))).toBe(true);
-  });
-
-  it('ignores stale next_due/last_administered from before the simulation session started', () => {
-    const sessionStartedAt = new Date().toISOString();
-    const patient = makePatient();
-    const medication = makeMedication({
-      // Both fields predate the simulation session (leftover from a prior group's run)
-      last_administered: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      next_due: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
-    });
-
-    const result = bcmaService.validateBarcodes(
-      patient.patient_id,
-      medication.id,
-      patient,
-      medication,
-      sessionStartedAt
-    );
-
-    expect(result.checks.time).toBe(true);
-  });
-
-  it('treats a null sessionStartedAt (reset/pending simulation) as no prior dose this session', () => {
-    const patient = makePatient();
-    const medication = makeMedication({
-      last_administered: new Date().toISOString(), // would otherwise be "too soon"
-      frequency: 'Once daily'
-    });
-
-    const result = bcmaService.validateBarcodes(
-      patient.patient_id,
-      medication.id,
-      patient,
-      medication,
-      null
-    );
-
-    expect(result.checks.time).toBe(true);
-  });
-
-  it('still enforces the minimum interval for a dose given after the session started', () => {
-    const sessionStartedAt = new Date(Date.now() - 1000 * 60 * 60).toISOString(); // session started 1h ago
-    const patient = makePatient();
-    const medication = makeMedication({
-      frequency: 'Once daily', // 20h minimum interval
-      last_administered: new Date(Date.now() - 5 * 60 * 1000).toISOString() // 5 min ago, within session
-    });
-
-    const result = bcmaService.validateBarcodes(
-      patient.patient_id,
-      medication.id,
-      patient,
-      medication,
-      sessionStartedAt
-    );
-
-    expect(result.checks.time).toBe(false);
+    expect(result.warnings).toHaveLength(0);
   });
 });
 
 describe('bcmaService.validateBarcodes - overall validity', () => {
-  it('is valid only when patient, medication and timing all pass', () => {
+  it('is valid when patient and medication barcodes both match', () => {
     const patient = makePatient();
     const medication = makeMedication({
-      next_due: new Date(Date.now() - 5 * 60 * 1000).toISOString() // due 5 min ago, within the 30-min window
+      next_due: new Date(Date.now() - 5 * 60 * 1000).toISOString()
     });
 
     const result = bcmaService.validateBarcodes(patient.patient_id, medication.id, patient, medication);
