@@ -5,7 +5,7 @@
 
 import { Patient, Medication, MedicationAdministration } from '../../types';
 import { recordMedicationAdministration } from './medicationService';
-import { doseIntervalMs, minimumDoseGapMs } from './medicationFrequency';
+import { doseIntervalMs } from './medicationFrequency';
 import { secureLogger } from '../../lib/security/secureLogger';
 
 export interface AdministrationLog {
@@ -90,15 +90,15 @@ class BCMAService {
     scannedPatientId: string,
     scannedMedicationId: string,
     expectedPatient: Patient,
-    expectedMedication: Medication,
-    sessionStartedAt?: string | null
+    expectedMedication: Medication
   ): BCMAValidationResult {
     const checks = {
       patient: this.validatePatientBarcode(scannedPatientId, expectedPatient),
       medication: this.validateMedicationBarcode(scannedMedicationId, expectedMedication),
       dose: true, // Assume dose is correct if medication matches
       route: true, // Assume route is correct if medication matches
-      time: this.validateTiming(expectedMedication, sessionStartedAt)
+      // Timing is not enforced: students in the same simulation each give the same scheduled dose
+      time: true
     };
 
     const errors: string[] = [];
@@ -112,17 +112,8 @@ class BCMAService {
       errors.push('Medication barcode does not match expected medication');
     }
 
-    if (!checks.time) {
-      const timeError = this.getTimingError(expectedMedication, sessionStartedAt);
-      if (timeError.includes('Too soon')) {
-        errors.push(timeError);
-      } else {
-        warnings.push(timeError);
-      }
-    }
-
     return {
-      isValid: checks.patient && checks.medication && checks.dose && checks.route && checks.time,
+      isValid: checks.patient && checks.medication && checks.dose && checks.route,
       errors,
       warnings,
       checks
@@ -173,96 +164,6 @@ class BCMAService {
     secureLogger.debug('🔵 Is barcode valid?', isValid);
     
     return isValid;
-  }
-
-  // Validate timing for medication administration
-  private validateTiming(medication: Medication, sessionStartedAt?: string | null): boolean {
-    if (!medication.next_due || medication.category === 'prn') {
-      return true; // PRN medications don't have strict timing
-    }
-
-    const now = new Date();
-    const nextDue = new Date(medication.next_due);
-    const rawLastAdministered = medication.last_administered ? new Date(medication.last_administered) : null;
-
-    // sessionStartedAt semantics:
-    //   undefined  → not a simulation context, apply all timing checks normally
-    //   null       → simulation was reset/pending (starts_at is NULL in DB)
-    //   string     → simulation is running — discard last_administered that predates session start
-    const lastAdministered = (
-      sessionStartedAt === undefined
-        ? rawLastAdministered
-        : sessionStartedAt === null
-          ? null
-          : (rawLastAdministered && rawLastAdministered < new Date(sessionStartedAt)) ? null : rawLastAdministered
-    );
-
-    // In a simulation context, next_due is only meaningful for preventing a second dose
-    // coming too soon after the first. If no dose has been given this session, next_due
-    // is stale data from a previous administration (possibly a prior group's run)
-    // and has no bearing on the first administration — skip all timing checks.
-    if (sessionStartedAt !== undefined && !lastAdministered) {
-      return true;
-    }
-
-    // Check minimum interval since last dose (prevent double dosing within a session)
-    if (lastAdministered) {
-      const minimumInterval = this.getMinimumInterval(medication.frequency);
-      const timeSinceLastDose = now.getTime() - lastAdministered.getTime();
-      if (timeSinceLastDose < minimumInterval) {
-        return false; // Too soon since last dose
-      }
-    }
-
-    // Check if it's not too early (within 30 minutes of due time)
-    const thirtyMinutesEarly = new Date(nextDue.getTime() - 30 * 60 * 1000);
-    return now >= thirtyMinutesEarly;
-  }
-
-  // Get timing error message
-  private getTimingError(medication: Medication, sessionStartedAt?: string | null): string {
-    if (!medication.next_due || medication.category === 'prn') {
-      return '';
-    }
-
-    const now = new Date();
-    const nextDue = new Date(medication.next_due);
-    const rawLastAdministered = medication.last_administered ? new Date(medication.last_administered) : null;
-
-    const lastAdministered = (
-      sessionStartedAt === undefined
-        ? rawLastAdministered
-        : sessionStartedAt === null
-          ? null
-          : (rawLastAdministered && rawLastAdministered < new Date(sessionStartedAt)) ? null : rawLastAdministered
-    );
-
-    // In simulation context with no prior dose this session, timing is always valid
-    if (sessionStartedAt !== undefined && !lastAdministered) {
-      return '';
-    }
-
-    if (lastAdministered) {
-      const minimumInterval = this.getMinimumInterval(medication.frequency);
-      const timeSinceLastDose = now.getTime() - lastAdministered.getTime();
-      if (timeSinceLastDose < minimumInterval) {
-        const hoursRemaining = Math.ceil((minimumInterval - timeSinceLastDose) / (60 * 60 * 1000));
-        return `Too soon since last dose. Wait ${hoursRemaining} more hours.`;
-      }
-    }
-
-    const thirtyMinutesEarly = new Date(nextDue.getTime() - 30 * 60 * 1000);
-    if (now < thirtyMinutesEarly) {
-      const minutesEarly = Math.ceil((thirtyMinutesEarly.getTime() - now.getTime()) / (60 * 1000));
-      return `Medication due in ${minutesEarly} minutes. Administering early.`;
-    }
-
-    return '';
-  }
-
-  // Get minimum interval between doses
-  private getMinimumInterval(frequency: string): number {
-    return minimumDoseGapMs(frequency);
   }
 
   // Create administration log

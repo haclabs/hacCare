@@ -11,7 +11,6 @@ import { BarcodeGenerator } from './BarcodeGenerator';
 import { simulateBarcodeScan } from '../../../lib/barcode/barcodeScanner';
 import { setBCMAActive } from '../../../services/simulation/bcmaState';
 import { secureLogger } from '../../../lib/security/secureLogger';
-import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
 import { SlidingScaleTable } from './mar/SlidingScaleTable';
 import { findScaleRowIndex, formatScaleResult } from '../utils/slidingScale';
 import { formatTabletDose, isOralTabletMedication, isValidTabletCount, parseTabletStrength } from '../utils/tabletDose';
@@ -44,10 +43,6 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   onCancel,
   practiceMode = false
 }) => {
-  // When the current simulation session started, so we can ignore
-  // last_administered / next_due values from a previous group's run.
-  const { data: simulationStartsAt, isSimulationTenant } = useSimulationStartsAt();
-
   const [scannedPatientId, setScannedPatientId] = useState<string>('');
   const [scannedMedicationId, setScannedMedicationId] = useState<string>('');
   const [validationResult, setValidationResult] = useState<BCMAValidationResult | null>(null);
@@ -147,17 +142,11 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         secureLogger.debug('🔵 BCMA: Valid medication barcode, proceeding');
         setScannedMedicationId(barcode);
         
-        // Validate both barcodes.
-        // Pass sessionStartedAt so last_administered from a previous group's run is ignored.
         const validation = bcmaService.validateBarcodes(
           scannedPatientId,
           barcode,
           patient,
-          medication,
-          // undefined = not a simulation (full timing checks apply)
-          // null      = simulation reset/pending (skip stale timing)
-          // string    = simulation running (skip timing that predates session start)
-          isSimulationTenant ? simulationStartsAt ?? null : undefined
+          medication
         );
         
         secureLogger.debug('🔵 BCMA: Validation result:', validation);
@@ -171,7 +160,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
         alert(`❌ Unknown barcode format: ${barcode}\n\nExpected: Medication barcode (format: M + letter + 5 digits, e.g., MA26325)`);
       }
     }
-  }, [currentStep, scannedPatientId, scannedMedicationId, patient, medication, isSimulationTenant, simulationStartsAt]);
+  }, [currentStep, scannedPatientId, scannedMedicationId, patient, medication]);
 
   // Listen for barcode scans from global barcode dispatcher
   useEffect(() => {
@@ -291,8 +280,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       patient: 'Patient barcode verification failed - the scanned patient barcode does not match the expected patient',
       medication: 'Medication barcode verification failed - the scanned medication barcode does not match the expected medication',
       dose: 'Dose verification failed - there may be a dosage discrepancy',
-      route: 'Route verification failed - the administration route may not match the prescribed route',
-      time: 'Timing verification failed - the medication may not be due at this time or was recently administered'
+      route: 'Route verification failed - the administration route may not match the prescribed route'
     };
     return descriptions[check] || `${check} verification failed`;
   };

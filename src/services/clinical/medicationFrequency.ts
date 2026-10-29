@@ -1,5 +1,5 @@
 /**
- * Frequency parsing shared by the medication forms and BCMA timing checks.
+ * Frequency parsing shared by the medication forms and MAR/BCMA scheduling.
  *
  * Stored frequencies come in several wordings ("1 time daily" from the Add form, legacy
  * "Once daily" / "BID (Twice daily)", "Every 4 hours PRN", "Q12H"), so callers must not
@@ -29,26 +29,6 @@ export function doseIntervalHours(frequency: string): number | null {
   if (hourly) return parseInt(hourly[1] ?? hourly[2], 10);
   const perDay = dosesPerDay(frequency);
   return perDay > 0 ? 24 / perDay : null;
-}
-
-// Minimum gap before BCMA allows another dose, keyed by the scheduled interval in hours.
-// Leaves slack for early/late administration within a normal schedule.
-const MINIMUM_GAP_HOURS: Record<number, number> = {
-  24: 20,
-  12: 10,
-  8: 6,
-  6: 4,
-  4: 3,
-  [30 * 24]: 25 * 24,
-};
-
-const DEFAULT_MINIMUM_GAP_HOURS = 6;
-
-/** Minimum time (ms) BCMA requires between doses of a medication with this frequency. */
-export function minimumDoseGapMs(frequency: string): number {
-  const interval = doseIntervalHours(frequency);
-  if (interval === null) return DEFAULT_MINIMUM_GAP_HOURS * HOUR_MS;
-  return (MINIMUM_GAP_HOURS[interval] ?? interval * 0.75) * HOUR_MS;
 }
 
 /** Scheduled interval (ms) between doses, falling back to 24 hours when the frequency has none. */

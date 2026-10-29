@@ -7,6 +7,17 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-29 - CHANGE: BCMA NO LONGER CHECKS "RIGHT TIME"
+===============================================================================
+
+* Students in the same simulation each give the same scheduled dose, and
+  the "Right time" check failed for everyone after the first ("too soon
+  since last dose" / "not due yet"), forcing an override every time. BCMA
+  no longer checks timing anywhere; patient and medication barcode checks
+  are unchanged. Removed the now-unused timing code (validateTiming,
+  getTimingError, minimumDoseGapMs)
+
+===============================================================================
 [Unreleased] - 2026-10-28 - FIX: STUDENTS TAKE PHONE/VERBAL ORDERS
 ===============================================================================
 
