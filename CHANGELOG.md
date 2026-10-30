@@ -7,6 +7,23 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-30 - FIX: SIMULATION MEDS LINKED TO THE CATALOG
+===============================================================================
+
+* 23 template medications (and the 14 copies in running simulations) were
+  free-entry, with random barcodes that match no printed label, so they
+  couldn't be scanned. They are now linked to medication catalog entries
+  and carry the catalog barcode; template and template-state snapshots
+  were patched to match. Added catalog entries MZ110–MZ114 (Amlodipine,
+  Azithromycin IV, Symbicort, Cyanocobalamin IM, Tylenol #3) and
+  reactivated Potassium Chloride IV (MZ018). Labels for the new entries
+  need printing
+* The 8 free-entry medications in patient templates are linked the same
+  way. Added MZ115 (Albuterol-Ipratropium / DuoNeb nebule) and MZ116
+  (Azithromycin 500 mg oral); azithromycin is matched by route so IV
+  orders get MZ111 and PO orders MZ116
+
+===============================================================================
 [Unreleased] - 2026-10-29 - CHANGE: BCMA NO LONGER CHECKS "RIGHT TIME"
 ===============================================================================
 
