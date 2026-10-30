@@ -11,10 +11,7 @@ export const TenantSettings: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: currentTenant?.name || '',
-    primary_color: currentTenant?.settings?.primary_color || '#3B82F6',
-    timezone: currentTenant?.settings?.timezone || 'UTC',
-    currency: currentTenant?.settings?.currency || 'USD',
-    date_format: currentTenant?.settings?.date_format || 'MM/DD/YYYY'
+    primary_color: currentTenant?.settings?.primary_color || '#3B82F6'
   });
 
   if (!currentTenant) {
@@ -47,10 +44,7 @@ export const TenantSettings: React.FC = () => {
       // Prepare updated settings
       const updatedSettings = {
         ...currentTenant.settings,
-        primary_color: formData.primary_color,
-        timezone: formData.timezone,
-        currency: formData.currency,
-        date_format: formData.date_format
+        primary_color: formData.primary_color
       };
 
       // Update tenant
@@ -141,58 +135,6 @@ export const TenantSettings: React.FC = () => {
                 placeholder="#3B82F6"
               />
             </div>
-          </div>
-
-          {/* Timezone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Timezone
-            </label>
-            <select
-              value={formData.timezone}
-              onChange={(e) => handleInputChange('timezone', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="UTC">UTC</option>
-              <option value="America/New_York">Eastern Time</option>
-              <option value="America/Chicago">Central Time</option>
-              <option value="America/Denver">Mountain Time</option>
-              <option value="America/Los_Angeles">Pacific Time</option>
-              <option value="America/Edmonton">Mountain Time (Canada)</option>
-            </select>
-          </div>
-
-          {/* Currency */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Currency
-            </label>
-            <select
-              value={formData.currency}
-              onChange={(e) => handleInputChange('currency', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="USD">USD - US Dollar</option>
-              <option value="CAD">CAD - Canadian Dollar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="GBP">GBP - British Pound</option>
-            </select>
-          </div>
-
-          {/* Date Format */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date Format
-            </label>
-            <select
-              value={formData.date_format}
-              onChange={(e) => handleInputChange('date_format', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
-              <option value="DD/MM/YYYY">DD/MM/YYYY (International)</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
-            </select>
           </div>
         </div>
 

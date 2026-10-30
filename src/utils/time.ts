@@ -172,6 +172,21 @@ export const format24HourTime = (dateValue: Date | string | null | undefined): s
 };
 
 /**
+ * The viewer's own time-zone abbreviation for a given instant (e.g. "MDT", "EST").
+ * Never hard-code a zone label: Alberta moved to permanent UTC−6 in 2026, so "MST" is wrong there,
+ * and the browser's tz data is the only source that knows the viewer's actual offset.
+ */
+export const getLocalTimeZoneAbbreviation = (dateValue: Date | string): string => {
+  const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
+  if (!isValid(date)) return '';
+  return (
+    new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' })
+      .formatToParts(date)
+      .find((part) => part.type === 'timeZoneName')?.value ?? ''
+  );
+};
+
+/**
  * Get current date/time formatted for datetime-local input
  * Returns current system time in the format required by HTML5 datetime-local input
  * 

@@ -642,9 +642,6 @@ const CreateTenantModal: React.FC<{
         admin_user_id: adminUserId, // Convert email to user_id
         status: 'active' as const,
         settings: {
-          timezone: 'UTC',
-          date_format: 'MM/DD/YYYY',
-          currency: 'USD',
           features: {
             advanced_analytics: formData.subscription_plan !== 'basic',
             medication_management: true,
