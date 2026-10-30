@@ -5,6 +5,7 @@ import { secureLogger } from '../../../lib/security/secureLogger';
 import { PatientBraceletsModal } from './PatientBraceletsModal';
 import { MedicationLabelsModal } from './MedicationLabelsModal';
 import { AllLabelsModal } from './AllLabelsModal';
+import { NotInCatalogLabelsNotice } from './NotInCatalogLabelsNotice';
 interface SimulationLabelPrintModalProps {
   simulationName: string;
   tenantId: string;
@@ -167,6 +168,7 @@ export const SimulationLabelPrintModal: React.FC<SimulationLabelPrintModalProps>
                     <p className="text-sm text-green-700 mb-4">
                       One label per distinct medication
                     </p>
+                    <NotInCatalogLabelsNotice items={medicationLabelItems} compact />
                     <div className="flex items-center gap-2 mb-3">
                       <label className="text-sm font-medium text-green-900">Qty per medication:</label>
                       <input

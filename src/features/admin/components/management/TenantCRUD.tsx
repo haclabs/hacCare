@@ -479,9 +479,6 @@ const CreateTenantModal: React.FC<{
         ...formData,
         status: 'active',
         settings: {
-          timezone: 'UTC',
-          date_format: 'MM/DD/YYYY',
-          currency: 'USD',
           features: {
             advanced_analytics: formData.subscription_plan !== 'basic',
             medication_management: true,

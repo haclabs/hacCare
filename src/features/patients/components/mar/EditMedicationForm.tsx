@@ -4,6 +4,8 @@ import { CheckCircle, Lock } from 'lucide-react';
 import type { Medication } from '../../../../types';
 import { updateMedication, fetchMedicationCatalog, catalogDisplayName } from '../../../../services/clinical/medicationService';
 import { CatalogMedicationPicker } from './CatalogMedicationPicker';
+import { CatalogNameSuggestions } from './CatalogNameSuggestions';
+import { useNotInCatalogConfirmation } from './useNotInCatalogConfirmation';
 import type { CatalogEntry } from './CatalogMedicationPicker';
 import { SlidingScaleEditor } from './SlidingScaleEditor';
 import { fromDraftRows, toDraftRows, type SlidingScaleDraftRow } from '../../utils/slidingScale';
@@ -84,6 +86,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
   const [form, setForm] = useState<EditFormState>(() => initForm(medication));
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const { confirmSave, dialog: notInCatalogDialog } = useNotInCatalogConfirmation();
   const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [selectedCatalog, setSelectedCatalog] = useState<CatalogEntry | null>(null);
@@ -146,7 +149,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
     setForm((prev) => ({ ...prev, admin_times: newTimes, admin_time: newTimes[0] }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const { scale, error: scaleError } =
       form.category === 'diabetic' ? fromDraftRows(scaleRows) : { scale: null, error: null };
@@ -154,6 +157,10 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
       alert(scaleError);
       return;
     }
+    confirmSave(form.catalog_id, form.name, () => void save(scale));
+  };
+
+  const save = async (scale: ReturnType<typeof fromDraftRows>['scale']) => {
     setIsLoading(true);
     try {
       const releaseAfterMinutes = parseReleaseAfterMinutes(releaseInput);
@@ -273,6 +280,12 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 }}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <CatalogNameSuggestions
+                name={form.name}
+                catalog={catalog}
+                selected={selectedCatalog}
+                onSelect={handleCatalogSelect}
               />
             </div>
 
@@ -424,6 +437,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
           </form>
         </div>
       </div>
+      {notInCatalogDialog}
     </div>
   );
 };

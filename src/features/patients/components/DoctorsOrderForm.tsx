@@ -21,6 +21,7 @@ import { todayLocalISODate } from '../utils/localDate';
 import { ReleaseDelayField } from './DoctorsOrderRelease';
 import { MedicationEntryFields } from './mar/MedicationEntryFields';
 import { useMedicationEntryForm } from './mar/useMedicationEntryForm';
+import { useNotInCatalogConfirmation } from './mar/useNotInCatalogConfirmation';
 
 type OrderType = DoctorsOrder['order_type'];
 
@@ -89,6 +90,7 @@ const OrderFormBody: React.FC<DoctorsOrderFormProps & { initialMedication: Medic
 
   const [orderedDose, setOrderedDose] = useState(editingOrder?.ordered_dose ?? '');
   const entry = useMedicationEntryForm(initialMedication, { labelStrength: true });
+  const { confirmSave, dialog: notInCatalogDialog } = useNotInCatalogConfirmation();
   const composedText = composeMedicationOrderText({
     ...entry.form,
     dosage: orderedDose,
@@ -135,25 +137,35 @@ const OrderFormBody: React.FC<DoctorsOrderFormProps & { initialMedication: Medic
       medication = { ...built.fields, next_due: entry.initialNextDue() };
     }
 
-    try {
-      setSubmitting(true);
-      let saved: DoctorsOrder;
-      if (medication) {
-        const medOrderFields = { ...orderFields, ordered_dose: orderedDose.trim() };
-        saved = editingOrder
-          ? (await updateMedicationOrder(editingOrder, medOrderFields, medication)).order
-          : (await createMedicationOrder({ patient_id: patientId, ...medOrderFields }, medication)).order;
-      } else {
-        saved = editingOrder
-          ? await updateDoctorsOrder(editingOrder.id, orderFields)
-          : await createDoctorsOrder({ patient_id: patientId, ...orderFields });
+    const persist = async (med: typeof medication) => {
+      try {
+        setSubmitting(true);
+        let saved: DoctorsOrder;
+        if (med) {
+          const medOrderFields = { ...orderFields, ordered_dose: orderedDose.trim() };
+          saved = editingOrder
+            ? (await updateMedicationOrder(editingOrder, medOrderFields, med)).order
+            : (await createMedicationOrder({ patient_id: patientId, ...medOrderFields }, med)).order;
+        } else {
+          saved = editingOrder
+            ? await updateDoctorsOrder(editingOrder.id, orderFields)
+            : await createDoctorsOrder({ patient_id: patientId, ...orderFields });
+        }
+        onSaved(saved, !!med);
+      } catch (err) {
+        secureLogger.error('Error saving doctors order:', err);
+        setError(isMedicationOrder ? 'Failed to save medication order' : 'Failed to save doctors order');
+      } finally {
+        setSubmitting(false);
       }
-      onSaved(saved, !!medication);
-    } catch (err) {
-      secureLogger.error('Error saving doctors order:', err);
-      setError(isMedicationOrder ? 'Failed to save medication order' : 'Failed to save doctors order');
-    } finally {
-      setSubmitting(false);
+    };
+
+    // Students get an inline note instead, so a phone/verbal order isn't held up mid-scenario
+    const med = medication;
+    if (med && !isNurse) {
+      confirmSave(med.catalog_id, med.name, () => void persist(med));
+    } else {
+      await persist(med);
     }
   };
 
@@ -234,7 +246,7 @@ const OrderFormBody: React.FC<DoctorsOrderFormProps & { initialMedication: Medic
                 This order's MAR entry was removed. Saving will add it to the MAR again.
               </p>
             )}
-            <MedicationEntryFields entry={entry} />
+            <MedicationEntryFields entry={entry} showNotInCatalogNote={isNurse} />
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
               <label className="block text-sm font-semibold text-blue-900 mb-1">Ordered dose *</label>
               <input
@@ -300,6 +312,7 @@ const OrderFormBody: React.FC<DoctorsOrderFormProps & { initialMedication: Medic
           </button>
         </div>
       </form>
+      {notInCatalogDialog}
     </div>
   );
 };

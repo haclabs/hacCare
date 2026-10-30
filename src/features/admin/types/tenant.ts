@@ -34,9 +34,6 @@ export interface Tenant {
  * Tenant configuration settings
  */
 export interface TenantSettings {
-  timezone: string;
-  date_format: string;
-  currency: string;
   logo_url?: string | null;
   primary_color?: string;
   features: {

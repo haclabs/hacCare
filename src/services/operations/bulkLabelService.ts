@@ -24,6 +24,7 @@ export interface MedicationLabelData {
   date_prescribed: string;
   barcode?: string | null; // Stable catalog barcode (e.g. MZ003) or null for free-entry
   category?: string | null; // scheduled | prn | continuous | diabetic | stat | unscheduled
+  catalog_id?: string | null; // null = free-entry: no pre-printed catalog label matches its barcode
 }
 
 export interface BulkLabelData {
@@ -42,6 +43,7 @@ export interface BarcodeLabelItem {
   subtitle: string; // e.g. "25 mg · tablet"
   category?: string | null;
   quantity?: number; // per-item label count override; falls back to the sheet's global quantity
+  notInCatalog?: boolean; // free-entry medication; its label is unique to this tenant
 }
 
 // Single accent color for the label's left stripe (no longer varies by category)
@@ -133,6 +135,7 @@ export function dedupeMedicationLabels(medications: MedicationLabelData[]): Barc
         name: medication.medication_name,
         subtitle: `${medication.dosage} · ${medication.route}`,
         category: medication.category,
+        notInCatalog: !medication.catalog_id,
       });
     }
   });
@@ -268,6 +271,7 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         status,
         barcode,
         category,
+        catalog_id,
         patients!inner (
           first_name,
           last_name,
@@ -312,7 +316,8 @@ export async function fetchMedicationLabels(providedTenantId?: string): Promise<
         prescriber: med.prescribed_by,
         date_prescribed: med.start_date,
         barcode: (med as unknown as { barcode?: string | null }).barcode ?? null,
-        category: (med as unknown as { category?: string | null }).category ?? null
+        category: (med as unknown as { category?: string | null }).category ?? null,
+        catalog_id: med.catalog_id ?? null
       };
     });
 

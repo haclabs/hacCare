@@ -576,6 +576,8 @@ Start typing in **Catalog Lookup** to search the Med Catalog, including brand na
 ## Free entry
 Skip the catalog and type the name. hacCare assigns its own barcode (M + a letter + 5 digits). It's stable once saved, so labels still work after resets and launches. Changing the name of a catalog medication turns it into a free-entry one.
 
+If the name you type matches a catalog medication, matching entries appear under **Medication Name**. Click one to link it. Saving a medication that isn't from the catalog asks you to confirm: no pre-printed catalog label will scan for it, so print its label from the template or simulation. To get a medication added to the catalog, email support@haccare.app. Students taking a phone or verbal order see a note instead of the confirmation. When you print labels, medications that aren't in the catalog are marked **Not in catalog**.
+
 ## The rest of the form
 - **Category**: Scheduled, PRN, IV/Continuous, STAT or Diabetic. Choosing Diabetic shows the sliding-scale editor.
 - **Dosage**, **Route** and **Frequency** (for example "2 times daily" or "Every 4 hours"). Frequency controls the BCMA dose-gap check.
@@ -677,7 +679,7 @@ If a dose really is needed, the student can **Override** with a reason. The over
         title: 'The Med Catalog',
         content: `The **Med Catalog** (in the sidebar) is the master list of medications with permanent barcodes (MZ001, MZ002, …). A catalog medication's label prints the same everywhere, so you can print it once and reuse it in any template or simulation.
 
-Everyone except students can view the catalog and print labels. Only super admins can add and edit entries, because the catalog is shared by every institution. Ask your hacCare administrator if you need a new medication added.
+Everyone except students can view the catalog and print labels. Only super admins can add and edit entries, because the catalog is shared by every institution. Email support@haccare.app if you need a new medication added.
 
 ## Each entry has
 - **Barcode**: suggested automatically (next MZ number)
