@@ -3,6 +3,7 @@ import { X, Printer } from 'lucide-react';
 import { QrThumbnail } from '../../admin/components/BarcodeLabelSheetModal';
 import { type BarcodeLabelItem, MEDICATION_LABEL_ACCENT_COLOR, splitMedicationSubtitle, splitMedicationName, medicationNameHtml } from '../../../services/operations/bulkLabelService';
 import { generateQRDataURLs, SimulationParticipant } from './labelPrintingUtils';
+import { NotInCatalogLabelsNotice } from './NotInCatalogLabelsNotice';
 interface MedicationLabelsModalProps {
   items: BarcodeLabelItem[];
   simulationName: string;
@@ -200,6 +201,7 @@ export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ it
             <h3 className="font-medium text-blue-900 mb-1">Avery 5160 Format</h3>
             <p className="text-sm text-blue-700">Labels sized for 1" × 2⅝" (30 labels per sheet)</p>
           </div>
+          <NotInCatalogLabelsNotice items={items} />
           <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded">
             <p className="text-sm text-purple-700">
               <strong>Quantity: {quantity}×</strong> - Each medication will have {quantity} label{quantity !== 1 ? 's' : ''} printed ({items.length} medication{items.length !== 1 ? 's' : ''} × {quantity} = {duplicatedItems.length} total labels)
@@ -226,6 +228,11 @@ export const MedicationLabelsModal: React.FC<MedicationLabelsModalProps> = ({ it
                   <div className="absolute top-1.5 right-1.5 w-14 h-14">
                     <QrThumbnail data={item.barcode} size={56} />
                   </div>
+                  {item.notInCatalog && (
+                    <span className="absolute bottom-4 right-1.5 rounded bg-amber-100 px-1 text-[8px] font-bold uppercase text-amber-800">
+                      Not in catalog
+                    </span>
+                  )}
                   <div className="flex items-baseline justify-between text-gray-400">
                     <span className="text-[9.5px]"><strong className="text-[#1e3a5f]">hac</strong><strong className="text-[#3EB489]">Care</strong> EMR Sim</span>
                     <span className="text-[8px] font-mono">{item.barcode}</span>

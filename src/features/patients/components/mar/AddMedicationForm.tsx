@@ -6,7 +6,8 @@ import { createMedication } from '../../../../services/clinical/medicationServic
 import { parseReleaseAfterMinutes } from '../../utils/orderRelease';
 import { ReleaseDelayField } from '../DoctorsOrderRelease';
 import { MedicationEntryFields } from './MedicationEntryFields';
-import { useMedicationEntryForm } from './useMedicationEntryForm';
+import { useMedicationEntryForm, type MedicationEntryFields as MedicationEntryFieldValues } from './useMedicationEntryForm';
+import { useNotInCatalogConfirmation } from './useNotInCatalogConfirmation';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface AddMedicationFormProps {
@@ -25,12 +26,13 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
   canSetReleaseDelay = false,
 }) => {
   const entry = useMedicationEntryForm();
+  const { confirmSave, dialog: notInCatalogDialog } = useNotInCatalogConfirmation();
   const [prescribedBy, setPrescribedBy] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [releaseInput, setReleaseInput] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const built = entry.buildFields();
     if (built.error !== null) {
@@ -42,7 +44,10 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
       return;
     }
     const { fields } = built;
+    confirmSave(fields.catalog_id, fields.name, () => void save(fields));
+  };
 
+  const save = async (fields: MedicationEntryFieldValues) => {
     setIsLoading(true);
     try {
       const medicationData: Omit<Medication, 'id'> = {
@@ -130,6 +135,7 @@ export const AddMedicationForm: React.FC<AddMedicationFormProps> = ({
           </form>
         </div>
       </div>
+      {notInCatalogDialog}
     </div>
   );
 };

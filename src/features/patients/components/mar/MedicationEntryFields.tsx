@@ -2,6 +2,8 @@ import React from 'react';
 import { Lock } from 'lucide-react';
 
 import { CatalogMedicationPicker } from './CatalogMedicationPicker';
+import { CatalogNameSuggestions } from './CatalogNameSuggestions';
+import { NotInCatalogNote } from './NotInCatalogConfirmation';
 import { SlidingScaleEditor } from './SlidingScaleEditor';
 import { TimeInput } from './TimeInput';
 import type { MedicationEntryForm } from './useMedicationEntryForm';
@@ -18,8 +20,12 @@ const inputClass =
 /**
  * Catalog lookup, barcode, dose, route, frequency and schedule fields for one medication.
  * Rendered inside the caller's <form>; state lives in useMedicationEntryForm.
+ * `showNotInCatalogNote` is for students, who get an inline note instead of the save-time dialog.
  */
-export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm }> = ({ entry }) => {
+export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showNotInCatalogNote?: boolean }> = ({
+  entry,
+  showNotInCatalogNote = false,
+}) => {
   const { form, updateField } = entry;
 
   return (
@@ -66,7 +72,15 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm }> = (
           className={inputClass}
           placeholder="Enter medication name"
         />
+        <CatalogNameSuggestions
+          name={form.name}
+          catalog={entry.catalog}
+          selected={entry.selectedCatalog}
+          onSelect={entry.selectCatalog}
+        />
       </div>
+
+      {showNotInCatalogNote && !form.catalog_id && form.name.trim() && <NotInCatalogNote />}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>

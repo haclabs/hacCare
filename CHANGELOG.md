@@ -7,6 +7,35 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-10-30 - CHANGE: WARN WHEN A MEDICATION ISN'T FROM THE CATALOG
+===============================================================================
+
+* Typing a medication name that matches the Med Catalog now lists the
+  matching entries under the name field (Add/Edit Medication and
+  medication doctors' orders); one click links the catalog entry and its
+  pre-printed barcode
+* Staff saving a medication that isn't linked to the catalog get a
+  confirmation: no pre-printed catalog label will scan for it, so its label
+  must be printed from the template or simulation. "Save anyway" needs an
+  acknowledgement; the dialog points to support@haccare.app for catalog
+  additions. Students entering phone/verbal orders see an inline note
+  instead, so they aren't blocked mid-scenario
+* The label print screens flag medications that aren't in the catalog
+  ("Not in catalog" badge and list)
+
+===============================================================================
+[Unreleased] - 2026-10-30 - CLEANUP: ALBERTA TIME ZONE / UNUSED TENANT SETTINGS
+===============================================================================
+
+* Alberta moved to permanent UTC−6 in 2026, so the hard-coded "MST" label
+  on completed simulations in Simulation History was wrong. It now shows
+  the viewer's own time-zone abbreviation from the browser. Times
+  everywhere else already followed the device's time zone
+* Removed the Timezone, Currency and Date Format options from Tenant
+  Settings. They were saved but never read, so changing them did nothing.
+  Values already stored in tenant settings are left in place and ignored
+
+===============================================================================
 [Unreleased] - 2026-10-30 - FIX: SIMULATION MEDS LINKED TO THE CATALOG
 ===============================================================================
 
