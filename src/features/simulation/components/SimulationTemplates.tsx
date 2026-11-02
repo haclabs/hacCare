@@ -21,6 +21,7 @@ import LaunchSimulationModal from './LaunchSimulationModal';
 import TemplateExportButton from './TemplateExportButton';
 import TemplateImportModal from './TemplateImportModal';
 import { TemplateStatesModal } from './TemplateStatesModal';
+import TemplateDescriptionEditor from './TemplateDescriptionEditor';
 import { formatDistanceToNow } from 'date-fns';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { useNavigate } from 'react-router-dom';
@@ -758,13 +759,13 @@ const SimulationTemplates: React.FC = () => {
                       tIdx < grouped[group].length - 1 ? 'border-b border-gray-100' : ''
                     }`}>
                       <div className="ml-11 space-y-2">
-                        {template.description ? (
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {template.description}
-                          </p>
-                        ) : (
-                          <p className="text-sm text-gray-400 italic">No description provided.</p>
-                        )}
+                        <TemplateDescriptionEditor
+                          templateId={template.id}
+                          description={template.description}
+                          onSaved={(description) =>
+                            setTemplates((prev) => prev.map((t) => (t.id === template.id ? { ...t, description } : t)))
+                          }
+                        />
                         <div className="flex flex-wrap gap-3 pt-1 text-xs text-gray-500">
                           <span>Duration: <strong className="text-gray-700">{template.default_duration_minutes} min</strong></span>
                           <span>Status: <strong className={`${

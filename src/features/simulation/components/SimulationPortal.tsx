@@ -319,9 +319,11 @@ const SimulationPortal: React.FC = () => {
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
                             {assignment.simulation.name}
                           </h3>
-                          <p className="text-sm text-gray-600 mb-2">
-                            {assignment.simulation.template?.description || 'Simulation session'}
-                          </p>
+                          {isInstructor && assignment.simulation.template?.description && (
+                            <p className="text-sm text-gray-600 mb-2">
+                              {assignment.simulation.template.description}
+                            </p>
+                          )}
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           assignment.simulation.status === 'active'

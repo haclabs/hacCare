@@ -99,12 +99,15 @@ export async function updateSimulationTemplate(
   updates: Partial<Pick<SimulationTemplate, 'name' | 'description' | 'default_duration_minutes' | 'status'>>
 ): Promise<void> {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('simulation_templates')
       .update(updates)
-      .eq('id', templateId);
+      .eq('id', templateId)
+      .select('id');
 
     if (error) throw error;
+    // RLS blocks an update by matching zero rows rather than raising
+    if (!data || data.length === 0) throw new Error('Template not found or not editable');
   } catch (error: unknown) {
     secureLogger.error('Error updating simulation template:', error);
     throw error;
