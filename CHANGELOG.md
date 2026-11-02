@@ -8,7 +8,6 @@ documented in this file.
 
 ===============================================================================
 [Unreleased] - 2026-11-02 - CHANGE: HIDE SIM DESCRIPTION FROM STUDENTS / EDIT IT
-===============================================================================
 
 * Students no longer see the scenario description on the Enter Sim cards,
   so it can't give the scenario away. Instructors still see it
@@ -17,7 +16,6 @@ documented in this file.
   Active simulations show their template's description, so the change
   appears there too
 
-===============================================================================
 [Unreleased] - 2026-10-30 - CHANGE: WARN WHEN A MEDICATION ISN'T FROM THE CATALOG
 ===============================================================================
 
