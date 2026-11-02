@@ -7,6 +7,15 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-02 - CHANGE: HIDE SIM DESCRIPTION FROM STUDENTS / EDIT IT
+
+* Students no longer see the scenario description on the Enter Sim cards,
+  so it can't give the scenario away. Instructors still see it
+* Instructors can edit a template's description: expand the template in
+  Simulation Templates (list view) and click "Edit" next to the description.
+  Active simulations show their template's description, so the change
+  appears there too
+
 [Unreleased] - 2026-10-30 - CHANGE: WARN WHEN A MEDICATION ISN'T FROM THE CATALOG
 ===============================================================================
 
