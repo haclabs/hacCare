@@ -7,6 +7,18 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-03 - FIX: NAMED STATES MISSING FROM RESET / LAUNCH
+===============================================================================
+
+* Some instructors couldn't choose a state (e.g. "Week 2") when resetting or
+  launching a simulation: the "Reset into state" and "Launch From" options
+  were missing, while other instructors in the same program could see them.
+  It only worked for instructors who had opened that template with "Edit"
+  at some point. Every instructor who can see a template now sees its
+  states and can reset or launch into them
+  (migration 20261103012827_share_template_states_with_template_viewers)
+
+===============================================================================
 [Unreleased] - 2026-11-02 - CHANGE: HIDE SIM DESCRIPTION FROM STUDENTS / EDIT IT
 ===============================================================================
 
