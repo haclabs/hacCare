@@ -199,6 +199,14 @@ BEGIN
     RAISE EXCEPTION 'FAIL 13: instructor % cannot read their assigned programs', v_instr;
   END IF;
 
+  -- 20. Named template states follow template visibility (20261103012827): none from a foreign institution.
+  SELECT count(*) INTO v_n FROM simulation_template_states sts
+  WHERE public.template_owner_institution(sts.template_id) IS DISTINCT FROM v_inst
+    AND sts.created_by IS DISTINCT FROM v_instr;
+  IF v_n > 0 THEN
+    RAISE EXCEPTION 'FAIL 20: instructor % sees % foreign named template states', v_instr, v_n;
+  END IF;
+
   RESET role;
   RAISE NOTICE 'PASS: institution scoping held for instructor %', v_instr;
 END $$;

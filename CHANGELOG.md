@@ -7,7 +7,33 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-03 - SECURITY: MINIMATCH AND ZOD ADVISORIES
+===============================================================================
+
+* Cleared Dependabot alert #84 (minimatch, GHSA-g3hv-75wg-m249) by forcing
+  minimatch ^11.0.4 through an npm override; ESLint's packages still ask
+  for 10.x
+* Removed the unused ts-prune dev dependency, the only package needing
+  minimatch 3 (no script or CI step ran it)
+* Updated zod to 4.6.7 (GHSA-mrhx-c7xc-m3w5, pulled in by ESLint tooling)
+* npm audit now reports 0 vulnerabilities. All of these were build/lint
+  tools only; nothing that ships to users changed
+
+===============================================================================
+[Unreleased] - 2026-11-03 - FIX: NAMED STATES MISSING FROM RESET / LAUNCH
+===============================================================================
+
+* Some instructors couldn't choose a state (e.g. "Week 2") when resetting or
+  launching a simulation: the "Reset into state" and "Launch From" options
+  were missing, while other instructors in the same program could see them.
+  It only worked for instructors who had opened that template with "Edit"
+  at some point. Every instructor who can see a template now sees its
+  states and can reset or launch into them
+  (migration 20261103012827_share_template_states_with_template_viewers)
+
+===============================================================================
 [Unreleased] - 2026-11-02 - CHANGE: HIDE SIM DESCRIPTION FROM STUDENTS / EDIT IT
+===============================================================================
 
 * Students no longer see the scenario description on the Enter Sim cards,
   so it can't give the scenario away. Instructors still see it
@@ -16,6 +42,7 @@ documented in this file.
   Active simulations show their template's description, so the change
   appears there too
 
+===============================================================================
 [Unreleased] - 2026-10-30 - CHANGE: WARN WHEN A MEDICATION ISN'T FROM THE CATALOG
 ===============================================================================
 
