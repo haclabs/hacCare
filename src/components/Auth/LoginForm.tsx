@@ -9,14 +9,10 @@ import { HacCareLogo } from '../Layout/HacCareLogo';
 import { PrivacyNoticeModal } from './PrivacyNoticeModal';
 import { MFAChallenge } from './MFAChallenge';
 import { MFAEnrollment } from './MFAEnrollment';
+import { getPostLoginPath } from '../../features/rover/roverMode';
 
 const doRedirect = (simulationOnly?: boolean) => {
-  if (simulationOnly) {
-    localStorage.removeItem('current_simulation_tenant');
-    window.location.href = '/app/simulation-portal';
-  } else {
-    window.location.href = '/app';
-  }
+  window.location.href = getPostLoginPath(simulationOnly);
 };
 
 export const LoginForm: React.FC = () => {
@@ -84,7 +80,7 @@ export const LoginForm: React.FC = () => {
   const handleMFASuccess = () => {
     submitActiveRef.current = false;
     setMfaMode(null);
-    window.location.href = '/app';
+    window.location.href = getPostLoginPath();
   };
 
   const handleMFACancel = async () => {

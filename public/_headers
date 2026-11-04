@@ -22,6 +22,12 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=()
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src https://player.vimeo.com https://scribehow.com; frame-ancestors 'none';
 
+# Rover (bedside tablet) routes - never serve a stale MAR from cache
+/rover/*
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+  Pragma: no-cache
+  Expires: 0
+
 /*
   # Prevent clickjacking attacks
   X-Frame-Options: DENY

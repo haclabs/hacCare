@@ -126,7 +126,11 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     secureLogger.debug('  - Final: isMedicationBarcode =', isMedicationBarcode);
     
     if (currentStep === 'scan-patient') {
-      if (isPatientBarcode) {
+      if (isPatientBarcode && !bcmaService.validatePatientBarcode(barcode, patient)) {
+        // Right format, wrong person — stop here rather than at the Verify step
+        secureLogger.debug('❌ BCMA: Patient barcode does not match expected patient - rejecting');
+        alert(`❌ Wrong patient!\n\nScanned wristband: ${barcode}\nExpected: ${patient.first_name} ${patient.last_name} (${patient.patient_id})\n\nScan this patient's wristband.`);
+      } else if (isPatientBarcode) {
         secureLogger.debug('🔵 BCMA: Valid patient barcode, proceeding');
         setScannedPatientId(barcode);
         setCurrentStep('scan-medication');

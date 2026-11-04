@@ -17,6 +17,7 @@ import { useWelcomeModal } from './hooks/useWelcomeModal';
 import { AuthCallback } from './components/Auth/AuthCallback';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 import { PatientForm } from './features/patients/components/forms/PatientForm';
+import { RoverModeSuggestion } from './features/rover/components/RoverModeSuggestion';
 import { secureLogger } from './lib/security/secureLogger';
 
 /**
@@ -690,6 +691,9 @@ function App() {
         
         {/* Simulation Mode Banner */}
         <SimulationBanner />
+
+        {/* Offer the bedside Rover view on tablets */}
+        <RoverModeSuggestion />
 
         {/* Breadcrumb back to Workspace Home — only for program tenants, away from the home tab */}
         {currentTenant?.tenant_type === 'program' && activeTab !== 'program-home' && (

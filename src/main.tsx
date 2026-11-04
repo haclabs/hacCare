@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Hidden - uncomment to show TanStack devtools
 import { SimulationAwareAuthProvider } from './contexts/auth/SimulationAwareAuthProvider';
@@ -20,7 +20,12 @@ import './index.css';
 import { testSupabaseConnection } from './lib/api/supabase';
 import { getCurrentSubdomain } from './lib/infrastructure/subdomainService';
 import { secureLogger } from './lib/security/secureLogger';
+import { ROVER_PATH, isRoverHost } from './features/rover/roverMode';
+import { RoverRoute } from './features/rover/components/RoverRoute';
 // import { initializeAuth } from './lib/browserAuthFix'; // Disabled for deployment fix
+
+// The rover. subdomain is locked to the bedside tablet view
+const roverHost = isRoverHost();
 
 // Initialize subdomain detection for production
 if (import.meta.env.NODE_ENV === 'production') {
@@ -59,13 +64,16 @@ createRoot(document.getElementById('root')!).render(
             <SimulationAwareAuthProvider>
               <Routes>
                 {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={roverHost ? <Navigate to={ROVER_PATH} replace /> : <LandingPage />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/set-password" element={<SetNewPassword />} />
                 
+                {/* Bedside tablet (Rover) */}
+                <Route path={`${ROVER_PATH}/*`} element={<RoverRoute />} />
+
                 {/* Protected application routes */}
-                <Route path="/app/*" element={
+                <Route path="/app/*" element={roverHost ? <Navigate to={ROVER_PATH} replace /> : (
                   <TenantProvider>
                     <PatientProvider>
                       <ProtectedRoute>
@@ -73,7 +81,7 @@ createRoot(document.getElementById('root')!).render(
                       </ProtectedRoute>
                     </PatientProvider>
                   </TenantProvider>
-                } />
+                )} />
               </Routes>
             </SimulationAwareAuthProvider>
           </ThemeProvider>

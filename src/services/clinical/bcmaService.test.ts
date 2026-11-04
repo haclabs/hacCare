@@ -183,3 +183,15 @@ describe('bcmaService.validateBarcodes - overall validity', () => {
     expect(result.errors).toHaveLength(0);
   });
 });
+
+describe('bcmaService.validatePatientBarcode - wristband step', () => {
+  // The BCMA modal calls this on the first scan so a wrong wristband is stopped
+  // before the medication scan, not only at the Verify step.
+  it('accepts the expected patient wristband', () => {
+    expect(bcmaService.validatePatientBarcode('PT64280', { patient_id: 'PT64280' })).toBe(true);
+  });
+
+  it("rejects another patient's correctly formatted wristband", () => {
+    expect(bcmaService.validatePatientBarcode('PT51234', { patient_id: 'PT64280' })).toBe(false);
+  });
+});

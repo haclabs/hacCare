@@ -145,26 +145,33 @@ export const MARModule: React.FC<MARModuleProps> = ({
     ADULT: 'Adult (18+ years)',
   };
 
+  const hasPatientNav = !!(
+    onChartClick || onVitalsClick || onMedsClick || onLabsClick || onOrdersClick ||
+    onHacMapClick || onIOClick || onNotesClick || onFlowsheetsClick
+  );
+
   return (
     <div className="space-y-6 px-4 py-4">
-      {/* Patient Action Bar */}
-      <PatientActionBar
-        onChartClick={onChartClick}
-        onVitalsClick={onVitalsClick}
-        onMedsClick={onMedsClick}
-        onLabsClick={onLabsClick}
-        onOrdersClick={onOrdersClick}
-        onHacMapClick={onHacMapClick}
-        onIOClick={onIOClick}
-        onNotesClick={onNotesClick}
-        onFlowsheetsClick={onFlowsheetsClick}
-        vitalsCount={vitalsCount}
-        medsCount={medsCount}
-        hasNewLabs={hasNewLabs}
-        hasNewOrders={hasNewOrders}
-        hasNewNotes={hasNewNotes}
-        activeAction="meds"
-      />
+      {/* Patient Action Bar — omitted when the host (e.g. Rover) offers no other modules */}
+      {hasPatientNav && (
+        <PatientActionBar
+          onChartClick={onChartClick}
+          onVitalsClick={onVitalsClick}
+          onMedsClick={onMedsClick}
+          onLabsClick={onLabsClick}
+          onOrdersClick={onOrdersClick}
+          onHacMapClick={onHacMapClick}
+          onIOClick={onIOClick}
+          onNotesClick={onNotesClick}
+          onFlowsheetsClick={onFlowsheetsClick}
+          vitalsCount={vitalsCount}
+          medsCount={medsCount}
+          hasNewLabs={hasNewLabs}
+          hasNewOrders={hasNewOrders}
+          hasNewNotes={hasNewNotes}
+          activeAction="meds"
+        />
+      )}
 
       {/* Module Header */}
       <div className="flex items-center justify-between">

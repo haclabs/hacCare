@@ -23,6 +23,7 @@ const RESERVED_SUBDOMAINS = new Set([
   'api',
   'admin',
   'simulation',
+  'rover',
 ]);
 
 /**
@@ -68,7 +69,7 @@ export function getCurrentSubdomain(): string | null {
   // than a tenant. Without this, dev.haccare.app resolves subdomain 'dev' and
   // the app tries to load a tenant called 'dev' on every page load, behaving
   // like a broken tenant login. Verified 2026-09-21 that no tenant uses any of
-  // these names. 'simulation' is handled separately in App.tsx, which matches
+  // these names ('rover' verified 2026-11-04). 'simulation' is handled separately in App.tsx, which matches
   // hostname.startsWith('simulation.') directly.
   const subdomain = parts[0];
   const result = RESERVED_SUBDOMAINS.has(subdomain) ? null : subdomain;

@@ -23,6 +23,19 @@
   status = 200
   force = false
 
+# ============================================================================
+# ROVER (BEDSIDE TABLET) SUBDOMAIN
+# ============================================================================
+# rover.haccare.app serves the same app; src/main.tsx sees the rover. host and
+# locks the device to the /rover view (simulation list -> wristband scan -> MAR).
+# Requires rover.haccare.app as a domain alias on this Netlify site.
+
+[[redirects]]
+  from = "https://rover.haccare.app/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
 # Main SPA fallback - must come after specific redirects
 [[redirects]]
   from = "/*"

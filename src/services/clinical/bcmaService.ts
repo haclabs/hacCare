@@ -121,7 +121,7 @@ class BCMAService {
   }
 
   // Validate patient barcode
-  private validatePatientBarcode(scannedId: string, patient: Patient): boolean {
+  validatePatientBarcode(scannedId: string, patient: Pick<Patient, 'patient_id'>): boolean {
     // Handle both old and new barcode formats
     const generatedBarcode = this.generatePatientBarcode(patient);
     const validIds = [
