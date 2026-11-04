@@ -7,6 +7,31 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-04 - NEW: ROVER MODE FOR BEDSIDE TABLETS
+===============================================================================
+
+* New Rover mode for handheld tablets with built-in barcode scanners, like the
+  rovers hospitals use at the bedside. It shows only three screens: pick a
+  simulation, scan the patient's wristband, then that patient's MAR with the
+  usual BCMA scanning. No sidebar and no other modules
+* The patient bar on the Rover MAR stays pinned while scrolling and always
+  shows the patient's allergies (or "No known allergies")
+* Scanning another patient's wristband from the MAR jumps to that patient;
+  scans are ignored while a BCMA check is open
+* Open it at /rover, or give tablets their own address: rover.haccare.app
+  always opens Rover mode and can't leave it. On the main site, touch-only
+  devices see a "Switch to Rover mode" banner; once used, the device returns
+  to Rover after each sign-in until someone taps "Full view"
+* Rover devices are shared, so signing in always starts at the simulation
+  list, and the large "Switch user" button clears the previous user's
+  simulation and cached patient data
+* See docs/features/bcma/ROVER_MODE.md for setup
+* BCMA now checks the wristband against the patient as soon as it is scanned.
+  Before, any patient's wristband showed "Patient verified" and the mismatch
+  only appeared after the medication scan (it was always blocked from being
+  recorded). Applies on desktop and Rover
+
+===============================================================================
 [Unreleased] - 2026-11-03 - SECURITY: MINIMATCH AND ZOD ADVISORIES
 ===============================================================================
 

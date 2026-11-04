@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { getPostLoginPath } from '../../features/rover/roverMode';
 
 /**
  * OAuth Callback Handler
@@ -28,7 +29,7 @@ export const AuthCallback = () => {
         if (data.session) {
           secureLogger.debug('✅ OAuth session established:', data.session.user.email);
           // The AuthContext will handle the rest, redirect to app
-          navigate('/app');
+          navigate(getPostLoginPath());
         } else {
           secureLogger.warn('⚠️ No session found in callback');
           navigate('/login?error=no_session');
