@@ -40,42 +40,47 @@ const categoryInfo = {
   prn: {
     title: 'PRN (As Needed)',
     icon: Clock,
-    color: 'blue',
+    iconColor: 'text-blue-600 dark:text-blue-400',
+    badgeColor: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 dark:bg-blue-900/40 dark:text-blue-200',
     description: 'No alerts - administer as needed',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    borderColor: 'border-blue-200 dark:border-blue-800',
   },
   scheduled: {
     title: 'Scheduled Medications',
     icon: Calendar,
-    color: 'green',
+    iconColor: 'text-green-600 dark:text-green-400',
+    badgeColor: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 dark:bg-green-900/40 dark:text-green-200',
     description: 'Time-based alerts enabled',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
+    bgColor: 'bg-green-50 dark:bg-green-900/20',
+    borderColor: 'border-green-200 dark:border-green-800',
   },
   continuous: {
     title: 'IV/Continuous',
     icon: Syringe,
-    color: 'blue',
+    iconColor: 'text-blue-600 dark:text-blue-400',
+    badgeColor: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 dark:bg-blue-900/40 dark:text-blue-200',
     description: 'Running continuously until discontinued',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    borderColor: 'border-blue-200 dark:border-blue-800',
   },
   diabetic: {
     title: 'Diabetic Medications',
     icon: Syringe,
-    color: 'orange',
+    iconColor: 'text-orange-600 dark:text-orange-400',
+    badgeColor: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200 dark:bg-orange-900/40 dark:text-orange-200',
     description: 'Blood glucose management - time-based alerts enabled',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+    borderColor: 'border-orange-200 dark:border-orange-800',
   },
   stat: {
     title: 'STAT Medications',
     icon: Clock,
-    color: 'red',
+    iconColor: 'text-red-600 dark:text-red-400',
+    badgeColor: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 dark:bg-red-900/40 dark:text-red-200',
     description: 'One-time administration - no alerts',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    borderColor: 'border-red-200 dark:border-red-800',
   },
 } as const;
 
@@ -149,23 +154,23 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     const linkedOrder = medication.order_link_key ? ordersByKey?.get(medication.order_link_key) : undefined;
 
     return (
-      <div key={medication.id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
+      <div key={medication.id} className="p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0 md:flex-1">
             <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white">{medication.name}</h4>
               {category !== 'continuous' && (
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     category === 'prn'
-                      ? 'bg-blue-100 text-blue-800'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200'
                       : category === 'scheduled'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200'
                       : medication.category === 'diabetic'
-                      ? 'bg-orange-100 text-orange-800'
+                      ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200'
                       : category === 'stat'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
                   }`}
                 >
                   {category === 'prn'
@@ -184,8 +189,8 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
                     category === 'continuous'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200'
+                      : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200'
                   }`}
                 >
                   <Clock className="h-3 w-3" />
@@ -195,7 +200,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
               {medication.last_administered && (
                 // Cleared by both simulation resets (last_administered = NULL), so it never carries over
                 <span
-                  className="px-2 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300"
+                  className="px-2 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 ring-1 ring-emerald-300"
                   title={`Last administered ${new Date(medication.last_administered).toLocaleString()}`}
                 >
                   <CheckCircle className="h-3 w-3" />
@@ -212,12 +217,12 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                 />
               )}
             </div>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               {medication.dosage} • {medication.route} • {medication.frequency}
             </p>
             {linkedOrder && <LinkedOrderNote order={linkedOrder} compact />}
             {medication.next_due && category === 'continuous' && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Continuous infusion
               </p>
             )}
@@ -225,7 +230,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
 
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
             <div className="md:text-right">
-              <p className="text-sm font-medium text-gray-500 md:text-gray-900">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 md:text-gray-900">
                 Prescribed by: {medication.prescribed_by}
               </p>
             </div>
@@ -284,10 +289,10 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
 
   if (medications.length === 0) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+      <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
         <Pill className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Medications</h3>
-        <p className="text-gray-600">Patient has no medications on record.</p>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Medications</h3>
+        <p className="text-gray-600 dark:text-gray-400">Patient has no medications on record.</p>
         <button
           onClick={onAddClick}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 mx-auto"
@@ -303,7 +308,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     <div className="space-y-6">
       {/* Category Filter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex max-w-full gap-1 overflow-x-auto bg-gray-100 rounded-lg p-1 md:flex-wrap">
+        <div className="flex max-w-full gap-1 overflow-x-auto bg-gray-100 dark:bg-gray-700 rounded-lg p-1 md:flex-wrap">
           {(['All', 'prn', 'scheduled', 'scheduled_diabetic', 'continuous', 'stat'] as const).map(
             (cat) => (
               <button
@@ -311,8 +316,8 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                 onClick={() => setActiveCategoryFilter(cat)}
                 className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-md font-medium text-sm transition-colors flex items-center space-x-2 ${
                   activeCategoryFilter === cat
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 {cat === 'prn' && <Clock className="h-4 w-4" />}
@@ -333,7 +338,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                     ? 'IV/Continuous'
                     : 'STAT'}
                 </span>
-                <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs">
+                <span className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full px-2 py-0.5 text-xs">
                   {cat === 'All'
                     ? activeMedications.length
                     : cat === 'scheduled_diabetic'
@@ -356,15 +361,15 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
 
       {/* Success / loading feedback */}
       {showSuccessMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
-          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start space-x-3">
+          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-medium text-green-800">Success!</p>
-            <p className="text-sm text-green-700 mt-1">{successMessage}</p>
+            <p className="font-medium text-green-800 dark:text-green-200">Success!</p>
+            <p className="text-sm text-green-700 dark:text-green-300 mt-1">{successMessage}</p>
           </div>
           <button
             onClick={() => setShowSuccessMessage(false)}
-            className="flex-shrink-0 text-green-400 hover:text-green-600"
+            className="flex-shrink-0 text-green-400 hover:text-green-600 dark:hover:text-green-400"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -381,7 +386,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
       {isLoading && (
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3" />
-          <span className="text-gray-600 text-sm">Processing...</span>
+          <span className="text-gray-600 dark:text-gray-400 text-sm">Processing...</span>
         </div>
       )}
 
@@ -398,23 +403,23 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                   key={key}
                   className={`${info.bgColor} ${info.borderColor} border rounded-lg`}
                 >
-                  <div className="px-4 md:px-6 py-4 border-b border-gray-200">
+                  <div className="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <IconComponent className={`h-5 w-5 text-${info.color}-600`} />
+                        <IconComponent className={`h-5 w-5 ${info.iconColor}`} />
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">{info.title}</h3>
-                          <p className="text-sm text-gray-600">{info.description}</p>
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{info.title}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{info.description}</p>
                         </div>
                       </div>
                       <span
-                        className={`bg-${info.color}-100 text-${info.color}-800 px-3 py-1 rounded-full text-sm font-medium`}
+                        className={`${info.badgeColor} px-3 py-1 rounded-full text-sm font-medium`}
                       >
                         {meds.length}
                       </span>
                     </div>
                   </div>
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
                     {meds.map((med) => renderMedicationItem(med, med.category || 'scheduled'))}
                   </div>
                 </div>
@@ -423,9 +428,9 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
           )}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg">
-          <div className="px-4 md:px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
               {activeCategoryFilter === 'prn'
                 ? 'PRN (As Needed)'
                 : activeCategoryFilter === 'scheduled'
@@ -439,10 +444,10 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                 : 'All Medications'}
             </h3>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredMedications.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-gray-500">No medications in this category</p>
+                <p className="text-gray-500 dark:text-gray-400">No medications in this category</p>
               </div>
             ) : (
               filteredMedications.map((med) =>

@@ -181,7 +181,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
               <div className="flex items-center gap-2 mb-0.5">
                 <button
                   onClick={() => setActiveView('administration')}
-                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -189,25 +189,25 @@ export const MARModule: React.FC<MARModuleProps> = ({
                   Medication Administration Record
                 </button>
               </div>
-              <h2 className="text-2xl font-bold text-purple-700">
+              <h2 className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                 BBIT
                 <span className="text-lg font-normal text-purple-500 ml-2">Basal-Bolus Insulin Therapy</span>
               </h2>
-              <p className="text-gray-600 mt-0.5">
+              <p className="text-gray-600 dark:text-gray-400 mt-0.5">
                 Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})
               </p>
             </>
           ) : (
             <>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Medication Administration Record</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Medication Administration Record</h2>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400">
                   Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})
                 </p>
                 {patient.date_of_birth && (() => {
                   const ageInfo = calculatePreciseAge(patient.date_of_birth);
                   return (
-                    <span className="whitespace-nowrap text-sm text-blue-600 font-medium px-3 py-1 bg-blue-50 rounded-full">
+                    <span className="whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-medium px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full">
                       {ageBandLabels[ageInfo.ageBand]}
                     </span>
                   );
@@ -230,13 +230,13 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
       {/* Tab bar — hidden in BBIT sub-view */}
       {activeView !== 'bbit' && (
-        <div className="flex overflow-x-auto border-b border-gray-200">
+        <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveView('administration')}
             className={`shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
               activeView === 'administration'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             <Pill className="h-3.5 w-3.5" />
@@ -246,8 +246,8 @@ export const MARModule: React.FC<MARModuleProps> = ({
             onClick={() => setActiveView('history')}
             className={`shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
               activeView === 'history'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             <Clock className="h-3.5 w-3.5" />
@@ -255,7 +255,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
           </button>
           <button
             onClick={() => setActiveView('bbit')}
-            className="shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1.5"
+            className="shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors flex items-center gap-1.5"
           >
             <Droplets className="h-3.5 w-3.5" />
             BBIT Chart

@@ -205,11 +205,11 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium text-gray-900">Edit Medication</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Edit Medication</h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -222,15 +222,15 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
           </div>
 
           {successMessage && (
-            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-center space-x-2">
-              <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-              <p className="text-sm text-green-700">{successMessage}</p>
+            <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+              <p className="text-sm text-green-700 dark:text-green-300">{successMessage}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Catalog Lookup
               </label>
               <CatalogMedicationPicker
@@ -246,7 +246,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             </div>
 
             <div>
-              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+              <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 <Lock className="h-3.5 w-3.5 text-gray-400" />
                 QR Barcode
               </label>
@@ -254,7 +254,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 type="text"
                 value={form.barcode ?? ''}
                 readOnly
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-500 font-mono text-sm cursor-not-allowed select-all"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-md text-gray-500 dark:text-gray-400 font-mono text-sm cursor-not-allowed select-all"
               />
               <p className="text-xs text-gray-400 mt-1">
                 {form.catalog_id
@@ -264,7 +264,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Medication Name *
               </label>
               <input
@@ -279,7 +279,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                   }
                 }}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <CatalogNameSuggestions
                 name={form.name}
@@ -290,29 +290,29 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dosage *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dosage *</label>
               <input
                 type="text"
                 value={form.dosage}
                 onChange={(e) => updateField('dosage', e.target.value)}
                 required
                 placeholder="e.g., 10mg, 2 tablets"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {selectedCatalog && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Catalog product: {selectedCatalog.strength} {selectedCatalog.formulation} — enter the ordered dose
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Route *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Route *</label>
               <select
                 value={form.route}
                 onChange={(e) => updateField('route', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select route...</option>
                 {withCurrentValue(ROUTE_OPTIONS, form.route).map((o) => (
@@ -322,12 +322,12 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">💊 Frequency *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">💊 Frequency *</label>
               <select
                 value={form.frequency}
                 onChange={(e) => updateField('frequency', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select frequency...</option>
                 {withCurrentValue(FREQUENCY_OPTIONS, form.frequency).map((o) => (
@@ -337,12 +337,12 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">🏷️ Category *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">🏷️ Category *</label>
               <select
                 value={form.category}
                 onChange={(e) => updateField('category', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select category...</option>
                 {withCurrentValue(CATEGORY_OPTIONS, form.category).map((o) => (
@@ -354,7 +354,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             {form.category === 'diabetic' && <SlidingScaleEditor rows={scaleRows} onChange={setScaleRows} />}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Prescribed By *
               </label>
               <input
@@ -363,19 +363,19 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                 onChange={(e) => updateField('prescribed_by', e.target.value)}
                 required
                 placeholder="Dr. Prescriber Name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <label className="block text-sm font-medium text-blue-700 mb-2">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
                 ⏰ Administration {isMultiTime ? 'Times' : 'Time'} *
               </label>
               {isMultiTime ? (
                 <div className="grid grid-cols-2 gap-3">
                   {form.admin_times.map((time, i) => (
                     <div key={i} className="space-y-1">
-                      <label className="block text-xs font-medium text-blue-600">Time {i + 1}</label>
+                      <label className="block text-xs font-medium text-blue-600 dark:text-blue-400">Time {i + 1}</label>
                       <TimeInput value={time} onChange={(v) => updateAdminTime(i, v)} />
                     </div>
                   ))}
@@ -386,31 +386,31 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
                   onChange={(v) => updateField('admin_time', v)}
                 />
               )}
-              <p className="text-xs text-blue-600 mt-2 font-medium">
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
                 🔔 Scheduled alerts and BCMA will use these times for administration checks
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date *</label>
               <input
                 type="date"
                 value={form.start_date}
                 onChange={(e) => updateField('start_date', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 End Date (Optional)
               </label>
               <input
                 type="date"
                 value={form.end_date}
                 onChange={(e) => updateField('end_date', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -422,7 +422,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>

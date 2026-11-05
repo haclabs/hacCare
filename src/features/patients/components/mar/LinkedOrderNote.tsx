@@ -12,16 +12,16 @@ interface LinkedOrderNoteProps {
 
 /** The doctors' order behind a MAR entry, shown on the MAR row and during BCMA. */
 export const LinkedOrderNote: React.FC<LinkedOrderNoteProps> = ({ order, compact = false }) => (
-  <div className={`rounded-lg border border-blue-200 bg-blue-50 ${compact ? 'px-3 py-2 mt-2' : 'p-3'}`}>
-    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800">
+  <div className={`rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 ${compact ? 'px-3 py-2 mt-2' : 'p-3'}`}>
+    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-blue-800 dark:text-blue-200">
       <FileText className="h-3.5 w-3.5" />
       Doctor's order
     </p>
-    <p className={`mt-1 text-gray-900 whitespace-pre-line ${compact ? 'text-sm' : 'text-sm font-medium'}`}>
+    <p className={`mt-1 text-gray-900 dark:text-white whitespace-pre-line ${compact ? 'text-sm' : 'text-sm font-medium'}`}>
       {order.order_text}
     </p>
-    {order.notes && <p className="mt-1 text-xs text-gray-600">Notes: {order.notes}</p>}
-    <p className="mt-1 text-xs text-blue-700">
+    {order.notes && <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Notes: {order.notes}</p>}
+    <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
       Dr. {stripDoctorTitle(order.ordering_doctor)} · {order.order_type} ·{' '}
       {formatLocalDate(order.order_date)} {order.order_time.slice(0, 5)}
     </p>

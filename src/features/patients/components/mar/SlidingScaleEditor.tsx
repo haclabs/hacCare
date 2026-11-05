@@ -7,7 +7,7 @@ interface SlidingScaleEditorProps {
   onChange: (rows: SlidingScaleDraftRow[]) => void;
 }
 
-const inputCls = 'w-full px-2 py-1.5 text-sm border border-orange-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-400';
+const inputCls = 'w-full px-2 py-1.5 text-sm border border-orange-300 dark:border-orange-700 rounded-md bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400';
 
 /** Instructor editor for a diabetic medication's correction scale, shown on the BCMA screen. */
 export const SlidingScaleEditor: React.FC<SlidingScaleEditorProps> = ({ rows, onChange }) => {
@@ -15,16 +15,16 @@ export const SlidingScaleEditor: React.FC<SlidingScaleEditorProps> = ({ rows, on
     onChange(rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
 
   return (
-    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-      <label className="block text-sm font-medium text-orange-900">🩸 Sliding Scale (Optional)</label>
-      <p className="text-xs text-orange-800 mt-1 mb-3">
+    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+      <label className="block text-sm font-medium text-orange-900 dark:text-orange-100">🩸 Sliding Scale (Optional)</label>
+      <p className="text-xs text-orange-800 dark:text-orange-200 mt-1 mb-3">
         Shown to students on the BCMA screen. The row matching their glucose reading is highlighted.
         Leave "from" or "to" blank for an open-ended row (e.g. 18.1 or higher → Call MD).
       </p>
 
       {rows.length > 0 && (
         <div className="space-y-2 mb-3">
-          <div className="grid grid-cols-[1fr_1fr_1.3fr_0.9fr_auto] gap-2 text-xs font-semibold text-orange-900">
+          <div className="grid grid-cols-[1fr_1fr_1.3fr_0.9fr_auto] gap-2 text-xs font-semibold text-orange-900 dark:text-orange-100">
             <span>From (mmol/L)</span>
             <span>To (mmol/L)</span>
             <span>Then</span>
@@ -57,7 +57,7 @@ export const SlidingScaleEditor: React.FC<SlidingScaleEditorProps> = ({ rows, on
               />
               <button
                 type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))}
-                className="p-1.5 text-red-600 hover:bg-red-100 rounded" title="Remove row"
+                className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded" title="Remove row"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -68,7 +68,7 @@ export const SlidingScaleEditor: React.FC<SlidingScaleEditorProps> = ({ rows, on
 
       <button
         type="button" onClick={() => onChange([...rows, emptyDraftRow()])}
-        className="inline-flex items-center gap-1 text-sm font-medium text-orange-800 hover:text-orange-900"
+        className="inline-flex items-center gap-1 text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100"
       >
         <Plus className="h-4 w-4" /> Add row
       </button>
