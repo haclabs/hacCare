@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { findPatientByWristband } from './findPatientByWristband';
 import { describeCameraError, getScanWindowCrop, getScanWindowSize } from './cameraScanner';
-import { getPostLoginPath, isRoverHostname, isRoverMode, setRoverPreferred } from './roverMode';
+import { getPostLoginPath, isEchoHostname, isEchoMode, setEchoPreferred } from './echoMode';
 
 const patients = [
   { id: 'a', patient_id: 'PT64280' },
@@ -47,34 +47,34 @@ function stubWindow(hostname: string) {
   return store;
 }
 
-describe('rover mode', () => {
+describe('echo mode', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('recognises the rover subdomain', () => {
-    expect(isRoverHostname('rover.example.org')).toBe(true);
-    expect(isRoverHostname('ROVER.example.org')).toBe(true);
-    expect(isRoverHostname('example.org')).toBe(false);
-    expect(isRoverHostname('simulation.example.org')).toBe(false);
+  it('recognises the echo subdomain', () => {
+    expect(isEchoHostname('echo.example.org')).toBe(true);
+    expect(isEchoHostname('ECHO.example.org')).toBe(true);
+    expect(isEchoHostname('example.org')).toBe(false);
+    expect(isEchoHostname('simulation.example.org')).toBe(false);
   });
 
-  it('is on for the rover host without a stored preference', () => {
-    stubWindow('rover.example.org');
-    expect(isRoverMode()).toBe(true);
+  it('is on for the echo host without a stored preference', () => {
+    stubWindow('echo.example.org');
+    expect(isEchoMode()).toBe(true);
   });
 
   it('follows the device preference on the main domain', () => {
     stubWindow('example.org');
-    expect(isRoverMode()).toBe(false);
-    setRoverPreferred(true);
-    expect(isRoverMode()).toBe(true);
-    setRoverPreferred(false);
-    expect(isRoverMode()).toBe(false);
+    expect(isEchoMode()).toBe(false);
+    setEchoPreferred(true);
+    expect(isEchoMode()).toBe(true);
+    setEchoPreferred(false);
+    expect(isEchoMode()).toBe(false);
   });
 
-  it('sends rover sign-ins to the rover and forgets the last simulation', () => {
-    const store = stubWindow('rover.example.org');
+  it('sends echo sign-ins to the echo and forgets the last simulation', () => {
+    const store = stubWindow('echo.example.org');
     store.set('current_simulation_tenant', 'tenant-x');
-    expect(getPostLoginPath(false)).toBe('/rover');
+    expect(getPostLoginPath(false)).toBe('/echo');
     expect(store.has('current_simulation_tenant')).toBe(false);
   });
 

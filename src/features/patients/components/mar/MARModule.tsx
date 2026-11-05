@@ -152,7 +152,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
   return (
     <div className="space-y-6 px-4 py-4">
-      {/* Patient Action Bar — omitted when the host (e.g. Rover) offers no other modules */}
+      {/* Patient Action Bar — omitted when the host (e.g. Echo) offers no other modules */}
       {hasPatientNav && (
         <PatientActionBar
           onChartClick={onChartClick}

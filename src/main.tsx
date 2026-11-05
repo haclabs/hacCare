@@ -20,12 +20,12 @@ import './index.css';
 import { testSupabaseConnection } from './lib/api/supabase';
 import { getCurrentSubdomain } from './lib/infrastructure/subdomainService';
 import { secureLogger } from './lib/security/secureLogger';
-import { ROVER_PATH, isRoverHost } from './features/rover/roverMode';
-import { RoverRoute } from './features/rover/components/RoverRoute';
+import { ECHO_PATH, isEchoHost } from './features/echo/echoMode';
+import { EchoRoute } from './features/echo/components/EchoRoute';
 // import { initializeAuth } from './lib/browserAuthFix'; // Disabled for deployment fix
 
-// The rover. subdomain is locked to the bedside tablet view
-const roverHost = isRoverHost();
+// The echo. subdomain is locked to the bedside tablet view
+const echoHost = isEchoHost();
 
 // Initialize subdomain detection for production
 if (import.meta.env.NODE_ENV === 'production') {
@@ -64,16 +64,16 @@ createRoot(document.getElementById('root')!).render(
             <SimulationAwareAuthProvider>
               <Routes>
                 {/* Public routes */}
-                <Route path="/" element={roverHost ? <Navigate to={ROVER_PATH} replace /> : <LandingPage />} />
+                <Route path="/" element={echoHost ? <Navigate to={ECHO_PATH} replace /> : <LandingPage />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/set-password" element={<SetNewPassword />} />
                 
-                {/* Bedside tablet (Rover) */}
-                <Route path={`${ROVER_PATH}/*`} element={<RoverRoute />} />
+                {/* Bedside tablet (Echo) */}
+                <Route path={`${ECHO_PATH}/*`} element={<EchoRoute />} />
 
                 {/* Protected application routes */}
-                <Route path="/app/*" element={roverHost ? <Navigate to={ROVER_PATH} replace /> : (
+                <Route path="/app/*" element={echoHost ? <Navigate to={ECHO_PATH} replace /> : (
                   <TenantProvider>
                     <PatientProvider>
                       <ProtectedRoute>

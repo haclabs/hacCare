@@ -2,24 +2,24 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import { Camera } from 'lucide-react';
 import { dispatchBarcodeEvent } from '../../../lib/barcode/barcodeScanner';
 import { isCameraScanSupported } from '../cameraScanner';
-import { RoverCameraScanner } from './RoverCameraScanner';
+import { EchoCameraScanner } from './EchoCameraScanner';
 
-interface RoverCameraContextValue {
+interface EchoCameraContextValue {
   cameraAvailable: boolean;
   openCamera: () => void;
 }
 
-const RoverCameraContext = createContext<RoverCameraContextValue>({ cameraAvailable: false, openCamera: () => {} });
+const EchoCameraContext = createContext<EchoCameraContextValue>({ cameraAvailable: false, openCamera: () => {} });
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useRoverCamera = () => useContext(RoverCameraContext);
+export const useEchoCamera = () => useContext(EchoCameraContext);
 
 /**
  * Lets a phone or tablet camera stand in for a hardware scanner. A code read by the camera is
  * sent as the same `barcodescanned` event a scanner gun produces, so wristband lookup, the MAR
  * and BCMA all handle it unchanged. The floating button sits above the BCMA dialog (z-50).
  */
-export const RoverCameraProvider: React.FC<{ showButton: boolean; children: React.ReactNode }> = ({
+export const EchoCameraProvider: React.FC<{ showButton: boolean; children: React.ReactNode }> = ({
   showButton,
   children,
 }) => {
@@ -34,7 +34,7 @@ export const RoverCameraProvider: React.FC<{ showButton: boolean; children: Reac
   const value = useMemo(() => ({ cameraAvailable, openCamera }), [cameraAvailable, openCamera]);
 
   return (
-    <RoverCameraContext.Provider value={value}>
+    <EchoCameraContext.Provider value={value}>
       {children}
       {cameraAvailable && showButton && !open && (
         <button
@@ -46,7 +46,7 @@ export const RoverCameraProvider: React.FC<{ showButton: boolean; children: Reac
           <span className="hidden sm:inline">Camera</span>
         </button>
       )}
-      {open && <RoverCameraScanner onDetected={handleDetected} onClose={close} />}
-    </RoverCameraContext.Provider>
+      {open && <EchoCameraScanner onDetected={handleDetected} onClose={close} />}
+    </EchoCameraContext.Provider>
   );
 };

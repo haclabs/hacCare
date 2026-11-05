@@ -7,12 +7,12 @@ import { usePatientDashboard } from '../../patients/hooks/usePatientDashboard';
 import { useMultiTenantPatients } from '../../patients/hooks/useMultiTenantPatients';
 import { MARModule } from '../../patients/components/mar/MARModule';
 import type { Medication, Patient } from '../../../types';
-import { ROVER_PATH } from '../roverMode';
+import { ECHO_PATH } from '../echoMode';
 import { findPatientByWristband } from '../findPatientByWristband';
-import { useRoverScan } from '../hooks/useRoverScan';
+import { useEchoScan } from '../hooks/useEchoScan';
 
 /** Bedside MAR for one patient. Scanning another wristband jumps straight to that patient. */
-export const RoverPatientMAR: React.FC = () => {
+export const EchoPatientMAR: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -27,18 +27,18 @@ export const RoverPatientMAR: React.FC = () => {
     if (patient) setLocalPatient(patient);
   }, [patient]);
 
-  useRoverScan((barcode) => {
+  useEchoScan((barcode) => {
     const match = findPatientByWristband(barcode, patients);
     if (match && match.id !== id) {
       setScanNotice(null);
-      navigate(`${ROVER_PATH}/patient/${match.id}`);
+      navigate(`${ECHO_PATH}/patient/${match.id}`);
     } else if (!match) {
       setScanNotice(`"${barcode}" isn't a patient wristband in this simulation. Tap Administer on a medication to start a scan.`);
     }
   });
 
   const activePatient = localPatient ?? patient;
-  const backToScan = () => navigate(ROVER_PATH);
+  const backToScan = () => navigate(ECHO_PATH);
 
   const currentUser =
     user && profile
